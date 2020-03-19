@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -98,7 +99,7 @@ namespace pwiz.SkylineTestFunctional
             SkipLibraryDlg();
             WaitForDocumentLoaded();
             // Transitions have been imported, but not iRT
-            RunUI(() => ValidateDocAndIrt(SkylineWindow.DocumentUI, 294, 11, 10));
+            ValidateDocAndIrt(294, 11, 10);
 
             // 4. Importing mass list with iRT's into document with existing iRT calculator, no conflicts
             LoadDocument(documentExisting);
@@ -110,7 +111,7 @@ namespace pwiz.SkylineTestFunctional
             });
             SkipLibraryDlg();
             WaitForDocumentLoaded();
-            RunUI(() => ValidateDocAndIrt(SkylineWindow.DocumentUI, 294, 295, 10));
+            ValidateDocAndIrt(294, 295, 10);
 
             // 5. Peptide iRT in document conflicts with peptide iRT in database, respond by canceling whole operation
             LoadDocument(documentExisting);
@@ -137,9 +138,9 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(importIrtConflictOverwriteNo, importIrtConflictOverwriteNo.Btn0Click);
             SkipLibraryDlg();
             WaitForDocumentLoaded();
+            var calculator = ValidateDocAndIrt(355, 355, 10);
             RunUI(() =>
             {
-                var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 355, 10);
                 var scores = calculator.PeptideScores.ToList();
                 var peptides = scores.Select(item => item.Key.Sequence).ToList();
                 int conflictIndex = peptides.IndexOf("YVPIHTIDDGYSVIK");
@@ -219,12 +220,11 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(confirmIrtDlg, confirmIrtDlg.Btn0Click);
             var libraryAcceptDlg = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(libraryAcceptDlg, libraryAcceptDlg.Btn0Click);
-            WaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 16);
+            ValidateDocAndIrt(16, 361, 10);
             RunUI(() =>
             {
                 var docCurrent = SkylineWindow.DocumentUI;
                 // All of the transitions are there except for the ones with errors
-                ValidateDocAndIrt(docCurrent, 16, 361, 10);
                 Assert.AreEqual(docCurrent.PeptideTransitionCount, 109);
                 Assert.AreEqual(docCurrent.PeptideTransitionGroupCount, 22);
                 // Spectral library results are there
@@ -315,7 +315,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Transition gets added but not iRT
-            RunUI(() => ValidateDocAndIrt(SkylineWindow.DocumentUI, 11, 361, 10));
+            ValidateDocAndIrt(11, 361, 10);
 
             // 14. Same as 5 but this time do overwrite the iRT value
             LoadDocument(documentExisting);
@@ -327,9 +327,9 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(importIrtConflictOverwriteYes, importIrtConflictOverwriteYes.Btn1Click);
             SkipLibraryDlg();
             WaitForDocumentLoaded();
+            calculator = ValidateDocAndIrt(355, 361, 10);
             RunUI(() =>
             {
-                var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 361, 10);
                 var scores = calculator.PeptideScores.ToList();
                 var peptides = scores.Select(item => item.Key.Sequence).ToList();
                 int conflictIndex = peptides.IndexOf("YVPIHTIDDGYSVIK");
@@ -343,9 +343,9 @@ namespace pwiz.SkylineTestFunctional
             var calculatorOld = docLoaded.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), libraryDlg => libraryDlg.Btn1Click());
             var docMassList = WaitForDocumentChangeLoaded(docLoaded);
+            calculator = ValidateDocAndIrt(355, 361, 10);
             RunUI(() => 
             {
-                var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 361, 10);
                 var scores = calculator.PeptideScores.ToList();
                 var peptides = scores.Select(item => item.Key.Sequence).ToList();
                 int conflictIndex = peptides.IndexOf("YVPIHTIDDGYSVIK");
@@ -360,6 +360,7 @@ namespace pwiz.SkylineTestFunctional
             // 16. Attempt to create iRT calculator, then cancel, leaves the document the same
             var documentBlank = TestFilesDir.GetTestPath("AQUA4_Human_Blank.sky");
             var docCreateIrtCancel = LoadDocument(documentBlank);
+            docCreateIrtCancel = AllowAllIonTypes();
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt =>
             {
                 Assert.AreEqual(importIrt.Message,
@@ -494,6 +495,7 @@ namespace pwiz.SkylineTestFunctional
             // 355 transitions, libraries, and iRT times are imported, including libraries for the iRT times
             var docCalcGood = LoadDocument(documentBlank);
             Assert.AreEqual(0, docCalcGood.PeptideTransitions.Count());
+            AllowAllIonTypes();
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), importIrt => importIrt.Btn0Click());
             var createIrtCalcGood = WaitForOpenForm<CreateIrtCalculatorDlg>();
             RunUI(() =>
@@ -513,11 +515,10 @@ namespace pwiz.SkylineTestFunctional
                 return doc;
             }));
             OkDialog(libraryDlgAll, libraryDlgAll.Btn0Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 355); // Was 3sec wait, but that timed out under dotCover
             WaitForDocumentLoaded();
+            ValidateDocAndIrt(355, 355, 10);
             RunUI(() =>
             {
-                ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 355, 10);
                 var libraries = SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries;
                 Assert.IsTrue(libraries.HasLibraries);
                 Assert.IsTrue(libraries.IsLoaded);
@@ -583,11 +584,10 @@ namespace pwiz.SkylineTestFunctional
             var libraryDlgOverwriteYes = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(() => AssertEx.AreComparableStrings(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_, libraryDlgOverwriteYes.Message));
             OkDialog(libraryDlgOverwriteYes, libraryDlgOverwriteYes.Btn0Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 345);    // Peptide count checked below
             WaitForDocumentLoaded();
+            calculator = ValidateDocAndIrt(345, 355, 10);
             RunUI(() =>
             {
-                var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
                 var scores = calculator.PeptideScores.ToList();
                 var peptides = scores.Select(item => item.Key.Sequence).ToList();
                 int conflictIndex = peptides.IndexOf("YVPIHTIDDGYSVIK");
@@ -659,15 +659,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(string.Format(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_, libraryName),
                 libraryDlgOverwrite.Message));
             OkDialog(libraryDlgOverwrite, libraryDlgOverwrite.Btn0Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 345); // Peptide count checked below
             WaitForDocumentLoaded();
             var openAlert = FindOpenForm<AlertDlg>();
             if (openAlert != null)
                 Assert.Fail("Found unexpected alert: {0}", openAlert.Message);
 
+            calculator = ValidateDocAndIrt(345, 355, 10);
             RunUI(() =>
             {
-                var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
                 var scores = calculator.PeptideScores.ToList();
                 var peptides = scores.Select(item => item.Key.Sequence).ToList();
                 int conflictIndex = peptides.IndexOf("YVPIHTIDDGYSVIK");
@@ -703,11 +702,10 @@ namespace pwiz.SkylineTestFunctional
 
             // 28.  Do exactly the same thing over again, should happen silently, with only a prompt to add library info
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), libraryDlgRepeat => libraryDlgRepeat.Btn0Click());
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 690); // Peptide count checked below
             WaitForDocumentLoaded();
+            ValidateDocAndIrt(690, 355, 10);
             RunUI(() =>
             {
-                ValidateDocAndIrt(SkylineWindow.DocumentUI, 690, 355, 10);
                 var libraries = SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries;
                 Assert.IsTrue(libraries.HasLibraries);
                 Assert.IsTrue(libraries.IsLoaded);
@@ -804,7 +802,7 @@ namespace pwiz.SkylineTestFunctional
                 return doc;
             }));
             OkDialog(libraryInterleaved, libraryInterleaved.Btn0Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);  // Peptide count checked below
+            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 6);  // Peptide count checked below
             WaitForDocumentLoaded();
             RunUI(() =>
             {
@@ -842,7 +840,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(libraryInterleavedIrt, libraryInterleavedIrt.Btn0Click);
             var libraryDlgOverwriteIrt = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(libraryDlgOverwriteIrt.Btn0Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);
+            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 6);
             WaitForDocumentLoaded();
             Assert.AreEqual(6, SkylineWindow.Document.PeptideCount);
             var irtValue = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence(new Target("AAAAAAAAAAAAAAAGAAGK"));
@@ -856,13 +854,23 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textInterleavedIrtNoLib), addIrtDlg => addIrtDlg.Btn0Click());
             var irtOverwriteNoLib = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(irtOverwriteNoLib, irtOverwriteNoLib.Btn1Click);
-            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);
+            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 6);
             WaitForDocumentLoaded();
             Assert.AreEqual(6, SkylineWindow.Document.PeptideCount);
             var irtValueNoLib = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence(new Target("AAAAAAAAAAAAAAAGAAGK"));
             Assert.IsNotNull(irtValueNoLib);
             Assert.AreEqual(irtValueNoLib.Value, 52.407, 1e-3);
 
+        }
+
+        private static SrmDocument AllowAllIonTypes()
+        {
+            RunUI(() => SkylineWindow.ModifyDocument("Allow all fragment ions - because test file contains a2", doc =>
+            {
+                return doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
+                    f.ChangePeptideIonTypes(Transition.PEPTIDE_ION_TYPES)));
+            }));
+            return SkylineWindow.Document;
         }
 
         private static void VerifyEmptyRTRegression()
@@ -986,7 +994,7 @@ namespace pwiz.SkylineTestFunctional
                 importResultsDlg.NamedPathSets = path;
             });
             OkDialog(importResultsDlg, importResultsDlg.OkDialog);
-            WaitForCondition(2 * 60 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 2 minutes
+            WaitForConditionUI(2 * 60 * 1000, () => SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);    // 2 minutes
             RunUI(() => SkylineWindow.SaveDocument());
 
             // Show data can be imported with modified sequence column following bare sequence column
@@ -1004,7 +1012,7 @@ namespace pwiz.SkylineTestFunctional
         private static void PasteOnePeptide(string textModifiedSeqExpected)
         {
             SkylineWindow.Paste();
-            TryWaitForCondition(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
+            TryWaitForConditionUI(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
             Assert.AreEqual(1, SkylineWindow.DocumentUI.PeptideCount);
             var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
             Assert.AreEqual(textModifiedSeqExpected, peptideNode.ModifiedSequence);
@@ -1036,6 +1044,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var documentBlank = TestFilesDir.GetTestPath("AQUA4_Human_Blank.sky");
             LoadDocument(documentBlank);
+            AllowAllIonTypes();
             string textEmbedded = TestFilesDir.GetTestPath("OpenSWATH_SM4_Combined.csv");
             RemoveColumn(textEmbedded, 11); // Remove bad modified sequence column that import would use
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textEmbedded), importIrt => importIrt.Btn0Click());
@@ -1053,7 +1062,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(createIrtDlg, createIrtDlg.OkDialog);
             SkipLibraryDlg();
             WaitForDocumentLoaded();
-            ValidateDocAndIrt(SkylineWindow.Document, 294, 294, 10);
+            ValidateDocAndIrt(294, 294, 10);
             RunUI(() => SkylineWindow.SaveDocument());
         }
 
@@ -1105,9 +1114,10 @@ namespace pwiz.SkylineTestFunctional
 
             // Undo import
             RunUI(SkylineWindow.Undo);
-            doc = WaitForDocumentChange(doc);
+            WaitForDocumentChange(doc);
 
             // Import assay library and choose a file
+            doc = AllowAllIonTypes();
             var irtCsvFile = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             var overwriteDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile));
             var chooseIrt2 = ShowDialog<ChooseIrtStandardPeptidesDlg>(overwriteDlg.BtnYesClick);
@@ -1117,17 +1127,58 @@ namespace pwiz.SkylineTestFunctional
             CollectionUtil.ForEach(SkylineWindow.Document.PeptideGroups.Take(10), protein => Assert.IsTrue(protein.Name.StartsWith("AQRT_")));
             CheckAssayLibrarySettings();
 
+            // Import assay library and choose CiRTs
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.ResetDefaultSettings();
+                Assert.IsTrue(SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("assay_import_cirt.sky")));
+            });
+            doc = SkylineWindow.Document;
+            var transitionErrs = ShowDialog<ImportTransitionListErrorDlg>(() => SkylineWindow.ImportAssayLibrary(TestFilesDir.GetTestPath("cirts.tsv")));
+            var chooseIrt3 = ShowDialog<ChooseIrtStandardPeptidesDlg>(transitionErrs.AcceptButton.PerformClick);
+            var useCirtsDlg = ShowDialog<AddIrtStandardsDlg>(() => chooseIrt3.OkDialogStandard(IrtStandard.CIRT_SHORT));
+            RunUI(() => useCirtsDlg.StandardCount = 12);
+            OkDialog(useCirtsDlg, useCirtsDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
+            AssertEx.IsDocumentState(doc, null, 63, 120, 202, 1574);
+            CheckAssayLibrarySettings();
+
+            // Undo import
+            RunUI(SkylineWindow.Undo);
+            doc = WaitForDocumentChange(doc);
+
+            // Import assay library and choose a standard
+            var chooseStandard = IrtStandard.BIOGNOSYS_11;
+            var overwriteDlg2 = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(TestFilesDir.GetTestPath("cirts.tsv")));
+            var transitionErrs2 = ShowDialog<ImportTransitionListErrorDlg>(() => overwriteDlg2.BtnYesClick());
+            var chooseIrt4 = ShowDialog<ChooseIrtStandardPeptidesDlg>(transitionErrs2.AcceptButton.PerformClick);
+            OkDialog(chooseIrt4, () => chooseIrt4.OkDialogStandard(chooseStandard));
+            doc = WaitForDocumentChange(doc);
+            // We should have an extra peptide group and extra peptides since the standard peptides should've been added to the document
+            AssertEx.IsDocumentState(doc, null, 64, 120 + chooseStandard.Peptides.Count, null, null);
+            var biognosysTargets = new TargetMap<bool>(chooseStandard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            var standardGroup = doc.PeptideGroups.First();
+            Assert.AreEqual(chooseStandard.Peptides.Count, standardGroup.PeptideCount);
+            foreach (var nodePep in standardGroup.Peptides)
+                Assert.IsTrue(biognosysTargets.ContainsKey(nodePep.ModifiedTarget));
             RunUI(() => SkylineWindow.SaveDocument());
         }
 
-        public static RCalcIrt ValidateDocAndIrt(SrmDocument doc, int peptides, int irtTotal, int irtStandards)
+        public RCalcIrt ValidateDocAndIrt(int peptides, int irtTotal, int irtStandards)
         {
-            Assert.AreEqual(peptides, doc.PeptideCount);
-            var calculator = doc.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
-            Assert.IsNotNull(calculator);
-            var peptideSeqs = calculator.PeptideScores.Select(item => item.Key).ToList();
-            Assert.AreEqual(irtTotal, peptideSeqs.Count);
-            Assert.AreEqual(irtStandards, calculator.GetStandardPeptides(peptideSeqs).Count());
+            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == peptides); // Peptide count checked below
+            RCalcIrt calculator = null;
+            RunUI(() =>
+            {
+                var doc = SkylineWindow.DocumentUI;
+                Assert.AreEqual(peptides, doc.PeptideCount);
+                calculator = doc.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
+                Assert.IsNotNull(calculator);
+                var peptideSeqs = calculator.PeptideScores.Select(item => item.Key).ToList();
+                Assert.AreEqual(irtTotal, peptideSeqs.Count);
+                Assert.AreEqual(irtStandards, calculator.GetStandardPeptides(peptideSeqs).Count());
+            });
             return calculator;
         }
 

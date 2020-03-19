@@ -34,7 +34,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class PeptideDocNode : DocNodeParent
+    public class PeptideDocNode : DocNodeParent, ISequenceContainer
     {
         public static readonly StandardType STANDARD_TYPE_IRT = StandardType.IRT;
         public static readonly StandardType STANDARD_TYPE_QC = StandardType.QC;
@@ -910,7 +910,7 @@ namespace pwiz.Skyline.Model
                     diff.DiffTransitions || diff.DiffTransitionProps ||
                     diff.DiffResults)
                 {
-                    IList<DocNode> childrenNew = new List<DocNode>();
+                    IList<DocNode> childrenNew = new List<DocNode>(nodeResult.Children.Count);
 
                     // Enumerate the nodes making necessary changes.
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
@@ -1124,6 +1124,13 @@ namespace pwiz.Skyline.Model
                     return this;
                 return ChangeResults(null);
             }
+            else if (!settingsNew.MeasuredResults.Chromatograms.Any(c => c.IsLoaded) &&
+                     (!HasResults || Results.All(r => r.IsEmpty)))
+            {
+                if (HasResults && Results.Count == settingsNew.MeasuredResults.Chromatograms.Count)
+                    return this;
+                return ChangeResults(settingsNew.MeasuredResults.EmptyPeptideResults);
+            }
 
             var transitionGroupKeys = new HashSet<Tuple<IsotopeLabelType, Adduct>>();
             // Update the results summary
@@ -1287,7 +1294,7 @@ namespace pwiz.Skyline.Model
                 {
                     return results;
                 }
-                Dictionary<int, bool> excludeFromCalibrations = null;   // Delay allocation
+                Dictionary<int, Tuple<bool, double?>> peptideChromInfoAttributes = null;   // Delay allocation
                 foreach (var chromInfos in peptideDocNode.Results)
                 {
                     if (chromInfos.IsEmpty)
@@ -1296,16 +1303,20 @@ namespace pwiz.Skyline.Model
                     }
                     foreach (var chromInfo in chromInfos)
                     {
-                        if (chromInfo != null && chromInfo.ExcludeFromCalibration)
+                        if (chromInfo != null)
                         {
-                            if (excludeFromCalibrations == null)
-                                excludeFromCalibrations = new Dictionary<int, bool>();
-                            excludeFromCalibrations.Add(chromInfo.FileId.GlobalIndex,
-                                chromInfo.ExcludeFromCalibration);
+                            if (chromInfo.ExcludeFromCalibration || chromInfo.AnalyteConcentration.HasValue)
+                            {
+                                if (peptideChromInfoAttributes == null)
+                                {
+                                    peptideChromInfoAttributes = new Dictionary<int, Tuple<bool, double?>>();
+                                }
+                                peptideChromInfoAttributes.Add(chromInfo.FileId.GlobalIndex, Tuple.Create(chromInfo.ExcludeFromCalibration, chromInfo.AnalyteConcentration));
+                            }
                         }
                     }
                 }
-                if (excludeFromCalibrations == null)
+                if (peptideChromInfoAttributes == null)
                 {
                     return results;
                 }
@@ -1323,13 +1334,16 @@ namespace pwiz.Skyline.Model
                         foreach (var chromInfo in chromInfoList)
                         {
                             var chromInfoAdd = chromInfo;
-                            bool excludeFromCalibration;
-                            if (chromInfo != null &&
-                                excludeFromCalibrations.TryGetValue(chromInfo.FileId.GlobalIndex,
-                                    out excludeFromCalibration))
+                            if (chromInfo != null)
                             {
-                                chromInfoAdd = chromInfo.ChangeExcludeFromCalibration(excludeFromCalibration);
-                            }
+                                Tuple<bool, double?> attributes;
+                                if (peptideChromInfoAttributes.TryGetValue(chromInfoAdd.FileId.GlobalIndex,
+                                    out attributes))
+                                {
+                                    chromInfoAdd = chromInfoAdd.ChangeExcludeFromCalibration(attributes.Item1)
+                                        .ChangeAnalyteConcentration(attributes.Item2);
+                                }
+                            } 
                             if (newChromInfoList != null)
                                 newChromInfoList.Add(chromInfoAdd);
                             else
@@ -1953,9 +1967,9 @@ namespace pwiz.Skyline.Model
         #endregion
     }
 
-    public struct PeptidePrecursorPair
+    public class PeptidePrecursorPair
     {
-        public PeptidePrecursorPair(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup) : this()
+        public PeptidePrecursorPair(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
         {
             NodePep = nodePep;
             NodeGroup = nodeGroup;

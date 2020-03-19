@@ -147,6 +147,12 @@
   <data name="AreaRatio">
     <value>面积比</value>
   </data>
+  <data name="AttributeAreaProportion">
+    <value>属性面积比例</value>
+  </data>
+  <data name="AttributeGroupId">
+    <value>属性组 ID</value>
+  </data>
   <data name="AuditLogRow">
     <value>审计日志行</value>
   </data>
@@ -160,7 +166,7 @@
     <value>自动选择分子</value>
   </data>
   <data name="AutoSelectPeptides">
-    <value>自动选择肽</value>
+    <value>自动选择肽段</value>
   </data>
   <data name="AutoSelectPrecursors">
     <value>自动选择母离子</value>
@@ -172,7 +178,7 @@
     <value>平均质量误差PPM</value>
   </data>
   <data name="AverageMasses">
-    <value>平均成群</value>
+    <value>平均质量</value>
   </data>
   <data name="AverageMeasuredRetentionTime">
     <value>平均测量保留时间</value>
@@ -373,10 +379,10 @@
     <value>明确保留时间</value>
   </data>
   <data name="ExplicitRetentionTimeWindow">
-    <value>显式保留时间窗口</value>
+    <value>明示保留时间窗口</value>
   </data>
   <data name="ExplicitSLens">
-    <value>明确 SLens</value>
+    <value>明示SLens</value>
   </data>
   <data name="FiguresOfMerit">
     <value>品质因数</value>
@@ -496,6 +502,9 @@
   <data name="IsotopeLabelType">
     <value>同位素标记类型</value>
   </data>
+  <data name="KEGG">
+    <value>KEGG</value>
+  </data>
   <data name="Key">
     <value>关键</value>
   </data>
@@ -507,6 +516,9 @@
   </data>
   <data name="LibraryName">
     <value>库名称</value>
+  </data>
+  <data name="LibraryProbabilityScore">
+    <value>库概率得分</value>
   </data>
   <data name="LibraryRank">
     <value>库排名</value>
@@ -626,18 +638,18 @@
     <value>遗漏的酶解位点数</value>
   </data>
   <data name="ModifiedAreaProportion">
-    <value>修改面积比例</value>
+    <value>修改的面积比例</value>
   </data>
   <data name="ModifiedSequence">
-    <value>修改序列</value>
+    <value>修改的序列</value>
   </data>
-  <data name="ModifiedSequenceAverageMasses"><value>修改序列平均质量</value></data>
-  <data name="ModifiedSequenceFullNames"><value>修改序列全名</value></data>
-  <data name="ModifiedSequenceMonoisotopicMasses"><value>修饰的序列同位素质量</value></data>
-  <data name="ModifiedSequenceThreeLetterCodes"><value>修改序列三字母代码</value></data>
-  <data name="ModifiedSequenceUnimodIds"><value>修改序列单模式ID</value></data>
+  <data name="ModifiedSequenceAverageMasses"><value>修改的序列平均质量</value></data>
+  <data name="ModifiedSequenceFullNames"><value>修改的序列全名</value></data>
+  <data name="ModifiedSequenceMonoisotopicMasses"><value>修改的序列同位素质量</value></data>
+  <data name="ModifiedSequenceThreeLetterCodes"><value>修改的序列三字母代码</value></data>
+  <data name="ModifiedSequenceUnimodIds"><value>修改的序列Unimod ID</value></data>
   <data name="ModifiedTime">
-    <value>修改时间</value>
+    <value>修改的时间</value>
   </data>
   <data name="Molecule">
     <value>分子</value>
@@ -685,7 +697,7 @@
     <value>分子保留时间</value>
   </data>
   <data name="Molecules">
-    <value>分子学</value>
+    <value>分子</value>
   </data>
   <data name="MonoisotopicMasses"><value>单一同位素质量</value></data>
   <data name="MsLevel">
@@ -742,7 +754,7 @@
     <value>肽段注释</value>
   </data>
   <data name="PeptidePeakFoundRatio">
-    <value>肽峰值检出比</value>
+    <value>肽段峰值检出比</value>
   </data>
   <data name="PeptideResult">
     <value>肽段结果</value>
@@ -777,8 +789,14 @@
   <data name="Precursor">
     <value>母离子</value>
   </data>
+  <data name="PrecursorAccuracy">
+    <value>母离子准确性</value>
+  </data>
   <data name="PrecursorAdduct">
     <value>母离子加合物</value>
+  </data>
+  <data name="PrecursorCalculatedConcentration">
+    <value>母离子计算的浓度</value>
   </data>
   <data name="PrecursorCharge">
     <value>母离子电荷</value>
@@ -804,11 +822,17 @@
   <data name="PrecursorNeutralMass">
     <value>母离子中性质量</value>
   </data>
+  <data name="PrecursorNormalizedArea">
+    <value>母离子校准后面积</value>
+  </data>
   <data name="PrecursorNote">
     <value>母离子注释</value>
   </data>
   <data name="PrecursorPeakFoundRatio">
     <value>母离子峰值检出比</value>
+  </data>
+  <data name="PrecursorQuantification">
+    <value>母离子定量</value>
   </data>
   <data name="PrecursorReplicateNote">
     <value>母离子重复测定注释</value>
@@ -1165,5 +1189,11 @@
   </data>
   <data name="UTCTime">
     <value>UTC 时间</value>
+  </data>
+  <data name="SampleId" xml:space="preserve">
+    <value>样品 ID</value>
+  </data>
+  <data name="InstrumentSerialNumber" xml:space="preserve">
+    <value>仪器序列号</value>
   </data>
 </root>

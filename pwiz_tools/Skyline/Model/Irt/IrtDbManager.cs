@@ -240,8 +240,9 @@ namespace pwiz.Skyline.Model.Irt
             var listTime = listPepCorr.Select(p => p.Time).ToList();
             var listScore = listPepCorr.Select(p => p.Score).ToList();
 
-            RegressionLine line;
-            return RCalcIrt.TryGetRegressionLine(listScore, listTime, minCount, out line) ? line : null;
+            return IrtRegression.TryGet<RegressionLine>(listScore, listTime, minCount, out var line)
+                ? (RegressionLine) line
+                : null;
         }
 
         private struct TimeScorePair

@@ -18,17 +18,18 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -214,6 +215,7 @@ namespace pwiz.Skyline.SettingsUI
     {
         LibraryManager LibraryManager { get; }
         void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
+        SrmDocument Document { get; }
     }
 
     public sealed class LibraryBuildNotificationHandler
@@ -379,9 +381,30 @@ namespace pwiz.Skyline.SettingsUI
                             {
                                 MessageDlg.Show(TopMostApplicationForm, buildState.ExtraMessage);
                             }
-                            if (buildState.IrtStandard != null && !buildState.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name) && AddIrts(buildState))
+                            if (buildState.IrtStandard != null && !buildState.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
                             {
-                                AddRetentionTimePredictor(buildState);
+                                // Load library
+                                Library lib = null;
+                                using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Loading_library})
+                                {
+                                    var status = longWait.PerformWork(TopMostApplicationForm, 800, monitor =>
+                                    {
+                                        lib = NotificationContainer.LibraryManager.TryGetLibrary(buildState.LibrarySpec) ??
+                                              NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
+                                        if (lib != null)
+                                        {
+                                            foreach (var stream in lib.ReadStreams)
+                                                stream.CloseStream();
+                                        }
+                                    });
+                                    if (status.IsCanceled)
+                                        lib = null;
+                                    if (status.IsError)
+                                        throw status.ErrorException;
+                                }
+                                // Add iRTs to library
+                                if (AddIrts(IrtRegressionType.DEFAULT, lib, buildState.LibrarySpec, buildState.IrtStandard, NotificationContainerForm, true))
+                                    AddRetentionTimePredictor(buildState);
                             }
                         }));
                         frm.Start();
@@ -393,85 +416,129 @@ namespace pwiz.Skyline.SettingsUI
             threadComplete.Start();
         }
 
-        private bool AddIrts(LibraryManager.BuildState buildState)
+        public static bool AddIrts(IrtRegressionType regressionType, Library lib, LibrarySpec libSpec, IrtStandard standard, Control parent, bool useTopMostForm)
         {
-            try
+            if (lib == null || !lib.IsLoaded || standard == null || standard.Name.Equals(IrtStandard.EMPTY.Name))
+                return false;
+
+            Control GetParent() { return useTopMostForm ? FormUtil.FindTopLevelOpenForm(f => f is BuildLibraryNotification) ?? parent : parent; }
+
+            IRetentionTimeProvider[] irtProviders = null;
+            var cirtPeptides = new DbIrtPeptide[0];
+            using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers})
             {
-                Library lib;
-                ProcessedIrtAverages processed = null;
-                var initialMessage = Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library;
-                using (var longWait = new LongWaitDlg { Text = Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library })
+                var status = longWait.PerformWork(GetParent(), 800, monitor =>
                 {
-                    var status = longWait.PerformWork(TopMostApplicationForm, 800, monitor =>
+                    monitor.UpdateProgress(new ProgressStatus().ChangePercentComplete(-1));
+                    irtProviders = lib.RetentionTimeProvidersIrt.ToArray();
+                    if (!irtProviders.Any())
+                        irtProviders = lib.RetentionTimeProviders.ToArray();
+
+                    if (ReferenceEquals(standard, IrtStandard.CIRT_SHORT))
                     {
-                        var initStatus = new ProgressStatus(initialMessage).ChangeSegments(0, 2);
-                        monitor.UpdateProgress(initStatus);
-                        lib = NotificationContainer.LibraryManager.TryGetLibrary(buildState.LibrarySpec) ??
-                              NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
-                        foreach (var stream in lib.ReadStreams)
-                            stream.CloseStream();
-                        if (longWait.IsCanceled)
-                            return;
-                        var irtProviders = lib.RetentionTimeProvidersIrt.ToArray();
-                        if (!irtProviders.Any())
-                            irtProviders = lib.RetentionTimeProviders.ToArray();
-                        processed = RCalcIrt.ProcessRetentionTimes(monitor, irtProviders, irtProviders.Length,
-                                                                   buildState.IrtStandard.Peptides.ToArray(), new DbIrtPeptide[0]);
+                        var libPeptides = new TargetMap<bool>(irtProviders
+                            .SelectMany(provider => provider.PeptideRetentionTimes).Select(rt => new KeyValuePair<Target, bool>(rt.PeptideSequence, true)));
+                        cirtPeptides = IrtStandard.CIRT.Peptides.Where(pep => libPeptides.ContainsKey(pep.ModifiedTarget)).ToArray();
+                    }
+                });
+                if (status.IsCanceled)
+                    return false;
+                if (status.IsError)
+                    throw status.ErrorException;
+            }
+
+            int? numCirt = null;
+            if (cirtPeptides.Length >= RCalcIrt.MIN_PEPTIDES_COUNT)
+            {
+                using (var dlg = new AddIrtStandardsDlg(cirtPeptides.Length,
+                    string.Format(
+                        Resources.LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_,
+                        cirtPeptides.Length)))
+                {
+                    if (dlg.ShowDialog(GetParent()) != DialogResult.OK)
+                        return false;
+                    numCirt = dlg.StandardCount;
+                }
+            }
+
+            var standardPeptides = standard.Peptides.ToArray();
+            ProcessedIrtAverages processed = null;
+            using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Processing_retention_times})
+            {
+                try
+                {
+                    var status = longWait.PerformWork(GetParent(), 800, monitor =>
+                    {
+                        processed = !numCirt.HasValue
+                            ? RCalcIrt.ProcessRetentionTimes(monitor, irtProviders, standardPeptides, new DbIrtPeptide[0], regressionType)
+                            : RCalcIrt.ProcessRetentionTimesCirt(monitor, irtProviders, cirtPeptides, numCirt.Value, regressionType, out standardPeptides);
                     });
                     if (status.IsCanceled)
                         return false;
                     if (status.IsError)
                         throw status.ErrorException;
                 }
-
-                using (var resultsDlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.spectral_library, processed))
+                catch (Exception x)
                 {
-                    if (resultsDlg.ShowDialog(TopMostApplicationForm) != DialogResult.OK)
-                        return false;
-                }
-
-                var recalibrate = false;
-                if (processed.CanRecalibrateStandards(buildState.IrtStandard.Peptides))
-                {
-                    using (var dlg = new MultiButtonMsgDlg(
-                        TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
-                            Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_),
-                        MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
-                    {
-                        if (dlg.ShowDialog(TopMostApplicationForm) == DialogResult.Yes)
-                            recalibrate = true;
-                    }
-                }
-
-                var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
-                if (!processedDbIrtPeptides.Any())
+                    MessageDlg.ShowWithException(GetParent(),
+                        TextUtil.LineSeparate(
+                            Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_,
+                            x.Message), x);
                     return false;
+                }
+            }
 
-                using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library})
+            using (var resultsDlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.spectral_library, processed))
+            {
+                if (resultsDlg.ShowDialog(GetParent()) != DialogResult.OK)
+                    return false;
+            }
+
+            var recalibrate = false;
+            if (processed.CanRecalibrateStandards(standardPeptides))
+            {
+                using (var dlg = new MultiButtonMsgDlg(
+                    TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
+                        Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_),
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                 {
-                    ImmutableList<DbIrtPeptide> newStandards = null;
-                    var status = longWait.PerformWork(TopMostApplicationForm, 800, monitor =>
+                    recalibrate = dlg.ShowDialog(GetParent()) == DialogResult.Yes;
+                }
+            }
+
+            var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
+            if (!processedDbIrtPeptides.Any())
+                return false;
+
+            using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library})
+            {
+                try
+                {
+                    DbIrtPeptide[] newStandards = null;
+                    var status = longWait.PerformWork(GetParent(), 800, monitor =>
                     {
                         if (recalibrate)
                         {
                             monitor.UpdateProgress(new ProgressStatus().ChangeSegments(0, 2));
-                            newStandards = ImmutableList.ValueOf(processed.RecalibrateStandards(buildState.IrtStandard.Peptides));
-                            processed = RCalcIrt.ProcessRetentionTimes(
-                                monitor, processed.ProviderData.Select(data => data.Value.RetentionTimeProvider),
-                                processed.ProviderData.Count, newStandards.ToArray(), new DbIrtPeptide[0]);
+                            newStandards = processed.RecalibrateStandards(standardPeptides).ToArray();
+                            processed = RCalcIrt.ProcessRetentionTimes(monitor,
+                                processed.ProviderData.Select(data => data.RetentionTimeProvider).ToArray(),
+                                newStandards.ToArray(), new DbIrtPeptide[0], regressionType);
                         }
-                        var irtDb = IrtDb.CreateIrtDb(buildState.LibrarySpec.FilePath);
-                        irtDb.AddPeptides(monitor, (newStandards ?? buildState.IrtStandard.Peptides).Concat(processedDbIrtPeptides).ToList());
+                        var irtDb = IrtDb.CreateIrtDb(libSpec.FilePath);
+                        irtDb.AddPeptides(monitor, (newStandards ?? standardPeptides).Concat(processed.DbIrtPeptides).ToList());
                     });
                     if (status.IsError)
                         throw status.ErrorException;
                 }
-            }
-            catch (Exception x)
-            {
-                MessageDlg.ShowWithException(TopMostApplicationForm,
-                    TextUtil.LineSeparate(Resources.LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_trying_to_add_iRTs_to_the_library_, x.Message), x);
-                return false;
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(GetParent(),
+                        TextUtil.LineSeparate(
+                            Resources.LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_,
+                            x.Message), x);
+                    return false;
+                }
             }
             return true;
         }

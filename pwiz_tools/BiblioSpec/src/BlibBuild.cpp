@@ -173,8 +173,8 @@ int main(int argc, char* argv[])
                     ShimadzuMLBReader mlbReader(builder, result_file, progress_cptr);
                     success = mlbReader.parseFile();
                 } else if (has_extension(result_file, ".tsv")) {
-                    TSVReader tsvReader(builder, result_file, progress_cptr);
-                    success = tsvReader.parseFile();
+                    auto tsvReader = TSVReader::create(builder, result_file, progress_cptr);
+                    success = tsvReader->parseFile();
                 } else if (has_extension(result_file, ".osw")) {
                     OSWReader oswReader(builder, result_file, progress_cptr);
                     success = oswReader.parseFile();
@@ -216,18 +216,8 @@ int main(int argc, char* argv[])
                 success = false;
             } catch (...){
                 failureMessage = "Unknown ERROR";
-                cerr << "xERROR: Unknown error reading file " << inFiles.at(i) << endl;
+                cerr << "ERROR: Unknown error reading file " << inFiles.at(i) << endl;
                 success = false;
-
-                // Write first 10 lines
-                std::ifstream fileStream(inFiles.at(i));
-                for (int i = 0; i < 100 && !fileStream.eof(); i++)
-                {
-                    std::string line;
-                    std::getline(fileStream, line);
-                
-                    Verbosity::debug(line.c_str());
-                }
             }
         }
 

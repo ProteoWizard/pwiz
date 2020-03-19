@@ -364,7 +364,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 Assume.IsNotNull(chromInfoData, @"chromInfoData");
                 Assume.IsNotNull(chromInfoData.ChromFileInfo, @"chromInfoData.ChromFileInfo");
-                IRegressionFunction regressionFunction;
+                RegressionLine regressionFunction;
                 return !RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);
             }
 
@@ -383,7 +383,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var chromInfoData in chromInfoDatas)
                 {
                     var retentionTimeValues = getRetentionTimeValues(chromInfoData).GetValueOrDefault();
-                    IRegressionFunction regressionFunction = null;
+                    RegressionLine regressionFunction = null;
                     if (null != RetentionTimeTransform.RtTransformOp)
                     {
                         RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);

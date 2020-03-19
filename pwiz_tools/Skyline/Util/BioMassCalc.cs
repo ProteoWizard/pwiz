@@ -484,6 +484,24 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        /// <summary>
+        /// Ensure that the entries for D and T are the same as the entries for H' and H".
+        /// </summary>
+        public static IsotopeAbundances AddHeavyNicknames(IsotopeAbundances isotopeAbundances)
+        {
+            var changes = new Dictionary<string, MassDistribution>();
+            foreach (var kvp in DICT_HEAVYSYMBOL_NICKNAMES)
+            {
+                MassDistribution massDistribution;
+                if (isotopeAbundances.TryGetValue(kvp.Value, out massDistribution))
+                {
+                    changes.Add(kvp.Key, massDistribution);
+                }
+            }
+
+            return isotopeAbundances.SetAbundances(changes);
+        }
+
         public MassType MassType { get; private set; }
 
         public string FormatArgumentExceptionMessage(string desc)
@@ -505,6 +523,32 @@ namespace pwiz.Skyline.Util
         public static bool ContainsIsotopicElement(string desc)
         {
             return DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Keys.Any(desc.Contains); // Look for Cl', O", D, T etc
+        }
+
+        public static bool TryParseFormula(string formula, out Molecule resultMolecule, out string errMessage)
+        {
+            try
+            {
+                var unprocessed = formula;
+                var resultDict = new Dictionary<string, int>();
+                // ParseMass checks for unknown symbols, so it's useful to us as a syntax checking parser even if we don't care about mass
+                // N.B. Monoisotopic vs Average doesn't actually matter here as we're just interested in the atom counts in resultDict
+                MONOISOTOPIC.ParseMass(ref unprocessed, resultDict); 
+                if (unprocessed.Length > 0)
+                {
+                    MONOISOTOPIC.ThrowArgumentException(formula); // Did not parse completely
+                }
+
+                resultMolecule = Molecule.FromDict(resultDict);
+                errMessage = string.Empty;
+                return true;
+            }
+            catch (ArgumentException e)
+            {
+                resultMolecule = Molecule.Empty;
+                errMessage = e.Message;
+                return false;
+            }
         }
 
         /// <summary>
@@ -704,48 +748,86 @@ namespace pwiz.Skyline.Util
         /// an expression that might contain a minus sign, use <see cref="ParseMassExpression"/>.
         /// </summary>
         /// <param name="desc">Input description, and remaining string after parsing</param>
+        /// <param name="molReturn">Optional dictionary for returning the atoms and counts</param>
         /// <returns>Total mass of formula parsed</returns>
-        public double ParseMass(ref string desc)
+        public double ParseMass(ref string desc, Dictionary<string, int> molReturn = null)
         {
             double totalMass = 0.0;
             desc = desc.Trim();
             Molecule mol;
             Adduct adduct;
             string neutralFormula;
+            Dictionary<string, int> dict = null;
             if (IonInfo.IsFormulaWithAdduct(desc, out mol, out adduct, out neutralFormula))
             {
                 totalMass += mol.Sum(p => p.Value*GetMass(p.Key));
                 desc = string.Empty; // Signal that we parsed the whole thing
-                return totalMass;
+                if (molReturn != null)
+                {
+                    dict = mol.Dictionary.ToDictionary(kvp=>kvp.Key, kvp=>kvp.Value);
+                }
             }
-            while (desc.Length > 0)
+            else
             {
-                string sym = NextSymbol(desc);
-                double massAtom = GetMass(sym);
-
-                // Stop if unrecognized atom found.
-                if (massAtom == 0)
+                if (molReturn != null)
                 {
-                    // CONSIDER: Throw with a useful message?
-                    break;
+                    dict = new Dictionary<string, int>();
                 }
-
-                desc = desc.Substring(sym.Length);
-                int endCount = 0;
-                while (endCount < desc.Length && Char.IsDigit(desc[endCount]))
-                    endCount++;
-
-                long count = 1;
-                if (endCount > 0)
+                while (desc.Length > 0)
                 {
-                    if (!long.TryParse(desc.Substring(0, endCount), out count))
-                        count = long.MaxValue; // We know at this point that it should parse, so it's probably just too big
-                }
-                totalMass += massAtom * count;
+                    string sym = NextSymbol(desc);
+                    double massAtom = GetMass(sym);
 
-                desc = desc.Substring(endCount).TrimStart();
+                    // Stop if unrecognized atom found.
+                    if (massAtom == 0)
+                    {
+                        // CONSIDER: Throw with a useful message?
+                        break;
+                    }
+
+                    desc = desc.Substring(sym.Length);
+                    int endCount = 0;
+                    while (endCount < desc.Length && Char.IsDigit(desc[endCount]))
+                        endCount++;
+
+                    var count = 1;
+                    if (endCount > 0)
+                    {
+                        if (!int.TryParse(desc.Substring(0, endCount), out count))
+                            count = int.MaxValue; // We know at this point that it should parse, so it's probably just too big
+                    }
+                    totalMass += massAtom * count;
+                    if (dict != null)
+                    {
+                        if (dict.TryGetValue(sym, out var oldCount))
+                        {
+                            dict[sym] = count + oldCount;
+                        }
+                        else
+                        {
+                            dict.Add(sym, count);
+                        }
+                    }
+                    desc = desc.Substring(endCount).TrimStart();
+                }
             }
 
+            if (molReturn != null)
+            {
+                foreach (var kvp in dict)
+                {
+                    var sym = kvp.Key;
+                    var count = kvp.Value;
+                    if (molReturn.TryGetValue(sym, out var oldCount))
+                    {
+                        molReturn[sym] = count + oldCount;
+                    }
+                    else
+                    {
+                        molReturn.Add(sym, count);
+                    }
+                }
+            }
             return totalMass;            
         }
 

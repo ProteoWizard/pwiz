@@ -47,6 +47,8 @@ Reader::Config::Config()
     , iterationListenerRegistry(nullptr)
     , preferOnlyMsLevel(0)
     , allowMsMsWithoutPrecursor(true)
+    , sortAndJitter(false)
+    , globalChromatogramsAreMs1Only(false)
 {
 }
 
@@ -63,6 +65,9 @@ Reader::Config::Config(const Config& rhs)
     iterationListenerRegistry = rhs.iterationListenerRegistry;
     preferOnlyMsLevel = rhs.preferOnlyMsLevel;
     allowMsMsWithoutPrecursor = rhs.allowMsMsWithoutPrecursor;
+    isolationMzAndMobilityFilter = rhs.isolationMzAndMobilityFilter;
+    sortAndJitter = rhs.sortAndJitter;
+    globalChromatogramsAreMs1Only = rhs.globalChromatogramsAreMs1Only;
 }
 
 // default implementation; most Readers don't need to worry about multi-run input files

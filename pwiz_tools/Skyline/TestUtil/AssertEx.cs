@@ -114,6 +114,18 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void FileExists(string filePath, string message = null)
+        {
+            if (!File.Exists(filePath))
+                Assert.Fail(TextUtil.LineSeparate(string.Format("Missing file {0}", filePath), message ?? string.Empty));
+        }
+
+        public static void FileNotExists(string filePath, string message = null)
+        {
+            if (File.Exists(filePath))
+                Assert.Fail(TextUtil.LineSeparate(string.Format("Unexpected file exists {0}", filePath), message ?? string.Empty));
+        }
+
         public static TObj Deserialize<TObj>(string s)
         {
             s = XmlUtil.XML_DIRECTIVE + s;
@@ -950,6 +962,9 @@ namespace pwiz.SkylineTestUtil
             Assert.AreEqual(target.DataSettings, copy.DataSettings);  // Might both by DataSettings.DEFAULT
             if (!DataSettings.DEFAULT.Equals(target.DataSettings))
                 Assert.AreNotSame(target.DataSettings, copy.DataSettings);
+            Assert.AreEqual(target.MeasuredResults, copy.MeasuredResults);
+            if (target.MeasuredResults != null)
+                Assert.AreNotSame(target.MeasuredResults, copy.MeasuredResults);
             Cloned(target, copy);
         }
 
@@ -988,6 +1003,30 @@ namespace pwiz.SkylineTestUtil
         public static void AreEqualLines(string expected, string actual)
         {
             Assert.AreEqual(LineBracket(expected), LineBracket(actual));
+        }
+
+        public static void IsLessThan<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) >= 0)
+                Assert.Fail("\"{0}\" is not less than \"{1}\"", actual, expectedBound);
+        }
+
+        public static void IsLessThanOrEqual<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) > 0)
+                Assert.Fail("\"{0}\" is not less than or equal to \"{1}\"", actual, expectedBound);
+        }
+
+        public static void IsGreaterThan<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) <= 0)
+                Assert.Fail("\"{0}\" is not greater than \"{1}\"", actual, expectedBound);
+        }
+
+        public static void IsGreaterThanOrEqual<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) < 0)
+                Assert.Fail("\"{0}\" is not greater than or equal to \"{1}\"", actual, expectedBound);
         }
 
         /// <summary>
@@ -1118,6 +1157,18 @@ namespace pwiz.SkylineTestUtil
                 }
                 Assert.IsFalse(convertedTransitionIterator.MoveNext());
             }
+        }
+
+        /// <summary>
+        /// Just like regular Assert.Equals but easier to set a breakpoint on.
+        /// </summary>
+        public static void AreEqual<T>(T expected, T actual)
+        {
+            if (Equals(expected, actual))
+            {
+                return;
+            }
+            Assert.AreEqual(expected, actual);
         }
     }
 }

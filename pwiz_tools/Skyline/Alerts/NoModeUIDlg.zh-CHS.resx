@@ -179,7 +179,7 @@
     <value>1</value>
   </data>
   <data name="imageListBoxItemMolecule.Text" xml:space="preserve">
-    <value>分子学</value>
+    <value>分子</value>
   </data>
   <data name="imageListBoxItemMixed.ImageIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -323,13 +323,13 @@
     <value>imageListBoxItemProteomics</value>
   </data>
   <data name="&gt;&gt;imageListBoxItemProteomics.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;imageListBoxItemMolecule.Name" xml:space="preserve">
     <value>imageListBoxItemMolecule</value>
   </data>
   <data name="&gt;&gt;imageListBoxItemMolecule.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.ImageListBoxItem, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;imageListBoxItemMixed.Name" xml:space="preserve">
     <value>imageListBoxItemMixed</value>

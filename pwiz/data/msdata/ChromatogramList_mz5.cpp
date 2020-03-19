@@ -249,7 +249,7 @@ ChromatogramPtr ChromatogramList_mz5Impl::chromatogram(size_t index, bool getBin
     initialize();
     if (numberOfChromatograms_ > index)
     {
-        ChromatogramPtr ptr(chromatogramData_[index].getChromatogram(*rref_));
+        ChromatogramPtr ptr(chromatogramData_[index].getChromatogram(*rref_, *conn_));
         std::pair<hsize_t, hsize_t> bounds = chromatogramRanges_.find(index)->second;
         hsize_t start = bounds.first;
         hsize_t end = bounds.second;

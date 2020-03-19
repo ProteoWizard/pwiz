@@ -133,6 +133,7 @@ message SkylineDocumentProto {
 		LossInclusion lossInclusion = 4;
 		string modificationName = 5;
 		int32 lossIndex = 6;
+		int32 charge = 7;
 	}
 
 

@@ -57,19 +57,38 @@ struct PasefPrecursorInfo
 };
 typedef boost::shared_ptr<PasefPrecursorInfo> PasefPrecursorInfoPtr;
 
+struct DiaPasefIsolationInfo
+{
+    double isolationMz;
+    double isolationWidth;
+    double collisionEnergy;
+    int numScans;
+};
+
+enum class MsMsType
+{
+    MS1 = 0,
+    MRM = 2,
+    DDA_PASEF = 8,
+    DIA_PASEF = 9,
+    PRM_PASEF = 10
+};
+
 struct PWIZ_API_DECL TimsFrame
 {
 
 
     TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
-              int msLevel, double rt,
+              MsMsType msmsType, double rt,
               double startMz, double endMz,
               double tic, double bpi,
               IonPolarity polarity, int scanMode, int numScans,
               const optional<uint64_t>& parentId,
               const optional<double>& precursorMz,
               const optional<double>& isolationWidth,
-              const optional<int>& precursorCharge);
+              const optional<int>& precursorCharge,
+              int calibrationIndex,
+              const vector<double>& oneOverK0);
 
     int64_t frameId() const { return frameId_; }
     int numScans() const { return numScans_; }
@@ -78,6 +97,7 @@ struct PWIZ_API_DECL TimsFrame
     friend struct TimsSpectrum;
     friend struct TimsDataImpl;
     int64_t frameId_;
+    MsMsType msmsType_;
     int msLevel_;
     double rt_;
     optional<uint64_t> parentId_;
@@ -90,16 +110,19 @@ struct PWIZ_API_DECL TimsFrame
     std::pair<double, double> scanRange_;
     optional<int> chargeState_;
     optional<double> isolationWidth_;
+    optional<int> windowGroup_;
 
     optional<double> precursorMz_;
     int scanMode_;
+    int calibrationIndex_;
 
     map<int, size_t> scanIndexByScanNumber_; // for frame/scan -> index calculation with support for missing scans (e.g. allowMsMsWithoutPrecursor == false)
 
     vector<PasefPrecursorInfoPtr> pasef_precursor_info_;
+    map<int, DiaPasefIsolationInfo> diaPasefIsolationInfoByScanNumber_; // only the first scan number of each window is stored, so use lower_bound() to find the info for a given scan number
 
     TimsDataImpl & timsDataImpl_;
-    vector<double> oneOverK0_; // access by (scan number - 1)
+    const vector<double>& oneOverK0_;
 };
 
 typedef boost::shared_ptr<TimsFrame> TimsFramePtr;
@@ -117,31 +140,42 @@ public:
     virtual bool hasProfileData() const;
     virtual size_t getLineDataSize() const;
     virtual size_t getProfileDataSize() const;
-    virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
-    virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
+    virtual void getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const;
+    virtual void getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const;
 
     virtual double getTIC() const { return frame_.tic_; }
     virtual double getBPI() const { return frame_.bpi_; }
 
     virtual int getMSMSStage() const;
     virtual double getRetentionTime() const;
-    virtual void getIsolationData(std::vector<double>& isolatedMZs, std::vector<IsolationMode>& isolationModes) const;
+    virtual void getIsolationData(std::vector<IsolationInfo>& isolationInfo) const;
     virtual void getFragmentationData(std::vector<double>& fragmentedMZs, std::vector<FragmentationMode>& fragmentationModes) const;
     virtual IonPolarity getPolarity() const;
 
     virtual std::pair<double, double> getScanRange() const;
     virtual int getChargeState() const;
     virtual double getIsolationWidth() const;
+    virtual int getWindowGroup() const;
 
     virtual bool isIonMobilitySpectrum() const { return oneOverK0() > 0; }
     virtual double oneOverK0() const;
 
-    void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const;
+    void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const;
     size_t getCombinedSpectrumDataSize() const;
     virtual pwiz::util::IntegerSet getMergedScanNumbers() const;
 
     virtual bool HasPasefPrecursorInfo() const { return false; }
     virtual const PasefPrecursorInfo& GetPasefPrecursorInfo() const { return empty_; }
+
+    const DiaPasefIsolationInfo& getDiaPasefIsolationInfo() const
+    {
+        if (frame_.diaPasefIsolationInfoByScanNumber_.empty())
+            throw runtime_error("[TimsSpectrum::getDiaPasefIsolationInfo] no DIA PASEF info");
+
+        auto diaPasefIsolationInfoPair = frame_.diaPasefIsolationInfoByScanNumber_.upper_bound(scanBegin_);
+        --diaPasefIsolationInfoPair;
+        return diaPasefIsolationInfoPair->second;
+    }
 
     int scanBegin() const { return scanBegin_; }
     virtual int scanEnd() const = 0;
@@ -155,7 +189,6 @@ public:
     const TimsFrame& frame_;
     const int scanBegin_;
     const static PasefPrecursorInfo empty_;
-
 };
 
 struct TimsSpectrumNonPASEF : public TimsSpectrum
@@ -207,7 +240,8 @@ typedef boost::shared_ptr<TimsSpectrum> TimsSpectrumPtr;
 
 struct PWIZ_API_DECL TimsDataImpl : public CompassData
 {
-    TimsDataImpl(const std::string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel = 0, bool allowMsMsWithoutPrecursor = true);
+    TimsDataImpl(const std::string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel = 0, bool allowMsMsWithoutPrecursor = true,
+                 const std::vector<chemistry::MzMobilityWindow>& isolationMzFilter = std::vector<chemistry::MzMobilityWindow>());
     virtual ~TimsDataImpl() {}
 
     /// returns true if the source has MS spectra
@@ -225,7 +259,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     /// returns a spectrum from the MS source
     virtual MSSpectrumPtr getMSSpectrum(int scan, DetailLevel detailLevel = DetailLevel_FullMetadata) const;
 
-    virtual std::pair<size_t, size_t> getFrameScanPair(int scan) const;
+    virtual FrameScanRange getFrameScanPair(int scan) const;
     virtual size_t getSpectrumIndex(int frame, int scan) const;
 
     /// returns the number of sources available from the LC system
@@ -241,13 +275,13 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     virtual LCSpectrumPtr getLCSpectrum(int source, int scan) const;
 
     /// returns a chromatogram with times and total ion currents of all spectra, or a null pointer if the format doesn't support fast access to TIC
-    virtual ChromatogramPtr getTIC() const;
+    virtual ChromatogramPtr getTIC(bool ms1Only) const;
 
     /// returns a chromatogram with times and base peak intensities of all spectra, or a null pointer if the format doesn't support fast access to BPC
-    virtual ChromatogramPtr getBPC() const;
+    virtual ChromatogramPtr getBPC(bool ms1Only) const;
 
     virtual std::string getOperatorName() const;
-    virtual std::string getAnalysisName() const ;
+    virtual std::string getAnalysisName() const;
     virtual boost::local_time::local_date_time getAnalysisDateTime() const;
     virtual std::string getSampleName() const;
     virtual std::string getMethodName() const;
@@ -261,7 +295,6 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
 
     private:
     std::string tdfFilepath_;
-    TimsBinaryDataPtr tdfStoragePtr_;
     boost::container::flat_map<size_t, TimsFramePtr> frames_;
     std::vector<TimsSpectrumPtr> spectra_;
     std::string acquisitionSoftware_;
@@ -276,13 +309,16 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     bool hasPASEFData_;
     int preferOnlyMsLevel_; // when nonzero, caller only wants spectra at this ms level
     bool allowMsMsWithoutPrecursor_; // when false, PASEF MS2 specta without precursor info will be excluded
-    ChromatogramPtr tic_, bpc_;
+    vector<chemistry::MzMobilityWindow> isolationMzFilter_; // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
+    vector<vector<double>> oneOverK0ByScanNumberByCalibration_;
+    ChromatogramPtr tic_, ticMs1_, bpc_, bpcMs1_;
 
     int64_t currentFrameId_; // used for cacheing frame contents
 
     protected:
     friend struct TimsFrame;
     friend struct TimsSpectrum;
+    TimsBinaryDataPtr tdfStoragePtr_;
     TimsBinaryData& tdfStorage_;
 
     ///

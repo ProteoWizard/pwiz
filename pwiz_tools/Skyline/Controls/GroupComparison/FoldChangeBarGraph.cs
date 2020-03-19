@@ -91,8 +91,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _skylineWindow = null;
             }
 
-            _bindingListSource.AllRowsChanged -= BindingListSourceAllRowsChanged;
-            _bindingListSource.ListChanged -= BindingListSourceOnListChanged;
+            if (_bindingListSource != null)
+            {
+                _bindingListSource.AllRowsChanged -= BindingListSourceAllRowsChanged;
+                _bindingListSource.ListChanged -= BindingListSourceOnListChanged;
+            }
 
             base.OnHandleDestroyed(e);
         }

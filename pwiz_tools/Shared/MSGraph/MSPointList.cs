@@ -167,9 +167,9 @@ namespace pwiz.MSGraph
                 } else // same bin, set exit point
                 {
                     curBinExitIndex = i;
-                    if( point.Y > _fullPointList[curBinMaxIndex].Y )
+                    if( Math.Abs(point.Y) > Math.Abs(_fullPointList[curBinMaxIndex].Y) )
                         curBinMaxIndex = i;
-                    else if( point.Y < _fullPointList[curBinMinIndex].Y )
+                    else if(Math.Abs(point.Y) < Math.Abs(_fullPointList[curBinMinIndex].Y) )
                         curBinMinIndex = i;
                 }
             }

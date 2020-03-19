@@ -32,6 +32,9 @@ namespace pwiz.Skyline.FileUI
         public ImportTransitionListErrorDlg(List<TransitionImportErrorInfo> errorList, bool isErrorAll)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
+
             SimpleGridViewDriver<TransitionImportErrorInfo> compareGridViewDriver = new ImportErrorGridViewDriver(dataGridViewErrors,
                 bindingSourceGrid, new SortableBindingList<TransitionImportErrorInfo>());
             ErrorList = errorList;

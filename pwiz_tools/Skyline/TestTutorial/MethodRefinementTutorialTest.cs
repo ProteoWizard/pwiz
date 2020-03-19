@@ -93,15 +93,13 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
 
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
-                SkylineWindow.AutoZoomBestPeak();   // TODO: Mention this in the tutorial
-                SkylineWindow.Size = new Size(1160, 660);
+                SkylineWindow.AutoZoomBestPeak();
+                SkylineWindow.GraphSpectrumSettings.ShowBIons = true;
+                SkylineWindow.Size = new Size(1266, 736);
 
                 Assert.AreEqual(SkylineWindow.SequenceTree.SelectedNode.Text, "YLGAYLLATLGGNASPSAQDVLK"); // Not L10N
             });
             PauseForScreenShot("Main window", 2);
-
-            // TODO: Update tutorial to view b-ions.
-            RunUI(() => SkylineWindow.GraphSpectrumSettings.ShowBIons = true);
 
             // Unrefined Methods, p. 3
             {
@@ -149,7 +147,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.OkDialog();
             });
             WaitForOpenForm<AllChromatogramsGraph>();   // To make the AllChromatogramsGraph form accessible to the SkylineTester forms tab
-            PauseForScreenShot<AllChromatogramsGraph>("Loading Chromatograms: Take screenshot at about 25% loaded...", 5);
+            PauseForScreenShot<AllChromatogramsGraph>("Loading Chromatograms: Take screenshot at about 25% loaded...", 7);
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 15 minutes
 
             Assert.IsTrue(SkylineWindow.Document.Settings.HasResults);
@@ -168,8 +166,8 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(39, SkylineWindow.Document.Settings.MeasuredResults.CachedFilePaths.ToArray().Length);
 
             RunUI(SkylineWindow.AutoZoomNone);
-            RestoreViewOnScreen(7);
-            PauseForScreenShot("Chromatogram graph metafile", 7);
+            RestoreViewOnScreen(8);
+            PauseForScreenShot("Chromatogram graph metafile", 8);
 
             // Simple Manual Refinement, p. 6
             int startingNodeCount = SkylineWindow.SequenceTree.Nodes[0].GetNodeCount(false);
@@ -187,7 +185,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForRegression();
             Assert.AreEqual(SkylineWindow.SequenceTree.Nodes[0].GetNodeCount(false), startingNodeCount - 1);
             Assert.AreEqual("VLEAGGLDCDMENANSVVDALK", SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Text); // Not L10N
-            PauseForScreenShot("Retention Times Regression plot metafile", 8);
+            RestoreViewOnScreen(9);
+            PauseForScreenShot("Retention Times Regression plot metafile", 9);
 
             RunDlg<RegressionRTThresholdDlg>(SkylineWindow.ShowRegressionRTThresholdDlg, rtThresholdDlg =>
             {
@@ -202,6 +201,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<EditRTDlg>(SkylineWindow.CreateRegression, editRTDlg =>
             {
                 Assert.AreEqual(146, editRTDlg.PeptideCount);
+                Assert.AreEqual(15.7, editRTDlg.Regression.TimeWindow, 0.05);
                 editRTDlg.OkDialog();
             });
 
@@ -215,13 +215,13 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.RTGraphController.SelectPeptide(SkylineWindow.Document.GetPathTo(1, 163));
                     Assert.AreEqual("YLAEVASEDR", SkylineWindow.SequenceTree.SelectedNode.Text); // Not L10N
                 });
-            RestoreViewOnScreen(11);
+            RestoreViewOnScreen(12);
             //  Restoring the view changes the selection
             RunUI(SkylineWindow.CollapsePeptides);
             FindNode("YLAEVASEDR");
             RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[153]);
 
-            PauseForScreenShot("Targets view clipped from the main window", 11);
+            PauseForScreenShot("Targets view clipped from the main window", 12);
 
             RunUI(() =>
             {
@@ -238,7 +238,8 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ActivateReplicate("Unrefined");
                 SkylineWindow.AutoZoomNone();
             });
-            PauseForScreenShot("Unrefined chromatogram graph page clipped from main window", 12); // Not L10N
+            RestoreViewOnScreen(13);
+            PauseForScreenShot("Unrefined chromatogram graph page clipped from main window", 13); // Not L10N
 
 //            foreach (var peptideDocNode in SkylineWindow.Document.Peptides)
 //            {
@@ -260,22 +261,18 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
-            RestoreViewOnScreen(13);
-            RunUI(() => SkylineWindow.ShowGraphSpectrum(false));
-            PauseForScreenShot("Targets view clipped from the main window and chromatogram graph metafile", 13);
-
-            RunUI(() => SkylineWindow.ShowGraphSpectrum(true));
-            PauseForScreenShot("Library Match plot metafile", 14);
+            PauseForScreenShot("Targets view clipped from the main window AND chromatogram graph metafile", 14);
+            RestoreViewOnScreen(16);
+            PauseForScreenShot("Library Match plot metafile", 16);
 
             RunUI(() =>
             {
-                SkylineWindow.ShowGraphSpectrum(false);
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Transitions, 0);
                 SkylineWindow.SelectedNode.Expand();
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
             });
 
-            PauseForScreenShot("Targetes view clipped from the main window", 14); // Not L10N
+            PauseForScreenShot("Targets view clipped from the main window", 16); // Not L10N
 
             RunUI(() =>
             {
@@ -284,7 +281,6 @@ namespace pwiz.SkylineTestTutorial
                     dotpExpect.ToString(LocalizationHelper.CurrentCulture));
                 SkylineWindow.EditDelete();
 
-                // TODO(nicksh): Update tutorial document to reflect this dotp value (was 0.34)
                 dotpExpect = 0.53; // Math.Round(Statistics.AngleToNormalizedContrastAngle(0.633), 2);  // 0.44
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
                 AssertEx.Contains(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text,
@@ -300,9 +296,9 @@ namespace pwiz.SkylineTestTutorial
                     {
                         TransitionDocNode nodeTranDoc = (TransitionDocNode) nodeTran.Model;
                         Assert.AreEqual((int) SequenceTree.StateImageId.peak,
-                                        TransitionTreeNode.GetPeakImageIndex(nodeTranDoc,
-                                                                             (PeptideDocNode) nodePep.Model,
-                                                                             SkylineWindow.SequenceTree));
+                            TransitionTreeNode.GetPeakImageIndex(nodeTranDoc,
+                                (PeptideDocNode) nodePep.Model,
+                                SkylineWindow.SequenceTree));
                         var resultsIndex = SkylineWindow.SequenceTree.GetDisplayResultsIndex(nodePep);
                         var rank = nodeTranDoc.GetPeakRank(resultsIndex);
                         if (rank == null || rank > 3)
@@ -316,9 +312,9 @@ namespace pwiz.SkylineTestTutorial
                 {
                     TransitionDocNode nodeTranDoc = (TransitionDocNode) nodeTran.Model;
                     Assert.AreEqual((int) SequenceTree.StateImageId.peak,
-                                    TransitionTreeNode.GetPeakImageIndex(nodeTranDoc,
-                                                                         (PeptideDocNode) nodePep.Model,
-                                                                         SkylineWindow.SequenceTree));
+                        TransitionTreeNode.GetPeakImageIndex(nodeTranDoc,
+                            (PeptideDocNode) nodePep.Model,
+                            SkylineWindow.SequenceTree));
                     var name = ((TransitionDocNode) nodeTran.Model).FragmentIonName;
                     if (!(name == "y11" || name == "y13" || name == "y14")) // Not L10N
                         SkylineWindow.SequenceTree.SelectedNode = nodeTran;
@@ -335,20 +331,23 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
-            RestoreViewOnScreen(15);
-            PauseForScreenShot("Targetes view clipped from main window and chromatogram graph metafile", 15);
+            RestoreViewOnScreen(17);
+            PauseForScreenShot("Targets view clipped from main window and chromatogram graph metafile", 17);
 
             // Automated Refinement, p. 16
-            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
+            var refineDlgLoose = ShowDialog<RefineDlg>(SkylineWindow.ShowRefineDlg);
+            RunUI(() =>
             {
-                refineDlg.MaxTransitionPeakRank = 3;
-                refineDlg.PreferLargerIons = true;
-                refineDlg.RemoveMissingResults = true;
-                refineDlg.RTRegressionThreshold = 0.95;
-                refineDlg.DotProductThreshold = 0.8;
-                refineDlg.OkDialog();
+                refineDlgLoose.SelectedTab = RefineDlg.TABS.Results;
+                refineDlgLoose.MaxTransitionPeakRank = 3;
+                refineDlgLoose.PreferLargerIons = true;
+                refineDlgLoose.RemoveMissingResults = true;
+                refineDlgLoose.RTRegressionThreshold = 0.95;
+                refineDlgLoose.DotProductThreshold = 0.8;
             });
-            // TODO(nicksh): Update tutorial document: we used to expect 75 peptides
+            PauseForForm(typeof(RefineDlg.ResultsTab));
+            OkDialog(refineDlgLoose, refineDlgLoose.OkDialog);
+
             const int expectedRefinedPeptideCount = 80;
             WaitForCondition(() => SkylineWindow.Document.PeptideCount <= expectedRefinedPeptideCount);
 //            foreach (var peptideDocNode in SkylineWindow.Document.Peptides)
@@ -359,13 +358,14 @@ namespace pwiz.SkylineTestTutorial
 //            }
             RunUI(() =>
             {
-                Assert.AreEqual(expectedRefinedPeptideCount, SkylineWindow.Document.PeptideCount);   // TODO: Tutorial says 71 and 213
+                Assert.AreEqual(expectedRefinedPeptideCount, SkylineWindow.Document.PeptideCount);
                 Assert.AreEqual(240, SkylineWindow.Document.PeptideTransitionCount);
                 SkylineWindow.CollapsePeptides();
                 SkylineWindow.Undo();
             });
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
             {
+                refineDlgLoose.SelectedTab = RefineDlg.TABS.Results;
                 refineDlg.MaxTransitionPeakRank = 6;
                 refineDlg.RemoveMissingResults = true;
                 refineDlg.RTRegressionThreshold = 0.90;
@@ -376,7 +376,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => SkylineWindow.Document.PeptideCount <= expectedPeptideCount);
             RunUI(() =>
             {
-                Assert.AreEqual(expectedPeptideCount, SkylineWindow.Document.PeptideCount);   // TODO: Tutorial says 113
+                Assert.AreEqual(expectedPeptideCount, SkylineWindow.Document.PeptideCount);
 
                 // Scheduling for Efficient Acquisition, p. 17 
                 SkylineWindow.Undo();
@@ -431,16 +431,16 @@ namespace pwiz.SkylineTestTutorial
 
             TestRTResidualsSwitch();
 
-            // Measuring Retention Times, p. 17
+            // Measuring Retention Times, p. 20
             {
                 var exportDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
                 RunUI(() => exportDlg.MaxTransitions = 130);
-                PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 18);
+                PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 20);
                 OkDialog(exportDlg, () => exportDlg.OkDialog(TestFilesDirs[1].FullPath + "\\unscheduled")); // Not L10N
             }
             ///////////////////////
 
-            // Reviewing Retention Time Runs, p. 18
+            // Reviewing Retention Time Runs, p. 21
             RunUI(() =>
             {
                 SkylineWindow.ShowGraphSpectrum(false);
@@ -451,17 +451,17 @@ namespace pwiz.SkylineTestTutorial
             FindNode("FWEVISDEHGIQPDGTFK");
 
             RunUI(() => SkylineWindow.Size = new Size(1060, 550));
-            RestoreViewOnScreen(19);
-            PauseForScreenShot("Main window", 19); // Not L10N
+            RestoreViewOnScreen(21);
+            PauseForScreenShot("Main window", 21); // Not L10N
 
             RunUI(() => SkylineWindow.ShowRTSchedulingGraph());
             WaitForCondition(() => SkylineWindow.GraphRetentionTime != null);
 
-            PauseForScreenShot("Retention Times - Scheduling graph metafile", 19);
+            PauseForScreenShot("Retention Times - Scheduling graph metafile", 22);
 
-            RestoreViewOnScreen(20);
+            RestoreViewOnScreen(22);
 
-            // Creating a Scheduled Transition List, p. 20 
+            // Creating a Scheduled Transition List, p. 22 
             {
                 var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
                 RunUI(() =>
@@ -469,7 +469,7 @@ namespace pwiz.SkylineTestTutorial
                         peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction;
                         peptideSettingsUI.TimeWindow = 4;
                     });
-                PauseForScreenShot<PeptideSettingsUI.PredictionTab>("Peptide Settings - Prediction tab", 21);
+                PauseForScreenShot<PeptideSettingsUI.PredictionTab>("Peptide Settings - Prediction tab", 23);
                 OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog); // Not L10N
             }
 
@@ -481,13 +481,13 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg1.MethodType = ExportMethodType.Scheduled;
             });
             // TODO: Update tutorial to mention the scheduling options dialog.
-            PauseForScreenShot("Export Transition List form", 22); // Not L10N
+            PauseForScreenShot("Export Transition List form", 24); // Not L10N
             RunDlg<SchedulingOptionsDlg>(() =>
                 exportMethodDlg1.OkDialog(TestFilesDirs[1].FullPath + "\\scheduled"), // Not L10N
                 schedulingOptionsDlg => schedulingOptionsDlg.OkDialog());
             WaitForClosedForm(exportMethodDlg1);
 
-            // Reviewing Multi-Replicate Data, p. 22
+            // Reviewing Multi-Replicate Data, p. 25
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, manageResultsDlg =>
             {
                 manageResultsDlg.RemoveAllReplicates();
@@ -523,9 +523,15 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowChromatogramLegends(false);
                 SkylineWindow.Size = new Size(1024, 768);
             });
-            RestoreViewOnScreen(24);
+            RestoreViewOnScreen(26);
             WaitForGraphs();
-            PauseForScreenShot("Main window", 24); // Not L10N
+            PauseForScreenShot("Main window", 26); // Not L10N
+
+            // Show the RefineDlg.ConsistencyTab for localization text review
+            var refineDlgConsistency = ShowDialog<RefineDlg>(SkylineWindow.ShowRefineDlg);
+            RunUI(() => refineDlgConsistency.SelectedTab = RefineDlg.TABS.Consistency);
+            PauseForForm(typeof(RefineDlg.ConsistencyTab));
+            OkDialog(refineDlgConsistency, refineDlgConsistency.OkDialog);
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);

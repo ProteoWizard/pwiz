@@ -276,7 +276,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetRegressionFunction(fileId) ?? Conversion;
         }
 
-        public IRegressionFunction GetUnconversion(ChromFileInfoId fileId)
+        public RegressionLine GetUnconversion(ChromFileInfoId fileId)
         {
             double slope, intercept;
             var regressionLineFromFile = GetRegressionFunction(fileId);
@@ -620,7 +620,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 lock (data)
                 {
                     data.Add(regressionInfo);
-                    longWaitBroker?.SetProgressCheckCancel(i + 1, calculators.Count);
+                    longWaitBroker?.SetProgressCheckCancel(data.Count, calculators.Count);
                 }
             });
 
@@ -644,14 +644,14 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public static RetentionTimeRegression CalcSingleRegression(string name,
-                                                             RetentionScoreCalculatorSpec calculator,
-                                                             IList<MeasuredRetentionTime> measuredPeptides,
-                                                             RetentionTimeScoreCache scoreCache,
-                                                             bool allPeptides,
-                                                             RegressionMethodRT regressionMethod,
-                                                             out RetentionTimeStatistics statistics,
-                                                             out double rVal,
-                                                             CustomCancellationToken token)
+            RetentionScoreCalculatorSpec calculator,
+            IList<MeasuredRetentionTime> measuredPeptides,
+            RetentionTimeScoreCache scoreCache,
+            bool allPeptides,
+            RegressionMethodRT regressionMethod,
+            out RetentionTimeStatistics statistics,
+            out double rVal,
+            CustomCancellationToken token)
         {
             // Get a list of peptide names for use by the calculators to choose their regression peptides
             var listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
@@ -702,8 +702,6 @@ namespace pwiz.Skyline.Model.DocSettings
             var statRT = new Statistics(listRTs);
             var stat = aStatValues;
             IRegressionFunction regressionFunction;
-            double[] xArr;
-            double[] ySmoothed;
             switch (regressionMethod)
             {
                 case RegressionMethodRT.linear:
@@ -713,18 +711,18 @@ namespace pwiz.Skyline.Model.DocSettings
                     var kdeAligner = new KdeAligner();
                     kdeAligner.Train(stat.CopyList(), statRT.CopyList(), token);
 
-                    kdeAligner.GetSmoothedValues(out xArr, out ySmoothed);
+                    kdeAligner.GetSmoothedValues(out var xArr, out var ySmoothed);
                     regressionFunction =
                         new PiecewiseLinearRegressionFunction(xArr, ySmoothed, kdeAligner.GetRmsd());
                     stat = new Statistics(ySmoothed);
                     break;
+                case RegressionMethodRT.log:
+                    regressionFunction = new LogRegression(stat.CopyList(), statRT.CopyList(), true);
+                    stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
+                    break;
                 case RegressionMethodRT.loess:
-                    var loessAligner = new LoessAligner();
-                    loessAligner.Train(stat.CopyList(), statRT.CopyList(), token);
-                    loessAligner.GetSmoothedValues(out xArr, out ySmoothed);
-                    regressionFunction =
-                        new PiecewiseLinearRegressionFunction(xArr, ySmoothed, loessAligner.GetRmsd());
-                    stat = new Statistics(ySmoothed);
+                    regressionFunction = new LoessRegression(stat.CopyList(), statRT.CopyList(), true, token);
+                    stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
                     break;
                 default:
                     return null;
@@ -998,6 +996,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public const string SSRCALC_300_A = "SSRCalc 3.0 (300A)";
         public const string SSRCALC_100_A = "SSRCalc 3.0 (100A)";
+        // public const string PROSITRTCALC = "Prosit RT Calc";
 
         public static IRetentionScoreCalculator GetCalculatorByName(string calcName)
         {
@@ -1007,6 +1006,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     return new SSRCalc3(SSRCALC_300_A, SSRCalc3.Column.A300);
                 case SSRCALC_100_A:
                     return new SSRCalc3(SSRCALC_100_A, SSRCalc3.Column.A100);
+                // case PROSITRTCALC:
+                //    return new PrositRetentionScoreCalculator(PROSITRTCALC);
+
             }
             return null;
         }
@@ -1144,6 +1146,8 @@ namespace pwiz.Skyline.Model.DocSettings
         IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount);
 
         IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides);
+
+        RetentionScoreProvider ScoreProvider { get; }
     }
 
     public abstract class RetentionScoreCalculatorSpec : XmlNamedElement, IRetentionScoreCalculator
@@ -1160,6 +1164,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public abstract IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount);
 
         public abstract IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides);
+
+        public virtual RetentionScoreProvider ScoreProvider
+        {
+            get { return null; }
+        }
 
         public virtual bool IsUsable { get { return true; } }
 
@@ -1191,6 +1200,116 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+    }
+
+    public interface IRetentionScoreSource
+    {
+        /// <summary>
+        /// Make sure that the current retention scores are still valid
+        /// (Not by actually looking at the scores, but by checking
+        /// that the state required to calculate the scores has not changed)
+        /// If invalid, false should be returned, prompting the score provider
+        /// to clear its cache
+        /// </summary>
+        /// <returns>True if still valid, false if not valid</returns>
+        bool ValidateSource();
+
+        /// <summary>
+        /// Called if no score for the given target is cached.
+        /// Should return the new score or null if no score can be
+        /// calculated.
+        /// </summary>
+        /// <param name="target">The sequence to score</param>
+        /// <returns></returns>
+        double? GetScore(Target target);
+    }
+
+    public class RetentionScoreProvider
+    {
+        private readonly Dictionary<Target, double> _scoreCache;
+        private readonly object _cacheLock = new object();
+        private IRetentionScoreSource _scoreSource;
+
+        public RetentionScoreProvider()
+        {
+            _scoreCache = new Dictionary<Target, double>();
+            _scoreSource = null;
+        }
+
+
+        public void Attach(IRetentionScoreSource source)
+        {
+            _scoreSource = source;
+            if (source == null)
+            {
+                lock (_cacheLock)
+                {
+                    _scoreCache.Clear();
+                }
+            }
+        }
+
+        public void AddScores(Dictionary<Target, double> scores, bool replace)
+        {
+            foreach (var kvp in scores)
+                AddScore(kvp.Key, kvp.Value, replace);
+        }
+
+        public void AddScore(Target target, double score, bool replace)
+        {
+            lock (_cacheLock)
+            {
+                if (!replace && _scoreCache.TryGetValue(target, out _))
+                    return; // Already exists and don't replace
+
+                // Add new iRT or replace
+                _scoreCache[target] = score;
+            }
+        }
+
+        public double? GetScore(Target target)
+        {
+            if (_scoreSource == null)
+                return null;
+            var valid = _scoreSource.ValidateSource();
+
+            lock (_cacheLock)
+            {
+                if (!valid)
+                    _scoreCache.Clear();
+
+                if (_scoreCache.TryGetValue(target, out var iRT))
+                    return iRT;
+            }
+
+            var score = _scoreSource.GetScore(target);
+            if (score != null)
+                AddScore(target, score.Value, true);
+
+            return score;
+        }
+
+        public class GetScoreEventArgs : EventArgs
+        {
+            public GetScoreEventArgs(Target target)
+            {
+                Target = target;
+                Score = null;
+            }
+
+            public Target Target { get; private set; }
+            public double? Score { get; set; }
+        }
+
+        public class ValidateEventArgs : EventArgs
+        {
+            public ValidateEventArgs()
+            {
+                Valid = false;
+            }
+
+            public bool Valid { get; set; }
+        }
     }
 
     [XmlRoot("retention_score_calculator")]
@@ -1233,6 +1352,11 @@ namespace pwiz.Skyline.Model.DocSettings
             _impl = RetentionTimeRegression.GetCalculatorByName(Name);
             if (_impl == null)
                 throw new InvalidDataException(string.Format(Resources.RetentionScoreCalculator_Validate_The_retention_time_calculator__0__is_not_valid, Name));
+        }
+
+        public override RetentionScoreProvider ScoreProvider
+        {
+            get { return _impl.ScoreProvider; }
         }
 
         public override void ReadXml(XmlReader reader)
@@ -1636,6 +1760,11 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return CollisionEnergyList.NONE;
         }
+
+        public override string AuditLogText
+        {
+            get { return ReferenceEquals(this, CollisionEnergyList.NONE) ? LogMessage.NONE : base.AuditLogText; }
+        }
     }
 
     /// <summary>
@@ -1987,7 +2116,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return DeclusterPotentialList.GetDefault();
+            return DeclusterPotentialList.NONE;
+        }
+
+        public override string AuditLogText
+        {
+            get { return ReferenceEquals(this, DeclusterPotentialList.NONE) ? LogMessage.NONE : base.AuditLogText; }
         }
     }
 
@@ -2205,12 +2339,17 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        #endregion
+
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return CompensationVoltageList.GetDefault();
+            return CompensationVoltageList.NONE;
         }
 
-        #endregion
+        public override string AuditLogText
+        {
+            get { return ReferenceEquals(this, CompensationVoltageList.NONE) ? LogMessage.NONE : base.AuditLogText; }
+        }
     }
 
     [XmlRoot("predict_compensation_voltage_rough")]
@@ -2728,12 +2867,33 @@ namespace pwiz.Skyline.Model.DocSettings
     /// element.  Use one of the wrapper classes for full XML
     /// serialization.
     /// </summary>
-    public sealed class RegressionLine : IRegressionFunction
+    public sealed class RegressionLine : IIrtRegression
     {
-        public RegressionLine(double slope, double intercept)
+        public RegressionLine()
+        {
+            Slope = 0;
+            Intercept = 0;
+            XValues = new double[0];
+            YValues = new double[0];
+            IrtIndependent = false;
+        }
+
+        public RegressionLine(double slope, double intercept, bool irtIndependent = false)
         {
             Slope = slope;
             Intercept = intercept;
+            IrtIndependent = irtIndependent;
+        }
+
+        public RegressionLine(double[] x, double[] y, bool irtIndependent = false)
+        {
+            var statX = new Statistics(x);
+            var statY = new Statistics(y);
+            Slope = statY.Slope(statX);
+            Intercept = statY.Intercept(statX);
+            XValues = x;
+            YValues = y;
+            IrtIndependent = irtIndependent;
         }
 
         // XML Serializable properties
@@ -2742,6 +2902,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [Track]
         public double Intercept { get; private set; }
+
+        public string DisplayEquation => IrtIndependent
+            ? string.Format(@"{0} = {1:F3} * {2} {3} {4:F3}",
+                Resources.IIrtRegression_DisplayEquation_Measured_RT, Slope, Resources.IIrtRegression_DisplayEquation_iRT, Intercept >= 0 ? '+' : '-', Math.Abs(Intercept))
+            : string.Format(@"{0} = {1:F3} * {2} {3} {4:F3}",
+                Resources.IIrtRegression_DisplayEquation_iRT, Slope, Resources.IIrtRegression_DisplayEquation_Measured_RT, Intercept >= 0 ? '+' : '-', Math.Abs(Intercept));
+
+        public bool IrtIndependent { get; }
 
         /// <summary>
         /// Use the y = m*x + b formula to calculate the desired y
@@ -2753,6 +2921,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return Slope * x + Intercept;
         }
+
+        public IIrtRegression ChangePoints(double[] x, double[] y)
+        {
+            return new RegressionLine(x, y);
+        }
+        public double[] XValues { get; }
+        public double[] YValues { get; }
 
         public string GetRegressionDescription(double r, double window)
         {
@@ -2807,9 +2982,6 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// For serialization
         /// </summary>
-        private RegressionLine()
-        {
-        }
 
         private enum ATTR
         {
@@ -3125,6 +3297,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString() // For debugging convenience, not user-facing
         {
+            if (IsEmpty)
+                return string.Empty;
+
             string ionMobilityAbbrev = @"im";
             switch (IonMobility.Units)
             {
@@ -3202,6 +3377,11 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public static readonly IonMobilityWindowWidthCalculator EMPTY = new IonMobilityWindowWidthCalculator(IonMobilityPeakWidthType.resolving_power, 0, 0, 0);
+
+        public IonMobilityWindowWidthCalculator(double resolvingPower)
+            : this(IonMobilityPeakWidthType.resolving_power, resolvingPower, 0, 0)
+        {
+        }
 
         public IonMobilityWindowWidthCalculator(IonMobilityPeakWidthType peakWidthMode,
                                     double resolvingPower,

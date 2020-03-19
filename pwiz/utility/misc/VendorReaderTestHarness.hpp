@@ -21,6 +21,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
 #include <boost/optional.hpp>
 #include <string>
@@ -40,26 +41,68 @@ struct PWIZ_API_DECL TestPathPredicate
     virtual ~TestPathPredicate() {}
 };
 
+struct PWIZ_API_DECL IsNamedRawFile : public TestPathPredicate
+{
+    IsNamedRawFile(const std::string& rawpath) : filenames({ rawpath }) {}
+    IsNamedRawFile(const std::initializer_list<std::string>& filenames) : filenames(filenames) {}
+
+    bool operator() (const std::string& rawpath) const
+    {
+        return filenames.count(bfs::path(rawpath).filename().string()) > 0;
+    }
+
+    std::set<std::string> filenames;
+};
+
+struct PWIZ_API_DECL TestResult
+{
+    int totalTests;
+    int failedTests;
+
+    TestResult() : totalTests(0), failedTests(0) {}
+
+    TestResult& operator+= (const TestResult& rhs);
+    TestResult operator+ (const TestResult& rhs) const;
+
+    void check() const;
+};
 
 struct PWIZ_API_DECL ReaderTestConfig : public pwiz::msdata::Reader::Config
 {
-    ReaderTestConfig() : peakPicking(false), thresholdCount(0), doublePrecision(false) {}
+    ReaderTestConfig() : peakPicking(false), peakPickingCWT(false), thresholdCount(0), doublePrecision(false), autoTest(false) {}
+    ReaderTestConfig(const ReaderTestConfig& rhs) : pwiz::msdata::Reader::Config(rhs)
+    {
+        peakPicking = rhs.peakPicking;
+        peakPickingCWT = rhs.peakPickingCWT;
+        thresholdCount = rhs.thresholdCount;
+        doublePrecision = rhs.doublePrecision;
+        diffPrecision = rhs.diffPrecision;
+        indexRange = rhs.indexRange;
+        autoTest = rhs.autoTest;
+        runIndex = rhs.runIndex;
+    }
+
     std::string resultFilename(const std::string& baseFilename) const;
     void wrap(pwiz::msdata::MSData& msd) const;
 
     bool peakPicking; // test vendor centroiding
+    bool peakPickingCWT; // test CWT centroiding (happens automatically with vendor centroiding, but only to check for BinaryData bugs)
     int thresholdCount; // test that downstream mutating filters don't conflict with any vendor reader implementation details
     bool doublePrecision; // true if vendor data needs 64-bit precision (like Bruker TDF)
+    boost::optional<double> diffPrecision; // override default Diff::BaseDiffConfig::precision
     boost::optional<std::pair<int, int>> indexRange;
+    boost::optional<int> runIndex;
+
+    bool autoTest; // test config variant generated automatically (e.g. thresholdCount) that does not use a separate mzML file
 };
 
-/// A common test harness for vendor readers;
+/// A common test harness for vendor readers; returns a TestResult (with count of failedTests and totalTests)
 PWIZ_API_DECL
-int testReader(const pwiz::msdata::Reader& reader,
-               const std::vector<std::string>& args,
-               bool testAcceptOnly, bool requireUnicodeSupport,
-               const TestPathPredicate& isPathTestable,
-               const ReaderTestConfig& config = ReaderTestConfig());
+TestResult testReader(const pwiz::msdata::Reader& reader,
+                      const std::vector<std::string>& args,
+                      bool testAcceptOnly, bool requireUnicodeSupport,
+                      const TestPathPredicate& isPathTestable,
+                      const ReaderTestConfig& config = ReaderTestConfig());
 
 
 } // namespace util

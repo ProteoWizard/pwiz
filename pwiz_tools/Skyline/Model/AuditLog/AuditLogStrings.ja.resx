@@ -633,6 +633,9 @@
     <value>ドキュメントがSkyline外で変更されました
 ：{0}</value>
   </data>
+  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
+    <value>監査ログが破損しています。監査ログエントリのタイムスタンプとインデックスの値が正しい順序である必要があります。エントリ番号{0}のタイムスタンプ{1:G}はエントリ番号{2}のタイムスタンプ{3:G} の前に発生します。</value>
+  </data>
   <data name="test_only" xml:space="preserve">
     <value>{0}</value>
   </data>
@@ -650,8 +653,11 @@
   <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
     <value>監査ログを読み取り中に例外が発生しました。
 
-監査ログファイルを削除、名前の変更したり移動することによってこのエラーが発生しなくなります。またはSkylineチームに監査ログを送信することも可能で、チームはファイルの手動修正を試みます。
+監査ログファイルの削除、名前の変更や移動によってこのエラーが発生しなくなります。またはSkylineチームに監査ログを送信することも可能で、チームはファイルの手動修正を試みます。
 
 ご参考までに、監査ログの場所はここです：「{0}」</value>
+  </data>
+  <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
+    <value>以下のドキュメントの監査ログを読み込み中にエラーが発生しました：{0}。</value>
   </data>
 </root>

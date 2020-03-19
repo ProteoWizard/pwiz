@@ -698,6 +698,9 @@
   <data name="FragmentLoss_MonoisotopicMass" xml:space="preserve">
     <value>单一同位素丢失</value>
   </data>
+  <data name="FragmentLoss_Charge" xml:space="preserve">
+    <value>电荷</value>
+  </data>
   <data name="MeasuredIon_Charge" xml:space="preserve">
     <value>电荷</value>
   </data>
@@ -816,13 +819,13 @@
     <value>删除标签类型</value>
   </data>
   <data name="RefinementSettings_RemoveDuplicatePeptides" xml:space="preserve">
-    <value>删除所有重复肽段</value>
+    <value>删除重复的肽段</value>
   </data>
   <data name="RefinementSettings_RemoveMissingLibrary" xml:space="preserve">
     <value>删除缺失库匹配的肽段</value>
   </data>
   <data name="RefinementSettings_RemoveRepeatedPeptides" xml:space="preserve">
-    <value>删除多余重复肽段</value>
+    <value>删除重复的肽段</value>
   </data>
   <data name="RefinementSettings" xml:space="preserve">
     <value>高级调整设置</value>
@@ -1008,7 +1011,7 @@
     <value>阈值</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_FilterForDocumentPeptides" xml:space="preserve">
-    <value>文档肽筛选器</value>
+    <value>文档肽段筛选器</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_IncludeAmbiguousMatches" xml:space="preserve">
     <value>包含不明确匹配项</value>
@@ -1198,6 +1201,9 @@
   </data>
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
     <value>同位素标记类型</value>
+  </data>
+  <data name="TransitionGroupDocNode_PrecursorConcentration">
+    <value>母离子浓度</value>
   </data>
   <data name="UniquePeptideSettings_ProteinPeptideSelections" xml:space="preserve">
     <value>序列特异的肽段</value>
@@ -1411,5 +1417,38 @@
   </data>
   <data name="ListData_Rows" xml:space="preserve">
     <value>行</value>
+  </data>
+  <data name="RefinementSettings_MaxPrecursorPeakOnly" xml:space="preserve">
+    <value>仅最大母离子峰值</value>
+  </data>
+  <data name="PeptideFilter_PeptideUniqueness" xml:space="preserve">
+    <value>肽段独特性</value>
+  </data>
+  <data name="RefinementSettings_CVCutoff" xml:space="preserve">
+    <value>删除 CV 截止值以上</value>
+  </data>
+  <data name="RefinementSettings_QValueCutoff" xml:space="preserve">
+    <value>删除 QV 截止值以上</value>
+  </data>
+  <data name="RefinementSettings_MinimumDetections" xml:space="preserve">
+    <value>最低检测</value>
+  </data>
+  <data name="RefinementSettings_NormalizationLabelType" xml:space="preserve">
+    <value>标准类型标准化</value>
+  </data>
+  <data name="RefinementSettings_NormalizationMethod" xml:space="preserve">
+    <value>归一化方法</value>
+  </data>
+  <data name="RefinementSettings_CountTransitions" xml:space="preserve">
+    <value>离子对计数</value>
+  </data>
+  <data name="RefinementSettings_Transitions" xml:space="preserve">
+    <value>离子对</value>
+  </data>
+  <data name="RefinementSettings_MSLevel" xml:space="preserve">
+    <value>MS 级别</value>
+  </data>
+  <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
+    <value>定量</value>
   </data>
 </root>

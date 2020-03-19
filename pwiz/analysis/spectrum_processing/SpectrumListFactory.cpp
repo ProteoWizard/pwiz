@@ -210,11 +210,15 @@ SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg, pwi
 {
     double scanTimeLow = 0;
     double scanTimeHigh = 0;
+    LocaleBool assumeSorted = true;
 
     istringstream iss(arg);
     char open='\0', comma='\0', close='\0';
     iss >> open >> scanTimeLow >> comma >> scanTimeHigh >> close;
-
+    
+    if (iss.good())
+        iss >> assumeSorted;
+    cout << assumeSorted << endl;
     if (open!='[' || comma!=',' || close!=']')
     {
         cerr << "scanTime filter argument does not have form \"[\"<startTime>,<endTime>\"]\", ignored." << endl;
@@ -223,7 +227,7 @@ SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg, pwi
 
     return SpectrumListPtr(new
         SpectrumList_Filter(msd.run.spectrumListPtr, 
-                            SpectrumList_FilterPredicate_ScanTimeRange(scanTimeLow, scanTimeHigh)));
+                            SpectrumList_FilterPredicate_ScanTimeRange(scanTimeLow, scanTimeHigh, assumeSorted)));
 }
 UsageInfo usage_scanTime = {"<scan_time_range>",
     "This filter selects only spectra within a given time range.\n"
@@ -243,10 +247,11 @@ SpectrumListPtr filterCreator_scanSummer(const MSData& msd, const string& carg, 
     double precursorTol = parseKeyValuePair<double>(arg, "precursorTol=", 0.05); // m/z
     double scanTimeTol = parseKeyValuePair<double>(arg, "scanTimeTol=", 10); // seconds
     double ionMobilityTol = parseKeyValuePair<double>(arg, "ionMobilityTol=", 0.01); // ms for drift time or vs/cm^2 for TIMS
+    bool sumMs1 = parseKeyValuePair<bool>(arg, "sumMs1", false);
     if (bal::icontains(arg, "="))
-        throw user_error("[SpectrumList_ScanSummer] unused argument (key=value) in " + arg);
+        throw user_error("[SpectrumList_ScanSummer] unused argument (key=value) in " + arg + "; supported arguments are precursorTol, scanTimeTol, ionMobilityTol, and sumMs1");
 
-    return SpectrumListPtr(new SpectrumList_ScanSummer(msd.run.spectrumListPtr, precursorTol, scanTimeTol, ionMobilityTol, ilr));
+    return SpectrumListPtr(new SpectrumList_ScanSummer(msd.run.spectrumListPtr, precursorTol, scanTimeTol, ionMobilityTol, sumMs1, ilr));
 }
 UsageInfo usage_scanSummer = {"[precursorTol=<precursor tolerance>] [scanTimeTol=<scan time tolerance in seconds>] [ionMobilityTol=<ion mobility tolerance>]",
     "This filter sums MS2 sub-scans whose precursors are within <precursor tolerance> (default: 0.05 m/z)"
@@ -263,6 +268,7 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
     bool preferCwt = false; 
     double mzTol = 0.1; // default value, minimum spacing between peaks
     double minSnr = 1.0; // for the cwt algorithm, default value is 1.01
+    bool centroid = false; // for the cwt algorithm, whether to centroid fitted peaks
     int fixedPeaksKeep = 0; // this will always be set to zero, except from charge determination algorithm
 
     string msLevelSets = "1-"; // peak-pick all MS levels by default
@@ -291,17 +297,17 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
 
             if ( boost::iequals(keyword,"snr") )
             {
-                try { lexical_cast<double>(paramVal); }
-                catch (...) { throw user_error("[SpectrumList_PeakPicker] A numeric value must follow the snr argument."); }
-                minSnr = lexical_cast<double>(paramVal);
+                minSnr = parseKeyValuePair<double>(nextStr, "snr=", 1.0);
                 if ( minSnr < 0 ) { throw user_error("[SpectrumList_PeakPicker] snr must be greater than or equal to zero."); }
             }
             else if ( boost::iequals(keyword,"peakSpace") ) 
             {
-                try { lexical_cast<double>(paramVal); }
-                catch (...) { throw user_error("[SpectrumList_PeakPicker] A numeric value must follow the peakSpace argument."); }
-                mzTol = lexical_cast<double>(paramVal);
+                mzTol = parseKeyValuePair<double>(nextStr, "peakSpace=");
                 if ( mzTol < 0 ) { throw user_error("[SpectrumList_PeakPicker] peakSpace must be greater than or equal to zero."); }
+            }
+            else if ( boost::iequals(keyword,"centroid") ) 
+            {
+                centroid = parseKeyValuePair<bool>(nextStr, "centroid=", false);
             }
             else if ( boost::iequals(keyword,"msLevel") )
             {
@@ -353,7 +359,7 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
     {
         return SpectrumListPtr(new 
             SpectrumList_PeakPicker(msd.run.spectrumListPtr,
-                                    PeakDetectorPtr(new CwtPeakDetector(minSnr,fixedPeaksKeep,mzTol)),
+                                    PeakDetectorPtr(new CwtPeakDetector(minSnr,fixedPeaksKeep,mzTol,centroid)),
                                     preferVendor,
                                     msLevelsToCentroid));
     }
@@ -793,6 +799,8 @@ SpectrumListPtr filterCreator_lockmassRefiner(const MSData& msd, const string& c
         cerr << "lockmassMz and lockmassTolerance must be positive real numbers" << endl;
         return SpectrumListPtr();
     }
+    else if (lockmassMzNegIons <= 0)
+        lockmassMzNegIons = lockmassMz;
 
     return SpectrumListPtr(new SpectrumList_LockmassRefiner(msd.run.spectrumListPtr, lockmassMz, lockmassMzNegIons, lockmassTolerance));
 }

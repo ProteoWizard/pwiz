@@ -1,386 +1,386 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="160109_Mix1_calcurve_070" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.0.14" URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
-    <cv id="UO" fullName="Unit Ontology" version="12:10:2011" URI="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
     <fileContent>
     </fileContent>
     <sourceFileList count="89">
-      <sourceFile id="_FUNC001.DAT" name="_FUNC001.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC001.DAT" name="_FUNC001.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="76c4a7f5951649315a8045a542aad0ac00363903"/>
       </sourceFile>
-      <sourceFile id="_FUNC002.DAT" name="_FUNC002.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC002.DAT" name="_FUNC002.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9485e8811fcbd0b8d59895d3e2451e79c451c44e"/>
       </sourceFile>
-      <sourceFile id="_FUNC003.DAT" name="_FUNC003.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC003.DAT" name="_FUNC003.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="71995501de4a99981a60e126b7dfb371bebc775a"/>
       </sourceFile>
-      <sourceFile id="_FUNC004.DAT" name="_FUNC004.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC004.DAT" name="_FUNC004.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="e9639dc40b0e6a5aaa9871526d1daae4efefb09d"/>
       </sourceFile>
-      <sourceFile id="_FUNC005.DAT" name="_FUNC005.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC005.DAT" name="_FUNC005.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9dceb68ec7fa22599c54d1049a8ee59d46c710b0"/>
       </sourceFile>
-      <sourceFile id="_FUNC006.DAT" name="_FUNC006.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC006.DAT" name="_FUNC006.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="ab28b7bf80774beb802d853bfaee104faf054c6f"/>
       </sourceFile>
-      <sourceFile id="_FUNC007.DAT" name="_FUNC007.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC007.DAT" name="_FUNC007.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="1fdc948c12341171b7999d1f65f212ed18ddc624"/>
       </sourceFile>
-      <sourceFile id="_FUNC008.DAT" name="_FUNC008.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC008.DAT" name="_FUNC008.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="98d1b54b2e9d4d721e12d065f52c8d403680958f"/>
       </sourceFile>
-      <sourceFile id="_FUNC009.DAT" name="_FUNC009.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC009.DAT" name="_FUNC009.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="6a118bcd56ee0ef6d69647279f53160a16c5eea7"/>
       </sourceFile>
-      <sourceFile id="_FUNC010.DAT" name="_FUNC010.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC010.DAT" name="_FUNC010.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="6e5f95af9a51d729da3c9c62485282e7d8a379de"/>
       </sourceFile>
-      <sourceFile id="_FUNC011.DAT" name="_FUNC011.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC011.DAT" name="_FUNC011.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d8f1932de3317d382d7ace73b602188fc575fe57"/>
       </sourceFile>
-      <sourceFile id="_FUNC012.DAT" name="_FUNC012.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC012.DAT" name="_FUNC012.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="22a072bad9f75d5ca45dc6f9274c1a923dd145ff"/>
       </sourceFile>
-      <sourceFile id="_FUNC013.DAT" name="_FUNC013.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC013.DAT" name="_FUNC013.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="20f96d31a70d78fc550d4ccf64d2d5c60aa61e10"/>
       </sourceFile>
-      <sourceFile id="_FUNC016.DAT" name="_FUNC016.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC016.DAT" name="_FUNC016.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="15ba691c066776848f6efa100021fb55937d5fd6"/>
       </sourceFile>
-      <sourceFile id="_FUNC017.DAT" name="_FUNC017.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC017.DAT" name="_FUNC017.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c47064a24621b7937033f89d3f2c187830211efe"/>
       </sourceFile>
-      <sourceFile id="_FUNC018.DAT" name="_FUNC018.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC018.DAT" name="_FUNC018.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="25a6c5d1ca69b57cf2cf87b8dd38f5617e45e9d0"/>
       </sourceFile>
-      <sourceFile id="_FUNC019.DAT" name="_FUNC019.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC019.DAT" name="_FUNC019.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="b74fbfa0f3101f0bdb35760ef938b3879844b6a0"/>
       </sourceFile>
-      <sourceFile id="_FUNC021.DAT" name="_FUNC021.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC021.DAT" name="_FUNC021.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="cd2933d0ec825fd94ee3977a250b7d4241c95258"/>
       </sourceFile>
-      <sourceFile id="_FUNC023.DAT" name="_FUNC023.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC023.DAT" name="_FUNC023.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="402f3c36713a5d7f22e28d608e341158d1f1af30"/>
       </sourceFile>
-      <sourceFile id="_FUNC024.DAT" name="_FUNC024.DAT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC024.DAT" name="_FUNC024.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d58c97f5566c1f38ccb0feb59c8e14b8175063f6"/>
       </sourceFile>
-      <sourceFile id="_extern.inf" name="_extern.inf" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_extern.inf" name="_extern.inf" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="1288e6bad807bb6e8cc4cd88dee4bcceb4de2a92"/>
       </sourceFile>
-      <sourceFile id="_FUNC001.CMP" name="_FUNC001.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC001.CMP" name="_FUNC001.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="44643cad662a0bd388181cf5fd88e4af2dcb9ddd"/>
       </sourceFile>
-      <sourceFile id="_FUNC001.EE" name="_FUNC001.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC001.EE" name="_FUNC001.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c25ec73bd2c52d658bd1f7d46bd7dd1210b3d658"/>
       </sourceFile>
-      <sourceFile id="_FUNC001.IDX" name="_FUNC001.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC001.IDX" name="_FUNC001.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="30530ce82d7df380a94c153cd073f91afbf9a9ff"/>
       </sourceFile>
-      <sourceFile id="_FUNC001.STS" name="_FUNC001.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC001.STS" name="_FUNC001.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="97371deed617dd5b5741b1401392bb351e94271b"/>
       </sourceFile>
-      <sourceFile id="_FUNC002.CMP" name="_FUNC002.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC002.CMP" name="_FUNC002.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="02f22e5a280269bd568ee9f2b55da6acdf3d95cd"/>
       </sourceFile>
-      <sourceFile id="_FUNC002.EE" name="_FUNC002.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC002.EE" name="_FUNC002.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="800fad976b3b7d69e19f5f9c6633971aa974cc04"/>
       </sourceFile>
-      <sourceFile id="_FUNC002.IDX" name="_FUNC002.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC002.IDX" name="_FUNC002.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="ea1423be725339b96610606638d51f3d7e4a6910"/>
       </sourceFile>
-      <sourceFile id="_FUNC002.STS" name="_FUNC002.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC002.STS" name="_FUNC002.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="489e208a228f664531ff21b78ca3330bcb810e2e"/>
       </sourceFile>
-      <sourceFile id="_FUNC003.CMP" name="_FUNC003.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC003.CMP" name="_FUNC003.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="6f57ab3b8d3d719518e478354c8b8d22a4712297"/>
       </sourceFile>
-      <sourceFile id="_FUNC003.EE" name="_FUNC003.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC003.EE" name="_FUNC003.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9d3dfa18a16225d7080fb98fca01531d7e92c225"/>
       </sourceFile>
-      <sourceFile id="_FUNC003.IDX" name="_FUNC003.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC003.IDX" name="_FUNC003.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="bfffd69e880f6db8e9773968d1b2b88a67254ba9"/>
       </sourceFile>
-      <sourceFile id="_FUNC003.STS" name="_FUNC003.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC003.STS" name="_FUNC003.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="ac3edbd24bab19d45001698a98964d11477c9a92"/>
       </sourceFile>
-      <sourceFile id="_FUNC004.CMP" name="_FUNC004.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC004.CMP" name="_FUNC004.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="a645b42fb3ea67f6c2326370685d8560ede2f9b0"/>
       </sourceFile>
-      <sourceFile id="_FUNC004.EE" name="_FUNC004.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC004.EE" name="_FUNC004.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="695edde935b3effdf7cc0debae60101d91f35266"/>
       </sourceFile>
-      <sourceFile id="_FUNC004.IDX" name="_FUNC004.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC004.IDX" name="_FUNC004.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="4cffa25ee197e1bf48d7fb267a47c9e188bc2631"/>
       </sourceFile>
-      <sourceFile id="_FUNC004.STS" name="_FUNC004.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC004.STS" name="_FUNC004.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="859934f59488013a8f37f43e8f1d1817c9783a93"/>
       </sourceFile>
-      <sourceFile id="_FUNC005.CMP" name="_FUNC005.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC005.CMP" name="_FUNC005.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="eaf1e176775631348b5a5f9adfb3b15cf022ed4a"/>
       </sourceFile>
-      <sourceFile id="_FUNC005.EE" name="_FUNC005.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC005.EE" name="_FUNC005.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="67ea86919a9a9c1e115743ce85f20037126f85d4"/>
       </sourceFile>
-      <sourceFile id="_FUNC005.IDX" name="_FUNC005.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC005.IDX" name="_FUNC005.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9caeb19d69f65d6901fdb9cc2df78be034a7c487"/>
       </sourceFile>
-      <sourceFile id="_FUNC005.STS" name="_FUNC005.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC005.STS" name="_FUNC005.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="2fb24587722511ca46d5915ee0d5dc864998b09b"/>
       </sourceFile>
-      <sourceFile id="_FUNC006.CMP" name="_FUNC006.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC006.CMP" name="_FUNC006.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9c9fc01508123c486423f342aa03b085c488e4a6"/>
       </sourceFile>
-      <sourceFile id="_FUNC006.EE" name="_FUNC006.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC006.EE" name="_FUNC006.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c6a0ea2dc45635fcd0dafb54b6851d64d06e8a7d"/>
       </sourceFile>
-      <sourceFile id="_FUNC006.IDX" name="_FUNC006.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC006.IDX" name="_FUNC006.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="23aafcf3a72a4f4556fb26645f56ac89bab6bc39"/>
       </sourceFile>
-      <sourceFile id="_FUNC006.STS" name="_FUNC006.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC006.STS" name="_FUNC006.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="8b905df624b526e4be8db92562ad4e513664d17b"/>
       </sourceFile>
-      <sourceFile id="_FUNC007.CMP" name="_FUNC007.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC007.CMP" name="_FUNC007.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="430023005649c5ada1eb22999bb243fb6165d4e5"/>
       </sourceFile>
-      <sourceFile id="_FUNC007.EE" name="_FUNC007.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC007.EE" name="_FUNC007.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c6a0ea2dc45635fcd0dafb54b6851d64d06e8a7d"/>
       </sourceFile>
-      <sourceFile id="_FUNC007.IDX" name="_FUNC007.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC007.IDX" name="_FUNC007.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="e263afb4e149d7941f67aadd5cfccaf6453b8b29"/>
       </sourceFile>
-      <sourceFile id="_FUNC007.STS" name="_FUNC007.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC007.STS" name="_FUNC007.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="85ebc52008745c3e82eceaa604660462ffa4add8"/>
       </sourceFile>
-      <sourceFile id="_FUNC008.CMP" name="_FUNC008.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC008.CMP" name="_FUNC008.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="3cd369ad365112b4f699b275743606324a60d17c"/>
       </sourceFile>
-      <sourceFile id="_FUNC008.EE" name="_FUNC008.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC008.EE" name="_FUNC008.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="fa7a848ac13a9f022d28b34f59eb491f18460131"/>
       </sourceFile>
-      <sourceFile id="_FUNC008.IDX" name="_FUNC008.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC008.IDX" name="_FUNC008.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="efaf77232f99e845a9bf61e5ae5c8b6dbba3a1d1"/>
       </sourceFile>
-      <sourceFile id="_FUNC008.STS" name="_FUNC008.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC008.STS" name="_FUNC008.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c10ef02c8d0b76fbf96541a1651c6a77339e55b4"/>
       </sourceFile>
-      <sourceFile id="_FUNC009.CMP" name="_FUNC009.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC009.CMP" name="_FUNC009.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="6a476671faebb989115f1815fd1ab6890ecaaba4"/>
       </sourceFile>
-      <sourceFile id="_FUNC009.EE" name="_FUNC009.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC009.EE" name="_FUNC009.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="fa7a848ac13a9f022d28b34f59eb491f18460131"/>
       </sourceFile>
-      <sourceFile id="_FUNC009.IDX" name="_FUNC009.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC009.IDX" name="_FUNC009.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="2c6978cd25320e163cc14599fe86ca3c9ef59f35"/>
       </sourceFile>
-      <sourceFile id="_FUNC009.STS" name="_FUNC009.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC009.STS" name="_FUNC009.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="774332a13df636527c52a641a99c99ee093d9e64"/>
       </sourceFile>
-      <sourceFile id="_FUNC010.CMP" name="_FUNC010.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC010.CMP" name="_FUNC010.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="13a2ab2c710258c5961850450f54b1a7f3d0494e"/>
       </sourceFile>
-      <sourceFile id="_FUNC010.EE" name="_FUNC010.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC010.EE" name="_FUNC010.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="2a50f30757c2558ddf9012b86544e788492c1339"/>
       </sourceFile>
-      <sourceFile id="_FUNC010.IDX" name="_FUNC010.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC010.IDX" name="_FUNC010.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c322bf1acef3f85eff3bedcdd3962dc14effb849"/>
       </sourceFile>
-      <sourceFile id="_FUNC010.STS" name="_FUNC010.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC010.STS" name="_FUNC010.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d0a24eb7ebb1ae3140f16abb8eac6213ad9fe11e"/>
       </sourceFile>
-      <sourceFile id="_FUNC011.CMP" name="_FUNC011.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC011.CMP" name="_FUNC011.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="87f1d47a0a249a0a4e531fa06f420e83bf561d48"/>
       </sourceFile>
-      <sourceFile id="_FUNC011.EE" name="_FUNC011.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC011.EE" name="_FUNC011.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="2a50f30757c2558ddf9012b86544e788492c1339"/>
       </sourceFile>
-      <sourceFile id="_FUNC011.IDX" name="_FUNC011.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC011.IDX" name="_FUNC011.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="e070b26e8f529e3f21a76d8d60fa6a7b78ad8066"/>
       </sourceFile>
-      <sourceFile id="_FUNC011.STS" name="_FUNC011.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC011.STS" name="_FUNC011.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="77dd263adce0ef2d8a07ca19aff15bbf8f510840"/>
       </sourceFile>
-      <sourceFile id="_FUNC012.CMP" name="_FUNC012.CMP" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC012.CMP" name="_FUNC012.CMP" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d325ba5a36eacc3528e0dab1e1cebdbff7800e67"/>
       </sourceFile>
-      <sourceFile id="_FUNC012.EE" name="_FUNC012.EE" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC012.EE" name="_FUNC012.EE" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="97dfb4f80ad33181fb73b814467e11b6972863e0"/>
       </sourceFile>
-      <sourceFile id="_FUNC012.IDX" name="_FUNC012.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC012.IDX" name="_FUNC012.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="deeb0e06f61fe8fa4796bc21da319ffb150f4f28"/>
       </sourceFile>
-      <sourceFile id="_FUNC012.STS" name="_FUNC012.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC012.STS" name="_FUNC012.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="32a97872d0261ee42db7025e6ce04660737965e0"/>
       </sourceFile>
-      <sourceFile id="_FUNC013.IDX" name="_FUNC013.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC013.IDX" name="_FUNC013.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="e8d440e44bcd72c2052d2ba3a65cf80e596feca7"/>
       </sourceFile>
-      <sourceFile id="_FUNC013.STS" name="_FUNC013.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC013.STS" name="_FUNC013.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="7aa7877c1f59ef010d668dabd1c6dc81f1e99380"/>
       </sourceFile>
-      <sourceFile id="_FUNC016.IDX" name="_FUNC016.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC016.IDX" name="_FUNC016.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="81f3c393923cfa06d32048089f4289e01ff84756"/>
       </sourceFile>
-      <sourceFile id="_FUNC016.STS" name="_FUNC016.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC016.STS" name="_FUNC016.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="630186bc77c9383fc7102ca4240e81e85f2a5e54"/>
       </sourceFile>
-      <sourceFile id="_FUNC017.IDX" name="_FUNC017.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC017.IDX" name="_FUNC017.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="95c9a862ef762b852bbf3d197d00dc84dcb34776"/>
       </sourceFile>
-      <sourceFile id="_FUNC017.STS" name="_FUNC017.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC017.STS" name="_FUNC017.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="ed547ccb3c3839192dfcaa42136a003abb3e118e"/>
       </sourceFile>
-      <sourceFile id="_FUNC018.IDX" name="_FUNC018.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC018.IDX" name="_FUNC018.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="e73dd1da6dfaee4a5e74a5d5994bbf41b84d8206"/>
       </sourceFile>
-      <sourceFile id="_FUNC018.STS" name="_FUNC018.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC018.STS" name="_FUNC018.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="00bd7d30e76520f905920c03f8428be309df9720"/>
       </sourceFile>
-      <sourceFile id="_FUNC019.IDX" name="_FUNC019.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC019.IDX" name="_FUNC019.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="698d74f7d864875d7f57fca3c7c02698ec566ffb"/>
       </sourceFile>
-      <sourceFile id="_FUNC019.STS" name="_FUNC019.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC019.STS" name="_FUNC019.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="b29009a3a83a78b44ad8c9a2eef27bd14c41c3dc"/>
       </sourceFile>
-      <sourceFile id="_FUNC021.IDX" name="_FUNC021.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC021.IDX" name="_FUNC021.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="03e800c52b807504e8492a7ff8c4873c615fd332"/>
       </sourceFile>
-      <sourceFile id="_FUNC021.STS" name="_FUNC021.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC021.STS" name="_FUNC021.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="a0025ca28a02c28343c817df83da07a6905f2669"/>
       </sourceFile>
-      <sourceFile id="_FUNC023.IDX" name="_FUNC023.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC023.IDX" name="_FUNC023.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="742404cfdfc6b4b3183116b8a74fd23e9102a28c"/>
       </sourceFile>
-      <sourceFile id="_FUNC023.STS" name="_FUNC023.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC023.STS" name="_FUNC023.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="1261c05be3acaa80ae319d5da7ffaf0dfb562a74"/>
       </sourceFile>
-      <sourceFile id="_FUNC024.IDX" name="_FUNC024.IDX" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC024.IDX" name="_FUNC024.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="ab8316552d1a3e1ad43be5a3d6125a9269237d22"/>
       </sourceFile>
-      <sourceFile id="_FUNC024.STS" name="_FUNC024.STS" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNC024.STS" name="_FUNC024.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="23584645a6ccad28bd66f7d28a55254527ce8f08"/>
       </sourceFile>
-      <sourceFile id="_FUNCTNS.INF" name="_FUNCTNS.INF" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_FUNCTNS.INF" name="_FUNCTNS.INF" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="e3a656c558ff8beae9deec479010e05177d92150"/>
       </sourceFile>
-      <sourceFile id="_HEADER.TXT" name="_HEADER.TXT" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_HEADER.TXT" name="_HEADER.TXT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="492151b3c16e5f56f6a6b10909e58b1d8f836068"/>
       </sourceFile>
-      <sourceFile id="_HISTORY.INF" name="_HISTORY.INF" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_HISTORY.INF" name="_HISTORY.INF" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="01b51d0a25416e7057e86a529d1c258ab38edeff"/>
       </sourceFile>
-      <sourceFile id="_INLET.INF" name="_INLET.INF" location="file://C:\pwiz-src\trunk\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
+      <sourceFile id="_INLET.INF" name="_INLET.INF" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\160109_Mix1_calcurve_070.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="dbc0629ead09253385c18c58c40876dfea99900c"/>
       </sourceFile>
@@ -390,7 +390,7 @@
     <software id="MassLynx" version="4.1">
       <cvParam cvRef="MS" accession="MS:1000534" name="MassLynx" value=""/>
     </software>
-    <software id="pwiz_Reader_Waters" version="3.0.11537">
+    <software id="pwiz_Reader_Waters" version="3.0.19304">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -420,7 +420,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="17"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="22.488966" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="22.488965988159" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -472,7 +472,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="17"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="23.8005009" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="23.800500869751" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -524,7 +524,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="19"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="28.0034008" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="28.003400802612" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -576,7 +576,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="19"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="29.0998173" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="29.099817276001" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -628,7 +628,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="19"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="29.3877659" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="29.387765884399" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -680,7 +680,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="19"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="29.4785671" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="29.478567123413" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -732,7 +732,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="13"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="30.3237991" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="30.323799133301" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -784,7 +784,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="13"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="30.4411335" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="30.441133499146" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -836,7 +836,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="13"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="30.5251675" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="30.52516746521" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -888,7 +888,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="21"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="41.1892662" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="41.189266204834" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -940,7 +940,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="16"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="47.7860336" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="47.786033630371" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -992,7 +992,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="23"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="54.191967" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="54.191967010498" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1044,7 +1044,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="18"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="57.8528824" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="57.852882385254" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1096,7 +1096,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="18"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="58.7257652" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="58.725765228271" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
@@ -1148,7 +1148,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000616" name="preset scan configuration" value="24"/>
-            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="69.4673462" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="69.467346191406" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
             <scanWindowList count="1">
               <scanWindow>
                 <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="50.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>

@@ -298,8 +298,8 @@ namespace pwiz.Skyline
                 // Position window offscreen for stress testing.
                 if (SkylineOffscreen)
                     FormEx.SetOffscreen(MainWindow);
-
-                SendAnalyticsHitAsync();
+                if (!UnitTest)  // Covers Unit and Functional tests
+                    SendAnalyticsHitAsync();
 
                 MainToolServiceName = Guid.NewGuid().ToString();
                 Application.Run(MainWindow);
@@ -332,8 +332,9 @@ namespace pwiz.Skyline
 
         private static void SendAnalyticsHitAsync()
         {
-            if (!Install.Version.Equals(String.Empty) &&
-                Install.Type != Install.InstallType.developer)
+            if (!Install.Version.Equals(String.Empty) &&    // This is rarely true anymore with the strong versioning introduced in 19.1.1.309
+                !Install.IsDeveloperInstall &&
+                !Install.IsAutomatedBuild)  // Currently the only automated build we care about is the Docker Container which is command-line only
             {
                 ActionUtil.RunAsync(() =>
                 {
@@ -609,9 +610,12 @@ namespace pwiz.Skyline
         {
             get
             {
-                return _name ??
-                       (_name =
-                        Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? @"-daily" : string.Empty));
+                if (Settings.Default.TutorialMode)
+                    return (_name = Settings.Default.ProgramName);
+                else
+                    return _name ??
+                           (_name =
+                            Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? @"-daily" : string.Empty));
             }
         }
 

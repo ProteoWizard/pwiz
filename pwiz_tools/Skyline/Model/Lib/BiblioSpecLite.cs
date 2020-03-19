@@ -115,7 +115,8 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 16; 
+        private const int FORMAT_VERSION_CACHE = 17;
+        // V17 add ID file (alongside already-cached spectrum source file)
         // V16 scores and score types
         // V15 add score to peak boundaries
         // V14 adds peak annotations
@@ -132,6 +133,7 @@ namespace pwiz.Skyline.Model.Lib
         private PooledSqliteConnection _sqliteConnectionRedundant;
 
         private BiblioLiteSourceInfo[] _librarySourceFiles;
+        private bool _anyExplicitPeakBounds;
 
         public static string GetLibraryCachePath(string libraryPath)
         {
@@ -260,6 +262,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 LibraryDetails details = new LibraryDetails
                                              {
+                                                 Id = Lsid,
                                                  Format = FORMAT_NAME,
                                                  Revision = Revision.ToString(LocalizationHelper.CurrentCulture),
                                                  Version = SchemaVersion.ToString(LocalizationHelper.CurrentCulture),
@@ -322,7 +325,7 @@ namespace pwiz.Skyline.Model.Lib
                                 SpectrumSourceFileDetails sourceFileDetails;
                                 if (!detailsByFileName.TryGetValue(filename, out sourceFileDetails))
                                 {
-                                    sourceFileDetails = new SpectrumSourceFileDetails(filename) { IdFilePath = idFilename };
+                                    sourceFileDetails = new SpectrumSourceFileDetails(filename, idFilename);
                                     detailsByFileName.Add(filename, sourceFileDetails);
                                 }
                                 sourceFileDetails.BestSpectrum += Convert.ToInt32(reader.GetValue(2));
@@ -346,7 +349,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (Exception)
             {
-                return _librarySourceFiles.Select(file => new SpectrumSourceFileDetails(file.FilePath));
+                return _librarySourceFiles.Select(file => new SpectrumSourceFileDetails(file.FilePath, file.IdFilePath));
             }
         }
 
@@ -533,6 +536,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             id,
             fileName,
+            idFileName
         }
 
         // Cache struct layouts
@@ -555,6 +559,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             id,
             filename_length,
+            id_filename_length,
 
             count
         }
@@ -606,6 +611,10 @@ namespace pwiz.Skyline.Model.Lib
 
                     dataRev = reader.GetInt32(LibInfo.majorVersion);
                     schemaVer = reader.GetInt32(LibInfo.minorVersion);
+
+                    // Set these now, in case we encounter an error further in
+                    Lsid = lsid;
+                    SetRevision(dataRev, schemaVer);
                 }
 
                 // Corrupted library without a valid row count, but try to compensate
@@ -629,7 +638,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 if (schemaVer >= 1)
                 {
-                    try
+                    if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes")) // Only a filtered library will have this table
                     {
                         using (var cmd = _sqliteConnection.Connection.CreateCommand())
                         {
@@ -646,7 +655,9 @@ namespace pwiz.Skyline.Model.Lib
                                     kvp => kvp.Value);
                             }
                         }
-
+                    }
+                    if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"ScoreTypes"))
+                    {
                         select.CommandText = @"SELECT id, scoreType FROM ScoreTypes";
                         using (var reader = select.ExecuteReader())
                         {
@@ -658,11 +669,6 @@ namespace pwiz.Skyline.Model.Lib
                                 scoreTypesByName[name] = id;
                             }
                         }
-                    }
-                    // In case there is no RetentionTimes table
-                    // CONSIDER: Could also be a failure to read the SQLite file
-                    catch (SQLiteException)
-                    {
                     }
                 }
 
@@ -690,7 +696,7 @@ namespace pwiz.Skyline.Model.Lib
                     int rowsRead = 0;
                     while (reader.Read())
                     {
-                        int percentComplete = rowsRead++*100/rows;
+                        int percentComplete = rowsRead++*percent/rows;
                         if (status.PercentComplete != percentComplete)
                         {
                             // Check for cancellation after each integer change in percent loaded.
@@ -701,7 +707,7 @@ namespace pwiz.Skyline.Model.Lib
                             }
 
                             // If not cancelled, update progress.
-                            loader.UpdateProgress(status = status.ChangePercentComplete(percent));
+                            loader.UpdateProgress(status = status.ChangePercentComplete(percentComplete));
                         }
 
                         int id = reader.GetInt32(iId);
@@ -785,12 +791,14 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         int iId = reader.GetOrdinal(SpectrumSourceFiles.id);
                         int iFilename = reader.GetOrdinal(SpectrumSourceFiles.fileName);
+                        int iIdFilename = reader.GetOrdinal(SpectrumSourceFiles.idFileName); // Save the search result file, too (may be distinct from the spectra source file)
 
                         while (reader.Read())
                         {
                             string filename = reader.GetString(iFilename);
+                            string idFilename = iIdFilename < 0 || reader.IsDBNull(iIdFilename) ? null : reader.GetString(iIdFilename);
                             int id = reader.GetInt32(iId);
-                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename));
+                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty));
                         }
                     }
 
@@ -825,12 +833,19 @@ namespace pwiz.Skyline.Model.Lib
                         foreach (var librarySourceFile in librarySourceFiles)
                         {
                             outStream.Write(BitConverter.GetBytes(librarySourceFile.Id), 0, sizeof(int));
+                            // Spectra source filename
                             var librarySourceFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.FilePath);
+                            // ID source (e.g. Mascot search results) filename
+                            var searchResultsFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.IdFilePath ?? string.Empty);
                             outStream.Write(BitConverter.GetBytes(librarySourceFileNameBytes.Length), 0, sizeof(int));
+                            outStream.Write(BitConverter.GetBytes(searchResultsFileNameBytes.Length), 0, sizeof(int));
                             outStream.Write(librarySourceFileNameBytes, 0, librarySourceFileNameBytes.Length);
+                            outStream.Write(searchResultsFileNameBytes, 0, searchResultsFileNameBytes.Length);
                         }
                         // Terminate with zero ID and zero name length
                         var zeroBytes = BitConverter.GetBytes(0);
+                        outStream.Write(zeroBytes, 0, sizeof(int));
+                        outStream.Write(zeroBytes, 0, sizeof(int));
                         outStream.Write(zeroBytes, 0, sizeof(int));
                         outStream.Write(zeroBytes, 0, sizeof(int));
                     }
@@ -879,7 +894,7 @@ namespace pwiz.Skyline.Model.Lib
             loader.UpdateProgress(status);
 
             bool cached = loader.StreamManager.IsCached(FilePath, CachePath);
-            if (Load(loader, status, cached))
+            if (Load(loader, status, cached, out var failureException))
                 return true;
 
             // If loading from the cache failed, rebuild it.
@@ -891,22 +906,26 @@ namespace pwiz.Skyline.Model.Lib
                     _sqliteConnection.CloseStream();
                     _sqliteConnection = null;
                 }
-                if (Load(loader, status, false))
+                if (Load(loader, status, false, out failureException))
                     return true;
             }
 
             // Close any streams that got opened
             foreach (var pooledStream in ReadStreams)
                 pooledStream.CloseStream();
+
+            if (failureException != null)
+                throw failureException;
             return false;
         }
 
-        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached)
+        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached, out Exception failureException)
         {
             try
             {
                 var valueCache = new ValueCache();
-                int loadPercent = 100;                
+                int loadPercent = 100;
+                failureException = null;
                 if (!cached)
                 {
                     // Building the cache will take 95% of the load time.
@@ -916,8 +935,16 @@ namespace pwiz.Skyline.Model.Lib
                     status = status.ChangePercentComplete(0);
                     loader.UpdateProgress(status);
 
-                    if (!CreateCache(loader, status, 100 - loadPercent))
+                    try
+                    {
+                        if (!CreateCache(loader, status, 100 - loadPercent))
+                            return false;
+                    }
+                    catch (Exception e)
+                    {
+                        failureException = new Exception(FormatErrorMessage(e), e);
                         return false;
+                    }
                 }
 
                 status = status.ChangeMessage(string.Format(Resources.BiblioSpecLiteLibraryLoadLoading__0__library,
@@ -967,8 +994,10 @@ namespace pwiz.Skyline.Model.Lib
                             int filenameLength = GetInt32(sourceHeader, (int)SourceHeader.filename_length);
                             if (filenameLength == 0)
                                 break;
+                            int idfilenameLength = GetInt32(sourceHeader, (int)SourceHeader.id_filename_length);
                             string filename = ReadString(stream, filenameLength);
-                            librarySourceFiles.Add(new BiblioLiteSourceInfo(sourceId, filename));
+                            string idfilename = ReadString(stream, idfilenameLength);
+                            librarySourceFiles.Add(new BiblioLiteSourceInfo(sourceId, filename, idfilename)); 
                         }
                     }
 
@@ -1026,6 +1055,7 @@ namespace pwiz.Skyline.Model.Lib
                         var driftTimesByFileId = IndexedIonMobilities.Read(stream);
                         ImmutableSortedList<int, ExplicitPeakBounds> peakBoundaries =
                             ReadPeakBoundaries(stream);
+                        _anyExplicitPeakBounds = _anyExplicitPeakBounds || peakBoundaries.Count > 0;
                         libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id,
                             retentionTimesByFileId, driftTimesByFileId, peakBoundaries, score, scoreType);
                     }
@@ -1043,31 +1073,39 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (InvalidDataException x)
             {
+                failureException = new InvalidDataException(FormatErrorMessage(x), x);
                 if (!cached)
                 {
-                    x = new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath), x);
-                    loader.UpdateProgress(status.ChangeErrorException(x));
+                    loader.UpdateProgress(status.ChangeErrorException(failureException));
                 }
                 return false;
             }
             catch (IOException x)
             {
+                failureException = new IOException(FormatErrorMessage(x), x);
                 if (!cached)
                 {
-                    x = new IOException(string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath), x);
-                    loader.UpdateProgress(status.ChangeErrorException(x));
+                    loader.UpdateProgress(status.ChangeErrorException(failureException));
                 }
                 return false;
             }
             catch (Exception x)
             {
+                failureException = new Exception(FormatErrorMessage(x), x);
                 if (!cached)
                 {
-                    x = new Exception(string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath), x);
-                    loader.UpdateProgress(status.ChangeErrorException(x));
+                    loader.UpdateProgress(status.ChangeErrorException(failureException));
                 }
                 return false;
             }
+        }
+
+        string FormatErrorMessage(Exception x)
+        {
+            return TextUtil.LineSeparate(
+                string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath),
+                x.Message,
+                LibraryDetails.ToString());
         }
 
         private ImmutableSortedList<int, ExplicitPeakBounds> ReadPeakBoundaries(Stream stream)
@@ -1298,6 +1336,10 @@ namespace pwiz.Skyline.Model.Lib
 
         public override ExplicitPeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<Target> peptideSequences)
         {
+            if (!_anyExplicitPeakBounds)
+            {
+                return null;
+            }
             int iFile = FindSource(filePath);
             if (iFile < 0)
             {
@@ -1495,42 +1537,97 @@ namespace pwiz.Skyline.Model.Lib
             if (i != -1 && j != -1)
             {
                 ionMobilities = _libraryEntries[i].IonMobilitiesByFileId.GetIonMobilityInfo(_librarySourceFiles[j].Id);
-                return true;
+                return ionMobilities != null;
             }
 
             return base.TryGetIonMobilityInfos(key, filePath, out ionMobilities);
         }
 
-        public override bool TryGetIonMobilityInfos(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
-            return TryGetIonMobilityInfos(FindSource(filePath), out ionMobilities);
+            return TryGetIonMobilityInfos(targetIons, FindSource(filePath), out ionMobilities);
         }
 
-        public override bool TryGetIonMobilityInfos(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities)
         {
             if (fileIndex >= 0 && fileIndex < _librarySourceFiles.Length)
             {
+                ILookup<LibKey, IonMobilityAndCCS[]> timesLookup;
                 var source = _librarySourceFiles[fileIndex];
-                ILookup<LibKey, IonMobilityAndCCS[]> timesLookup = _libraryEntries.ToLookup(
-                    entry => entry.Key,
-                    entry => entry.IonMobilitiesByFileId.GetIonMobilityInfo(source.Id));
-                var timesDict = timesLookup.ToDictionary(
+                if (targetIons != null)
+                {
+                    if (!targetIons.Any())
+                    {
+                        ionMobilities = null;
+                        return true; // return value false means "that's not a proper file index"'
+                    }
+
+                    timesLookup = targetIons.SelectMany(target => _libraryEntries.ItemsMatching(target, true)).ToLookup(
+                        entry => entry.Key,
+                        entry => entry.IonMobilitiesByFileId.GetIonMobilityInfo(source.Id));
+                }
+                else
+                {
+                    timesLookup = _libraryEntries.ToLookup(
+                        entry => entry.Key,
+                        entry => entry.IonMobilitiesByFileId.GetIonMobilityInfo(source.Id));
+                }
+                var timesDict = timesLookup.Where(tl => !tl.IsNullOrEmpty() && tl.Any(i => i != null)).ToDictionary(
                     grouping => grouping.Key,
                     grouping =>
                     {
-                        var array = grouping.SelectMany(values => values).ToArray();
+                        var array = grouping.SelectMany(values => values).Where(v => v != null && !v.IsEmpty).ToArray();
                         Array.Sort(array);
                         return array;
                     });
                 var nonEmptyTimesDict = timesDict
                     .Where(kvp => kvp.Value.Length > 0)
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                ionMobilities = new LibraryIonMobilityInfo(source.FilePath, nonEmptyTimesDict);
+                ionMobilities = nonEmptyTimesDict.Any() ? new LibraryIonMobilityInfo(source.FilePath, nonEmptyTimesDict) : null;
+                return true;  // return value false means "that's not a proper file index"'
+            }
+
+            return base.TryGetIonMobilityInfos(targetIons, fileIndex, out ionMobilities);
+        }
+
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
+        {
+            if (targetIons != null && targetIons.Length > 0)
+            {
+                var timesDict = new Dictionary<LibKey, IonMobilityAndCCS[]>();
+                foreach (var target in targetIons)
+                {
+                    foreach (var matchedItem in _libraryEntries.ItemsMatching(target, true))
+                    {
+                        var matchedTarget = matchedItem.Key;
+                        var match = matchedItem.IonMobilitiesByFileId.AllValuesSorted;
+                        if (match == null)
+                            continue;
+                        if (timesDict.TryGetValue(matchedTarget, out var mobilities))
+                        {
+                            var newMobilities = match.Concat(mobilities).ToArray();
+                            Array.Sort(newMobilities);
+                            timesDict[matchedTarget] = newMobilities;
+                        }
+                        else
+                        {
+                            timesDict[matchedTarget] = match;
+                        }
+                    }
+                }
+                if (!timesDict.Values.Any(v => v.Any()))
+                {
+                    ionMobilities = null;
+                    return false;
+                }
+                ionMobilities = new LibraryIonMobilityInfo(FilePath, timesDict);
                 return true;
             }
 
-            return base.TryGetIonMobilityInfos(fileIndex, out ionMobilities);
+            return base.TryGetIonMobilityInfos(targetIons, out ionMobilities);
         }
+
+
 
         /// <summary>
         /// Reads all retention times for a specified source file into a dictionary by
@@ -1601,7 +1698,7 @@ namespace pwiz.Skyline.Model.Lib
             return i;
         }
 
-        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             if (redundancy == LibraryRedundancy.best && SchemaVersion < 1)
             {
@@ -1621,14 +1718,14 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        private IEnumerable<SpectrumInfo> GetRedundantSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        private IEnumerable<SpectrumInfoLibrary> GetRedundantSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             // No redundant spectra before schema version 1
             if (SchemaVersion == 0)
-                return new SpectrumInfo[0];
+                return new SpectrumInfoLibrary[0];
             int i = FindEntry(key);
             if (i == -1)
-                return new SpectrumInfo[0];
+                return new SpectrumInfoLibrary[0];
 
             var hasRetentionTimesTable = RetentionTimesPsmCount() != 0;
             var info = _libraryEntries[i];
@@ -1684,7 +1781,7 @@ namespace pwiz.Skyline.Model.Lib
                         iDTorCCS = reader.GetOrdinal(RetentionTimes.ionMobilityValue);
                         iDriftTimeVsCCS = reader.GetOrdinal(RetentionTimes.ionMobilityType);
                     }
-                    var listSpectra = new List<SpectrumInfo>();
+                    var listSpectra = new List<SpectrumInfoLibrary>();
                     while (reader.Read())
                     {
                         string filePath = reader.GetString(iFilePath);
@@ -1736,7 +1833,7 @@ namespace pwiz.Skyline.Model.Lib
                         object spectrumKey = i;
                         if (!isBest || redundancy == LibraryRedundancy.all_redundant)
                             spectrumKey = new SpectrumLiteKey(i, redundantId, isBest);
-                        listSpectra.Add(new SpectrumInfo(this, labelType, filePath, retentionTime, ionMobilityInfo, isBest,
+                        listSpectra.Add(new SpectrumInfoLibrary(this, labelType, filePath, retentionTime, ionMobilityInfo, isBest,
                                                          spectrumKey)
                                             {
                                                 SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i])
@@ -1940,15 +2037,17 @@ namespace pwiz.Skyline.Model.Lib
 
         private struct BiblioLiteSourceInfo
         {
-            public BiblioLiteSourceInfo(int id, string filePath) : this()
+            public BiblioLiteSourceInfo(int id, string filePath, string idFilePath) : this()
             {
                 Id = id;
                 FilePath = filePath;
+                IdFilePath = idFilePath;
             }
 
             public int Id { get; private set; }
-            public string FilePath { get; private set; }
-            
+            public string FilePath { get; private set; } // File from which the spectra were taken (may be same as idFilePath if spectra are taken from search file)
+            public string IdFilePath { get; private set; } // File from which the IDs were taken (e.g. search results file from Mascot etc)
+
             public string BaseName
             {
                 get
@@ -2301,14 +2400,26 @@ namespace pwiz.Skyline.Model.Lib
             _ionMobilityById = ImmutableSortedList.FromValues(timesById);
         }
 
+        public IonMobilityAndCCS[] AllValuesSorted
+        {
+            get
+            {
+                if (null == _ionMobilityById)
+                    return null;
+
+                var val = _ionMobilityById.Values.SelectMany(i => i).ToArray();
+                Array.Sort(val);
+                return val;
+            }
+        }
+
         public IonMobilityAndCCS[] GetIonMobilityInfo(int id)
         {
-            IonMobilityAndCCS[] times;
-            if (null == _ionMobilityById || !_ionMobilityById.TryGetValue(id, out times))
+            if (null == _ionMobilityById || !_ionMobilityById.TryGetValue(id, out var times))
             {
-                return new IonMobilityAndCCS[0];
+                return null;
             }
-            return times.ToArray();
+            return times;
         }
 
         public void Write(Stream stream)

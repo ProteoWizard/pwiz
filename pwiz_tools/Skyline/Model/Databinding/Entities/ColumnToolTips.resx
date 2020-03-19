@@ -314,6 +314,11 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   <data name="ExcludeFromCalibration">
     <value>Whether the results in the replicate should be excluded from the peptide's calibration curve calculation.</value>
   </data>
+  <data name="ExplicitAnalyteConcentration">
+    <value>The concentration of this particular molecule or peptide in this particular replicate.
+If the Explicit Analyte Concentration is not specified then the concentration of the analyte is assumed 
+to be the Analyte Concentration from the Replicate times the Concentration Multiplier of the Peptide or Molecule.</value>
+  </data>
   <data name="ExplicitCollisionEnergy">
     <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</value>
   </data>
