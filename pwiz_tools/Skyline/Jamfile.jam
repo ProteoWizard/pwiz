@@ -32,7 +32,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
 
-    constant SKYLINE_YEAR : 19 ;
+    constant SKYLINE_YEAR : 20 ;
     constant SKYLINE_ORDINAL : 1 ; # A count of official releases made so far this year
     constant SKYLINE_BRANCH : 1 ; # 0 - release, 1 - daily, 9 - feature complete daily
 
@@ -136,6 +136,22 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestData /nologo /verbosity:minimal
         echo Unit testing pwiz data reading in Skyline in $(CONFIGURATION:L) configuration...
         $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestData.dll $(.teamcity-test-decoration)
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+    
+    rule do_skyline_test_pass1_subset ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_test_pass1_subset
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building Skyline Test Data in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestData /nologo /verbosity:minimal
+        echo Testing subset of Skyline's leak checking (pass1) in $(CONFIGURATION:L) configuration...
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
         exit %status%
     }
@@ -296,6 +312,18 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         : # sources
         : # actions
             @do_skyline_test_a
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+    
+    make TestPass1Subset
+        : # sources
+        : # actions
+            @do_skyline_test_pass1_subset
         : # requirements
             <link>shared:<build>no
             <conditional>@no-express-requirement

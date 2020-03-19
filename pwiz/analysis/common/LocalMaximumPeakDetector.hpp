@@ -39,7 +39,7 @@ struct PWIZ_API_DECL LocalMaximumPeakDetector : public PeakDetector
     virtual void detect(const std::vector<double>& x, const std::vector<double>& y,
                         std::vector<double>& xPeakValues, std::vector<double>& yPeakValues,
                         std::vector<Peak>* peaks = NULL);
-
+    virtual const char* name() const { return "local maximum peak picker"; }
     private:
     size_t window_;
 };

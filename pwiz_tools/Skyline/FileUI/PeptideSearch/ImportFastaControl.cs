@@ -412,31 +412,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return false;
 
                 // Add iRT standards if not present
-                if (irtStandard != null && !irtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+                if (irtStandard != null && irtStandard.HasDocument)
                 {
-                    using (var reader = irtStandard.GetDocumentReader())
+                    var standardMap = new TargetMap<bool>(irtStandard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+                    var docStandards = new TargetMap<bool>(docNew.Peptides
+                        .Where(nodePep => standardMap.ContainsKey(nodePep.ModifiedTarget)).Select(nodePep =>
+                            new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
+                    if (irtStandard.Peptides.Any(pep => !docStandards.ContainsKey(pep.ModifiedTarget)))
                     {
-                        if (reader != null)
-                        {
-                            var standardMap = new TargetMap<bool>(irtStandard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
-                            var docStandards = new TargetMap<bool>(docNew.Peptides
-                                .Where(nodePep => standardMap.ContainsKey(nodePep.ModifiedTarget)).Select(nodePep =>
-                                    new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
-                            if (irtStandard.Peptides.Any(pep => !docStandards.ContainsKey(pep.ModifiedTarget)))
-                            {
-                                docNew = docNew.ImportDocumentXml(reader,
-                                    string.Empty,
-                                    Model.Results.MeasuredResults.MergeAction.remove,
-                                    false,
-                                    null,
-                                    Settings.Default.StaticModList,
-                                    Settings.Default.HeavyModList,
-                                    new IdentityPath(docNew.Children.First().Id),
-                                    out _,
-                                    out _,
-                                    false);
-                            }
-                        }
+                        docNew = irtStandard.ImportTo(docNew);
                     }
                 }
 

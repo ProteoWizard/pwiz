@@ -789,6 +789,17 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.QValueCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_MINIMUM_DETECTIONS = new RefineArgument(@"refine-minimum-detections", INT_VALUE,
             (c, p) => c.Refinement.MinimumDetections = p.ValueInt);
+        // Refinement Group Comparison Tab
+        public static readonly Argument ARG_REFINE_GC_P_VALUE_CUTOFF = new RefineArgument(
+            @"refine-gc-p-value-cutoff", NUM_VALUE,
+            (c, p) => c.Refinement.AdjustedPValueCutoff = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_GC_FOLD_CHANGE_CUTOFF = new RefineArgument(@"refine-gc-fold-change-cutoff",
+            NUM_VALUE,
+            (c, p) => c.Refinement.FoldChangeCutoff = Math.Log(p.ValueDouble, 2));
+        public static readonly Argument ARG_REFINE_GC_MS_LEVEL = new RefineArgument(@"refine-gc-ms-level", NUM_VALUE,
+            (c, p) => c.Refinement.MSLevelGroupComparison = p.ValueInt);
+        public static readonly Argument ARG_REFINE_GROUP_NAME = new RefineArgument(@"refine-gc-name", LABEL_VALUE,
+            (c, p) => c.Refinement.GroupComparisonNames.Add(p.Value));
 
         private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT, false,
@@ -806,7 +817,8 @@ namespace pwiz.Skyline
             ARG_REFINE_USE_BEST_RESULT,
             ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF, ARG_REFINE_CV_GLOBAL_NORMALIZE, ARG_REFINE_CV_REFERENCE_NORMALIZE,
             ARG_REFINE_CV_TRANSITIONS, ARG_REFINE_CV_TRANSITIONS_COUNT, ARG_REFINE_CV_MS_LEVEL,
-            ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS);
+            ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS,
+            ARG_REFINE_GC_P_VALUE_CUTOFF, ARG_REFINE_GC_FOLD_CHANGE_CUTOFF, ARG_REFINE_GC_MS_LEVEL, ARG_REFINE_GROUP_NAME);
         
 
         public RefinementSettings Refinement { get; private set; }
@@ -1109,13 +1121,13 @@ namespace pwiz.Skyline
             { WrapValue = true };
         public static readonly Argument ARG_TRAN_FRAGMENT_ION_TYPES = new DocArgument(@"tran-product-ion-types", ION_TYPE_LIST_VALUE,
             (c, p) => c.FilterProductTypes = ParseIonTypes(p)) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", GetDisplayNames(Settings.Default.CollisionEnergyList),
+        public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", () => GetDisplayNames(Settings.Default.CollisionEnergyList),
             (c, p) => c.PredictCEName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", GetDisplayNames(Settings.Default.DeclusterPotentialList),
+        public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", () => GetDisplayNames(Settings.Default.DeclusterPotentialList),
             (c, p) => c.PredictDPName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", GetDisplayNames(Settings.Default.CompensationVoltageList),
+        public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", () => GetDisplayNames(Settings.Default.CompensationVoltageList),
             (c, p) => c.PredictCoVName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", GetDisplayNames(Settings.Default.OptimizationLibraryList),
+        public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", () => GetDisplayNames(Settings.Default.OptimizationLibraryList),
             (c, p) => c.PredictOpimizationLibraryName = p.Value) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES = new DocArgument(@"full-scan-precursor-res", RP_VALUE,
             (c, p) => c.FullScanPrecursorRes = p.ValueDouble) { WrapValue = true };
@@ -1528,7 +1540,7 @@ namespace pwiz.Skyline
             (c, p) => c.UseSlens = true)
             { AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_Thermo};
         public static readonly Argument ARG_EXP_RUN_LENGTH = new DocArgument(@"exp-run-length", MINUTES_VALUE,
-            (c, p) => c.RunLength = p.GetValueInt(AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX))
+            (c, p) => c.RunLength = p.GetValueDouble(AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX))
             { AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_RUN_LENGTH_AppliesTo};
 
         private static readonly ArgumentGroup GROUP_EXP_INSTRUMENT = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_EXP_INSTRUMENT_Vendor_specific_method_and_transition_list_options, false,
@@ -1627,8 +1639,8 @@ namespace pwiz.Skyline
 
         public bool AddEnergyRamp { get; private set; }
         public bool UseSlens { get; private set; }
-        private int _runLength;
-        public int RunLength
+        private double _runLength;
+        public double RunLength
         {
             get { return _runLength; }
             set
@@ -1949,7 +1961,7 @@ namespace pwiz.Skyline
             public Argument(string name, string[] values, Func<CommandArgs, NameValuePair, bool> processValue)
                 : this(name, () => ValuesToExample(values), processValue)
             {
-                Values = values;
+                _fixedValues = values;
             }
 
             public Argument(string name, string[] values, Action<CommandArgs, NameValuePair> processValue)
@@ -1961,6 +1973,24 @@ namespace pwiz.Skyline
             {
             }
 
+            public Argument(string name, Func<string[]> values, Func<CommandArgs, NameValuePair, bool> processValue)
+                : this(name, () => ValuesToExample(values()), processValue)
+            {
+                _dynamicValues = values;
+            }
+
+            public Argument(string name, Func<string[]> values, Action<CommandArgs, NameValuePair> processValue)
+                : this(name, values, (c, p) =>
+                {
+                    processValue(c, p);
+                    return true;
+                })
+            {
+            }
+
+            private string[] _fixedValues;
+            private Func<string[]> _dynamicValues;
+
             public Func<CommandArgs, NameValuePair, bool> ProcessValue;
 
             public string Name { get; private set; }
@@ -1970,7 +2000,13 @@ namespace pwiz.Skyline
                 get { return CommandArgUsage.ResourceManager.GetString("_" + Name.Replace('-', '_')); }
             }
             public Func<string> ValueExample { get; private set; }
-            public string[] Values { get; private set; }
+            public string[] Values
+            {
+                get
+                {
+                    return _dynamicValues?.Invoke() ?? _fixedValues;
+                }
+            }
             public bool WrapValue { get; set; }
             public bool OptionalValue { get; set; }
             public bool InternalUse { get; set; }
@@ -2074,6 +2110,16 @@ namespace pwiz.Skyline
             }
 
             public DocArgument(string name, string[] values, Action<CommandArgs, NameValuePair> processValue)
+                : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public DocArgument(string name, Func<string[]> values, Func<CommandArgs, NameValuePair, bool> processValue)
+                : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public DocArgument(string name, Func<string[]> values, Action<CommandArgs, NameValuePair> processValue)
                 : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
             {
             }
@@ -2443,7 +2489,7 @@ namespace pwiz.Skyline
 
             private static string HtmlEncode(string str)
             {
-                string encodedText = HttpUtility.HtmlEncode(str) ?? string.Empty;
+                string encodedText = HttpUtility.HtmlEncode(str ?? string.Empty);
                 return encodedText.Replace(@"-", @"&#8209;");   // Use non-breaking hyphens
             }
         }

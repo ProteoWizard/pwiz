@@ -1759,7 +1759,7 @@ namespace pwiz.Skyline
                     selectPath = null;
                     using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
                     {
-                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(csvText);
+                        var smallMoleculeTransitionListReader = new SmallMoleculeTransitionListCSVReader(MassListInputs.ReadLinesFromText(csvText));
                         IdentityPath firstAdded;
                         longWaitDlg.PerformWork(this, 1000,
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
@@ -1860,6 +1860,11 @@ namespace pwiz.Skyline
             {
                 return;
             }
+            else
+            {
+                FileEx.SafeDelete(AssayLibraryFileName);
+                FileEx.SafeDelete(Path.ChangeExtension(AssayLibraryFileName, BiblioSpecLiteSpec.EXT_REDUNDANT));
+            }
             ImportMassList(inputs, description, true);
         }
 
@@ -1909,21 +1914,23 @@ namespace pwiz.Skyline
             SrmDocument docNew = null;
             using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
             {
-                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                var status = longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                 {
                     docNew = docCurrent.ImportMassList(inputs, longWaitBroker,
                         insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
                 });
+                if (status.IsCanceled)
+                    return;
             }
             if (assayLibrary)
             {
                 var missingMessage = new List<string>();
                 if (!irtPeptides.Any())
                     missingMessage.Add(TextUtil.LineSeparate(Resources.SkylineWindow_ImportMassList_The_file_does_not_contain_iRTs__Valid_column_names_for_iRTs_are_,
-                                                             TextUtil.LineSeparate(MassListImporter.IrtColumnNames)));
+                                                             TextUtil.LineSeparate(ColumnIndices.IrtColumnNames)));
                 if (!librarySpectra.Any())
                     missingMessage.Add(TextUtil.LineSeparate(Resources.SkylineWindow_ImportMassList_The_file_does_not_contain_intensities__Valid_column_names_for_intensities_are_,
-                                                             TextUtil.LineSeparate(MassListImporter.LibraryColumnNames)));
+                                                             TextUtil.LineSeparate(ColumnIndices.LibraryColumnNames)));
                 if (missingMessage.Any())
                 {
                     MessageDlg.Show(this, TextUtil.LineSeparate(missingMessage));
@@ -2119,24 +2126,61 @@ namespace pwiz.Skyline
                 db = IrtDb.CreateIrtDb(AssayLibraryFileName);
 
                 // Try to guess iRT standards
-                var matchingStandards = IrtStandard.ALL.Where(standard => standard.IsSubset(dbIrtPeptides, null)).ToArray();
-                if (matchingStandards.Length == 2 && matchingStandards.Contains(IrtStandard.BIOGNOSYS_10) && matchingStandards.Contains(IrtStandard.BIOGNOSYS_11))
-                    matchingStandards = new[] {IrtStandard.BIOGNOSYS_11};
-                if (matchingStandards.Length == 1)
+                var matchingStandards = IrtStandard.ALL.Where(standard => standard.IsSubset(dbIrtPeptides, null)).ToList();
+
+                // Remove standards that don't actually match (heavy label check with precursor m/zs)
+                for (var i = matchingStandards.Count - 1; i >= 0; i--)
                 {
-                    foreach (var peptide in dbIrtPeptides.Where(peptide => matchingStandards[0].Contains(peptide, null)))
-                        peptide.Standard = true;
+                    var standardDoc = matchingStandards[i].GetDocument();
+                    if (standardDoc == null || standardDoc.Peptides.All(nodePep => nodePep.ExplicitModsHeavy.Count == 0))
+                        continue;
+
+                    var docPeps = new TargetMap<PeptideDocNode>(standardDoc.Peptides.Select(pep => new KeyValuePair<Target, PeptideDocNode>(pep.ModifiedTarget, pep)));
+                    var matchTargets = standardDoc.Peptides.Select(pep => pep.ModifiedTarget).ToHashSet();
+                    // Compare precursor m/z to see if heavy labeled
+                    foreach (var spec in librarySpectra)
+                    {
+                        if (!docPeps.TryGetValue(spec.Key.Target, out var nodePep))
+                            continue;
+
+                        var docPrecursors = nodePep.TransitionGroups.ToDictionary(nodeTranGroup => nodeTranGroup.PrecursorCharge, nodeTranGroup => nodeTranGroup.PrecursorMz);
+                        if (docPrecursors.TryGetValue(spec.Key.Charge, out var docPrecursorMz) && Math.Abs(docPrecursorMz - spec.PrecursorMz) < 1)
+                            matchTargets.Remove(nodePep.ModifiedTarget);
+                    }
+                    if (matchTargets.Count > 0)
+                        matchingStandards.RemoveAt(i);
+                }
+
+                if (matchingStandards.Count == 2 && matchingStandards.Contains(IrtStandard.BIOGNOSYS_10) && matchingStandards.Contains(IrtStandard.BIOGNOSYS_11))
+                    matchingStandards = new List<IrtStandard> { IrtStandard.BIOGNOSYS_11 };
+
+                if (matchingStandards.Count == 1)
+                {
+                    IrtPeptidePicker.SetStandards(dbIrtPeptides, matchingStandards[0]);
                 }
                 else
                 {
                     // Ask for standards
-                    using (var dlg = new ChooseIrtStandardPeptidesDlg(doc, DocumentFilePath, peptideGroups))
+                    using (var dlg = new ChooseIrtStandardPeptidesDlg(doc, DocumentFilePath, dbIrtPeptides, peptideGroups))
                     {
                         if (dlg.ShowDialog(this) != DialogResult.OK)
                             return false;
 
+                        const double slopeTolerance = 0.05;
+                        var rescale = false;
+                        if (dlg.Regression != null && !(1 - slopeTolerance <= dlg.Regression.Slope && dlg.Regression.Slope <= 1 + slopeTolerance))
+                        {
+                            using (var scaleDlg = new MultiButtonMsgDlg(
+                                Resources.SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_,
+                                MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                            {
+                                if (scaleDlg.ShowDialog(this) == DialogResult.Yes)
+                                    rescale = true;
+                            }
+                        }
+
                         doc = dlg.Document;
-                        dlg.UpdateLists(librarySpectra, dbIrtPeptides);
+                        dlg.UpdateLists(librarySpectra, dbIrtPeptides, rescale);
                         if (!string.IsNullOrEmpty(dlg.IrtFile))
                             irtInputs = new MassListInputs(dlg.IrtFile);
                     }
@@ -2161,7 +2205,8 @@ namespace pwiz.Skyline
                     TextUtil.LineSeparate(messageOverwrite, conflicts.Count == 1
                         ? Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_value_or_overwrite_with_the_imported_value_
                         : Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_values_or_overwrite_with_imported_values_),
-                        Resources.SkylineWindow_ImportMassList__Keep, Resources.SkylineWindow_ImportMassList__Overwrite, true);
+                    Resources.SkylineWindow_ImportMassList__Keep, Resources.SkylineWindow_ImportMassList__Overwrite,
+                    true);
                 if (overwriteResult == DialogResult.Cancel)
                     return false;
                 overwriteExisting = overwriteResult == DialogResult.No;
@@ -2243,14 +2288,13 @@ namespace pwiz.Skyline
                     var indexOldLibrary2 = indexOldLibrary;
                     longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                     {
-                        docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, AssayLibraryName ?? Path.GetFileNameWithoutExtension(AssayLibraryFileName), progressMonitor);
+                        IProgressStatus status = new ProgressStatus(Resources .BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list);
+                        docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, AssayLibraryName ?? Path.GetFileNameWithoutExtension(AssayLibraryFileName), progressMonitor, ref status);
                         if (docLibraryNew == null)
                             return;
                         var newSettings = docNew.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibraryNew, docLibrarySpec2, indexOldLibrary2));
-                        var status = new ProgressStatus(Resources.SkylineWindow_ImportMassList_Finishing_up_import);
-                        progressMonitor.UpdateProgress(status);
-                        progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
-                        docNew = docNew.ChangeSettings(newSettings);
+                        progressMonitor.UpdateProgress(status = status.ChangeMessage(Resources.SkylineWindow_ImportMassList_Finishing_up_import).ChangePercentComplete(0));
+                        docNew = docNew.ChangeSettings(newSettings, new SrmSettingsChangeMonitor(progressMonitor, Resources.LibraryManager_LoadBackground_Updating_library_settings_for__0_, status));
                     });
                     doc = docNew;
                     docLibrary = docLibraryNew;
@@ -2390,7 +2434,7 @@ namespace pwiz.Skyline
                     longWaitBroker.Message = string.Format(Resources.SkylineWindow_ImportFiles_Importing__0__, Path.GetFileName(filePath));
                 }
 
-                using (var reader = new StreamReader(filePath))
+                using (var reader = new StreamReader(PathEx.SafePath(filePath)))
                 {
                     IdentityPath firstAddedForFile, nextAdd;
                     docResult = docResult.ImportDocumentXml(reader,
@@ -2682,9 +2726,7 @@ namespace pwiz.Skyline
             OptimizableRegression optimizationFunction = doc.Settings.TransitionSettings.Prediction.GetOptimizeFunction(optimize);
 
             if (namedResults.Count == 1)
-                return ImportResults(doc, namedResults[0].Key, 
-                    namedResults[0].Value.Select(p => p.ChangeCombineIonMobilitySpectra(true)), // Try to load as 3-array IMS data if that happens to be supported
-                    optimizationFunction);
+                return ImportResults(doc, namedResults[0].Key, namedResults[0].Value, optimizationFunction);
 
             // Add all chosen files as separate result sets.
             var results = doc.Settings.MeasuredResults;
@@ -2703,9 +2745,7 @@ namespace pwiz.Skyline
                 // Delete caches that will be overwritten
                 FileEx.SafeDelete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult), true);
 
-                listChrom.Add(new ChromatogramSet(nameResult, 
-                    namedResult.Value.Select(m => m.ChangeCombineIonMobilitySpectra(true)), // Try to load as 3-array IMS data if that happens to be supported
-                    Annotations.EMPTY, optimizationFunction));
+                listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, Annotations.EMPTY, optimizationFunction));
             }
 
             var arrayChrom = listChrom.ToArray();
@@ -2884,16 +2924,25 @@ namespace pwiz.Skyline
                         }
 
                         var results = doc.Settings.MeasuredResults;
-                        if (results == null)
+                        var listChrom = dlg.Chromatograms.ToArray();
+                        if (results == null && listChrom.Length == 0)
                             return doc;
 
                         // Set HasMidasSpectra = false for file infos
-                        var listChrom = MidasLibrary.UnflagFiles(dlg.Chromatograms, dlg.LibraryRunsRemovedList.Select(Path.GetFileName)).ToList();
+                        listChrom = MidasLibrary.UnflagFiles(listChrom, dlg.LibraryRunsRemovedList.Select(Path.GetFileName)).ToArray();
 
-                        if (ArrayUtil.ReferencesEqual(results.Chromatograms, listChrom))
+                        if (ArrayUtil.ReferencesEqual(results?.Chromatograms, listChrom))
                             return doc;
-                        results = listChrom.Count > 0 ? results.ChangeChromatograms(listChrom.ToArray()) : null;
-                        doc = doc.ChangeMeasuredResults(results);
+
+                        MeasuredResults resultsNew = null;
+                        if (listChrom.Length > 0)
+                        {
+                            if (results == null)
+                                resultsNew = new MeasuredResults(listChrom);
+                            else
+                                resultsNew = results.ChangeChromatograms(listChrom.ToArray());
+                        }
+                        doc = doc.ChangeMeasuredResults(resultsNew);
                         doc.ValidateResults();
 
                         return doc;
@@ -2941,7 +2990,7 @@ namespace pwiz.Skyline
                     // Remove all replicates to be re-imported
                     var results = document.Settings.MeasuredResults;
                     var chromRemaining = results.Chromatograms.Where(chrom => !setReimport.Contains(chrom)).ToArray();
-                    var resultsNew = results.ChangeChromatograms(chromRemaining);
+                    MeasuredResults resultsNew = results.ChangeChromatograms(chromRemaining);
                     if (chromRemaining.Length > 0)
                     {
                         // Optimize the cache using this reduced set to remove their data from the cache
@@ -2956,19 +3005,8 @@ namespace pwiz.Skyline
                         string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
                         FileEx.SafeDelete(cachePath, true);
                     }
-                    // Restore the original set, updating those to be reimported  with current centroiding
-                    // settings and requesting 3-array IM format
-                    var isCentroidMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMs;
-                    var isCentroidMsMs = document.Settings.TransitionSettings.FullScan.IsCentroidedMsMs;
-                    var chromatograms = new List<ChromatogramSet>();
-                    foreach (var c in results.Chromatograms)
-                    {
-                        chromatograms.Add(setReimport.Contains(c) ?
-                            c.ChangeMSDataFilePaths(c.MSDataFilePaths.Select(p =>
-                                p.ChangeCentroiding(isCentroidMs, isCentroidMsMs).ChangeCombineIonMobilitySpectra(true)).ToList()) :
-                            c);
-                    }
-                    resultsNew = resultsNew.ChangeChromatograms(chromatograms);
+                    // Restore the original set unchanged
+                    resultsNew = resultsNew.ChangeChromatograms(results.Chromatograms);
 
                     // Update the document without adding an undo record, because the only information
                     // to change should be cache related.
@@ -2990,6 +3028,11 @@ namespace pwiz.Skyline
         {
             if (!CheckDocumentExists(Resources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
             {
+                return;
+            }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
                 return;
             }
 

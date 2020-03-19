@@ -68,9 +68,10 @@ struct DiaPasefIsolationInfo
 enum class MsMsType
 {
     MS1 = 0,
-    MRM =2,
+    MRM = 2,
     DDA_PASEF = 8,
-    DIA_PASEF = 9
+    DIA_PASEF = 9,
+    PRM_PASEF = 10
 };
 
 struct PWIZ_API_DECL TimsFrame
@@ -139,8 +140,8 @@ public:
     virtual bool hasProfileData() const;
     virtual size_t getLineDataSize() const;
     virtual size_t getProfileDataSize() const;
-    virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
-    virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
+    virtual void getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const;
+    virtual void getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const;
 
     virtual double getTIC() const { return frame_.tic_; }
     virtual double getBPI() const { return frame_.bpi_; }
@@ -274,10 +275,10 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     virtual LCSpectrumPtr getLCSpectrum(int source, int scan) const;
 
     /// returns a chromatogram with times and total ion currents of all spectra, or a null pointer if the format doesn't support fast access to TIC
-    virtual ChromatogramPtr getTIC() const;
+    virtual ChromatogramPtr getTIC(bool ms1Only) const;
 
     /// returns a chromatogram with times and base peak intensities of all spectra, or a null pointer if the format doesn't support fast access to BPC
-    virtual ChromatogramPtr getBPC() const;
+    virtual ChromatogramPtr getBPC(bool ms1Only) const;
 
     virtual std::string getOperatorName() const;
     virtual std::string getAnalysisName() const;
@@ -310,7 +311,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     bool allowMsMsWithoutPrecursor_; // when false, PASEF MS2 specta without precursor info will be excluded
     vector<chemistry::MzMobilityWindow> isolationMzFilter_; // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
     vector<vector<double>> oneOverK0ByScanNumberByCalibration_;
-    ChromatogramPtr tic_, bpc_;
+    ChromatogramPtr tic_, ticMs1_, bpc_, bpcMs1_;
 
     int64_t currentFrameId_; // used for cacheing frame contents
 

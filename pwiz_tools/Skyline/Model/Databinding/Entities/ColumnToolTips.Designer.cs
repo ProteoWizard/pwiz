@@ -758,6 +758,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The concentration of this particular molecule or peptide in this particular replicate.
+        ///If the Explicit Analyte Concentration is not specified then the concentration of the analyte is assumed 
+        ///to be the Analyte Concentration from the Replicate times the Concentration Multiplier of the Peptide or Molecule..
+        /// </summary>
+        public static string ExplicitAnalyteConcentration {
+            get {
+                return ResourceManager.GetString("ExplicitAnalyteConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The exact desired collisional cross section (in square angstroms) to be converted to ion mobility and used in extracting chromatograms from ion mobility mass spectra, overriding all model values. .
         /// </summary>
         public static string ExplicitCollisionalCrossSection {

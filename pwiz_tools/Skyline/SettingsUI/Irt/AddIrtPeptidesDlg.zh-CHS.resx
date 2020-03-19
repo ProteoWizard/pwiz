@@ -624,7 +624,7 @@
     <value>2</value>
   </data>
   <data name="labelChoice.Text" xml:space="preserve">
-    <value>选择您希望以何种方式处理这些肽：</value>
+    <value>选择您希望以何种方式处理这些肽段：</value>
   </data>
   <data name="&gt;&gt;labelChoice.Name" xml:space="preserve">
     <value>labelChoice</value>

@@ -94,7 +94,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _cache != null ? _cache.CachedFiles[_fileIndex].IonMobilityUnits : eIonMobilityUnits.none; } }
-        public override bool SourceHasCombinedIonMobilitySpectra { get { return _cache != null && (_cache.CachedFiles[_fileIndex].FilePath.GetCombineIonMobilitySpectra()); } }
 
         public override bool GetChromatogram(int id, Target modifiedSequence, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
@@ -105,7 +104,7 @@ namespace pwiz.Skyline.Model.Results
                 _lastChromGroupInfo.ReadChromatogram(_cache);
             }
             _lastIndices = chromKeyIndices;
-            var tranInfo = _lastChromGroupInfo.GetTransitionInfo(chromKeyIndices.TranIndex);
+            var tranInfo = _lastChromGroupInfo.GetTransitionInfo(chromKeyIndices.TranIndex, TransformChrom.raw);
             timeIntensities = tranInfo.TimeIntensities;
 
             // Assume that each chromatogram will be read once, though this may

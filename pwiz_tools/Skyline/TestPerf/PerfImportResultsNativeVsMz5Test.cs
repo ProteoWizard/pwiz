@@ -28,6 +28,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -331,13 +333,19 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
             var doc = ResultsUtil.DeserializeDocument(_skyFile);
+            if (_centroided)
+            {
+                doc = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(f =>
+                    f.ChangePrecursorResolution(FullScanMassAnalyzerType.centroided, 20, null)
+                        .ChangeProductResolution(FullScanMassAnalyzerType.centroided, 20, null)));
+            }
             doc = ConnectLibrarySpecs(doc, _skyFile);
             using (var docContainer = new ResultsTestDocumentContainer(doc, _skyFile))
             {
                 var chromSets = new[]
                 {
                     new ChromatogramSet(_replicateName, new[]
-                        { new MsDataFilePath(_dataFile, null, _centroided, _centroided),  }),
+                        { new MsDataFilePath(_dataFile),  }),
                 };
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
                 Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));

@@ -223,7 +223,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>需要保留的肽(&amp;P)：</value>
+    <value>需要保留的肽段(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

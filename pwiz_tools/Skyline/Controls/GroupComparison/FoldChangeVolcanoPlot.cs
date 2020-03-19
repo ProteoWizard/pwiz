@@ -787,11 +787,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var foldchangeCutoff = Math.Abs(Settings.Default.Log2FoldChangeCutoff);
             var pvalueCutoff = Math.Pow(10, -Settings.Default.PValueCutoff);
 
-            var indices =
-                rows.Where(r => CutoffSettings.PValueCutoffValid && r.FoldChangeResult.AdjustedPValue >= pvalueCutoff || CutoffSettings.FoldChangeCutoffValid && r.FoldChangeResult.AbsLog2FoldChange <= foldchangeCutoff)
-                    .Select(GetGlobalIndex)
-                    .Distinct()
-                    .ToArray();
+            var indices = new int[0];
+            if (CutoffSettings.PValueCutoffValid || CutoffSettings.FoldChangeCutoffValid)
+            {
+                indices = GroupComparisonRefinementData.IndicesBelowCutoff(CutoffSettings.PValueCutoffValid ? pvalueCutoff : double.NaN, CutoffSettings.FoldChangeCutoffValid ? foldchangeCutoff : double.NaN,
+                    double.NaN, rows).ToArray();
+            }
+                        
 
             _skylineWindow.ModifyDocument(GroupComparisonStrings.FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs, document => (SrmDocument)document.RemoveAll(indices),
                 docPair => AuditLogEntry.CreateSimpleEntry(indices.Length == 1 ? MessageType.removed_single_below_cutoffs : MessageType.removed_below_cutoffs, docPair.NewDocumentType,

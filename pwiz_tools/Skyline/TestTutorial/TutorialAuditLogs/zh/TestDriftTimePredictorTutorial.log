@@ -24,7 +24,7 @@ Undo Redo : 已管理结果
 Summary   : 已管理结果
 All Info  :
 已管理结果
-已删除重复测定 Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01
+已接受的肽段 Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01
 
 Undo Redo : 肽段设置 -- 预测 > 离子迁移预测器 从 "None" 更改到 "BSA"
 Summary   : 设置 > 肽段设置 -- 预测 > 离子迁移预测器 从 "None" 更改到 "BSA"
@@ -96,9 +96,4 @@ Extra Info: 文件名称 =
 [
     "BSA_Frag_100nM_18May15_Fir_15-04-02"
 ]
-
-Undo Redo : 已管理结果
-Summary   : 已管理结果
-All Info  :
-已管理结果
 

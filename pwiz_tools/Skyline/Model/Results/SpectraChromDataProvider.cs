@@ -47,7 +47,6 @@ namespace pwiz.Skyline.Model.Results
         private bool _isSingleMzMatch;
         private bool _sourceHasPositivePolarityData;
         private bool _sourceHasNegativePolarityData;
-        private bool _sourceHasCombinedIonMobilitySpectra;
         private double? _ticArea;
 
         private readonly ChromatogramLoadingStatus.TransitionData _allChromData;
@@ -85,6 +84,11 @@ namespace pwiz.Skyline.Model.Results
             _document = document;
             _cachePath = cachePath;
             _globalChromatogramExtractor = new GlobalChromatogramExtractor(dataFile);
+            if (_document.Settings.TransitionSettings.FullScan.IsEnabledMs 
+                && !_globalChromatogramExtractor.IsTicChromatogramUsable())
+            {
+                _globalChromatogramExtractor.TicChromatogramIndex = null;
+            }
 
             // If no SRM spectra, then full-scan filtering must be enabled
             _isSrm = dataFile.HasSrmSpectra;
@@ -111,7 +115,6 @@ namespace pwiz.Skyline.Model.Results
 
             if (NeedMaxIonMobilityValue(dataFile))
                 _maxIonMobilityValue = dataFile.GetMaxIonMobility();
-            _sourceHasCombinedIonMobilitySpectra = dataFile.HasCombinedIonMobilitySpectra;
 
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);
@@ -222,8 +225,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _filter.IonMobilityUnits; } }
-
-        public override bool SourceHasCombinedIonMobilitySpectra { get { return _sourceHasCombinedIonMobilitySpectra; } }
 
         private void ExtractionComplete()
         {
@@ -599,27 +600,29 @@ namespace pwiz.Skyline.Model.Results
         public override bool GetChromatogram(int id, Target modifiedSequence, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             var chromKey = _collectors.ChromKeys.Count > id ? _collectors.ChromKeys[id] : null;
-
-            if (!SignedMz.ZERO.Equals(chromKey?.Precursor ?? SignedMz.ZERO) ||
-                !_globalChromatogramExtractor.GetChromatogram(id, out float[] times, out float[] intensities))
+            timeIntensities = null;
+            extra = null;
+            if (SignedMz.ZERO.Equals(chromKey?.Precursor ?? SignedMz.ZERO))
+            {
+                if (_globalChromatogramExtractor.GetChromatogram(id, out float[] times, out float[] intensities))
+                {
+                    timeIntensities = new TimeIntensities(times, intensities, null, null);
+                    extra = new ChromExtra(0, 0);
+                }
+            }
+            if (null == timeIntensities)
             {
                 var statusId = _collectors.ReleaseChromatogram(id, _chromGroups, out timeIntensities);
                 extra = new ChromExtra(statusId, 0);
                 // Each chromatogram will be read only once!
                 _readChromatograms++;
             }
-            else
+
+            if (null != chromKey && SignedMz.ZERO.Equals(chromKey.Precursor) &&
+                ChromExtractor.summed == chromKey.Extractor && timeIntensities.NumPoints > 0)
             {
-                // BPC and TIC are extracted directly from the file's chromatograms
-                timeIntensities = new TimeIntensities(times, intensities, null, null);
-                extra = new ChromExtra(0, 0);
-
-                if (timeIntensities.NumPoints > 0 && ChromExtractor.summed == chromKey?.Extractor)
-                {
-                    _ticArea = timeIntensities.Integral(0, timeIntensities.NumPoints - 1);
-                }
+                _ticArea = timeIntensities.Integral(0, timeIntensities.NumPoints - 1);
             }
-
 
             UpdatePercentComplete();
             return timeIntensities.NumPoints > 0;
@@ -1004,121 +1007,129 @@ namespace pwiz.Skyline.Model.Results
             {
                 while ((i = _lookaheadContext.NextIndex(i)) < _countSpectra)
                 {
-
-                    if (HasSrmSpectra)
+                    try
                     {
-                        var nextSpectrum = _dataFile.GetSrmSpectrum(i);
-                        if (nextSpectrum.Level != 2)
-                            continue;
-
-                        if (!nextSpectrum.RetentionTime.HasValue)
+                        if (HasSrmSpectra)
                         {
-                            throw new InvalidDataException(
+                            var nextSpectrum = _dataFile.GetSrmSpectrum(i);
+                            if (nextSpectrum.Level != 2)
+                                continue;
+
+                            if (!nextSpectrum.RetentionTime.HasValue)
+                            {
+                                throw new InvalidDataException(
                                 string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time,
                                     _dataFile.GetSpectrumId(i)));
-                        }
-                        var precursors = nextSpectrum.Precursors;
-                        if (precursors.Count < 1 || !precursors[0].PrecursorMz.HasValue)
-                        {
+                            }
+                            var precursors = nextSpectrum.Precursors;
+                            if (precursors.Count < 1 || !precursors[0].PrecursorMz.HasValue)
+                            {
                             throw new InvalidDataException(
                                 string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
                                     _dataFile.GetSpectrumId(i)));
-                        }
-                        return new SpectrumInfo(i, new []{nextSpectrum}, (float) nextSpectrum.RetentionTime.Value);
-                    }
-                    else
-                    {
-                        // CONSIDER: This showed up as 10% in diaPASEF profiling because it requires FullMetaData
-                        // It no longer provides any benefit in that case, because of the use of combined 3D spectra
-                        // Before reinstating this filter, we need a way of deciding whether it will be of any use
-                        // by querying the MsDataFile, did it succeed in producing combined spectra. Otherwise,
-                        // this is a costly operation with little benefit.
-//                        var ionMobility = _filter.HasIonMobilityFilters ? _lookaheadContext.GetIonMobility(i) : null ; // Read this first to take advantage of cache behavior
-
-                        // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
-                        var msLevel = _lookaheadContext.GetMsLevel(i);
-                        if (!_filter.EnabledMsMs && msLevel != 1)
-                            continue;
-                        // And if full gradient MS1 is not required and MS1 filtering is not enabled, skip MS1 spectra
-                        if (!_filter.EnabledMs && msLevel == 1 && !_filter.IsFilteringFullGradientMs1)
-                            continue;
-
-                        // Skip quickly through the chromatographic lead-in and tail when possible 
-                        if (msLevel > 1 || (_filter.HasRangeRT && !_filter.IsFilteringFullGradientMs1)) // We need all MS1 for TIC and BPC
-                        {
-                            // Only do these checks if we can get the information instantly. Otherwise,
-                            // this will slow down processing in more complex cases.
-                            double? rtCheck = _lookaheadContext.GetRetentionTime(i);
-                            if (_filter.IsOutsideRetentionTimeRange(rtCheck))
-                            {
-                                // Leave an update cue for the chromatogram painter then move on
-                                if (_allChromData != null)
-                                    _allChromData.CurrentTime = (float)rtCheck.Value;
-                                continue;
                             }
+                            return new SpectrumInfo(i, new[] {nextSpectrum}, (float) nextSpectrum.RetentionTime.Value);
+                        }
+                        else
+                        {
+                            // CONSIDER: This showed up as 10% in diaPASEF profiling because it requires FullMetaData
+                            // It no longer provides any benefit in that case, because of the use of combined 3D spectra
+                            // Before reinstating this filter, we need a way of deciding whether it will be of any use
+                            // by querying the MsDataFile, did it succeed in producing combined spectra. Otherwise,
+                            // this is a costly operation with little benefit.
+                            //                        var ionMobility = _filter.HasIonMobilityFilters ? _lookaheadContext.GetIonMobility(i) : null ; // Read this first to take advantage of cache behavior
 
-                            if (msLevel > 1)
+                            // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
+                            var msLevel = _lookaheadContext.GetMsLevel(i);
+                            if (!_filter.EnabledMsMs && msLevel != 1)
+                                continue;
+                            // And if full gradient MS1 is not required and MS1 filtering is not enabled, skip MS1 spectra
+                            if (!_filter.EnabledMs && msLevel == 1 && !_filter.IsFilteringFullGradientMs1)
+                                continue;
+
+                            // Skip quickly through the chromatographic lead-in and tail when possible 
+                            if (msLevel > 1 || (_filter.HasRangeRT && !_filter.IsFilteringFullGradientMs1)) // We need all MS1 for TIC and BPC
                             {
-                                var precursors = _lookaheadContext.GetPrecursors(i, 1);
-                                if (precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
+                                // Only do these checks if we can get the information instantly. Otherwise,
+                                // this will slow down processing in more complex cases.
+                                double? rtCheck = _lookaheadContext.GetRetentionTime(i);
+                                if (_filter.IsOutsideRetentionTimeRange(rtCheck))
                                 {
+                                    // Leave an update cue for the chromatogram painter then move on
+                                    if (_allChromData != null)
+                                        _allChromData.CurrentTime = (float) rtCheck.Value;
                                     continue;
                                 }
+
+                                if (msLevel > 1)
+                                {
+                                    var precursors = _lookaheadContext.GetPrecursors(i, 1);
+                                    if (precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
+                                    {
+                                        continue;
+                                    }
+                                }
                             }
-                        }
 
-                        // Ignore uninteresting ion mobility ranges
-//                        if (ionMobility != null && ionMobility.HasValue && _filter.IsOutsideIonMobilityRange(ionMobility))
-//                        {
-//                            continue;
-//                        }
+                            // Ignore uninteresting ion mobility ranges
+                            //                        if (ionMobility != null && ionMobility.HasValue && _filter.IsOutsideIonMobilityRange(ionMobility))
+                            //                        {
+                            //                            continue;
+                            //                        }
 
-                        // Inexpensive checks are complete, now actually get the spectrum data
-                        var nextSpectrum = _lookaheadContext.GetSpectrum(i);
-                        // Assertion for testing ID to spectrum index support
-                        //                        int iFromId = dataFile.GetSpectrumIndex(dataSpectrum.Id);
-                        //                        Assume.IsTrue(i == iFromId);
-                        if (nextSpectrum.Mzs.Length == 0)
-                            continue;
-
-                        double? rt = nextSpectrum.RetentionTime;
-                        if (!rt.HasValue)
-                            continue;
-
-                        // For Waters msE skip any lockspray data
-                        if (_filter.IsWatersMse)
-                        {
-                            // looking for the 3 in 3.0.1 (or the 10 in 10.0.1) or the 2 in 1.2.3 if it's combined ion mobility'
-                            if (MsDataSpectrum.WatersFunctionNumberFromId(nextSpectrum.Id, _dataFile.HasCombinedIonMobilitySpectra) > 2)
+                            // Inexpensive checks are complete, now actually get the spectrum data
+                            var nextSpectrum = _lookaheadContext.GetSpectrum(i);
+                            // Assertion for testing ID to spectrum index support
+                            //                        int iFromId = dataFile.GetSpectrumIndex(dataSpectrum.Id);
+                            //                        Assume.IsTrue(i == iFromId);
+                            if (nextSpectrum.Mzs.Length == 0)
                                 continue;
-                        }
-                        else if (_filter.IsWatersFile)
-                        {
-                            // looking for the 3 in id string 3.0.1 (or the 10 in 10.0.1)
-                            if ( _dataFile.IsWatersLockmassSpectrum(nextSpectrum))
+
+                            double? rt = nextSpectrum.RetentionTime;
+                            if (!rt.HasValue)
                                 continue;
+
+                            // For Waters msE skip any lockspray data
+                            if (_filter.IsWatersMse)
+                            {
+                                // looking for the 3 in 3.0.1 (or the 10 in 10.0.1) or the 2 in 1.2.3 if it's combined ion mobility'
+                                if (MsDataSpectrum.WatersFunctionNumberFromId(nextSpectrum.Id, _dataFile.HasCombinedIonMobilitySpectra) > 2)
+                                    continue;
+                            }
+                            else if (_filter.IsWatersFile)
+                            {
+                                // looking for the 3 in id string 3.0.1 (or the 10 in 10.0.1)
+                                if (_dataFile.IsWatersLockmassSpectrum(nextSpectrum))
+                                    continue;
+                            }
+
+                            // Deal with ion mobility data - look ahead for a run of scans all 
+                            // with the same retention time.  For non-IMS data we'll just get
+                            // a single "ion mobility bin" with no ion mobility value.
+                            //
+                            // Also for Agilent ramped-CE msE, gather MS2 scans together
+                            // so they get averaged.
+                            //
+
+                            var nextSpectra = _lookaheadContext.Lookahead(nextSpectrum, out rt);
+                            if (!rt.HasValue)
+                                continue; // Spectrum didn't match filter, probably due to being outside IM range
+
+                            if (!_filter.ContainsTime(rt.Value))
+                            {
+                                if (_allChromData != null)
+                                    _allChromData.CurrentTime = (float) rt.Value;
+                                continue;
+                            }
+
+                            return new SpectrumInfo(i, nextSpectra, rt.Value);
                         }
-
-                        // Deal with ion mobility data - look ahead for a run of scans all 
-                        // with the same retention time.  For non-IMS data we'll just get
-                        // a single "ion mobility bin" with no ion mobility value.
-                        //
-                        // Also for Agilent ramped-CE msE, gather MS2 scans together
-                        // so they get averaged.
-                        //
-
-                        var nextSpectra = _lookaheadContext.Lookahead(nextSpectrum, out rt);
-                        if (!rt.HasValue)
-                            continue; // Spectrum didn't match filter, probably due to being outside IM range
-
-                        if (!_filter.ContainsTime(rt.Value))
-                        {
-                            if (_allChromData != null)
-                                _allChromData.CurrentTime = (float)rt.Value;
-                            continue;
-                        }
-
-                        return new SpectrumInfo(i, nextSpectra, rt.Value);
+                    }
+                    catch (Exception e)
+                    {
+                        if (e.Message.Contains(@"NoVendorPeakPickingException"))
+                            throw;
+                        throw new Exception($@"error reading spectrum {_dataFile.GetSpectrumId(i)}", e);
                     }
                 }
                 return SpectrumInfo.LAST;

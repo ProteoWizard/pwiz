@@ -603,8 +603,9 @@ namespace pwiz.Skyline
             }
             if (ImportingResultsWindow != null)
             {
-                ImportingResultsWindow.Close();
+                var importingResultsWindowTemp = ImportingResultsWindow;
                 ImportingResultsWindow = null;
+                importingResultsWindowTemp.RemoveAsync();
 
                 // Reset progress for the current document
                 _chromatogramManager.ResetProgress(Document);
@@ -999,8 +1000,7 @@ namespace pwiz.Skyline
 
         private void editToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            bool canApply, canRemove;
-            CanApplyOrRemovePeak(null, null, out canApply, out canRemove);
+            CanApplyOrRemovePeak(null, null, out var canApply, out var canRemove);
             if (!canApply && !canRemove)
             {
                 integrationToolStripMenuItem.Enabled = false;
@@ -1008,8 +1008,66 @@ namespace pwiz.Skyline
             else
             {
                 applyPeakAllToolStripMenuItem.Enabled = applyPeakSubsequentToolStripMenuItem.Enabled = canApply;
+                applyPeakGroupToolStripMenuItem.Text = Resources.SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group;
+                groupApplyToByToolStripMenuItem.DropDownItems.Clear();
+                applyPeakGroupToolStripMenuItem.Enabled = groupApplyToByToolStripMenuItem.Enabled = false;
+                if (ReplicateValue.GetGroupableReplicateValues(DocumentUI).Any())
+                {
+                    groupApplyToByToolStripMenuItem.Enabled = true;
+                    var selectedAnnotation = GetGroupApplyToDescription();
+                    if (selectedAnnotation != null)
+                    {
+                        applyPeakGroupToolStripMenuItem.Text = Resources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + selectedAnnotation;
+                        applyPeakGroupToolStripMenuItem.Enabled = true;
+                    }
+                    var i = 0;
+                    AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue=> Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
+                    groupApplyToByGraphMenuItem.Visible = true;
+                }
+                else
+                {
+                    groupApplyToByGraphMenuItem.Visible = false;
+                }
                 removePeakToolStripMenuItem.Enabled = canRemove;
                 integrationToolStripMenuItem.Enabled = true;
+            }
+        }
+
+        private void AddApplyRemovePeak(ToolStrip menuStrip, ToolStripItemCollection removePeakItems, IsotopeLabelType labelType, int separator, ref int iInsert)
+        {
+            var document = DocumentUI;
+            CanApplyOrRemovePeak(removePeakItems, labelType, out var canApply, out var canRemove);
+            if (canApply || canRemove)
+            {
+                if (separator < 0)
+                    menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
+                if (canApply)
+                {
+                    menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
+                    menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
+                    var groupable = ReplicateValue.GetGroupableReplicateValues(document).ToArray();
+                    if (groupable.Any())
+                    {
+                        var groupBy = GetGroupApplyToDescription();
+                        if (groupBy != null)
+                        {
+                            applyPeakGroupGraphMenuItem.Text =
+                                Resources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + groupBy;
+                            menuStrip.Items.Insert(iInsert++, applyPeakGroupGraphMenuItem);
+                        }
+
+                        AddGroupByMenuItems(menuStrip, groupApplyToByGraphMenuItem, SetGroupApplyToBy, false, Settings.Default.GroupApplyToBy, ref iInsert);
+                        groupApplyToByGraphMenuItem.Visible = true;
+                    }
+                    else
+                    {
+                        groupApplyToByGraphMenuItem.Visible = false;
+                    }
+                }
+                if (canRemove)
+                    menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
+                if (separator > 0)
+                    menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
             }
         }
 
@@ -1024,7 +1082,7 @@ namespace pwiz.Skyline
             var displayType = GraphChromatogram.GetDisplayType(DocumentUI, selectedTreeNode);
             if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic || displayType == DisplayTypeChrom.qc)
                 return;
-            ChromFileInfoId chromFileInfoId = GetSelectedChromFileId();
+            var chromFileInfoId = GetSelectedChromFileId();
 
             var node = selectedTreeNode as TransitionTreeNode;
             if (node != null && GraphChromatogram.IsSingleTransitionDisplay)
@@ -1038,7 +1096,7 @@ namespace pwiz.Skyline
             }
             else if (selectedTreeNode is TransitionTreeNode && displayType == DisplayTypeChrom.all ||
                      selectedTreeNode is TransitionGroupTreeNode ||
-                     selectedTreeNode is PeptideTreeNode && ((PeptideTreeNode)selectedTreeNode).DocNode.Children.Any())
+                     selectedTreeNode is PeptideTreeNode treeNode && treeNode.DocNode.Children.Any())
             {
                 canApply = true;
 
@@ -1049,19 +1107,17 @@ namespace pwiz.Skyline
 
                 if (hasPeak)
                 {
-                    if (removePeakItems != null)
-                        removePeakItems.Clear();
+                    removePeakItems?.Clear();
                     canRemove = true;
 
                     // Remove [IsotopeLabelType]
                     if (removePeakItems != null && labelType != null)
                     {
-                        var peptideTreeNode = selectedTreeNode as PeptideTreeNode;
                         // only if multiple isotope label types
-                        if (peptideTreeNode != null &&
+                        if (selectedTreeNode is PeptideTreeNode peptideTreeNode &&
                             peptideTreeNode.DocNode.TransitionGroups.Select(nodeTranGroup => nodeTranGroup.TransitionGroup.LabelType).Distinct().Count() > 1)
                         {
-                            removePeakItems.Add(new ToolStripMenuItem {Tag = labelType});
+                            removePeakItems.Add(new ToolStripMenuItem { Tag = labelType });
                         }
                     }
                 }
@@ -1083,6 +1139,28 @@ namespace pwiz.Skyline
             return graphChrom.GetChromFileInfoId();
         }
 
+        public string GetGroupApplyToDescription()
+        {
+            var document = Document;
+            var groupBy = ReplicateValue.FromPersistedString(document.Settings, Settings.Default.GroupApplyToBy);
+            if (groupBy == null)
+            {
+                return null;
+            }
+
+            object value = null;
+            if (document.Settings.HasResults)
+            {
+                int replicateIndex = SelectedResultsIndex;
+                if (replicateIndex >= 0 && replicateIndex < document.Settings.MeasuredResults.Chromatograms.Count)
+                {
+                    var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];
+                    value = groupBy.GetValue(new AnnotationCalculator(document), chromatogramSet);
+                }
+            }
+
+            return groupBy.Title + ':' + value;
+        }
         private void ranksMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
@@ -1588,21 +1666,7 @@ namespace pwiz.Skyline
             bool retentionPredict = (settings.PeptideSettings.Prediction.RetentionTime != null);
             bool peptideIdTimes = (settings.PeptideSettings.Libraries.HasLibraries &&
                                    (settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary));
-            bool canApply, canRemove;
-            CanApplyOrRemovePeak(removePeakGraphMenuItem.DropDownItems, paneKey.IsotopeLabelType, out canApply, out canRemove);
-            if (canApply || canRemove)
-            {
-                if (canApply)
-                {
-                    menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
-                    menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
-                }
-                if (canRemove)
-                {
-                    menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
-                }
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
-            }
+            AddApplyRemovePeak(menuStrip, removePeakGraphMenuItem.DropDownItems, paneKey.IsotopeLabelType, 1, ref iInsert);
             legendChromContextMenuItem.Checked = set.ShowChromatogramLegend;
             menuStrip.Items.Insert(iInsert++, legendChromContextMenuItem);
             var fullScan = Document.Settings.TransitionSettings.FullScan;
@@ -2015,13 +2079,11 @@ namespace pwiz.Skyline
 
         private void removePeakMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            bool canApply, canRemove;
-            CanApplyOrRemovePeak(null, null, out canApply, out canRemove);
+            CanApplyOrRemovePeak(null, null, out _, out var canRemove);
             if (!canRemove)
                 return;
 
-            var menu = sender as ToolStripMenuItem;
-            if (menu == null || !menu.DropDownItems.OfType<object>().Any())
+            if (!(sender is ToolStripMenuItem menu) || !menu.DropDownItems.OfType<object>().Any())
                 return;
 
             var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
@@ -2101,24 +2163,28 @@ namespace pwiz.Skyline
 
         private void applyPeakAllMenuItem_Click(object sender, EventArgs e)
         {
-            ApplyPeak(false);
+            ApplyPeak(false, false);
         }
 
         private void applyPeakSubsequentMenuItem_Click(object sender, EventArgs e)
         {
-            ApplyPeak(true);
+            ApplyPeak(true, false);
         }
 
-        public void ApplyPeak(bool subsequent)
+        private void applyPeakGroupGraphMenuItem_Click(object sender, EventArgs e)
         {
-            bool canApply, canRemove;
-            CanApplyOrRemovePeak(null, null, out canApply, out canRemove);
+            ApplyPeak(false, true);
+        }
+
+        public void ApplyPeak(bool subsequent, bool group)
+        {
+            CanApplyOrRemovePeak(null, null, out var canApply, out _);
             if (!canApply)
                 return;
 
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             var nodeTranGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-            var nodeTranGroup = nodeTranGroupTree != null ? nodeTranGroupTree.DocNode : null;
+            var nodeTranGroup = nodeTranGroupTree?.DocNode;
 
             using (var longWait = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ApplyPeak_Applying_Peak })
             {
@@ -2126,8 +2192,17 @@ namespace pwiz.Skyline
                 try
                 {
                     var resultsIndex = SelectedResultsIndex;
-                    var resultsFile = GetGraphChrom(Document.MeasuredResults.Chromatograms[resultsIndex].Name).GetChromFileInfoId();
-                    longWait.PerformWork(this, 800, monitor => doc = PeakMatcher.ApplyPeak(Document, nodePepTree, ref nodeTranGroup, resultsIndex, resultsFile, subsequent, monitor));
+                    var chromatogramSet = Document.MeasuredResults.Chromatograms[resultsIndex];
+                    var resultsFile = GetGraphChrom(chromatogramSet.Name).GetChromFileInfoId();
+                    var groupBy =
+                        ReplicateValue.FromPersistedString(Document.Settings, Settings.Default.GroupApplyToBy);
+                    object groupByValue = null;
+                    if (groupBy != null)
+                    {
+                        groupByValue = groupBy.GetValue(new AnnotationCalculator(Document), chromatogramSet);
+                    }
+                    longWait.PerformWork(this, 800, monitor =>
+                        doc = PeakMatcher.ApplyPeak(Document, nodePepTree, ref nodeTranGroup, resultsIndex, resultsFile, subsequent, groupBy, groupByValue, monitor));
                 }
                 catch (Exception x)
                 {
@@ -2162,9 +2237,8 @@ namespace pwiz.Skyline
 
         public void RemovePeak(bool removePeakByContextMenu = false)
         {
-            bool canApply, canRemove;
             var chromFileInfoId = GetSelectedChromFileId();
-            CanApplyOrRemovePeak(null, null, out canApply, out canRemove);
+            CanApplyOrRemovePeak(null, null, out _, out var canRemove);
             if (!canRemove)
                 return;
 
@@ -3035,7 +3109,7 @@ namespace pwiz.Skyline
 
         public void CloseAllChromatograms()
         {
-            foreach (var graphChromatogram in _listGraphChrom)
+            foreach (var graphChromatogram in _listGraphChrom.ToList())
             {
                 graphChromatogram.Hide();
             }
@@ -3409,17 +3483,16 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++,setRegressionMethodContextMenuItem);
                 if (setRegressionMethodContextMenuItem.DropDownItems.Count == 0)
                 {
-                        setRegressionMethodContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    setRegressionMethodContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         linearRegressionContextMenuItem,
                         kernelDensityEstimationContextMenuItem,
                         loessContextMenuItem
                     });
                 }
-                linearRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod ==
-                                                            RegressionMethodRT.linear;
-                kernelDensityEstimationContextMenuItem.Checked = RTGraphController.RegressionMethod ==
-                                                                   RegressionMethodRT.kde;
+                linearRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.linear;
+                kernelDensityEstimationContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.kde;
+                logRegressionContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.log;
                 loessContextMenuItem.Checked = RTGraphController.RegressionMethod == RegressionMethodRT.loess;
 
                 var showPointsTypeStandards = Document.GetRetentionTimeStandards().Any();
@@ -3557,24 +3630,10 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator38);
                 menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);
 
-                bool canApply, canRemove;
                 var isotopeLabelType = graph.GraphPaneFromPoint(mousePt) != null
                     ? graph.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
                     : null;
-                CanApplyOrRemovePeak(removePeakGraphMenuItem.DropDownItems, isotopeLabelType, out canApply, out canRemove);
-                if (canApply || canRemove)
-                {
-                    menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
-                    if (canApply)
-                    {
-                        menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
-                        menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
-                    }
-                    if (canRemove)
-                    {
-                        menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
-                    }
-                }
+                AddApplyRemovePeak(menuStrip, removePeakGraphMenuItem.DropDownItems, isotopeLabelType, -1, ref iInsert);
             }
 
             menuStrip.Items.Insert(iInsert, toolStripSeparator24);
@@ -3687,6 +3746,11 @@ namespace pwiz.Skyline
         private void kernelDensityEstimationContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowRegressionMethod(RegressionMethodRT.kde);
+        }
+
+        private void logRegressionContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRegressionMethod(RegressionMethodRT.log);
         }
 
         private void loessContextMenuItem_Click(object sender, EventArgs e)
@@ -4283,7 +4347,7 @@ namespace pwiz.Skyline
             var isHistogram = graphType == GraphTypeSummary.histogram || graphType == GraphTypeSummary.histogram2d;
 
             if (isHistogram)
-                AddGroupByMenuItems(menuStrip, ref iInsert);
+                AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
             else
                 AddTransitionContextMenu(menuStrip, iInsert++);
 
@@ -4455,24 +4519,10 @@ namespace pwiz.Skyline
 
             if (!isHistogram)
             {
-                bool canApply, canRemove;
                 var isotopeLabelType = graphSummary.GraphPaneFromPoint(mousePt) != null
                     ? graphSummary.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
                     : null;
-                CanApplyOrRemovePeak(removePeakGraphMenuItem.DropDownItems, isotopeLabelType, out canApply, out canRemove);
-                if (canApply || canRemove)
-                {
-                    menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
-                    if (canApply)
-                    {
-                        menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
-                        menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
-                    }
-                    if (canRemove)
-                    {
-                        menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
-                    }
-                }
+                AddApplyRemovePeak(menuStrip, removePeakGraphMenuItem.DropDownItems, isotopeLabelType, -1, ref iInsert);
             }
 
             // Remove some ZedGraph menu items not of interest
@@ -4636,43 +4686,38 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming(graphSummaries.FirstOrDefault(gs => gs != null && ReferenceEquals(gs.GraphControl, sender)), newState);
         }
 
-        private void AddGroupByMenuItems(ToolStrip menuStrip, ref int iInsert)
+        private void AddGroupByMenuItems(ToolStrip menuStrip, ToolStripDropDownItem item, Action<ReplicateValue> clickHandler, bool includeAll, string checkedValue, ref int iInsert)
         {
-            var groups = AnnotationHelper.FindGroupsByTarget(Document.Settings, AnnotationDef.AnnotationTarget.replicate);
-            if (!groups.Any())
+            var replicateValues = ReplicateValue.GetGroupableReplicateValues(Document).ToArray();
+            if (!replicateValues.Any())
             {
                 return;
             }
 
-            var item = groupReplicatesByContextMenuItem;
             item.DropDownItems.Clear();
 
-            var all = new ToolStripMenuItem(Resources.SkylineWindow_AddGroupByMenuItems_All_Replicates, null, cvAreaHistogramGroupByMenuItem_Click);
-            if (string.IsNullOrEmpty(AreaGraphController.GroupByGroup))
-                all.Checked = true;
-
-            item.DropDownItems.Add(all);
-
-            foreach (var g in groups)
+            if (includeAll)
             {
-                var subItem = new ToolStripMenuItem(g, null, cvAreaHistogramGroupByMenuItem_Click)
+                item.DropDownItems.Add(new ToolStripMenuItem(Resources.SkylineWindow_AddGroupByMenuItems_All_Replicates,
+                    null, (sender, args)=>clickHandler(null)) {Checked = string.IsNullOrEmpty(checkedValue)});
+            }
+
+            foreach (var g in replicateValues)
+            {
+                var subItem = new ToolStripMenuItem(g.Title, null, (sender, args)=>clickHandler(g))
                 {
-                    Checked = AreaGraphController.GroupByGroup == g
+                    Checked = checkedValue == g.ToPersistedString(),
                 };
 
                 item.DropDownItems.Add(subItem);
             }
 
-            menuStrip.Items.Insert(iInsert++, item);
+            menuStrip?.Items.Insert(iInsert++, item);
         }
 
-        private void cvAreaHistogramGroupByMenuItem_Click(object sender, EventArgs e)
+        public void SetGroupApplyToBy(ReplicateValue replicateValue)
         {
-            var item = (ToolStripMenuItem) sender;
-            string group = null;
-            if (((ToolStripMenuItem) item.OwnerItem).DropDownItems.IndexOf(item) != 0)
-                group = item.Text;
-            SetAreaCVGroup(group);
+            Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString();
         }
 
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
@@ -4777,10 +4822,10 @@ namespace pwiz.Skyline
                 nodeCount, Settings.Default.AreaCVCVCutoff * AreaGraphController.GetAreaCVFactorToPercentage()));
         }
 
-        public void SetAreaCVGroup(string group)
+        public void SetAreaCVGroup(ReplicateValue replicateValue)
         {
-            AreaGraphController.GroupByGroup = group;
-            if (string.IsNullOrEmpty(group))
+            AreaGraphController.GroupByGroup = replicateValue?.ToPersistedString();
+            if (null == replicateValue)
                 AreaGraphController.GroupByAnnotation = null;
             UpdatePeakAreaGraph();
         }

@@ -268,6 +268,7 @@ namespace pwiz.Skyline
         }
 
         public AllChromatogramsGraph ImportingResultsWindow { get; private set; }
+        public MultiProgressStatus ImportingResultsError { get; private set; }
 
         protected override void OnShown(EventArgs e)
         {
@@ -472,6 +473,10 @@ namespace pwiz.Skyline
             get { return _immediateWindow; }
         }
 
+        public DockPanel DockPanel
+        {
+            get { return dockPanel; }
+        }
         public bool DiscardChanges { get; set; }
 
         /// <summary>
@@ -2557,12 +2562,27 @@ namespace pwiz.Skyline
 
         public void ShowRefineDlg()
         {
-            using (var refineDlg = new RefineDlg(DocumentUI))
+            using (var refineDlg = new RefineDlg(this))
             {
                 if (refineDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine,
-                        doc => refineDlg.RefinementSettings.Refine(doc), refineDlg.FormSettings.EntryCreator.Create);
+                        doc =>
+                        {
+                            using (var longWaitDlg = new LongWaitDlg(this))
+                            {
+                                longWaitDlg.Message = Resources.SkylineWindow_ShowRefineDlg_Refining_document;
+                                longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
+                                {
+                                    var srmSettingsChangeMonitor =
+                                        new SrmSettingsChangeMonitor(progressMonitor, Resources.SkylineWindow_ShowRefineDlg_Refining_document, this, doc);
+
+                                        doc = refineDlg.RefinementSettings.Refine(doc, srmSettingsChangeMonitor);
+                                    });
+                            }
+
+                            return doc;
+                        }, refineDlg.FormSettings.EntryCreator.Create);
                 }
             }
         }
@@ -3388,32 +3408,9 @@ namespace pwiz.Skyline
             // Explorer's spectrum graph pane.
             UpdateGraphPanes();
         }
-        public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
+
+        private void HandleStandardsChanged(ICollection<Target> oldStandard)
         {
-            SrmDocument docImport;
-            using (var standardDocReader = standard.GetDocumentReader())
-            {
-                if (standardDocReader == null)
-                    return null;
-
-                var ser = new XmlSerializer(typeof(SrmDocument));
-                docImport = (SrmDocument) ser.Deserialize(standardDocReader);
-            }
-
-            var peps = docImport.Peptides.ToList();
-            var precs = peps.Select(p => p.TransitionGroups.First());
-            /*for (var i = 0; i < peps.Count; i++)
-            {
-                var modSeq = ModifiedSequence.GetModifiedSequence(docImport.Settings, peps[i], IsotopeLabelType.light);
-                peps[i] = peps[i].ChangeExplicitMods(new ExplicitMods(peps[i].Peptide,
-                    modSeq.ExplicitMods.Select(m => m.ExplicitMod).ToArray(),
-                    new TypedExplicitModifications[0]));
-            }*/
-            return Enumerable.Zip(peps, precs,
-                (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec)).ToList();
-        }
-
-        private void HandleStandardsChanged(ICollection<Target> oldStandard)        {
             var calc = RCalcIrt.Calculator(Document);
             if (calc == null)
                 return;
@@ -3428,64 +3425,76 @@ namespace pwiz.Skyline
             }
             
             // Determine which peptides are in the standard, but not in the document
-            var missingPeptides = newStandard.Except(Document.Peptides.Select(pep => pep.Peptide.Target)).ToHashSet();
+            var documentPeps = new TargetMap<bool>(Document.Molecules.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            var missingPeptides = new TargetMap<bool>(newStandard.Where(pep => !documentPeps.ContainsKey(pep)).Select(target => new KeyValuePair<Target, bool>(target, true)));
             if (missingPeptides.Count == 0)
                 return;
 
+            SrmDocument newDoc = null;
+            IdentityPath firstAdded = null;
+            var numTransitions = 0;
+            Func<SrmDocumentPair, AuditLogEntry> dlgCreate = null;
             if (!string.IsNullOrEmpty(calc.DocumentXml))
             {
                 using (var reader = new StringReader(calc.DocumentXml))
+                using (var dlg = new AddIrtStandardsToDocumentDlg())
                 {
-                    AddStandardsToDocument(reader, missingPeptides);
+                    if (dlg.ShowDialog(this) == DialogResult.Yes)
+                    {
+                        newDoc = Document.ImportDocumentXml(reader,
+                            string.Empty,
+                            MeasuredResults.MergeAction.remove,
+                            false,
+                            FindSpectralLibrary,
+                            Settings.Default.StaticModList,
+                            Settings.Default.HeavyModList,
+                            Document.Children.Any() ? new IdentityPath(Document.Children.First().Id) : null,
+                            out firstAdded,
+                            out _,
+                            false);
+                        numTransitions = dlg.NumTransitions;
+                        dlgCreate = dlg.FormSettings.EntryCreator.Create;
+                    }
                 }
             }
             else
             {
-                using (var reader = IrtStandard.WhichStandard(newStandard).GetDocumentReader())
+                var matchingStandard = IrtStandard.WhichStandard(newStandard);
+                if (matchingStandard != null && matchingStandard.HasDocument)
                 {
-                    if (reader != null)
-                        AddStandardsToDocument(reader, missingPeptides);
+                    using (var dlg = new AddIrtStandardsToDocumentDlg())
+                    {
+                        if (dlg.ShowDialog(this) == DialogResult.Yes)
+                        {
+                            newDoc = matchingStandard.ImportTo(Document, FindSpectralLibrary, out firstAdded);
+                            numTransitions = dlg.NumTransitions;
+                            dlgCreate = dlg.FormSettings.EntryCreator.Create;
+                        }
+                    }
                 }
             }
-        }
-
-        private void AddStandardsToDocument(TextReader reader, ICollection<Target> missingPeptides)
-        {
-            using (var dlg = new AddIrtStandardsToDocumentDlg())
+            if (newDoc != null)
             {
-                if (dlg.ShowDialog(this) == DialogResult.Yes)
+                ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, _ =>
                 {
-                    ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, doc =>
+                    var standardPepGroup = newDoc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
+                    var pepList = new List<DocNode>();
+                    foreach (var nodePep in standardPepGroup.Peptides.Where(pep => missingPeptides.ContainsKey(pep.ModifiedTarget)))
                     {
-                        doc = doc.ImportDocumentXml(reader,
-                                                    string.Empty,
-                                                    MeasuredResults.MergeAction.remove,
-                                                    false,
-                                                    FindSpectralLibrary,
-                                                    Settings.Default.StaticModList,
-                                                    Settings.Default.HeavyModList,
-                                                    doc.Children.Any() ? new IdentityPath(doc.Children.First().Id) : null,
-                                                    out var firstAdded,
-                                                    out _,
-                                                    false);
-
-                        var standardPepGroup = doc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
-                        var pepList = new List<DocNode>();
-                        foreach (var nodePep in standardPepGroup.Peptides.Where(pep => missingPeptides.Contains(pep.ModifiedTarget)))
+                        var tranGroupList = new List<DocNode>();
+                        foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
                         {
-                            var tranGroupList = new List<DocNode>();
-                            foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
-                            {
-                                var transitions = nodeTranGroup.Transitions.Take(dlg.NumTransitions).ToArray();
-                                Array.Sort(transitions, TransitionGroup.CompareTransitions);
-                                tranGroupList.Add(nodeTranGroup.ChangeChildren(transitions.Cast<DocNode>().ToList()));
-                            }
-                            pepList.Add(nodePep.ChangeChildren(tranGroupList));
+                            var transitions = nodeTranGroup.Transitions.Take(numTransitions).ToArray();
+                            Array.Sort(transitions, TransitionGroup.CompareTransitions);
+                            tranGroupList.Add(nodeTranGroup.ChangeChildren(transitions.Cast<DocNode>().ToList()));
                         }
-                        var newStandardPepGroup = standardPepGroup.ChangeChildren(pepList);
-                        return (SrmDocument) doc.ReplaceChild(newStandardPepGroup);
-                    }, dlg.FormSettings.EntryCreator.Create);
-                }
+
+                        pepList.Add(nodePep.ChangeChildren(tranGroupList));
+                    }
+
+                    var newStandardPepGroup = standardPepGroup.ChangeChildren(pepList);
+                    return (SrmDocument) newDoc.ReplaceChild(newStandardPepGroup);
+                }, dlgCreate);
             }
         }
 
@@ -5006,7 +5015,14 @@ namespace pwiz.Skyline
                 if (final)
                 {
                     if (i != -1)
+                    {
+                        // Avoid a race condition where simply removing the status can cause a update
+                        // caused by a timer tick to remove the ImportingResultsWindow
+                        if (status.IsError)
+                            ImportingResultsError = multiStatus;
+
                         _listProgress.RemoveAt(i);
+                    }
                 }
                 // Otherwise, if present update the status
                 else if (i != -1)
@@ -5022,6 +5038,9 @@ namespace pwiz.Skyline
                 first = i == 0;
             }
 
+            // A problematic place to put a Thread.Sleep which exposed some race conditions causing failures in nightly tests
+//            Thread.Sleep(100);
+
             // If the status is first in the queue and it is beginning, initialize
             // the progress UI.
             bool begin = status.IsBegin || (!final && !_timerProgress.Enabled);
@@ -5033,17 +5052,23 @@ namespace pwiz.Skyline
             // make sure user sees the change.
             else if (final)
             {
-                // Import progress needs to know about this status immediately.  It might be gone by
-                // the time the update progress interval comes around next time.
-                if (ImportingResultsWindow != null && status is MultiProgressStatus)
-                    RunUIAction(() => UpdateImportProgress(status as MultiProgressStatus));
-
-                // Only wait for an error, since it is expected that e
-                // may be modified by return of this function call
+                // Only wait for an error, since it is expected that e may be modified by return of this function call
+                // Also, it is important to do this with one update, or a timer tick can destroy the window and this
+                // will recreate it causing tests to fail because they have the wrong Form reference
                 if (status.IsError)
+                {
                     RunUIAction(CompleteProgressUI, e);
-                else if (first)
-                    RunUIActionAsync(CompleteProgressUI, e);
+                }
+                else
+                {
+                    // Import progress needs to know about this status immediately.  It might be gone by
+                    // the time the update progress interval comes around next time.
+                    if (ImportingResultsWindow != null && status is MultiProgressStatus)
+                        RunUIAction(() => UpdateImportProgress(status as MultiProgressStatus));
+
+                    if (first)
+                        RunUIActionAsync(CompleteProgressUI, e);
+                }
             }
         }
 
@@ -5087,9 +5112,14 @@ namespace pwiz.Skyline
                 // Add the error to the ImportingResultsWindow before calling "ShowAllChromatogramsGraph" 
                 // because "ShowAllChromatogramsGraph" may destroy the window if the job is done and there are
                 // no errors yet.
-                ImportingResultsWindow.UpdateStatus((MultiProgressStatus) e.Progress);
+                var multiProgress = (MultiProgressStatus) e.Progress;
+                ImportingResultsWindow.UpdateStatus(multiProgress);
                 ShowAllChromatogramsGraph();
-                return;
+                // Safe to resume updates based on timer ticks
+                ImportingResultsError = null;
+                // Make sure user is actually seeing an error
+                if (ImportingResultsWindow != null && ImportingResultsWindow.HasErrors)
+                    return;
             }
 
             // TODO: replace this with more generic logic fed from IProgressMonitor
@@ -5152,6 +5182,10 @@ namespace pwiz.Skyline
                 }
                 else if (ImportingResultsWindow != null)
                 {
+                    // If an importing results error is pending or the window handle is not yet created, then ignore this update
+                    if (ImportingResultsError != null || !ImportingResultsWindow.IsHandleCreated)
+                        return;
+
                     if (!ImportingResultsWindow.IsUserCanceled)
                         Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
                     ImportingResultsWindow.Finish();
@@ -5200,7 +5234,7 @@ namespace pwiz.Skyline
                 Assume.IsFalse(multiStatus.IsEmpty);    // Should never be starting results window with empty status
                 ImportingResultsWindow = new AllChromatogramsGraph { Owner = this, ChromatogramManager = _chromatogramManager };
                 if (Settings.Default.AutoShowAllChromatogramsGraph)
-                    ImportingResultsWindow.Show(this);
+                    ImportingResultsWindow.ShowSafe(this);
             }
             if (ImportingResultsWindow != null)
                 ImportingResultsWindow.UpdateStatus(multiStatus);
@@ -5213,7 +5247,7 @@ namespace pwiz.Skyline
                 if (ImportingResultsWindow.Visible)
                     ImportingResultsWindow.Activate();
                 else
-                    ImportingResultsWindow.Show(this);
+                    ImportingResultsWindow.ShowSafe(this);
                 UpdateProgressUI(); // Sets selected control
             }
         }

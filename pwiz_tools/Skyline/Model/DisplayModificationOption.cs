@@ -27,31 +27,32 @@ namespace pwiz.Skyline.Model
     public class DisplayModificationOption
     {
         public static readonly DisplayModificationOption NOT_SHOWN 
-            = new DisplayModificationOption(@"not_shown", ()=>Resources.DisplayModificationOption_NOT_SHOWN_Not_Shown, (settings, mod) => string.Empty, modSeq=>modSeq.ToString());
+            = new DisplayModificationOption(@"not_shown", ()=>Resources.DisplayModificationOption_NOT_SHOWN_Not_Shown, (settings, mod) => string.Empty, modSeq=>modSeq.ToString(), true);
 
         public static readonly DisplayModificationOption MASS_DELTA =
             new DisplayModificationOption(@"mass_delta", () => Resources.DisplayModificationOption_MASS_DELTA_Mass_Difference,
-                FormatMassDelta, modSeq=>modSeq.ToString());
+                FormatMassDelta, modSeq=>modSeq.ToString(), true);
 
         public static readonly DisplayModificationOption THREE_LETTER_CODE =
             new DisplayModificationOption(@"three_letter_code", () => Resources.DisplayModificationOption_THREE_LETTER_CODE_Three_Letter_Code,
-                FormatThreeLetterCode, modSeq=>modSeq.ThreeLetterCodes);
+                FormatThreeLetterCode, modSeq=>modSeq.ThreeLetterCodes, false);
         public static readonly DisplayModificationOption FULL_NAME =
             new DisplayModificationOption(@"full_name", () =>Resources.DisplayModificationOption_FULL_NAME_Full_Name, 
-                FormatFullName, modSeq=>modSeq.FullNames);
+                FormatFullName, modSeq=>modSeq.FullNames, false);
         public static readonly DisplayModificationOption UNIMOD_ID =
-            new DisplayModificationOption(@"unimod_id", ()=>Resources.DisplayModificationOption_UNIMOD_ID_Unimod_ID, FormatUnimodId, modSeq=>modSeq.UnimodIds);
+            new DisplayModificationOption(@"unimod_id", ()=>Resources.DisplayModificationOption_UNIMOD_ID_Unimod_ID, FormatUnimodId, modSeq=>modSeq.UnimodIds, false);
         private Func<String> _menuItemText;
         private ModificationFormatter _modificationFormatter;
         private Func<ModifiedSequence, string> _modifiedSequenceFormatter;
 
         public DisplayModificationOption(string name, Func<String> menuItemText,
-            ModificationFormatter modificationFormatter, Func<ModifiedSequence, string> modifiedSequenceFormatter)
+            ModificationFormatter modificationFormatter, Func<ModifiedSequence, string> modifiedSequenceFormatter, bool ignoreZeroMassMods)
         {
             Name = name;
             _menuItemText = menuItemText;
             _modificationFormatter = modificationFormatter;
             _modifiedSequenceFormatter = modifiedSequenceFormatter;
+            IgnoreZeroMassMods = ignoreZeroMassMods;
         }
 
         public String Name { get; private set; }
@@ -70,6 +71,8 @@ namespace pwiz.Skyline.Model
         {
             return _modifiedSequenceFormatter(modifiedSequence);
         }
+
+        public bool IgnoreZeroMassMods { get; private set; }
 
         public static IEnumerable<DisplayModificationOption> All
         {

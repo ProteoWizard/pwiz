@@ -43,6 +43,9 @@ namespace pwiz.SkylineTestFunctional
         }
 
         const string C12H12 = "C12H12";
+        private static readonly Adduct ADDUCT_HEAVY_M_PLUS_H = Adduct.FromString(@"[M6C13+H]", Adduct.ADDUCT_TYPE.non_proteomic, null);
+        const string C12H12_HEAVY = "C6C'6H12";
+        const string C12H12_HEAVY_PLUS_H = "C6C'6H13"; // C12H12[M6C13+H]
         const string testNametextA = "moleculeA";
         const string COOO13H = "COOO13H";
         const double averageMass100 = 100;
@@ -113,6 +116,8 @@ namespace pwiz.SkylineTestFunctional
             TestEditingSmallMolecule();
             docNext = WaitForDocumentChange(docNext);
             TestEditingTransition();
+            docNext = WaitForDocumentChange(docNext);
+            TestEditingMoleculeName(); // Test fix for double application of heavy labels in adduct
             docNext = WaitForDocumentChange(docNext);
             TestAddingSmallMoleculePrecursor();
             WaitForDocumentChange(docNext);
@@ -367,6 +372,7 @@ namespace pwiz.SkylineTestFunctional
         private static void TestEditingTransition()
         {
             double massPrecisionTolerance = Math.Pow(10, -SequenceMassCalc.MassPrecision);
+            double displayPrecisionTolerance = 1.0E-3;
             var doc = SkylineWindow.Document;
             RunUI(() =>
             {
@@ -379,17 +385,29 @@ namespace pwiz.SkylineTestFunctional
             var monoMass = new TypedMass(805, MassType.Monoisotopic);
             RunUI(() =>
             {
-                Assert.AreEqual(C12H12 + Adduct.NonProteomicProtonatedFromCharge(1).AdductFormula, editMoleculeDlg.FormulaBox.Formula);
+                // Check neutral mass calculation
+                Assert.AreEqual(C12H12 + ADDUCT_HEAVY_M_PLUS_H.AdductFormula, editMoleculeDlg.FormulaBox.Formula);
                 Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H12),
                     editMoleculeDlg.FormulaBox.MonoMass ?? -1, massPrecisionTolerance);
                 Assert.AreEqual(BioMassCalc.AVERAGE.CalculateMassFromFormula(C12H12),
                     editMoleculeDlg.FormulaBox.AverageMass ?? -1, massPrecisionTolerance);
-                Assert.AreEqual(Adduct.NonProteomicProtonatedFromCharge(1).AdductFormula, editMoleculeDlg.FormulaBox.Adduct.AdductFormula);
+
+                // Check m/z calculation
+                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H12_HEAVY_PLUS_H),
+                    double.Parse(editMoleculeDlg.FormulaBox.MonoText), displayPrecisionTolerance);
+                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateMassFromFormula(C12H12_HEAVY_PLUS_H),
+                    double.Parse(editMoleculeDlg.FormulaBox.AverageText), displayPrecisionTolerance);
+
+                Assert.AreEqual(ADDUCT_HEAVY_M_PLUS_H.AdductFormula, editMoleculeDlg.FormulaBox.Adduct.AdductFormula);
                 editMoleculeDlg.FormulaBox.Formula = editMoleculeDlg.FormulaBox.Adduct.AdductFormula; // Remove neutral formula, should leave masses unchanged
-                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H12),
+                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H12_HEAVY),
                     editMoleculeDlg.FormulaBox.MonoMass ?? -1, massPrecisionTolerance);
-                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateMassFromFormula(C12H12),
+                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateMassFromFormula(C12H12_HEAVY),
                     editMoleculeDlg.FormulaBox.AverageMass ?? -1, massPrecisionTolerance);
+                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H12_HEAVY_PLUS_H),
+                    double.Parse(editMoleculeDlg.FormulaBox.MonoText), displayPrecisionTolerance);
+                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateMassFromFormula(C12H12_HEAVY_PLUS_H),
+                    double.Parse(editMoleculeDlg.FormulaBox.AverageText), displayPrecisionTolerance);
                 editMoleculeDlg.FormulaBox.AverageMass = 800;
                 editMoleculeDlg.FormulaBox.MonoMass = monoMass.Value;
                 editMoleculeDlg.NameText = "Fragment";
@@ -440,6 +458,25 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.AreEqual(SkylineWindow.SequenceTree.SelectedNode, SkylineWindow.SequenceTree.Nodes[0].FirstNode.FirstNode.FirstNode);
             });
+
+        }
+        // Verify the fix for the problem where a molecule rename would doubly apply label masses due to needlessly complicated mass-from-mz calculation
+        private static void TestEditingMoleculeName()
+        {
+            var doc = SkylineWindow.Document;
+            var editMoleculeDlg =
+                ShowDialog<EditCustomMoleculeDlg>(
+                    () => SkylineWindow.ModifyTransition((TransitionTreeNode)SkylineWindow.SequenceTree.SelectedNode));
+            RunUI(() => { editMoleculeDlg.FormulaBox.Formula = C12H12 + ADDUCT_HEAVY_M_PLUS_H.AdductFormula; });
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            var newdoc = WaitForDocumentChange(doc);
+            RunUI(() => { SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode; });
+            editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(() => SkylineWindow.ModifyPeptide());
+            RunUI(() => { editMoleculeDlg.NameText = "different_name";});
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            newdoc = WaitForDocumentChange(doc);
+            Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H12_HEAVY_PLUS_H),
+                newdoc.MoleculeTransitions.First().Mz, 1.0E-3);
         }
 
         private static void TestEditingTransitionAsMasses()
@@ -514,11 +551,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 moleculeDlg.FormulaBox.Formula = C12H12;
                 moleculeDlg.NameText = testNametextA;
-                moleculeDlg.Adduct = Adduct.NonProteomicProtonatedFromCharge(1);
+                moleculeDlg.Adduct = ADDUCT_HEAVY_M_PLUS_H;
             });
             OkDialog(moleculeDlg, moleculeDlg.OkDialog);
             var newDoc = SkylineWindow.Document;
-            var compareIon = new CustomIon(C12H12, Adduct.NonProteomicProtonatedFromCharge(1), null, null, testNametextA);
+            var compareIon = new CustomIon(C12H12, ADDUCT_HEAVY_M_PLUS_H, null, null, testNametextA);
             Assert.AreEqual(compareIon,newDoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon);
             Assert.AreEqual(1,newDoc.MoleculeTransitions.ElementAt(0).Transition.Charge);
 

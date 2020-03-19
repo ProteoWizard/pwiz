@@ -2889,5 +2889,29 @@ namespace pwiz.Skyline.Properties {
                 this["SettingsUpgradeRequired"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool TutorialMode {
+            get {
+                return ((bool)(this["TutorialMode"]));
+            }
+            set {
+                this["TutorialMode"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string GroupApplyToBy {
+            get {
+                return ((string)(this["GroupApplyToBy"]));
+            }
+            set {
+                this["GroupApplyToBy"] = value;
+            }
+        }
     }
 }

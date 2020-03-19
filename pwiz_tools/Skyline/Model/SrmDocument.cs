@@ -516,7 +516,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 return Molecules.SelectMany(
-                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(node)));
+                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(Settings, node)));
             }
         }
 
@@ -2331,7 +2331,7 @@ namespace pwiz.Skyline.Model
 
             double? covRough = OptimizationStep<CompensationVoltageRegressionRough>.FindOptimizedValueFromResults(settings,
                 nodePep, nodeGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageRough);
-            return covRough.HasValue && covRough.Value > 0 ? covRough.Value + regression.StepSizeMedium*step : 0;
+            return covRough.HasValue ? covRough.Value + regression.StepSizeMedium*step : 0;
         }
 
         public static double GetCompensationVoltageFine(SrmSettings settings, PeptideDocNode nodePep,
@@ -2342,7 +2342,7 @@ namespace pwiz.Skyline.Model
 
             double? covMedium = OptimizationStep<CompensationVoltageRegressionMedium>.FindOptimizedValueFromResults(settings,
                 nodePep, nodeGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageMedium);
-            return covMedium.HasValue && covMedium.Value > 0 ? covMedium.Value + regression.StepSizeFine*step : 0;
+            return covMedium.HasValue ? covMedium.Value + regression.StepSizeFine*step : 0;
         }
 
         public double? GetOptimizedCompensationVoltage(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, CompensationVoltageParameters.Tuning tuneLevel)

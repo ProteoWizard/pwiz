@@ -71,6 +71,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         outlierIndices.Add(i);
                 }
 
+                string regressionName;
+                if (data.RegressionSuccess)
+                {
+                    regressionName = data.Regression == null
+                        ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression
+                        : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined;
+                }
+                else
+                {
+                    regressionName = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted;
+                }
                 var graphData = new RegressionGraphData
                 {
                     Title = data.RetentionTimeProvider.Name,
@@ -83,11 +94,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     OutlierIndices = outlierIndices,
                     RegressionLine = data.RegressionRefined,
                     RegressionLineCurrent = data.Regression,
-                    RegressionName = data.RegressionSuccess
-                        ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined
-                        : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted,
-                    ShowCurrentR = true,
-                    MinR = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
+                    RegressionName = regressionName,
+                    ShowCurrentCorrelation = true,
+                    MinCorrelation = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
                     MinPoints = data.MinPoints
                 };
 
@@ -103,9 +112,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 dataGridView.Rows.Add(
                     filename,
                     graphData.RegularPoints.Count,
-                    data.RegressionRefined != null ? data.RegressionRefined.Slope.ToString(@"F04") : string.Empty,
-                    data.RegressionRefined != null ? data.RegressionRefined.Intercept.ToString(@"F04") : string.Empty,
-                    graphData.R.ToString(@"F03"),
+                    data.RegressionRefined != null ? data.RegressionRefined.DisplayEquation : string.Empty,
+                    data.RegressionRefined != null ? IrtRegression.R(data.RegressionRefined).ToString(@"F03") : IrtRegression.R(data.Regression).ToString(@"F03"),
                     data.RegressionSuccess ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed);
                 var lastRow = dataGridView.Rows[dataGridView.RowCount - 1];
                 lastRow.DefaultCellStyle = data.RegressionSuccess ? successStyle : failStyle;
@@ -272,7 +280,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             return data != null && data.RegressionSuccess;
         }
 
-        private DataGridViewRow GetRow(int rowIndex)
+        public DataGridViewRow GetRow(int rowIndex)
         {
             return 0 <= rowIndex && rowIndex < dataGridView.RowCount ? dataGridView.Rows[rowIndex] : null;
         }

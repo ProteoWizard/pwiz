@@ -276,7 +276,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetRegressionFunction(fileId) ?? Conversion;
         }
 
-        public IRegressionFunction GetUnconversion(ChromFileInfoId fileId)
+        public RegressionLine GetUnconversion(ChromFileInfoId fileId)
         {
             double slope, intercept;
             var regressionLineFromFile = GetRegressionFunction(fileId);
@@ -620,7 +620,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 lock (data)
                 {
                     data.Add(regressionInfo);
-                    longWaitBroker?.SetProgressCheckCancel(i + 1, calculators.Count);
+                    longWaitBroker?.SetProgressCheckCancel(data.Count, calculators.Count);
                 }
             });
 
@@ -644,14 +644,14 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public static RetentionTimeRegression CalcSingleRegression(string name,
-                                                             RetentionScoreCalculatorSpec calculator,
-                                                             IList<MeasuredRetentionTime> measuredPeptides,
-                                                             RetentionTimeScoreCache scoreCache,
-                                                             bool allPeptides,
-                                                             RegressionMethodRT regressionMethod,
-                                                             out RetentionTimeStatistics statistics,
-                                                             out double rVal,
-                                                             CustomCancellationToken token)
+            RetentionScoreCalculatorSpec calculator,
+            IList<MeasuredRetentionTime> measuredPeptides,
+            RetentionTimeScoreCache scoreCache,
+            bool allPeptides,
+            RegressionMethodRT regressionMethod,
+            out RetentionTimeStatistics statistics,
+            out double rVal,
+            CustomCancellationToken token)
         {
             // Get a list of peptide names for use by the calculators to choose their regression peptides
             var listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
@@ -702,8 +702,6 @@ namespace pwiz.Skyline.Model.DocSettings
             var statRT = new Statistics(listRTs);
             var stat = aStatValues;
             IRegressionFunction regressionFunction;
-            double[] xArr;
-            double[] ySmoothed;
             switch (regressionMethod)
             {
                 case RegressionMethodRT.linear:
@@ -713,18 +711,18 @@ namespace pwiz.Skyline.Model.DocSettings
                     var kdeAligner = new KdeAligner();
                     kdeAligner.Train(stat.CopyList(), statRT.CopyList(), token);
 
-                    kdeAligner.GetSmoothedValues(out xArr, out ySmoothed);
+                    kdeAligner.GetSmoothedValues(out var xArr, out var ySmoothed);
                     regressionFunction =
                         new PiecewiseLinearRegressionFunction(xArr, ySmoothed, kdeAligner.GetRmsd());
                     stat = new Statistics(ySmoothed);
                     break;
+                case RegressionMethodRT.log:
+                    regressionFunction = new LogRegression(stat.CopyList(), statRT.CopyList(), true);
+                    stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
+                    break;
                 case RegressionMethodRT.loess:
-                    var loessAligner = new LoessAligner();
-                    loessAligner.Train(stat.CopyList(), statRT.CopyList(), token);
-                    loessAligner.GetSmoothedValues(out xArr, out ySmoothed);
-                    regressionFunction =
-                        new PiecewiseLinearRegressionFunction(xArr, ySmoothed, loessAligner.GetRmsd());
-                    stat = new Statistics(ySmoothed);
+                    regressionFunction = new LoessRegression(stat.CopyList(), statRT.CopyList(), true, token);
+                    stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
                     break;
                 default:
                     return null;
@@ -1762,6 +1760,11 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return CollisionEnergyList.NONE;
         }
+
+        public override string AuditLogText
+        {
+            get { return ReferenceEquals(this, CollisionEnergyList.NONE) ? LogMessage.NONE : base.AuditLogText; }
+        }
     }
 
     /// <summary>
@@ -2113,7 +2116,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return DeclusterPotentialList.GetDefault();
+            return DeclusterPotentialList.NONE;
+        }
+
+        public override string AuditLogText
+        {
+            get { return ReferenceEquals(this, DeclusterPotentialList.NONE) ? LogMessage.NONE : base.AuditLogText; }
         }
     }
 
@@ -2331,12 +2339,17 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        #endregion
+
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return CompensationVoltageList.GetDefault();
+            return CompensationVoltageList.NONE;
         }
 
-        #endregion
+        public override string AuditLogText
+        {
+            get { return ReferenceEquals(this, CompensationVoltageList.NONE) ? LogMessage.NONE : base.AuditLogText; }
+        }
     }
 
     [XmlRoot("predict_compensation_voltage_rough")]
@@ -2854,12 +2867,33 @@ namespace pwiz.Skyline.Model.DocSettings
     /// element.  Use one of the wrapper classes for full XML
     /// serialization.
     /// </summary>
-    public sealed class RegressionLine : IRegressionFunction
+    public sealed class RegressionLine : IIrtRegression
     {
-        public RegressionLine(double slope, double intercept)
+        public RegressionLine()
+        {
+            Slope = 0;
+            Intercept = 0;
+            XValues = new double[0];
+            YValues = new double[0];
+            IrtIndependent = false;
+        }
+
+        public RegressionLine(double slope, double intercept, bool irtIndependent = false)
         {
             Slope = slope;
             Intercept = intercept;
+            IrtIndependent = irtIndependent;
+        }
+
+        public RegressionLine(double[] x, double[] y, bool irtIndependent = false)
+        {
+            var statX = new Statistics(x);
+            var statY = new Statistics(y);
+            Slope = statY.Slope(statX);
+            Intercept = statY.Intercept(statX);
+            XValues = x;
+            YValues = y;
+            IrtIndependent = irtIndependent;
         }
 
         // XML Serializable properties
@@ -2868,6 +2902,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [Track]
         public double Intercept { get; private set; }
+
+        public string DisplayEquation => IrtIndependent
+            ? string.Format(@"{0} = {1:F3} * {2} {3} {4:F3}",
+                Resources.IIrtRegression_DisplayEquation_Measured_RT, Slope, Resources.IIrtRegression_DisplayEquation_iRT, Intercept >= 0 ? '+' : '-', Math.Abs(Intercept))
+            : string.Format(@"{0} = {1:F3} * {2} {3} {4:F3}",
+                Resources.IIrtRegression_DisplayEquation_iRT, Slope, Resources.IIrtRegression_DisplayEquation_Measured_RT, Intercept >= 0 ? '+' : '-', Math.Abs(Intercept));
+
+        public bool IrtIndependent { get; }
 
         /// <summary>
         /// Use the y = m*x + b formula to calculate the desired y
@@ -2879,6 +2921,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return Slope * x + Intercept;
         }
+
+        public IIrtRegression ChangePoints(double[] x, double[] y)
+        {
+            return new RegressionLine(x, y);
+        }
+        public double[] XValues { get; }
+        public double[] YValues { get; }
 
         public string GetRegressionDescription(double r, double window)
         {
@@ -2933,9 +2982,6 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// For serialization
         /// </summary>
-        private RegressionLine()
-        {
-        }
 
         private enum ATTR
         {
@@ -3251,6 +3297,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString() // For debugging convenience, not user-facing
         {
+            if (IsEmpty)
+                return string.Empty;
+
             string ionMobilityAbbrev = @"im";
             switch (IonMobility.Units)
             {

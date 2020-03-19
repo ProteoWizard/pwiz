@@ -65,6 +65,7 @@ namespace SkylineTester
         private string _processName;
         private bool _processKilled;
         private Timer _outputTimer;
+        private DateTime _lastOutputTime;
 
         #region Add/run commands
 
@@ -352,7 +353,7 @@ namespace SkylineTester
             _processName = _process.ProcessName;
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
-            LastOutputTime = DateTime.Now;
+            ResetLastOutputTime();
         }
 
         public int ProcessId
@@ -360,14 +361,18 @@ namespace SkylineTester
             get { return _process != null ? _process.Id : 0; }
         }
 
-        private DateTime LastOutputTime { get; set; }
-
+        private void ResetLastOutputTime() { _lastOutputTime = DateTime.UtcNow; }   // Use UtcNow to avoid hiccups with tests running during DST changeover
+ 
+        private TimeSpan ElapsedTimeSinceLastOutput
+        {
+            get { return DateTime.UtcNow - _lastOutputTime; }  // Use UtcNow to avoid hiccups with tests running during DST changeover
+        }
         /// <summary>
         /// Handle a line of output/error data from the process.
         /// </summary>
         private void HandleOutput(object sender, DataReceivedEventArgs e)
         {
-            LastOutputTime = DateTime.Now;
+            ResetLastOutputTime();
             Log(e.Data);
         }
 
@@ -387,7 +392,7 @@ namespace SkylineTester
                 if (IsRunning)
                 {
                     // If process has been quiet for a very long time, don't kill it, for forensic purposes
-                    if (preserveHungProcesses && (DateTime.Now - LastOutputTime).TotalMinutes > MAX_PROCESS_SILENCE_MINUTES)
+                    if (preserveHungProcesses && ElapsedTimeSinceLastOutput.TotalMinutes > MAX_PROCESS_SILENCE_MINUTES)
                     {
                         Log(string.Format("{0} has been silent for more than {1} minutes.  Leaving it running for forensic purposes.",
                            _process.Modules[0].FileName, MAX_PROCESS_SILENCE_MINUTES));

@@ -172,12 +172,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             using (ISession session = OpenWriteSession())
             using (ITransaction transaction = session.BeginTransaction())
             {
-                int progressPercent = 0;
+                int progressPercent = -1;
                 int i = 0;
                 var sourceFiles = new Dictionary<string, long>();
                 foreach (var spectrum in listSpectra)
                 {
-                    ++i;
                     var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
                     session.Save(dbRefSpectrum);
                     listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key, 
@@ -195,6 +194,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             progressPercent = progressNew;
                         }
                     }
+                    ++i;
                 }
 
                 session.Flush();
@@ -214,6 +214,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 session.Flush();
                 session.Clear();
                 transaction.Commit();
+
+                if (progressMonitor != null)
+                {
+                    progressMonitor.UpdateProgress(status = status.Complete());
+                }
             }
 
             var libraryEntries = listLibrary.ToArray();
@@ -415,7 +420,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             if (nodePep.IsProteomic)
                             {
                                 var calcPre = document.Settings.GetPrecursorCalc(labelType, nodePep.SourceExplicitMods);
-                                peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, SequenceModFormatType.full_precision, false);
+                                peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, SequenceModFormatType.lib_precision, false);
                             }
                             else
                             {
@@ -1017,7 +1022,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         listLibrarySpecs.Add(librarySpec);
                         listLibraries.Add(pepLibraries.Libraries[i]);
                         fileName += MidasLibSpec.EXT;
-                        File.Copy(librarySpec.FilePath, Path.Combine(pathDirectory, fileName));
+                        File.Copy(librarySpec.FilePath ?? string.Empty, // Prevent ReSharper from complaining about possible null arg
+                            Path.Combine(pathDirectory, fileName));
                         dictOldNameToNew.Add(librarySpec.Name, librarySpec.Name);
                         continue;
                     }

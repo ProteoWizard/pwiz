@@ -196,6 +196,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <None Include="AbsoluteQuantViews.zip" />
     <None Include="CEOptimizationViews.zip" />
     <None Include="CustomReportsViews.zip" />
     <None Include="DiaViews.zip" />

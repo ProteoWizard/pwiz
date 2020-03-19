@@ -157,11 +157,21 @@ MidacDataImpl::MidacDataImpl(const std::string& path)
 
         ticTimes_.resize(imsReader_->FileInfo->NumFrames);
         ticIntensities_.resize(ticTimes_.size());
+        //ticTimesMs1_.resize(imsReader_->FileInfo->NumFrame / 2);
+        //ticIntensitiesMs1_.resize(ticTimes_.size() / 2);
         for (size_t i = 0; i < ticTimes_.size(); ++i)
         {
             auto frameInfo = imsReader_->FrameInfo(i+1);
             ticTimes_[i] = frameInfo->AcqTimeRange->Min;
             ticIntensities_[i] = frameInfo->Tic;
+
+
+            double collisionEnergy = getScanRecord(i)->getCollisionEnergy();
+            if (collisionEnergy == 0)
+            {
+                ticTimesMs1_.push_back(ticTimes_[i]);
+                ticIntensitiesMs1_.push_back(ticIntensities_[i]);
+            }
         }
 
         hasProfileData_ = bfs::exists(bfs::path(path) / "AcqData/MSProfile.bin");
@@ -277,24 +287,24 @@ const set<Transition>& MidacDataImpl::getTransitions() const
     return transitions_;
 }
 
-const automation_vector<double>& MidacDataImpl::getTicTimes() const
+const BinaryData<double>& MidacDataImpl::getTicTimes(bool ms1Only) const
 {
-    return ticTimes_;
+    return ms1Only ? ticTimesMs1_ : ticTimes_;
 }
 
-const automation_vector<double>& MidacDataImpl::getBpcTimes() const
+const BinaryData<double>& MidacDataImpl::getBpcTimes(bool ms1Only) const
 {
-    return bpcTimes_;
+    return ms1Only ? bpcTimesMs1_ : bpcTimes_;
 }
 
-const automation_vector<float>& MidacDataImpl::getTicIntensities() const
+const BinaryData<float>& MidacDataImpl::getTicIntensities(bool ms1Only) const
 {
-    return ticIntensities_;
+    return ms1Only ? ticIntensitiesMs1_ : ticIntensities_;
 }
 
-const automation_vector<float>& MidacDataImpl::getBpcIntensities() const
+const BinaryData<float>& MidacDataImpl::getBpcIntensities(bool ms1Only) const
 {
-    return bpcIntensities_;
+    return ms1Only ? bpcIntensitiesMs1_ : bpcIntensities_;
 }
 
 ChromatogramPtr MidacDataImpl::getChromatogram(const Transition& transition) const

@@ -28,6 +28,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -255,7 +256,7 @@ namespace pwiz.SkylineTestData
                 PropertyNames.RefinementSettings_CVCutoff
             };
             // Remove all elements above the cv cutoff
-            TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional/AreaCVHistogramTest.zip");
+            TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional\AreaCVHistogramTest.zip");
             DocumentPath = InitRefineDocument("Rat_plasma.sky", 48, 0, 125, 125, 721);
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
             var output = Run(args.ToArray());
@@ -288,7 +289,64 @@ namespace pwiz.SkylineTestData
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
             DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky", 1, 4, 37, 40, 338);
             output = Run(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff));
-            AssertEx.Contains(output, "The document must contain at least 2 replicates to refine based on consistency.");
+            AssertEx.Contains(output, Resources.RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_);
+        }
+
+        [TestMethod]
+        public void ConsoleRefineGroupComparisonsTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefineGroupComparisonTest.zip");
+            DocumentPath = InitRefineDocument("Rat_plasma.sky", 48, 0, 125, 125, 721);
+            OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "gctest.sky");
+
+            // Verify pValueCutoff and fold change cutoff work
+            var pValueCutoff = 0.05.ToString(CultureInfo.CurrentCulture);
+            var foldChangeCutoff = 2.ToString(CultureInfo.CurrentCulture);
+            var args = new List<string>
+            {
+                CommandArgs.ARG_REFINE_GC_P_VALUE_CUTOFF.GetArgumentTextWithValue(pValueCutoff),
+                CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff),
+                CommandArgs.ARG_REFINE_GROUP_NAME.GetArgumentTextWithValue("Test Group Comparison"),
+            };
+
+            var parts = new List<string>
+            {
+                PropertyNames.RefinementSettings_AdjustedPValueCutoff,
+                PropertyNames.RefinementSettings_FoldChangeCutoff
+            };
+            var output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 43, 0, 43, 248, output);
+
+            // Verify only fold change cutoff works
+            args.RemoveAt(0);
+            foldChangeCutoff = 3.ToString();
+            args[0] = CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff);
+            parts.RemoveAt(0);
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 20, 0, 20, 114, output);
+
+            // Verify only p value cutoff works
+            pValueCutoff = 0.08.ToString(CultureInfo.CurrentCulture);
+            args[0] = CommandArgs.ARG_REFINE_GC_P_VALUE_CUTOFF.GetArgumentTextWithValue(pValueCutoff);
+            parts[0] = PropertyNames.RefinementSettings_AdjustedPValueCutoff;
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 103, 0, 103, 597, output);
+
+            // Verify the union of two group comparisons works
+            pValueCutoff = 0.05.ToString(CultureInfo.CurrentCulture);
+            foldChangeCutoff = 2.ToString();
+            args.Clear();
+            args.Add(CommandArgs.ARG_REFINE_GC_P_VALUE_CUTOFF.GetArgumentTextWithValue(pValueCutoff));
+            args.Add(CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff));
+            args.Add(CommandArgs.ARG_REFINE_GROUP_NAME.GetArgumentTextWithValue("Test Group Comparison"));
+            args.Add(CommandArgs.ARG_REFINE_GROUP_NAME.GetArgumentTextWithValue("Test Group Comparison 2"));
+            parts.Add(PropertyNames.RefinementSettings_FoldChangeCutoff);
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 44, 0, 44, 255, output);
         }
 
         //        [TestMethod]
@@ -330,17 +388,21 @@ namespace pwiz.SkylineTestData
             string output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue("SCIEX"));
             AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", "SCIEX");
             IsDocumentUnchanged(output);
-            output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(CollisionEnergyList.ELEMENT_NONE));
-            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", CollisionEnergyList.ELEMENT_NONE);
+            string ceNoneText = Settings.Default.CollisionEnergyList.GetDisplayName(CollisionEnergyList.NONE);
+            output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(ceNoneText));
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", AuditLogStrings.None);
             IsDocumentUnchanged(output);
+            string dpNoneText = Settings.Default.DeclusterPotentialList.GetDisplayName(DeclusterPotentialList.NONE);
             output = Run(CommandArgs.ARG_TRAN_PREDICT_DP.GetArgumentTextWithValue("SCIEX"));
-            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullDeclusteringPotential, DeclusterPotentialList.ELEMENT_NONE, "SCIEX");
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullDeclusteringPotential, AuditLogStrings.None, "SCIEX");
             IsDocumentUnchanged(output);
+            string covNoneText = Settings.Default.CompensationVoltageList.GetDisplayName(CompensationVoltageList.NONE);
             output = Run(CommandArgs.ARG_TRAN_PREDICT_COV.GetArgumentTextWithValue("SCIEX"));
-            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCompensationVoltage, CompensationVoltageList.ELEMENT_NONE, "SCIEX");
+            AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCompensationVoltage, AuditLogStrings.None, "SCIEX");
             IsDocumentUnchanged(output);
             // Only None is possible for optimization libraries without setting one up
-            output = Run(CommandArgs.ARG_TRAN_PREDICT_OPTDB.GetArgumentTextWithValue(OptimizationLibraryList.ELEMENT_NONE));
+            string optLibNoneText = Settings.Default.OptimizationLibraryList.GetDisplayName(OptimizationLibrary.NONE);
+            output = Run(CommandArgs.ARG_TRAN_PREDICT_OPTDB.GetArgumentTextWithValue(optLibNoneText));
             AssertEx.Contains(output, "test2", Resources.CommandLine_LogNewEntries_Document_unchanged);
             IsDocumentUnchanged(output);
 

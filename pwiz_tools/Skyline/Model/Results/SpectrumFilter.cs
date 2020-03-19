@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model.Results
             // TODO(bspratt): Should be queried out of the libraries as needed, as with RT not bulk copied all at once
             var libraryIonMobilityInfo = document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues
                 ? document.Settings.GetIonMobilities(moleculesThisPass.SelectMany(
-                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(node))).ToArray(), msDataFileUri)
+                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(document.Settings, node))).ToArray(), msDataFileUri)
                 : null;
             var ionMobilityMax = maxObservedIonMobilityValue ?? 0;
 
@@ -145,19 +145,23 @@ namespace pwiz.Skyline.Model.Results
                     _isHighAccMsFilter = !Equals(_fullScan.PrecursorMassAnalyzer,
                         FullScanMassAnalyzerType.qit);
 
-                    /*
-                     Leaving this here in case we ever decide to fall back to our own BPC+TIC extraction in cases where data
-                     file doesn't have them ready to go, as in mzXML
                     if (!firstPass && !_isIonMobilityFiltered)
                     {
-                        var key = TIC_KEY;
-                        dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                            _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
-                        key = BPC_KEY;
-                        dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                            _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
+                        if (gce?.TicChromatogramIndex == null)
+                        {
+                            var key = TIC_KEY;
+                            dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
+                                _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
+                            /*
+                             Leaving this here in case we ever decide to fall back to our own BPC extraction in cases where data
+                             file doesn't have them ready to go, as in mzXML
+                            key = BPC_KEY;
+                            dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
+                                _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
+                            */
+                        }
                     }
-                    //*/
+
                 }
                 if (EnabledMsMs)
                 {
@@ -677,9 +681,10 @@ namespace pwiz.Skyline.Model.Results
 
         private static bool IsSimIsolation(IsolationWindowFilter isoWin)
         {
+            // Consider: Introduce a variable cut-off in the document settings
+            const int SIM_ISOLATION_CUTOFF = 500;
             return isoWin.IsolationMz.HasValue && isoWin.IsolationWidth.HasValue &&
-                // TODO: Introduce a variable cut-off in the document settings
-                isoWin.IsolationWidth.Value <= 200;
+                   isoWin.IsolationWidth.Value <= SIM_ISOLATION_CUTOFF;
         }
 
         public bool IsMsMsSpectrum(MsDataSpectrum dataSpectrum)

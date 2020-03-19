@@ -284,8 +284,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         {
             scan.instrumentConfigurationPtr = msd_.instrumentConfigurationPtrs.back();
 
-            result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), UO_nanometer);
-            result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
+            if (scanInfo->basePeakMass() > 0)
+            {
+                result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), UO_nanometer);
+                result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
+            }
             result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
 
             scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass(), UO_nanometer));
@@ -726,14 +729,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             {
                 result->swapMZIntensityArrays(massList->mzArray, massList->intensityArray, MS_number_of_detector_counts);
             }
-        }
 
-        if (msLevel < maxMsLevel_ && detailLevel >= DetailLevel_FullMetadata)
-        {
-            // insert into cache if there is a higher ms level
-            // NB: even FullMetadata level will have binary arrays (because they have to be retrieved to get defaultArrayLength)
-            boost::lock_guard<boost::mutex> lock(readMutex);
-            precursorCache_.insert(CacheEntry(index, make_pair(result->getMZArray()->data, result->getIntensityArray()->data)));
+            if (msLevel < maxMsLevel_)
+            {
+                // insert into cache if there is a higher ms level
+                // NB: even FullMetadata level will have binary arrays (because they have to be retrieved to get defaultArrayLength)
+                boost::lock_guard<boost::mutex> lock(readMutex);
+                precursorCache_.insert(CacheEntry(index, make_pair(result->getMZArray()->data, result->getIntensityArray()->data)));
+            }
         }
 
         return result;
@@ -813,7 +816,16 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 
         for (long n=1; n <= numControllers; ++n)
         {
-            rawfile_->setCurrentController((ControllerType) controllerType, n);
+            try
+            {
+                rawfile_->setCurrentController((ControllerType) controllerType, n);
+            }
+            catch (exception& e)
+            {
+                warn_once(("[SpectrumList_Thermo::createIndex] error setting controller to " + lexical_cast<std::string>(ControllerTypeStrings[controllerType]) + ": " + e.what()).c_str());
+                continue;
+            }
+
             long numSpectra = rawfile_->getLastScanNumber();
             switch (controllerType)
             {
@@ -942,20 +954,21 @@ PWIZ_API_DECL double SpectrumList_Thermo::getPrecursorIntensity(int precursorSpe
 {
     const PrecursorBinaryData* precursorBinaryData = nullptr;
 
-    {
-        boost::lock_guard<boost::mutex> lock(readMutex);
-        auto findItr = precursorCache_.find(precursorSpectrumIndex);
-        if (findItr != precursorCache_.end())
-            precursorBinaryData = &findItr->binaryData;
-    }
+    boost::lock_guard<boost::mutex> lock(readMutex);
+    auto findItr = precursorCache_.find(precursorSpectrumIndex);
+    if (findItr != precursorCache_.end())
+        precursorBinaryData = &findItr->binaryData;
 
     // CONSIDER: is it worth it to keep separate caches for centroid and profile spectra?
     if (!precursorBinaryData)
     {
-        spectrum(precursorSpectrumIndex, true, msLevelsToCentroid);
+        const IndexEntry& precursorIndexEntry = index_[precursorSpectrumIndex];
+        auto raw = rawfile_->getRawByThread(std::hash<std::thread::id>()(std::this_thread::get_id()));
+        bool doCentroid = msLevelsToCentroid.contains((int)precursorIndexEntry.msOrder);
+        MassListPtr massList = raw->getMassList(precursorIndexEntry.scan, "", Cutoff_None, 0, 0, doCentroid);
+        precursorCache_.insert(CacheEntry(precursorSpectrumIndex, make_pair(massList->mzArray, massList->intensityArray)));
         precursorBinaryData = &precursorCache_.find(precursorSpectrumIndex)->binaryData;
     }
-
 
     const auto& mz = precursorBinaryData->first;
     const auto& intensity = precursorBinaryData->second;

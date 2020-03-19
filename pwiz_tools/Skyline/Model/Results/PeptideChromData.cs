@@ -150,15 +150,43 @@ namespace pwiz.Skyline.Model.Results
 
         public void PickChromatogramPeaks()
         {
+            TimeIntervals intersectedTimeIntervals = null;
+            if (_document.Settings.TransitionSettings.Instrument.TriggeredAcquisition && NodePep != null)
+            {
+                var triggeredAcquisition = new TriggeredAcquisition();
+                foreach (var chromDataSet in _dataSets)
+                {
+                    var timeIntervals = triggeredAcquisition.InferTimeIntervals(
+                        chromDataSet.Chromatograms.Where(chrom => null != chrom.DocNode)
+                            .Select(chrom => chrom.RawTimes));
+                    chromDataSet.TimeIntervals = timeIntervals;
+                    if (intersectedTimeIntervals == null)
+                    {
+                        intersectedTimeIntervals = timeIntervals;
+                    }
+                    else
+                    {
+                        intersectedTimeIntervals = intersectedTimeIntervals.Intersect(timeIntervals);
+                    }
+                }
+            }
             // Make sure times are evenly spaced before doing any peak detection.
             EvenlySpaceTimes();
             var explicitPeakBounds = _document.Settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
+
+            // If an explicit retention time was provided, limit peak picking to that window
+            var explicitRetentionTime = NodePep?.ExplicitRetentionTime;
+            if (explicitRetentionTime != null && !explicitRetentionTime.RetentionTimeWindow.HasValue)
+            {
+                // If no explicit window, use the one in Peptide Settings
+                explicitRetentionTime = new ExplicitRetentionTimeInfo(explicitRetentionTime.RetentionTime, _document.Settings.PeptideSettings.Prediction.MeasuredRTWindow);
+            }
             // Pick peak groups at the precursor level
             foreach (var chromDataSet in _dataSets)
             {
                 if (explicitPeakBounds == null)
                 {
-                    chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes);
+                    chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes, explicitRetentionTime);
                 }
                 else
                 {
@@ -173,7 +201,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Adjust peak dimensions based on peak picking
             foreach (var chromDataSet in _dataSets)
-                chromDataSet.GeneratePeakData();
+                chromDataSet.GeneratePeakData(intersectedTimeIntervals);
 
             var detailedCalcs = DetailedPeakFeatureCalculators.Select(calc => (IPeakFeatureCalculator)calc).ToList();
             for (int i = 0; i < _listListPeakSets.Count; i++)

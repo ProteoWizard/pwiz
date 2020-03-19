@@ -91,8 +91,6 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract eIonMobilityUnits IonMobilityUnits { get; }
 
-        public abstract bool SourceHasCombinedIonMobilitySpectra { get; } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
-
         public abstract bool IsProcessedScans { get; }
 
         public abstract bool IsSingleMzMatch { get; }
@@ -137,7 +135,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public int IndexOffset { get; set; }
 
-        public int? TicChromatogramIndex { get; }
+        public int? TicChromatogramIndex { get; set; }
         public int? BpcChromatogramIndex { get; }
 
         public IList<int> GlobalChromatogramIndexes
@@ -181,6 +179,40 @@ namespace pwiz.Skyline.Model.Results
 
             return true;
         }
+
+        /// <summary>
+        /// Returns true if the TIC chromatogram present in the .raw file can be relied on
+        /// for the calculation of total MS1 ion current.
+        /// </summary>
+        public bool IsTicChromatogramUsable()
+        {
+            if (!TicChromatogramIndex.HasValue)
+            {
+                return false;
+            }
+
+            float[] times;
+            if (!GetChromatogram(TicChromatogramIndex.Value, out times, out _))
+            {
+                return false;
+            }
+
+            if (times.Length == 0)
+            {
+                return false;
+            }
+
+            // If the number of points in the chromatogram is more than half of the total
+            // spectra, then this chromatogram probably includes MS2 scans, and should not 
+            // be used for calculating TIC Area.
+            // The number 2 is necessary because demultiplexing doubles the number of spectra.
+            if (times.Length >= _dataFile.SpectrumCount / 2)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 
     internal sealed class ChromatogramDataProvider : ChromDataProvider
@@ -194,7 +226,6 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _hasMidasSpectra;
         private readonly bool _sourceHasNegativePolarityData;
         private readonly bool _sourceHasPositivePolarityData;
-        private readonly bool _hasIonMobilityCombined;
         private readonly eIonMobilityUnits _ionMobilityUnits;
 
         /// <summary>
@@ -290,7 +321,6 @@ namespace pwiz.Skyline.Model.Results
             _hasMidasSpectra = (dataFile.IsABFile) && SpectraChromDataProvider.HasSpectrumData(dataFile);
 
             _ionMobilityUnits = dataFile.IonMobilityUnits;
-            _hasIonMobilityCombined = dataFile.HasCombinedIonMobilitySpectra;  // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
 
             SetPercentComplete(50);
         }
@@ -369,8 +399,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _ionMobilityUnits; } }
-
-        public override bool SourceHasCombinedIonMobilitySpectra { get { return _hasIonMobilityCombined; } }
 
         public override bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
         {

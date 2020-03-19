@@ -62,6 +62,13 @@ namespace Thermo = ThermoFisher::CommonCore::Data::Business;
 #endif // WIN64
 
 
+#ifdef _WIN64
+const char* pwiz::vendor_api::Thermo::ControllerTypeStrings[] = { "MS", "Analog", "A/D Card", "UV", "PDA", "Other" };
+#else
+const char* pwiz::vendor_api::Thermo::ControllerTypeStrings[] = { "MS", "Analog", "A/D Card", "PDA", "UV", "Other" };
+#endif
+
+
 class RawFileImpl : public RawFile
 {
     public:
@@ -293,6 +300,9 @@ RawFileImpl::RawFileImpl(const string& filename)
         if (raw_->Open(bfs::path(filename_).native().c_str()))
             throw RawEgg("[RawFile::ctor] Unable to open file " + filename);
 
+        if (getNumberOfControllersOfType(Controller_MS) == 0)
+            return; // none of the following metadata stuff works for non-MS controllers as far as I can tell
+
         setCurrentController(Controller_MS, 1);
 
 #else // is WIN64
@@ -304,6 +314,9 @@ RawFileImpl::RawFileImpl(const string& filename)
         // CONSIDER: throwing C++ exceptions in managed code may cause Wine to crash?
         if (raw_->IsError || raw_->InAcquisition)
             throw gcnew System::Exception("Corrupt RAW file " + managedFilename);
+
+        if (getNumberOfControllersOfType(Controller_MS) == 0)
+            return; // none of the following metadata stuff works for non-MS controllers as far as I can tell
 
         setCurrentController(Controller_MS, 1);
 
@@ -939,12 +952,22 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
         if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
         {
             auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
-            ToBinaryData(centroidStream->Masses, result->mzArray);
-            ToBinaryData(centroidStream->Intensities, result->intensityArray);
+            if (centroidStream != nullptr && centroidStream->Length > 0)
+            {
+                ToBinaryData(centroidStream->Masses, result->mzArray);
+                ToBinaryData(centroidStream->Intensities, result->intensityArray);
+                return result;
+            }
         }
-        else if (centroidResult)
+
+        if (centroidResult)
         {
-            auto centroidScan = Thermo::Scan::ToCentroid(Thermo::Scan::FromFile(raw_.get(), scanNumber));
+            auto scan = Thermo::Scan::FromFile(raw_.get(), scanNumber);
+            if (scan->SegmentedScanAccess->Positions->Length == 0 || scan->ScanStatistics->BasePeakIntensity == 0)
+                return result;
+            auto centroidScan = Thermo::Scan::ToCentroid(scan);
+            if (centroidScan == nullptr || centroidScan->SegmentedScanAccess->Positions->Length == 0)
+                throw gcnew System::Exception("failed to centroid scan");
             ToBinaryData(centroidScan->SegmentedScanAccess->Positions, result->mzArray);
             ToBinaryData(centroidScan->SegmentedScanAccess->Intensities, result->intensityArray);
         }
@@ -2548,7 +2571,7 @@ MassListPtr RawFileThreadImpl::getMassList(long scanNumber,
         if (centroidResult)
         {
             auto scan = Thermo::Scan::FromFile(raw_.get(), scanNumber);
-            if (scan->SegmentedScanAccess->Positions->Length == 0)
+            if (scan->SegmentedScanAccess->Positions->Length == 0 || scan->ScanStatistics->BasePeakIntensity == 0)
                 return result;
             auto centroidScan = Thermo::Scan::ToCentroid(scan);
             if (centroidScan == nullptr || centroidScan->SegmentedScanAccess->Positions->Length == 0)

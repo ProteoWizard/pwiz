@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -47,6 +46,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private bool FireStandardsChanged { get; set; }
 
         private readonly IrtStandard _standard;
+        private readonly DbIrtPeptide[] _standardPeptidesSorted;
         private readonly IEnumerable<IrtStandard> _existing;
         private readonly DbIrtPeptide[] _updatePeptides;
 
@@ -57,42 +57,43 @@ namespace pwiz.Skyline.SettingsUI.Irt
             Icon = Resources.Skyline;
 
             _standard = standard;
+            _standardPeptidesSorted = standard != null ? standard.Peptides.OrderBy(pep => pep.Irt).ToArray() : new DbIrtPeptide[0];
             _existing = existing;
             _updatePeptides = updatePeptides;
 
             _gridViewDriver = new CalibrationGridViewDriver(this, gridViewCalibrate, bindingSourceStandard,
                 new SortableBindingList<StandardPeptide>());
 
-            FireStandardsChanged = true;
+            FireStandardsChanged = false; // wait until after OnLoad, otherwise ModeUIAwareFormHelper causes it to fire with small molecules
 
             comboRegression.Items.AddRange(RegressionOption.All(Program.ActiveDocumentUI).ToArray());
             comboRegression.SelectedIndex = 0;
 
             if (IsRecalibration)
             {
-                textName.Text = standard.Name;
+                textName.Text = standard?.Name;
                 FormBorderStyle = FormBorderStyle.Fixed3D;
                 panelPeptides.Hide();
                 btnUseCurrent.Hide();
                 Height -= panelPeptides.Height;
-                var standardPeptides = standard.Peptides.Select(pep => pep.PeptideModSeq).ToArray();
+                var standardPeptides = _standardPeptidesSorted.Select(pep => pep.PeptideModSeq).ToArray();
                 comboMinPeptide.Items.AddRange(standardPeptides);
                 comboMaxPeptide.Items.AddRange(standardPeptides);
                 if (standardPeptides.Length > 0)
                 {
                     // Look for standard peptides with whole number values as the suggested fixed points
-                    var iFixed1 = standard.Peptides.IndexOf(pep => Math.Round(pep.Irt, 8) == Math.Round(pep.Irt));
-                    var iFixed2 = standard.Peptides.LastIndexOf(pep => Math.Round(pep.Irt, 8) == Math.Round(pep.Irt));
+                    var iFixed1 = _standardPeptidesSorted.IndexOf(pep => Math.Round(pep.Irt, 8) == Math.Round(pep.Irt));
+                    var iFixed2 = _standardPeptidesSorted.LastIndexOf(pep => Math.Round(pep.Irt, 8) == Math.Round(pep.Irt));
                     if (iFixed1 == -1 || iFixed2 == -1)
                     {
                         iFixed1 = 0;
-                        iFixed2 = standardPeptides.Length - 1;
+                        iFixed2 = _standardPeptidesSorted.Length - 1;
                     }
                     else if (iFixed1 == iFixed2)
                     {
-                        if (iFixed1 < standardPeptides.Length / 2)
+                        if (iFixed1 < _standardPeptidesSorted.Length / 2)
                         {
-                            iFixed2 = standardPeptides.Length - 1;
+                            iFixed2 = _standardPeptidesSorted.Length - 1;
                         }
                         else
                         {
@@ -101,7 +102,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
                     comboMinPeptide.SelectedIndex = iFixed1;
                     comboMaxPeptide.SelectedIndex = iFixed2;
-                    SetIrtRange(standard.Peptides[iFixed1].Irt, standard.Peptides[iFixed2].Irt);
+                    SetIrtRange(_standardPeptidesSorted[iFixed1].Irt, _standardPeptidesSorted[iFixed2].Irt);
                 }
             }
         }
@@ -109,6 +110,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         public IrtStandard IrtStandard { get; private set; }
 
         public SortableBindingList<StandardPeptide> StandardPeptideList { get { return _gridViewDriver.Items; } }
+        public StandardPeptide[] StandardPeptidesSorted => StandardPeptideList.OrderBy(pep => pep.RetentionTime).ToArray();
 
         public int StandardPeptideCount { get { return StandardPeptideList.Count; } }
 
@@ -119,6 +121,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
             // If you set this in the Designer, DataGridView has a defect that causes it to throw an
             // exception if the the cursor is positioned over the record selector column during loading.
             gridViewCalibrate.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        }
+
+        private void CalibrateIrtDlg_Shown(object sender, EventArgs e)
+        {
+            FireStandardsChanged = true;
         }
 
         public void OkDialog()
@@ -135,25 +142,25 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return;
             }
 
-            if (!TryGetLine(true, out var linearEquation))
+            if (!TryGetRegression(true, out var regression))
             {
                 return;
             }
 
             if (!IsRecalibration)
             {
-                IrtStandard = new IrtStandard(name, null,
+                IrtStandard = new IrtStandard(name, null, null,
                     StandardPeptideList.Select(pep => new DbIrtPeptide(pep.Target, pep.Irt, true, TimeSource.peak)));
             }
             else
             {
                 foreach (var pep in _updatePeptides)
                 {
-                    pep.Irt = linearEquation.GetY(pep.Irt);
+                    pep.Irt = regression.GetY(pep.Irt);
                 }
-                IrtStandard = new IrtStandard(name, null,
+                IrtStandard = new IrtStandard(name, null, null,
                     _standard.Peptides.Select(pep =>
-                        new DbIrtPeptide(pep.Target, linearEquation.GetY(pep.Irt), true, TimeSource.peak)));
+                        new DbIrtPeptide(pep.Target, regression.GetY(pep.Irt), true, TimeSource.peak)));
             }
             DialogResult = DialogResult.OK;
         }
@@ -168,18 +175,18 @@ namespace pwiz.Skyline.SettingsUI.Irt
             UseResults();
         }
 
-        private bool TryGetLine(bool showErrors, out RegressionLine line)
+        private bool TryGetRegression(bool showErrors, out IIrtRegression regression)
         {
-            if (SelectedRegressionOption.RegressionLine != null)
+            if (!SelectedRegressionOption.FixedPoint)
             {
-                line = SelectedRegressionOption.RegressionLine;
+                regression = SelectedRegressionOption.Regression;
                 return true;
             }
 
-            line = null;
+            regression = null;
             var helper = new MessageBoxHelper(this, showErrors);
 
-            if (!helper.ValidateDecimalTextBox(textMinIrt, null, null, out var minIrt))
+            if (!helper.ValidateDecimalTextBox(textMinIrt, SelectedRegressionOption.Regression is LogRegression ? (double?) 0.01 : null, null, out var minIrt))
                 return false;
             if (!helper.ValidateDecimalTextBox(textMaxIrt, minIrt, null, out var maxIrt))
                 return false;
@@ -206,13 +213,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
             double minRt, maxRt;
             if (!IsRecalibration)
             {
-                minRt = StandardPeptideList[comboMinIdx].RetentionTime;
-                maxRt = StandardPeptideList[comboMaxIdx].RetentionTime;
+                minRt = StandardPeptidesSorted[comboMinIdx].RetentionTime;
+                maxRt = StandardPeptidesSorted[comboMaxIdx].RetentionTime;
             }
             else
             {
-                minRt = _standard.Peptides[comboMinIdx].Irt;
-                maxRt = _standard.Peptides[comboMaxIdx].Irt;
+                minRt = _standardPeptidesSorted[comboMinIdx].Irt;
+                maxRt = _standardPeptidesSorted[comboMaxIdx].Irt;
             }
 
             if (minRt >= maxRt)
@@ -225,9 +232,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return false;
             }
 
-            var statRt = new Statistics(minRt, maxRt);
-            var statIrt = new Statistics(minIrt, maxIrt);
-            line = new RegressionLine(statIrt.Slope(statRt), statIrt.Intercept(statRt));
+            regression = SelectedRegressionOption.Regression.ChangePoints(new[] {minRt, maxRt}, new[] {minIrt, maxIrt});
             return true;
         }
 
@@ -298,7 +303,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void UpdateEquation(object sender, EventArgs e)
         {
-            if (!TryGetLine(false, out var line))
+            if (!TryGetRegression(false, out var regression))
             {
                 lblEquation.Text = string.Empty;
                 if (!IsRecalibration)
@@ -310,38 +315,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
                 return;
             }
-            var equationSb = new StringBuilder();
-            equationSb.Append(Resources.CalibrateIrtDlg_UpdateControls_iRT);
-            equationSb.Append(@" =");
-            var roundedSlope = Math.Round(line.Slope, 4);
-            var roundedIntercept = Math.Round(line.Intercept, 4);
-            if (roundedSlope != 0 || roundedIntercept != 0)
-            {
-                if (roundedSlope != 0)
-                {
-                    if (roundedSlope != 1)
-                    {
-                        equationSb.Append(string.Format(@" {0:F04} *", roundedSlope));
-                    }
-                    equationSb.Append(' ');
-                    equationSb.Append(Resources.CalibrateIrtDlg_UpdateControls_RT);
-                }
-                if (roundedIntercept != 0)
-                {
-                    equationSb.Append(roundedSlope != 0
-                        ? string.Format(@" {0} {1:F04}", roundedIntercept >= 0 ? '+' : '-', Math.Abs(roundedIntercept))
-                        : string.Format(@" {0:F04}", roundedIntercept));
-                }
-            }
-            else
-            {
-                equationSb.Append(string.Format(@" {0:F04}", 0));
-            }
-            lblEquation.Text = equationSb.ToString();
+            lblEquation.Text = regression.DisplayEquation;
             if (!IsRecalibration && !SelectedRegressionOption.ForcedIrts)
             {
                 FireStandardsChanged = false;
-                StandardPeptideList.ForEach(pep => pep.Irt = line.GetY(pep.RetentionTime));
+                StandardPeptideList.ForEach(pep => pep.Irt = regression.GetY(pep.RetentionTime));
                 StandardPeptideList.ResetBindings();
                 FireStandardsChanged = true;
             }
@@ -401,11 +379,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void StandardsChanged(object sender, EventArgs eventArgs)
         {
-            if (!FireStandardsChanged)
+            if (!FireStandardsChanged || !_gridViewDriver.ItemsValid)
                 return;
 
             var oldPeps = comboMinPeptide.Items.Cast<string>().ToArray();
-            var newPeps = StandardPeptideList.Select(pep => pep.Sequence).ToArray();
+            var newPeps = StandardPeptidesSorted.Select(pep => pep.Sequence).ToArray();
 
             if (oldPeps.SequenceEqual(newPeps))
                 return;
@@ -451,34 +429,32 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             double[] xValues, yValues;
             Dictionary<int, string> tooltips;
-            RegressionLine regressionLine;
+            IIrtRegression regression;
 
-            if (SelectedRegressionOption.RegressionLine == null)
+            if (SelectedRegressionOption.FixedPoint)
             {
-                if (!TryGetLine(true, out regressionLine))
-                {
+                if (!TryGetRegression(true, out regression))
                     return;
-                }
 
                 double pepMinTime, pepMaxTime;
                 if (!IsRecalibration)
                 {
-                    var pepMin = StandardPeptideList[comboMinPeptide.SelectedIndex];
-                    var pepMax = StandardPeptideList[comboMaxPeptide.SelectedIndex];
+                    var pepMin = StandardPeptidesSorted[comboMinPeptide.SelectedIndex];
+                    var pepMax = StandardPeptidesSorted[comboMaxPeptide.SelectedIndex];
                     pepMinTime = pepMin.RetentionTime;
                     pepMaxTime = pepMax.RetentionTime;
                     tooltips = new Dictionary<int, string> {{0, pepMin.Sequence}, {1, pepMax.Sequence}};
                 }
                 else
                 {
-                    var pepMin = _standard.Peptides[comboMinPeptide.SelectedIndex];
-                    var pepMax = _standard.Peptides[comboMaxPeptide.SelectedIndex];
+                    var pepMin = _standardPeptidesSorted[comboMinPeptide.SelectedIndex];
+                    var pepMax = _standardPeptidesSorted[comboMaxPeptide.SelectedIndex];
                     pepMinTime = pepMin.Irt;
                     pepMaxTime = pepMax.Irt;
                     tooltips = new Dictionary<int, string> {{0, pepMin.PeptideModSeq}, {1, pepMax.PeptideModSeq}};
                 }
                 xValues = new[] {pepMinTime, pepMaxTime};
-                yValues = xValues.Select(x => regressionLine.GetY(x)).ToArray();
+                yValues = xValues.Select(x => regression.GetY(x)).ToArray();
             }
             else
             {
@@ -493,11 +469,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     tooltips[i] = standardPeptide.PeptideModSeq;
                     i++;
                 }
-                regressionLine = SelectedRegressionOption.RegressionLine;
+                regression = SelectedRegressionOption.Regression;
             }
 
-            ShowGraph(Resources.CalibrateIrtDlg_btnGraph_Click_Linear_equation_calculation, xValues, yValues, tooltips,
-                regressionLine, SelectedRegressionOption.RegressionLine == null && IsRecalibration);
+            ShowGraph(Resources.CalibrateIrtDlg_btnGraph_Click_Regression_equation_calculation, xValues, yValues, tooltips,
+                regression, SelectedRegressionOption.FixedPoint && IsRecalibration);
         }
 
         private void btnGraphIrts_Click(object sender, EventArgs e)
@@ -507,7 +483,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void GraphIrts()
         {
-            if (!TryGetLine(true, out var regressionLine))
+            if (!TryGetRegression(true, out var regressionLine))
             {
                 return;
             }
@@ -544,7 +520,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 regressionLine, IsRecalibration);
         }
 
-        private void ShowGraph(string title, double[] xValues, double[] yValues, Dictionary<int, string> tooltips, RegressionLine line, bool xIrt)
+        private void ShowGraph(string title, double[] xValues, double[] yValues, Dictionary<int, string> tooltips, IIrtRegression regression, bool xIrt)
         {
             var data = new RegressionGraphData
             {
@@ -554,7 +530,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 XValues = xValues,
                 YValues = yValues,
                 Tooltips = tooltips,
-                RegressionLine = line,
+                RegressionLine = regression,
             };
 
             using (var graph = new GraphRegression(new[] { data }) { Width = 800, Height = 600 })
@@ -566,10 +542,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
         public class RegressionOption
         {
             public string Name { get; }
-            public RegressionLine RegressionLine { get; }
+            public IIrtRegression Regression { get; }
+            public bool FixedPoint { get; }
             public List<Tuple<DbIrtPeptide, PeptideDocNode>> MatchedRegressionPeptides { get; }
             public List<StandardPeptide> StandardPeptides { get; }
-            public bool AllowEditEquation => RegressionLine == null;
+            public bool AllowEditEquation => FixedPoint;
             public bool AllowEditGrid { get; }
             public bool ForcedStandards => StandardPeptides != null && StandardPeptides.Count > 0;
             public bool ForcedIrts => ForcedStandards && !StandardPeptides.Any(pep => double.IsNaN(pep.Irt));
@@ -577,16 +554,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
             public int MatchedPeptideCount => MatchedRegressionPeptides?.Count ?? 0;
             public bool IsCirtDiscovered => Equals(Name, Resources.CalibrationGridViewDriver_CiRT_option_name);
 
-            private RegressionOption(string name) : this(name, null, null, null, true, true)
+            private RegressionOption(string name, IIrtRegression regression) : this(name, regression, true, null, null, true)
             {
             }
 
-            public RegressionOption(string name, RegressionLine regressionLine,
+            public RegressionOption(string name, IIrtRegression regression, bool fixedPoint,
                 List<Tuple<DbIrtPeptide, PeptideDocNode>> matchedRegressionPeptides, List<StandardPeptide> standardPeptides,
-                bool allowEditEquation, bool allowEditGrid)
+                bool allowEditGrid)
             {
                 Name = name;
-                RegressionLine = regressionLine;
+                Regression = regression;
+                FixedPoint = fixedPoint;
                 MatchedRegressionPeptides = matchedRegressionPeptides;
                 StandardPeptides = standardPeptides;
                 AllowEditGrid = allowEditGrid;
@@ -594,7 +572,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             public static IEnumerable<RegressionOption> All(SrmDocument document)
             {
-                yield return new RegressionOption(Resources.RegressionOption_All_Fixed_points);
+                yield return new RegressionOption(Resources.RegressionOption_All_Fixed_points__linear_, new RegressionLine());
+                yield return new RegressionOption(Resources.RegressionOption_All_Fixed_points__logarithmic_, new LogRegression(true));
 
                 var docPeptides = new Dictionary<Target, PeptideDocNode>();
                 foreach (var nodePep in document.Peptides.Where(nodePep => nodePep.PercentileMeasuredRetentionTime.HasValue && !nodePep.IsDecoy))
@@ -613,12 +592,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             pepMatches.Add(Tuple.Create(pep, nodePep));
                         }
                     }
-                    if (RCalcIrt.TryGetRegressionLine(
+                    if (IrtRegression.TryGet<RegressionLine>(
                         pepMatches.Select(pep => (double) pep.Item2.PercentileMeasuredRetentionTime.Value).ToList(),
                         pepMatches.Select(pep => pep.Item1.Irt).ToList(),
                         RCalcIrt.MinStandardCount(standard.Peptides.Count), out var regressionLine))
                     {
-                        yield return new RegressionOption(standard.Name, regressionLine, pepMatches, null, false, false);
+                        yield return new RegressionOption(standard.Name, (RegressionLine) regressionLine, false, pepMatches, null, false);
                     }
                 }
             }
@@ -643,6 +622,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 Items.ListChanged += parent.StandardsChanged;
             }
 
+            public bool ItemsValid => Items.All(item => item.Target != null && !(item.RetentionTime <= 0));
+
             protected override void DoPaste()
             {
                 var standardPeptidesNew = new List<MeasuredPeptide>();
@@ -664,7 +645,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var bestPeptides = PickPeptides(document, peptideCount, exclude, currentRegression, out var cirt);
                 if (bestPeptides == null)
                     return null;
-                if ((currentRegression?.RegressionLine != null && !currentRegression.IsCirtDiscovered) || cirt == null)
+                if (((currentRegression != null && !currentRegression.FixedPoint) && !currentRegression.IsCirtDiscovered) || cirt == null)
                 {
                     SetPeptides(bestPeptides);
                 }
@@ -725,7 +706,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         case DialogResult.Yes:
                             cirtRegression = tryCirtRegression;
                             useCirt = true;
-                            if (currentRegression?.RegressionLine == null || currentIsCirt)
+                            if ((currentRegression != null && currentRegression.FixedPoint) || currentIsCirt)
                             {
                                 switch (MultiButtonMsgDlg.Show(_parent,
                                     Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_,
@@ -757,12 +738,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     var standardPeptides = bestPeptides.Select(pep => new StandardPeptide
                     {
-                        Irt = cirtUsePredefined ? _picker.CirtIrt(pep.Target).Value : double.NaN,
+                        Irt = cirtUsePredefined ? _picker.CirtIrt(pep.Target).GetValueOrDefault() : double.NaN,
                         RetentionTime = pep.RetentionTime,
                         Target = pep.Target
                     }).ToList();
-                    cirt = new RegressionOption(Resources.CalibrationGridViewDriver_CiRT_option_name, cirtRegression,
-                        matchedPeptides.ToList(), standardPeptides, false, false);
+                    cirt = new RegressionOption(Resources.CalibrationGridViewDriver_CiRT_option_name, cirtRegression, false,
+                        matchedPeptides.ToList(), standardPeptides, false);
                 }
                 return bestPeptides;
             }

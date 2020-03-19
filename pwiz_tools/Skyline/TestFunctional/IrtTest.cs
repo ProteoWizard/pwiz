@@ -752,8 +752,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 calibrateIrtDlg.StandardName = "Test standard";
                 var regressionOptions = calibrateIrtDlg.RegressionOptions;
-                Assert.AreEqual(3, regressionOptions.Length);
-                Assert.IsTrue(regressionOptions[0].Name.Equals(Resources.RegressionOption_All_Fixed_points));
+                Assert.AreEqual(4, regressionOptions.Length);
+                Assert.IsTrue(regressionOptions[0].Name.Equals(Resources.RegressionOption_All_Fixed_points__linear_));
+                Assert.IsTrue(regressionOptions[1].Name.Equals(Resources.RegressionOption_All_Fixed_points__logarithmic_));
                 Assert.IsTrue(regressionOptions.Select(opt => opt.Name).Contains(IrtStandard.REPLICAL.Name));
                 Assert.IsTrue(regressionOptions.Select(opt => opt.Name).Contains(IrtStandard.PIERCE.Name));
                 Assert.IsTrue(ReferenceEquals(calibrateIrtDlg.SelectedRegressionOption, regressionOptions[0]));
@@ -833,9 +834,10 @@ namespace pwiz.SkylineTestFunctional
             {
                 calibrateIrtDlg2.StandardName = "CiRT test standard 1";
                 var regressionOptions = calibrateIrtDlg2.RegressionOptions;
-                Assert.AreEqual(2, regressionOptions.Length);
-                Assert.IsTrue(regressionOptions[0].Name.Equals(Resources.RegressionOption_All_Fixed_points));
-                Assert.IsTrue(regressionOptions[1].Name.Equals(IrtStandard.CIRT_SHORT.Name));
+                Assert.AreEqual(3, regressionOptions.Length);
+                Assert.IsTrue(regressionOptions[0].Name.Equals(Resources.RegressionOption_All_Fixed_points__linear_));
+                Assert.IsTrue(regressionOptions[1].Name.Equals(Resources.RegressionOption_All_Fixed_points__logarithmic_));
+                Assert.IsTrue(regressionOptions[2].Name.Equals(IrtStandard.CIRT_SHORT.Name));
                 Assert.IsTrue(ReferenceEquals(calibrateIrtDlg2.SelectedRegressionOption, regressionOptions[0]));
             });
             var addIrtDlg2 = ShowDialog<AddIrtStandardsDlg>(calibrateIrtDlg2.UseResults);
@@ -863,7 +865,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 var data = dlg.RegressionGraphDatas.First();
-                Assert.AreEqual(72, data.RegularPoints.Count);
+                Assert.AreEqual(73, data.RegularPoints.Count);
                 Assert.AreEqual(0, data.MissingPoints.Count);
                 Assert.AreEqual(0, data.OutlierPoints.Count);
                 Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
@@ -907,7 +909,7 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var pep in calibrateIrtDlg3.StandardPeptideList)
                 {
                     Assert.IsTrue(predefinedIrts.ContainsKey(pep.Target));
-                    var expectedIrt = calibrateIrtDlg3.SelectedRegressionOption.RegressionLine.GetY(pep.RetentionTime);
+                    var expectedIrt = calibrateIrtDlg3.SelectedRegressionOption.Regression.GetY(pep.RetentionTime);
                     cirtIrts[pep.Target] = expectedIrt;
                     Assert.AreEqual(expectedIrt, pep.Irt);
                 }
@@ -916,7 +918,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 var data = dlg.RegressionGraphDatas.First();
-                Assert.AreEqual(72, data.RegularPoints.Count);
+                Assert.AreEqual(73, data.RegularPoints.Count);
                 Assert.AreEqual(0, data.MissingPoints.Count);
                 Assert.AreEqual(0, data.OutlierPoints.Count);
                 Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);

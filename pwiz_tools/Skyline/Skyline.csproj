@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>828D97D15AA50E99C25127B6A71E0A6DFC12027E</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>19870CA6C934F1DFEADFC678B704FD5CEF4C7F0B</ManifestCertificateThumbprint>
     <ManifestKeyFile>
     </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
@@ -47,8 +47,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>18334</ApplicationRevision>
-    <ApplicationVersion>4.2.1.18334</ApplicationVersion>
+    <ApplicationRevision>32</ApplicationRevision>
+    <ApplicationVersion>20.1.1.32</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -90,7 +90,7 @@
     <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -436,7 +436,9 @@
     <Compile Include="Model\AuditLog\DiffNode.cs" />
     <Compile Include="Model\AuditLog\PropertyName.cs" />
     <Compile Include="Model\ExplicitTransitionValues.cs" />
+    <Compile Include="Model\GroupComparisonRefinementData.cs" />
     <Compile Include="Model\Irt\IrtPeptidePicker.cs" />
+    <Compile Include="Model\Irt\Regression.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
@@ -463,6 +465,7 @@
       <DependentUpon>PrositResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Prosit\PrositRetentionScoreCalculator.cs" />
+    <Compile Include="Model\Results\PeakIntegrator.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountList.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountType.cs" />
@@ -470,6 +473,8 @@
     <Compile Include="Model\Results\RemoteApi\RemoteServerException.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteSession.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteUrl.cs" />
+    <Compile Include="Model\Results\TimeIntervals.cs" />
+    <Compile Include="Model\Results\TriggeredAcquisition.cs" />
     <Compile Include="Model\Serialization\AnnotationScrubber.cs" />
     <Compile Include="Model\Serialization\Pre372CustomIonTransitionGroupHandler.cs" />
     <Compile Include="Model\Serialization\XmlReadAhead.cs" />
@@ -539,6 +544,12 @@
     <Compile Include="ProtocolBuffers\GeneratedCode\Tensor.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\TensorShape.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\Types.cs" />
+    <Compile Include="SettingsUI\Irt\UseCurrentCalculatorDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\UseCurrentCalculatorDlg.Designer.cs">
+      <DependentUpon>UseCurrentCalculatorDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
       <SubType>UserControl</SubType>
@@ -2260,6 +2271,9 @@
     <EmbeddedResource Include="FileUI\ExportAnnotationsDlg.resx">
       <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ExportAnnotationsDlg.zh-CHS.resx">
+      <DependentUpon>ExportAnnotationsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsLockMassDlg.ja.resx">
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2557,6 +2571,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineDlg.zh-CHS.resx">
       <DependentUpon>RefineDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineListDlg.ja.resx">
       <DependentUpon>RefineListDlg.cs</DependentUpon>
@@ -2773,9 +2788,17 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.zh-CHS.resx" />
+    <EmbeddedResource Include="Model\Prosit\PrositResources.ja.resx">
+      <DependentUpon>PrositResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Prosit\PrositResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>PrositResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Prosit\PrositResources.zh-CHS.resx">
+      <DependentUpon>PrositResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
@@ -2783,6 +2806,7 @@
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
     <EmbeddedResource Include="Resources\PeptideQc.bmp" />
     <EmbeddedResource Include="Resources\PeptideQcLib.bmp" />
+    <EmbeddedResource Include="Resources\Skyline_Release.bmp" />
     <EmbeddedResource Include="Resources\ToolUpdateAvailable.bmp" />
     <EmbeddedResource Include="Resources\directoryicon.png" />
     <EmbeddedResource Include="Model\IonMobility\mapping.xml">
@@ -2959,6 +2983,10 @@
     <EmbeddedResource Include="Resources\MoleculeIrt.bmp" />
     <EmbeddedResource Include="Resources\MoleculeIrtLib.bmp" />
     <EmbeddedResource Include="Resources\MoleculeStandardLib.bmp" />
+    <EmbeddedResource Include="Resources\Skyline_Release.ico" />
+    <None Include="Resources\GenerateDecoys.bmp" />
+    <EmbeddedResource Include="Resources\StartPage\WizardBlankDocument-ja.bmp" />
+    <EmbeddedResource Include="Resources\StartPage\WizardBlankDocument-zh-CHS.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
@@ -3304,6 +3332,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.zh-CHS.resx">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\UseCurrentCalculatorDlg.resx">
+      <DependentUpon>UseCurrentCalculatorDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>
@@ -5004,9 +5035,6 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Model\Unifi\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">

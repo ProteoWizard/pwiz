@@ -38,8 +38,8 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-ChromatogramList_Agilent::ChromatogramList_Agilent(MassHunterDataPtr rawfile)
-:   rawfile_(rawfile), indexInitialized_(util::init_once_flag_proxy)
+ChromatogramList_Agilent::ChromatogramList_Agilent(MassHunterDataPtr rawfile, const Reader::Config& config)
+:   rawfile_(rawfile), config_(config), indexInitialized_(util::init_once_flag_proxy)
 {
 }
 
@@ -104,16 +104,17 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
             if (detailLevel < DetailLevel_FullMetadata)
                 return result;
 
+            bool onlyMs1 = config_.globalChromatogramsAreMs1Only;
             if (getBinaryData)
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
-                result->getTimeArray()->data.assign(rawfile_->getTicTimes().begin(), rawfile_->getTicTimes().end());
-                result->getIntensityArray()->data.assign(rawfile_->getTicIntensities().begin(), rawfile_->getTicIntensities().end());
+                result->getTimeArray()->data.assign(rawfile_->getTicTimes(onlyMs1).begin(), rawfile_->getTicTimes(onlyMs1).end());
+                result->getIntensityArray()->data.assign(rawfile_->getTicIntensities(onlyMs1).begin(), rawfile_->getTicIntensities(onlyMs1).end());
 
                 result->defaultArrayLength = result->getTimeArray()->data.size();
             }
             else
-                result->defaultArrayLength = rawfile_->getTicTimes().size();
+                result->defaultArrayLength = rawfile_->getTicTimes(onlyMs1).size();
         }
         break;
 
@@ -139,15 +140,14 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
 
-                automation_vector<double> xArray;
-                chromatogramPtr->getXArray(xArray);
-                result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
+                auto& timeArray = result->getTimeArray()->data;
+                chromatogramPtr->getXArray(timeArray);
 
-                automation_vector<float> yArray;
+                pwiz::util::BinaryData<float> yArray;
                 chromatogramPtr->getYArray(yArray);
                 result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
 
-                result->defaultArrayLength = xArray.size();
+                result->defaultArrayLength = timeArray.size();
             }
             else
                 result->defaultArrayLength = chromatogramPtr->getTotalDataPoints();
@@ -170,15 +170,14 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
             {
                 result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
 
-                automation_vector<double> xArray;
-                chromatogramPtr->getXArray(xArray);
-                result->getTimeArray()->data.assign(xArray.begin(), xArray.end());
+                auto& timeArray = result->getTimeArray()->data;
+                chromatogramPtr->getXArray(timeArray);
 
-                automation_vector<float> yArray;
+                pwiz::util::BinaryData<float> yArray;
                 chromatogramPtr->getYArray(yArray);
                 result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
 
-                result->defaultArrayLength = xArray.size();
+                result->defaultArrayLength = timeArray.size();
             }
             else
                 result->defaultArrayLength = chromatogramPtr->getTotalDataPoints();

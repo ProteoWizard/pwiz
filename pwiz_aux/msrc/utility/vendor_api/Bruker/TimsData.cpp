@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/sort_together.hpp"
 #include "TimsData.hpp"
 #include "sqlite3pp.h"
 
@@ -188,6 +189,13 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     bpc_->times.reserve(count);
     bpc_->intensities.reserve(count);
 
+    ticMs1_.reset(new Chromatogram);
+    bpcMs1_.reset(new Chromatogram);
+    ticMs1_->times.reserve(count / 2);
+    ticMs1_->intensities.reserve(count / 2);
+    bpcMs1_->times.reserve(count / 2);
+    bpcMs1_->intensities.reserve(count / 2);
+
     if (!combineIonMobilitySpectra)
     {
         // get anticipated scan count
@@ -227,6 +235,14 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         bpc_->times.push_back(rt);
         tic_->intensities.push_back(tic);
         bpc_->intensities.push_back(bpi);
+
+        if (msmsType == MsMsType::MS1)
+        {
+            ticMs1_->times.push_back(rt);
+            bpcMs1_->times.push_back(rt);
+            ticMs1_->intensities.push_back(tic);
+            bpcMs1_->intensities.push_back(bpi);
+        }
 
         int numScans = row.get<int>(++idx);
         int numPeaks = row.get<int>(++idx);
@@ -365,7 +381,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 auto& frame = findItr->second;
 
                 int scanBegin = row.get<int>(colScanBegin);
-                int scanEnd = row.get<int>(colScanEnd); // scan end in DiaFrameMsMsInfo is inclusive same as pwiz;
+                int scanEnd = row.get<int>(colScanEnd) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
 
                 info.isolationMz = row.get<double>(colIsolationMz);
                 info.isolationWidth = row.get<double>(colIsolationWidth);
@@ -421,13 +437,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
                 frame->windowGroup_ = windowGroup; 
                 frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
-            }
-
-            for (const auto& kvp : frames_)
-            {
-                const auto& frame = kvp.second;
-                if (frame->windowGroup_) // if windowGroup is unset for DIA, the frame is filtered out
-                    frame->diaPasefIsolationInfoByScanNumber_.rbegin()->second.numScans--; // the last ScanNumEnd for each DIA window seems to be exclusive rather than inclusive
             }
         }
     }
@@ -586,8 +595,8 @@ size_t TimsDataImpl::getLCSpectrumCount(int source) const { return 0; }
 LCSpectrumSourcePtr TimsDataImpl::getLCSource(int source) const { return 0; }
 LCSpectrumPtr TimsDataImpl::getLCSpectrum(int source, int scan) const { return LCSpectrumPtr(); }
 
-ChromatogramPtr TimsDataImpl::getTIC() const { return tic_; }
-ChromatogramPtr TimsDataImpl::getBPC() const { return bpc_; }
+ChromatogramPtr TimsDataImpl::getTIC(bool ms1Only) const { return ms1Only ? ticMs1_ : tic_; }
+ChromatogramPtr TimsDataImpl::getBPC(bool ms1Only) const { return ms1Only ? bpcMs1_ : bpc_; }
 
 std::string TimsDataImpl::getOperatorName() const { return operatorName_; }
 std::string TimsDataImpl::getAnalysisName() const { return ""; }
@@ -659,7 +668,7 @@ bool TimsSpectrum::hasProfileData() const { return false; }
 size_t TimsSpectrum::getLineDataSize() const { return frame_.timsDataImpl_.readFrame(frame_.frameId_).getNbrPeaks(scanBegin_); }
 size_t TimsSpectrum::getProfileDataSize() const { return 0; }
 
-void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+void TimsSpectrum::getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
     auto& storage = frame_.timsDataImpl_;
     const auto& frameProxy = storage.readFrame(frame_.frameId_);
@@ -675,8 +684,8 @@ void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<
     }
 
     auto scanMZs = frameProxy.getScanMZs(scanBegin_);
-    intensities.resize_no_initialize(intensityCounts.size());
-    mz.resize_no_initialize(intensityCounts.size());
+    intensities.resize(intensityCounts.size());
+    mz.resize(intensityCounts.size());
 
     double *m = &mz[0];
     double *inten = &intensities[0];
@@ -687,7 +696,7 @@ void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<
     }
 }
 
-void TimsSpectrum::getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+void TimsSpectrum::getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
     // TDF does not support profile data
     mz.clear();
@@ -717,21 +726,6 @@ double TimsSpectrum::oneOverK0() const
     }
 }
 
-namespace {
-    template<typename T>
-    struct SortByOther
-    {
-        const vector<T> & value_vector;
-
-        SortByOther(const vector<T> & val_vec) :
-            value_vector(val_vec) {}
-
-        bool operator()(int i1, int i2) const
-        {
-            return value_vector[i1] < value_vector[i2];
-        }
-    };
-}
 
 void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const
 {
@@ -770,21 +764,7 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
     if (!sortAndJitter)
         return;
 
-    // sort an array of indices by m/z; these indices are used to reorder all 3 arrays
-    vector<int> indices(mz.size());
-    for (int i = 0; i < mz.size(); ++i)
-        indices[i] = i;
-    std::sort(indices.begin(), indices.end(), SortByOther<double>(mz));
-    pwiz::util::BinaryData<double> mzTmp(mz.size()), intensityTmp(mz.size()), mobilityTmp(mz.size());
-    for (int i = 0; i < mz.size(); ++i)
-    {
-        mzTmp[i] = mz[indices[i]];
-        intensityTmp[i] = intensities[indices[i]];
-        mobilityTmp[i] = mobilities[indices[i]];
-    }
-    swap(mzTmp, mz);
-    swap(intensityTmp, intensities);
-    swap(mobilityTmp, mobilities);
+    sort_together(mz, vector<boost::iterator_range<BinaryData<double>::iterator>> { intensities, mobilities });
 
     // add jitter to identical m/z values (which come from different mobility bins)
     for (size_t i = 1; i < mz.size(); ++i)

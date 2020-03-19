@@ -30,6 +30,12 @@ namespace SkylineNightly
         private static bool PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
         {
             var nightly = new Nightly(runMode, decorateSrcDirName);
+            var nightlyTask = Nightly.NightlyTask;
+            if (nightlyTask != null && DateTime.UtcNow.Add(nightly.TargetDuration).ToLocalTime() > nightlyTask.NextRunTime)
+            {
+                // Don't run, because the projected end time is after the start of the next scheduled start
+                return false;
+            }
             var errMessage = nightly.RunAndPost();
             var message = string.Format(@"Completed {0}", arg);
             nightly.Finish(message, errMessage);

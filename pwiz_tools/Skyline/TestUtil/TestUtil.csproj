@@ -158,9 +158,11 @@
       <DependentUpon>PauseAndContinueForm.cs</DependentUpon>
     </Compile>
     <Compile Include="PeakMatcherTestUtil.cs" />
+    <Compile Include="ProcessKiller.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResultsUtil.cs" />
     <Compile Include="AbstractUnitTest.cs" />
+    <Compile Include="ScreenshotManager.cs" />
     <Compile Include="StackTraceLogger.cs" />
     <Compile Include="TestDocumentContainer.cs" />
     <Compile Include="TestFilesDir.cs" />
@@ -379,6 +381,16 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Schemas\Skyline_19.1.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_20.1.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_20.11.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>

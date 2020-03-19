@@ -27,7 +27,6 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/BinaryData.hpp"
-#include "pwiz/utility/misc/automation_vector.h"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/chemistry/MzMobilityWindow.hpp"
 #include <string>
@@ -195,8 +194,8 @@ struct PWIZ_API_DECL MSSpectrum
     virtual bool hasProfileData() const = 0;
     virtual size_t getLineDataSize() const = 0;
     virtual size_t getProfileDataSize() const = 0;
-    virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const = 0;
-    virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const = 0;
+    virtual void getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const = 0;
+    virtual void getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const = 0;
 
     virtual double getTIC() const = 0;
     virtual double getBPI() const = 0;
@@ -315,10 +314,10 @@ struct PWIZ_API_DECL CompassData
     virtual LCSpectrumPtr getLCSpectrum(int source, int scan) const = 0;
 
     /// returns a chromatogram with times and total ion currents of all spectra, or a null pointer if the format doesn't support fast access to TIC
-    virtual ChromatogramPtr getTIC() const = 0;
+    virtual ChromatogramPtr getTIC(bool ms1Only = false) const = 0;
 
     /// returns a chromatogram with times and base peak intensities of all spectra, or a null pointer if the format doesn't support fast access to BPC
-    virtual ChromatogramPtr getBPC() const = 0;
+    virtual ChromatogramPtr getBPC(bool ms1Only = false) const = 0;
 
     virtual std::string getOperatorName() const = 0;
     virtual std::string getAnalysisName() const = 0;

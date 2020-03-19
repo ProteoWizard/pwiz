@@ -129,8 +129,12 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         method.userParams.push_back(UserParam("Waters/MassLynx peak picking"));
     else if (mode_ == 7)
         method.userParams.push_back(UserParam("Shimadzu peak picking"));
-    //else
-    //    method.userParams.push_back(algorithm->name());
+    else if (algorithm != NULL)
+        method.userParams.emplace_back(algorithm->name());
+
+    if (algorithm_)
+        noVendorCentroidingWarningMessage_ = string("[SpectrumList_PeakPicker]: vendor centroiding requested but not available for this data; falling back to ") + algorithm_->name();
+
     if (preferVendorPeakPicking && !mode_ && (algorithm_ != NULL)) // VendorOnlyPeakPicker sets algorithm null, we deal with this at get binary data time
     {
         cerr << "Warning: vendor peakPicking was requested, but is unavailable";
@@ -283,8 +287,19 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
     {
         if (algorithm_ == NULL) // As with VendorOnlyPeakPicker
             throw NoVendorPeakPickingException();
+        if (mode_)
+            warn_once(noVendorCentroidingWarningMessage_.c_str());
+
         BinaryData<double>& mzs = s->getMZArray()->data;
         BinaryData<double>& intensities = s->getIntensityArray()->data;
+        if (mzs.empty())
+            return s;
+
+        // remove extra arrays that are the same length as the m/z array because pwiz peak picking will not preserve the one-to-one correspondence
+        for (size_t i = 2; i < s->binaryDataArrayPtrs.size(); ++i)
+            if (s->binaryDataArrayPtrs[i]->data.size() == mzs.size())
+                s->binaryDataArrayPtrs.erase(s->binaryDataArrayPtrs.begin() + (i--));
+
         vector<double> xPeakValues, yPeakValues;
         algorithm_->detect(mzs, intensities, xPeakValues, yPeakValues);
         mzs.swap(xPeakValues);

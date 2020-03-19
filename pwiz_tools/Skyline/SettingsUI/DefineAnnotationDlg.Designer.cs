@@ -40,7 +40,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
-            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageEditable = new System.Windows.Forms.TabPage();
             this.tabPageCalculated = new System.Windows.Forms.TabPage();
@@ -114,12 +113,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
-            // 
-            // imageList1
-            // 
-            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
-            this.imageList1.TransparentColor = System.Drawing.Color.Magenta;
-            this.imageList1.Images.SetKeyName(0, "Delete.bmp");
             // 
             // tabControl1
             // 
@@ -224,7 +217,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPageEditable;
         private System.Windows.Forms.TabPage tabPageCalculated;

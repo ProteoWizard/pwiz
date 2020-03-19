@@ -91,8 +91,8 @@ namespace pwiz.SkylineTestFunctional
                     i++;
                 }
             }
-            // There are 236 total transitions, 186 of which have decent peaks
-            Assert.AreEqual(186, countPeaksProperPolarity, "countPeaksProperPolarity: " + string.Join(", ", properList));
+            // There are 236 total transitions, 98 of which have decent peaks that match declared explict RT values
+            Assert.AreEqual(98, countPeaksProperPolarity, "countPeaksProperPolarity: " + string.Join(", ", properList));
             Assert.AreEqual(0, countPeaksNegPolarity, "countPeaksNegPolarity"); //Should be total polarity mismatch
             Assert.AreEqual(0, countPeaksPosPolarity, "countPeaksNoPolarity"); //Should be total polarity mismatch
             testFilesDir.Dispose();
@@ -167,8 +167,8 @@ namespace pwiz.SkylineTestFunctional
                 {
                     importProgress = FindOpenForm<AllChromatogramsGraph>();
                 }
-                WaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error) && importProgress.Error.Contains(expectedError),
-                    string.Format("Timed out waiting for error message containing \"{0}\"", expectedError));
+                WaitForConditionUI(10000, () => !string.IsNullOrEmpty(importProgress.Error) && importProgress.Error.Contains(expectedError),
+                    () => string.Format("Timed out waiting for error message containing \"{0}\"", expectedError));
             }
             document = WaitForDocumentChangeLoaded(document);
             return document;

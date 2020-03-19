@@ -542,18 +542,16 @@ namespace pwiz.SkylineTestFunctional
             if (expectedAmbiguous > 0)
             {
                 var ambiguousDlg = WaitForOpenForm<MessageDlg>();
-                RunUI(() =>
-                {
-                    Assert.AreEqual(expectedAmbiguous, ambiguousDlg.Message.Split('\n').Length - 1, ambiguousDlg.Message);
-                    ambiguousDlg.OkDialog();
-                });
+                RunUI(() => Assert.AreEqual(expectedAmbiguous, ambiguousDlg.Message.Split('\n').Length - 1, ambiguousDlg.Message));
+                OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
             }
 
-            Assert.IsTrue(WaitForConditionUI(() =>
-                PeptideSettingsUI.AvailableLibraries.Contains(_libraryName)));
+            TryWaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(_libraryName));
+            WaitForConditionUI(() => !PeptideSettingsUI.IsBuildingLibrary);
+            var messageDlg = FindOpenForm<MessageDlg>();
+            if (messageDlg != null)
+                Assert.Fail("Unexpected MessageDlg: " + messageDlg.DetailedMessage);
             RunUI(() => PeptideSettingsUI.PickedLibraries = new[] { _libraryName });
-            // Check this worked, because setting a non-existent name silently leaves nothing checked
-            RunUI(() => Assert.IsTrue(PeptideSettingsUI.PickedLibraries.Contains(_libraryName)));
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.OkDialog);
 
             // Wait for the library to load
@@ -611,6 +609,12 @@ namespace pwiz.SkylineTestFunctional
         {
             PeptideSettingsUI = FindOpenForm<PeptideSettingsUI>() ??
                                 ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            // Allow a person watching to see what is going on in the Library tab
+            RunUI(() =>
+            {
+                if (PeptideSettingsUI.SelectedTab != PeptideSettingsUI.TABS.Library)
+                    PeptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
+            });
         }
 
         private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles, string libraryPath,
