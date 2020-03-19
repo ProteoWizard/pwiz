@@ -208,6 +208,7 @@ SciexToolKit.dll
 Shimadzu.LabSolutions.IO.IoModule.dll
 sk\ZedGraph.resources.dll
 SkylineCmd.exe
+SkylineCmd.exe.config
 Skyline-daily.exe
 Skyline-daily.exe.config
 Skyline-daily.exe.manifest
