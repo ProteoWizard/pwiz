@@ -212,6 +212,7 @@ Skyline.exe
 Skyline.exe.config
 Skyline.exe.manifest
 Skyline.pdb
+SkylineCmd.exe.config
 SkylineData.ico
 SkylineDoc.ico
 SkylineDocPointer.ico
