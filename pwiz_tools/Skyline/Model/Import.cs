@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
 
                 if (line.StartsWith(@">"))
                 {
-                    if (!requireLibraryMatch)
+                    if (!requireLibraryMatch && progressMonitor == null)
                     {
                         if (_countIons > SrmDocument.MaxTransitionCount)
                         {
