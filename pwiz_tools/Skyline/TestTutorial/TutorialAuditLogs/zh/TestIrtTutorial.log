@@ -68,6 +68,12 @@ Extra Info: 文件名称 =
 重复测定名称 = "色谱图",
 要同步导入的文件 = "许多个"
 
+Undo Redo : 离子对设置 -- Integration > Integrate All 已更改为 真
+Summary   : 设置 > 离子对设置 -- Integration > Integrate All 已更改为 真
+All Info  :
+离子对设置 -- Integration > Integrate All 已更改为 真
+设置 > 离子对设置 -- Integration > Integrate All 从 假 更改到 真
+
 Undo Redo : 已删除目标 RBM39 > K.NSAQGNVYVK.C [467, 476]
 Summary   : 已删除目标 RBM39 > K.NSAQGNVYVK.C [467, 476]
 All Info  :

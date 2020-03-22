@@ -513,6 +513,12 @@ All Info  :
 Transition Settings -- Instrument > Method match tolerance m/z changed to "0,065"
 Settings > Transition Settings -- Instrument > Method match tolerance m/z changed from "0,055" to "0,065"
 
+Undo Redo : Transition Settings -- Integration > Integrate All changed to True
+Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
+All Info  :
+Transition Settings -- Integration > Integrate All changed to True
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
+
 Undo Redo : Annotation : "Concentration" was added
 Summary   : Settings > Document Settings -- Annotations : "Concentration" was added
 All Info  :

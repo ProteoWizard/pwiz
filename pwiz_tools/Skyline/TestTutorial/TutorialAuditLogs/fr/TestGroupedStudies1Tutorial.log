@@ -93,6 +93,12 @@ Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574,7844++ to 
 All Info  :
 Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574,7844++ to all
 
+Undo Redo : Transition Settings -- Integration > Integrate All changed to True
+Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
+All Info  :
+Transition Settings -- Integration > Integrate All changed to True
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
+
 Undo Redo : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 Summary   : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 All Info  :
