@@ -77,11 +77,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             if (CalculatedConcentration.HasValue)
             {
-                if (Units == null)
-                {
-                    return CalculatedConcentration.Value.ToString(Formats.CalibrationCurve);
-                }
-                return TextUtil.SpaceSeparate(CalculatedConcentration.Value.ToString(Formats.Concentration), Units);
+                FormatCalculatedConcentration(CalculatedConcentration.Value, Units);
             }
             else if (NormalizedArea.HasValue)
             {
@@ -89,6 +85,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     NormalizedArea.Value.ToString(Formats.CalibrationCurve));
             }
             return TextUtil.EXCEL_NA;
+        }
+
+        public static string FormatCalculatedConcentration(double calculatedConcentration, string units)
+        {
+            if (units == null)
+            {
+                return calculatedConcentration.ToString(Formats.CalibrationCurve);
+            }
+
+            return TextUtil.SpaceSeparate(calculatedConcentration.ToString(Formats.Concentration), units);
         }
     }
 }

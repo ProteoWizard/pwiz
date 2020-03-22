@@ -1466,6 +1466,15 @@
   <data name="RefinementSettings_GroupComparisonDefs" xml:space="preserve">
     <value>Group comparisons</value>
   </data>
+  <data name="PeptideChromInfo_ExcludeFromCalibration" xml:space="preserve">
+    <value>Exclude From Calibration</value>
+  </data>
+  <data name="PeptideChromInfo_AnalyteConcentration" xml:space="preserve">
+    <value>Analyte Concentration</value>
+  </data>
+  <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
+    <value>Quantitative</value>
+  </data>
   <data name="TransitionIntegration_IsIntegrateAll" xml:space="preserve">
     <value>Integrate All</value>
   </data>

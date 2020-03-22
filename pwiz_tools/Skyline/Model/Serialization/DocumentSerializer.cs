@@ -192,6 +192,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string qvalue = "qvalue";
             public const string zscore = "zscore";
             public const string exclude_from_calibration = "exclude_from_calibration";
+            public const string analyte_concentration = "analyte_concentration";
             public const string points_across = "points_across";
 
             public const string forced_integration = "forced_integration";

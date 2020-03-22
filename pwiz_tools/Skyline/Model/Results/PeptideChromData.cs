@@ -150,11 +150,10 @@ namespace pwiz.Skyline.Model.Results
 
         public void PickChromatogramPeaks()
         {
-            TriggeredAcquisition triggeredAcquisition = null;
             TimeIntervals intersectedTimeIntervals = null;
             if (_document.Settings.TransitionSettings.Instrument.TriggeredAcquisition && NodePep != null)
             {
-                triggeredAcquisition = new TriggeredAcquisition();
+                var triggeredAcquisition = new TriggeredAcquisition();
                 foreach (var chromDataSet in _dataSets)
                 {
                     var timeIntervals = triggeredAcquisition.InferTimeIntervals(
