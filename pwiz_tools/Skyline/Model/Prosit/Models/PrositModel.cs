@@ -660,12 +660,15 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     {
                         break;
                     }
+                    // This essentially prioritizes unmodified AA over modified AA (e.g. unmodified C over Carbamidomethyl C)
                     else if (PrositConstants.AMINO_ACIDS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAA))
                     {
                         seq.Append(prositAA.AA);
                     }
-                    else if (PrositConstants.MODIFICATIONS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAAMod))
+                    // Here a single "first" modification is given precedence over all others for any given AA
+                    else if (PrositConstants.MODIFICATIONS_REVERSE.TryGetValue(encodedSeqs[idx + j], out var prositAAMods))
                     {
+                        var prositAAMod = prositAAMods[0];
                         explicitMods.Add(new ExplicitMod(j, prositAAMod.Mod));
                         seq.Append(prositAAMod.AA);
                     }
