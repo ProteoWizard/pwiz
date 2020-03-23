@@ -89,6 +89,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Choose the next animation step depending on how much time has elapsed
                 // since the animation started. Skip frames if we're not called fast enough.
                 var elapsed = (int)(DateTime.UtcNow - _startTime).TotalMilliseconds;
+                elapsed = Math.Max(0, elapsed);
                 var step = Math.Min(
                     _scaleFactors.Length - 1,
                     elapsed / _updateMsec + 1);
