@@ -177,7 +177,7 @@ CVParam::CVParam()
 double CVParam::timeInSeconds()
 {
     try { return (*base_)->timeInSeconds(); }
-    CATCH_AND_FORWARD_CAST(value, "double")
+    CATCH_AND_FORWARD_CAST(value, "CVParam", "double")
 }
 bool CVParam::operator==(CVParam^ that) {return **base_ == **that->base_;}
 bool CVParam::operator!=(CVParam^ that) {return **base_ != **that->base_;}
@@ -251,7 +251,7 @@ bool UserParam::empty()
 double UserParam::timeInSeconds()
 {
     try { return (*base_)->timeInSeconds(); }
-    CATCH_AND_FORWARD_CAST(value, "double")
+    CATCH_AND_FORWARD_CAST(value, "UserParam", "double")
 }
 
 bool UserParam::operator==(UserParam^ that) {return (*base_) == *that->base_;}

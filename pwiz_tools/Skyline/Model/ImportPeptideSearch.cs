@@ -347,14 +347,14 @@ namespace pwiz.Skyline.Model
                 if (!ReferenceEquals(type, IsotopeLabelType.light) && DefaultHeavyLabelType == null)
                     DefaultHeavyLabelType = type;
 
-                foreach (StaticMod mod in mods.GetModificationsByName(type.Name).Modifications.Where(m => !m.IsUserSet))
+                foreach (var mod in mods.GetModificationsByName(type.Name).Modifications.Where(m => !m.IsUserSet))
                     UserDefinedTypedMods.Add(mod);
             }
 
             var staticMods = new TypedModifications(IsotopeLabelType.light, mods.StaticModifications);
             var heavyMods = new TypedModifications(DefaultHeavyLabelType, mods.GetModifications(DefaultHeavyLabelType));
 
-            foreach (StaticMod mod in staticMods.Modifications.Union(heavyMods.Modifications))
+            foreach (var mod in staticMods.Modifications.Union(heavyMods.Modifications))
                 UserDefinedTypedMods.Add(mod);
         }
 
@@ -366,7 +366,7 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<StaticMod> GetMatchedMods()
         {
-            IEnumerable<StaticMod> allMods = MatcherPepMods.StaticModifications.Union(MatcherHeavyMods);
+            var allMods = MatcherPepMods.StaticModifications.Union(MatcherHeavyMods);
             return allMods.Where(mod => !UserDefinedTypedMods.Any(mod.Equivalent));
         }
 

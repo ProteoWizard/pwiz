@@ -83,11 +83,6 @@ namespace pwiz.Skyline.Model
             return new TransitionLossKey(parent, this, Losses);
         }
 
-        public TransitionLossEquivalentKey EquivalentKey(TransitionGroupDocNode parent)
-        {
-            return new TransitionLossEquivalentKey(parent, this, Losses); 
-        }
-
         public MassType MzMassType { get; private set; }  // The massType used to calculate Mz
         public SignedMz Mz { get; private set; }
 
@@ -108,6 +103,7 @@ namespace pwiz.Skyline.Model
 
         public double LostMass { get { return HasLoss ? Losses.Mass : 0; } }
 
+        [Track(defaultValues: typeof(DefaultValuesTrue))]
         public bool ExplicitQuantitative { get; private set; }
 
         public TransitionDocNode ChangeExplicitSLens(double? value)

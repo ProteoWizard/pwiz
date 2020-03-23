@@ -378,7 +378,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!LoadPeptideSearchLibrary(docLibSpec))
                 return false;
 
-            var addedIrts = LibraryBuildNotificationHandler.AddIrts(ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm);
+            var addedIrts = LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.DEFAULT, ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
             if (docNew == null)
@@ -420,6 +420,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     string libraryName =
                         Helpers.GetUniqueName(Path.GetFileNameWithoutExtension(libraryPath), existingNames);
                     docLibSpec = LibrarySpec.CreateFromPath(libraryName, libraryPath);
+                    if (docLibSpec == null)
+                    {
+                        MessageDlg.Show(WizardForm, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__is_not_a_supported_spectral_library_file_format, libraryPath));
+                        return false;
+                    }
                     Settings.Default.SpectralLibraryList.SetValue(docLibSpec);
                 }
             }

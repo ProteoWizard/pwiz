@@ -23,7 +23,7 @@ namespace pwiz.Skyline.Model
         }
 
         public AreaCVRefinementData(SrmDocument document, AreaCVRefinementSettings settings,
-            CancellationToken? token = null)
+            CancellationToken? token = null, SrmSettingsChangeMonitor progressMonitor = null)
         {
             _settings = settings;
             if (document == null || !document.Settings.HasResults)
@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model
 
             var replicates = document.MeasuredResults.Chromatograms.Count;
             var areas = new List<AreaInfo>(replicates);
-            var annotations = AnnotationHelper.GetPossibleAnnotations(document.Settings, settings.Group, AnnotationDef.AnnotationTarget.replicate);
+            var annotations = AnnotationHelper.GetPossibleAnnotations(document, settings.Group).ToArray();
             if (!annotations.Any() && settings.Group == null)
                 annotations = new string[] { null };
 
@@ -58,6 +58,10 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var peptide in peptideGroup.Molecules)
                 {
+                    if (progressMonitor != null)
+                    {
+                        progressMonitor.ProcessMolecule(peptide);
+                    }
                     foreach (var transitionGroupDocNode in peptide.TransitionGroups)
                     {
                         if (_settings.PointsType == PointsTypePeakArea.decoys != transitionGroupDocNode.IsDecoy)
@@ -67,11 +71,14 @@ namespace pwiz.Skyline.Model
                         {
                             areas.Clear();
 
-                            if (a != _settings.Annotation && (_settings.Group == null || _settings.Annotation != null))
+                            if (!Equals(a, _settings.Annotation) && (_settings.Group == null || _settings.Annotation != null))
                                 continue;
                             
-                            foreach (var i in AnnotationHelper.GetReplicateIndices(document.Settings, _settings.Group, a))
+                            foreach (var i in AnnotationHelper.GetReplicateIndices(document, _settings.Group, a))
                             {
+                                if (progressMonitor != null && progressMonitor.IsCanceled())
+                                    throw new OperationCanceledException();
+                                
                                 if (token.HasValue && token.Value.IsCancellationRequested)
                                 {
                                     throw new Exception(@"Cancelled");
@@ -257,7 +264,7 @@ namespace pwiz.Skyline.Model
         public PeptideGroupDocNode PeptideGroup;
         public PeptideDocNode Peptide;
         public TransitionGroupDocNode TransitionGroup;
-        public string Annotation;
+        public object Annotation;
         public double CV;
         public double CVBucketed;
         public double Area;
@@ -306,7 +313,7 @@ namespace pwiz.Skyline.Model
         }
 
         public virtual void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas,
-            PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation)
+            PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, object annotation)
         {
             var normalizedStatistics = new Statistics(areas.Select(a => a.NormalizedArea));
             var normalizedMean = normalizedStatistics.Mean();
@@ -336,12 +343,49 @@ namespace pwiz.Skyline.Model
         public AreaCVTransitions Transitions { get; protected set; }
         public int CountTransitions { get; protected set; }
         public int RatioIndex { get; protected set; }
-        public string Group { get; protected set; }
-        public string Annotation { get; protected set; }
+        public ReplicateValue Group { get; protected set; }
+        public object Annotation { get; protected set; }
         public PointsTypePeakArea PointsType { get; protected set; }
         public double QValueCutoff { get; protected set; }
         public double CVCutoff { get; protected set; }
         public int MinimumDetections { get; protected set; }
+
+        protected bool Equals(AreaCVRefinementSettings other)
+        {
+            return NormalizationMethod == other.NormalizationMethod && MsLevel == other.MsLevel &&
+                   Transitions == other.Transitions && CountTransitions == other.CountTransitions &&
+                   RatioIndex == other.RatioIndex && Equals(Group, other.Group) &&
+                   Equals(Annotation, other.Annotation) && PointsType == other.PointsType &&
+                   QValueCutoff.Equals(other.QValueCutoff) && CVCutoff.Equals(other.CVCutoff) &&
+                   MinimumDetections == other.MinimumDetections;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((AreaCVRefinementSettings) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (int) NormalizationMethod;
+                hashCode = (hashCode * 397) ^ (int) MsLevel;
+                hashCode = (hashCode * 397) ^ (int) Transitions;
+                hashCode = (hashCode * 397) ^ CountTransitions;
+                hashCode = (hashCode * 397) ^ RatioIndex;
+                hashCode = (hashCode * 397) ^ (Group != null ? Group.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Annotation != null ? Annotation.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (int) PointsType;
+                hashCode = (hashCode * 397) ^ QValueCutoff.GetHashCode();
+                hashCode = (hashCode * 397) ^ CVCutoff.GetHashCode();
+                hashCode = (hashCode * 397) ^ MinimumDetections;
+                return hashCode;
+            }
+        }
     }
 
     public class AreaInfo
@@ -370,7 +414,7 @@ namespace pwiz.Skyline.Model
 
     public class PeptideAnnotationPair
     {
-        public PeptideAnnotationPair(PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation, double cvRaw)
+        public PeptideAnnotationPair(PeptideGroupDocNode peptideGroup, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, object annotation, double cvRaw)
         {
             PeptideGroup = peptideGroup;
             Peptide = peptide;
@@ -382,7 +426,7 @@ namespace pwiz.Skyline.Model
         public PeptideGroupDocNode PeptideGroup { get; private set; }
         public PeptideDocNode Peptide { get; private set; }
         public TransitionGroupDocNode TransitionGroup { get; private set; }
-        public string Annotation { get; private set; }
+        public object Annotation { get; private set; }
         public double CVRaw { get; private set; }
 
     }

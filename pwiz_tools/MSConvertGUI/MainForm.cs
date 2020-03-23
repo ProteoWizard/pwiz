@@ -230,6 +230,8 @@ namespace MSConvertGUI
                 }
             }
 
+            FilesToConvertInParallelUpDown.Value = Properties.Settings.Default.NumFilesToConvertInParallel;
+
             thresholdTypeComboBox.Items.AddRange(thresholdTypes.Select(o => o.Key).ToArray());
             thresholdTypeComboBox.SelectedIndex = 0;
             thresholdOrientationComboBox.SelectedIndex = 0;
@@ -651,7 +653,7 @@ namespace MSConvertGUI
                     FilterDGV.Rows.Add(new[] { "lockmassRefiner", $"mz={LockmassMz.Text} tol={LockmassTolerance.Text}" });
                     break;
                 case "Scan Summing":
-                    FilterDGV.Rows.Add(new[] { "scanSumming", $"precursorTol={ScanSummingPrecursorToleranceTextBox.Text} scanTimeTol={ScanSummingScanTimeToleranceTextBox.Text} ionMobilityTol={ScanSummingIonMobilityToleranceTextBox.Text}" });
+                    FilterDGV.Rows.Add(new[] { "scanSumming", $"precursorTol={ScanSummingPrecursorToleranceTextBox.Text} scanTimeTol={ScanSummingScanTimeToleranceTextBox.Text} ionMobilityTol={ScanSummingIonMobilityToleranceTextBox.Text} sumMs1={(ScanSummingSumMs1Checkbox.Checked ? 1 : 0)}" });
                     break;
             }
         }
@@ -1191,6 +1193,7 @@ namespace MSConvertGUI
             setToolTip(this.ScanSummingPrecursorToleranceTextBox, "Specify how similar two MS2 spectra's precursors must be to be considered for summing.");
             setToolTip(this.ScanSummingScanTimeToleranceTextBox, "Specify how similar two MS2 spectra's scan times must be to be considered for summing. A value of 0 specifies that a similar scan time is not required for summing.");
             setToolTip(this.ScanSummingIonMobilityToleranceTextBox, "Specify how similar two MS2 spectra's ion mobilities must be to be considered for summing. A value of 0 specifies that a similar ion mobility is not required for summing.");
+            setToolTip(this.ScanSummingSumMs1Checkbox, "Specify whether to sum MS1 scans as well as MS2s. Currently the tolerances are ignored: points are only summed within MS1 spectra, not between them.");
         }
 
         private void AboutButtonClick(object sender, EventArgs e)
@@ -1277,6 +1280,12 @@ namespace MSConvertGUI
         {
             setCfgFromGUI(MakePresetFilename());
             SelectPreset(SetDefaultsDataType == String.Empty ? "Generic Defaults" : SetDefaultsDataType + " Defaults");
+        }
+
+        private void FilesToConvertInParallelUpDown_ValueChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.NumFilesToConvertInParallel = FilesToConvertInParallelUpDown.Value;
+            Properties.Settings.Default.Save();
         }
 
         #region Drag 'n Drop reordering of rows

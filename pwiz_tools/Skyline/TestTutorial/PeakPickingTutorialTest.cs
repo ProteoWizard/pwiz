@@ -480,18 +480,6 @@ namespace pwiz.SkylineTestTutorial
                 AssertEx.AreEqualLines(EXPECTED_COEFFICIENTS[coeffIndex], coefficients);
         }
 
-        private IEnumerable<string> GetCoefficientStrings(EditPeakScoringModelDlg editDlg)
-        {
-            for (int i = 0; i < editDlg.PeakCalculatorsGrid.Items.Count; i++)
-            {
-                double? weight = editDlg.PeakCalculatorsGrid.Items[i].Weight;
-                if (weight.HasValue)
-                    yield return string.Format(CultureInfo.InvariantCulture, "{0:F04}", weight.Value);
-                else
-                    yield return " null ";  // To help values line up
-            }
-        }
-
         private void CheckPointsTypeRT(PointsTypeRT pointsType, int expectedPoints)
         {
             RunUI(() => SkylineWindow.ShowPointsType(pointsType));

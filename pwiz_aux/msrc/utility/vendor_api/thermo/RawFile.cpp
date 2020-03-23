@@ -62,6 +62,13 @@ namespace Thermo = ThermoFisher::CommonCore::Data::Business;
 #endif // WIN64
 
 
+#ifdef _WIN64
+const char* pwiz::vendor_api::Thermo::ControllerTypeStrings[] = { "MS", "Analog", "A/D Card", "UV", "PDA", "Other" };
+#else
+const char* pwiz::vendor_api::Thermo::ControllerTypeStrings[] = { "MS", "Analog", "A/D Card", "PDA", "UV", "Other" };
+#endif
+
+
 class RawFileImpl : public RawFile
 {
     public:
@@ -293,6 +300,9 @@ RawFileImpl::RawFileImpl(const string& filename)
         if (raw_->Open(bfs::path(filename_).native().c_str()))
             throw RawEgg("[RawFile::ctor] Unable to open file " + filename);
 
+        if (getNumberOfControllersOfType(Controller_MS) == 0)
+            return; // none of the following metadata stuff works for non-MS controllers as far as I can tell
+
         setCurrentController(Controller_MS, 1);
 
 #else // is WIN64
@@ -304,6 +314,9 @@ RawFileImpl::RawFileImpl(const string& filename)
         // CONSIDER: throwing C++ exceptions in managed code may cause Wine to crash?
         if (raw_->IsError || raw_->InAcquisition)
             throw gcnew System::Exception("Corrupt RAW file " + managedFilename);
+
+        if (getNumberOfControllersOfType(Controller_MS) == 0)
+            return; // none of the following metadata stuff works for non-MS controllers as far as I can tell
 
         setCurrentController(Controller_MS, 1);
 

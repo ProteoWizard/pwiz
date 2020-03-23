@@ -391,8 +391,11 @@ namespace pwiz.Skyline.SettingsUI
                                     {
                                         lib = NotificationContainer.LibraryManager.TryGetLibrary(buildState.LibrarySpec) ??
                                               NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
-                                        foreach (var stream in lib.ReadStreams)
-                                            stream.CloseStream();
+                                        if (lib != null)
+                                        {
+                                            foreach (var stream in lib.ReadStreams)
+                                                stream.CloseStream();
+                                        }
                                     });
                                     if (status.IsCanceled)
                                         lib = null;
@@ -400,7 +403,7 @@ namespace pwiz.Skyline.SettingsUI
                                         throw status.ErrorException;
                                 }
                                 // Add iRTs to library
-                                if (AddIrts(lib, buildState.LibrarySpec, buildState.IrtStandard, NotificationContainerForm, true))
+                                if (AddIrts(IrtRegressionType.DEFAULT, lib, buildState.LibrarySpec, buildState.IrtStandard, NotificationContainerForm, true))
                                     AddRetentionTimePredictor(buildState);
                             }
                         }));
@@ -413,7 +416,7 @@ namespace pwiz.Skyline.SettingsUI
             threadComplete.Start();
         }
 
-        public static bool AddIrts(Library lib, LibrarySpec libSpec, IrtStandard standard, Control parent, bool useTopMostForm = false)
+        public static bool AddIrts(IrtRegressionType regressionType, Library lib, LibrarySpec libSpec, IrtStandard standard, Control parent, bool useTopMostForm)
         {
             if (lib == null || !lib.IsLoaded || standard == null || standard.Name.Equals(IrtStandard.EMPTY.Name))
                 return false;
@@ -467,8 +470,8 @@ namespace pwiz.Skyline.SettingsUI
                     var status = longWait.PerformWork(GetParent(), 800, monitor =>
                     {
                         processed = !numCirt.HasValue
-                            ? RCalcIrt.ProcessRetentionTimes(monitor, irtProviders, standardPeptides, new DbIrtPeptide[0])
-                            : RCalcIrt.ProcessRetentionTimesCirt(monitor, irtProviders, cirtPeptides, numCirt.Value, out standardPeptides);
+                            ? RCalcIrt.ProcessRetentionTimes(monitor, irtProviders, standardPeptides, new DbIrtPeptide[0], regressionType)
+                            : RCalcIrt.ProcessRetentionTimesCirt(monitor, irtProviders, cirtPeptides, numCirt.Value, regressionType, out standardPeptides);
                     });
                     if (status.IsCanceled)
                         return false;
@@ -520,7 +523,7 @@ namespace pwiz.Skyline.SettingsUI
                             newStandards = processed.RecalibrateStandards(standardPeptides).ToArray();
                             processed = RCalcIrt.ProcessRetentionTimes(monitor,
                                 processed.ProviderData.Select(data => data.RetentionTimeProvider).ToArray(),
-                                newStandards.ToArray(), new DbIrtPeptide[0]);
+                                newStandards.ToArray(), new DbIrtPeptide[0], regressionType);
                         }
                         var irtDb = IrtDb.CreateIrtDb(libSpec.FilePath);
                         irtDb.AddPeptides(monitor, (newStandards ?? standardPeptides).Concat(processed.DbIrtPeptides).ToList());

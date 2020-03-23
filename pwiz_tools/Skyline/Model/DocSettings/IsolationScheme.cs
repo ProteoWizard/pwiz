@@ -38,6 +38,19 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static class SpecialHandlingType
         {
+            public class DefaultNone : DefaultValues
+            {
+                public override bool IsDefault(object obj, object parentObject)
+                {
+                    return Equals(obj, NONE);
+                }
+
+                public override bool IgnoreIfDefault
+                {
+                    get { return true; }
+                }
+            }
+
             public static string NONE { get { return @"None"; } }    // : Used only in XML and in memory
             public const string MULTIPLEXED = "Multiplexed";  // : Used only in XML and in memory
             public const string MS_E = "MSe"; // : This is a Waters trademark, and probably not localizable
@@ -67,7 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         };
 
-        [Track]
+        [Track(defaultValues: typeof(DefaultValuesNull))]
         public double? PrecursorFilter { get; private set; }
         public double? PrecursorRightFilter { get; private set; }
         public bool UseMargin { get; private set; }
@@ -79,11 +92,13 @@ namespace pwiz.Skyline.Model.DocSettings
             results_with_margin
         }
 
-        [Track]
-        public IsolationWidthType IsolationWidth
+        [Track(defaultValues: typeof(DefaultValuesNull))]
+        public IsolationWidthType? IsolationWidth
         {
             get
             {
+                if (!FromResults)
+                    return null;
                 if (UseMargin)
                     return IsolationWidthType.results_with_margin;
                 else if (PrecursorFilter.HasValue)
@@ -101,9 +116,9 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private ImmutableList<IsolationWindow> _prespecifiedDisjointWindows;
 
-        [Track]
+        [Track(defaultValues: typeof(SpecialHandlingType.DefaultNone))]
         public string SpecialHandling { get; private set; }
-        [Track]
+        [Track(defaultValues: typeof(DefaultValuesNull))]
         public int? WindowsPerScan { get; private set; }
 
         public IsolationScheme(string name, string specialHandling, double? precursorFilter, double? precursorRightFilter = null, bool useMargin = false)

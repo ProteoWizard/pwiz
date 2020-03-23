@@ -18,11 +18,16 @@ message ChromatogramGroupData {
 		repeated sint32 massErrors100X = 5;
 		int32 scanIdListIndex = 4; // One-based index into "scanIdLists" or zero if no scanIds
 	}
+	message TimeIntervals {
+		repeated float startTimes = 1;
+		repeated float endTimes = 2;
+	}
 	repeated Chromatogram chromatograms = 3;
 	double interpolatedStartTime = 4;
 	double interpolatedEndTime = 5;
 	int32 interpolatedNumPoints = 6;
 	double interpolatedDelta = 7;
 	bool inferZeroes = 9;
+	TimeIntervals timeIntervals = 10;
 }
 

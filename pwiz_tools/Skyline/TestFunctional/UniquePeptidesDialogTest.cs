@@ -18,12 +18,10 @@
  */
 
 using System;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
-using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Properties;
 
@@ -94,42 +92,13 @@ namespace pwiz.SkylineTestFunctional
 
             // Add FASTA sequence that's not in the library
             using (new WaitDocumentChange())
-            using (new DocChangeLogger())
+//            using (new ImportFastaDocChangeLogger()) // Log any document changes that are not due to Import Fasta
             {
                 RunUI(() => SkylineWindow.Paste(bogus ? TEXT_FASTA_NONSENSE : TEXT_FASTA_SPROT));
             }
             WaitForProteinMetadataBackgroundLoaderCompletedUI();
         }
 
-        private class DocChangeLogger : StackTraceLogger, IDisposable
-        {
-            public DocChangeLogger() : base("SkylineWindow.ImportFasta")
-            {
-                SkylineWindow.LogChange = LogChange;
-            }
-
-            private void LogChange(SrmDocument docNew, SrmDocument docOriginal)
-            {
-                LogStack(() => LogMessage(docNew));
-            }
-
-            private static string LogMessage(SrmDocument doc)
-            {
-                var sb = new StringBuilder();
-                sb.Append(string.Format(@"Setting document revision {0}", doc.RevisionIndex));
-                if (!doc.IsLoaded)
-                {
-                    foreach (var desc in doc.NonLoadedStateDescriptions)
-                        sb.AppendLine().Append(desc);
-                }
-                return sb.ToString();
-            }
-
-            public void Dispose()
-            {
-                SkylineWindow.LogChange = null;
-            }
-        }
 
         private void scenario(int nodeNum, int expectedMatches, int expectedMoleculeFilteredCount, UniquePeptidesDlg.UniquenessType testType, bool bogus = false)
         {

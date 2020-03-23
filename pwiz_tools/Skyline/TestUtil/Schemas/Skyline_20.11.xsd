@@ -446,6 +446,7 @@
           <xs:attribute name="max_time" type="xs:nonNegativeInteger"/>
           <xs:attribute name="max_transitions" type="xs:nonNegativeInteger"/>
           <xs:attribute name="max_inclusions" type="xs:integer"/>
+          <xs:attribute name="triggered_acquisition" type="xs:boolean" />
         </xs:complexType>
       </xs:element>
       <xs:element name="transition_full_scan" minOccurs="0" maxOccurs="1">
@@ -1765,6 +1766,7 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="analyte_concentration" type="xs:double" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

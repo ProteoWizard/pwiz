@@ -155,65 +155,39 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
     // decide whether to use Points or Peaks to populate data arrays
     bool doCentroid = msLevelsToCentroid.contains(msLevel);
 
-    if (!doCentroid)
+    if (!doCentroid && spectrum->getDataIsContinuous())
         result->set(MS_profile_spectrum);
     else
         result->set(MS_centroid_spectrum);
 
-    /*if (experimentType == MRM)
+    if (spectrum->getHasPrecursorInfo())
     {
-        MRMTransitions^ transitions = msExperiment->MRMTransitions;
-        double q1mz = transitions[ie.transition]->Q1Mass;//ie.transition->first;
-        double q3mz = transitions[ie.transition]->Q3Mass;
-        double intensity = points[ie.transition]->Y;
-        result->defaultArrayLength = 1;//ie.transition->second.size();
+        double selectedMz, intensity;
+        int charge;
+        spectrum->getPrecursorInfo(selectedMz, intensity, charge);
 
         Precursor precursor;
+        if (spectrum->getHasIsolationInfo())
+        {
+            double centerMz, lowerLimit, upperLimit;
+            spectrum->getIsolationInfo(centerMz, lowerLimit, upperLimit);
+            precursor.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
+            precursor.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
+            precursor.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
+			selectedMz = centerMz;
+        }
+
         SelectedIon selectedIon;
 
-        selectedIon.set(MS_selected_ion_m_z, q1mz, MS_m_z);
+        selectedIon.set(MS_selected_ion_m_z, selectedMz, MS_m_z);
+        if (charge > 0)
+            selectedIon.set(MS_charge_state, charge);
 
-        precursor.activation.set(MS_CID); // assume CID
+        precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all ABI instruments that write WIFFs are either QqTOF or QqLIT
 
         precursor.selectedIons.push_back(selectedIon);
         result->precursors.push_back(precursor);
-
-        if (getBinaryData)
-        {
-            mzArray.resize(result->defaultArrayLength, q3mz);
-            intensityArray.resize(result->defaultArrayLength, intensity);
-        }
     }
-    else*/
-    {
-        if (spectrum->getHasPrecursorInfo())
-        {
-            double selectedMz, intensity;
-            int charge;
-            spectrum->getPrecursorInfo(selectedMz, intensity, charge);
-
-            Precursor precursor;
-            if (spectrum->getHasIsolationInfo())
-            {
-                double centerMz, lowerLimit, upperLimit;
-                spectrum->getIsolationInfo(centerMz, lowerLimit, upperLimit);
-                precursor.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
-                precursor.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
-                precursor.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
-				selectedMz = centerMz;
-            }
-
-            SelectedIon selectedIon;
-
-            selectedIon.set(MS_selected_ion_m_z, selectedMz, MS_m_z);
-            if (charge > 0)
-                selectedIon.set(MS_charge_state, charge);
-
-            precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all ABI instruments that write WIFFs are either QqTOF or QqLIT
-
-            precursor.selectedIons.push_back(selectedIon);
-            result->precursors.push_back(precursor);
-        }
 
     if (detailLevel == DetailLevel_InstantMetadata)
         return result;
@@ -221,32 +195,31 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
     // Revert to previous behavior for getting binary data or not.
     bool getBinaryData = (detailLevel == DetailLevel_FullData);
 
-        //result->set(MS_lowest_observed_m_z, spectrum->getMinX(), MS_m_z);
-        //result->set(MS_highest_observed_m_z, spectrum->getMaxX(), MS_m_z);
+    //result->set(MS_lowest_observed_m_z, spectrum->getMinX(), MS_m_z);
+    //result->set(MS_highest_observed_m_z, spectrum->getMaxX(), MS_m_z);
 
-        if (!config_.acceptZeroLengthSpectra)
-        {
-            result->set(MS_base_peak_intensity, spectrum->getBasePeakY(), MS_number_of_detector_counts);
-            result->set(MS_base_peak_m_z, spectrum->getBasePeakX(), MS_m_z);
-        }
-
-        result->set(MS_total_ion_current, spectrum->getSumY(), MS_number_of_detector_counts);
-
-        if (getBinaryData)
-        {
-            result->setMZIntensityArrays(std::vector<double>(), std::vector<double>(), MS_number_of_detector_counts);
-            BinaryDataArrayPtr mzArray = result->getMZArray();
-            BinaryDataArrayPtr intensityArray = result->getIntensityArray();
-
-            spectrum->getData(doCentroid, mzArray->data, intensityArray->data, config_.ignoreZeroIntensityPoints);
-            if (doCentroid)
-                result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
-        }
-
-        // This forces the WIFF reader to get the data, making full metadata
-        // nearly equivalent in performance to getting binary.
-        result->defaultArrayLength = spectrum->getDataSize(doCentroid, config_.ignoreZeroIntensityPoints);
+    if (!config_.acceptZeroLengthSpectra)
+    {
+        result->set(MS_base_peak_intensity, spectrum->getBasePeakY(), MS_number_of_detector_counts);
+        result->set(MS_base_peak_m_z, spectrum->getBasePeakX(), MS_m_z);
     }
+
+    result->set(MS_total_ion_current, spectrum->getSumY(), MS_number_of_detector_counts);
+
+    if (getBinaryData)
+    {
+        result->setMZIntensityArrays(std::vector<double>(), std::vector<double>(), MS_number_of_detector_counts);
+        BinaryDataArrayPtr mzArray = result->getMZArray();
+        BinaryDataArrayPtr intensityArray = result->getIntensityArray();
+
+        spectrum->getData(doCentroid, mzArray->data, intensityArray->data, config_.ignoreZeroIntensityPoints);
+        if (doCentroid)
+            result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
+    }
+
+    // This forces the WIFF reader to get the data, making full metadata
+    // nearly equivalent in performance to getting binary.
+    result->defaultArrayLength = spectrum->getDataSize(doCentroid, config_.ignoreZeroIntensityPoints);
 
     return result;
 }

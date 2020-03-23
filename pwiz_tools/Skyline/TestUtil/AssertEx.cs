@@ -1158,5 +1158,17 @@ namespace pwiz.SkylineTestUtil
                 Assert.IsFalse(convertedTransitionIterator.MoveNext());
             }
         }
+
+        /// <summary>
+        /// Just like regular Assert.Equals but easier to set a breakpoint on.
+        /// </summary>
+        public static void AreEqual<T>(T expected, T actual)
+        {
+            if (Equals(expected, actual))
+            {
+                return;
+            }
+            Assert.AreEqual(expected, actual);
+        }
     }
 }

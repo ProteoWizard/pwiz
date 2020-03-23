@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // collections for comparison
-        private string _selectedNode { get; set; }
+        private string _selectedNodeText { get; set; }
         private string _topNode { get; set; }
         private ICollection<string> _selectedNodes { get; set; }
         private ICollection<string> _expandedNodes { get; set; }
@@ -242,32 +242,41 @@ namespace pwiz.SkylineTestFunctional
 
         private void CompareStates()
         {
-            // selected node of the TreeView should be part of the TreeViewMS' selected nodes
-            Assert.IsTrue(SkylineWindow.SelectedNode == null || SkylineWindow.SelectedNode.IsInSelection);
+            RunUI(() =>
+            {
+                // selected node of the TreeView should be part of the TreeViewMS' selected nodes
+                Assert.IsTrue(SkylineWindow.SelectedNode == null || SkylineWindow.SelectedNode.IsInSelection);
 
-            // proper scrolling
-            Assert.AreEqual(SkylineWindow.SequenceTree.TopNode.Text, _topNode);
+                // proper scrolling
+                Assert.AreEqual(_topNode, SkylineWindow.SequenceTree.TopNode.Text);
 
-            // expansion is equal
-            Assert.AreEqual(GetExpandedNodes(SkylineWindow.SequenceTree.Nodes).Count, _expandedNodes.Count);
-            CollectionAssert.AreEqual(GetExpandedNodes(SkylineWindow.SequenceTree.Nodes).ToArray(), _expandedNodes.ToArray());
+                // expansion is equal
+                Assert.AreEqual(_expandedNodes.Count, GetExpandedNodes(SkylineWindow.SequenceTree.Nodes).Count);
+                CollectionAssert.AreEqual(_expandedNodes.ToArray(),
+                    GetExpandedNodes(SkylineWindow.SequenceTree.Nodes).ToArray());
 
-            // selections are equal (equivalency is used because the order of selected nodes in the list may differ when restored)
-            if (SkylineWindow.SelectedNode != null && _selectedNode != null)
-                Assert.AreEqual(SkylineWindow.SelectedNode.Text, _selectedNode);
-            Assert.AreEqual(GetSelectedNodes().Count, _selectedNodes.Count);
-            CollectionAssert.AreEquivalent(GetSelectedNodes().ToArray(), _selectedNodes.ToArray());
+                // selections are equal (equivalency is used because the order of selected nodes in the list may differ when restored)
+                if (SkylineWindow.SelectedNode != null && _selectedNodeText != null)
+                    Assert.AreEqual(_selectedNodeText, SkylineWindow.SelectedNode.Text);
+                else
+                    Assert.IsTrue(SkylineWindow.SelectedNode == null && _selectedNodeText == null);
+                Assert.AreEqual(_selectedNodes.Count, GetSelectedNodes().Count);
+                CollectionAssert.AreEquivalent(_selectedNodes.ToArray(), GetSelectedNodes().ToArray());
 
-            // auto-expand single nodes should be enabled
-            Assert.IsTrue(SkylineWindow.SequenceTree.AutoExpandSingleNodes);
+                // auto-expand single nodes should be enabled
+                Assert.IsTrue(SkylineWindow.SequenceTree.AutoExpandSingleNodes);
+            });
         }
 
         private void SetCurrentState()
         {
-            _selectedNode = SkylineWindow.SelectedNode != null ? SkylineWindow.SelectedNode.Text : null;
-            _topNode = SkylineWindow.SequenceTree.TopNode.Text;
-            _selectedNodes = GetSelectedNodes();
-            _expandedNodes = GetExpandedNodes(SkylineWindow.SequenceTree.Nodes);
+            RunUI(() => 
+            { 
+                _selectedNodeText = SkylineWindow.SelectedNode != null ? SkylineWindow.SelectedNode.Text : null;
+                _topNode = SkylineWindow.SequenceTree.TopNode.Text;
+                _selectedNodes = GetSelectedNodes();
+                _expandedNodes = GetExpandedNodes(SkylineWindow.SequenceTree.Nodes);
+            });
         }
 
         private static ICollection<string> GetSelectedNodes()

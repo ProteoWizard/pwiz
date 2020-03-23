@@ -1084,6 +1084,158 @@ namespace pwiz.Skyline.Model.Results
             return (short) Math.Round(f*10);
         }
 
+        /// <summary>
+        /// Constructs a ChromPeak with the specified start and end times and no background subtraction.
+        /// </summary>
+        public ChromPeak(TimeIntensities timeIntensities, float startTime, float endTime, FlagValues flagValues)
+        {
+            int pointsAcrossThePeak = 0;
+            double totalArea = 0;
+            double totalMassError = 0;
+            double apexTime = 0;
+            double apexHeight = 0;
+
+            int startIndex = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
+            if (startIndex < 0)
+            {
+                startIndex = ~startIndex;
+            }
+
+            for (int index = startIndex; index < timeIntensities.NumPoints; index++)
+            {
+                double time = timeIntensities.Times[index];
+                double prevTime = startTime;
+                if (index > 0)
+                {
+                    prevTime = Math.Max(prevTime, (time + timeIntensities.Times[index - 1]) / 2);
+                }
+
+                double nextTime = endTime;
+                if (index < timeIntensities.NumPoints - 1)
+                {
+                    nextTime = Math.Min(nextTime, (time + timeIntensities.Times[index + 1]) / 2);
+                }
+
+                float intensity = timeIntensities.Intensities[index];
+                if (nextTime > prevTime)
+                {
+                    double width = nextTime - prevTime;
+                    double area = intensity * width;
+                    totalArea += area;
+                    if (timeIntensities.MassErrors != null)
+                    {
+                        totalMassError += area * timeIntensities.MassErrors[index];
+                    }
+                }
+
+                if (startTime <= time && endTime >= time)
+                {
+                    pointsAcrossThePeak++;
+                    if (intensity > apexHeight)
+                    {
+                        apexHeight = intensity;
+                        apexTime = time;
+                    }
+                }
+
+                if (time >= endTime)
+                {
+                    break;
+                }
+            }
+
+            // Determine the full width at half max
+            bool fwhmDegenerate = false;
+            double? halfMaxStart = null;
+            double? halfMaxEnd = null;
+            var halfHeight = apexHeight / 2;
+            for (int index = startIndex; index < timeIntensities.NumPoints; index++)
+            {
+                double time = timeIntensities.Times[index];
+                double intensity = timeIntensities.Intensities[index];
+                if (intensity >= halfHeight)
+                {
+                    if (!halfMaxStart.HasValue)
+                    {
+                        halfMaxStart = time;
+                        if (index > startIndex)
+                        {
+                            if (intensity > halfHeight)
+                            {
+                                double prevTime = timeIntensities.Times[index - 1];
+                                double prevIntensity = timeIntensities.Intensities[index - 1];
+                                if (prevIntensity < halfHeight)
+                                {
+                                    var fraction = (intensity - halfHeight) / (intensity - prevIntensity);
+                                    halfMaxStart = (1 - fraction) * time + fraction * prevTime;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            fwhmDegenerate = true;
+                        }
+                    }
+
+                    halfMaxEnd = time;
+                    if (index < timeIntensities.NumPoints - 1)
+                    {
+                        double nextTime = timeIntensities.Times[index + 1];
+                        if (nextTime <= endTime)
+                        {
+                            double nextIntensity = timeIntensities.Intensities[index + 1];
+                            if (nextIntensity < halfHeight)
+                            {
+                                var fraction = (intensity - halfHeight) / (intensity - nextIntensity);
+                                halfMaxEnd = (1 - fraction) * time + fraction * nextTime;
+                            }
+                        }
+                        else
+                        {
+                            fwhmDegenerate = true;
+                        }
+                    }
+                    else
+                    {
+                        fwhmDegenerate = true;
+                    }
+                }
+                if (time >= endTime)
+                {
+                    break;
+                }
+            }
+
+            _area = (float) totalArea;
+            _startTime = startTime;
+            _endTime = endTime;
+            _height = (float) apexHeight;
+            _backgroundArea = 0;
+            _pointsAcross = (short)Math.Min(pointsAcrossThePeak, ushort.MaxValue);
+            _retentionTime = (float) apexTime;
+            _flagBits = 0;
+            if (halfMaxStart.HasValue)
+            {
+                _fwhm = (float) (halfMaxEnd - halfMaxStart);
+            }
+            else
+            {
+                _fwhm = 0;
+            }
+            if (null != timeIntensities.MassErrors && totalArea > 0)
+            {
+                flagValues |= FlagValues.mass_error_known;
+                FlagBits = ((uint)To10x(totalMassError / totalArea)) << 16;
+            }
+
+
+            FlagBits |= (uint) flagValues;
+            if (fwhmDegenerate)
+            {
+                FlagBits |= (uint) FlagValues.degenerate_fwhm;
+            }
+        }
+
         public ChromPeak(IPeakFinder finder,
                          IFoundPeak peak,
                          FlagValues flags,
@@ -2508,7 +2660,7 @@ namespace pwiz.Skyline.Model.Results
                 TimeIntensities = timeIntensitiesGroup.TransitionTimeIntensities[_transitionIndex];
                 if (Header.HasRawTimes())
                 {
-                    RawTimes = TimeIntensities.Times;
+                    RawTimeIntensities = TimeIntensities;
                 }
             }
         }
@@ -2584,7 +2736,11 @@ namespace pwiz.Skyline.Model.Results
             get { return _groupInfo.GetChromTransitionLocal(_transitionIndex); }
         }
 
-        public IList<float> RawTimes { get; set; }
+        private TimeIntensities RawTimeIntensities { get; set; }
+        public IList<float> RawTimes
+        {
+            get { return RawTimeIntensities?.Times; }
+        }
         public TimeIntensities TimeIntensities { get; set; }
         public IList<float> Times { get { return TimeIntensities == null ? null : TimeIntensities.Times; } }
         public IList<int> ScanIndexes { get { return TimeIntensities == null ? null : TimeIntensities.ScanIds; } }
@@ -2618,16 +2774,14 @@ namespace pwiz.Skyline.Model.Results
             return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
         }
 
-        public ChromPeak CalcPeak(int startIndex, int endIndex, ChromPeak.FlagValues flags)
+        public ChromPeak CalcPeak(float startTime, float endTime, ChromPeak.FlagValues flags)
         {
-            if (startIndex == endIndex)
-                return ChromPeak.EMPTY;
-
-            var finder = Crawdads.NewCrawdadPeakFinder();
-            finder.SetChromatogram(TimeIntensities.Times, TimeIntensities.Intensities);
-            var peak = finder.GetPeak(startIndex, endIndex);
-
-            return new ChromPeak(finder, peak, flags, TimeIntensities, RawTimes);
+            var peakIntegrator = new PeakIntegrator(TimeIntensities)
+            {
+                RawTimeIntensities = RawTimeIntensities,
+                TimeIntervals = TimeIntervals
+            };
+            return peakIntegrator.IntegratePeak(startTime, endTime, flags);
         }
 
         public int IndexOfPeak(double retentionTime)
@@ -2656,9 +2810,32 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                times = TimeIntensities.Times.Select(time => (double) time).ToArray();
-                intensities = TimeIntensities.Intensities.Select(intensity => (double) intensity).ToArray();
+                if (TimeIntervals == null)
+                {
+                    times = TimeIntensities.Times.Select(time => (double)time).ToArray();
+                    intensities = TimeIntensities.Intensities.Select(intensity => (double)intensity).ToArray();
+                }
+                else
+                {
+                    var points = TimeIntervals.ReplaceExternalPointsWithNaN(Enumerable
+                            .Range(0, TimeIntensities.NumPoints).Select(i =>
+                                new KeyValuePair<float, float>(TimeIntensities.Times[i],
+                                    TimeIntensities.Intensities[i])))
+                        .ToList();
+                    times = points.Select(p => (double) p.Key).ToArray();
+                    intensities = points.Select(p => (double) p.Value).ToArray();
+                }
             }
+        }
+
+        /// <summary>
+        /// If this chromatogram came from a triggered acquisition then TimeIntervals represents the time
+        /// over which data actually was collected.
+        /// The TimeIntervals will be null if this chromatogram was not from a triggered acquisition.
+        /// </summary>
+        public TimeIntervals TimeIntervals
+        {
+            get { return (GroupInfo?.TimeIntensitiesGroup as RawTimeIntensities)?.TimeIntervals; }
         }
 
         public double MaxIntensity
@@ -2723,6 +2900,18 @@ namespace pwiz.Skyline.Model.Results
             if (rawTimeIntensities == null)
                 return;
             TimeIntensities = TimeIntensities.Interpolate(rawTimeIntensities.GetInterpolatedTimes(), rawTimeIntensities.InferZeroes);
+        }
+
+        public TimeIntensities GetInterpolatedTimeIntensities()
+        {
+            var rawTimeIntensities = _groupInfo?.TimeIntensitiesGroup as RawTimeIntensities;
+            if (rawTimeIntensities == null)
+            {
+                return TimeIntensities;
+            }
+
+            return rawTimeIntensities.TransitionTimeIntensities[TransitionIndex]
+                .Interpolate(rawTimeIntensities.GetInterpolatedTimes(), rawTimeIntensities.InferZeroes);
         }
 
         public void Crawdad1DTransform()

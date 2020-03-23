@@ -76,8 +76,10 @@ namespace pwiz.Skyline.Model.Serialization
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
             float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
             bool excludeFromCalibration = reader.GetBoolAttribute(ATTR.exclude_from_calibration);
+            double? analyteConcentration = reader.GetNullableDoubleAttribute(ATTR.analyte_concentration);
             return new PeptideChromInfo(fileInfo.FileId, peakCountRatio, retentionTime, ImmutableList<PeptideLabelRatio>.EMPTY)
-                .ChangeExcludeFromCalibration(excludeFromCalibration);
+                .ChangeExcludeFromCalibration(excludeFromCalibration)
+                .ChangeAnalyteConcentration(analyteConcentration);
         }
 
         private SpectrumHeaderInfo ReadTransitionGroupLibInfo(XmlReader reader)

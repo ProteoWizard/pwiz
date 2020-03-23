@@ -604,28 +604,38 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private PrositHelpers.PrositRequest _prositRequest;
 
-        private SpectrumDisplayInfo UpdatePrositPrediction(SpectrumNodeSelection selection)
+        private SpectrumDisplayInfo UpdatePrositPrediction(SpectrumNodeSelection selection, IsotopeLabelType labelType, out Exception ex)
         {
-            var prositRequest = new PrositHelpers.PrositRequest(
-                DocumentUI.Settings, selection.Peptide, selection.Precursor,
-                () => CommonActionUtil.SafeBeginInvoke(this, () => UpdateUI()));
-
-            if (_prositRequest == null || !_prositRequest.Equals(prositRequest))
+            try
             {
-                // Cancel old request
-                _prositRequest?.Cancel();
-                _prositRequest = prositRequest.Predict();
+                var prositRequest = new PrositHelpers.PrositRequest(
+                    DocumentUI.Settings, selection.Peptide, selection.Precursor, labelType,
+                    () => CommonActionUtil.SafeBeginInvoke(this, () => UpdateUI()));
 
-                throw new PrositPredictingException();
+                if (_prositRequest == null || !_prositRequest.Equals(prositRequest))
+                {
+                    // Cancel old request
+                    _prositRequest?.Cancel();
+                    _prositRequest = prositRequest.Predict();
+
+                    throw new PrositPredictingException();
+                }
+                else if (_prositRequest.Spectrum == null)
+                {
+                    // Rethrow the exception caused by Prosit, otherwise
+                    // we are still predicting
+                    throw _prositRequest.Exception ?? new PrositPredictingException();
+                }
+
+                ex = null;
+                return _prositRequest.Spectrum;
+
             }
-            else if (_prositRequest.Spectrum == null)
+            catch (Exception x)
             {
-                // Rethrow the exception caused by Prosit, otherwise
-                // we are still predicting
-                throw _prositRequest.Exception ?? new PrositPredictingException();
+                ex = x;
+                return null;
             }
-            
-            return _prositRequest.Spectrum;
         }
 
         private SpectrumGraphItem MakeGraphItem(SpectrumDisplayInfo spectrum, SpectrumNodeSelection selection, SrmSettings settings, SpectrumPeaksInfo spectrumPeaksOverride = null)
@@ -895,32 +905,29 @@ namespace pwiz.Skyline.Controls.Graphs
                         SpectrumDisplayInfo spectrum = null;
                         PrositSpectrum = null;
 
-                        if (Settings.Default.Prosit && prositEx == null)
+                        if (Settings.Default.Prosit && !Settings.Default.LibMatchMirror && prositEx == null)
                         {
-                            try
-                            {
-                                PrositSpectrum = UpdatePrositPrediction(selection);
-
-                                if (!Settings.Default.LibMatchMirror)
-                                {
-                                    spectrum = PrositSpectrum;
-                                    _spectra = new[] { PrositSpectrum };
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                prositEx = ex;
-                            }
+                            spectrum = PrositSpectrum = UpdatePrositPrediction(selection, null, out prositEx);
+                            if (prositEx == null)
+                                _spectra = new[] { spectrum };
                         }
 
                         var loadFromLib = libraries.HasLibraries && libraries.IsLoaded &&
-                                          (!Settings.Default.Prosit ||
-                                           Settings.Default.LibMatchMirror);
+                                          (!Settings.Default.Prosit || Settings.Default.LibMatchMirror);
 
                         try
                         {
                             if (loadFromLib)
+                            {
                                 UpdateSpectra(selection.Precursor, new LookupData(selection));
+
+                                // For a mirrored spectrum, make sure the isotope label types between library and Prosit match
+                                if (Settings.Default.Prosit && Settings.Default.LibMatchMirror && prositEx == null)
+                                {
+                                    var labelType = _spectra != null ? _spectra[0].LabelType : null;
+                                    PrositSpectrum = UpdatePrositPrediction(selection, labelType, out prositEx);
+                                }
+                            }
                             UpdateToolbar();
                         }
                         catch (Exception)

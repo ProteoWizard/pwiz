@@ -140,6 +140,7 @@
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
+    <Compile Include="ChromPeakTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
     <Compile Include="CommandLineAssayImportTest.cs" />
     <Compile Include="CommandLineImportAnnotationsTest.cs" />
@@ -212,6 +213,7 @@
     <Compile Include="StringHelpersTest.cs" />
     <Compile Include="TestSerializeIsolationScheme.cs" />
     <Compile Include="TextUtilTest.cs" />
+    <Compile Include="TimeIntervalsTest.cs" />
     <Compile Include="ToolDescriptionTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
     <Compile Include="TypeSafeEnumTest.cs" />
