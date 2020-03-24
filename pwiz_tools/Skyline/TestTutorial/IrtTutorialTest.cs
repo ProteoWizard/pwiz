@@ -435,8 +435,8 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<EditIrtCalcDlg>("Edit iRT Calculator form", 16);
 
                 RunUI(() => Assert.AreEqual(148, editIrtCalc2.LibraryPeptideCount));
-                RunUI(editIrtCalc2.OkDialog);
-                WaitForClosedForm(editIrtCalc2);
+
+                CommitIrtCalcChange(editIrtCalc2);
             }
 
             // Check the RT regression, p. 17
@@ -625,8 +625,8 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(recalibrateDlg, recalibrateDlg.Btn1Click);
 
                 Assert.IsTrue(WaitForConditionUI(() => editIrtCalc.LibraryPeptideCount == 706));
-                RunUI(editIrtCalc.OkDialog);
-                WaitForClosedForm(editIrtCalc);
+
+                CommitIrtCalcChange(editIrtCalc);
             }
 
             // Inspect MS1 filtered Skyline file created from library DDA data, p. 29
@@ -678,6 +678,19 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
+        }
+
+        private static void CommitIrtCalcChange(EditIrtCalcDlg editIrtCalc)
+        {
+            // TODO(brendanx): For now just allow audit logging to skip this operation until we can figure out how to handle it
+            RunUI(() => SkylineWindow.AssumeNonNullModificationAuditLogging = false);
+
+            using (new WaitDocumentChange())
+            {
+                OkDialog(editIrtCalc, editIrtCalc.OkDialog);
+            }
+
+            RunUI(() => SkylineWindow.AssumeNonNullModificationAuditLogging = true);
         }
 
         private void ImportNewResults(IEnumerable<string> baseNames, int suffixLength, bool multiFile, bool? removeFix = null)

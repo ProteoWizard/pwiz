@@ -343,7 +343,10 @@ namespace pwiz.Skyline.SettingsUI
             BackgroundProteome backgroundProteome = BackgroundProteome.NONE;
             if (!backgroundProteomeSpec.IsNone)
             {
-                backgroundProteome = new BackgroundProteome(backgroundProteomeSpec);
+                if (_peptideSettings.BackgroundProteome.EqualsSpec(backgroundProteomeSpec))
+                    backgroundProteome = _peptideSettings.BackgroundProteome;
+                else
+                    backgroundProteome = new BackgroundProteome(backgroundProteomeSpec);
                 if (backgroundProteome.DatabaseInvalid)
                 {
 
@@ -604,7 +607,7 @@ namespace pwiz.Skyline.SettingsUI
                 return;
 
             // Only update, if anything changed
-            if (!Equals(settings, _peptideSettings))
+            if (!Equals(MakeDocIndependent(settings), MakeDocIndependent(_peptideSettings)))
             {
                 if (!_parent.ChangeSettingsMonitored(this, Resources.PeptideSettingsUI_OkDialog_Changing_peptide_settings,
                                                      s => s.ChangePeptideSettings(settings)))
@@ -614,6 +617,13 @@ namespace pwiz.Skyline.SettingsUI
                 _peptideSettings = settings;
             }
             DialogResult = DialogResult.OK;
+        }
+
+        private PeptideSettings MakeDocIndependent(PeptideSettings settings)
+        {
+            // TODO(nicksh): This is to handle the fact that we currently cache document information in PeptideModifications.HasHeavyModifications
+            //               The cached value gets updated later. So, any PeptideSettings where it is true will not equal the one constructed by this form
+            return settings.ChangeModifications(settings.Modifications.ChangeHasHeavyModifications(false));
         }
 
         private void enzyme_SelectedIndexChanged(object sender, EventArgs e)

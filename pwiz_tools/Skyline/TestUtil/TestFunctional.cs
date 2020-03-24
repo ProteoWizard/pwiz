@@ -1437,9 +1437,9 @@ namespace pwiz.SkylineTestUtil
                 {
                     if (Program.MainWindow != null && Program.MainWindow.IsHandleCreated)
                         break;
-                    if (ShowStartPage && null != FindOpenForm<StartPage>()) {
+                    if (ShowStartPage && null != FindOpenForm<StartPage>())
                         break;
-                    }
+
                     Thread.Sleep(SLEEP_INTERVAL);
                 }
                 if (!ShowStartPage)
@@ -1471,6 +1471,7 @@ namespace pwiz.SkylineTestUtil
                 RunUI(() =>
                 {
                     SkylineWindow.UseKeysOverride = true;
+                    SkylineWindow.AssumeNonNullModificationAuditLogging = true;
                     if (IsPauseForScreenShots)
                     {
                         // Screenshots should be taken with release icon and "Skyline" in the window title

@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             {
                 var newEntry = Entry.ChangeReason(value);
                 ModifyDocument(EditColumnDescription(nameof(Reason), value), d => ChangeEntry(d, newEntry),
-                    docPair => null);
+                    AuditLogEntry.SkipChange);
             }
         }
 
