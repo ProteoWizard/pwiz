@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>JetBrains.Profiler.Api</name>
+    </assembly>
+    <members>
+        <member name="T:JetBrains.Profiler.Api.InternalProfilerException">
+            <summary>
+              Internal profiler exception.
+            </summary>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.InternalProfilerException.#ctor(System.Int32)">
+            <summary>
+              Construct the internal profiler exception.
+            </summary>
+            <param name="hr">HRESULT value.</param>
+        </member>
+        <member name="T:JetBrains.Profiler.Api.MeasureFeatures">
+            <summary>
+              Performance/coverage profiler feature set.
+            </summary>
+        </member>
+        <member name="F:JetBrains.Profiler.Api.MeasureFeatures.Ready">
+            <summary>
+              Indicates whether the profiler is ready to work. You need to check this flag only in case you attach the
+              profiler to the current process: the flag will be set once the profiler is ready to accept your commands. If
+              you start a process under profiling, this flag is always set. After you detach the profiler from the process,
+              the flag is cleared. 
+            </summary>
+        </member>
+        <member name="F:JetBrains.Profiler.Api.MeasureFeatures.Detach">
+            <summary>
+              Indicates whether it is possible to use <see cref="M:JetBrains.Profiler.Api.MeasureProfiler.Detach" />:
+              <list type="table">
+                <item>
+                  <term>0</term>
+                  <description>the profiler ignores <see cref="M:JetBrains.Profiler.Api.MeasureProfiler.Detach" />.</description>
+                </item>
+                <item>
+                  <term>1</term>
+                  <description><see cref="M:JetBrains.Profiler.Api.MeasureProfiler.Detach" /> will take effect on the profiler.</description>
+                </item>
+              </list>
+            </summary>
+        </member>
+        <member name="T:JetBrains.Profiler.Api.MeasureProfiler">
+            <summary>
+              Control performance/coverage profiling session.
+            </summary>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MeasureProfiler.GetFeatures">
+            <summary>
+              Get a set of features currently active in the profiler.
+            </summary>
+            <returns>The set of features.</returns>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MeasureProfiler.StartCollectingData">
+            <summary>
+              Start collecting profiling data.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MeasureProfiler.StartCollectingData(System.String)">
+            <summary>
+              Start collecting profiling data.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+            <param name="groupName">The name of the collected data block.</param>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MeasureProfiler.StopCollectingData">
+            <summary>
+              Stop collecting profiling data. This method doesn't save the collected data block to the disk.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MeasureProfiler.SaveData">
+            <summary>
+              Stop collecting data if needed and save all collected data blocks to the disk.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MeasureProfiler.SaveData(System.String)">
+            <summary>
+              Stop collecting data if needed and save all collected data blocks to the disk.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+            <param name="name">
+              The name of all data blocks that were not yet saved or dropped. This is not a file name. Currently
+              not used.
+            </param>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MeasureProfiler.DropData">
+            <summary>
+              Stop collecting data if needed and drop all collected data blocks.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MeasureProfiler.Detach">
+            <summary>
+              Detach the profiler from the profiled process. Does nothing if detaching is disabled in the profiler. To check
+              whether the detaching is enabled, use <see cref="M:JetBrains.Profiler.Api.MeasureProfiler.GetFeatures" /> with <see cref="F:JetBrains.Profiler.Api.MeasureFeatures.Detach" /> flag.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+        </member>
+        <member name="T:JetBrains.Profiler.Api.MemoryFeatures">
+            <summary>
+              Memory profiler feature set.
+            </summary>
+        </member>
+        <member name="F:JetBrains.Profiler.Api.MemoryFeatures.Ready">
+            <summary>
+              Indicates whether the profiler is ready to work. You need to check this flag only in case you attach the
+              profiler to the current process: the flag will be set once the profiler is ready to accept your commands. If
+              you start a process under profiling, this flag is always set. After you detach the profiler from the process,
+              the flag is cleared. 
+            </summary>
+        </member>
+        <member name="F:JetBrains.Profiler.Api.MemoryFeatures.Detach">
+            <summary>
+              Indicates whether it is possible to use <see cref="M:JetBrains.Profiler.Api.MemoryProfiler.Detach" />:
+              <list type="table">
+                <item>
+                  <term>0</term>
+                  <description>the profiler ignores <see cref="M:JetBrains.Profiler.Api.MemoryProfiler.Detach" />.</description>
+                </item>
+                <item>
+                  <term>1</term>
+                  <description><see cref="M:JetBrains.Profiler.Api.MemoryProfiler.Detach" /> will take effect on the profiler.</description>
+                </item>
+              </list>
+            </summary>
+        </member>
+        <member name="F:JetBrains.Profiler.Api.MemoryFeatures.CollectAllocations">
+            <summary>
+              Indicates whether it is possible to use <see cref="M:JetBrains.Profiler.Api.MemoryProfiler.CollectAllocations(System.Boolean)" />:
+              <list type="table">
+                <item>
+                  <term>0</term>
+                  <description>the profiler ignores <see cref="M:JetBrains.Profiler.Api.MemoryProfiler.CollectAllocations(System.Boolean)" />.</description>
+                </item>
+                <item>
+                  <term>1</term>
+                  <description><see cref="M:JetBrains.Profiler.Api.MemoryProfiler.CollectAllocations(System.Boolean)" /> will take effect on the profiler.</description>
+                </item>
+              </list>
+            </summary>
+        </member>
+        <member name="T:JetBrains.Profiler.Api.MemoryProfiler">
+            <summary>
+              Control memory profiling session.
+            </summary>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MemoryProfiler.GetFeatures">
+            <summary>
+              Get a set of features currently active in the profiler.
+            </summary>
+            <returns>The set of features.</returns>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MemoryProfiler.GetSnapshot">
+            <summary>
+              Collect memory snapshot and save it to the disk. This method forces full GC.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MemoryProfiler.GetSnapshot(System.String)">
+            <summary>
+              Collect memory snapshot and save it to the disk. This method forces full GC.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+            <param name="name">The name of the memory snapshot. This is not a file name. Currently not used.</param>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MemoryProfiler.ForceGc">
+            <summary>
+              Forces full GC.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MemoryProfiler.CollectAllocations(System.Boolean)">
+            <summary>
+              Enable/disable collecting memory allocation data. Does nothing if collecting allocation data is disabled in the
+              profiler. To check whether the collecting is enabled, use <see cref="M:JetBrains.Profiler.Api.MemoryProfiler.GetFeatures" /> with
+              <see cref="F:JetBrains.Profiler.Api.MemoryFeatures.CollectAllocations" /> flag.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+        </member>
+        <member name="M:JetBrains.Profiler.Api.MemoryProfiler.Detach">
+            <summary>
+              Detach the profiler from the profiled process. Does nothing if detaching is disabled in the profiler. To check
+              whether the detaching is enabled, use <see cref="M:JetBrains.Profiler.Api.MemoryProfiler.GetFeatures" /> with <see cref="F:JetBrains.Profiler.Api.MemoryFeatures.Detach" /> flag.
+              Doesn't throw any errors even if the application is run with profiling disabled.
+            </summary>
+        </member>
+    </members>
+</doc>

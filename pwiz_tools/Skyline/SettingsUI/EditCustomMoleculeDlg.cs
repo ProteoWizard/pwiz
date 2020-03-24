@@ -688,19 +688,29 @@ namespace pwiz.Skyline.SettingsUI
             // Did user change the list of heavy labels?
             if (_driverLabelType != null)
             {
-                PeptideModifications modifications = new PeptideModifications(
-                    _peptideSettings.Modifications.StaticModifications,
-                    _peptideSettings.Modifications.MaxVariableMods,
-                    _peptideSettings.Modifications.MaxNeutralLosses,
-                    _driverLabelType.GetHeavyModifications(), // This is the only thing the user may have altered
-                    _peptideSettings.Modifications.InternalStandardTypes);
-                var settings = _peptideSettings.ChangeModifications(modifications);
-                // Only update if anything changed
-                if (!Equals(settings, _peptideSettings))
+                // This is the only thing the user may have altered
+                var newHeavyMods = _driverLabelType.GetHeavyModifications().ToArray();
+                if (!ArrayUtil.EqualsDeep(newHeavyMods, _peptideSettings.Modifications.HeavyModifications))
                 {
+                    var labelTypes = _peptideSettings.Modifications.InternalStandardTypes.Where(t =>
+                        newHeavyMods.Any(m => Equals(m.LabelType, t))).ToArray();
+                    if (labelTypes.Length == 0)
+                        labelTypes = new[] {newHeavyMods.First().LabelType};
+
+                    PeptideModifications modifications = new PeptideModifications(
+                        _peptideSettings.Modifications.StaticModifications,
+                        _peptideSettings.Modifications.MaxVariableMods,
+                        _peptideSettings.Modifications.MaxNeutralLosses,
+                        newHeavyMods,
+                        labelTypes);
+                    var settings = _peptideSettings.ChangeModifications(modifications);
                     SrmSettings newSettings = _parent.DocumentUI.Settings.ChangePeptideSettings(settings);
                     if (!_parent.ChangeSettings(newSettings, true))
                     {
+                        // Not expected, since we checked for a change before calling
+                        // Otherwise, this is very confusing. The form just refuses to go away
+                        // We would prefer to get an unhandled exception and fix this
+                        Assume.Fail();
                         return;
                     }
                     _peptideSettings = newSettings.PeptideSettings;

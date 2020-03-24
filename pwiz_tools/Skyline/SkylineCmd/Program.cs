@@ -27,6 +27,7 @@ namespace pwiz.SkylineCmd
 {
     static class Program
     {
+        public const int EXIT_CODE_FAILURE_TO_START = 1;
         [STAThread]
         static int Main(string[] args)
         {
@@ -36,8 +37,16 @@ namespace pwiz.SkylineCmd
             var preferredEncoding = GetPreferredEncoding(argsList);
             using (new EncodingManager(preferredEncoding))
             {
-                // ReSharper disable once PossibleNullReferenceException
-                return (int)GetMainFunction().Invoke(null, new object[] { argsList.ToArray() });
+                try
+                {
+                    // ReSharper disable once PossibleNullReferenceException
+                    return (int) GetMainFunction().Invoke(null, new object[] {argsList.ToArray()});
+                }
+                catch (Exception e)
+                {
+                    Console.Out.WriteLine(SkylineCmdResources.Program_Main_Error_trying_to_run_Skyline___0_, e);
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
             }
         }
 
@@ -49,7 +58,7 @@ namespace pwiz.SkylineCmd
             }
             catch
             {
-                // Rely on the default width. The command is being run in an invironment without a screen width
+                // Rely on the default width. The command is being run in an environment without a screen width
             }
         }
 
@@ -61,27 +70,26 @@ namespace pwiz.SkylineCmd
 
         private static MethodInfo GetMainFunction()
         {
-            Assembly assembly;
             // SkylineCmd and Skyline must be in the same directory
             string dirPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-            try
+            const string SKYLINE = "Skyline.exe";
+            const string SKYLINE_DAILY = "Skyline-daily.exe"; // Keep -daily;
+            foreach (var exeName in new []{SKYLINE, SKYLINE_DAILY})
             {
-                assembly = Assembly.LoadFrom(Path.Combine(dirPath, @"Skyline-daily.exe")); // Keep -daily
-            }
-            catch (Exception e1)
-            {
-                try
+                string exePath = Path.Combine(dirPath, exeName);
+                if (!File.Exists(exePath))
                 {
-                    assembly = Assembly.LoadFrom(Path.Combine(dirPath, @"Skyline.exe"));
+                    continue;
                 }
-                catch (Exception e2)
-                {
-                    throw new AggregateException(e1, e2);
-                }
+                var assembly = Assembly.LoadFrom(Path.Combine(dirPath, exeName));
+                var programClass = assembly.GetType(@"pwiz.Skyline.Program");
+                var mainFunction = programClass.GetMethod(@"Main");
+                return mainFunction;
             }
-            var programClass = assembly.GetType(@"pwiz.Skyline.Program");
-            var mainFunction = programClass.GetMethod(@"Main");
-            return mainFunction;
+
+            string message = string.Format(SkylineCmdResources.Program_GetMainFunction_Unable_to_find_either_file___0___or_file___1___in_folder___2___,
+                SKYLINE, SKYLINE_DAILY, dirPath);
+            throw new FileNotFoundException(message);
         }
     }
 

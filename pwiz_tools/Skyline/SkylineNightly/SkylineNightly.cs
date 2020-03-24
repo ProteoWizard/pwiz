@@ -56,11 +56,7 @@ namespace SkylineNightly
                 textBoxFolder.Text = Path.Combine(defaultDir);
             }
 
-            using (var ts = new TaskService())
-            {
-                var task = ts.FindTask(Nightly.NightlyTaskName) ?? ts.FindTask(Nightly.NightlyTaskNameWithUser);
-                enabled.Checked = (task != null);
-            }
+            enabled.Checked = Nightly.NightlyTask != null;
         }
 
         private void Cancel(object sender, EventArgs e)

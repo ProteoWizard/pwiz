@@ -2990,10 +2990,9 @@ namespace pwiz.Skyline
                     // Remove all replicates to be re-imported
                     var results = document.Settings.MeasuredResults;
                     var chromRemaining = results.Chromatograms.Where(chrom => !setReimport.Contains(chrom)).ToArray();
-                    MeasuredResults resultsNew = null;
+                    MeasuredResults resultsNew = results.ChangeChromatograms(chromRemaining);
                     if (chromRemaining.Length > 0)
                     {
-                        resultsNew = results.ChangeChromatograms(chromRemaining);
                         // Optimize the cache using this reduced set to remove their data from the cache
                         resultsNew = resultsNew.OptimizeCache(DocumentFilePath, _chromatogramManager.StreamManager, longWaitBroker);
                     }
@@ -3006,6 +3005,8 @@ namespace pwiz.Skyline
                         string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
                         FileEx.SafeDelete(cachePath, true);
                     }
+                    // Restore the original set unchanged
+                    resultsNew = resultsNew.ChangeChromatograms(results.Chromatograms);
 
                     // Update the document without adding an undo record, because the only information
                     // to change should be cache related.

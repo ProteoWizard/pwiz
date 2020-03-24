@@ -837,6 +837,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // listBoxSmallMolInternalStandardTypes
             // 
+            this.listBoxSmallMolInternalStandardTypes.CheckOnClick = true;
             this.listBoxSmallMolInternalStandardTypes.FormattingEnabled = true;
             resources.ApplyResources(this.listBoxSmallMolInternalStandardTypes, "listBoxSmallMolInternalStandardTypes");
             this.listBoxSmallMolInternalStandardTypes.Name = "listBoxSmallMolInternalStandardTypes";

@@ -418,7 +418,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (calculatedConcentration.HasValue)
                 {
                     labelLines.Add(string.Format(@"{0} = {1}",
-                        QuantificationStrings.Calculated_Concentration, calculatedConcentration));
+                        QuantificationStrings.Calculated_Concentration,
+                        QuantificationResult.FormatCalculatedConcentration(calculatedConcentration.Value,
+                            curveFitter.QuantificationSettings.Units)));
                 }
                 else if (quantificationResult != null && !quantificationResult.NormalizedArea.HasValue)
                 {

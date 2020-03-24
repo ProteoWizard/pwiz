@@ -85,11 +85,22 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return result;
         }
 
-        public double? GetPeptideConcentration(ChromatogramSet chromatogramSet)
+        public double? GetPeptideConcentration(int replicateIndex)
         {
+            var chromatogramSet = GetChromatogramSet(replicateIndex);
             if (null == chromatogramSet)
             {
                 return null;
+            }
+
+            var results = PeptideQuantifier.PeptideDocNode.Results;
+            if (null != results && 0 <= replicateIndex && replicateIndex < results.Count)
+            {
+                var peptideChromInfo = results[replicateIndex].FirstOrDefault();
+                if (peptideChromInfo != null && peptideChromInfo.AnalyteConcentration.HasValue)
+                {
+                    return peptideChromInfo.AnalyteConcentration.Value;
+                }
             }
             double concentrationMultiplier = PeptideQuantifier.PeptideDocNode.ConcentrationMultiplier.GetValueOrDefault(1.0);
             return chromatogramSet.AnalyteConcentration*concentrationMultiplier/chromatogramSet.SampleDilutionFactor;
@@ -112,7 +123,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 }
                 return transitionGroup.PrecursorConcentration / chromatogramSet.SampleDilutionFactor;
             }
-            return GetPeptideConcentration(chromatogramSet);
+            return GetPeptideConcentration(calibrationPoint.ReplicateIndex);
         }
 
         public IEnumerable<CalibrationPoint> EnumerateCalibrationPoints()
@@ -186,7 +197,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     {
                         continue;
                     }
-                    double? concentration = GetPeptideConcentration(chromatogramSet);
+                    double? concentration = GetPeptideConcentration(replicateIndex);
                     if (concentration.HasValue)
                     {
                         result.Add(new CalibrationPoint(replicateIndex, null), concentration.Value);
@@ -474,7 +485,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return null;
             }
 
-            double? peptideConcentration = GetPeptideConcentration(chromatogramSet);
+            double? peptideConcentration = GetPeptideConcentration(calibrationPoint.ReplicateIndex);
             if (peptideConcentration.HasValue)
             {
                 if (HasExternalStandards() && HasInternalStandardConcentration())
@@ -584,9 +595,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, new CalibrationPoint(replicateIndex, null));
                 result = result.ChangeCalculatedConcentration(calculatedConcentration);
-                double? expectedConcentration = GetPeptideConcentration(GetChromatogramSet(replicateIndex));
+                double? expectedConcentration = GetPeptideConcentration(replicateIndex);
                 result = result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
-                result = result.ChangeUnits(SrmSettings.PeptideSettings.Quantification.Units);
+                result = result.ChangeUnits(QuantificationSettings.Units);
             }
             return result;
         }
@@ -603,10 +614,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 result = result.ChangeCalculatedConcentration(calculatedConcentration);
                 double? expectedConcentration = transitionGroupDocNode.PrecursorConcentration;
                 result = result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
-                result = result.ChangeUnits(SrmSettings.PeptideSettings.Quantification.Units);
+                result = result.ChangeUnits(QuantificationSettings.Units);
             }
             return result;
-
         }
 
         public static String AppendUnits(String title, String units)

@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public int IndexOffset { get; set; }
 
-        public int? TicChromatogramIndex { get; }
+        public int? TicChromatogramIndex { get; set; }
         public int? BpcChromatogramIndex { get; }
 
         public IList<int> GlobalChromatogramIndexes
@@ -174,6 +174,40 @@ namespace pwiz.Skyline.Model.Results
             else
             {
                 times = intensities = null;
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true if the TIC chromatogram present in the .raw file can be relied on
+        /// for the calculation of total MS1 ion current.
+        /// </summary>
+        public bool IsTicChromatogramUsable()
+        {
+            if (!TicChromatogramIndex.HasValue)
+            {
+                return false;
+            }
+
+            float[] times;
+            if (!GetChromatogram(TicChromatogramIndex.Value, out times, out _))
+            {
+                return false;
+            }
+
+            if (times.Length == 0)
+            {
+                return false;
+            }
+
+            // If the number of points in the chromatogram is more than half of the total
+            // spectra, then this chromatogram probably includes MS2 scans, and should not 
+            // be used for calculating TIC Area.
+            // The number 2 is necessary because demultiplexing doubles the number of spectra.
+            if (times.Length >= _dataFile.SpectrumCount / 2)
+            {
                 return false;
             }
 
