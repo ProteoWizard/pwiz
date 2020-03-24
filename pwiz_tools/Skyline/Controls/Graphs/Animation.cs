@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -89,10 +90,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Choose the next animation step depending on how much time has elapsed
                 // since the animation started. Skip frames if we're not called fast enough.
                 var elapsed = (int)(DateTime.UtcNow - _startTime).TotalMilliseconds;
-                elapsed = Math.Max(0, elapsed);
                 var step = Math.Min(
                     _scaleFactors.Length - 1,
                     elapsed / _updateMsec + 1);
+                if (step < 0 || step >= _scaleFactors.Length)
+                {
+                    string msg = string.Format(@"{0} is out of range. Array length: {1}. Elapsed time: {2}", step,
+                        _scaleFactors.Length, elapsed);
+                    Assume.Fail(msg);
+                }
 
                 Value = _startValue + (_endValue - _startValue) * _scaleFactors[step];
 
