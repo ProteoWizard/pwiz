@@ -747,20 +747,28 @@ namespace pwiz.Skyline
             }
         }
 
+        public bool AssumeNonNullModificationAuditLogging { get; set; }
+
         public void ModifyDocumentOrThrow(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act,
             Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc)
         {
             using (var undo = BeginUndo(undoState))
             {
-                // Only create undo-redo record if an audit log entry was created
-                if (ModifyDocumentInner(act, onModifying, onModified, description, logFunc, out var entry) && entry != null)
-                    undo.Commit(entry.UndoRedo.ToString());
+                if (ModifyDocumentInner(act, onModifying, onModified, description, logFunc, out var entry))
+                {
+                    // If the document was modified, then we want to fail if there is no audit log entry.
+                    // We do not want to silently succeed without either an undo record or an audit log entry.
+                    if (AssumeNonNullModificationAuditLogging)  // For now this check is limited to functional testing
+                        Assume.IsNotNull(entry);
+                    if (entry != null && !entry.IsSkip)
+                        undo.Commit(entry.UndoRedo.ToString());
+                }
             }
         }
 
         public void ModifyDocumentNoUndo(Func<SrmDocument, SrmDocument> act)
         {
-            ModifyDocumentInner(act, null, null, null, null, out _);
+            ModifyDocumentInner(act, null, null, null, AuditLogEntry.SkipChange, out _);
         }
 
         private bool ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, string description, Func<SrmDocumentPair, AuditLogEntry> logFunc, out AuditLogEntry resultEntry)
@@ -788,6 +796,9 @@ namespace pwiz.Skyline
                 try
                 {
                     resultEntry = entry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, docNew, ModeUI));
+                    // Compatibility: original implementation treated null as an acceptable reason to skip audit logging
+                    if (entry != null && entry.IsSkip)
+                        entry = null;
                 }
                 catch (Exception ex)
                 {
@@ -1843,6 +1854,9 @@ namespace pwiz.Skyline
                                                                                                resultText,
                                                                                                resultColorIndex,
                                                                                                resultAnnotations);
+                                                            if (Equals(newAnnotations, nodeInDoc.Annotations))
+                                                                continue;
+
                                                             doc = (SrmDocument) doc.ReplaceChild(nodePath.Parent,
                                                                                                  nodeInDoc.
                                                                                                      ChangeAnnotations(
@@ -2192,6 +2206,9 @@ namespace pwiz.Skyline
                                         dlg.ResultExplicitTransitionGroupValues, nodeTransGroup.Results,
                                         nodeTransGroup.Children.Cast<TransitionDocNode>().ToArray(),
                                         nodeTransGroup.AutoManageChildren);
+                                if (Equals(newNode, nodeTransGroup))
+                                    return doc;
+
                                 return (SrmDocument) doc.ReplaceChild(nodeTransitionGroupTree.Path.Parent, newNode);
                             }
                         }, docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair, AuditLogEntry.GetNodeName(docPair.OldDoc, nodeTransGroup)));
@@ -2226,6 +2243,10 @@ namespace pwiz.Skyline
                                     // But if custom molecule has changed then we can't "Replace", since newNode has a different identity and isn't in the document.  We have to 
                                     // insert and delete instead.  
                                     var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomMolecule, dlg.ExplicitRetentionTimeInfo);
+                                    // Nothing to do if the node is not changing
+                                    if (Equals(nodePep, newNode))
+                                        return doc;
+
                                     if (!nodePep.Peptide.Equals(newNode.Peptide)) // Did that change the Id object?
                                     {
                                         // We don't want the tree selection to change, so note this as a replacement.
@@ -2309,6 +2330,10 @@ namespace pwiz.Skyline
                                     nodeTran.QuantInfo,
                                     dlg.ResultExplicitTransitionValues,
                                     null);
+                                // Nothing to do, if the transition is not changing
+                                if (Equals(newDocNode, nodeTran))
+                                    return doc;
+
                                 if (noTransitionChange)
                                 {
                                     // If we are not changing anything in the transition ID, we can be more gentle in replacement
@@ -3588,7 +3613,7 @@ namespace pwiz.Skyline
                                                     {
                                                         settingsNew = (SrmSettings) doc.Settings.ChangeName(ss.SaveName);
                                                         return doc.ChangeSettings(settingsNew);
-                                                    }, AuditLogEntry.SettingsLogFunction);
+                                                    }, AuditLogEntry.SkipChange);
 
                 if (settingsNew != null)
                     Settings.Default.SrmSettingsList.Add(settingsNew.MakeSavable(ss.SaveName));
@@ -5724,11 +5749,13 @@ namespace pwiz.Skyline
                     return;
                 }
 
+                var count = pathsToProcess.Count;
+                var changedTargets = count == 1 ? SelectedNode.Text : string.Format(AuditLogStrings.SkylineWindow_ChangeQuantitative_0_transitions, count);
                 ModifyDocument(message, doc =>
                 {
-                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));
+                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));  // CONSIDER: Might not be true if background processing is happening
                     return newDocument;
-                }, AuditLogEntry.SettingsLogFunction);
+                }, docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, changedTargets));
             }
         }
 

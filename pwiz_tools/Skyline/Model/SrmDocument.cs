@@ -281,7 +281,7 @@ namespace pwiz.Skyline.Model
             FormatVersion = doc.FormatVersion;
             RevisionIndex = doc.RevisionIndex;
             UserRevisionIndex = doc.UserRevisionIndex;
-            Settings = settings;
+            Settings = doc.UpdateHasHeavyModifications(settings);
             AuditLog = doc.AuditLog;
             DocumentHash = doc.DocumentHash;
             DeferSettingsChanges = doc.DeferSettingsChanges;
@@ -943,7 +943,7 @@ namespace pwiz.Skyline.Model
         /// <returns>A new document revision</returns>
         public SrmDocument ChangeSettingsNoDiff(SrmSettings settingsNew)
         {
-            return new SrmDocument(this, UpdateHasHeavyModifications(settingsNew), doc =>
+            return new SrmDocument(this, settingsNew, doc =>
             {
                 doc.RevisionIndex++;
                 doc.IsProteinMetadataPending = doc.CalcIsProteinMetadataPending();
@@ -1848,7 +1848,7 @@ namespace pwiz.Skyline.Model
             }
 
             var pepModsNew = pepMods.DeclareExplicitMods(docResult, listGlobalStaticMods, listGlobalHeavyMods);
-            if (ReferenceEquals(pepModsNew, pepMods))
+            if (Equals(pepModsNew, pepMods))
                 return docResult;
 
             // Make sure any newly included modifications are added to the settings

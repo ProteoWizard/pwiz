@@ -911,7 +911,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool ContainsIonMobility(IonMobilityValue ionMobility, bool useHighEnergyOffset)
         {
-            if (_filters == null || IonMobilityValue.IsNullOrEmpty(ionMobility))
+            if (IsEmpty || IonMobilityValue.IsNullOrEmpty(ionMobility))
                 return true; // It doesn't NOT include it
             return _filters.Any(f => f.ContainsIonMobility(ionMobility, useHighEnergyOffset));
         }

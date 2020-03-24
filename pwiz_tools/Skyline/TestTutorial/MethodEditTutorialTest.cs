@@ -107,9 +107,10 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast"; // Not L10N
-                buildBackgroundProteomeDlg.CreateDb(TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\Yeast")); // Not L10N
+                buildBackgroundProteomeDlg.CreateDb(TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\Yeast" + ProteomeDb.EXT_PROTDB)); // Not L10N
             });
             AddFastaToBackgroundProteome(buildBackgroundProteomeDlg, TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\sgd_yeast.fasta"), 61);
+            RunUI(buildBackgroundProteomeDlg.SelToEndBackgroundProteomePath);
             PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome form", 5); // Not L10N
 
             OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
@@ -166,6 +167,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[3].Nodes[0];
+                SkylineWindow.Size = new Size(1035, 511);
             });
             RestoreViewOnScreen(07);
             PauseForScreenShot("Main window", 7); // Not L10N
@@ -464,7 +466,6 @@ namespace pwiz.SkylineTestTutorial
                     AssertEx.FieldsEqual(target, actual, 6, null, true);
                 }
             }
-            PauseForAuditLog();
         }
         private void ShowNodeTip(string nodeText)
         {

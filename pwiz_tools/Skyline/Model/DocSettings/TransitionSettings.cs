@@ -69,6 +69,7 @@ namespace pwiz.Skyline.Model.DocSettings
         [TrackChildren(true)]
         public TransitionLibraries Libraries { get; private set; }
 
+        [TrackChildren(true)]
         public TransitionIntegration Integration { get; private set; }
 
         [TrackChildren(true)]
@@ -3041,6 +3042,7 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("transition_integration")]
     public sealed class TransitionIntegration : Immutable, IValidating, IXmlSerializable
     {
+        [Track]
         public bool IsIntegrateAll { get; private set; }
 
         #region Property change methods

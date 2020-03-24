@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return IonMobilityFilters.Any(im =>
             {
-                var testval = ionMobilityValue - (useHighEnergyOffset ? (im.HighEnergyIonMobilityOffset??0) : 0);
+                var testval = ionMobilityValue + (useHighEnergyOffset ? (im.HighEnergyIonMobilityOffset??0) : 0);
                 var halfWin = im.IonMobilityExtractionWindowWidth / 2;
                 return im.IonMobilityAndCCS.IonMobility.Mobility - halfWin <= testval &&
                        testval <= im.IonMobilityAndCCS.IonMobility.Mobility + halfWin;
