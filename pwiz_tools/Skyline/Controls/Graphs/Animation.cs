@@ -93,15 +93,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 var step = Math.Min(
                     _scaleFactors.Length - 1,
                     elapsed / _updateMsec + 1);
-                if (step < 0 || step >= _scaleFactors.Length)
+
+                try
                 {
-                    string msg = string.Format(@"{0} is out of range. Array length: {1}. Elapsed time: {2}", step,
-                        _scaleFactors.Length, elapsed);
-                    Assume.Fail(msg);
+                    Value = _startValue + (_endValue - _startValue) * _scaleFactors[step];
                 }
-
-                Value = _startValue + (_endValue - _startValue) * _scaleFactors[step];
-
+                catch (Exception exception)
+                {
+                    string msg = string.Format(@"Step: {0} Array length: {1}. Elapsed time: {2}", 
+                        step, _scaleFactors.Length, elapsed);
+                    throw new Exception(msg, exception);
+                }
                 if (step == _scaleFactors.Length - 1)
                 {
                     _scaleFactors = null;
