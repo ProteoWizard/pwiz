@@ -21,6 +21,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
+using System.Security;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -137,6 +140,33 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void OnClosed(EventArgs e)
         {
             graphChromatograms.Finish();
+        }
+
+        private bool _inCreateHandle;
+        [HandleProcessCorruptedStateExceptions]
+        [SecurityCritical]
+        protected override void CreateHandle()
+        {
+            Assume.IsFalse(_inCreateHandle);
+            if (Program.MainWindow != null && Program.MainWindow.InvokeRequired)
+            {
+                throw new ApplicationException(@"CreateHandle called on wrong thread");
+            }
+
+            try
+            {
+                _inCreateHandle = true;
+                base.CreateHandle();
+            }
+            catch (Exception e)
+            {
+                Trace.TraceWarning(@"Exception in AllChromatogramsGraph CreateHandle {0}", e);
+                throw new Exception(@"Exception in AllChromatogramsGraph", e);
+            }
+            finally
+            {
+                _inCreateHandle = false;
+            }
         }
 
         private void ElapsedTimer_Tick(object sender, EventArgs e)
