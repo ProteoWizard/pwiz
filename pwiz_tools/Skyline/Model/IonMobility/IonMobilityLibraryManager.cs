@@ -79,14 +79,14 @@ namespace pwiz.Skyline.Model.IonMobility
                 EndProcessing(document);
                 return false;
             }
-            var dtPredictor = docCurrent.Settings.PeptideSettings.Prediction.IonMobilityPredictor;
-            var dtPredictorNew = !ReferenceEquals(ionMobilityLibrary, dtPredictor.IonMobilityLibrary)
-                ? dtPredictor.ChangeLibrary(ionMobilityLibrary)
-                : dtPredictor;
+            var ionMobilityFiltering = docCurrent.Settings.TransitionSettings.IonMobilityFiltering;
+            var ionMobilityFilteringNew = !ReferenceEquals(ionMobilityLibrary, ionMobilityFiltering.IonMobilityLibrary)
+                ? ionMobilityFiltering.ChangeLibrary(ionMobilityLibrary)
+                : ionMobilityFiltering;
 
-            if (dtPredictorNew == null ||
+            if (ionMobilityFilteringNew == null ||
                 !ReferenceEquals(document.Id, container.Document.Id) ||
-                (Equals(dtPredictor, dtPredictorNew)))
+                (Equals(ionMobilityFiltering, ionMobilityFilteringNew)))
             {
                 // Loading was cancelled or document changed
                 EndProcessing(document);
@@ -95,12 +95,11 @@ namespace pwiz.Skyline.Model.IonMobility
             SrmDocument docNew;
             do
             {
-                // Change the document to use the new predictor.
+                // Change the document to use the new ion mobility filter.
                 docCurrent = container.Document;
-                if (!ReferenceEquals(dtPredictor, docCurrent.Settings.PeptideSettings.Prediction.IonMobilityPredictor))
-                    return false;
-                docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptidePrediction(predictor =>
-                    predictor.ChangeDriftTimePredictor(dtPredictorNew)));
+                if (!ReferenceEquals(ionMobilityFiltering, docCurrent.Settings.TransitionSettings.IonMobilityFiltering))
+                    return false; // Loading was cancelled or document changed
+                docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangeTransitionSettings(t => t.ChangeIonMobilityFiltering(ionMobilityFilteringNew)));
             }
             while (!CompleteProcessing(container, docNew, docCurrent));
             return true;
@@ -126,10 +125,8 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             if (document == null)
                 return null;
-            var driftTimePredictor = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor;
-            if (driftTimePredictor == null)
-                return null;
-            return driftTimePredictor.IonMobilityLibrary as IonMobilityLibrary;
+            var ionMobilityFiltering = document.Settings.TransitionSettings.IonMobilityFiltering;
+            return ionMobilityFiltering?.IonMobilityLibrary as IonMobilityLibrary;
         }
 
     }

@@ -63,11 +63,30 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.ExtractionWidth;
-            } }
+            } 
+        }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? ChromatogramIonMobility { get { return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.IonMobility; } }
+        public FormattableList<double?> ChromatogramIonMobility // Multiple conformers (multiple CCS per ion) are supported, so this has to be a list
+        {
+            get
+            {
+                return _chromatogramInfo.Value == null ? null
+                    : _chromatogramInfo.Value.HasIonMobility ? new FormattableList<double?>(_chromatogramInfo.Value
+                        .IonMobilityFilterSet.Select(im => im.IonMobilityAndCCS.IonMobility.Mobility).ToArray())
+                    : null;
+            }
+        }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? ChromatogramIonMobilityExtractionWidth { get { return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.IonMobilityExtractionWidth; } }
+        public FormattableList<double?> ChromatogramIonMobilityExtractionWidth // Multiple conformers (multiple CCS per ion) are supported, so this has to be a list
+        {
+            get
+            {
+                return _chromatogramInfo.Value == null ? null
+                    : _chromatogramInfo.Value.HasIonMobility ? new FormattableList<double?>(_chromatogramInfo.Value
+                        .IonMobilityFilterSet.Select(im => im.IonMobilityExtractionWindowWidth).ToArray())
+                    : null;
+            }
+        }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public string ChromatogramIonMobilityUnits
         {

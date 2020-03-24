@@ -1297,10 +1297,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.StartTime),
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.EndTime));
             var chromPeak = new ChromPeak(crawPeakFinder, crawdadPeak, 0, timeIntensities, null);
+            var ionMobilities = IonMobilityFilterSet.EMPTY; // chromData.IonMobility;
+            int imFirst = ionMobilities.Count > 0 ? 0 : -1;
+            int imLast = ionMobilities.Count-1;
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak,
-                IonMobilityFilter.EMPTY, // CONSIDER(bspratt) IMS in chromatogram libraries?
+                IonMobilityFilterSet.EMPTY, // CONSIDER(bspratt) IMS in chromatogram libraries?
                 new float?[0], Annotations.EMPTY,
-                                                            UserSet.FALSE);
+                UserSet.FALSE);
             var peaks = new[] {chromPeak};
             var header = new ChromGroupHeaderInfo(precursorMz,
                 0,  // file index
@@ -1314,15 +1317,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, null, eIonMobilityUnits.none); // CONSIDER(bspratt) IMS in chromatogram libraries?
-            var driftTimeFilter = IonMobilityFilter.EMPTY; // CONSIDER(bspratt) IMS in chromatogram libraries?
+                0, -1, -1, null, null, ionMobilities);
             var groupInfo = new ChromatogramGroupInfo(header,
                     new Dictionary<Type, int>(),
                     new byte[0],
                     new ChromCachedFile[0],
-                    new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.IonMobility.Mobility??0), (float)(driftTimeFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
+                    new[] { new ChromTransition(chromData.Mz, 0, imFirst, imLast, ChromSource.unknown), },
                     peaks,
-                    null) { TimeIntensitiesGroup = TimeIntensitiesGroup.Singleton(timeIntensities) };
+                    null,
+                    ionMobilities.Count > 0 ? ionMobilities.Select(ChromIonMobilityFilter.GetChromIonMobilityFilter).ToArray() : null
+                    ) { TimeIntensitiesGroup = TimeIntensitiesGroup.Singleton(timeIntensities) };
 
             chromatogramInfo = new ChromatogramInfo(groupInfo, 0);
         }

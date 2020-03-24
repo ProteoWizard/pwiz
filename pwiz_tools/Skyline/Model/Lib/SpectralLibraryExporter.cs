@@ -100,12 +100,12 @@ namespace pwiz.Skyline.Model.Lib
             var mi = new List<SpectrumPeaksInfo.MI>();
             var rt = 0.0;
             var im = IonMobilityAndCCS.EMPTY;
-            var imGroup = TransitionGroupIonMobilityInfo.EMPTY; // CCS may be available only at group level
+            var imGroup = IonMobilityFilterSet.EMPTY; // CCS may be available only at group level
             var groupChromInfos = nodeTranGroup.GetSafeChromInfo(replicateIndex);
             if (!groupChromInfos.IsEmpty)
             {
                 var chromInfo = groupChromInfos.First(info => info.OptimizationStep == 0);
-                imGroup = chromInfo.IonMobilityInfo;
+                imGroup = chromInfo.IonMobilityFilters;
             }
             var maxApex = float.MinValue;
             string chromFileName = null;
@@ -137,7 +137,8 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     maxApex = chromInfo.Height;
                     rt = chromInfo.RetentionTime;
-                    im = IonMobilityAndCCS.GetIonMobilityAndCCS(chromInfo.IonMobility.IonMobility, chromInfo.IonMobility.CollisionalCrossSectionSqA ?? imGroup.CollisionalCrossSection, 0);
+                    var single = chromInfo.IonMobilityFilters.FirstOrDefault(); // Spectral libraries don't support multiple conformers
+                    im = single == null ? IonMobilityAndCCS.EMPTY : single.IonMobilityAndCCS;
                 }
             }
             if (chromFileName == null)

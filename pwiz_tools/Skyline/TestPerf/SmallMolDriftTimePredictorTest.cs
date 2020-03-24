@@ -87,29 +87,23 @@ namespace TestPerf
             var area = document.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
 
             // Locate drift peaks
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction);
-            var driftPredictor = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsUI.AddDriftTimePredictor);
-            const string predictorName = "Sulfa";
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
+            RunUI(() => transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50);
+            var calibrationDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
+            const string libName = "Sulfa";
             RunUI(() =>
             {
-                driftPredictor.SetPredictorName(predictorName);
-                driftPredictor.SetResolvingPower(50);
-                driftPredictor.GetDriftTimesFromResults();
+                calibrationDlg.LibraryName = libName;
+                calibrationDlg.GetIonMobilitiesFromResults();
             });
-
-            // Check that a new value was calculated for all precursors
-            RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, driftPredictor.Predictor.IonMobilityRows.Count));
-
-            OkDialog(driftPredictor, () => driftPredictor.OkDialog());
+            OkDialog(calibrationDlg, () => calibrationDlg.OkDialog());
 
             RunUI(() =>
             {
-                Assert.IsTrue(peptideSettingsUI.IsUseMeasuredRT);
-                Assert.AreEqual(2, peptideSettingsUI.TimeWindow);
-                Assert.AreEqual(predictorName, peptideSettingsUI.SelectedDriftTimePredictor);
+                Assert.AreEqual(libName, transitionSettingsUI.IonMobilityControl.SelectedIonMobilityLibrary);
             });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
             WaitForDocumentChangeLoaded(document);
 

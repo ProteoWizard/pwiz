@@ -1367,7 +1367,7 @@ namespace pwiz.Skyline.Model
                                     if (!keepUserSet || notUserSet || missmatchedEmptyReintegrated)
                                     {
                                         ChromPeak peak = ChromPeak.EMPTY;
-                                        IonMobilityFilter ionMobility = IonMobilityFilter.EMPTY;
+                                        IonMobilityFilterSet ionMobility = IonMobilityFilterSet.EMPTY;
                                         if (info != null)
                                         {
                                             // If the peak boundaries have been set by the user, make sure this peak matches
@@ -1392,7 +1392,7 @@ namespace pwiz.Skyline.Model
                                                 if (bestIndex != -1)
                                                     peak = info.GetPeak(bestIndex);
                                             }
-                                            ionMobility = info.GetIonMobilityFilter();
+                                            ionMobility = info.IonMobilityFilterSet;
                                         }
 
                                         // Avoid creating new info objects that represent the same data
@@ -1557,7 +1557,7 @@ namespace pwiz.Skyline.Model
         }
 
         private static TransitionChromInfo CreateTransitionChromInfo(TransitionChromInfo chromInfo, ChromFileInfoId fileId,
-                                              int step, ChromPeak peak, IonMobilityFilter ionMobility, int ratioCount, UserSet userSet)
+                                              int step, ChromPeak peak, IonMobilityFilterSet ionMobility, int ratioCount, UserSet userSet)
         {
             // Use the old ratio for now, and it will be corrected by the peptide,
             // if it is incorrect.
@@ -2277,14 +2277,14 @@ namespace pwiz.Skyline.Model
                     Ratios = chromInfo.Ratios;
                     Annotations = chromInfo.Annotations;
 
-                    IonMobilityInfo = chromInfo.IonMobilityInfo;
+                    IonMobilityFilters = chromInfo.IonMobilityFilters;
                 }
                 else
                 {
                     Ratios = TransitionGroupChromInfo.GetEmptyRatios(ratioCount);
                     Annotations = Annotations.EMPTY;
 
-                    IonMobilityInfo = TransitionGroupIonMobilityInfo.EMPTY; 
+                    IonMobilityFilters = IonMobilityFilterSet.EMPTY;
                 }
 
                 if (reintegratePeak != null)
@@ -2308,7 +2308,7 @@ namespace pwiz.Skyline.Model
             private float? RetentionTime { get; set; }
             private float? StartTime { get; set; }
             private float? EndTime { get; set; }
-            private TransitionGroupIonMobilityInfo IonMobilityInfo { get; set; }
+            private IonMobilityFilterSet IonMobilityFilters { get; set; }
             private float? Fwhm { get; set; }
             private float? Area { get; set; }
             private float? AreaMs1 { get; set; }
@@ -2338,7 +2338,7 @@ namespace pwiz.Skyline.Model
                     return;
 
                 // Aggregate ion mobility information across all transitions
-                IonMobilityInfo = IonMobilityInfo.AddIonMobilityFilterInfo(info.IonMobility, nodeTran.Transition.IsPrecursor());
+                IonMobilityFilters = IonMobilityFilters.Merge(info.IonMobilityFilters, nodeTran.Transition.IsPrecursor());
 
                 ResultsCount++;
 
@@ -2459,7 +2459,7 @@ namespace pwiz.Skyline.Model
                                                     RetentionTime,
                                                     StartTime,
                                                     EndTime,
-                                                    IonMobilityInfo,
+                                                    IonMobilityFilters,
                                                     Fwhm,
                                                     Area, AreaMs1, AreaFragment,
                                                     BackgroundArea, BackgroundAreaMs1, BackgroundAreaFragment,
@@ -2634,7 +2634,7 @@ namespace pwiz.Skyline.Model
 
                         ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
                         nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(
-                                                              indexSet, fileId, step, peakNew, chromInfo.GetIonMobilityFilter(), ratioCount, userSet);
+                                                              indexSet, fileId, step, peakNew, chromInfo.IonMobilityFilterSet, ratioCount, userSet);
                     }
                     listChildrenNew.Add(nodeTranNew);
                 }
@@ -2709,9 +2709,9 @@ namespace pwiz.Skyline.Model
                         var chromInfo = listChromInfo[i];
                         int step = i - numSteps;
                         nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, fileId, step,
-                                                                                    chromInfo.CalcPeak((float) startTime, (float) endTime, flags),
-                                                                                    chromInfo.GetIonMobilityFilter(),
-                                                                                    ratioCount, userSet);
+                            chromInfo.CalcPeak((float) startTime, (float) endTime, flags),
+                            chromInfo.IonMobilityFilterSet,
+                            ratioCount, userSet);
                     }
                     listChildrenNew.Add(nodeTranNew);
                 }

@@ -245,9 +245,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (hasIonMobilityDimension)
             {
                 // Is there actually any drift time filtering available?
-                double minIonMobility, maxIonMobility;
-                _msDataFileScanHelper.GetIonMobilityRange(out minIonMobility, out maxIonMobility, ChromSource.unknown); // Get range of IM values for all products and precursors
-                if ((minIonMobility == double.MinValue) && (maxIonMobility == double.MaxValue))
+                if (!_msDataFileScanHelper.GetIonMobilityRanges(out _, ChromSource.unknown)) // Get range of IM values for all products and precursors
                 {
                     filterBtn.Visible = false;
                     filterBtn.Checked = false;
@@ -358,51 +356,57 @@ namespace pwiz.Skyline.Controls.Graphs
                 _heatMapData = new HeatMapData(points);
             }
 
-            double minDrift;
-            double maxDrift;
-            _msDataFileScanHelper.GetIonMobilityRange(out minDrift, out maxDrift, _msDataFileScanHelper.Source);  // There may be a different drift time filter for products in Waters
-
-            if (minDrift > 0 && maxDrift < double.MaxValue)
+            var minGlobalIM = double.MaxValue;
+            var maxGlobalIM = double.MinValue;
+            if (_msDataFileScanHelper.GetIonMobilityRanges(out var ranges, _msDataFileScanHelper.Source))  // There may be a different drift time filter for products in Waters
             {
-                // Add gray shaded box behind heat points.
-                var driftTimeBox = new BoxObj(
-                    0.0,
-                    maxDrift,
-                    1.0,
-                    maxDrift - minDrift,
-                    Color.Transparent,
-                    Color.FromArgb(50, Color.Gray))
+                foreach (var range in ranges) // Multiple conformers represented by multiple bands
                 {
-                    Location = {CoordinateFrame = CoordType.XChartFractionYScale},
-                    ZOrder = ZOrder.F_BehindGrid,
-                    IsClippedToChartRect = true,
-                };
-                GraphPane.GraphObjList.Add(driftTimeBox);
+                    var minIM = range.Item1;
+                    var maxIM = range.Item2;
+                    minGlobalIM = Math.Min(minIM, minGlobalIM);
+                    maxGlobalIM = Math.Max(maxIM, maxGlobalIM);
 
-                // Add outline in front of heat points, so you can tell where the limits are in a dense graph.
-                var driftTimeOutline = new BoxObj(
-                    0.0,
-                    maxDrift,
-                    1.0,
-                    maxDrift - minDrift,
-                    Color.FromArgb(50, Color.DarkViolet),
-                    Color.Transparent)
-                {
-                    Location = {CoordinateFrame = CoordType.XChartFractionYScale},
-                    ZOrder = ZOrder.C_BehindChartBorder,
-                    IsClippedToChartRect = true,
-                    Border = new Border(Color.FromArgb(100, Color.DarkViolet), 2)
-                };
-                GraphPane.GraphObjList.Add(driftTimeOutline);
+                    // Add gray shaded box behind heat points.
+                    var driftTimeBox = new BoxObj(
+                        0.0,
+                        maxIM,
+                        1.0,
+                        maxIM - minIM,
+                        Color.Transparent,
+                        Color.FromArgb(50, Color.Gray))
+                    {
+                        Location = {CoordinateFrame = CoordType.XChartFractionYScale},
+                        ZOrder = ZOrder.F_BehindGrid,
+                        IsClippedToChartRect = true,
+                    };
+                    GraphPane.GraphObjList.Add(driftTimeBox);
+
+                    // Add outline in front of heat points, so you can tell where the limits are in a dense graph.
+                    var driftTimeOutline = new BoxObj(
+                        0.0,
+                        maxIM,
+                        1.0,
+                        maxIM - minIM,
+                        Color.FromArgb(50, Color.DarkViolet),
+                        Color.Transparent)
+                    {
+                        Location = {CoordinateFrame = CoordType.XChartFractionYScale},
+                        ZOrder = ZOrder.C_BehindChartBorder,
+                        IsClippedToChartRect = true,
+                        Border = new Border(Color.FromArgb(100, Color.DarkViolet), 2)
+                    };
+                    GraphPane.GraphObjList.Add(driftTimeOutline);
+
+                }
             }
-
             if (!Settings.Default.FilterIonMobilityFullScan)
             {
-                minDrift = 0;
-                maxDrift = double.MaxValue;
+                minGlobalIM = 0;
+                maxGlobalIM = double.MaxValue;
             }
             var heatMapGraphPane = (HeatMapGraphPane)GraphPane;
-            heatMapGraphPane.SetPoints(_heatMapData, minDrift, maxDrift);
+            heatMapGraphPane.SetPoints(_heatMapData, minGlobalIM, maxGlobalIM);
         }
 
         /// <summary>
@@ -661,15 +665,15 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                double minDriftTime, maxDriftTime;
-                _msDataFileScanHelper.GetIonMobilityRange(out minDriftTime, out maxDriftTime, _msDataFileScanHelper.Source);
-                if (minDriftTime > double.MinValue && maxDriftTime < double.MaxValue)
+                if (_msDataFileScanHelper.GetIonMobilityRanges(out var imRanges, _msDataFileScanHelper.Source))
                 {
+                    var minIonMobility = imRanges.Select(r => r.Item1).Min();
+                    var maxIonMobility = imRanges.Select(r => r.Item2).Max();
                     double range = filterBtn.Checked
-                        ? (maxDriftTime - minDriftTime)/2 
-                        : (maxDriftTime - minDriftTime)*2;
-                    yScale.Min = minDriftTime - range;
-                    yScale.Max = maxDriftTime + range;
+                        ? (maxIonMobility - minIonMobility)/2 
+                        : (maxIonMobility - minIonMobility)*2;
+                    yScale.Min = minIonMobility - range;
+                    yScale.Max = maxIonMobility + range;
                 }
                 else
                 {

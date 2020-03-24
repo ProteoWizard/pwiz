@@ -40,6 +40,17 @@ message SkylineDocumentProto {
 		string name = 1;
 		string textValue = 2;
 	}
+
+	message IonMobilityFilters
+	{
+	    repeated IonMobilityFilter values = 1;
+	}
+
+	message IonMobilityFilter
+	{
+		OptionalDouble ionMobility = 1;
+		OptionalDouble ionMobilityWindow = 2;
+	}
 	
 	message TransitionPeak {
 		int32 replicateIndex = 1;
@@ -48,8 +59,8 @@ message SkylineDocumentProto {
 		float retentionTime = 4;
 		float startRetentionTime = 5;
 		float endRetentionTime = 6;
-		OptionalDouble ionMobility = 7;
-		OptionalDouble ionMobilityWindow = 8;
+		OptionalDouble ionMobility = 7;  // Obsolete - see IonMobilityFilters
+		OptionalDouble ionMobilityWindow = 8; // Obsolete - see IonMobilityFilters
 		float area = 9;
 		float backgroundArea = 10;
 		float height = 11;
@@ -64,6 +75,7 @@ message SkylineDocumentProto {
 		sint32 optimizationStep = 23;
 		Annotations annotations = 24;
 		bool forcedIntegration = 25;
+		IonMobilityFilters ionMobilityFilters = 26; // Support for multiple conformers in ion mobility filtering
 	}
 	message TransitionResults {
 		repeated TransitionPeak peaks = 1;

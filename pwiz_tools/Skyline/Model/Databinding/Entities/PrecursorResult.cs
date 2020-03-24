@@ -20,6 +20,7 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
@@ -28,6 +29,7 @@ using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -141,29 +143,96 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? CollisionalCrossSection { get { return ChromInfo.IonMobilityInfo.CollisionalCrossSection; } }
+        public FormattableList<double?> CollisionalCrossSection // Multiple conformers (multiple CCS per ion) are supported, so this has to be a list
+        {
+            get
+            {
+                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters) ? null
+                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters.Select(im => im.CollisionalCrossSectionSqA).ToArray());
+            }
+        }
 
         [Obsolete("use IonMobilityMS1 instead")] 
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? DriftTimeMS1 { get { return ChromInfo.IonMobilityInfo.DriftTimeMS1; } }
+        public FormattableList<double?> DriftTimeMS1  // Multiple conformers (multiple CCS per ion) are supported, so this has to be a list
+        {
+            get
+            {
+                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters) ? null
+                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters.Where(im => im.IonMobilityUnits == eIonMobilityUnits.drift_time_msec)
+                        .Select(im => im.IonMobilityAndCCS.IonMobility.Mobility).ToArray());
+            }
+        }
 
         [Obsolete("use IonMobilityFragment instead")] 
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? DriftTimeFragment { get { return ChromInfo.IonMobilityInfo.DriftTimeFragment; } }
+        public FormattableList<double?> DriftTimeFragment  // Multiple conformers (multiple CCS per ion) are supported, so this has to be a list
+        {
+            get
+            {
+                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters) ? null
+                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters
+                        .Where(im => im.IonMobilityUnits == eIonMobilityUnits.drift_time_msec)
+                        .Select(im => im.IonMobilityAndCCS.IonMobility.Mobility.HasValue ? im.IonMobilityAndCCS.IonMobility.Mobility.Value + im.HighEnergyIonMobilityOffset??0 : im.IonMobilityAndCCS.IonMobility.Mobility).ToArray());
+            }
+        }
+
 
         [Obsolete("use IonMobilityWindow instead")]
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? DriftTimeWindow { get { return ChromInfo.IonMobilityInfo.DriftTimeWindow; } }
+        public FormattableList<double?> DriftTimeWindow // Multiple conformers (multiple CCS per ion) are supported, so this has to be a list
+        {
+            get
+            {
+                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters)
+                    ? null
+                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters
+                        .Where(im => im.IonMobilityUnits == eIonMobilityUnits.drift_time_msec)
+                        .Select(im => im.IonMobilityExtractionWindowWidth).ToArray());
+            }
+        }
 
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? IonMobilityMS1 { get { return ChromInfo.IonMobilityInfo.IonMobilityMS1; } }
+        public FormattableList<double?> IonMobilityMS1  // Multiple conformers (multiple CCS per ion) are supported, so this has to be a list
+        {
+            get
+            {
+                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters) ? null
+                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters.Select(im => im.IonMobilityAndCCS.IonMobility.Mobility).ToArray());
+            }
+        }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? IonMobilityFragment { get { return ChromInfo.IonMobilityInfo.IonMobilityFragment; } }
+        public FormattableList<double?> IonMobilityFragment  // Multiple conformers (multiple CCS per ion) are supported, so this has to be a list
+        {
+            get
+            {
+                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters) ? null
+                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters
+                        .Select(im => im.IonMobilityAndCCS.IonMobility.Mobility.HasValue ? im.IonMobilityAndCCS.IonMobility.Mobility.Value + im.HighEnergyIonMobilityOffset ?? 0 : im.IonMobilityAndCCS.IonMobility.Mobility).ToArray());
+            }
+        }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? IonMobilityWindow { get { return ChromInfo.IonMobilityInfo.IonMobilityWindow; } }
+        public FormattableList<double?> IonMobilityWindow  // Multiple conformers (multiple CCS per ion) are supported, so this has to be a list
+        {
+            get
+            {
+                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters)
+                    ? null
+                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters
+                        .Select(im => im.IonMobilityExtractionWindowWidth).ToArray());
+            }
+        }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public string IonMobilityUnits { get { return IonMobilityFilter.IonMobilityUnitsL10NString(ChromInfo.IonMobilityInfo.IonMobilityUnits); } }
+        public string IonMobilityUnits
+        {
+            get
+            {
+                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters)
+                    ? null 
+                    : IonMobilityFilter.IonMobilityUnitsL10NString(ChromInfo.IonMobilityFilters.First().IonMobilityUnits);
+            }
+        }
 
         [ChildDisplayName("Precursor{0}")]
         public LinkValue<QuantificationResult> PrecursorQuantification

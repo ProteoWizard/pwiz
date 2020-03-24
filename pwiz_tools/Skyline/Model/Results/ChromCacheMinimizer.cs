@@ -76,9 +76,9 @@ namespace pwiz.Skyline.Model.Results
         /// is not null) writes out the minimized cache file.
         /// </summary>
         public void Minimize(Settings settings, ProgressCallback progressCallback, Stream outStream,
-            FileStream outStreamScans = null, FileStream outStreamPeaks = null, FileStream outStreamScores = null)
+            FileStream outStreamScans = null, FileStream outStreamPeaks = null, FileStream outStreamScores = null, FileStream outputStreamIonMobilities = null)
         {
-            var writer = outStream == null ? null : new Writer(ChromatogramCache, settings.CacheFormat, outStream, outStreamScans, outStreamPeaks, outStreamScores);
+            var writer = outStream == null ? null : new Writer(ChromatogramCache, settings.CacheFormat, outStream, outStreamScans, outStreamPeaks, outStreamScores, outputStreamIonMobilities);
             var statisticsCollector = new MinStatisticsCollector(this);
             bool readChromatograms = settings.NoiseTimeRange.HasValue || writer != null;
 
@@ -305,6 +305,7 @@ namespace pwiz.Skyline.Model.Results
             public TimeIntensitiesGroup MinimizedTimeIntensitiesGroup { get; private set; }
             public ChromPeak[] MinimizedPeaks { get; private set; }
             public IList<ChromTransition> Transitions { get; private set; }
+            public IList<ChromIonMobilityFilter> IonMobilityFilters { get; private set; }
             public float[] PeakScores { get; private set; }
 
             public void SetStartEndTime(float minRetentionTime, float maxRetentionTime)
@@ -375,9 +376,22 @@ namespace pwiz.Skyline.Model.Results
                 PeakScores = peakScores.ToArray();
                 var peaks = new List<ChromPeak>();
                 Transitions = new List<ChromTransition>();
+                IonMobilityFilters = new List<ChromIonMobilityFilter>();
                 foreach (var originalIndex in RetainedTransitionIndexes)
                 {
-                    Transitions.Add(cache.GetTransition(originalIndex + header.StartTransitionIndex));
+                    var chromTransition = cache.GetTransition(originalIndex + header.StartTransitionIndex);
+                    if (chromTransition.IonMobilityIndexStart >= 0)
+                    {
+                        // Compress the ion mobilities table
+                        var indexStartIM = IonMobilityFilters.Count;
+                        for (var indexIM = chromTransition.IonMobilityIndexStart; indexIM <= chromTransition.IonMobilityIndexEnd; indexIM++)
+                        {
+                            IonMobilityFilters.Add(cache.GetIonMobilityFilter(indexIM));
+                        }
+                        var indexEndIM = IonMobilityFilters.Count - 1;
+                        chromTransition = new ChromTransition(chromTransition.Product, chromTransition.ExtractionWidth, indexStartIM, indexEndIM, chromTransition.Source);
+                    }
+                    Transitions.Add(chromTransition);
                     for (int iPeak = 0; iPeak < numPeaks; iPeak++)
                     {
                         if (!retainedPeakIndexes.Contains(iPeak))
@@ -387,6 +401,7 @@ namespace pwiz.Skyline.Model.Results
                         peaks.Add(originalPeak);
                         TotalPeakCount++;
                     }
+
                 }
                 MinimizedPeaks = peaks.ToArray();
             }
@@ -609,18 +624,21 @@ namespace pwiz.Skyline.Model.Results
             private readonly FileStream _outputStreamPeaks;
             private readonly FileStream _outputStreamScans;
             private readonly FileStream _outputStreamScores;
+            private readonly FileStream _outputStreamIonMobilities;
             private int _peakCount;
             private int _scoreCount;
             private readonly BlockedArrayList<ChromGroupHeaderInfo> _chromGroupHeaderInfos =
                 new BlockedArrayList<ChromGroupHeaderInfo>(ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
             private readonly BlockedArrayList<ChromTransition> _transitions =
                 new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
+            private readonly BlockedArrayList<ChromIonMobilityFilter> _ionMobilityFilters =
+                new BlockedArrayList<ChromIonMobilityFilter>(ChromIonMobilityFilter.SizeOf, ChromIonMobilityFilter.DEFAULT_BLOCK_SIZE);
             private readonly List<Type> _scoreTypes;
             private readonly List<byte> _textIdBytes = new List<byte>();
             private readonly IDictionary<ImmutableList<byte>, int> _textIdIndexes 
                 = new Dictionary<ImmutableList<byte>, int>();
 
-            public Writer(ChromatogramCache chromatogramCache, CacheFormat cacheFormat, Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores)
+            public Writer(ChromatogramCache chromatogramCache, CacheFormat cacheFormat, Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores, FileStream outputStreamIonMobilities)
             {
                 _originalCache = chromatogramCache;
                 _cacheFormat = cacheFormat;
@@ -628,6 +646,7 @@ namespace pwiz.Skyline.Model.Results
                 _outputStreamScans = outputStreamScans;
                 _outputStreamPeaks = outputStreamPeaks;
                 _outputStreamScores = outputStreamScores;
+                _outputStreamIonMobilities = outputStreamIonMobilities;
                 _scoreTypes = chromatogramCache.ScoreTypes.ToList();
             }
 
@@ -649,6 +668,7 @@ namespace pwiz.Skyline.Model.Results
 
                 _peakCount += minimizedChromGroup.TotalPeakCount;
                 _transitions.AddRange(minimizedChromGroup.Transitions);
+                _ionMobilityFilters.AddRange(minimizedChromGroup.IonMobilityFilters);
 
                 var flags = originalHeader.Flags;
                 MemoryStream pointsStream = new MemoryStream();
@@ -732,7 +752,7 @@ namespace pwiz.Skyline.Model.Results
                                                       originalHeader.StatusId,
                                                       originalHeader.StatusRank,
                                                       originalHeader.StartTime, originalHeader.EndTime,
-                                                      originalHeader.CollisionalCrossSection, 
+                                                      originalHeader.CollisionalCrossSectionV11, 
                                                       originalHeader.IonMobilityUnits);
                 _chromGroupHeaderInfos.Add(header);
             }
@@ -747,9 +767,11 @@ namespace pwiz.Skyline.Model.Results
                                                _outputStreamScans,
                                                _outputStreamPeaks,
                                                _outputStreamScores,
+                                               _outputStreamIonMobilities,
                                                _originalCache.CachedFiles,
                                                _chromGroupHeaderInfos,
                                                _transitions,
+                                               _ionMobilityFilters,
                                                _textIdBytes,
                                                _scoreTypes,
                                                _scoreCount,

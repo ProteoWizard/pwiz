@@ -225,47 +225,54 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             RunUI(() => SkylineWindow.SaveDocument());
 
             {
-                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-                RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction);
-                var driftPredictor = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsUI.AddDriftTimePredictor);
+                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                RunUI(() =>
+                {
+                    transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility;
+                    transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50;
+                });
+                PauseForScreenShot("Setting ion mobility filter width calculation values", 18);
+
+
+                var dlgIonMobilityLib = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
                 const string predictorName = "BSA";
                 RunUI(() =>
                 {
-                    driftPredictor.SetPredictorName(predictorName);
-                    driftPredictor.SetResolvingPower(50);
-                    driftPredictor.SetOffsetHighEnergySpectraCheckbox(true);
-                    driftPredictor.GetDriftTimesFromResults();
+                    dlgIonMobilityLib.LibraryName = predictorName;
+                    dlgIonMobilityLib.SetOffsetHighEnergySpectraCheckbox(true);
+                    dlgIonMobilityLib.GetIonMobilitiesFromResults();
+
                 });
-                PauseForScreenShot("Edit predictor form", 18);
+                PauseForScreenShot("Edit ion mobility library form", 18);
 
                 // Check that a new value was calculated for all precursors
-                RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, driftPredictor.Predictor.IonMobilityRows.Count));
+                RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, dlgIonMobilityLib.IonMobilityLibrary.Count));
 
-                OkDialog(driftPredictor, () => driftPredictor.OkDialog());
+                OkDialog(dlgIonMobilityLib, () => dlgIonMobilityLib.OkDialog());
 
-                PauseForScreenShot("Peptide Settings - Prediction", 19);
+                PauseForScreenShot<TransitionSettingsUI.IonMobilityTab>("Transition Settings - Ion Mobility", 19);
 
-                RunUI(() =>
-                {
-                    Assert.IsTrue(peptideSettingsUI.IsUseMeasuredRT);
-                    Assert.AreEqual(6, peptideSettingsUI.TimeWindow);
-                    Assert.AreEqual(predictorName, peptideSettingsUI.SelectedDriftTimePredictor);
-                });
-
-                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-            }
-
-            {
-                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
                 RunUI(() =>
                 {
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.FullScan;
                     transitionSettingsUI.SetRetentionTimeFilter(RetentionTimeFilterType.scheduling_windows, 3);
                 });
 
-                PauseForScreenShot("Transition Settings - Full-Scan", 20);
+                PauseForScreenShot("Transition Settings - Full-Scan", 19);
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+
+                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction);
+                PauseForScreenShot("Peptide Settings - Prediction", 20);
+                RunUI(() =>
+                {
+                    Assert.IsTrue(peptideSettingsUI.IsUseMeasuredRT);
+                    Assert.AreEqual(6, peptideSettingsUI.TimeWindow);
+                });
+
+                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+
             }
 
             using (new WaitDocumentChange(1, true, 1000 * 60 * 60 * 5))

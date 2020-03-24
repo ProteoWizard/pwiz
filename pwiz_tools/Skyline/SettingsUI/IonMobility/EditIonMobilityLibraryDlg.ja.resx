@@ -486,22 +486,22 @@
   <data name="gridViewMeasuredPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <metadata name="columnLibrarySequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <metadata name="columnTarget.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="columnLibrarySequence.HeaderText" xml:space="preserve">
+  <data name="columnTarget.HeaderText" xml:space="preserve">
     <value>修飾シークエンス</value>
   </data>
-  <data name="columnLibrarySequence.Width" type="System.Int32, mscorlib">
+  <data name="columnTarget.Width" type="System.Int32, mscorlib">
     <value>260</value>
   </data>
-  <metadata name="columnLibraryCollisionalCrossSection.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <metadata name="columnCollisionalCrossSection.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="columnLibraryCollisionalCrossSection.HeaderText" xml:space="preserve">
+  <data name="columnCollisionalCrossSection.HeaderText" xml:space="preserve">
     <value>衝突断面積</value>
   </data>
-  <data name="columnLibraryCollisionalCrossSection.Width" type="System.Int32, mscorlib">
+  <data name="columnCollisionalCrossSection.Width" type="System.Int32, mscorlib">
     <value>135</value>
   </data>
   <metadata name="columnHighEnergyDriftTimeOffsetMsec.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -612,16 +612,16 @@
   <data name="&gt;&gt;toolTipMeasuredPeptidesGrid.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;columnLibrarySequence.Name" xml:space="preserve">
-    <value>columnLibrarySequence</value>
+  <data name="&gt;&gt;columnTarget.Name" xml:space="preserve">
+    <value>columnTarget</value>
   </data>
-  <data name="&gt;&gt;columnLibrarySequence.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnTarget.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;columnLibraryCollisionalCrossSection.Name" xml:space="preserve">
-    <value>columnLibraryCollisionalCrossSection</value>
+  <data name="&gt;&gt;columnCollisionalCrossSection.Name" xml:space="preserve">
+    <value>columnCollisionalCrossSection</value>
   </data>
-  <data name="&gt;&gt;columnLibraryCollisionalCrossSection.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnCollisionalCrossSection.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnHighEnergyDriftTimeOffsetMsec.Name" xml:space="preserve">

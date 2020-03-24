@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -34,6 +35,7 @@ using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -1136,22 +1138,26 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            if (newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor != null &&
-                newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons != null &&
-                newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons.Any())
+            if (newdoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary != null &&
+                newdoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.IsUsable)
             {
-                var mapped = new Dictionary<LibKey, IonMobilityAndCCS>();
-                foreach (var item in newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons)
+                var mapped = new List<PrecursorIonMobilities>();
+                foreach (var kvp in precursorMap)
                 {
-                    LibKey smallMolKey;
-                    if (precursorMap.TryGetValue(item.Key, out smallMolKey))
+                    var im = document.Settings.TransitionSettings.IonMobilityFiltering.GetIonMobilityInfo(kvp.Key, null);
+                    if (im != null && im.Count > 0)
                     {
-                        mapped.Add(smallMolKey, item.Value);
+                        mapped.Add(new PrecursorIonMobilities(kvp.Value, im));
                     }
                 }
-                var newpredictorDt = newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValues(mapped);
-                var newpredictor = newdoc.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(newpredictorDt);
-                var newSettings = newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(newpredictor));
+
+                var name = Path.GetFileNameWithoutExtension(newdoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.PersistencePath) +
+                           Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules;
+                var path = Path.Combine(pathForLibraryFiles, name + IonMobilityDb.EXT);
+                var db = IonMobilityDb.CreateIonMobilityDb(path, name, false);
+                db.UpdateIonMobilities(mapped);
+                var spec = new IonMobilityLibrary(name, path);
+                var newSettings = newdoc.Settings.ChangeTransitionIonMobilityFiltering(t => t.ChangeLibrary(spec));
                 newdoc = newdoc.ChangeSettings(newSettings);
             }
 
@@ -1205,18 +1211,16 @@ namespace pwiz.Skyline.Model
                 }
                 if (document.Settings.HasIonMobilityLibraryPersisted)
                 {
-                    var newDbPath = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor
-                        .IonMobilityLibrary.PersistMinimized(pathForLibraryFiles, document, precursorMap);
-                    var spec = new IonMobilityLibrary(document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.Name +
-                        @" " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath);
-                    var driftTimePredictor = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeLibrary(spec);
-                    newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(
-                        newdoc.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(driftTimePredictor))));
+                    var newDbPath = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary
+                        .PersistMinimized(pathForLibraryFiles, document, precursorMap);
+                    var spec = new IonMobilityLibrary(document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name + 
+                                                      @" " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath);
+                    newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangeTransitionIonMobilityFiltering(im => im.ChangeLibrary(spec)));
                 }
             }            
             // No retention time prediction for small molecules (yet?)
             newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(
-                        newdoc.Settings.PeptideSettings.Prediction.ChangeRetentionTime(null))));
+                newdoc.Settings.PeptideSettings.Prediction.ChangeRetentionTime(null))));
             CloseLibraryStreams(newdoc);
             return newdoc;
         }

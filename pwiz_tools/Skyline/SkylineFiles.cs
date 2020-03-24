@@ -25,7 +25,9 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml;
 using System.Xml.Serialization;
+using System.Xml.XmlConfiguration;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
@@ -319,7 +321,8 @@ namespace pwiz.Skyline
                         using (var reader = new HashingStreamReaderWithProgress(path, progressMonitor))
                         {
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
-                            document = (SrmDocument) ser.Deserialize(reader);
+                            var xmlReader = new XmlTextReader(path, reader); // So that we can get path from BaseURI
+                            document = (SrmDocument) ser.Deserialize(xmlReader);
                             skylineDocumentHash = reader.Stream.Done();
                         }
 

@@ -28,6 +28,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml;
 using NHibernate;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;

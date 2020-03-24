@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     PrecursorMz = fullScanInfo.ChromInfo.PrecursorMz,
                     ProductMz = fullScanInfo.ChromInfo.ProductMz,
                     ExtractionWidth = fullScanInfo.ChromInfo.ExtractionWidth,
-                    _ionMobilityInfo = fullScanInfo.ChromInfo.GetIonMobilityFilter(),
+                    _ionMobilityInfo = fullScanInfo.ChromInfo.IonMobilityFilterSet,
                     Id = graphItem.TransitionNode.Id
                 });
             }

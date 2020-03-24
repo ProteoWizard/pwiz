@@ -671,8 +671,14 @@ namespace pwiz.Skyline.Model
                     transitionPeak.RetentionTime = transitionChromInfo.RetentionTime;
                     transitionPeak.StartRetentionTime = transitionChromInfo.StartRetentionTime;
                     transitionPeak.EndRetentionTime = transitionChromInfo.EndRetentionTime;
-                    transitionPeak.IonMobility = DataValues.ToOptional(transitionChromInfo.IonMobility.IonMobility.Mobility);
-                    transitionPeak.IonMobilityWindow = DataValues.ToOptional(transitionChromInfo.IonMobility.IonMobilityExtractionWindowWidth);
+                    if (!IonMobilityFilterSet.IsNullOrEmpty(transitionChromInfo.IonMobilityFilters) &&
+                        transitionChromInfo.IonMobilityFilters.Count == 1)
+                    {
+                        // Can write backward compatible format if not multiple conformers
+                        transitionPeak.IonMobility = DataValues.ToOptional(transitionChromInfo.IonMobilityFilters.First().IonMobilityAndCCS.IonMobility.Mobility);
+                        transitionPeak.IonMobilityWindow = DataValues.ToOptional(transitionChromInfo.IonMobilityFilters.First().IonMobilityExtractionWindowWidth);
+                    }
+                    transitionPeak.IonMobilityFilters = transitionChromInfo.IonMobilityFilters.ToProtoIonMobilityFilters();
                     transitionPeak.Area = transitionChromInfo.Area;
                     transitionPeak.BackgroundArea = transitionChromInfo.BackgroundArea;
                     transitionPeak.Height = transitionChromInfo.Height;
@@ -729,7 +735,7 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.ResultsRank = prop);
         }
 
-        public DocNode ChangePeak(int indexSet, ChromFileInfoId fileId, int step, ChromPeak peak, IonMobilityFilter ionMobility, int ratioCount, UserSet userSet)
+        public DocNode ChangePeak(int indexSet, ChromFileInfoId fileId, int step, ChromPeak peak, IonMobilityFilterSet ionMobility, int ratioCount, UserSet userSet)
         {
             if (Results == null)
                 return this;
@@ -783,7 +789,7 @@ namespace pwiz.Skyline.Model
             return ChangeResults(Results.ChangeAt(indexSet, new ChromInfoList<TransitionChromInfo>(listChromInfoNew)));
         }
 
-        private static TransitionChromInfo CreateChromInfo(ChromFileInfoId fileId, int step, ChromPeak peak, IonMobilityFilter ionMobility, int ratioCount, UserSet userSet)
+        private static TransitionChromInfo CreateChromInfo(ChromFileInfoId fileId, int step, ChromPeak peak, IonMobilityFilterSet ionMobility, int ratioCount, UserSet userSet)
         {
             return new TransitionChromInfo(fileId, step, peak, ionMobility, new float?[ratioCount], Annotations.EMPTY, userSet);
         }
@@ -801,7 +807,7 @@ namespace pwiz.Skyline.Model
                     listChromInfoNew.Add(chromInfo);
                 else if (chromInfo.OptimizationStep == 0)
                 {
-                    if (!chromInfo.Equivalent(fileId, 0, ChromPeak.EMPTY, IonMobilityFilter.EMPTY))
+                    if (!chromInfo.Equivalent(fileId, 0, ChromPeak.EMPTY, IonMobilityFilterSet.EMPTY))
                     {
                         listChromInfoNew.Add(chromInfo.ChangePeak(ChromPeak.EMPTY, userSet));
                         peakChanged = true;

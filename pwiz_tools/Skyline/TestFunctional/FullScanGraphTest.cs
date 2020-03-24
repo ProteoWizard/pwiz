@@ -41,7 +41,6 @@ namespace pwiz.SkylineTestFunctional
             ImportResults("ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5);
             FindNode("453");
             WaitForGraphs();
-
             CloseSpectrumGraph();
 
             // Simulate click on a peak in GraphChromatogram form.
@@ -62,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             TestScale(453, 457, 0, 80);
             SetScanType(ChromSource.ms1, 33.23, 27.9);
             TestScale(452, 456, 0, 400);
-
+ 
             // Check filtered spectrum.
             SetFilter(true);
             TestScale(452, 456, 0, 40);

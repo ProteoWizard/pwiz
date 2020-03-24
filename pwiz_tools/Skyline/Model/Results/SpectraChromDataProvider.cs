@@ -153,18 +153,14 @@ namespace pwiz.Skyline.Model.Results
 
         private bool NeedMaxIonMobilityValue(MsDataFileImpl dataFile)
         {
-            var linear = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
-            // If peak width mode for a predictor is linear then the maximum is needed
-            var peptidePrediction = _document.Settings.PeptideSettings.Prediction;
-            if (peptidePrediction.IonMobilityPredictor?.WindowWidthCalculator.PeakWidthMode == linear)
-                return true;
+            // Only need to find the IM range if filter window width calculation mode is linear
+            var settings = _document.Settings.TransitionSettings.IonMobilityFiltering;
 
-            // Otherwise, if library ion mobilities are not used, then it is not necessary
-            if (!_document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues)
-                return false;
-            // If the library window width calculator is not using linear mode, then it is not necessary
-            if (peptidePrediction.LibraryIonMobilityWindowWidthCalculator?.PeakWidthMode != linear)
-                return false;
+            if (settings == null || settings.IsEmpty)
+                return false; // No IM filtering in use
+
+            if (settings.FilterWindowWidthCalculator?.WindowWidthMode != IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.linear_range)
+                return false; // Only the linear_range option needs to discover the IM range
 
             // This is the expensive part - check if there are any ion mobilities in the libraries that will need windows
             // TODO (bspratt): Use a quicker check for any ion mobility for a file - this especially slow with big DDA libraries used in DIA where the library may be composed of 40 files none of them this one
@@ -537,9 +533,9 @@ namespace pwiz.Skyline.Model.Results
             float[] intensityFloats = new float[intensities.Length];
             for (int i = 0; i < intensities.Length; i++)
                 intensityFloats[i] = (float) intensities[i];
-            var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0, 0)).ToArray();
+            var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0, IonMobilityFilterSet.EMPTY)).ToArray();
             var spectrum = new ExtractedSpectrum(modifiedSequence, peptideColor, precursorMz,
-            IonMobilityFilter.EMPTY, // ion mobility unknown
+                IonMobilityFilterSet.EMPTY, // ion mobility unknown
                 ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
             chromMap.ProcessExtractedSpectrum(time, _collectors, -1, spectrum, null);
         }
@@ -1714,7 +1710,7 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromDataCollector
     {
-        public ChromDataCollector(Target modifiedSequence, SignedMz precursorMz, IonMobilityFilter ionMobility, int statusId, bool isGroupedTime)
+        public ChromDataCollector(Target modifiedSequence, SignedMz precursorMz, IonMobilityFilterSet ionMobility, int statusId, bool isGroupedTime)
         {
             ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
@@ -1730,7 +1726,7 @@ namespace pwiz.Skyline.Model.Results
 
         public Target ModifiedSequence { get; private set; }
         public SignedMz PrecursorMz { get; private set; }
-        public IonMobilityFilter IonMobility { get; private set; }
+        public IonMobilityFilterSet IonMobility { get; private set; }
         public int StatusId { get; private set; }
         public Dictionary<SpectrumProductFilter, ChromCollector> ProductIntensityMap { get; private set; }
         public readonly SortedBlockedList<float> GroupedTimesCollector;

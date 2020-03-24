@@ -106,14 +106,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             loadStopwatch.Start();
 
             // Enable use of drift times in spectral library
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                peptideSettingsUI.IsUseSpectralLibraryDriftTimes = true;
-                peptideSettingsUI.SpectralLibraryDriftTimeResolvingPower = 50;
+                transitionSettingsUI.IonMobilityControl.IsUseSpectralLibraryIonMobilities = true;
+                transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50;
             });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
@@ -168,14 +168,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Modifications are already set up, so that page should get skipped.
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
-            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.SetUseSpectralLibraryDriftTimes(true));
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.SetUseSpectralLibraryIonMobilities(true));
 
             // Verify error handling in ion mobility control
-            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.SetResolvingPowerText("fish"));
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.SetResolvingPowerText("fish"));
             var errDlg = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             RunUI(() => errDlg.OkDialog());
 
-            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.SetResolvingPower(40));
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.SetResolvingPower(40));
 
             RunUI(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings
             // We're on the "Import FASTA" page of the wizard.
@@ -204,9 +204,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 foreach (var nodeGroup in pep.TransitionGroups)
                 {
-                    double windowDT;
-                    var calculatedDriftTime = doc1.Settings.GetIonMobility(
-                        pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0, out windowDT);
+                    var calculatedDriftTime = doc1.Settings.GetIonMobilityFilters(
+                        pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0).First().IonMobilityAndCCS;
                     var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorAdduct);
                     IonMobilityAndCCS[] infoValueExplicitDT;
                     if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))

@@ -745,8 +745,8 @@ namespace pwiz.Skyline.SettingsUI
                                     dtText = @"CCS" + COLON_SEP + string.Format(@"{0:F4} ", dt.CollisionalCrossSectionSqA.Value);
                                 if (dt.HasIonMobilityValue)
                                     dtText += @"IM" + COLON_SEP + string.Format(@"{0:F4}{1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
-                                if (dt.HighEnergyIonMobilityValueOffset != 0) // Show the high energy value (as in Waters MSe) if different
-                                    dtText += String.Format(@"({0:F4})", dt.HighEnergyIonMobilityValueOffset);
+                                if (dt.HighEnergyIonMobilityOffset != 0) // Show the high energy value (as in Waters MSe) if different
+                                    dtText += String.Format(@"({0:F4})", dt.HighEnergyIonMobilityOffset);
                                 labelRT.Text = TextUtil.SpaceSeparate(labelRT.Text, dtText);
                             }
                         }

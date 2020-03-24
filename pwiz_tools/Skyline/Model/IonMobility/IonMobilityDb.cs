@@ -20,9 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using NHibernate;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
@@ -46,7 +46,25 @@ namespace pwiz.Skyline.Model.IonMobility
         }
     }
 
-    public class IonMobilityDb : Immutable, IValidating
+    public class DbLibInfo
+    {
+        public const int INITIAL_LIBRARY_REVISION = 1;
+        public const int SCHEMA_VERSION_CURRENT = 1;
+        public virtual string LibLSID { get; set; }
+        public virtual string CreateTime { get; set; }
+        /// <summary>
+        /// Revision number of the library.  Libraries start at revision 1,
+        /// and that number gets increased if more stuff is added to the library.
+        /// </summary>
+        public virtual int MajorVersion { get; set; }
+        /// <summary>
+        /// Schema version of the library:
+        /// Version 1 initial version
+        /// </summary>
+        public virtual int MinorVersion { get; set; }
+    }
+
+    public class IonMobilityDb : Immutable, IValidating, IDisposable
     {
         public const string EXT = ".imdb";
 
@@ -55,34 +73,21 @@ namespace pwiz.Skyline.Model.IonMobility
             get { return TextUtil.FileDialogFilter(Resources.IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files, EXT); }
         }
 
-        public const int SCHEMA_VERSION_CURRENT = 3; // Version 2 adds high energy drift time offset, version 3 adds adduct and small molecule info
 
         private readonly string _path;
         private readonly ISessionFactory _sessionFactory;
         private readonly ReaderWriterLock _databaseLock;
-        private int _schemaVersion;
 
         private DateTime _modifiedTime;
-        private ImmutableDictionary<LibKey, DbIonMobilityPeptide> _dictLibrary;
 
-        private IonMobilityDb(String path, ISessionFactory sessionFactory)
+        // N.B. We allow more than one ion mobility per ion - this is the "multiple conformers" case (ion may have multiple shapes, thus multiple CCS)
+        private ImmutableDictionary<LibKey, List<IonMobilityAndCCS>> _dictLibrary;
+
+        private IonMobilityDb(string path, ISessionFactory sessionFactory)
         {
             _path = path;
             _sessionFactory = sessionFactory;
             _databaseLock = new ReaderWriterLock();
-            // Do we need to update the db to current version?
-            using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
-            {
-                ReadVersion(session);
-            }
-            if (_schemaVersion < SCHEMA_VERSION_CURRENT)
-            {
-                using (var session = OpenWriteSession())
-                {
-                    UpdateSchema(session);
-                }
-            }
-
         }
 
         public void Validate()
@@ -98,10 +103,10 @@ namespace pwiz.Skyline.Model.IonMobility
             }
         }
 
-        private IDictionary<LibKey, DbIonMobilityPeptide> DictLibrary
+        public ImmutableDictionary<LibKey, List<IonMobilityAndCCS>> DictLibrary
         {
             get { return _dictLibrary; }
-            set { _dictLibrary = new ImmutableDictionary<LibKey, DbIonMobilityPeptide>(value); }
+            private set { _dictLibrary = new ImmutableDictionary<LibKey, List<IonMobilityAndCCS>>(value); }
         }
 
         private ISession OpenWriteSession()
@@ -109,21 +114,20 @@ namespace pwiz.Skyline.Model.IonMobility
             return new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, true);
         }
 
-        // TODO(bspratt) either upgrade this for all ion mobility types, or rip out this code altogether
-        public IonMobilityAndCCS GetDriftTimeInfo(LibKey key, ChargeRegressionLine regression)
+        public IList<IonMobilityAndCCS> GetIonMobilityInfo(LibKey key)
         {
-            DbIonMobilityPeptide pep;
-            if (DictLibrary.TryGetValue(key, out pep))
-                return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(regression.GetY(pep.CollisionalCrossSection), eIonMobilityUnits.drift_time_msec), pep.CollisionalCrossSection, pep.HighEnergyDriftTimeOffsetMsec);
+            if (DictLibrary.TryGetValue(key, out var im) && im.Count > 0)
+            {
+                return im;
+            }
             return null;
         }
 
-        public IEnumerable<DbIonMobilityPeptide> GetPeptides()
+        public IEnumerable<DbPrecursorAndIonMobility> GetIonMobilityPrecursors()
         {
             using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
             {
-                LoadPeptides(session.CreateCriteria(typeof (DbIonMobilityPeptide)).List<DbIonMobilityPeptide>());
-                return DictLibrary.Values;
+                return session.CreateCriteria(typeof (DbPrecursorAndIonMobility)).List<DbPrecursorAndIonMobility>();
             }
         }
 
@@ -131,104 +135,180 @@ namespace pwiz.Skyline.Model.IonMobility
 
         private IonMobilityDb Load(IProgressMonitor loadMonitor, ProgressStatus status)
         {
-            var result = ChangeProp(ImClone(this), im => im.LoadPeptides(im.GetPeptides()));
+            var result = ChangeProp(ImClone(this), im => im.LoadIonMobilities());
             // Not really possible to show progress, unless we switch to raw reading
             if (loadMonitor != null)
                 loadMonitor.UpdateProgress(status.ChangePercentComplete(100));
             return result;
         }
 
-        public IonMobilityDb UpdatePeptides(IList<ValidatingIonMobilityPeptide> newPeptides, IList<ValidatingIonMobilityPeptide> oldPeptides)
+        /// <summary>
+        /// Accepts a list of precursors with potentially multiple ion mobility values ("multiple conformers")
+        /// and flattens it out into a list of potentially repeating precursors with different single IM values,
+        /// which is how the .imdb format stores them.
+        /// </summary>
+        public IonMobilityDb UpdateIonMobilities(IEnumerable<PrecursorIonMobilities> newMobilities)
         {
-            var dictOld = new Dictionary<LibKey, ValidatingIonMobilityPeptide>();
-            foreach (var ionMobilityPeptide in oldPeptides)  // Not using ToDict in case of duplicate entries
+            var list = new List<DbPrecursorAndIonMobility>();
+            foreach (var pim in newMobilities)
             {
-                ValidatingIonMobilityPeptide pep;
-                var libKey = ionMobilityPeptide.GetLibKey();
-                if (!dictOld.TryGetValue(libKey, out pep))
-                    dictOld[libKey] = ionMobilityPeptide;
-            }
-            var dictNew = new Dictionary<LibKey, ValidatingIonMobilityPeptide>();
-            foreach (var ionMobilityPeptide in newPeptides)  // Not using ToDict in case of duplicate entries
-            {
-                ValidatingIonMobilityPeptide pep;
-                var libKey = ionMobilityPeptide.GetLibKey();
-                if (!dictNew.TryGetValue(libKey, out pep))
-                    dictNew[libKey] = ionMobilityPeptide;
-            }
-
-            using (var session = OpenWriteSession())
-            using (var transaction = session.BeginTransaction())
-            {
-                // Remove peptides that are no longer in the list
-                foreach (var peptideOld in oldPeptides)
+                foreach (var im in pim.IonMobilities)
                 {
-                    ValidatingIonMobilityPeptide pep;
-                    var libKey = peptideOld.GetLibKey();
-                    if (!dictNew.TryGetValue(libKey, out pep))
-                        session.Delete(peptideOld);
+                    list.Add(new DbPrecursorAndIonMobility(new DbPrecursorIon(pim.Precursor),
+                        im.CollisionalCrossSectionSqA, im.IonMobility.Mobility, im.IonMobility.Units, im.HighEnergyIonMobilityOffset));
                 }
-
-                // Add or update peptides that have changed from the old list
-                foreach (var peptideNew in newPeptides)
-                {
-                    ValidatingIonMobilityPeptide peptideOld;
-                    // Create a new instance, because not doing this causes a BindingSource leak
-                    var peptideNewDisconnected = new DbIonMobilityPeptide(peptideNew);
-                    if (dictOld.TryGetValue(peptideNew.GetLibKey(), out peptideOld))
-                    {
-                        if (Equals(peptideNew, peptideOld))
-                            continue;
-                        session.SaveOrUpdate(peptideNewDisconnected);
-                    }
-                    else
-                    {
-                        session.Save(peptideNewDisconnected);
-                    }
-                }
-
-                transaction.Commit();
             }
 
-            return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides));
+            return UpdateIonMobilities(list);
         }
 
-        private void LoadPeptides(IEnumerable<DbIonMobilityPeptide> peptides)
+        public IonMobilityDb UpdateIonMobilities(IList<DbPrecursorAndIonMobility> newMobilities)
         {
-            var dictLibrary = new Dictionary<LibKey, DbIonMobilityPeptide>();
 
-            foreach (var pep in peptides)
+            using (var session = OpenWriteSession())
             {
-                var dict = dictLibrary;
-                try
+                var oldMoleculesSet = session.CreateCriteria<DbMolecule>().List<DbMolecule>();
+                var oldPrecursorsSet = session.CreateCriteria<DbPrecursorIon>().List<DbPrecursorIon>();
+                var oldMobilitiesSet = session.CreateCriteria<DbPrecursorAndIonMobility>().List<DbPrecursorAndIonMobility>();
+
+                // Remove items that are no longer in the list
+                foreach (var mobilityOld in oldMobilitiesSet)
                 {
-                    DbIonMobilityPeptide ignored;
-                    var adduct = pep.GetPrecursorAdduct();
-                    if (adduct.IsEmpty)
+                    if (!newMobilities.Any(m => m.EqualsIgnoreId(mobilityOld)))
                     {
-                        // Older formats didn't consider charge to be a factor is CCS, so just fake up M+H, M+2H and M+3H
-                        for (int z = 1; z <= 3; z++)
+                        session.Delete(mobilityOld);
+                        if (!newMobilities.Any(m => Equals(m.DbPrecursorIon, mobilityOld.DbPrecursorIon)))
                         {
-                            var newPep = new DbIonMobilityPeptide(pep.GetNormalizedModifiedSequence(),
-                                Adduct.FromChargeProtonated(z), pep.CollisionalCrossSection, pep.HighEnergyDriftTimeOffsetMsec);
-                            var key = newPep.GetLibKey();
-                            if (!dict.TryGetValue(key, out ignored))
-                                dict.Add(key, newPep);
+                            session.Delete(mobilityOld.DbPrecursorIon);
+                            if (!newMobilities.Any(m => Equals(m.DbPrecursorIon.DbMolecule, mobilityOld.DbPrecursorIon.DbMolecule)))
+                            {
+                                session.Delete(mobilityOld.DbPrecursorIon.DbMolecule);
+                            }
                         }
                     }
-                    else
-                    {
-                        var key = pep.GetLibKey();
-                        if (!dict.TryGetValue(key, out ignored))
-                            dict.Add(key, pep);
-                    }
                 }
-                catch (ArgumentException)
+
+                // Add or update items that have changed from the old list
+                var newMobilitiesSet = new HashSet<DbPrecursorAndIonMobility>();
+                var newMoleculesSet = new HashSet<DbMolecule>();
+                var newPrecursorsSet = new HashSet<DbPrecursorIon>();
+                foreach (var itemNew in newMobilities)
                 {
+                    // Create a new instance, because not doing this causes a BindingSource leak
+                    newMobilitiesSet.Add(new DbPrecursorAndIonMobility(itemNew));
+                    newPrecursorsSet.Add(new DbPrecursorIon(itemNew.DbPrecursorIon));
+                    newMoleculesSet.Add(new DbMolecule(itemNew.DbPrecursorIon.DbMolecule));
+                }
+
+                // Update the molecules table
+                using (var transaction = session.BeginTransaction())
+                {
+                    foreach (var molecule in newMoleculesSet)
+                    {
+                        if (oldMoleculesSet.Any(m => m.EqualsIgnoreId(molecule)))
+                        {
+                            session.SaveOrUpdate(molecule);
+                        }
+                        else
+                        {
+                            session.Save(molecule);
+                        }
+                    }
+
+                    transaction.Commit();
+                }
+
+                // Read them back to get their assigned IDs
+                oldMoleculesSet = session.CreateCriteria<DbMolecule>().List<DbMolecule>();
+
+                // Update the precursors table
+                using (var transaction = session.BeginTransaction())
+                {
+                    foreach (var precursor in newPrecursorsSet)
+                    {
+                        var dbMoleculeWithId = oldMoleculesSet.FirstOrDefault(m => m.EqualsIgnoreId(precursor.DbMolecule));
+                        var precursorWithMoleculeId =
+                            new DbPrecursorIon(dbMoleculeWithId, precursor.GetPrecursorAdduct());
+                        if (oldPrecursorsSet.Any(p => p.EqualsIgnoreId(precursor)))
+                        {
+                            session.SaveOrUpdate(precursorWithMoleculeId);
+                        }
+                        else
+                        {
+                            session.Save(precursorWithMoleculeId);
+                        }
+                    }
+
+                    transaction.Commit();
+                }
+
+                // Read them back to get their assigned IDs
+                oldPrecursorsSet = session.CreateCriteria<DbPrecursorIon>().List<DbPrecursorIon>();
+
+                // Update the mobilities table
+                using (var transaction = session.BeginTransaction())
+                {
+
+                    foreach (var mobility in newMobilitiesSet)
+                    {
+                        var dbPrecursorIonWithId = oldPrecursorsSet.FirstOrDefault(p => p.EqualsIgnoreId(mobility.DbPrecursorIon));
+                        var mobilityWithPrecursorId = new DbPrecursorAndIonMobility(dbPrecursorIonWithId,
+                            mobility.CollisionalCrossSectionSqA, mobility.IonMobilityNullable,
+                            mobility.IonMobilityUnits, mobility.HighEnergyIonMobilityOffset);
+                        if (oldMobilitiesSet.Any(m => m.EqualsIgnoreId(mobility)))
+                        {
+                            session.SaveOrUpdate(mobilityWithPrecursorId);
+                        }
+                        else
+                        {
+                            session.Save(mobilityWithPrecursorId);
+                        }
+                    }
+
+                    transaction.Commit();
                 }
             }
 
-            DictLibrary = dictLibrary;
+            return ChangeProp(ImClone(this), im => im.LoadIonMobilities());
+        }
+
+        /// <summary>
+        /// Take the current list of DbIonMobilityValues (which may have multiple occurrences of
+        /// a precursor ion, implying multiple conformers for that ion) and convert it
+        /// to a dictionary of precursor ions and their (possibly multiple) ion mobilities
+        /// </summary>
+        private void LoadIonMobilities()
+        {
+
+            var dictLibrary = new Dictionary<LibKey, List<IonMobilityAndCCS>>();
+
+            using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
+            {
+                var ionMobilities = session.CreateCriteria(typeof(DbPrecursorAndIonMobility)).List<DbPrecursorAndIonMobility>();
+
+                foreach (var im in ionMobilities)
+                {
+                    var dict = dictLibrary;
+                    try
+                    {
+                        var key = im.DbPrecursorIon.GetLibKey();
+                        var ionMobilityAndCCS = im.GetIonMobilityAndCCS();
+                        if (!dict.TryGetValue(key, out var list))
+                        {
+                            dict.Add(key, new List<IonMobilityAndCCS>() {ionMobilityAndCCS});
+                        }
+                        else
+                        {
+                            list.Add(ionMobilityAndCCS);
+                        }
+                    }
+                    catch (ArgumentException)
+                    {
+                    }
+                }
+            }
+
+            DictLibrary = new ImmutableDictionary<LibKey, List<IonMobilityAndCCS>>(dictLibrary);
         }
 
         #endregion
@@ -261,19 +341,44 @@ namespace pwiz.Skyline.Model.IonMobility
 
         #endregion
 
-        public static IonMobilityDb CreateIonMobilityDb(string path)
+        public static IonMobilityDb CreateIonMobilityDb(string path, string libraryName, bool minimized)
         {
+            const string libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
+            const int majorVer = 1;
+            const int minorVer = DbLibInfo.SCHEMA_VERSION_CURRENT;
+            //CONSIDER(bspratt): some better means of showing provenance of values in library?
+            string libLsid = string.Format(@"urn:lsid:{0}:ion_mobility_library:skyline:{1}{2}:{3}:{4}.{5}",
+                libAuthority, 
+                minimized?@"minimal:":string.Empty,
+                libraryName, Guid.NewGuid(), majorVer, minorVer);
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, typeof(IonMobilityDb), true))
+            using (var session = new SessionWithLock(sessionFactory.OpenSession(), new ReaderWriterLock(), true))
+            using (var transaction = session.BeginTransaction())
             {
-                using (var session = new SessionWithLock(sessionFactory.OpenSession(), new ReaderWriterLock(), true))
-                using (var transaction = session.BeginTransaction())
+                var createTime = new TimeStampISO8601().ToString();
+                DbLibInfo libInfo = new DbLibInfo
                 {
-                    session.Save(new DbVersionInfo { SchemaVersion = SCHEMA_VERSION_CURRENT });
-                    transaction.Commit();
-                }
+                    LibLSID = libLsid,
+                    CreateTime = createTime,
+                    MajorVersion = majorVer,
+                    MinorVersion = minorVer
+                };
+
+                session.Save(libInfo);
+                session.Flush();
+                session.Clear();
+                transaction.Commit();
             }
 
             return GetIonMobilityDb(path, null);
+
+        }
+
+        public static IonMobilityDb CreateIonMobilityDb(string path, string libraryName, bool minimized, IList<PrecursorIonMobilities> peptides)
+        {
+            var db = CreateIonMobilityDb(path, libraryName, minimized);
+            db.UpdateIonMobilities(peptides);
+            return db;
         }
 
         /// <summary>
@@ -348,46 +453,9 @@ namespace pwiz.Skyline.Model.IonMobility
             }
         }
 
-        private void ReadVersion(ISession session)
+        public void Dispose()
         {
-            using (var cmd = session.Connection.CreateCommand())
-            {
-                cmd.CommandText = @"SELECT SchemaVersion FROM VersionInfo";
-                var obj = cmd.ExecuteScalar();
-                _schemaVersion = Convert.ToInt32(obj);
-            }
-        }
-
-        private void UpdateSchema(ISession session)
-        {
-            ReadVersion(session);  // Recheck version, in case another thread got here before us
-            if ((_schemaVersion < SCHEMA_VERSION_CURRENT))
-            {
-                using (var transaction = session.BeginTransaction())
-                using (var command = session.Connection.CreateCommand())
-                {
-                    if (_schemaVersion < 2)
-                    {
-                        command.CommandText =
-                            @"ALTER TABLE IonMobilityLibrary ADD COLUMN HighEnergyDriftTimeOffsetMsec DOUBLE";
-                        command.ExecuteNonQuery();
-                    }
-                    if (_schemaVersion < 3)
-                    {
-                        foreach (var col in new[] { @"PrecursorAdduct", @"MoleculeName", @"ChemicalFormula", @"InChiKey", @"OtherKeys" })
-                        {
-                            command.CommandText =
-                                string.Format(@"ALTER TABLE IonMobilityLibrary ADD COLUMN {0} TEXT", col);
-                            command.ExecuteNonQuery();
-                        }
-                    }
-                    _schemaVersion = SCHEMA_VERSION_CURRENT;
-                    command.CommandText = string.Format(@"UPDATE VersionInfo SET SchemaVersion = {0}", _schemaVersion);
-                    command.ExecuteNonQuery();
-                    transaction.Commit();
-                }
-            }
-            // else unhandled schema version update - let downstream process issue detailed exceptions about missing fields etc
+            _sessionFactory?.Dispose();
         }
     }
 }

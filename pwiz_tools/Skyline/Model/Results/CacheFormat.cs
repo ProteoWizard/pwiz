@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using pwiz.Common.Collections;
@@ -38,12 +39,18 @@ namespace pwiz.Skyline.Model.Results
         Twelve = 12, // Adds structure sizes to CacheHeaderStruct
         Thirteen = 13,  // Adds TIC to CachedFileHeaderStruct
         Fourteen = 14,  // Adds SampleId and SerialNumber to CachedFileHeaderStruct and moves centroiding from ChromCachedFile.FilePath to Flags
-        CURRENT = Fourteen,
+        Fifteen = 15,  // Adds multiple conformers (more than one possible CCS per ion, so ion mobilities are in a table)
+        CURRENT = Fifteen,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct CacheHeaderStruct
     {
+        // Version 15 fields after this point
+        public int chromIonMobilityFilterSize;
+        public int numIonMobilityFilters;
+        public long locationIonMobilityFilters;
+        // Version 12 fields after this point
         public int chromPeakSize;
         public int chromTransitionSize;
         public int chromGroupHeaderSize;
@@ -70,9 +77,13 @@ namespace pwiz.Skyline.Model.Results
 
         public static int GetStructSize(CacheFormatVersion cacheFormatVersion)
         {
-            if (cacheFormatVersion >= WithStructSizes)
+            if (cacheFormatVersion >= WithIonMobilityFilters)
             {
                 return Marshal.SizeOf<CacheHeaderStruct>();
+            }
+            if (cacheFormatVersion >= WithStructSizes)
+            {
+                return Marshal.SizeOf<CacheHeaderStruct>() - (int)Marshal.OffsetOf<CacheHeaderStruct>(@"chromPeakSize");
             }
             if (cacheFormatVersion >= CacheFormatVersion.Nine)
             {
@@ -114,6 +125,7 @@ namespace pwiz.Skyline.Model.Results
             };
         }
 
+        public const CacheFormatVersion WithIonMobilityFilters = CacheFormatVersion.Fifteen;
         public const CacheFormatVersion WithStructSizes = CacheFormatVersion.Twelve;
 
         public CacheHeaderStruct(CacheFormat cacheFormat) : this()
@@ -121,6 +133,7 @@ namespace pwiz.Skyline.Model.Results
             chromPeakSize = cacheFormat.ChromPeakSize;
             chromTransitionSize = cacheFormat.ChromTransitionSize;
             chromGroupHeaderSize = cacheFormat.ChromGroupHeaderSize;
+            chromIonMobilityFilterSize = cacheFormat.ChromIonMobilityFilterSize;
             cachedFileSize = cacheFormat.CachedFileSize;
             formatVersion = cacheFormat.FormatVersion;
             versionRequired = cacheFormat.VersionRequired;
@@ -138,11 +151,12 @@ namespace pwiz.Skyline.Model.Results
         public static readonly CacheFormat CURRENT = new CacheFormat
         {
             FormatVersion = CacheFormatVersion.CURRENT,
-            VersionRequired = CacheFormatVersion.Fourteen,
+            VersionRequired = CacheFormatVersion.Fifteen, // V15 adds multiple conformer ion mobility info
             CachedFileSize = Marshal.SizeOf<CachedFileHeaderStruct>(),
             ChromGroupHeaderSize = Marshal.SizeOf<ChromGroupHeaderInfo>(),
             ChromPeakSize = Marshal.SizeOf<ChromPeak>(),
-            ChromTransitionSize = Marshal.SizeOf<ChromTransition>()
+            ChromTransitionSize = Marshal.SizeOf<ChromTransition>(),
+            ChromIonMobilityFilterSize = Marshal.SizeOf<ChromIonMobilityFilter>()
         };
 
         private CacheFormat()
@@ -171,6 +185,7 @@ namespace pwiz.Skyline.Model.Results
                 ChromPeakSize = ChromPeak.GetStructSize(formatVersion),
                 ChromTransitionSize = ChromTransition.GetStructSize(formatVersion),
                 CachedFileSize = CachedFileHeaderStruct.GetStructSize(formatVersion),
+                ChromIonMobilityFilterSize = ChromIonMobilityFilter.GetStructSize(formatVersion),
                 ChromGroupHeaderSize = ChromGroupHeaderInfo.GetStructSize(formatVersion)
             };
         }
@@ -188,6 +203,7 @@ namespace pwiz.Skyline.Model.Results
                     ChromGroupHeaderSize = cacheHeader.chromGroupHeaderSize,
                     ChromPeakSize = cacheHeader.chromPeakSize,
                     ChromTransitionSize = cacheHeader.chromTransitionSize,
+                    ChromIonMobilityFilterSize = cacheHeader.chromIonMobilityFilterSize,
                     VersionRequired = cacheHeader.versionRequired
                 };
             }
@@ -202,6 +218,7 @@ namespace pwiz.Skyline.Model.Results
         public int ChromPeakSize { get; private set; }
         public int ChromTransitionSize { get; private set; }
         public int ChromGroupHeaderSize { get; private set; }
+        public int ChromIonMobilityFilterSize { get; private set; }
         public int CachedFileSize { get; private set; }
 
         public IItemSerializer<CachedFileHeaderStruct> CachedFileSerializer()
@@ -223,11 +240,18 @@ namespace pwiz.Skyline.Model.Results
             return ConvertedItemSerializer.Create(v4Reader, v4Header => new ChromGroupHeaderInfo(v4Header), header=>new ChromGroupHeaderInfo4(header));
         }
 
-        public IItemSerializer<ChromTransition> ChromTransitionSerializer()
+        public IItemSerializer<ChromTransition> ChromTransitionSerializer(IList<ChromIonMobilityFilter> ionMobilityTable)
         {
-            if (FormatVersion > CacheFormatVersion.Six)
+            if (FormatVersion > CacheFormatVersion.Fourteen)
             {
                 return ChromTransition.StructSerializer(ChromTransitionSize);
+            }
+            if (FormatVersion > CacheFormatVersion.Six)
+            {
+                return ConvertedItemSerializer.Create(
+                    ChromTransition8.StructSerializer(ChromTransitionSize),
+                    chromTransition8 => new ChromTransition(chromTransition8, ionMobilityTable),
+                    chromTransition => new ChromTransition8(chromTransition, ionMobilityTable));
             }
             if (FormatVersion > CacheFormatVersion.Four)
             {
@@ -244,6 +268,11 @@ namespace pwiz.Skyline.Model.Results
         public IItemSerializer<ChromPeak> ChromPeakSerializer()
         {
             return ChromPeak.StructSerializer(ChromPeakSize);
+        }
+
+        public IItemSerializer<ChromIonMobilityFilter> ChromIonMobilityFilterSerializer()
+        {
+            return ChromIonMobilityFilter.StructSerializer(ChromIonMobilityFilterSize);
         }
     }
 }

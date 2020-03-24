@@ -24,16 +24,16 @@ namespace pwiz.Skyline.Model.Results
 {
     public struct PrecursorTextId
     {
-        public PrecursorTextId(SignedMz precursorMz, IonMobilityFilter ionMobilityFilter, Target target, ChromExtractor extractor) : this()
+        public PrecursorTextId(SignedMz precursorMz, IonMobilityFilterSet ionMobilityFilters, Target target, ChromExtractor extractor) : this()
         {
             PrecursorMz = precursorMz;
-            IonMobility = ionMobilityFilter ?? IonMobilityFilter.EMPTY;
+            IonMobility = ionMobilityFilters ?? IonMobilityFilterSet.EMPTY;
             Target = target;
             Extractor = extractor;
         }
 
         public SignedMz PrecursorMz { get; private set; }
-        public IonMobilityFilter IonMobility { get; private set; }
+        public IonMobilityFilterSet IonMobility { get; private set; } // Zero or more CCS values may be used in chromatogram extraction ("multiple conformers")
         public Target Target { get; private set; }  // Peptide Modifed Sequence or custom ion ID
         public ChromExtractor Extractor { get; private set; }
 

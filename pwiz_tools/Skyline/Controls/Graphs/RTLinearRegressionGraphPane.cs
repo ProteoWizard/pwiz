@@ -581,7 +581,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     requestContext.Settings = null;
                 }
 
-                if (GraphSummary.IsHandleCreated)
+                if (GraphSummary.IsHandleCreated && !GraphSummary.Disposing)
                 {
                     try
                     {

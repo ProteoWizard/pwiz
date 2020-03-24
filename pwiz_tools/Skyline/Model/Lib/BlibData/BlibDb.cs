@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 RetentionTime = spectrum.RetentionTime.GetValueOrDefault(),
                 IonMobility = ionMobility.IonMobility.Mobility,
                 IonMobilityType = (int)ionMobility.IonMobility.Units,
-                IonMobilityHighEnergyOffset = ionMobility.HighEnergyIonMobilityValueOffset,
+                IonMobilityHighEnergyOffset = ionMobility.HighEnergyIonMobilityOffset,
                 CollisionalCrossSectionSqA = ionMobility.CollisionalCrossSectionSqA,
                 FileId = GetSpectrumSourceId(session, spectrum.SourceFile, sourceFiles),
                 SpecIdInFile = null,
@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         SpectrumSourceId = GetSpectrumSourceId(session, rt.SourceFile, sourceFiles),
                         IonMobility = rt.IonMobility.IonMobility.Mobility,
                         IonMobilityType = (int)rt.IonMobility.IonMobility.Units,
-                        IonMobilityHighEnergyOffset = rt.IonMobility.HighEnergyIonMobilityValueOffset,
+                        IonMobilityHighEnergyOffset = rt.IonMobility.HighEnergyIonMobilityOffset,
                         CollisionalCrossSectionSqA = rt.IonMobility.CollisionalCrossSectionSqA,
                         RedundantRefSpectraId = -1
                     });
@@ -744,7 +744,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     dbRetentionTimes.CollisionalCrossSectionSqA = spectrum.IonMobilityInfo.CollisionalCrossSectionSqA.GetValueOrDefault();
                     dbRetentionTimes.IonMobilityType = (int) spectrum.IonMobilityInfo.IonMobility.Units;
                     dbRetentionTimes.IonMobility = spectrum.IonMobilityInfo.IonMobility.Mobility.GetValueOrDefault(); // Get the low energy value
-                    dbRetentionTimes.IonMobilityHighEnergyOffset = spectrum.IonMobilityInfo.HighEnergyIonMobilityValueOffset;
+                    dbRetentionTimes.IonMobilityHighEnergyOffset = spectrum.IonMobilityInfo.HighEnergyIonMobilityOffset;
                 }
 
                 if (refSpectra.RetentionTimes == null)
@@ -815,7 +815,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 refSpectra.CollisionalCrossSectionSqA = spectrum.IonMobilityInfo.CollisionalCrossSectionSqA;
                 refSpectra.IonMobilityType = (int)spectrum.IonMobilityInfo.IonMobility.Units;
                 refSpectra.IonMobility = spectrum.IonMobilityInfo.IonMobility.Mobility;
-                refSpectra.IonMobilityHighEnergyOffset = spectrum.IonMobilityInfo.HighEnergyIonMobilityValueOffset;
+                refSpectra.IonMobilityHighEnergyOffset = spectrum.IonMobilityInfo.HighEnergyIonMobilityOffset;
             }
 
             refSpectra.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();

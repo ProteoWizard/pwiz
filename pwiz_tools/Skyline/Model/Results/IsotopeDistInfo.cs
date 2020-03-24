@@ -24,6 +24,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -88,7 +89,7 @@ namespace pwiz.Skyline.Model.Results
             // CONSIDER: Mass accuracy information is not calculated here
             var key = new PrecursorTextId(signedQ1FilterValues[monoMassIndex], null, null, ChromExtractor.summed);
             var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, false, false);
-            filter.AddQ1FilterValues(signedQ1FilterValues, calcFilterWindow);
+            filter.AddQ1FilterValues(signedQ1FilterValues, calcFilterWindow, IonMobilityFilterSet.EMPTY);
 
             var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
             { Mzs = massDistribution.Keys.ToArray(), Intensities = massDistribution.Values.ToArray(), NegativeCharge = (adduct.AdductCharge < 0) } });

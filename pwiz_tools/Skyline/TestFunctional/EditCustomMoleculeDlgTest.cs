@@ -425,14 +425,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(BioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
             Assert.IsFalse(ReferenceEquals(doc.MoleculeTransitions.ElementAt(0).Id, newdoc.MoleculeTransitions.ElementAt(0).Id)); // Changing the mass changes the Id
 
-            // Verify that the explicitly set drift time overides any calculations
-            double windowDT;
+            // Verify that the explicitly set drift time overrides any calculations
             double driftTimeMax = 1000.0;
-            var centerDriftTime = newdoc.Settings.GetIonMobility(
-                newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), newdoc.MoleculeTransitions.First(), null, null, driftTimeMax, out windowDT);
-            Assert.AreEqual(TESTVALUES_GROUP.IonMobility.Value, centerDriftTime.IonMobility.Mobility.Value, .0001);
-            Assert.AreEqual(TESTVALUES_GROUP.IonMobility.Value + TESTVALUES_TRAN.IonMobilityHighEnergyOffset.Value, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? 0, .0001);
-            Assert.AreEqual(0, windowDT, .0001);
+            var centerDriftTime = newdoc.Settings.GetIonMobilityFilters(
+                newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), newdoc.MoleculeTransitions.First(), 
+                null, null, driftTimeMax).First();
+            Assert.AreEqual(TESTVALUES_GROUP.IonMobility.Value, centerDriftTime.IonMobilityAndCCS.IonMobility.Mobility.Value, .0001);
+            Assert.AreEqual(TESTVALUES_TRAN.IonMobilityHighEnergyOffset.Value, centerDriftTime.HighEnergyIonMobilityOffset ?? 0, .0001);
+            Assert.AreEqual(0, centerDriftTime.IonMobilityExtractionWindowWidth??0, .0001);
 
             // Verify that tree selection doesn't change just because we changed an ID object
             // (formerly the tree node would collapse and focus would jump up a level)

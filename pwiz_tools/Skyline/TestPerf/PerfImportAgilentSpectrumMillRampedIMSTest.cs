@@ -139,14 +139,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             loadStopwatch.Start();
 
             // Enable use of drift times in spectral library
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                peptideSettingsUI.IsUseSpectralLibraryDriftTimes = useDriftTimes;
-                peptideSettingsUI.SpectralLibraryDriftTimeResolvingPower = 50;
+                transitionSettingsUI.IonMobilityControl.IsUseSpectralLibraryIonMobilities = useDriftTimes;
+                transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50;
             });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
             // Launch import peptide search wizard
             WaitForDocumentLoaded();
@@ -244,27 +244,27 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 // Inspect the loaded data directly to derive DT and CCS
                 // Verify ability to extract predictions from raw data
-                var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
-                    () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+                var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
+                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
 
-                // Simulate user picking Edit Current from the Drift Time Predictor combo control
-                var driftTimePredictorDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);
+                RunUI(() => transitionSettingsDlg.IonMobilityControl.SetResolvingPower(50));
+                // Simulate user picking Edit Current from the Ion Mobility Library combo control
+                var driftTimePredictorDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.AddIonMobilityLibrary);
                 RunUI(() =>
                 {
-                    driftTimePredictorDlg.SetPredictorName("test");
-                    driftTimePredictorDlg.SetResolvingPower(50);
-                    driftTimePredictorDlg.GetDriftTimesFromResults();
+                    driftTimePredictorDlg.LibraryName = "test";
+                    driftTimePredictorDlg.GetIonMobilitiesFromResults();
                     driftTimePredictorDlg.OkDialog();
                 });
                 WaitForClosedForm(driftTimePredictorDlg);
                 RunUI(() =>
                 {
-                    peptideSettingsDlg.OkDialog();
+                    transitionSettingsDlg.OkDialog();
                 });
-                WaitForClosedForm(peptideSettingsDlg);
+                WaitForClosedForm(transitionSettingsDlg);
 
                 var document = SkylineWindow.Document;
-                var measuredDTs = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons;
+                var measuredDTs = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
                 Assert.IsNotNull(driftInfoExplicitDT, "driftInfoExplicitDT != null");
                 var explicitDTs = driftInfoExplicitDT.GetIonMobilityDict();
 
@@ -292,7 +292,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                         errMsg += "Could not locate explicit IMS info for " + key +"\n";
                     }
                     var given = explicitDTs[key][0];
-                    var measured = measuredDTs[key];
+                    var measured = measuredDTs.GetIonMobilityInfo(key).First();
                     var msg = CheckDeltaPct(given.CollisionalCrossSectionSqA ?? 0, measured.CollisionalCrossSectionSqA ?? 0, tolerCCS, "measured CCS", key.ToString());
                     if (!string.IsNullOrEmpty(msg))
                     {
@@ -302,7 +302,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     {
                         errMsg += CheckDelta(given.IonMobility.Mobility.Value, measured.IonMobility.Mobility.Value, 10.0, "measured drift time", key.ToString());
                     }
-                    errMsg += CheckDelta(given.HighEnergyIonMobilityValueOffset, measured.HighEnergyIonMobilityValueOffset, 2.0, "measured drift time high energy offset", key.ToString());
+                    errMsg += CheckDelta(given.HighEnergyIonMobilityOffset.Value, measured.HighEnergyIonMobilityOffset.Value, 2.0, "measured drift time high energy offset", key.ToString());
                     if (!string.IsNullOrEmpty(errMsg))
                         errMsgAll += "\n" + errMsg;
                 }
@@ -325,9 +325,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     foreach (var nodeGroup in pep.TransitionGroups)
                     {
-                        double windowDT;
-                        var calculatedDriftTime = doc1.Settings.GetIonMobility(
-                            pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0, out windowDT);
+                        var calculatedDriftTime = doc1.Settings.GetIonMobilityFilters(
+                            pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0).First();
                         var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorAdduct);
                         IonMobilityAndCCS[] infoValueExplicitDT;
                         if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))
@@ -337,12 +336,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                         else
                         {
                             var ionMobilityInfo = infoValueExplicitDT[0];
-                            var delta = Math.Abs(ionMobilityInfo.IonMobility.Mobility.Value -calculatedDriftTime.IonMobility.Mobility.Value);
+                            var delta = Math.Abs(ionMobilityInfo.IonMobility.Mobility.Value -calculatedDriftTime.IonMobilityAndCCS.IonMobility.Mobility.Value);
                             var acceptableDelta = (libKey.Sequence.StartsWith("DDPHAC") || libKey.Sequence.EndsWith("VLHEK")) ? 3: 1; // These were ambiguous matches
                             if (delta > acceptableDelta)
                             {
                                 errmsg += String.Format("calculated DT ({0}) and explicit DT ({1}, CCS={4}) do not agree (abs delta = {2}) for {3}\n",
-                                    calculatedDriftTime.IonMobility, ionMobilityInfo.IonMobility,
+                                    calculatedDriftTime.IonMobilityAndCCS.IonMobility, ionMobilityInfo.IonMobility,
                                     delta, libKey,
                                     ionMobilityInfo.CollisionalCrossSectionSqA??0);
                             }
@@ -402,14 +401,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // Watch for problem with reimport after changed DT window
             var docResolvingPower = SkylineWindow.Document;
-            var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var transitionSettingsUI2 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                peptideSettingsUI2.IsUseSpectralLibraryDriftTimes = useDriftTimes;
-                peptideSettingsUI2.SpectralLibraryDriftTimeResolvingPower = 40;
+                transitionSettingsUI2.IonMobilityControl.IsUseSpectralLibraryIonMobilities = useDriftTimes;
+                transitionSettingsUI2.IonMobilityControl.IonMobilityFilterResolvingPower = 40;
             });
-            OkDialog(peptideSettingsUI2, peptideSettingsUI2.OkDialog);
+            OkDialog(transitionSettingsUI2, transitionSettingsUI2.OkDialog);
             var docReimport = WaitForDocumentChangeLoaded(docResolvingPower);
             // Reimport data for a replicate
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>

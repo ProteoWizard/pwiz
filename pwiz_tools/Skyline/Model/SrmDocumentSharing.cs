@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model
                 if (Document.Settings.HasOptimizationLibraryPersisted)
                     zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath);
                 if (Document.Settings.HasIonMobilityLibraryPersisted)
-                    zip.AddFile(pepSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.PersistencePath);
+                    zip.AddFile(transitionSettings.IonMobilityFiltering.IonMobilityLibrary.PersistencePath);
                     
                 var libfiles = new HashSet<string>();
                 foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
@@ -300,8 +300,8 @@ namespace pwiz.Skyline.Model
                     // Minimize any persistable ion mobility predictor
                     if (tempDir == null)
                         tempDir = new TemporaryDirectory();
-                    string tempDbPath = Document.Settings.PeptideSettings.Prediction.IonMobilityPredictor
-                        .IonMobilityLibrary.PersistMinimized(tempDir.DirPath, Document, null);
+                    string tempDbPath = Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary
+                        .PersistMinimized(tempDir.DirPath, Document, null);
                     if (tempDbPath != null)
                         zip.AddFile(tempDbPath);
                 }
@@ -434,6 +434,7 @@ namespace pwiz.Skyline.Model
             using (var scansSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCANS_EXT, true))
             using (var peaksSaver = new FileSaver(targetSkydFile + ChromatogramCache.PEAKS_EXT, true))
             using (var scoreSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCORES_EXT, true))
+            using (var ionMobilitySaver = new FileSaver(targetSkydFile + ChromatogramCache.IMFILTERS_EXT, true))
             {
                 var minimizer = Document.Settings.MeasuredResults.GetChromCacheMinimizer(Document);
                 var settings = new ChromCacheMinimizer.Settings().ChangeCacheFormat(cacheFormat);
@@ -450,7 +451,7 @@ namespace pwiz.Skyline.Model
                         ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(stats.PercentComplete));
                     }
                     
-                }, skydSaver.FileStream, scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream);
+                }, skydSaver.FileStream, scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream, ionMobilitySaver.FileStream);
                 skydSaver.Commit();
             }
         }

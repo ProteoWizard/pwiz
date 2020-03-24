@@ -1463,4 +1463,22 @@
   <data name="RefinementSettings_GroupComparisonDefs" xml:space="preserve">
     <value>Group comparisons</value>
   </data>
+  <data name="IonMobilityWindowWidthCalculator_FixedWindowWidth" xml:space="preserve">
+    <value>Ion mobility filter window fixed width value</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_WindowWidthMode" xml:space="preserve">
+    <value>Ion mobility filter window width calculation type</value>
+  </data>
+  <data name="TransitionIonMobilityFiltering_IonMobilityLibrary" xml:space="preserve">
+    <value>Ion mobility library</value>
+  </data>
+  <data name="TransitionIonMobilityFiltering_UseSpectralLibraryIonMobilityValues" xml:space="preserve">
+    <value>Use spectral library ion mobility values</value>
+  </data>
+  <data name="IonMobilityAndCCS_HighEnergyIonMobilityOffset" xml:space="preserve">
+    <value>Offset ion mobility values for high energy spectra</value>
+  </data>
+  <data name="TransitionSettings_IonMobilityFiltering" xml:space="preserve">
+    <value>Ion Mobility</value>
+  </data>
 </root>

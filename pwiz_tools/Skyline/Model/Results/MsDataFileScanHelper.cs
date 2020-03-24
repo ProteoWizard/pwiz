@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -93,35 +94,41 @@ namespace pwiz.Skyline.Model.Results
         public MsDataSpectrum[] GetFilteredScans()
         {
             var fullScans = MsDataSpectra;
-            double minIonMobility, maxIonMobility;
-            if (Settings.Default.FilterIonMobilityFullScan && GetIonMobilityRange(out minIonMobility, out maxIonMobility, Source))
-                fullScans = fullScans.Where(s => minIonMobility <= s.IonMobility.Mobility && s.IonMobility.Mobility <= maxIonMobility).ToArray();
+            if (Settings.Default.FilterIonMobilityFullScan && GetIonMobilityRanges(out var imRanges, Source))
+                fullScans = fullScans.Where(s => imRanges.Any(im => im.Item1 <= s.IonMobility.Mobility && s.IonMobility.Mobility <= im.Item2)).ToArray();
             return fullScans;
         }
 
-        public bool GetIonMobilityRange(out double minIonMobility, out double maxIonMobility, ChromSource sourceType)
+        public bool GetIonMobilityRanges(out List<Tuple<double,double>> ranges, ChromSource sourceType)
         {
-            minIonMobility = double.MaxValue;
-            maxIonMobility = double.MinValue;
             var hasIonMobilityInfo = false;
             int i = 0;
+            ranges = null;
             foreach (var transition in ScanProvider.Transitions)
             {
-                if (!transition._ionMobilityInfo.HasIonMobilityValue || !transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.HasValue)
+                if (IonMobilityFilterSet.IsNullOrEmpty(transition._ionMobilityInfo) || 
+                    transition._ionMobilityInfo.Any(im => (im.IonMobilityExtractionWindowWidth??0)==0))
                 {
                     // Accept all values
-                    minIonMobility = double.MinValue;
-                    maxIonMobility = double.MaxValue;
+                    ranges = new List<Tuple<double, double>>(){ new Tuple<double, double>(double.MinValue, Double.MaxValue)};
+                    return ScanProvider.Transitions.Any(t => t._ionMobilityInfo != null
+                                                             && t._ionMobilityInfo.Any(im =>
+                                                                 (im.IonMobilityExtractionWindowWidth ?? 0) > 0));
                 }
                 else if (sourceType == ChromSource.unknown || (transition.Source == sourceType && i == TransitionIndex))
                 {
-                    // Products and precursors may have different expected ion mobility values in Waters MsE
-                    double startIM = transition._ionMobilityInfo.IonMobility.Mobility.Value -
-                                        transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.Value / 2;
-                    double endIM = startIM + transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.Value;
-                    minIonMobility = Math.Min(minIonMobility, startIM);
-                    maxIonMobility = Math.Max(maxIonMobility, endIM);
-                    hasIonMobilityInfo = true;
+                    foreach (var im in transition._ionMobilityInfo)
+                    {
+                        // Products and precursors may have different expected ion mobility values in Waters MsE TODO(bspratt) - not sure this is handled here?
+                        var startIM = im.IonMobilityAndCCS.IonMobility.Mobility.Value -
+                                      im.IonMobilityExtractionWindowWidth.Value / 2;
+                        var endIM = startIM + im.IonMobilityExtractionWindowWidth.Value;
+                        if (ranges == null)
+                            ranges = new List<Tuple<double, double>>() {new Tuple<double, double>(startIM, endIM)};
+                        else if (!ranges.Any(r => startIM==r.Item1 && endIM==r.Item2))
+                            ranges.Add(new Tuple<double, double>(startIM, endIM));
+                        hasIonMobilityInfo = true;
+                    }
                 }
                 i++;
             }

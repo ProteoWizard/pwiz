@@ -102,6 +102,7 @@ namespace pwiz.Skyline.Model.Serialization
             float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
             float? startTime = reader.GetNullableFloatAttribute(ATTR.start_time);
             float? endTime = reader.GetNullableFloatAttribute(ATTR.end_time);
+            // Old-style (pre multiple conformer) ion mobility information found in attributes
             float? ccs = reader.GetNullableFloatAttribute(ATTR.ccs);
             float? ionMobilityMS1 = reader.GetNullableFloatAttribute(ATTR.drift_time_ms1);
             float? ionMobilityFragment = reader.GetNullableFloatAttribute(ATTR.drift_time_fragment);
@@ -127,21 +128,33 @@ namespace pwiz.Skyline.Model.Serialization
             float? qvalue = reader.GetNullableFloatAttribute(ATTR.qvalue);
             float? zscore = reader.GetNullableFloatAttribute(ATTR.zscore);
             var annotations = Annotations.EMPTY;
+            IonMobilityFilterSet transitionGroupIonMobilityInfo = null;
             if (!reader.IsEmptyElement)
             {
                 reader.ReadStartElement();
+                if (reader.IsStartElement(EL.ion_mobility_filter))
+                    transitionGroupIonMobilityInfo = IonMobilityFilterSet.ReadXML(reader);
                 annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor_result);
                 // Convert q value and mProphet score annotations to numbers for the ChromInfo object
                 annotations = ReadAndRemoveScoreAnnotation(annotations, MProphetResultsHandler.AnnotationName, ref qvalue);
                 annotations = ReadAndRemoveScoreAnnotation(annotations, MProphetResultsHandler.MAnnotationName, ref zscore);
             }
+
+            if (transitionGroupIonMobilityInfo == null && ionMobilityMS1.HasValue)
+            {
+                // Old-style ion mobility filter declaration
+                var ionMobility = IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityMS1, ionMobilityUnits, ccs,
+                    (ionMobilityMS1.HasValue && ionMobilityFragment.HasValue) ? (ionMobilityFragment.Value - ionMobilityMS1.Value) : (double?)null);
+                var ionMobilityFilter = IonMobilityFilter.GetIonMobilityFilter(ionMobility, ionMobilityWindow);
+                if (!IonMobilityFilter.IsNullOrEmpty(ionMobilityFilter))
+                    transitionGroupIonMobilityInfo = IonMobilityFilterSet.GetIonMobilityFilterSet(new[] { ionMobilityFilter });
+            }
+
             // Ignore userSet during load, since all values are still calculated
             // from the child transitions.  Otherwise inconsistency is possible.
-//            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
+            //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
             const UserSet userSet = UserSet.FALSE;
             int countRatios = Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
-            var transitionGroupIonMobilityInfo = TransitionGroupIonMobilityInfo.GetTransitionGroupIonMobilityInfo(ccs,
-                ionMobilityMS1, ionMobilityFragment, ionMobilityWindow, ionMobilityUnits);
             return new TransitionGroupChromInfo(fileInfo.FileId,
                 optimizationStep,
                 peakCountRatio,
@@ -406,30 +419,37 @@ namespace pwiz.Skyline.Model.Serialization
                     PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
                 UserSet userSet = reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict,
                     UserSet.FALSE, XmlUtil.EnumCase.upper);
-                double? ionMobility = reader.GetNullableDoubleAttribute(ATTR.drift_time);
-                eIonMobilityUnits ionMobilityUnits = eIonMobilityUnits.drift_time_msec;
-                if (!ionMobility.HasValue)
-                {
-                    ionMobility = reader.GetNullableDoubleAttribute(ATTR.ion_mobility);
-                    ionMobilityUnits = GetAttributeMobilityUnits(reader, ATTR.ion_mobility_type, fileInfo);
-                }
-                double? ionMobilityWindow = reader.GetNullableDoubleAttribute(ATTR.drift_time_window) ??
-                                            reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window);
-                var annotations = Annotations.EMPTY;
                 bool forcedIntegration = reader.GetBoolAttribute(ATTR.forced_integration, false);
+
+                // Handle potentially old-style ion mobility information
+                IonMobilityFilterSet ionMobilities = IonMobilityFilterSet.EMPTY;
+                if (!string.IsNullOrEmpty(reader.GetAttribute(ATTR.ion_mobility)) || 
+                    !string.IsNullOrEmpty(reader.GetAttribute(ATTR.drift_time)))
+                {
+                    var ionMobilityFilter = IonMobilityFilter.ReadXMLAttributes(reader);
+                    if (!IonMobilityFilter.IsNullOrEmpty(ionMobilityFilter))
+                        ionMobilities = IonMobilityFilterSet.GetIonMobilityFilterSet(new[] {ionMobilityFilter});
+                }
+
+                var annotations = Annotations.EMPTY;
                 if (!reader.IsEmptyElement)
                 {
                     reader.ReadStartElement();
-                    annotations = _documentReader.ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.transition_result);
+                    if (reader.IsStartElement(EL.ion_mobility_filter))
+                        ionMobilities = IonMobilityFilterSet.ReadXML(reader);
+                    annotations =
+                        _documentReader.ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.transition_result);
                 }
-                int countRatios = _documentReader.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
+
+                int countRatios = _documentReader.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes
+                    .Count;
                 return new TransitionChromInfo(fileInfo.FileId,
                     optimizationStep,
                     massError,
                     retentionTime,
                     startRetentionTime,
                     endRetentionTime,
-                    IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityUnits), ionMobilityWindow, null), 
+                    ionMobilities, 
                     area,
                     backgroundArea,
                     height,

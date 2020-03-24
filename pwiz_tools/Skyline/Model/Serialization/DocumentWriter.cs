@@ -23,7 +23,6 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using Google.Protobuf;
-using pwiz.Common.Chemistry;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -522,7 +521,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
         }
 
-        private static void WriteTransitionGroupChromInfo(XmlWriter writer, TransitionGroupChromInfo chromInfo)
+        private void WriteTransitionGroupChromInfo(XmlWriter writer, TransitionGroupChromInfo chromInfo)
         {
             if (chromInfo.OptimizationStep != 0)
                 writer.WriteAttribute(ATTR.step, chromInfo.OptimizationStep);
@@ -530,14 +529,6 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeNullable(ATTR.retention_time, chromInfo.RetentionTime);
             writer.WriteAttributeNullable(ATTR.start_time, chromInfo.StartRetentionTime);
             writer.WriteAttributeNullable(ATTR.end_time, chromInfo.EndRetentionTime);
-            writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobilityInfo.CollisionalCrossSection);
-            if (chromInfo.IonMobilityInfo.IonMobilityUnits != eIonMobilityUnits.none)
-            {
-                writer.WriteAttributeNullable(ATTR.ion_mobility_ms1, chromInfo.IonMobilityInfo.IonMobilityMS1);
-                writer.WriteAttributeNullable(ATTR.ion_mobility_fragment, chromInfo.IonMobilityInfo.IonMobilityFragment);
-                writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobilityInfo.IonMobilityWindow);
-                writer.WriteAttribute(ATTR.ion_mobility_type, chromInfo.IonMobilityInfo.IonMobilityUnits.ToString());
-            }
             writer.WriteAttributeNullable(ATTR.fwhm, chromInfo.Fwhm);
             writer.WriteAttributeNullable(ATTR.area, chromInfo.Area);
             writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
@@ -550,6 +541,18 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeNullable(ATTR.qvalue, chromInfo.QValue);
             writer.WriteAttributeNullable(ATTR.zscore, chromInfo.ZScore);
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
+            if (!IonMobilityFilterSet.IsNullOrEmpty(chromInfo.IonMobilityFilters))
+            {
+                if (SkylineVersion.SrmDocumentVersion < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY)
+                {
+                    // No multiple conformer support in older versions, so just write the first one
+                    chromInfo.IonMobilityFilters.First().WriteAttributes(writer, IonMobilityFilter.SerializationElementType.TransitionGroupChromInfo);
+                }
+                else
+                {
+                    chromInfo.IonMobilityFilters.WriteXML(writer, IonMobilityFilter.SerializationElementType.TransitionGroupChromInfo);
+                }
+            }
             WriteAnnotations(writer, chromInfo.Annotations);
         }
 
@@ -743,8 +746,6 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
-                writer.WriteAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
-                writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
                 writer.WriteAttribute(ATTR.area, chromInfo.Area);
                 writer.WriteAttribute(ATTR.background, chromInfo.BackgroundArea);
                 writer.WriteAttribute(ATTR.height, chromInfo.Height);
@@ -762,6 +763,18 @@ namespace pwiz.Skyline.Model.Serialization
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
             writer.WriteAttribute(ATTR.forced_integration, chromInfo.IsForcedIntegration, false);
+            if (!chromInfo.IsEmpty && !IonMobilityFilterSet.IsNullOrEmpty(chromInfo.IonMobilityFilters))
+            {
+                if (SkylineVersion.SrmDocumentVersion < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY)
+                {
+                    // No multiple conformer support in older versions, so just write the first one
+                    chromInfo.IonMobilityFilters.First().WriteAttributes(writer, IonMobilityFilter.SerializationElementType.TransitionChromInfo);
+                }
+                else
+                {
+                    chromInfo.IonMobilityFilters.WriteXML(writer, IonMobilityFilter.SerializationElementType.TransitionChromInfo);
+                }
+            }
             WriteAnnotations(writer, chromInfo.Annotations);
         }
 

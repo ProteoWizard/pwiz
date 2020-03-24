@@ -22,9 +22,12 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 
@@ -90,23 +93,25 @@ namespace pwiz.Skyline.Model.IonMobility
             {
                 fname = fname.Replace(IonMobilityDb.EXT, BiblioSpecLiteSpec.DotConvertedToSmallMolecules + IonMobilityDb.EXT);
             }
-            string persistPath = Path.Combine(pathDestDir, fname ?? String.Empty); 
+
+            fname = fname ?? String.Empty; // Keeps ReSharper from complaining about possible null
+            string persistPath = Path.Combine(pathDestDir, fname); 
             using (var fs = new FileSaver(persistPath))
             {
-                var ionMobilityDbMinimal = IonMobilityDb.CreateIonMobilityDb(fs.SafeName);
+                var libraryName = fname.Replace(IonMobilityDb.EXT, String.Empty);
+                var ionMobilityDbMinimal = IonMobilityDb.CreateIonMobilityDb(fs.SafeName, libraryName, true);
 
                 // Calculate the minimal set of peptides needed for this document
-                var dbPeptides = _database.GetPeptides().ToList();
-                var persistPeptides = new List<ValidatingIonMobilityPeptide>();
+                var dbPrecursors = _database.DictLibrary.Keys;
+                var persistIonMobilities = new List<PrecursorIonMobilities>();
 
-                var dictPeptides = dbPeptides.ToDictionary(pep => pep.GetLibKey());
+                var dictPrecursors = dbPrecursors.ToDictionary(p => p.LibraryKey);
                 foreach (var pair in document.MoleculePrecursorPairs)
                 {
                     var test = 
-                        new ValidatingIonMobilityPeptide(pair.NodePep.ModifiedTarget, pair.NodeGroup.PrecursorAdduct, 0, 0);
-                    var key = test.GetLibKey();
-                    DbIonMobilityPeptide dbPeptide;
-                    if (dictPeptides.TryGetValue(key, out dbPeptide))
+                        new PrecursorIonMobilities(pair.NodePep.ModifiedTarget, pair.NodeGroup.PrecursorAdduct, 0, 0, 0, eIonMobilityUnits.none);
+                    var key = test.Precursor;
+                    if (dictPrecursors.TryGetValue(key, out var dbPrecursor))
                     {
                         if (smallMoleculeConversionMap != null)
                         {
@@ -116,7 +121,7 @@ namespace pwiz.Skyline.Model.IonMobility
                             {
                                 var precursorAdduct = smallMolInfo.Adduct;
                                 var smallMoleculeAttributes = smallMolInfo.SmallMoleculeLibraryAttributes;
-                                dbPeptide = new DbIonMobilityPeptide(smallMoleculeAttributes, precursorAdduct, dbPeptide.CollisionalCrossSection, dbPeptide.HighEnergyDriftTimeOffsetMsec);
+                                dbPrecursor = new LibKey(smallMoleculeAttributes, precursorAdduct);
                             }
                             else
                             {
@@ -125,23 +130,95 @@ namespace pwiz.Skyline.Model.IonMobility
                                 continue;
                             }
                         }
-                        persistPeptides.Add(new ValidatingIonMobilityPeptide(dbPeptide));
+                        persistIonMobilities.Add(new PrecursorIonMobilities(dbPrecursor, test.IonMobilities));
                         // Only add once
-                        dictPeptides.Remove(key);
+                        dictPrecursors.Remove(key);
                     }
                 }
 
-                ionMobilityDbMinimal.UpdatePeptides(persistPeptides, new ValidatingIonMobilityPeptide[0]);
+                ionMobilityDbMinimal.UpdateIonMobilities(persistIonMobilities);
                 fs.Commit();
             }
 
             return persistPath;
         }
 
-        public override IonMobilityAndCCS GetIonMobilityInfo(LibKey key, ChargeRegressionLine regressionLine)
+        public static Dictionary<LibKey, List<IonMobilityAndCCS>> FlatListToMultiConformerDictionary(
+            IEnumerable<ValidatingIonMobilityPrecursor> mobilitiesFlat)
+        {
+            // Put the list into a dict for performance reasons
+            var ionMobilities = new Dictionary<LibKey, List<IonMobilityAndCCS>>();
+            foreach (var item in mobilitiesFlat)
+            {
+                var libKey = item.Precursor;
+                var ionMobilityAndCcs = item.GetIonMobilityAndCCS();
+                if (!ionMobilities.TryGetValue(libKey, out var mobilities))
+                {
+                    ionMobilities.Add(libKey, new List<IonMobilityAndCCS>() { ionMobilityAndCcs });
+                }
+                else
+                {
+                    // Multiple conformer, or just a redundant line?
+                    if (!mobilities.Any(m => Equals(m, ionMobilityAndCcs)))
+                    {
+                        mobilities.Add(ionMobilityAndCcs);
+                    }
+                }
+            }
+
+            return ionMobilities;
+        }
+
+        public static List<ValidatingIonMobilityPrecursor> MultiConformerDictionaryToFlatList(
+            IDictionary<LibKey, List<IonMobilityAndCCS>> mobilitiesDict)
+        {
+            var ionMobilities = new List<ValidatingIonMobilityPrecursor>();
+            foreach (var item in mobilitiesDict)
+            {
+                var libKey = item.Key;
+                foreach (var im in item.Value)
+                {
+                    ionMobilities.Add(new ValidatingIonMobilityPrecursor(libKey, im));
+                }
+            }
+
+            return ionMobilities;
+        }
+
+
+        public static IonMobilityLibrary CreateFromDictionary(string libraryName, string dbDir, IDictionary<LibKey, List<IonMobilityAndCCS>> dict)
+        {
+            var fname = Path.GetFullPath(dbDir.Contains(IonMobilityDb.EXT) ? dbDir : Path.Combine(dbDir, libraryName + IonMobilityDb.EXT));
+            using (var fs = new FileSaver(fname))
+            {
+                var ionMobilityDb = IonMobilityDb.CreateIonMobilityDb(fs.SafeName, libraryName, false);
+                if (dict != null)
+                {
+                    var list = dict.Select(kvp => new PrecursorIonMobilities(kvp.Key, kvp.Value));
+                    ionMobilityDb.UpdateIonMobilities(list);
+                }
+                fs.Commit();
+            }
+            return new IonMobilityLibrary(libraryName, fname);
+        }
+
+        public static IonMobilityLibrary CreateFromList(string libraryName, string dbDir, IList<ValidatingIonMobilityPrecursor> list)
+        {
+            var dict = FlatListToMultiConformerDictionary(list);
+            return CreateFromDictionary(libraryName, dbDir, dict);
+        }
+
+        public override IList<IonMobilityAndCCS> GetIonMobilityInfo(LibKey key)
         {
             if (_database != null)
-                return _database.GetDriftTimeInfo(key, regressionLine);
+                return _database.GetIonMobilityInfo(key);
+            return null;
+        }
+
+        public override ImmutableDictionary<LibKey, List<IonMobilityAndCCS>> GetIonMobilityDict()
+        {
+            if (_database != null)
+                return _database.DictLibrary;
             return null;
         }
 
@@ -149,6 +226,29 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             if (!IsUsable)
                 throw new InvalidOperationException(@"Unexpected use of ion mobility library before successful initialization."); // - for developer use
+        }
+
+        public static Dictionary<LibKey, IonMobilityAndCCS> CreateFromResults(SrmDocument document, string documentFilePath, bool useHighEnergyOffset,
+            IProgressMonitor progressMonitor = null)
+        {
+            // Overwrite any existing measurements with newly derived ones
+            Dictionary<LibKey, IonMobilityAndCCS> measured;
+            using (var finder = new IonMobilityFinder(document, documentFilePath, progressMonitor) { UseHighEnergyOffset = useHighEnergyOffset })
+            {
+                measured = finder.FindIonMobilityPeaks(); // Returns null on cancel
+            }
+            return measured;
+        }
+
+        public static IonMobilityLibrary CreateFromResults(SrmDocument document, string documentFilePath, bool useHighEnergyOffset,
+            string libraryName, string dbPath, IProgressMonitor progressMonitor = null)
+        {
+            // Overwrite any existing measurements with newly derived ones
+            var measured = CreateFromResults(document, documentFilePath, useHighEnergyOffset, progressMonitor);
+            var ionMobilityDb = IonMobilityDb.CreateIonMobilityDb(dbPath, libraryName, false);
+            ionMobilityDb.UpdateIonMobilities(measured.Select(m => new PrecursorIonMobilities(
+                m.Key, m.Value)).ToList());
+            return new IonMobilityLibrary(libraryName, dbPath);
         }
 
         #region Property change methods
@@ -198,6 +298,32 @@ namespace pwiz.Skyline.Model.IonMobility
             writer.WriteAttribute(ATTR.database_path, DatabasePath ?? String.Empty);
         }
 
+        public override void WriteXml(XmlWriter writer, IonMobilityWindowWidthCalculator extraInfoForPre20_12)
+        {
+            if (extraInfoForPre20_12 == null)
+            {
+                WriteXml(writer);
+                return;
+            }
+
+            // Write the contents of the currently-in-use .imdb to old style in-document serialization
+            var dict = GetIonMobilityDict();
+            if (dict != null && dict.Any())
+            {
+                var oldDict =
+                    dict.ToDictionary(kvp => kvp.Key,
+                        kvp => kvp.Value.First()); // No multiple conformers in earlier formats
+                var dtp = new DriftTimePredictor(Name,
+                    oldDict, extraInfoForPre20_12.WindowWidthMode, extraInfoForPre20_12.ResolvingPower,
+                    extraInfoForPre20_12.PeakWidthAtIonMobilityValueZero,
+                    extraInfoForPre20_12.PeakWidthAtIonMobilityValueMax,
+                    extraInfoForPre20_12.FixedWindowWidth);
+                writer.WriteStartElement(DriftTimePredictor.EL.predict_drift_time); // N.B. EL.predict_drift_time is a misnomer, this covers all IMS types
+                dtp.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+        }
+
         #endregion
 
         #region object overrrides
@@ -206,7 +332,7 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other) && Equals(other._database, _database) && Equals(other.DatabasePath, DatabasePath);
+            return base.Equals(other) && Equals(other.DatabasePath, DatabasePath); // N.B. omitting Equals(other._database, _database) as timestamps will likely differ even if otherwise equal
         }
 
         public override bool Equals(object obj)

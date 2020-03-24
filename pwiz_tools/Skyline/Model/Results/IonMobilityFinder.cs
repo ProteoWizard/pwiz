@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var dt in _ms1IonMobilities)
                 {
                     // Choose the ion mobility which gave the largest signal
-                    // CONSIDER: average IM and CCS values that fall "near" the IM of largest signal?
+                    // CONSIDER: average IM and CCS values that fall "near" the IM of largest signal? Or consider them multiple conformers?
                     var ms1IonMobility = dt.Value.OrderByDescending(p => p.Intensity).First().IonMobility;
                     // Check for MS2 data to use for high energy offset
                     List<IonMobilityIntensityPair> listDt;
@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Model.Results
                                 mz, im.Key.Charge);
                             if (ccs.HasValue)
                             {
-                                value =  IonMobilityAndCCS.GetIonMobilityAndCCS(value.IonMobility, ccs, value.HighEnergyIonMobilityValueOffset);
+                                value =  IonMobilityAndCCS.GetIonMobilityAndCCS(value.IonMobility, ccs, value.HighEnergyIonMobilityOffset);
                             }
                         }
 

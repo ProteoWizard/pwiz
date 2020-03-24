@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz PrecursorMz;
         public SignedMz ProductMz;
         public double? ExtractionWidth;
-        public IonMobilityFilter _ionMobilityInfo;
+        public IonMobilityFilterSet _ionMobilityInfo; // Supports multiple CCS values per precursor
         public Identity Id;  // ID of the associated TransitionDocNode
     }
 

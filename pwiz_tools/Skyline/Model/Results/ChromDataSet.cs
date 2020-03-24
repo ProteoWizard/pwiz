@@ -160,14 +160,9 @@ namespace pwiz.Skyline.Model.Results
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.Precursor : SignedMz.ZERO; }
         }
 
-        public double? CollisionalCrossSectionSqA
+        public IonMobilityFilterSet IonMobilityFilters
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.CollisionalCrossSectionSqA : null; }
-        }
-
-        public eIonMobilityUnits IonMobilityUnits
-        {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobilityUnits : eIonMobilityUnits.none; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobilityFilters : IonMobilityFilterSet.EMPTY; }
         }
 
         public ChromExtractor Extractor

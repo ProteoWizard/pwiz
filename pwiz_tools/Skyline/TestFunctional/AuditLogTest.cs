@@ -81,15 +81,25 @@ namespace pwiz.SkylineTestFunctional
             VerifyStringLocalization("{0:SEttings}", "{0:SEttings}");
 
             var unlocalizedMessageTypes = GetUnlocalizedMessageTypes();
+            var errMsgs = new List<string>();
             if (unlocalizedMessageTypes.Any())
-                Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalizedMessageTypes));
+                errMsgs.Add("The following audit log message types are unlocalized:\n" + string.Join("\n", unlocalizedMessageTypes));
 
             //var unlocalized = GetUnlocalizedProperties(RootProperty.Create(typeof(SrmSettings), "Settings"), PropertyPath.Root);
-            var unlocalized = GetAllUnlocalizedProperties(typeof(AuditLogEntry))
-                .Concat(GetAllUnlocalizedProperties(typeof(RowItem)))
-                .Concat(GetAllUnlocalizedProperties(typeof(ImmutableList))).ToList();
+            var unlocalized = GetAllUnlocalizedProperties(typeof(AuditLogEntry)).ToList();
             if (unlocalized.Any())
-                Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalized));
+                errMsgs.Add("The following AuditLogEntry properties are unlocalized:\n" + string.Join("\n", unlocalized));
+            unlocalized = GetAllUnlocalizedProperties(typeof(RowItem)).ToList();
+            if (unlocalized.Any())
+                errMsgs.Add("The following audit log RowItem properties are unlocalized:\n" + string.Join("\n", unlocalized));
+            unlocalized = GetAllUnlocalizedProperties(typeof(ImmutableList)).ToList();
+            if (unlocalized.Any())
+                errMsgs.Add("The following audit log ImmutableList properties are unlocalized:\n" + string.Join("\n", unlocalized));
+            if (errMsgs.Any())
+            {
+                errMsgs.Add("This can be corrected by adding to the appropriate resx file in Skyline/Model/AuditLog.\nSee the Skyline developer wiki https://skyline.ms/wiki/home/development/page.view?name=Audit%20Logging for further details.");
+                Assert.Fail(string.Join("\n", errMsgs));
+            }
         }
 
         private void VerifyStringLocalization(string expected, string unlocalized, SrmDocument.DOCUMENT_TYPE modeUI = SrmDocument.DOCUMENT_TYPE.none)

@@ -836,20 +836,20 @@ namespace pwiz.Skyline
             {
                 if (commandArgs.IonMobilityLibraryRes.HasValue)
                 {
-                    if (!_doc.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues)
+                    if (!_doc.Settings.TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues)
                         _out.WriteLine(Resources.CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_);
                     double rp = commandArgs.IonMobilityLibraryRes.Value;
                     var imsWindowCalcNew = new IonMobilityWindowWidthCalculator(rp);
-                    var imsWindowCalc = _doc.Settings.PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator;
+                    var imsWindowCalc = _doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator;
                     if (!Equals(imsWindowCalc, imsWindowCalcNew))
                         _out.WriteLine(Resources.CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__, rp);
-                    ModifyDocument(d => d.ChangeSettings(d.Settings.ChangePeptidePrediction(p =>
+                    ModifyDocument(d => d.ChangeSettings(d.Settings.ChangeTransitionIonMobilityFiltering(p =>
                         {
                             var result = p;
-                            if (!result.UseLibraryIonMobilityValues)
-                                result = result.ChangeUseLibraryIonMobilityValues(true);
-                            if (!Equals(result.LibraryIonMobilityWindowWidthCalculator, imsWindowCalcNew))
-                                result = result.ChangeLibraryDriftTimesWindowWidthCalculator(imsWindowCalcNew);
+                            if (!result.UseSpectralLibraryIonMobilityValues)
+                                result = result.ChangeUseSpectralLibraryIonMobilityValues(true);
+                            if (!Equals(result.FilterWindowWidthCalculator, imsWindowCalcNew))
+                                result = result.ChangeFilterWindowWidthCalculator(imsWindowCalcNew);
                             return result;
                         })),
                         AuditLogEntry.SettingsLogFunction);

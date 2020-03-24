@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Model.Results
         private int _uncompressedSize;
         private float _startTime;
         private float _endTime;
-        private float _collisionalCrossSection;
+        private float _collisionalCrossSectionV11; // Obsolete - as of V15 we support multiple conformers
         /////////////////////////////////////////////////////////////////////
 
         [Flags]
@@ -211,17 +211,18 @@ namespace pwiz.Skyline.Model.Results
                                      int numPoints, int compressedSize, int uncompressedSize, long location, FlagValues flags,
                                      int statusId, int statusRank,
                                      float? startTime, float? endTime,
-                                     double? collisionalCrossSection, 
-                                     eIonMobilityUnits ionMobilityUnits)
+                                     IonMobilityFilterSet ionMobilityFilters)
             : this(precursor, -1, 0, fileIndex, numTransitions, startTransitionIndex,
                    numPeaks, startPeakIndex, startScoreIndex, maxPeakIndex, numPoints,
                    compressedSize, uncompressedSize, location, flags, statusId, statusRank,
-                   startTime, endTime, collisionalCrossSection, ionMobilityUnits)
+                   startTime, endTime,
+                   IonMobilityFilterSet.IsNullOrEmpty(ionMobilityFilters) ? null :ionMobilityFilters.First().CollisionalCrossSectionSqA,
+                   IonMobilityFilterSet.IsNullOrEmpty(ionMobilityFilters) ? eIonMobilityUnits.none : ionMobilityFilters.First().IonMobilityUnits)
         {
         }
 
         /// <summary>
-        /// Cunstructs header struct with all values populated.
+        /// Constructs header struct with all values populated.
         /// </summary>
         public ChromGroupHeaderInfo(SignedMz precursor, int textIdIndex, int textIdLen, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
@@ -241,6 +242,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 flags &= ~FlagValues.polarity_negative;
             }
+
             flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues) ((int) ionMobilityUnits << 8);
             _textIdIndex = textIdIndex;
             _textIdLen = CheckUShort(textIdLen);
@@ -260,7 +262,7 @@ namespace pwiz.Skyline.Model.Results
             _statusRank = CheckUShort(statusRank, true);
             _startTime = startTime ?? -1;
             _endTime = endTime ?? -1;
-            _collisionalCrossSection = (float)(collisionalCrossSection ?? 0);
+            _collisionalCrossSectionV11 = (float)(collisionalCrossSection ?? 0); // For backward compatiblility
             if (_startTime < 0)
             {
                 _startTime = -1;  // Unknown
@@ -289,7 +291,7 @@ namespace pwiz.Skyline.Model.Results
             -1,
             headerInfo.LocationPoints,
             0, -1, -1,
-            null, null, null, eIonMobilityUnits.none)
+            null, null, null)
         {
         }
 
@@ -337,6 +339,7 @@ namespace pwiz.Skyline.Model.Results
         public long LocationPoints { get{return _locationPoints;} }
         public int UncompressedSize { get{return _uncompressedSize;} }
         public bool IsProcessedScans { get { return _isProcessedScans != 0; } }
+        public float CollisionalCrossSectionV11 {  get {  return _collisionalCrossSectionV11; } } // For backward compatible serialization
 
         public override string ToString()
         {
@@ -386,16 +389,6 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz Precursor
         {
             get { return new SignedMz(_precursor, NegativeCharge); }
-        }
-
-        public float? CollisionalCrossSection
-        {
-            get
-            {
-                if (_collisionalCrossSection <= 0)
-                    return null;
-                return _collisionalCrossSection;
-            }
         }
 
         public eIonMobilityUnits IonMobilityUnits
@@ -852,7 +845,7 @@ namespace pwiz.Skyline.Model.Results
     /// Version 8 of ChromTransition adds ion mobility information
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack=4)]
-    public struct ChromTransition
+    public struct ChromTransition8
     {
         private double _product;
         private float _extractionWidth;
@@ -873,7 +866,7 @@ namespace pwiz.Skyline.Model.Results
 
         const FlagValues MASK_SOURCE = (FlagValues) 0x03;
 
-        public ChromTransition(double product, float extractionWidth, float ionMobilityValue, float ionMobilityExtractionWidth, ChromSource source) : this()
+        public ChromTransition8(double product, float extractionWidth, float ionMobilityValue, float ionMobilityExtractionWidth, ChromSource source) : this()
         {
             _product = product;
             _extractionWidth = extractionWidth;
@@ -882,7 +875,20 @@ namespace pwiz.Skyline.Model.Results
             Source = source;
         }
 
-        public ChromTransition(ChromTransition5 chromTransition5) : this(chromTransition5.Product,
+        // For backward compatibility serialization
+        public ChromTransition8(ChromTransition chromTransition, IList<ChromIonMobilityFilter> filters): this()
+        {
+            _product = chromTransition.Product;
+            _extractionWidth = chromTransition.ExtractionWidth;
+            if (chromTransition.IonMobilityIndexStart >= 0)
+            {
+                _ionMobilityValue = filters[chromTransition.IonMobilityIndexStart].IonMobility;
+                _ionMobilityExtractionWidth = filters[chromTransition.IonMobilityIndexStart].IonMobilityWindowWidth;
+            }
+            Source = chromTransition.Source;
+        }
+
+        public ChromTransition8(ChromTransition5 chromTransition5) : this(chromTransition5.Product,
             // There was an issue with Manage Results > Rescore, which made it possible to corrupt
             // the chromatogram source until a commit by Nick in March 2014, and Brian introduced
             // the next version of this struct in the May, 2014. So considering the source unknown
@@ -892,7 +898,7 @@ namespace pwiz.Skyline.Model.Results
         {            
         }
 
-        public ChromTransition(ChromTransition4 chromTransition4)
+        public ChromTransition8(ChromTransition4 chromTransition4)
             : this(chromTransition4.Product, 0, 0, 0, ChromSource.unknown)
         {
         }
@@ -906,6 +912,209 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return (FlagValues) _flagBits; }
             set { _flagBits = (ushort) value; }
+        }
+
+        public ChromSource Source
+        {
+            get
+            {
+                switch (Flags & MASK_SOURCE)
+                {
+                    case FlagValues.unknown:
+                        return ChromSource.unknown;
+                    case FlagValues.fragment:
+                        return ChromSource.fragment;
+                    case FlagValues.ms1:
+                        return ChromSource.ms1;
+                    default:
+                        return ChromSource.sim;
+                }
+            }
+            set
+            {
+                Flags = GetSourceFlags(value) | (Flags & ~MASK_SOURCE);
+            }
+        }
+
+        public bool MissingMassErrors
+        {
+            get { return (Flags & FlagValues.missing_mass_errors) != 0; }
+            set { Flags = (Flags & ~FlagValues.missing_mass_errors) | (value ? FlagValues.missing_mass_errors : 0); }
+        }
+
+        public static FlagValues GetSourceFlags(ChromSource source)
+        {
+            switch (source)
+            {
+                case ChromSource.unknown:
+                    return FlagValues.unknown;
+                case ChromSource.fragment:
+                    return FlagValues.fragment;
+                case ChromSource.ms1:
+                    return FlagValues.ms1;
+                default:
+                    return FlagValues.sim;
+            }
+        }
+
+        // Set default block size for BlockedArray<ChromTransition8>
+        public const int DEFAULT_BLOCK_SIZE = 100 * 1024 * 1024;  // 100 megabytes
+
+        // sizeof(ChromPeak)
+        public static int SizeOf
+        {
+            get { unsafe { return sizeof(ChromTransition8); } }
+        }
+
+        #region Fast file I/O
+
+        public static StructSerializer<ChromTransition8> StructSerializer(int structSizeOnDisk)
+        {
+            return new StructSerializer<ChromTransition8>()
+            {
+                DirectSerializer = DirectSerializer.Create(ReadArray, null),
+                ItemSizeOnDisk = structSizeOnDisk,
+            };
+        }
+
+        /// <summary>
+        /// Direct read of an entire array throw p-invoke of Win32 WriteFile.  This seems
+        /// to coexist with FileStream reading that the write version, but its use case
+        /// is tightly limited.
+        /// <para>
+        /// Contributed by Randy Kern.  See:
+        /// http://randy.teamkern.net/2009/02/reading-arrays-from-files-in-c-without-extra-copy.html
+        /// </para>
+        /// </summary>
+        /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
+        /// <param name="count">Number of elements to read</param>
+        /// <returns>New array of elements</returns>
+        private static unsafe ChromTransition8[] ReadArray(SafeHandle file, int count)
+        {
+            ChromTransition8[] results = new ChromTransition8[count];
+            fixed (ChromTransition8* p = results)
+            {
+                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromTransition8) * count);
+            }
+
+            return results;
+        }
+
+        public static ChromTransition8[] ReadArray(Stream stream, int count)
+        {
+            return new StructSerializer<ChromTransition8>().ReadArray(stream, count);
+        }
+
+        public static int GetStructSize(CacheFormatVersion cacheFormatVersion)
+        {
+            if (cacheFormatVersion < CacheFormatVersion.Five)
+            {
+                return 4;
+            }
+            if (cacheFormatVersion <= CacheFormatVersion.Six)
+            {
+                return 16;
+            }
+            return 24;
+        }
+
+        //
+        // NOTE: writing is handled by ChromatogramCache::WriteStructs, so any members
+        // added here need to be added there - and in the proper order!
+        // 
+
+        #endregion
+
+        #region object overrides
+
+        /// <summary>
+        /// For debugging only
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format(@"{0:F04} {1:F04} - {2}", Product, IonMobilityValue, Source);
+        }
+
+        #endregion
+
+
+
+    }
+
+    /// <summary>
+    /// Version 15 of ChromTransition adds multiple conformer support to ion mobility information
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    public struct ChromTransition
+    {
+        private double _product;
+        private float _extractionWidth;
+        private int _ionMobilityIndexStart; // Lookup into ion mobility table for start of multiple conformers range: -1 means "none"
+        private int _ionMobilityIndexEnd;  // Lookup into ion mobility table for end of range: -1 means "none", single CCS value will have start==end
+        private ushort _flagBits;
+        private ushort _align1;
+        [Flags]
+        public enum FlagValues
+        {
+            unknown = 0x00,
+            ms1 = 0x01,
+            fragment = 0x02,
+            sim = 0x03,
+
+            missing_mass_errors = 0x04,
+        }
+
+        const FlagValues MASK_SOURCE = (FlagValues)0x03;
+
+        public ChromTransition(double product, float extractionWidth, int ionMobilityIndexStart, int ionMobilityIndexEnd, ChromSource source) : this()
+        {
+            _product = product;
+            _extractionWidth = extractionWidth;
+            _ionMobilityIndexStart = ionMobilityIndexStart;
+            _ionMobilityIndexEnd = ionMobilityIndexEnd;
+            Source = source;
+        }
+
+        public ChromTransition(ChromTransition8 chromTransition8, IList<ChromIonMobilityFilter> ionMobilityTable) : this(chromTransition8.Product,
+            chromTransition8.ExtractionWidth, -1, -1, chromTransition8.Source)
+        {
+            // Deal with previous generation ion mobility encoding
+            if (chromTransition8.IonMobilityValue > 0)
+            {
+                var imStart = ionMobilityTable.Count;
+                var imFilter = ChromIonMobilityFilter.GetChromIonMobilityFilter(0, // This will be corrected once we read the old headers
+                    chromTransition8.IonMobilityValue, chromTransition8.IonMobilityExtractionWidth, 
+                    eIonMobilityUnits.none); // This will be corrected once we read the old headers
+                _ionMobilityIndexStart = _ionMobilityIndexEnd = imStart;
+                ionMobilityTable.Add(imFilter);
+            }
+        }
+
+        public ChromTransition(ChromTransition5 chromTransition5) : this(chromTransition5.Product,
+            // There was an issue with Manage Results > Rescore, which made it possible to corrupt
+            // the chromatogram source until a commit by Nick in March 2014, and Brian introduced
+            // the next version of this struct in the May, 2014. So considering the source unknown
+            // for these older files seems safest, since we are moving to paying attention to the
+            // source for chromatogram to transition matching.
+            chromTransition5.ExtractionWidth, -1, -1, ChromSource.unknown)
+        {
+        }
+
+        public ChromTransition(ChromTransition4 chromTransition4)
+            : this(chromTransition4.Product, 0, -1, -1, ChromSource.unknown)
+        {
+        }
+
+        public double Product { get { return _product; } }
+        public float ExtractionWidth { get { return _extractionWidth; } }  // In m/z
+
+        public int IonMobilityIndexStart { get { return _ionMobilityIndexStart; } }
+        public int IonMobilityIndexEnd { get { return _ionMobilityIndexEnd; } }
+
+        public FlagValues Flags
+        {
+            get { return (FlagValues)_flagBits; }
+            set { _flagBits = (ushort)value; }
         }
 
         public ChromSource Source
@@ -1022,15 +1231,133 @@ namespace pwiz.Skyline.Model.Results
         #region object overrides
 
         /// <summary>
-        /// For debugging only
+        /// For debugging only, not user-facing
         /// </summary>
         public override string ToString()
         {
-            return string.Format(@"{0:F04} {1:F04} - {2}", Product, IonMobilityValue, Source);
+            return string.Format(@"mz{0:F04} im{1},{2} {3}", Product, _ionMobilityIndexStart, _ionMobilityIndexEnd, Source);
         }
 
         #endregion
 
+
+
+    }
+
+
+    // A chromatogram may be extracted using more than one ion mobility filter
+    // (the "multiple conformers" case), so these are kept in their own table
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    public struct ChromIonMobilityFilter 
+    {
+        public static ChromIonMobilityFilter EMPTY = new ChromIonMobilityFilter(0,0,0,eIonMobilityUnits.none);
+        public float CollisionalCrossSection { get; private set; }
+        public float IonMobility { get; private set; }
+        public float IonMobilityWindowWidth { get; private set; }
+        public int Units { get; private set; }
+
+        public static ChromIonMobilityFilter GetChromIonMobilityFilter(IonMobilityFilter im)
+        {
+            return GetChromIonMobilityFilter((float) (im.CollisionalCrossSectionSqA ?? 0),
+                (float) (im.IonMobilityAndCCS.IonMobility.Mobility ?? 0),
+                (float) (im.IonMobilityExtractionWindowWidth ?? 0),
+                im.IonMobilityUnits);
+        }
+
+        public static ChromIonMobilityFilter GetChromIonMobilityFilter(float collisionalCrossSection, float ionMobility, float ionMobilityWindowWidth,
+            eIonMobilityUnits units)
+        {
+            if (collisionalCrossSection == 0 && ionMobility == 0 && ionMobilityWindowWidth == 0)
+                return EMPTY;
+            return new ChromIonMobilityFilter(collisionalCrossSection, ionMobility, ionMobilityWindowWidth, units);
+        }
+
+        private ChromIonMobilityFilter(float collisionalCrossSection, float ionMobility, float ionMobilityWindowWidth, eIonMobilityUnits units)
+        {
+            CollisionalCrossSection = collisionalCrossSection;
+            IonMobility = ionMobility;
+            IonMobilityWindowWidth = ionMobilityWindowWidth;
+            Units = (int) units;
+        }
+
+        // Set default block size for BlockedArray<ChromIonMobilityFilter>
+        public const int DEFAULT_BLOCK_SIZE = 100 * 1024 * 1024;  // 100 megabytes
+
+        // sizeof(ChromIonMobilityFilter)
+        public static int SizeOf
+        {
+            get { unsafe { return sizeof(ChromIonMobilityFilter); } }
+        }
+
+        public IonMobilityFilter GetIonMobilityFilter()
+        {
+            return IonMobilityFilter.GetIonMobilityFilter(
+                IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobility, (eIonMobilityUnits) Units,
+                    CollisionalCrossSection, null), IonMobilityWindowWidth);
+        }
+
+        #region Fast file I/O
+
+        public static StructSerializer<ChromIonMobilityFilter> StructSerializer(int structSizeOnDisk)
+        {
+            return new StructSerializer<ChromIonMobilityFilter>()
+            {
+                DirectSerializer = DirectSerializer.Create(ReadArray, null),
+                ItemSizeOnDisk = structSizeOnDisk,
+            };
+        }
+
+        /// <summary>
+        /// Direct read of an entire array throw p-invoke of Win32 WriteFile.  This seems
+        /// to coexist with FileStream reading that the write version, but its use case
+        /// is tightly limited.
+        /// <para>
+        /// Contributed by Randy Kern.  See:
+        /// http://randy.teamkern.net/2009/02/reading-arrays-from-files-in-c-without-extra-copy.html
+        /// </para>
+        /// </summary>
+        /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
+        /// <param name="count">Number of elements to read</param>
+        /// <returns>New array of elements</returns>
+        private static unsafe ChromIonMobilityFilter[] ReadArray(SafeHandle file, int count)
+        {
+            var results = new ChromIonMobilityFilter[count];
+            fixed (ChromIonMobilityFilter* p = results)
+            {
+                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromIonMobilityFilter) * count);
+            }
+
+            return results;
+        }
+
+        public static ChromIonMobilityFilter[] ReadArray(Stream stream, int count)
+        {
+            return new StructSerializer<ChromIonMobilityFilter>().ReadArray(stream, count);
+        }
+
+        public static int GetStructSize(CacheFormatVersion cacheFormatVersion)
+        {
+            return 16;
+        }
+
+        //
+        // NOTE: writing is handled by ChromatogramCache::WriteStructs, so any members
+        // added here need to be added there - and in the proper order!
+        // 
+
+        #endregion
+
+        #region object overrides
+
+        /// <summary>
+        /// For debugging only
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format(@"ccs{0:F04} im{1:F04} w{2:F04}", CollisionalCrossSection, IonMobility, IonMobilityWindowWidth);
+        }
+
+        #endregion
 
 
     }
@@ -1844,7 +2171,7 @@ namespace pwiz.Skyline.Model.Results
                         SignedMz precursor,
                         SignedMz product,
                         double extractionWidth,
-                        IonMobilityFilter ionMobility,
+                        IonMobilityFilterSet ionMobility,
                         ChromSource source,
                         ChromExtractor extractor,
                         bool calculatedMzs,
@@ -1870,7 +2197,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromKey(Target target,
                         SignedMz precursor,
-                        IonMobilityFilter ionMobilityFilter,
+                        IonMobilityFilterSet ionMobilityFilter,
                         SignedMz product,
                         double ceValue,
                         double extractionWidth,
@@ -1884,7 +2211,7 @@ namespace pwiz.Skyline.Model.Results
         {
             Target = target;
             Precursor = precursor;
-            IonMobilityFilter = ionMobilityFilter ?? IonMobilityFilter.EMPTY;
+            IonMobilityFilters = ionMobilityFilter ?? IonMobilityFilterSet.EMPTY;
             Product = product;
             CollisionEnergy = (float) ceValue;
             ExtractionWidth = (float) extractionWidth;
@@ -1904,9 +2231,7 @@ namespace pwiz.Skyline.Model.Results
 
         public Target Target { get; private set; }  // Modified sequence or custom ion id
         public SignedMz Precursor { get; private set; }
-        public double? CollisionalCrossSectionSqA { get { return IonMobilityFilter == null ? null : IonMobilityFilter.CollisionalCrossSectionSqA; }  }
-        public eIonMobilityUnits IonMobilityUnits { get { return IonMobilityFilter == null ? eIonMobilityUnits.none : IonMobilityFilter.IonMobility.Units; } }
-        public IonMobilityFilter IonMobilityFilter { get; private set; }
+        public IonMobilityFilterSet IonMobilityFilters { get; private set; }
         public SignedMz Product { get; private set; }
         public float CollisionEnergy { get; private set; }
         public float ExtractionWidth { get; private set; }
@@ -1930,7 +2255,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return new ChromKey(Target,
                                 Precursor,
-                                IonMobilityFilter,
+                                IonMobilityFilters,
                                 Product + step*ChromatogramInfo.OPTIMIZE_SHIFT_SIZE,
                                 0,
                                 ExtractionWidth,
@@ -1947,7 +2272,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return new ChromKey(Target,
                                 Precursor,
-                                IonMobilityFilter,
+                                IonMobilityFilters,
                                 Product,
                                 CollisionEnergy,
                                 ExtractionWidth,
@@ -1966,8 +2291,8 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             if (Target != null)
-                return string.Format(@"{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, Target, IonMobilityFilter);
-            return string.Format(@"{0:F04}, {1:F04} {3} - {2}", Precursor.RawValue, Product.RawValue, Source, IonMobilityFilter);
+                return string.Format(@"{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, Target, IonMobilityFilters);
+            return string.Format(@"{0:F04}, {1:F04} {3} - {2}", Precursor.RawValue, Product.RawValue, Source, IonMobilityFilters);
         }
 
         public int CompareTo(ChromKey key)
@@ -2147,7 +2472,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return Equals(Target, other.Target) &&
                 Precursor.Equals(other.Precursor) &&
-                IonMobilityFilter.Equals(other.IonMobilityFilter) &&
+                IonMobilityFilters.Equals(other.IonMobilityFilters) &&
                 Product.Equals(other.Product) &&
                 CollisionEnergy.Equals(other.CollisionEnergy) &&
                 ExtractionWidth.Equals(other.ExtractionWidth) &&
@@ -2171,7 +2496,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var hashCode = (Target != null ? Target.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ Precursor.GetHashCode();
-                hashCode = (hashCode*397) ^ IonMobilityFilter.GetHashCode();
+                hashCode = (hashCode*397) ^ IonMobilityFilters.GetHashCode();
                 hashCode = (hashCode*397) ^ Product.GetHashCode();
                 hashCode = (hashCode*397) ^ CollisionEnergy.GetHashCode();
                 hashCode = (hashCode*397) ^ ExtractionWidth.GetHashCode();
@@ -2243,6 +2568,7 @@ namespace pwiz.Skyline.Model.Results
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
         protected readonly IReadOnlyList<ChromPeak> _allPeaks;
         protected readonly IReadOnlyList<float> _allScores;
+        protected readonly IReadOnlyList<ChromIonMobilityFilter> _allIonMobilityFilters;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      IDictionary<Type, int> scoreTypeIndices,
@@ -2250,7 +2576,8 @@ namespace pwiz.Skyline.Model.Results
                                      IList<ChromCachedFile> allFiles,
                                      IReadOnlyList<ChromTransition> allTransitions,
                                      IReadOnlyList<ChromPeak> allPeaks,
-                                     IReadOnlyList<float> allScores)
+                                     IReadOnlyList<float> allScores,
+                                     IReadOnlyList<ChromIonMobilityFilter> allIonMobilityFilters)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _scoreTypeIndices = scoreTypeIndices;
@@ -2259,6 +2586,7 @@ namespace pwiz.Skyline.Model.Results
             _allTransitions = allTransitions;
             _allPeaks = allPeaks;
             _allScores = allScores;
+            _allIonMobilityFilters = allIonMobilityFilters;
         }
 
         protected ChromatogramGroupInfo()
@@ -2266,7 +2594,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         protected ChromatogramGroupInfo(ChromGroupHeaderInfo header, ChromatogramGroupInfo copyFrom) 
-            : this(header, copyFrom._scoreTypeIndices, copyFrom._textIdBytes, copyFrom._allFiles, copyFrom._allTransitions, copyFrom._allPeaks, copyFrom._allScores)
+            : this(header, copyFrom._scoreTypeIndices, copyFrom._textIdBytes, copyFrom._allFiles, copyFrom._allTransitions, copyFrom._allPeaks, copyFrom._allScores, copyFrom._allIonMobilityFilters)
         {
         }
 
@@ -2281,7 +2609,6 @@ namespace pwiz.Skyline.Model.Results
                     : null;
             }
         }
-        public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
         public ChromCachedFile CachedFile { get { return _allFiles[_groupHeaderInfo.FileIndex]; } }
         public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
         public DateTime FileWriteTime { get { return _allFiles[_groupHeaderInfo.FileIndex].FileWriteTime; } }
@@ -2375,6 +2702,15 @@ namespace pwiz.Skyline.Model.Results
         public ChromTransition GetChromTransitionLocal(int transitionIndex)
         {
             return _allTransitions[_groupHeaderInfo.StartTransitionIndex + transitionIndex];
+        }
+
+        public IonMobilityFilterSet GetIonMobilityFilterSet(int filterIndexStart, int filterIndexEnd)
+        {
+            if (filterIndexStart < 0)
+                return IonMobilityFilterSet.EMPTY;
+            return IonMobilityFilterSet.GetIonMobilityFilterSet(
+                Enumerable.Range(filterIndexStart, 1 + filterIndexEnd - filterIndexStart).Select(i =>
+                    _allIonMobilityFilters[i].GetIonMobilityFilter()));
         }
 
         public ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression)
@@ -2703,24 +3039,14 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public double? IonMobility
-        {
-            get { return FloatToNullableDouble(ChromTransition.IonMobilityValue); }
-        }
-
-        public double? IonMobilityExtractionWidth
-        {
-            get { return FloatToNullableDouble(ChromTransition.IonMobilityExtractionWidth); }
-        }
-
         public eIonMobilityUnits IonMobilityUnits
         {
             get { return Header.IonMobilityUnits; }
         }
 
-        public IonMobilityFilter GetIonMobilityFilter()
+        public bool HasIonMobility
         {
-            return IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(IonMobility, Header.IonMobilityUnits), IonMobilityExtractionWidth, _groupInfo.PrecursorCollisionalCrossSection);
+            get { return Header.IonMobilityUnits != eIonMobilityUnits.none; }
         }
 
         private static double? FloatToNullableDouble(float value)
@@ -2734,6 +3060,17 @@ namespace pwiz.Skyline.Model.Results
         private ChromTransition ChromTransition
         {
             get { return _groupInfo.GetChromTransitionLocal(_transitionIndex); }
+        }
+
+        public IonMobilityFilterSet IonMobilityFilterSet
+        {
+            get
+            {
+                var transition = ChromTransition;
+                if (transition.IonMobilityIndexStart < 0)
+                    return IonMobilityFilterSet.EMPTY;
+                return _groupInfo.GetIonMobilityFilterSet(transition.IonMobilityIndexStart, transition.IonMobilityIndexEnd);
+            }
         }
 
         private TimeIntensities RawTimeIntensities { get; set; }

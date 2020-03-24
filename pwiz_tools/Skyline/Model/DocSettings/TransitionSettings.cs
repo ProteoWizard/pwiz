@@ -46,7 +46,8 @@ namespace pwiz.Skyline.Model.DocSettings
                                   TransitionLibraries libraries,
                                   TransitionIntegration integration,
                                   TransitionInstrument instrument,
-                                  TransitionFullScan fullScan)
+                                  TransitionFullScan fullScan,
+                                  TransitionIonMobilityFiltering ionMobilityFiltering)
         {
             Prediction = prediction;
             Filter = filter;
@@ -54,6 +55,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Integration = integration;
             Instrument = instrument;
             FullScan = fullScan;
+            IonMobilityFiltering = ionMobilityFiltering;
 
             DoValidate();
         }
@@ -74,6 +76,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren(true)]
         public TransitionFullScan FullScan { get; private set; }
+
+        [TrackChildren(true)]
+        public TransitionIonMobilityFiltering IonMobilityFiltering { get; private set; }
+
 
         public bool IsMeasurablePrecursor(double mz)
         {
@@ -115,6 +121,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.Integration = prop);
         }
 
+        public TransitionSettings ChangeIonMobilityFiltering(TransitionIonMobilityFiltering prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IonMobilityFiltering = prop);
+        }
+
         public TransitionSettings ChangeInstrument(TransitionInstrument prop)
         {
             return ChangeProp(ImClone(this), im => im.Instrument = prop);
@@ -124,8 +135,6 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.FullScan = prop);
         }
-
-        
 
 
         #endregion
@@ -185,6 +194,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Read child elements.
                 Prediction = reader.DeserializeElement<TransitionPrediction>();
                 Filter = reader.DeserializeElement<TransitionFilter>();
+                IonMobilityFiltering = reader.IsStartElement(TransitionIonMobilityFiltering.EL.ion_mobility_filtering) ?
+                    reader.DeserializeElement<TransitionIonMobilityFiltering>() :
+                    TransitionIonMobilityFiltering.EMPTY; // Looks like a pre-20.2 format
                 Libraries = reader.DeserializeElement<TransitionLibraries>();
                 Integration = reader.DeserializeElement<TransitionIntegration>();
                 Instrument = reader.DeserializeElement<TransitionInstrument>();
@@ -215,6 +227,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write child elements
             writer.WriteElement(Prediction);
             writer.WriteElement(Filter);
+            if (!IonMobilityFiltering.IsEmpty)
+                writer.WriteElement(IonMobilityFiltering);
             writer.WriteElement(Libraries);
             writer.WriteElement(Integration);
             writer.WriteElement(Instrument);
@@ -234,6 +248,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(this, obj)) return true;
             return Equals(obj.Prediction, Prediction) &&
                    Equals(obj.Filter, Filter) &&
+                   Equals(obj.IonMobilityFiltering, IonMobilityFiltering) &&
                    Equals(obj.Libraries, Libraries) &&
                    Equals(obj.Integration, Integration) &&
                    Equals(obj.Instrument, Instrument) &&
@@ -254,6 +269,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int result = Prediction.GetHashCode();
                 result = (result * 397) ^ Filter.GetHashCode();
+                result = (result * 397) ^ IonMobilityFiltering.GetHashCode();
                 result = (result * 397) ^ Libraries.GetHashCode();
                 result = (result * 397) ^ Integration.GetHashCode();
                 result = (result * 397) ^ Instrument.GetHashCode();

@@ -84,29 +84,29 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var transitions = document.MoleculeTransitions.ToArray();
 
             // Verify ability to extract ion mobility peaks from raw data
-            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
-                () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+            var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            RunUI(()=>transitionSettingsDlg.IonMobilityControl.IonMobilityFilterResolvingPower = 40);
 
             // Simulate user picking Add from the ion mobility Predictor combo control
-            var driftTimePredictorDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);
+            var driftTimePredictorDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.AddIonMobilityLibrary);
             RunUI(() =>
             {
                 driftTimePredictorDlg.SetOffsetHighEnergySpectraCheckbox(true);
-                driftTimePredictorDlg.SetPredictorName("test_tims");
-                driftTimePredictorDlg.SetResolvingPower(40);
-                driftTimePredictorDlg.GetDriftTimesFromResults();
+                driftTimePredictorDlg.LibraryName = "test_tims";
+                driftTimePredictorDlg.GetIonMobilitiesFromResults();
             });
             // PauseTest(); // Uncomment this to inspect ion mobility finder results
             RunUI(() =>
             {
-                driftTimePredictorDlg.OkDialog(true); // Force overwrite if a named predictor already exists
+                driftTimePredictorDlg.OkDialog();
             });
             WaitForClosedForm(driftTimePredictorDlg);
             RunUI(() =>
             {
-                peptideSettingsDlg.OkDialog();
+                transitionSettingsDlg.OkDialog();
             });
-            WaitForClosedForm(peptideSettingsDlg);
+            WaitForClosedForm(transitionSettingsDlg);
 
             var docChangedDriftTimePredictor = WaitForDocumentChange(document);
 

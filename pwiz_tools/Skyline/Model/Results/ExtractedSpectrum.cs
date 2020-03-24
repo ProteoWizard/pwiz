@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Results
         public ExtractedSpectrum(Target target,
                                  Color peptideColor,
                                  SignedMz precursorMz,
-                                 IonMobilityFilter ionMobility,
+                                 IonMobilityFilterSet ionMobility,
                                  ChromExtractor chromExtractor,
                                  int filterIndex,
                                  SpectrumProductFilter[] productFilters,
@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Results
         public Target Target { get; private set; } // Peptide modified sequence or custom ion id
         public Color PeptideColor { get; private set; }
         public SignedMz PrecursorMz { get; private set; }
-        public IonMobilityFilter IonMobility { get; private set; }
+        public IonMobilityFilterSet IonMobility { get; private set; }
         public int FilterIndex { get; private set; }
         public SpectrumProductFilter[] ProductFilters { get; private set; }
         public float[] Intensities { get; private set; }

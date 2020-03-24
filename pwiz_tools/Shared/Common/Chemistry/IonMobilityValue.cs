@@ -29,9 +29,11 @@ namespace pwiz.Common.Chemistry
         compensation_V
     }
 
-    public sealed class IonMobilityValue : IComparable<IonMobilityValue>, IComparable
+    public sealed class IonMobilityValue : Immutable, IComparable<IonMobilityValue>
     {
         public static IonMobilityValue EMPTY = new IonMobilityValue(null, eIonMobilityUnits.none);
+
+        public static bool IsNullOrEmpty(IonMobilityValue val) { return Equals(val, null) || Equals(val, EMPTY); }
 
         // Private so we can issue EMPTY in the common case of no ion mobility info
         private IonMobilityValue(double? mobility, eIonMobilityUnits units)
@@ -76,8 +78,33 @@ namespace pwiz.Common.Chemistry
         }
         public IonMobilityValue ChangeIonMobility(double? value)
         {
-            return value == Mobility  ?this : GetIonMobilityValue(value, Units);
+            return value == Mobility ? this : GetIonMobilityValue(value, Units);
         }
+
+        /// <summary>
+        /// Merge non-empty parts of other into a copy of this
+        /// </summary>
+        public IonMobilityValue Merge(IonMobilityValue other)
+        {
+            var val = this;
+            if (other.Units != eIonMobilityUnits.none)
+            {
+                if (other.HasValue)
+                {
+                    val = other;
+                }
+                else
+                {
+                    val = val.ChangeIonMobility(Mobility, other.Units);
+                }
+            }
+            else if (other.HasValue)
+            {
+                val = val.ChangeIonMobility(other.Mobility);
+            }
+            return val;
+        }
+
         [Track]
         public double? Mobility { get; private set; }
         public eIonMobilityUnits Units { get; private set; }

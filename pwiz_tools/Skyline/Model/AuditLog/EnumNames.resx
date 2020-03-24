@@ -189,6 +189,9 @@
   <data name="IsolationWidthType_fixed_width" xml:space="preserve">
     <value>Fixed</value>
   </data>
+  <data name="IsolationWidthType_none" xml:space="preserve">
+    <value>None</value>
+  </data>
   <data name="IsolationWidthType_results" xml:space="preserve">
     <value>Results</value>
   </data>
@@ -551,5 +554,17 @@
   </data>
   <data name="IrtRegressionType_logarithmic" xml:space="preserve">
     <value>Logarithmic</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_linear_range" xml:space="preserve">
+    <value>Linear range</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_resolving_power" xml:space="preserve">
+    <value>Resolving power</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_fixed_width" xml:space="preserve">
+    <value>Fixed width</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
+    <value>None</value>
   </data>
 </root>

@@ -1503,6 +1503,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Offset ion mobility values for high energy spectra.
         /// </summary>
+        public static string IonMobilityAndCCS_HighEnergyIonMobilityOffset {
+            get {
+                return ResourceManager.GetString("IonMobilityAndCCS_HighEnergyIonMobilityOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Offset ion mobility values for high energy spectra.
+        /// </summary>
         public static string IonMobilityAndCCS_HighEnergyIonMobilityValueOffset {
             get {
                 return ResourceManager.GetString("IonMobilityAndCCS_HighEnergyIonMobilityValueOffset", resourceCulture);
@@ -1591,6 +1600,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion mobility filter window fixed width value.
+        /// </summary>
+        public static string IonMobilityWindowWidthCalculator_FixedWindowWidth {
+            get {
+                return ResourceManager.GetString("IonMobilityWindowWidthCalculator_FixedWindowWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Linear peak width.
         /// </summary>
         public static string IonMobilityWindowWidthCalculator_LinearPeakWidth {
@@ -1623,6 +1641,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string IonMobilityWindowWidthCalculator_ResolvingPower {
             get {
                 return ResourceManager.GetString("IonMobilityWindowWidthCalculator_ResolvingPower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility filter window width calculation type.
+        /// </summary>
+        public static string IonMobilityWindowWidthCalculator_WindowWidthMode {
+            get {
+                return ResourceManager.GetString("IonMobilityWindowWidthCalculator_WindowWidthMode", resourceCulture);
             }
         }
         
@@ -3832,6 +3859,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion mobility library.
+        /// </summary>
+        public static string TransitionIonMobilityFiltering_IonMobilityLibrary {
+            get {
+                return ResourceManager.GetString("TransitionIonMobilityFiltering_IonMobilityLibrary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use spectral library ion mobility values.
+        /// </summary>
+        public static string TransitionIonMobilityFiltering_UseSpectralLibraryIonMobilityValues {
+            get {
+                return ResourceManager.GetString("TransitionIonMobilityFiltering_UseSpectralLibraryIonMobilityValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Product ions.
         /// </summary>
         public static string TransitionLibraries_IonCount {
@@ -3972,6 +4017,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionSettings_Instrument {
             get {
                 return ResourceManager.GetString("TransitionSettings_Instrument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility.
+        /// </summary>
+        public static string TransitionSettings_IonMobilityFiltering {
+            get {
+                return ResourceManager.GetString("TransitionSettings_IonMobilityFiltering", resourceCulture);
             }
         }
         

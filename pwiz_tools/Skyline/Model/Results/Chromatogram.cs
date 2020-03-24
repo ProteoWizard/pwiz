@@ -742,6 +742,7 @@ namespace pwiz.Skyline.Model.Results
                     reader.IsStartElement(EL.replicate_file) ||
                     reader.IsStartElement(EL.chromatogram_file))
             {
+                var name = reader.Name;
                 // Note that the file path may actually be a URI that encodes things like lockmass correction as well as filename
                 var fileUri = MsDataFileUri.Parse(reader.GetAttribute(ATTR.file_path));
                 // BACKWARD COMPATIBILITY: Deal with legacy parameters which got stored on the file_path URI
@@ -762,12 +763,12 @@ namespace pwiz.Skyline.Model.Results
                 
                 string id = reader.GetAttribute(ATTR.id) ?? GetOrdinalSaveId(fileLoadIds.Count);
                 fileLoadIds.Add(id);
-                reader.Read();
+                reader.Read(); // Consume end tag, or position on instrument_info_list
                 if (reader.IsStartElement(EL.instrument_info_list))
                 {
                     reader.Skip();
-                    reader.Read();
-                } 
+                    reader.ReadEndElement(); // Consume end tag of EL.*_file
+                }
             }
             Annotations = DocumentReader.ReadAnnotations(reader);
 
