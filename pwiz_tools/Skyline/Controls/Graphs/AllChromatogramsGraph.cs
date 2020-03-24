@@ -151,6 +151,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         [HandleProcessCorruptedStateExceptions]
         [SecurityCritical]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         protected override void CreateHandle()
         {
             Assume.IsFalse(_inCreateHandle);
@@ -182,6 +183,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// test failures are figured out.
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         protected override void Dispose(bool disposing)
         {
             if (_inCreateHandle)
