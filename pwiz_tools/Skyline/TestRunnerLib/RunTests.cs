@@ -478,6 +478,8 @@ namespace TestRunnerLib
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool HeapUnlock(IntPtr hHeap);
 
+            private static bool _heapDiagnostics = false;
+
             public struct HeapAllocationSizes
             {
                 public long Committed { get; set; }
@@ -505,8 +507,6 @@ namespace TestRunnerLib
                 {
                     var h = buffer[i];
                     HeapLock(h);
-                    sizes[i].CommittedSizes = new Dictionary<long, int>();
-                    sizes[i].StringCounts = new Dictionary<string, int>();
                     var e = new PROCESS_HEAP_ENTRY();
                     while (HeapWalk(h, ref e))
                     {
@@ -514,39 +514,47 @@ namespace TestRunnerLib
                         {
                             sizes[i].Committed += e.cbData + e.cbOverhead;
 
-                            // Update count
-                            if (!sizes[i].CommittedSizes.ContainsKey(e.cbData))
-                                sizes[i].CommittedSizes[e.cbData] = 1;
-                            else
-                                sizes[i].CommittedSizes[e.cbData]++;
+                            if (_heapDiagnostics)
+                            {
+                                if (sizes[i].CommittedSizes == null)
+                                {
+                                    sizes[i].CommittedSizes = new Dictionary<long, int>();
+                                    sizes[i].StringCounts = new Dictionary<string, int>();
+                                }
+                                // Update count
+                                if (!sizes[i].CommittedSizes.ContainsKey(e.cbData))
+                                    sizes[i].CommittedSizes[e.cbData] = 1;
+                                else
+                                    sizes[i].CommittedSizes[e.cbData]++;
 
-                            // Find string(s)
-                            const int MIN_STRING_LENGTH = 8;
-                            var byteData = new byte[e.cbData];
-                            Marshal.Copy(e.lpData, byteData, 0, byteData.Length);
-                            var byteSb = new StringBuilder();
-                            var byteStrings = new List<string>();
-                            for (var j = 0; j < byteData.Length; j++)
-                            {
-                                if (32 <= byteData[j] && byteData[j] <= 126)
+                                // Find string(s)
+                                const int MIN_STRING_LENGTH = 8;
+                                var byteData = new byte[e.cbData];
+                                Marshal.Copy(e.lpData, byteData, 0, byteData.Length);
+                                var byteSb = new StringBuilder();
+                                var byteStrings = new List<string>();
+                                for (var j = 0; j < byteData.Length; j++)
                                 {
-                                    byteSb.Append((char) byteData[j]);
+                                    if (32 <= byteData[j] && byteData[j] <= 126)
+                                    {
+                                        byteSb.Append((char)byteData[j]);
+                                    }
+                                    else
+                                    {
+                                        if (byteSb.Length >= MIN_STRING_LENGTH)
+                                            byteStrings.Add(byteSb.ToString());
+                                        byteSb.Clear();
+                                    }
                                 }
-                                else
+                                if (byteSb.Length >= MIN_STRING_LENGTH)
+                                    byteStrings.Add(byteSb.ToString()); // Add the last string
+                                foreach (var byteString in byteStrings)
                                 {
-                                    if (byteSb.Length >= MIN_STRING_LENGTH)
-                                        byteStrings.Add(byteSb.ToString());
-                                    byteSb.Clear();
+                                    if (!sizes[i].StringCounts.ContainsKey(byteString))
+                                        sizes[i].StringCounts[byteString] = 1;
+                                    else
+                                        sizes[i].StringCounts[byteString]++;
                                 }
-                            }
-                            if (byteSb.Length >= MIN_STRING_LENGTH)
-                                byteStrings.Add(byteSb.ToString()); // Add the last string
-                            foreach (var byteString in byteStrings)
-                            {
-                                if (!sizes[i].StringCounts.ContainsKey(byteString))
-                                    sizes[i].StringCounts[byteString] = 1;
-                                else
-                                    sizes[i].StringCounts[byteString]++;
                             }
                         }
                         else if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_UNCOMMITTED_RANGE) != 0)
@@ -647,7 +655,7 @@ namespace TestRunnerLib
             if (errorMessage?.Length > 0)
             {
                 // ReSharper disable LocalizableElement
-                var tcMessage = new System.Text.StringBuilder(errorMessage);
+                var tcMessage = new StringBuilder(errorMessage);
                 tcMessage.Replace("|", "||");
                 tcMessage.Replace("'", "|'");
                 tcMessage.Replace("\n", "|n");
