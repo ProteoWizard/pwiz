@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util;
@@ -77,6 +79,34 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string ToString()
         {
             return ToString(Formats.RETENTION_TIME);
+        }
+    }
+
+    // ReSharper disable LocalizableElement
+    public class DetectionQValueSummary
+    {
+        public DetectionQValueSummary(Statistics statistics)
+        {
+            Min = statistics.Min();
+            Max = statistics.Max();
+            Median = statistics.Median();
+        }
+
+        [Format(Formats.PValue, NullValue = TextUtil.EXCEL_NA)]
+        public double? Min { get; private set; }
+
+        [Format(Formats.PValue, NullValue = TextUtil.EXCEL_NA)]
+        public double? Max { get; private set; }
+
+        [Format(Formats.PValue, NullValue = TextUtil.EXCEL_NA)]
+        public double? Median { get; private set; }
+        public override string ToString()
+        {
+            if (Median.HasValue)
+            {
+                return String.Format(Formats.PValue, Median);
+            }
+            return "N/A";
         }
     }
 
