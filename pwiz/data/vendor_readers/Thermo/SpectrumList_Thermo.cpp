@@ -449,6 +449,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             for (const auto& precursorInfo : boost::adaptors::reverse(precursorInfoList)) // highest ms level first
             {
                 precursor.clear();
+                precursor.isolationWindow.clear();
                 selectedIon.clear();
 
                 double isolationMz = precursorInfo.isolationMZ;
@@ -466,7 +467,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
                 precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
                 precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
-                precursor.userParams.push_back(UserParam("ms level", lexical_cast<string>(precursorInfo.msLevel)));
+                precursor.isolationWindow.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
 
                 ActivationType activationType = scanInfo->activationType();
                 if (activationType == ActivationType_Unknown)
@@ -646,7 +647,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                     if (ie.msOrder != MSOrder_ParentScan)
                         precursor.selectedIons.push_back(selectedIon);
 
-                    precursor.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
+                    precursor.isolationWindow.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
                     result->precursors.push_back(precursor);
 
                     if (ie.msOrder == MSOrder_ParentScan)
@@ -705,7 +706,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                     //    precursor.activation.set(MS_collision_energy, electronvoltActivationEnergy.get(), UO_electronvolt);
 
                     precursor.selectedIons.push_back(selectedIon);
-                    precursor.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
+                    precursor.isolationWindow.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
                     result->precursors.push_back(precursor);
                 }
             }

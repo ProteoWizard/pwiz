@@ -466,7 +466,6 @@ namespace pwiz.SkylineTestTutorial
                     AssertEx.FieldsEqual(target, actual, 6, null, true);
                 }
             }
-            PauseForAuditLog();
         }
         private void ShowNodeTip(string nodeText)
         {

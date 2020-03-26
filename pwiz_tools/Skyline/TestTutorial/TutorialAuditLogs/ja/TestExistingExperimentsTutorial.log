@@ -517,6 +517,12 @@ All Info  :
 トランジションの設定－装置>メソッド許容誤差m/zが"0.065"に変更されました
 設定>トランジションの設定－装置>メソッド許容誤差m/zは"0.055"から"0.065"に変更されました
 
+Undo Redo : トランジションの設定－Integration>Integrate Allが真に変更されました
+Summary   : 設定>トランジションの設定－Integration>Integrate Allが真に変更されました
+All Info  :
+トランジションの設定－Integration>Integrate Allが真に変更されました
+設定>トランジションの設定－Integration>Integrate Allは偽から真に変更されました
+
 Undo Redo : A_01のアナライト濃度が"0"に設定されました
 Summary   : A_01のアナライト濃度が"0"に設定されました
 All Info  :
