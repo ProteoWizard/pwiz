@@ -20,17 +20,20 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog.Databinding
 {
     public class AuditLogRow : SkylineObject
     {
+        public const int FIRST_LOG_INDEX = 1;
         private readonly AuditLogEntry _entry;
         private readonly bool _isMultipleUndo;
 
@@ -61,7 +64,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             _entry = entry;
             Id = new AuditLogRowId(id, 0);
             Details = ImmutableList.ValueOf(entry.AllInfo.Select((l, i) =>
-                new AuditLogDetailRow(this, new AuditLogRowId(id, i + 1))));
+                new AuditLogDetailRow(this, new AuditLogRowId(id, FIRST_LOG_INDEX + i))));
             _isMultipleUndo = GetIsMultipleUndo();
         }
 
@@ -183,6 +186,11 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             }
 
             return document;
+        }
+
+        public override ElementRef GetElementRef()
+        {
+            return AuditLogEntryRef.PROTOTYPE.ChangeName(AuditLogEntryRef.GetEntryName(_entry));
         }
     }
 }
