@@ -162,8 +162,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             set
             {
                 var newEntry = Entry.ChangeReason(value);
-                ModifyDocument(EditColumnDescription(nameof(Reason), value), d => ChangeEntry(d, newEntry),
-                    AuditLogEntry.SkipChange);
+                ModifyDocument(EditColumnDescription(nameof(Reason), value), d => ChangeEntry(d, newEntry));
             }
         }
 

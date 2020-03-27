@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 entry = entry.ChangeAllInfo(allInfoCopy);
 
                 ModifyDocument(EditColumnDescription(nameof(DetailReason), value),
-                    doc => AuditLogRow.ChangeEntry(doc, entry), AuditLogEntry.SkipChange);
+                    doc => AuditLogRow.ChangeEntry(doc, entry));
             }
         }
 
