@@ -32,7 +32,6 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 {
     public class AuditLogRow : SkylineObject
     {
-        public const int FIRST_LOG_INDEX = 1;
         private readonly AuditLogEntry _entry;
         private readonly bool _isMultipleUndo;
 
@@ -63,7 +62,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             _entry = entry;
             Id = new AuditLogRowId(id, 0);
             Details = ImmutableList.ValueOf(entry.AllInfo.Select((l, i) =>
-                new AuditLogDetailRow(this, new AuditLogRowId(id, FIRST_LOG_INDEX + i))));
+                new AuditLogDetailRow(this, new AuditLogRowId(id, i + 1))));
             _isMultipleUndo = GetIsMultipleUndo();
         }
 
