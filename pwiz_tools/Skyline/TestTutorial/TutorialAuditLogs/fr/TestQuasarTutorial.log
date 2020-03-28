@@ -16,7 +16,7 @@ Undo Redo : Pasted 120 values into the document grid
 Summary   : Pasted 120 values into the document grid
 All Info  :
 Pasted 120 values into the document grid
-Document grid > View name is "Replicates"
+Document grid > Report name is "Replicates"
 Set SampleGroup of 9-1_Site56B_A1_CalCurve_run_028 to "A"
 Set Concentration of 9-1_Site56B_A1_CalCurve_run_028 to "0"
 Set IS Spike of 9-1_Site56B_A1_CalCurve_run_028 to "10"
@@ -178,5 +178,5 @@ J	100	10
 J	100	10
 J	100	10
 
-View name = "Replicates"
+Report name = "Replicates"
 

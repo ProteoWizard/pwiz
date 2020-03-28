@@ -93,15 +93,15 @@ Extra Info: 標準	40
 
 ビュー名 = "繰り返し測定"
 
-Undo Redo : 「FOXN1-GST」にあるGST-tag>IEAIPQIDK>517.8022++ (heavy)の全ピークの終了時間が21.08から21.12に変更されました
-Summary   : 「FOXN1-GST」にあるGST-tag>IEAIPQIDK>517.8022++ (heavy)の全ピークの終了時間が21.08から21.12に変更されました
+Undo Redo : GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました
+Summary   : GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました
 All Info  :
-「FOXN1-GST」にあるGST-tag>IEAIPQIDK>517.8022++ (heavy)の全ピークの終了時間が21.08から21.12に変更されました
+GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました
+「FOXN1-GST」にあるGST-tag>IEAIPQIDK>517.8022++ (heavy)の全ピークの開始時間が20.54から20.64に変更されました
+「FOXN1-GST」にあるGST-tag>IEAIPQIDK>517.8022++ (heavy)の全ピークの終了時間が21.08から21.15に変更されました
 
-Undo Redo : 「FOXN1-GST」にあるGST-tag>IEAIPQIDK>517.8022++ (heavy)の全ピークの終了時間が21.08から21.12に変更されました
-Summary   : 「FOXN1-GST」にあるGST-tag>IEAIPQIDK>517.8022++ (heavy)の全ピークの終了時間が21.08から21.12に変更されました
-All Info  :
-「FOXN1-GST」にあるGST-tag>IEAIPQIDK>517.8022++ (heavy)の全ピークの終了時間が21.08から21.12に変更されました
+Reason Changed: GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました 
+Reason: '' to 'Changed peak integration as instructed by the tutorial'
 
 Undo Redo : 繰り返し測定Standard_5の校正でペプチドIEAIPQIDKを除外しています
 Summary   : 繰り返し測定Standard_5の校正でペプチドIEAIPQIDKを除外しています
@@ -123,8 +123,15 @@ Summary   : 繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除�
 All Info  :
 繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています
 
-Undo Redo : 繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています
-Summary   : 繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています
-All Info  :
-繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています
+Reason Changed: 繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: 繰り返し測定Standard_7の校正でペプチドIEAIPQIDKを除外しています 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: 繰り返し測定Standard_6の校正でペプチドIEAIPQIDKを除外しています 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: 繰り返し測定Standard_5の校正でペプチドIEAIPQIDKを除外しています 
+Reason: '' to 'Excluded standard below LOD'
 

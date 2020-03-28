@@ -305,8 +305,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
                 if (CalibrationCurve.RSquared.HasValue)
                 {
-                    labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_ +
-                                   CalibrationCurve.RSquared.Value.ToString(@"0.####"));
+                    labelLines.Add(CalibrationCurve.RSquaredDisplayText(CalibrationCurve.RSquared.Value));
                 }
                 if (!Equals(curveFitter.QuantificationSettings.RegressionWeighting, RegressionWeighting.NONE))
                 {

@@ -65,7 +65,7 @@ Undo Redo : Pasted 16 values into the document grid
 Summary   : Pasted 16 values into the document grid
 All Info  :
 Pasted 16 values into the document grid
-Document grid > View name is "Replicates"
+Document grid > Report name is "Replicates"
 Set Sample Type of Standard_1 to "Standard"
 Set Analyte Concentration of Standard_1 to "40"
 Set Sample Type of Standard_2 to "Standard"
@@ -91,40 +91,47 @@ Standard	0.5
 Standard	0.25
 Standard	0.1
 
-View name = "Replicates"
+Report name = "Replicates"
 
-Undo Redo : Changed end time of all peaks of GST-tag > IEAIPQIDK > 517.8022++ (heavy) in "FOXN1-GST" from 21.08 to 21.12
-Summary   : Changed end time of all peaks of GST-tag > IEAIPQIDK > 517.8022++ (heavy) in "FOXN1-GST" from 21.08 to 21.12
+Undo Redo : Changed peak bounds of GST-tag > IEAIPQIDK > 517.8022++ (heavy)
+Summary   : Changed peak bounds of GST-tag > IEAIPQIDK > 517.8022++ (heavy)
 All Info  :
-Changed end time of all peaks of GST-tag > IEAIPQIDK > 517.8022++ (heavy) in "FOXN1-GST" from 21.08 to 21.12
+Changed peak bounds of GST-tag > IEAIPQIDK > 517.8022++ (heavy)
+Changed start time of all peaks of GST-tag > IEAIPQIDK > 517.8022++ (heavy) in "FOXN1-GST" from 20.54 to 20.64
+Changed end time of all peaks of GST-tag > IEAIPQIDK > 517.8022++ (heavy) in "FOXN1-GST" from 21.08 to 21.15
 
-Undo Redo : Changed end time of all peaks of GST-tag > IEAIPQIDK > 517.8022++ (heavy) in "FOXN1-GST" from 21.08 to 21.12
-Summary   : Changed end time of all peaks of GST-tag > IEAIPQIDK > 517.8022++ (heavy) in "FOXN1-GST" from 21.08 to 21.12
-All Info  :
-Changed end time of all peaks of GST-tag > IEAIPQIDK > 517.8022++ (heavy) in "FOXN1-GST" from 21.08 to 21.12
+Reason Changed: Changed peak bounds of GST-tag > IEAIPQIDK > 517.8022++ (heavy) 
+Reason: '' to 'Changed peak integration as instructed by the tutorial'
 
-Undo Redo : Excluding peptide IEAIPQIDK in calibration of replicate Standard_5
-Summary   : Excluding peptide IEAIPQIDK in calibration of replicate Standard_5
+Undo Redo : Excluding peptide IEAIPQIDK replicate Standard_5 from calibration curve
+Summary   : Excluding peptide IEAIPQIDK replicate Standard_5 from calibration curve
 All Info  :
-Excluding peptide IEAIPQIDK in calibration of replicate Standard_5
+Excluding peptide IEAIPQIDK replicate Standard_5 from calibration curve
 
-Undo Redo : Excluding peptide IEAIPQIDK in calibration of replicate Standard_6
-Summary   : Excluding peptide IEAIPQIDK in calibration of replicate Standard_6
+Undo Redo : Excluding peptide IEAIPQIDK replicate Standard_6 from calibration curve
+Summary   : Excluding peptide IEAIPQIDK replicate Standard_6 from calibration curve
 All Info  :
-Excluding peptide IEAIPQIDK in calibration of replicate Standard_6
+Excluding peptide IEAIPQIDK replicate Standard_6 from calibration curve
 
-Undo Redo : Excluding peptide IEAIPQIDK in calibration of replicate Standard_7
-Summary   : Excluding peptide IEAIPQIDK in calibration of replicate Standard_7
+Undo Redo : Excluding peptide IEAIPQIDK replicate Standard_7 from calibration curve
+Summary   : Excluding peptide IEAIPQIDK replicate Standard_7 from calibration curve
 All Info  :
-Excluding peptide IEAIPQIDK in calibration of replicate Standard_7
+Excluding peptide IEAIPQIDK replicate Standard_7 from calibration curve
 
-Undo Redo : Excluding peptide IEAIPQIDK in calibration of replicate Standard_8
-Summary   : Excluding peptide IEAIPQIDK in calibration of replicate Standard_8
+Undo Redo : Excluding peptide IEAIPQIDK replicate Standard_8 from calibration curve
+Summary   : Excluding peptide IEAIPQIDK replicate Standard_8 from calibration curve
 All Info  :
-Excluding peptide IEAIPQIDK in calibration of replicate Standard_8
+Excluding peptide IEAIPQIDK replicate Standard_8 from calibration curve
 
-Undo Redo : Excluding peptide IEAIPQIDK in calibration of replicate Standard_8
-Summary   : Excluding peptide IEAIPQIDK in calibration of replicate Standard_8
-All Info  :
-Excluding peptide IEAIPQIDK in calibration of replicate Standard_8
+Reason Changed: Excluding peptide IEAIPQIDK replicate Standard_8 from calibration curve 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: Excluding peptide IEAIPQIDK replicate Standard_7 from calibration curve 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: Excluding peptide IEAIPQIDK replicate Standard_6 from calibration curve 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: Excluding peptide IEAIPQIDK replicate Standard_5 from calibration curve 
+Reason: '' to 'Excluded standard below LOD'
 

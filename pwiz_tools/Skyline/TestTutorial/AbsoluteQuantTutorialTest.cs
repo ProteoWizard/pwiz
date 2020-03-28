@@ -103,10 +103,6 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
                 WaitForDocumentChange(doc);
             }
-            RunUI(() =>
-            {
-                SkylineWindow.GraphSpectrum.Hide();
-            });
 
             // Configuring Peptide settings p. 4
             PeptideSettingsUI peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
