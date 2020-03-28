@@ -26,6 +26,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
 using log4net;
@@ -477,11 +478,16 @@ namespace TestRunnerLib
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool HeapUnlock(IntPtr hHeap);
 
+            private static bool _heapDiagnostics = false;
+
             public struct HeapAllocationSizes
             {
                 public long Committed { get; set; }
                 public long Reserved { get; set; }
                 public long Unknown { get; set; }
+
+                public Dictionary<long, int> CommittedSizes { get; set; }
+                public Dictionary<string, int> StringCounts { get; set; }
 
                 public override string ToString()
                 {
@@ -505,7 +511,52 @@ namespace TestRunnerLib
                     while (HeapWalk(h, ref e))
                     {
                         if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_ENTRY_BUSY) != 0)
+                        {
                             sizes[i].Committed += e.cbData + e.cbOverhead;
+
+                            if (_heapDiagnostics)
+                            {
+                                if (sizes[i].CommittedSizes == null)
+                                {
+                                    sizes[i].CommittedSizes = new Dictionary<long, int>();
+                                    sizes[i].StringCounts = new Dictionary<string, int>();
+                                }
+                                // Update count
+                                if (!sizes[i].CommittedSizes.ContainsKey(e.cbData))
+                                    sizes[i].CommittedSizes[e.cbData] = 1;
+                                else
+                                    sizes[i].CommittedSizes[e.cbData]++;
+
+                                // Find string(s)
+                                const int MIN_STRING_LENGTH = 8;
+                                var byteData = new byte[e.cbData];
+                                Marshal.Copy(e.lpData, byteData, 0, byteData.Length);
+                                var byteSb = new StringBuilder();
+                                var byteStrings = new List<string>();
+                                for (var j = 0; j < byteData.Length; j++)
+                                {
+                                    if (32 <= byteData[j] && byteData[j] <= 126)
+                                    {
+                                        byteSb.Append((char)byteData[j]);
+                                    }
+                                    else
+                                    {
+                                        if (byteSb.Length >= MIN_STRING_LENGTH)
+                                            byteStrings.Add(byteSb.ToString());
+                                        byteSb.Clear();
+                                    }
+                                }
+                                if (byteSb.Length >= MIN_STRING_LENGTH)
+                                    byteStrings.Add(byteSb.ToString()); // Add the last string
+                                foreach (var byteString in byteStrings)
+                                {
+                                    if (!sizes[i].StringCounts.ContainsKey(byteString))
+                                        sizes[i].StringCounts[byteString] = 1;
+                                    else
+                                        sizes[i].StringCounts[byteString]++;
+                                }
+                            }
+                        }
                         else if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_UNCOMMITTED_RANGE) != 0)
                             sizes[i].Reserved += e.cbData + e.cbOverhead;
                         else
@@ -604,7 +655,7 @@ namespace TestRunnerLib
             if (errorMessage?.Length > 0)
             {
                 // ReSharper disable LocalizableElement
-                var tcMessage = new System.Text.StringBuilder(errorMessage);
+                var tcMessage = new StringBuilder(errorMessage);
                 tcMessage.Replace("|", "||");
                 tcMessage.Replace("'", "|'");
                 tcMessage.Replace("\n", "|n");
