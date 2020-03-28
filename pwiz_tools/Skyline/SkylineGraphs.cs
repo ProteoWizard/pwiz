@@ -4470,7 +4470,8 @@ namespace pwiz.Skyline
 
                 if (areaCVCountTransitionsToolStripMenuItem.DropDownItems.Count == 0)
                 {
-                    var maxTransCount = Document.PeptideTransitionGroups.Max(g => g.TransitionCount);
+                    var maxTransCount = Document.MoleculeTransitionGroups
+                        .Select(g => g.TransitionCount).Append(0).Max();
                     for (int i = 1; i <= maxTransCount; i++)
                     {
                         var tmp = new ToolStripMenuItem(i.ToString(), null,
@@ -4855,9 +4856,9 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        public void SetAreaCVAnnotation(string annotation, bool update = true)
+        public void SetAreaCVAnnotation(object annotationValue, bool update = true)
         {
-            AreaGraphController.GroupByAnnotation = annotation;
+            AreaGraphController.GroupByAnnotation = annotationValue;
 
             if(update)
                 UpdatePeakAreaGraph();

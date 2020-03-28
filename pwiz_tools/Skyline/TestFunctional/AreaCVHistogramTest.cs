@@ -234,7 +234,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets));
             WaitForGraphs();
 
-            string[] annotations = null;
+            object[] annotations = null;
             RunUI(() => annotations = toolbar.Annotations.ToArray());
 
             CollectionAssert.AreEqual(annotations,
