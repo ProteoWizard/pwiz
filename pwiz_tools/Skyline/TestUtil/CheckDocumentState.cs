@@ -71,7 +71,8 @@ namespace pwiz.SkylineTestUtil
                     ? AbstractFunctionalTest.WaitForDocumentChangeLoaded(newDocument, _waitMillis)
                     : AbstractFunctionalTest.WaitForDocumentChange(newDocument);
             }
-            while (newDocument.RevisionIndex < revision);
+            // Unlogged changes can cause a lack of document revision increment
+            while (_revisionIncrement.HasValue && newDocument.RevisionIndex < revision);
             return newDocument;
         }
 

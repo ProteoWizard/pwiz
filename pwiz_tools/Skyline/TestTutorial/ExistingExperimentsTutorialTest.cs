@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestTutorial
     /// Testing the tutorial for Skyline Existing Quantitative Experiments.
     /// </summary>
     [TestClass]
-    public class ExistingExperimentsTutorialTest : AbstractFunctionalTest
+    public class ExistingExperimentsTutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestExistingExperimentsTutorial()
@@ -645,14 +645,6 @@ namespace pwiz.SkylineTestTutorial
                         .Contains(expectedPrecursorMz.ToString(LocalizationHelper.CurrentCulture))));
                 selNode.Pick(choices, false, false);
             });
-        }
-
-        private void SetCellValue(DataGridView dataGridView, int rowIndex, int columnIndex, object value)
-        {
-            dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[columnIndex];
-            dataGridView.BeginEdit(true);
-            dataGridView.CurrentCell.Value = value;
-            dataGridView.EndEdit();
         }
 
         private static void TestApplyToAll()
