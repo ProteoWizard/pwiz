@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Controls.Graphs
             Assume.IsFalse(_inCreateHandle);
             if (Program.FunctionalTest && Program.MainWindow != null && Program.MainWindow.InvokeRequired)
             {
-                throw new ApplicationException(@"CreateHandle called on wrong thread");
+                throw new ApplicationException(@"AllChromatogramsGraph.CreateHandle called on wrong thread");
             }
 
             try
