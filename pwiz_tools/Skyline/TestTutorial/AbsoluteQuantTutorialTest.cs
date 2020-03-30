@@ -303,15 +303,25 @@ namespace pwiz.SkylineTestTutorial
             }
             RunUI(() =>
             {
+                SkylineWindow.Width = 500;
                 var gridFloatingWindow = documentGridForm.Parent.Parent;
                 gridFloatingWindow.Size = new Size(370, 315);
-                gridFloatingWindow.Top = SkylineWindow.Bottom + 20;
+                gridFloatingWindow.Top = SkylineWindow.Top;
+                gridFloatingWindow.Left = SkylineWindow.Right + 20;
             });
             PauseForScreenShot("Document grid with concentrations filled in", 17);
 
             // View the calibration curve p. 18
+            RunUI(() => SkylineWindow.ShowDocumentGrid(false));
+
             var calibrationForm = ShowDialog<CalibrationForm>(() => SkylineWindow.ShowCalibrationForm());
-            RunUI(() => calibrationForm.Parent.Parent.Width = 565);
+            RunUI(() =>
+            {
+                var calibrationFloatingWindow = calibrationForm.Parent.Parent;
+                calibrationFloatingWindow.Width = 565;
+                calibrationFloatingWindow.Top = SkylineWindow.Top;
+                calibrationFloatingWindow.Left = SkylineWindow.Right + 20;
+            });
             PauseForScreenShot("View calibration curve", 18);
 
             Assert.AreEqual(CalibrationCurveFitter.AppendUnits(QuantificationStrings.Analyte_Concentration, quantUnits), calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
