@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Controls
             }
 
             labelMessage.Text = newMessage;
-            int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight * 3, 0);
+            int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight, 0);
             int newHeight = _originalFormHeight + Math.Min(formGrowth, MAX_HEIGHT);
             if (newHeight > Height)
             {
