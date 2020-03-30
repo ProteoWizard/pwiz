@@ -477,6 +477,15 @@ namespace pwiz.Skyline
         {
             get { return dockPanel; }
         }
+
+        public ToolStripSplitButton UndoButton
+        {
+            get { return undoToolBarButton; }
+        }
+        public ToolStripSplitButton RedoButton
+        {
+            get { return redoToolBarButton; }
+        }
         public bool DiscardChanges { get; set; }
 
         /// <summary>

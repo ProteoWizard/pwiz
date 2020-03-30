@@ -658,11 +658,8 @@ namespace TestRunner
                                     if (leakMessage != null)
                                     {
                                         runTests.Log(leakMessage);
-                                        if (!leakHanger.IsTestMode)
-                                        {
-                                            runTests.Log("# Entering infinite loop.");
-                                            leakHanger.Wait();
-                                        }
+                                        runTests.Log("# Entering infinite loop.");
+                                        leakHanger.Wait();
 
                                         runTestForever = true; // Once we break out of the loop, just keep running this test
                                     }
@@ -835,6 +832,8 @@ namespace TestRunner
                     Thread.Sleep(5000);
                     _iterationCount++;
                 }
+
+                RunTests.MemoryManagement.HeapDiagnostics = true;
             }
         }
 

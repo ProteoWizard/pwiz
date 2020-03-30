@@ -412,7 +412,7 @@ namespace TestRunnerLib
             public int LeakThresholdMB { get; private set; }
         }
 
-        static class MemoryManagement
+        public static class MemoryManagement
         {
             [DllImportAttribute("kernel32.dll", EntryPoint = "SetProcessWorkingSetSize", ExactSpelling = true, CharSet =
                 CharSet.Ansi, SetLastError = true)]
@@ -478,7 +478,7 @@ namespace TestRunnerLib
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool HeapUnlock(IntPtr hHeap);
 
-            private static bool _heapDiagnostics = false;
+            public static bool HeapDiagnostics { get; set; }
 
             public struct HeapAllocationSizes
             {
@@ -486,8 +486,8 @@ namespace TestRunnerLib
                 public long Reserved { get; set; }
                 public long Unknown { get; set; }
 
-                public Dictionary<long, int> CommittedSizes { get; set; }
-                public Dictionary<string, int> StringCounts { get; set; }
+                public List<KeyValuePair<long, int>> CommittedSizes { get; set; }
+                public List<KeyValuePair<string, int>> StringCounts { get; set; }
 
                 public override string ToString()
                 {
@@ -503,6 +503,8 @@ namespace TestRunnerLib
                 var buffer = new IntPtr[count];
                 GetProcessHeaps(count, buffer);
                 var sizes = new HeapAllocationSizes[count];
+                var committedSizes = HeapDiagnostics ? new Dictionary<long, int>() : null;
+                var stringCounts = HeapDiagnostics ? new Dictionary<string, int>() : null;
                 for (int i = 0; i < count; i++)
                 {
                     var h = buffer[i];
@@ -514,19 +516,17 @@ namespace TestRunnerLib
                         {
                             sizes[i].Committed += e.cbData + e.cbOverhead;
 
-                            if (_heapDiagnostics)
+                            if (committedSizes != null)
                             {
-                                if (sizes[i].CommittedSizes == null)
-                                {
-                                    sizes[i].CommittedSizes = new Dictionary<long, int>();
-                                    sizes[i].StringCounts = new Dictionary<string, int>();
-                                }
                                 // Update count
-                                if (!sizes[i].CommittedSizes.ContainsKey(e.cbData))
-                                    sizes[i].CommittedSizes[e.cbData] = 1;
+                                if (!committedSizes.ContainsKey(e.cbData))
+                                    committedSizes[e.cbData] = 1;
                                 else
-                                    sizes[i].CommittedSizes[e.cbData]++;
+                                    committedSizes[e.cbData]++;
+                            }
 
+                            if (stringCounts != null)
+                            {
                                 // Find string(s)
                                 const int MIN_STRING_LENGTH = 8;
                                 var byteData = new byte[e.cbData];
@@ -550,10 +550,10 @@ namespace TestRunnerLib
                                     byteStrings.Add(byteSb.ToString()); // Add the last string
                                 foreach (var byteString in byteStrings)
                                 {
-                                    if (!sizes[i].StringCounts.ContainsKey(byteString))
-                                        sizes[i].StringCounts[byteString] = 1;
+                                    if (!stringCounts.ContainsKey(byteString))
+                                        stringCounts[byteString] = 1;
                                     else
-                                        sizes[i].StringCounts[byteString]++;
+                                        stringCounts[byteString]++;
                                 }
                             }
                         }
@@ -564,6 +564,11 @@ namespace TestRunnerLib
 
                     }
                     HeapUnlock(h);
+
+                    if (committedSizes != null)
+                        sizes[i].CommittedSizes = committedSizes.OrderByDescending(p => p.Value).ToList();
+                    if (stringCounts != null)
+                        sizes[i].StringCounts = stringCounts.OrderByDescending(p => p.Value).ToList();
                 }
 
                 return sizes;

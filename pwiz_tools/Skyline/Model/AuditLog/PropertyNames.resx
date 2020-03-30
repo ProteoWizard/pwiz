@@ -1380,7 +1380,7 @@
     <value>Column Sorts</value>
   </data>
   <data name="BatchModifyInfo_ViewName" xml:space="preserve">
-    <value>View name</value>
+    <value>Report name</value>
   </data>
   <data name="ColumnSort_ListSortDirection" xml:space="preserve">
     <value>Direction</value>
