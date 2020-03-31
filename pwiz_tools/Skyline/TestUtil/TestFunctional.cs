@@ -1299,6 +1299,7 @@ namespace pwiz.SkylineTestUtil
         }
 
         private readonly HashSet<AuditLogEntry> _setSeenEntries = new HashSet<AuditLogEntry>();
+        private readonly Dictionary<int, AuditLogEntry> _lastLoggedEntries = new Dictionary<int, AuditLogEntry>();
 
         private void OnDocumentChangedLogging(object sender, DocumentChangedEventArgs e)
         {
@@ -1322,15 +1323,31 @@ namespace pwiz.SkylineTestUtil
             if (entry.IsRoot)
                 return;
 
+            AuditLogEntry lastLoggedEntry;
             lock (_setSeenEntries)
             {
                 if (_setSeenEntries.Contains(entry))
                     return;
+                lastLoggedEntry = GetLastLogged(entry);
                 _setSeenEntries.Add(entry);
             }
 
             LogNewEntries(entry.Parent);
-            WriteEntryToFile(AuditLogDir, entry);
+            if (lastLoggedEntry == null)
+                WriteEntryToFile(AuditLogDir, entry);
+            else
+                WriteDiffEntryToFile(AuditLogDir, entry, lastLoggedEntry);
+        }
+
+        private AuditLogEntry GetLastLogged(AuditLogEntry entry)
+        {
+            if (_lastLoggedEntries.TryGetValue(entry.LogIndex, out var lastLoggedEntry))
+            {
+                _lastLoggedEntries[entry.LogIndex] = entry;
+                return lastLoggedEntry;
+            }
+            _lastLoggedEntries.Add(entry.LogIndex, entry);
+            return null;
         }
 
         private void VerifyAuditLogCorrect()
@@ -1401,6 +1418,41 @@ namespace pwiz.SkylineTestUtil
             return Path.Combine(path, TestContext.TestName + ".log");
         }
 
+        private void WriteDiffEntryToFile(string folderPath, AuditLogEntry entry, AuditLogEntry lastLoggedEntry)
+        {
+            var filePath = GetLogFilePath(folderPath);
+            using (var fs = File.Open(filePath, FileMode.Append))
+            {
+                using (var sw = new StreamWriter(fs))
+                {
+                    sw.Write(AuditLogEntryDiffToString(entry, lastLoggedEntry));
+                }
+            }
+        }
+
+        private string AuditLogEntryDiffToString(AuditLogEntry entry, AuditLogEntry lastLoggedEntry)
+        {
+            Assert.AreEqual(lastLoggedEntry.LogIndex, entry.LogIndex);
+            Assert.AreEqual(lastLoggedEntry.UndoRedo.ToString(), entry.UndoRedo.ToString());
+            Assert.AreEqual(lastLoggedEntry.Summary.ToString(), entry.Summary.ToString());
+            Assert.AreEqual(lastLoggedEntry.AllInfo.Count, entry.AllInfo.Count);
+            var result = string.Empty;
+            if (!Equals(entry.Reason, lastLoggedEntry.Reason))
+                result += string.Format("Reason: '{0}' to '{1}'\r\n", lastLoggedEntry.Reason, entry.Reason);
+            for (int i = 0; i < entry.AllInfo.Count; i++)
+            {
+                var lastReason = lastLoggedEntry.AllInfo[i].Reason;
+                var newReason = entry.AllInfo[i].Reason;
+                if (!Equals(lastReason, newReason))
+                    result += string.Format("Detail Reason {0}: '{1}' to '{2}'\r\n", i, lastReason, newReason);
+            }
+
+            if (!string.IsNullOrEmpty(result))
+                result = result.Insert(0, string.Format("Reason Changed: {0} \r\n", entry.UndoRedo)) + "\r\n";
+
+            return result;
+        }
+
         private void WriteEntryToFile(string folderPath, AuditLogEntry entry)
         {
             var filePath = GetLogFilePath(folderPath);
@@ -1437,9 +1489,9 @@ namespace pwiz.SkylineTestUtil
                 {
                     if (Program.MainWindow != null && Program.MainWindow.IsHandleCreated)
                         break;
-                    if (ShowStartPage && null != FindOpenForm<StartPage>()) {
+                    if (ShowStartPage && null != FindOpenForm<StartPage>())
                         break;
-                    }
+
                     Thread.Sleep(SLEEP_INTERVAL);
                 }
                 if (!ShowStartPage)
@@ -1471,6 +1523,7 @@ namespace pwiz.SkylineTestUtil
                 RunUI(() =>
                 {
                     SkylineWindow.UseKeysOverride = true;
+                    SkylineWindow.AssumeNonNullModificationAuditLogging = true;
                     if (IsPauseForScreenShots)
                     {
                         // Screenshots should be taken with release icon and "Skyline" in the window title

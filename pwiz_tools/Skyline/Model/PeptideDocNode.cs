@@ -129,21 +129,20 @@ namespace pwiz.Skyline.Model
         private static IList<LoggableExplicitMod> EmptyIfDefault(ExplicitMods mods)
         {
             if (mods == null || mods.Equals(ExplicitMods.EMPTY))
-                return new LoggableExplicitMod[0];
+                return EMPTY_LOGGABLE;
 
             return null;
         }
+
+        private static LoggableExplicitMod[] EMPTY_LOGGABLE = new LoggableExplicitMod[0];
+        private static LoggableExplicitModList[] EMPTY_LOGGABLE_LIST = new LoggableExplicitModList[0];
 
         [TrackChildren(defaultValues:typeof(DefaultValuesNullOrEmpty))]
         public IList<LoggableExplicitMod> ExplicitModsStatic
         {
             get
             {
-                return EmptyIfDefault(ExplicitMods) ?? (ExplicitMods.StaticModifications == null
-                           ? new LoggableExplicitMod[0]
-                           : ExplicitMods.StaticModifications
-                               .Select(mod => new LoggableExplicitMod(mod, Peptide.Sequence))
-                               .ToArray());
+                return EmptyIfDefault(ExplicitMods) ?? GetLoggableMods(ExplicitMods.StaticModifications);
             }
         }
 
@@ -152,12 +151,33 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return EmptyIfDefault(ExplicitMods) ?? (ExplicitMods.HeavyModifications == null
-                           ? new LoggableExplicitMod[0]
-                           : ExplicitMods.HeavyModifications
-                               .Select(mod => new LoggableExplicitMod(mod, Peptide.Sequence))
-                               .ToArray());
+                return EmptyIfDefault(ExplicitMods) ?? GetLoggableMods(ExplicitMods.HeavyModifications);
             }
+        }
+
+        [TrackChildren(defaultValues: typeof(DefaultValuesNullOrEmpty))]
+        public IList<LoggableExplicitModList> ExplicitModsTyped
+        {
+            get
+            {
+                if (ExplicitMods == null)
+                    return EMPTY_LOGGABLE_LIST;
+                var labeledNonHeavyMods = ExplicitMods.GetHeavyModifications()
+                    .Where(m => !ReferenceEquals(m.LabelType, IsotopeLabelType.heavy)).ToArray();
+                if (labeledNonHeavyMods.Length == 0)
+                    return EMPTY_LOGGABLE_LIST;
+
+                return labeledNonHeavyMods.Select(mods =>
+                        new LoggableExplicitModList(mods.LabelType, GetLoggableMods(mods.Modifications)))
+                    .ToArray();
+            }
+        }
+
+        private IList<LoggableExplicitMod> GetLoggableMods(IList<ExplicitMod> mods)
+        {
+            if (mods != null)
+                return mods.Select(mod => new LoggableExplicitMod(mod, Peptide.Sequence)).ToArray();
+            return EMPTY_LOGGABLE;
         }
 
         public ExplicitMods ExplicitMods { get; private set; }

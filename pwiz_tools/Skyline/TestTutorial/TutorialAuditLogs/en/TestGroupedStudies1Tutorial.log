@@ -93,6 +93,12 @@ Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to 
 All Info  :
 Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
 
+Undo Redo : Transition Settings -- Integration > Integrate All changed to True
+Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
+All Info  :
+Transition Settings -- Integration > Integrate All changed to True
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
+
 Undo Redo : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 Summary   : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 All Info  :
@@ -200,7 +206,7 @@ Undo Redo : Pasted 72 values into the document grid
 Summary   : Pasted 72 values into the document grid
 All Info  :
 Pasted 72 values into the document grid
-Document grid > View name is "Replicates"
+Document grid > Report name is "Replicates"
 Set SubjectId of D_103_REP1 to "D102"
 Set BioReplicate of D_103_REP1 to "102"
 Set Condition of D_103_REP1 to "Diseased"
@@ -317,7 +323,7 @@ H162	162	Healthy
 H162	162	Healthy
 
 
-View name = "Replicates"
+Report name = "Replicates"
 
 Undo Redo : Annotation : "MissingData" was added
 Summary   : Settings > Document Settings -- Annotations : "MissingData" was added
@@ -336,7 +342,7 @@ Undo Redo : Pasted 149 values into the document grid
 Summary   : Pasted 149 values into the document grid
 All Info  :
 Pasted 149 values into the document grid
-Document grid > View name is "Truncated Precursors"
+Document grid > Report name is "Truncated Precursors"
 Document grid > Column settings > Column Sorts : contains { Column = "Count Truncated", Direction = "Descending" }
 Set MissingData of DFATVYVDAVK to True
 Set MissingData of DFATVYVDAVK to True
@@ -637,7 +643,7 @@ TRUE
 TRUE
 TRUE
 
-View name = "Truncated Precursors",
+Report name = "Truncated Precursors",
 Column settings = 
 {
     Column Sorts = 

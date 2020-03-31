@@ -93,8 +93,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     _scaleFactors.Length - 1,
                     elapsed / _updateMsec + 1);
 
-                Value = _startValue + (_endValue - _startValue) * _scaleFactors[step];
-
+                try
+                {
+                    Value = _startValue + (_endValue - _startValue) * _scaleFactors[step];
+                }
+                catch (Exception exception)
+                {
+                    string msg = string.Format(@"Step: {0} Array length: {1}. Elapsed time: {2}", 
+                        step, _scaleFactors.Length, elapsed);
+                    throw new Exception(msg, exception);
+                }
                 if (step == _scaleFactors.Length - 1)
                 {
                     _scaleFactors = null;

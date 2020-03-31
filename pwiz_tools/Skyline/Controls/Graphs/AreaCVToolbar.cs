@@ -76,7 +76,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                Program.MainWindow.SetAreaCVAnnotation(toolStripComboGroup.Items[index].ToString(), false);
+                Program.MainWindow.SetAreaCVAnnotation(toolStripComboGroup.Items[index], false);
                 var document = _graphSummary.DocumentUIContainer.DocumentUI;
                 var groupByGroup =
                     ReplicateValue.FromPersistedString(document.Settings, AreaGraphController.GroupByGroup);
@@ -226,7 +226,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (groupsVisible)
             {
-                var annotations = new[] { Resources.GraphSummary_UpdateToolbar_All }.Concat(AnnotationHelper.GetPossibleAnnotations(document, ReplicateValue.FromPersistedString(document.Settings, AreaGraphController.GroupByGroup))).ToArray();
+                var annotations = new[] {Resources.GraphSummary_UpdateToolbar_All}.Concat(
+                    AnnotationHelper.GetPossibleAnnotations(document,
+                            ReplicateValue.FromPersistedString(document.Settings, AreaGraphController.GroupByGroup))
+                        .Except(new object[] {null})).ToArray();
 
                 toolStripComboGroup.Items.Clear();
                 // ReSharper disable once CoVariantArrayConversion
@@ -279,9 +282,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool GroupsVisible { get { return toolStripLabel1.Visible && toolStripComboGroup.Visible; } }
 
-        public IEnumerable<string> Annotations
+        public IEnumerable<object> Annotations
         {
-            get { return toolStripComboGroup.Items.Cast<string>(); }
+            get { return toolStripComboGroup.Items.Cast<object>(); }
             set
             {
                 toolStripComboGroup.Items.Clear();
