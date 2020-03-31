@@ -57,7 +57,8 @@ namespace pwiz.SkylineTestFunctional
         public void TestLibraryBuild()
         {
             TestFilesZip = @"TestFunctional\LibraryBuildTest.zip";
-            RunFunctionalTest();
+using (new Assume.DebugOnFail("BSPRATT-UW3")) // If any AsertEx or Assume fails on BSPRATT-UW3, invoke debugger instead of failing  TODO(bspratt) remove this once debugged
+                RunFunctionalTest();
         }
 
         protected override void DoTest()
