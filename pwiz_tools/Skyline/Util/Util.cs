@@ -2033,7 +2033,7 @@ namespace pwiz.Skyline.Util
                 Console.WriteLine();
                 if (!string.IsNullOrEmpty(error))
                     Console.WriteLine(error);
-                Console.WriteLine(@"error encountered, launching debugger as indicated by Assume.MachineNamePatternForInvokeDebuggerOnFail");
+                Console.WriteLine(@"error encountered, launching debugger as requested by Assume.DebugOnFail");
                 Debugger.Launch();
             }
             throw new AssumptionException(error);
