@@ -547,11 +547,11 @@ namespace pwiz.Skyline.Model.Serialization
                 if (SkylineVersion.SrmDocumentVersion < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY)
                 {
                     // No multiple conformer support in older versions, so just write the first one
-                    chromInfo.IonMobilityFilters.First().WriteAttributes(writer, IonMobilityFilter.SerializationElementType.TransitionGroupChromInfo);
+                    chromInfo.IonMobilityFilters.First().WriteAttributes(writer, IonMobilityFilter.SerializationElementType.TransitionGroupChromInfo, SkylineVersion.SrmDocumentVersion);
                 }
                 else
                 {
-                    chromInfo.IonMobilityFilters.WriteXML(writer, IonMobilityFilter.SerializationElementType.TransitionGroupChromInfo);
+                    chromInfo.IonMobilityFilters.WriteXML(writer, IonMobilityFilter.SerializationElementType.TransitionGroupChromInfo, SkylineVersion.SrmDocumentVersion);
                 }
             }
             WriteAnnotations(writer, chromInfo.Annotations);
@@ -769,11 +769,11 @@ namespace pwiz.Skyline.Model.Serialization
                 if (SkylineVersion.SrmDocumentVersion < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY)
                 {
                     // No multiple conformer support in older versions, so just write the first one
-                    chromInfo.IonMobilityFilters.First().WriteAttributes(writer, IonMobilityFilter.SerializationElementType.TransitionChromInfo);
+                    chromInfo.IonMobilityFilters.First().WriteAttributes(writer, IonMobilityFilter.SerializationElementType.TransitionChromInfo, SkylineVersion.SrmDocumentVersion);
                 }
                 else
                 {
-                    chromInfo.IonMobilityFilters.WriteXML(writer, IonMobilityFilter.SerializationElementType.TransitionChromInfo);
+                    chromInfo.IonMobilityFilters.WriteXML(writer, IonMobilityFilter.SerializationElementType.TransitionChromInfo, SkylineVersion.SrmDocumentVersion);
                 }
             }
             WriteAnnotations(writer, chromInfo.Annotations);

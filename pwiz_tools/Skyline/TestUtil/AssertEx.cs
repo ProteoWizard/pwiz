@@ -42,11 +42,50 @@ namespace pwiz.SkylineTestUtil
     {
         public static void AreEqualDeep<TItem>(IList<TItem> l1, IList<TItem> l2)
         {
-            Assert.AreEqual(l1.Count, l2.Count);
+            AreEqual(l1.Count, l2.Count);
             for (int i = 0; i < l1.Count; i++)
             {
                 if (!Equals(l1[i], l2[i]))
-                    Assert.AreEqual(l1[i], l2[i]);  // For setting breakpoint
+                {
+                   AreEqual(l1[i], l2[i]);  // For setting breakpoint
+                }
+            }
+        }
+
+        // Just like Assert.AreEqual, but easier to set a breakpoint
+        public static void AreEqual<T>(T expected, T actual, string message)
+        {
+            if (!Equals(expected, actual))
+            {
+                Assert.AreEqual(expected, actual, message);
+            }
+        }
+
+        // Just like Assert.AreEqual, but easier to set a breakpoint
+        public static void AreEqual(double expected, double actual, double tolerance, string message = null)
+        {
+            if (!Equals(expected, actual))
+            {
+                if (Math.Abs(expected - actual) > tolerance)
+                {
+                    AreEqual(expected, actual, message);
+                }
+            }
+        }
+
+        // Just like Assert.AreEqual, but easier to set a breakpoint
+        public static void AreEqual(double? expected, double? actual, double tolerance, string message = null)
+        {
+            if (!Equals(expected, actual))
+            {
+                if (expected.HasValue && actual.HasValue)
+                {
+                    AreEqual(expected.Value, actual.Value, tolerance, message);
+                }
+                else
+                {
+                    AreEqual(expected, actual, message);
+                }
             }
         }
 

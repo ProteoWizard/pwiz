@@ -76,9 +76,9 @@ namespace pwiz.Skyline.Model.Results
         /// is not null) writes out the minimized cache file.
         /// </summary>
         public void Minimize(Settings settings, ProgressCallback progressCallback, Stream outStream,
-            FileStream outStreamScans = null, FileStream outStreamPeaks = null, FileStream outStreamScores = null, FileStream outputStreamIonMobilities = null)
+            FileStream outStreamScans = null, FileStream outStreamPeaks = null, FileStream outStreamScores = null)
         {
-            var writer = outStream == null ? null : new Writer(ChromatogramCache, settings.CacheFormat, outStream, outStreamScans, outStreamPeaks, outStreamScores, outputStreamIonMobilities);
+            var writer = outStream == null ? null : new Writer(ChromatogramCache, settings.CacheFormat, outStream, outStreamScans, outStreamPeaks, outStreamScores);
             var statisticsCollector = new MinStatisticsCollector(this);
             bool readChromatograms = settings.NoiseTimeRange.HasValue || writer != null;
 
@@ -383,11 +383,23 @@ namespace pwiz.Skyline.Model.Results
                     if (chromTransition.IonMobilityIndexStart >= 0)
                     {
                         // Compress the ion mobilities table
+                        // Avoid duplicating filters used by sibling fragments
+                        var count = chromTransition.IonMobilityIndexEnd - chromTransition.IonMobilityIndexStart + 1;
                         var indexStartIM = IonMobilityFilters.Count;
-                        for (var indexIM = chromTransition.IonMobilityIndexStart; indexIM <= chromTransition.IonMobilityIndexEnd; indexIM++)
+                        if (IonMobilityFilters.Count >= count &&
+                            Enumerable.Range(0, count).All(im => Equals(IonMobilityFilters[IonMobilityFilters.Count - 1 - im], 
+                                cache.GetIonMobilityFilter(chromTransition.IonMobilityIndexEnd - im))))
                         {
-                            IonMobilityFilters.Add(cache.GetIonMobilityFilter(indexIM));
+                            indexStartIM -= count;
                         }
+                        else
+                        {
+                            for (var indexIM = chromTransition.IonMobilityIndexStart; indexIM <= chromTransition.IonMobilityIndexEnd; indexIM++)
+                            {
+                                IonMobilityFilters.Add(cache.GetIonMobilityFilter(indexIM));
+                            }
+                        }
+
                         var indexEndIM = IonMobilityFilters.Count - 1;
                         chromTransition = new ChromTransition(chromTransition.Product, chromTransition.ExtractionWidth, indexStartIM, indexEndIM, chromTransition.Source);
                     }
@@ -624,7 +636,6 @@ namespace pwiz.Skyline.Model.Results
             private readonly FileStream _outputStreamPeaks;
             private readonly FileStream _outputStreamScans;
             private readonly FileStream _outputStreamScores;
-            private readonly FileStream _outputStreamIonMobilities;
             private int _peakCount;
             private int _scoreCount;
             private readonly BlockedArrayList<ChromGroupHeaderInfo> _chromGroupHeaderInfos =
@@ -638,7 +649,7 @@ namespace pwiz.Skyline.Model.Results
             private readonly IDictionary<ImmutableList<byte>, int> _textIdIndexes 
                 = new Dictionary<ImmutableList<byte>, int>();
 
-            public Writer(ChromatogramCache chromatogramCache, CacheFormat cacheFormat, Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores, FileStream outputStreamIonMobilities)
+            public Writer(ChromatogramCache chromatogramCache, CacheFormat cacheFormat, Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores)
             {
                 _originalCache = chromatogramCache;
                 _cacheFormat = cacheFormat;
@@ -646,7 +657,6 @@ namespace pwiz.Skyline.Model.Results
                 _outputStreamScans = outputStreamScans;
                 _outputStreamPeaks = outputStreamPeaks;
                 _outputStreamScores = outputStreamScores;
-                _outputStreamIonMobilities = outputStreamIonMobilities;
                 _scoreTypes = chromatogramCache.ScoreTypes.ToList();
             }
 
@@ -767,7 +777,6 @@ namespace pwiz.Skyline.Model.Results
                                                _outputStreamScans,
                                                _outputStreamPeaks,
                                                _outputStreamScores,
-                                               _outputStreamIonMobilities,
                                                _originalCache.CachedFiles,
                                                _chromGroupHeaderInfos,
                                                _transitions,

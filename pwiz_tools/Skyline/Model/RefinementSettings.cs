@@ -1154,9 +1154,8 @@ namespace pwiz.Skyline.Model
                 var name = Path.GetFileNameWithoutExtension(newdoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.PersistencePath) +
                            Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules;
                 var path = Path.Combine(pathForLibraryFiles, name + IonMobilityDb.EXT);
-                var db = IonMobilityDb.CreateIonMobilityDb(path, name, false);
-                db.UpdateIonMobilities(mapped);
-                var spec = new IonMobilityLibrary(name, path);
+                var db = IonMobilityDb.CreateIonMobilityDb(path, name, false).UpdateIonMobilities(mapped);
+                var spec = new IonMobilityLibrary(name, path, db);
                 var newSettings = newdoc.Settings.ChangeTransitionIonMobilityFiltering(t => t.ChangeLibrary(spec));
                 newdoc = newdoc.ChangeSettings(newSettings);
             }
@@ -1212,9 +1211,9 @@ namespace pwiz.Skyline.Model
                 if (document.Settings.HasIonMobilityLibraryPersisted)
                 {
                     var newDbPath = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary
-                        .PersistMinimized(pathForLibraryFiles, document, precursorMap);
+                        .PersistMinimized(pathForLibraryFiles, document, precursorMap, out var newLoadedDb);
                     var spec = new IonMobilityLibrary(document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name + 
-                                                      @" " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath);
+                                                      @" " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath, newLoadedDb);
                     newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangeTransitionIonMobilityFiltering(im => im.ChangeLibrary(spec)));
                 }
             }            

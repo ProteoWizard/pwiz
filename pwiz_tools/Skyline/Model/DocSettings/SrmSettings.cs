@@ -951,11 +951,10 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var chargedPeptide = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct);
 
-                if (TransitionSettings.IonMobilityFiltering.IonMobilityLibrary != null)
+                var result = TransitionSettings.IonMobilityFiltering.GetIonMobilityInfo(chargedPeptide, ionMobilityFunctionsProvider, ionMobilityMax);
+                if (result != null && result.Any())
                 {
-                    var result = TransitionSettings.IonMobilityFiltering.GetIonMobilityInfo(chargedPeptide, ionMobilityFunctionsProvider, ionMobilityMax);
-                    if (result != null && result.Any())
-                        return result;
+                    return result;
                 }
 
                 if (libraryIonMobilityInfo != null)

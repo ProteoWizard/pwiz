@@ -1381,7 +1381,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var imFilterStart = -1;
                 var imFilterEnd = -1;
-                if (CacheFormat.FormatVersion >= CacheFormatVersion.Fifteen)
+                if (CacheFormat.FormatVersion >= CacheFormatVersion.FIRST_MULTIPLE_CCS)
                 {
                     // Ion mobility filters get written to a table, and indexed from here
                     var mobilities =
@@ -1392,10 +1392,19 @@ namespace pwiz.Skyline.Model.Results
                                 im.IonMobilityUnits)).ToArray();
                     if (mobilities.Length > 0)
                     {
-                        imFilterStart = _ionMobilityFilterCount;
-                        _ionMobilityFilterCount += mobilities.Length;
-                        imFilterEnd = _ionMobilityFilterCount - 1;
-                        CacheFormat.ChromIonMobilityFilterSerializer().WriteItems(_fsIonMobilityFilters.FileStream, mobilities);
+                        // Avoid duplicating filters used by sibling fragments
+                        if (_listIonMobilityFilters.Count >= mobilities.Length && 
+                            Enumerable.Range(0, mobilities.Length).All(im => Equals(_listIonMobilityFilters[_listIonMobilityFilters.Count - 1 - im], mobilities[mobilities.Length - 1 - im])))
+                        {
+                            imFilterStart = _listIonMobilityFilters.Count - mobilities.Length;
+                            imFilterEnd = _listIonMobilityFilters.Count - 1;
+                        }
+                        else
+                        {
+                            imFilterStart = _listIonMobilityFilters.Count;
+                            _listIonMobilityFilters.AddRange(mobilities);
+                            imFilterEnd = _listIonMobilityFilters.Count - 1;
+                        }
                     }
                 }
 

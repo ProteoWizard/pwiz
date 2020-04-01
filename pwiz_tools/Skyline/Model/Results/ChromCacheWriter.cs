@@ -44,12 +44,10 @@ namespace pwiz.Skyline.Model.Results
         protected readonly FileSaver _fsScans;
         protected readonly FileSaver _fsPeaks;
         protected readonly FileSaver _fsScores;
-        protected readonly FileSaver _fsIonMobilityFilters;
         protected readonly ILoadMonitor _loader;
         protected IProgressStatus _status;
         protected int _peakCount;
         protected int _scoreCount;
-        protected int _ionMobilityFilterCount;
         protected IPooledStream _destinationStream;
 
         protected ChromCacheWriter(string cachePath, ILoadMonitor loader, IProgressStatus status,
@@ -61,7 +59,6 @@ namespace pwiz.Skyline.Model.Results
             _fsScans = new FileSaver(CachePath + ChromatogramCache.SCANS_EXT, true);
             _fsPeaks = new FileSaver(CachePath + ChromatogramCache.PEAKS_EXT, true);
             _fsScores = new FileSaver(CachePath + ChromatogramCache.SCORES_EXT, true);
-            _fsIonMobilityFilters = new FileSaver(CachePath + ChromatogramCache.IMFILTERS_EXT, true);
             _loader = loader;
             _status = status;
             _completed = completed;
@@ -96,7 +93,6 @@ namespace pwiz.Skyline.Model.Results
                                                                _fsScans.Stream,
                                                                _fsPeaks.Stream,
                                                                _fsScores.Stream,
-                                                               _fsIonMobilityFilters.Stream,
                                                                _listCachedFiles,
                                                                listChromGroupHeaderInfos,
                                                                _listTransitions,
@@ -132,7 +128,6 @@ namespace pwiz.Skyline.Model.Results
 
                             _fsPeaks.Stream.Seek(0, SeekOrigin.Begin);
                             _fsScores.Stream.Seek(0, SeekOrigin.Begin);
-                            _fsIonMobilityFilters.Stream.Seek(0, SeekOrigin.Begin);
                             var arrayCacheFiles = _listCachedFiles.ToArray();
                             _listCachedFiles = null;
                             var arrayChromEntries = BlockedArray<ChromGroupHeaderInfo>.Convert(_listGroups, 
@@ -147,13 +142,10 @@ namespace pwiz.Skyline.Model.Results
                             var scores = new BlockedArray<float>(
                                 count => PrimitiveArrays.Read<float>(_fsScores.FileStream, count), _scoreCount,
                                 sizeof(float), ChromatogramCache.DEFAULT_SCORES_BLOCK_SIZE);
-                            var ionMobilitySerializer = CacheFormat.ChromIonMobilityFilterSerializer();
-                            var ionMobilityFilters = new BlockedArray<ChromIonMobilityFilter>(
-                                count => ionMobilitySerializer.ReadArray(_fsIonMobilityFilters.FileStream, count), _ionMobilityFilterCount,
-                                ChromIonMobilityFilter.SizeOf, ChromIonMobilityFilter.DEFAULT_BLOCK_SIZE);
                             var textIdBytes = _listTextIdBytes.ToArray();
                             _listTextIdBytes = null;
-
+                            var chromIonMobilityFilters = new BlockedArray<ChromIonMobilityFilter>(_listIonMobilityFilters);
+                            _listIonMobilityFilters = null;
                             var rawData = new ChromatogramCache.RawData(CacheFormat)
                             {
                                 ChromCacheFiles = arrayCacheFiles,
@@ -165,7 +157,7 @@ namespace pwiz.Skyline.Model.Results
                                 TextIdBytes = textIdBytes,
                                 CountBytesScanIds = countBytesScanIds,
                                 LocationScanIds = locationScanIds,
-                                IonMobilityFilters = ionMobilityFilters
+                                IonMobilityFilters = chromIonMobilityFilters
                             };
                             result = new ChromatogramCache(CachePath, rawData, readStream);
                             _status = _status.Complete();
@@ -205,7 +197,6 @@ namespace pwiz.Skyline.Model.Results
             _fsPeaks.Dispose();
             _fsScans.Dispose();
             _fsScores.Dispose();
-            _fsIonMobilityFilters.Dispose();
         }
     }
 }

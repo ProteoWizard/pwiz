@@ -19,11 +19,13 @@
 
 using System;
 using System.ComponentModel;
+using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -87,6 +89,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public bool Coeluting { get { return !ChromInfo.IsForcedIntegration; } }
 
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public FormattableList<double?> IonMobilityFragment  // Multiple conformers (multiple CCS per ion) are supported, so this has to be a list
+        {
+            get
+            {
+                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters) ? null
+                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters
+                        .Select(im => im.IonMobilityAndCCS.IonMobility.Mobility.HasValue ? im.IonMobilityAndCCS.IonMobility.Mobility.Value + (im.HighEnergyIonMobilityOffset ?? 0) : im.IonMobilityAndCCS.IonMobility.Mobility).ToArray());
+            }
+        }
+
         public Chromatogram Chromatogram
         {
             get { return _chromatogram.Value; }
@@ -123,6 +136,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return new PrecursorResult(Transition.Precursor, GetResultFile());
             }
         }
+
         public override string ToString()
         {
             return string.Format(@"{0:0}", ChromInfo.Area);

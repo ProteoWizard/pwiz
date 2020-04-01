@@ -23,7 +23,6 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -36,15 +35,18 @@ namespace pwiz.Skyline.Model.IonMobility
     [XmlRoot("ion_mobility_library")]
     public class IonMobilityLibrary : IonMobilityLibrarySpec
     {
-        public static readonly IonMobilityLibrary NONE = new IonMobilityLibrary(@"None", String.Empty);
+        public static readonly IonMobilityLibrary NONE = new IonMobilityLibrary(@"None", String.Empty, null);
 
         private IonMobilityDb _database;
 
-        public IonMobilityLibrary(string name, string databasePath)
+        public IonMobilityLibrary(string name, string databasePath, IonMobilityDb loadedDatabase)
             : base(name)
         {
             DatabasePath = databasePath;
+            _database = loadedDatabase;
         }
+
+        public override int Count { get { return _database == null || _database.DictLibrary == null ? -1 : _database.DictLibrary.Count; } }  // How many entries in library?
 
         public string DatabasePath { get; private set; }
 
@@ -81,9 +83,10 @@ namespace pwiz.Skyline.Model.IonMobility
         /// <param name="pathDestDir">The directory to save to</param>
         /// <param name="document">The document for which charged peptides are to be kept</param>
         /// <param name="smallMoleculeConversionMap">Used for changing charge,modifedSeq to adduct,molecule in small molecule conversion</param>
+        /// <param name="loadedDatabase">Returns in-memory representation of the revised ion mobility table</param>
         /// <returns>The full path to the file saved</returns>
         public override string PersistMinimized(string pathDestDir,
-            SrmDocument document, IDictionary<LibKey, LibKey> smallMoleculeConversionMap)
+            SrmDocument document, IDictionary<LibKey, LibKey> smallMoleculeConversionMap, out IonMobilityDb loadedDatabase)
         {
             RequireUsable();
 
@@ -102,7 +105,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 var ionMobilityDbMinimal = IonMobilityDb.CreateIonMobilityDb(fs.SafeName, libraryName, true);
 
                 // Calculate the minimal set of peptides needed for this document
-                var dbPrecursors = _database.DictLibrary.Keys;
+                var dbPrecursors = _database.DictLibrary.LibKeys;
                 var persistIonMobilities = new List<PrecursorIonMobilities>();
 
                 var dictPrecursors = dbPrecursors.ToDictionary(p => p.LibraryKey);
@@ -136,7 +139,7 @@ namespace pwiz.Skyline.Model.IonMobility
                     }
                 }
 
-                ionMobilityDbMinimal.UpdateIonMobilities(persistIonMobilities);
+                loadedDatabase = ionMobilityDbMinimal.UpdateIonMobilities(persistIonMobilities);
                 fs.Commit();
             }
 
@@ -195,11 +198,11 @@ namespace pwiz.Skyline.Model.IonMobility
                 if (dict != null)
                 {
                     var list = dict.Select(kvp => new PrecursorIonMobilities(kvp.Key, kvp.Value));
-                    ionMobilityDb.UpdateIonMobilities(list);
+                    ionMobilityDb = ionMobilityDb.UpdateIonMobilities(list);
                 }
                 fs.Commit();
+                return new IonMobilityLibrary(libraryName, fname, ionMobilityDb);
             }
-            return new IonMobilityLibrary(libraryName, fname);
         }
 
         public static IonMobilityLibrary CreateFromList(string libraryName, string dbDir, IList<ValidatingIonMobilityPrecursor> list)
@@ -215,7 +218,7 @@ namespace pwiz.Skyline.Model.IonMobility
             return null;
         }
 
-        public override ImmutableDictionary<LibKey, List<IonMobilityAndCCS>> GetIonMobilityDict()
+        public override LibKeyMap<List<IonMobilityAndCCS>> GetIonMobilityLibKeyMap()
         {
             if (_database != null)
                 return _database.DictLibrary;
@@ -232,6 +235,8 @@ namespace pwiz.Skyline.Model.IonMobility
             IProgressMonitor progressMonitor = null)
         {
             // Overwrite any existing measurements with newly derived ones
+            // N.B. assumes we are not attempting to find multiple conformers
+            // (so, returns Dictionary<LibKey, IonMobilityAndCCS> instead of Dictionary<LibKey, IList<IonMobilityAndCCS>>)
             Dictionary<LibKey, IonMobilityAndCCS> measured;
             using (var finder = new IonMobilityFinder(document, documentFilePath, progressMonitor) { UseHighEnergyOffset = useHighEnergyOffset })
             {
@@ -245,10 +250,10 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             // Overwrite any existing measurements with newly derived ones
             var measured = CreateFromResults(document, documentFilePath, useHighEnergyOffset, progressMonitor);
-            var ionMobilityDb = IonMobilityDb.CreateIonMobilityDb(dbPath, libraryName, false);
-            ionMobilityDb.UpdateIonMobilities(measured.Select(m => new PrecursorIonMobilities(
+            var ionMobilityDb = IonMobilityDb.CreateIonMobilityDb(dbPath, libraryName, false).
+                UpdateIonMobilities(measured.Select(m => new PrecursorIonMobilities(
                 m.Key, m.Value)).ToList());
-            return new IonMobilityLibrary(libraryName, dbPath);
+            return new IonMobilityLibrary(libraryName, dbPath, ionMobilityDb);
         }
 
         #region Property change methods
@@ -307,7 +312,10 @@ namespace pwiz.Skyline.Model.IonMobility
             }
 
             // Write the contents of the currently-in-use .imdb to old style in-document serialization
-            var dict = GetIonMobilityDict();
+            var libKeyMap = GetIonMobilityLibKeyMap();
+            if (libKeyMap == null)
+                return;
+            var dict = libKeyMap.AsDictionary();
             if (dict != null && dict.Any())
             {
                 var oldDict =

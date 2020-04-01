@@ -108,7 +108,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             WaitForDocumentChange(doc);
             WaitForCondition(waitTimeMillis, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             loadStopwatch.Stop();
-
             var doc1 = WaitForDocumentLoaded(400000);
             AssertEx.IsDocumentState(doc1, null, 19, 19, 28, 607);
              

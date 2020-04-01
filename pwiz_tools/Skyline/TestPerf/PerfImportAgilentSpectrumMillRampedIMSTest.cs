@@ -33,6 +33,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -138,16 +139,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
 
-            // Enable use of drift times in spectral library
-            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-            RunUI(() =>
-            {
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                transitionSettingsUI.IonMobilityControl.IsUseSpectralLibraryIonMobilities = useDriftTimes;
-                transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50;
-            });
-            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
-
             // Launch import peptide search wizard
             WaitForDocumentLoaded();
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
@@ -214,6 +205,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Modifications are already set up, so that page should get skipped.
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.IsUseSpectralLibraryIonMobilities = useDriftTimes);
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.IonMobilityFilterResolvingPower = 50);
             RunUI(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings
 
             // We're on the "Import FASTA" page of the wizard.
@@ -253,6 +246,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 RunUI(() =>
                 {
                     driftTimePredictorDlg.LibraryName = "test";
+                    driftTimePredictorDlg.CreateDatabase(TestFilesDir.GetTestPath(driftTimePredictorDlg.LibraryName + IonMobilityDb.EXT), driftTimePredictorDlg.LibraryName); // Simulate user clicking Create button
                     driftTimePredictorDlg.GetIonMobilitiesFromResults();
                     driftTimePredictorDlg.OkDialog();
                 });
@@ -386,7 +380,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 // Verify that we can use library generated for one file as the default for another without its own library
                 ImportResults(nextFile);
-                TestReports(SkylineWindow.Document, 1, expectedDtWindow);
+                TestReports(SkylineWindow.Document, 1, expectedDtWindow); 
             }
 
             // And verify roundtrip of ion mobility 
@@ -441,7 +435,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityUnits",
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityWindow"
                 });
-
             CheckFieldByName(documentGrid, "IonMobilityMS1", row, _testCase == 1 ? 18.43 : 23.50, msg);
             CheckFieldByName(documentGrid, "IonMobilityFragment", row, (double?)null, msg); // Document is all precursor
             CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.drift_time_msec), msg);
@@ -454,13 +447,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null)
         {
             var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult." + name);
+            double? actual = null;
             RunUI(() =>
             {
-                // By checking the 1th row we check both the single file and two file cases
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as double?;
-                Assert.AreEqual(expected.HasValue, val.HasValue, name + (msg ?? string.Empty));
-                Assert.AreEqual(expected ?? 0, val ?? 0, 0.005, name + (msg ?? string.Empty));
+                var list = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as FormattableList<double?>; // Some ion mobility fields present as lists to support multiple conformers
+                actual = list == null ? documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as double? : list.ToArray()[0];
             });
+if (Math.Abs((expected??0) - (actual??0)) >= 0.005)
+PauseTest();
+            AssertEx.AreEqual(expected.HasValue, actual.HasValue, name + (msg ?? string.Empty));
+            AssertEx.AreEqual(expected ?? 0, actual ?? 0, 0.005, name + (msg ?? string.Empty));
         }
 
         private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null)
@@ -468,7 +464,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult." + name);
             RunUI(() =>
             {
-                // By checking the 1th row we check both the single file and two file cases
                 var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
                 Assert.AreEqual(expected, val, name + (msg ?? string.Empty));
             });

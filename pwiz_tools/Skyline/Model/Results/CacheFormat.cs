@@ -40,6 +40,7 @@ namespace pwiz.Skyline.Model.Results
         Thirteen = 13,  // Adds TIC to CachedFileHeaderStruct
         Fourteen = 14,  // Adds SampleId and SerialNumber to CachedFileHeaderStruct and moves centroiding from ChromCachedFile.FilePath to Flags
         Fifteen = 15,  // Adds multiple conformers (more than one possible CCS per ion, so ion mobilities are in a table)
+        FIRST_MULTIPLE_CCS = Fifteen,
         CURRENT = Fifteen,
     }
     
@@ -170,7 +171,11 @@ namespace pwiz.Skyline.Model.Results
                 throw new NotSupportedException();
             }
             CacheFormatVersion versionRequired;
-            if (formatVersion.CompareTo(CacheHeaderStruct.WithStructSizes) >= 0)
+            if (formatVersion.CompareTo(CacheHeaderStruct.WithIonMobilityFilters) >= 0)
+            {
+                versionRequired = CacheHeaderStruct.WithIonMobilityFilters;
+            }
+            else if (formatVersion.CompareTo(CacheHeaderStruct.WithStructSizes) >= 0)
             {
                 versionRequired = CacheHeaderStruct.WithStructSizes;
             }
@@ -242,7 +247,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IItemSerializer<ChromTransition> ChromTransitionSerializer(IList<ChromIonMobilityFilter> ionMobilityTable)
         {
-            if (FormatVersion > CacheFormatVersion.Fourteen)
+            if (FormatVersion >= CacheHeaderStruct.WithIonMobilityFilters)
             {
                 return ChromTransition.StructSerializer(ChromTransitionSize);
             }

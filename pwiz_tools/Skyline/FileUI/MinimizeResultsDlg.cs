@@ -313,7 +313,6 @@ namespace pwiz.Skyline.FileUI
             using (var scansSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCANS_EXT, true))
             using (var peaksSaver = new FileSaver(targetSkydFile + ChromatogramCache.PEAKS_EXT, true))
             using (var scoreSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCORES_EXT, true))
-            using (var ionMobilitySaver = new FileSaver(targetSkydFile + ChromatogramCache.IMFILTERS_EXT, true))
             {
                 skydSaver.Stream = File.OpenWrite(skydSaver.SafeName);
                 using (var longWaitDlg = new LongWaitDlg(DocumentUIContainer))
@@ -328,7 +327,7 @@ namespace pwiz.Skyline.FileUI
                                     new BackgroundWorker(this, longWaitBroker))
                                 {
                                     backgroundWorker.RunBackground(skydSaver.Stream,
-                                        scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream, ionMobilitySaver.FileStream);
+                                        scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream);
                                 }
                             }
                             catch (ObjectDisposedException)
@@ -447,16 +446,16 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            public void RunBackground(Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores, FileStream outputStreamIonMobilities)
+            public void RunBackground(Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores)
             {
-                _dlg.ChromCacheMinimizer.Minimize(_dlg.Settings, OnProgress, outputStream, outputStreamScans, outputStreamPeaks, outputStreamScores, outputStreamIonMobilities);
+                _dlg.ChromCacheMinimizer.Minimize(_dlg.Settings, OnProgress, outputStream, outputStreamScans, outputStreamPeaks, outputStreamScores);
             }
 
             public void CollectStatistics()
             {
                 try
                 {
-                    RunBackground(null, null, null, null, null);
+                    RunBackground(null, null, null, null);
                 }
                 catch (ObjectDisposedException)
                 {

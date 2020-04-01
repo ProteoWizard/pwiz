@@ -1048,7 +1048,7 @@ namespace pwiz.SkylineTestData
             var invalidFile = commandFilesDir.GetTestPath("InvalidFile.sky");
             output = RunCommand("--in=" + invalidFile);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_OpenSkyFile_Error__There_was_an_error_opening_the_file__0_, invalidFile));
-            AssertEx.Contains(output, string.Format(Resources.XmlUtil_GetInvalidDataMessage_The_file_contains_an_error_on_line__0__at_column__1__, 7, 8));
+            AssertEx.Contains(output, string.Format(Resources.XmlUtil_GetInvalidDataMessage_The_file_contains_an_error_on_line__0__at_column__1__, 6, 52));
             AssertEx.Contains(output, string.Format(Resources.DigestSettings_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3__, Resources.DigestSettings_Validate_maximum_missed_cleavages, 10, 0, 9));
 
             //Test unexpected parameter formats

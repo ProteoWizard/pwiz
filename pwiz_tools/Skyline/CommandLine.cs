@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -870,8 +871,9 @@ namespace pwiz.Skyline
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
                 string hash;
-                using (var reader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
+                using (var hashingStreamReader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
                 {
+                    var reader = new XmlTextReader(skylineFile, hashingStreamReader);  // Wrap in  XmlTextReader so that BaseUri is known
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
@@ -880,7 +882,7 @@ namespace pwiz.Skyline
                         return false;
 
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
-                    hash = reader.Stream.Done();
+                    hash = hashingStreamReader.Stream.Done();
                 }
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));

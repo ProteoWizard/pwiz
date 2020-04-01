@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NHibernate;
-using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -81,7 +80,8 @@ namespace pwiz.Skyline.Model.IonMobility
         private DateTime _modifiedTime;
 
         // N.B. We allow more than one ion mobility per ion - this is the "multiple conformers" case (ion may have multiple shapes, thus multiple CCS)
-        private ImmutableDictionary<LibKey, List<IonMobilityAndCCS>> _dictLibrary;
+        // LibKeyMap is a specialized dictionary class that can match modifications written at varying precisions
+        private LibKeyMap<List<IonMobilityAndCCS>> _dictLibrary;
 
         private IonMobilityDb(string path, ISessionFactory sessionFactory)
         {
@@ -103,10 +103,10 @@ namespace pwiz.Skyline.Model.IonMobility
             }
         }
 
-        public ImmutableDictionary<LibKey, List<IonMobilityAndCCS>> DictLibrary
+        public LibKeyMap<List<IonMobilityAndCCS>> DictLibrary
         {
             get { return _dictLibrary; }
-            private set { _dictLibrary = new ImmutableDictionary<LibKey, List<IonMobilityAndCCS>>(value); }
+            private set { _dictLibrary = value; }
         }
 
         private ISession OpenWriteSession()
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.IonMobility
             return null;
         }
 
-        public IEnumerable<DbPrecursorAndIonMobility> GetIonMobilityPrecursors()
+        public IEnumerable<DbPrecursorAndIonMobility> GetIonMobilities()
         {
             using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
             {
@@ -308,7 +308,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 }
             }
 
-            DictLibrary = new ImmutableDictionary<LibKey, List<IonMobilityAndCCS>>(dictLibrary);
+            DictLibrary = LibKeyMap<List<IonMobilityAndCCS>>.FromDictionary(dictLibrary);
         }
 
         #endregion
@@ -377,8 +377,7 @@ namespace pwiz.Skyline.Model.IonMobility
         public static IonMobilityDb CreateIonMobilityDb(string path, string libraryName, bool minimized, IList<PrecursorIonMobilities> peptides)
         {
             var db = CreateIonMobilityDb(path, libraryName, minimized);
-            db.UpdateIonMobilities(peptides);
-            return db;
+            return db.UpdateIonMobilities(peptides);
         }
 
         /// <summary>

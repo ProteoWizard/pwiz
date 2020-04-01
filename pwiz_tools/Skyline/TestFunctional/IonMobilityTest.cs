@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
                 // Make sure we haven't forgotten to update anything if a new IMS type has been added
                 foreach(eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
                 {
-                    Assume.IsNotNull(IonMobilityFilter.IonMobilityUnitsL10NString(units));
+                    AssertEx.IsNotNull(IonMobilityFilter.IonMobilityUnitsL10NString(units));
                 }
 
                 const double HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = -.1;
@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestFunctional
                     BuildValidatingIonMobilityPeptide("GDYAGIK", Adduct.SINGLY_PROTONATED,  91.09155861, 13.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
                     BuildValidatingIonMobilityPeptide("GDYAGIK", Adduct.SINGLY_PROTONATED,  91.09155861, 13.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
                     BuildValidatingIonMobilityPeptide("IFYESHGK", Adduct.SINGLY_PROTONATED, 111.2756406, 14.2, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.SINGLY_PROTONATED, 110.6867676, 14.3, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.SINGLY_PROTONATED, 110.6867676, 14.3, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // CCS conflict, should be tossed
                     BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.DOUBLY_PROTONATED, 90.6867676, 7.3, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Different charge, should be retained
                 };
                 var message = EditIonMobilityLibraryDlg.ValidateUniquePrecursors(ionMobilityPeptides, out var minimalSet); // Check for conflicts, strip out dupes
@@ -184,7 +184,8 @@ namespace pwiz.SkylineTestFunctional
                 * Check that it has the correct number peptides
                 */
                 IonMobilityDb db = IonMobilityDb.GetIonMobilityDb(databasePath, null);
-                Assert.AreEqual(11, db.GetIonMobilityPrecursors().Count());
+                var dbPrecursorAndIonMobilities = db.GetIonMobilities();
+                Assert.AreEqual(11, dbPrecursorAndIonMobilities.Count());
                 WaitForDocumentChange(olddoc);
 
                 // Check serialization and background loader

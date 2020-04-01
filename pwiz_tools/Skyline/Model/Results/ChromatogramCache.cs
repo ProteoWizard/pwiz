@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
-        public const CacheFormatVersion FORMAT_VERSION_CACHE_15 = CacheFormatVersion.Fifteen; // Adds support for multiple conformers (ions with more than one CCS for ion mobility)
+        public const CacheFormatVersion FORMAT_VERSION_CACHE_FIRST_MULTI_CCS = CacheFormatVersion.FIRST_MULTIPLE_CCS;  // Adds support for multiple conformers (ions with more than one CCS for ion mobility)
         public const CacheFormatVersion FORMAT_VERSION_CACHE_11 = CacheFormatVersion.Eleven; // Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
         public const CacheFormatVersion FORMAT_VERSION_CACHE_10 = CacheFormatVersion.Ten; // Introduces waters lockmass correction in MSDataFileUri syntax
         public const CacheFormatVersion FORMAT_VERSION_CACHE_9 = CacheFormatVersion.Nine; // Introduces abbreviated scan ids
@@ -50,7 +50,6 @@ namespace pwiz.Skyline.Model.Results
         public const string PEAKS_EXT = ".peaks";
         public const string SCANS_EXT = ".scans";
         public const string SCORES_EXT = ".scores";
-        public const string IMFILTERS_EXT = ".imfilters";
 
         public static CacheFormatVersion FORMAT_VERSION_CACHE
         {
@@ -842,7 +841,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             List<ChromIonMobilityFilter> imFilters = null;
-            if (formatVersion > CacheFormatVersion.Fourteen)
+            if (formatVersion >= CacheFormatVersion.FIRST_MULTIPLE_CCS)
             {
                 // Read ion mobility filters
                 stream.Seek(cacheHeader.locationIonMobilityFilters, SeekOrigin.Begin);
@@ -947,7 +946,6 @@ namespace pwiz.Skyline.Model.Results
                                         Stream outStreamScans,
                                         Stream outStreamPeaks,
                                         Stream outStreamScores,
-                                        Stream outStreamIonMobilityFilters,
                                         ICollection<ChromCachedFile> chromCachedFiles,
                                         ICollection<ChromGroupHeaderInfo> chromatogramEntries,
                                         ICollection<ChromTransition> chromTransitions,
@@ -962,7 +960,6 @@ namespace pwiz.Skyline.Model.Results
                          outStreamScans,
                          outStreamPeaks,
                          outStreamScores,
-                         outStreamIonMobilityFilters,
                          chromCachedFiles,
                          chromatogramEntries,
                          chromTransitions,
@@ -978,7 +975,6 @@ namespace pwiz.Skyline.Model.Results
                                         Stream outStreamScans,
                                         Stream outStreamPeaks,
                                         Stream outStreamScores,
-                                        Stream outStreamIonMobilityFilters,
                                         ICollection<ChromCachedFile> chromCachedFiles,
                                         ICollection<ChromGroupHeaderInfo> chromatogramEntries,
                                         ICollection<ChromTransition> chromTransitions,
@@ -998,11 +994,14 @@ namespace pwiz.Skyline.Model.Results
             }
 
             long locationIonMobilityFilters = outStream.Position;
-            if (formatVersion >= FORMAT_VERSION_CACHE_15 && chromIonMobilityFilters.Count > 0)
+            if (formatVersion >= FORMAT_VERSION_CACHE_FIRST_MULTI_CCS)
             {
                 // Write any ion mobility filters
-                outStreamIonMobilityFilters.Seek(0, SeekOrigin.Begin);
-                outStreamIonMobilityFilters.CopyTo(outStream);
+                if (chromIonMobilityFilters.Count > 0)
+                {
+                    var ionMobilitySerializer = CacheFormat.CURRENT.ChromIonMobilityFilterSerializer();
+                    ionMobilitySerializer.WriteItems(outStream, chromIonMobilityFilters);
+                }
             }
 
             // Write the picked peaks
@@ -1357,7 +1356,6 @@ namespace pwiz.Skyline.Model.Results
             using (var fsPeaks = new FileSaver(cachePathOpt + PEAKS_EXT, true))
             using (var fsScans = new FileSaver(cachePathOpt + SCANS_EXT, true))
             using (var fsScores = new FileSaver(cachePathOpt + SCORES_EXT, true))
-            using (var fsIonMobilities = new FileSaver(cachePathOpt + IMFILTERS_EXT, true))
             using (var fs = new FileSaver(cachePathOpt))
             {
                 var inStream = ReadStream.Stream;
@@ -1412,20 +1410,38 @@ namespace pwiz.Skyline.Model.Results
                         int end = start + lastEntry.NumTransitions;
                         for (int j = start; j < end; j++)
                         {
-                            var imStart = ionMobilityFilterCount;
                             var chromTransition = _chromTransitions[j];
-                            for (var imIndex = chromTransition.IonMobilityIndexStart;
-                                imIndex >= 0 && imIndex <= chromTransition.IonMobilityIndexEnd;
-                                imIndex++)
+                            if (chromTransition.IonMobilityIndexStart < 0)
                             {
-                                listKeepIonMobilityFilters.Add(_chromIonMobilityFilters[imIndex]);
-                                ionMobilityFilterCount++;
+                                // No ion mobility info
+                                listKeepTransitions.Add(chromTransition);
                             }
+                            else
+                            {
+                                // Avoid duplicating filters used by sibling fragments
+                                var imStart = ionMobilityFilterCount;
+                                var count = chromTransition.IonMobilityIndexEnd - chromTransition.IonMobilityIndexStart + 1;
+                                if (ionMobilityFilterCount >= count &&
+                                    Enumerable.Range(0, count).All(im => Equals(_chromIonMobilityFilters[chromTransition.IonMobilityIndexEnd - im],
+                                        listKeepIonMobilityFilters[ionMobilityFilterCount - 1 - im])))
+                                {
+                                    imStart = ionMobilityFilterCount - count;
+                                }
+                                else
+                                {
+                                    for (var imIndex = chromTransition.IonMobilityIndexStart;
+                                        imIndex >= 0 && imIndex <= chromTransition.IonMobilityIndexEnd;
+                                        imIndex++)
+                                    {
+                                        listKeepIonMobilityFilters.Add(_chromIonMobilityFilters[imIndex]);
+                                        ionMobilityFilterCount++;
+                                    }
+                                }
 
-                            listKeepTransitions.Add(imStart == ionMobilityFilterCount
-                                ? chromTransition
-                                : new ChromTransition(chromTransition.Product, chromTransition.ExtractionWidth,
-                                    imStart, ionMobilityFilterCount - 1, chromTransition.Source));
+                                listKeepTransitions.Add( new ChromTransition(chromTransition.Product, chromTransition.ExtractionWidth,
+                                        imStart, ionMobilityFilterCount - 1, chromTransition.Source));
+
+                            }
                         }
                         start = lastEntry.StartPeakIndex;
                         end = start + lastEntry.NumPeaks*lastEntry.NumTransitions;
@@ -1505,7 +1521,6 @@ namespace pwiz.Skyline.Model.Results
                     fsScans.Stream,
                     fsPeaks.Stream,
                     fsScores.Stream,
-                    fsIonMobilities.Stream,
                     listKeepCachedFiles,
                     listKeepEntries,
                     listKeepTransitions,

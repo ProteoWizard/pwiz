@@ -107,6 +107,7 @@ namespace pwiz.Skyline.Model.Results
                     int offsetPeaks = _peakCount;
                     int offsetScores = _scoreCount;
                     long offsetPoints = _fs.Stream.Position;
+                    int offsetIonMobilities = _listIonMobilityFilters.Count;
 
                     // Scan ids
                     long offsetScanIds = _fsScans.Stream.Position;
@@ -120,7 +121,15 @@ namespace pwiz.Skyline.Model.Results
                     _peakCount += rawData.ChromatogramPeaks.Length;
                     var chromPeakSerializer = CacheFormat.ChromPeakSerializer();
                     rawData.ChromatogramPeaks.WriteArray(block => chromPeakSerializer.WriteItems(_fsPeaks.FileStream, block));
-                    _listTransitions.AddRange(rawData.ChromTransitions);
+                    if (offsetIonMobilities > 0)
+                    {
+                        _listTransitions.AddRange(rawData.ChromTransitions.Select(t => t.Offset(offsetIonMobilities)));
+                    }
+                    else
+                    {
+                        _listTransitions.AddRange(rawData.ChromTransitions);
+                    }
+                    _listIonMobilityFilters.AddRange(rawData.IonMobilityFilters);
                     // Initialize the score types the first time through
                     if (_scoreTypesCount == -1)
                     {

@@ -123,9 +123,10 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var ionMobilities = GetIonMobilityInfoFromLibrary(peptide);
             // Convert from CCS to ion mobility if possible
-            if (ionMobilityFunctionsProvider != null &&
+            if (ionMobilities != null && 
+                ionMobilityFunctionsProvider != null &&
                 ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter &&
-                ionMobilities != null && peptide.PrecursorMz.HasValue)
+                peptide.PrecursorMz.HasValue)
             {
                 var result = new List<IonMobilityAndCCS>();
                 foreach (var im in ionMobilities)
@@ -158,7 +159,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Locate this target in ion mobility library, if any
             if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
             {
-                var dict = IonMobilityLibrary.GetIonMobilityDict();
+                var dict = IonMobilityLibrary.GetIonMobilityLibKeyMap();
                 if (dict != null && dict.TryGetValue(ion, out var imList))
                 {
                     return imList;
@@ -697,14 +698,19 @@ namespace pwiz.Skyline.Model.DocSettings
             HighEnergyIonMobilityOffset = highEnergyIonMobilityOffset;
         }
 
-        public static IonMobilityAndCCS GetIonMobilityAndCCS(double? ionMobilityValue, eIonMobilityUnits units, double? collisionalCrossSectionSqA, double? highEnergyIonMobilityValueOffset)
+        public static IonMobilityAndCCS GetIonMobilityAndCCS(double? ionMobilityValue, eIonMobilityUnits units,
+            double? collisionalCrossSectionSqA, double? highEnergyIonMobilityValueOffset)
         {
-            return GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobilityValue, units), collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset);
+            return GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobilityValue, units),
+                collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset);
         }
 
-        public static IonMobilityAndCCS GetIonMobilityAndCCS(IonMobilityValue ionMobilityValue, double? collisionalCrossSectionSqA, double? highEnergyIonMobilityValueOffset)
+        public static IonMobilityAndCCS GetIonMobilityAndCCS(IonMobilityValue ionMobilityValue,
+            double? collisionalCrossSectionSqA, double? highEnergyIonMobilityValueOffset)
         {
-            return ionMobilityValue.HasValue || collisionalCrossSectionSqA.HasValue ? new IonMobilityAndCCS(ionMobilityValue, collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset) : EMPTY;
+            return ionMobilityValue.HasValue || collisionalCrossSectionSqA.HasValue
+                ? new IonMobilityAndCCS(ionMobilityValue, collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset)
+                : EMPTY;
         }
 
         [Track]
@@ -713,12 +719,16 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return IonMobilityFilter.IonMobilityUnitsL10NString(IonMobility.Units); }
         }
 
-        [TrackChildren(ignoreName: true)]
-        public IonMobilityValue IonMobility { get; private set; }
+        [TrackChildren(ignoreName: true)] public IonMobilityValue IonMobility { get; private set; }
+        [Track] public double? CollisionalCrossSectionSqA { get; private set; }
+
         [Track]
-        public double? CollisionalCrossSectionSqA { get; private set; }
-        [Track]
-        public double? HighEnergyIonMobilityOffset { get; private set; } // As in Waters MSe, where product ions fly a bit faster due to added kinetic energy
+        public double?
+            HighEnergyIonMobilityOffset
+        {
+            get;
+            private set;
+        } // As in Waters MSe, where product ions fly a bit faster due to added kinetic energy
 
         public double? GetHighEnergyIonMobility()
         {
@@ -726,6 +736,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return IonMobility.Mobility + HighEnergyIonMobilityOffset;
             }
+
             return null;
         }
 
@@ -735,16 +746,33 @@ namespace pwiz.Skyline.Model.DocSettings
         public IonMobilityAndCCS Merge(IonMobilityAndCCS other)
         {
             var val = this;
-            if (other.HasCollisionalCrossSection && !Equals(other.CollisionalCrossSectionSqA, CollisionalCrossSectionSqA))
+            if (other.HasCollisionalCrossSection &&
+                !Equals(other.CollisionalCrossSectionSqA, CollisionalCrossSectionSqA))
                 val = ChangeProp(ImClone(this), im => im.CollisionalCrossSectionSqA = other.CollisionalCrossSectionSqA);
             if (!Equals(other.IonMobility, IonMobility))
                 val = ChangeProp(ImClone(this), im => im.IonMobility = IonMobility.Merge(other.IonMobility));
-            if (other.HighEnergyIonMobilityOffset.HasValue && other.HighEnergyIonMobilityOffset != HighEnergyIonMobilityOffset)
-                val = ChangeProp(ImClone(this), im => im.HighEnergyIonMobilityOffset = other.HighEnergyIonMobilityOffset);
+            if (other.HighEnergyIonMobilityOffset.HasValue &&
+                other.HighEnergyIonMobilityOffset != HighEnergyIonMobilityOffset)
+                val = ChangeProp(ImClone(this),
+                    im => im.HighEnergyIonMobilityOffset = other.HighEnergyIonMobilityOffset);
 
             return val;
         }
 
+        public IonMobilityAndCCS ChangeCollisionalCrossSection(double? ccs)
+        {
+            return Equals(ccs, CollisionalCrossSectionSqA) ? 
+                this :
+                ChangeProp(ImClone(this), im => im.CollisionalCrossSectionSqA = ccs);
+        }
+
+        public IonMobilityAndCCS ChangeHighEnergyIonMobilityOffset(double? offset)
+        {
+            return Equals(offset, HighEnergyIonMobilityOffset) ?
+                this :
+                ChangeProp(ImClone(this), im => im.HighEnergyIonMobilityOffset = offset);
+        }
+        
         public bool HasCollisionalCrossSection { get { return (CollisionalCrossSectionSqA ?? 0) != 0; } }
         public bool HasIonMobilityValue { get { return IonMobility.HasValue; } }
         public bool IsEmpty { get { return !HasIonMobilityValue && !HasCollisionalCrossSection; } }
@@ -797,16 +825,16 @@ namespace pwiz.Skyline.Model.DocSettings
     /// </summary>
     public class IonMobilityFilterSet : Immutable, IComparable<IonMobilityFilterSet>, IEquatable<IonMobilityFilterSet>, IEnumerable<IonMobilityFilter>
     {
-        public static IonMobilityFilterSet EMPTY = new IonMobilityFilterSet(new HashSet<IonMobilityFilter>());
+        public static IonMobilityFilterSet EMPTY = new IonMobilityFilterSet(new List<IonMobilityFilter>());
 
-        private HashSet<IonMobilityFilter> _filters;
+        private List<IonMobilityFilter> _filters;
 
         public static bool IsNullOrEmpty(IonMobilityFilterSet filterSet)
         {
             return filterSet == null || filterSet.IsEmpty;
         }
 
-        private IonMobilityFilterSet(HashSet<IonMobilityFilter> filters) // Use GetIonMobilityFilterSet() instead, for efficiency with empty lists
+        private IonMobilityFilterSet(List<IonMobilityFilter> filters) // Use GetIonMobilityFilterSet() instead, for efficiency with empty lists
         {
             _filters = filters;
         }
@@ -815,14 +843,14 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (IonMobilityFilter.IsNullOrEmpty(filter))
                 return EMPTY;
-            return new IonMobilityFilterSet(new HashSet<IonMobilityFilter>(){ filter});
+            return new IonMobilityFilterSet(new List<IonMobilityFilter>(){ filter});
         }
 
         public static IonMobilityFilterSet GetIonMobilityFilterSet(IEnumerable<IonMobilityFilter> filters)
         {
             if (filters == null)
                 return EMPTY;
-            var result = filters.Where(f => f != null && !f.IsEmpty).ToHashSet();
+            var result = filters.Where(f => f != null && !f.IsEmpty).ToList();
             return !result.Any() ? EMPTY : new IonMobilityFilterSet(result);
         }
 
@@ -830,44 +858,43 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (IsNullOrEmpty(other) || other._filters.All(f => _filters.Contains(f)))
                 return this;
-            var result = new HashSet<IonMobilityFilter>(_filters);
+            var result = new List<IonMobilityFilter>(_filters);
             foreach (var f in other._filters)
             {
-                result.Add(f);
+                if (!result.Contains(f))
+                {
+                    result.Add(f);
+                }
             }
             return new IonMobilityFilterSet(result);
         }
 
+        IonMobilityFilter this[int index]
+        {
+            get { return _filters[index]; }
+        }
+
+        // Used by TransitionGroupDocNode.AddChromInfo to aggregate ion mobility information from all transitions.
+        // All transitions, whether MS1 or MS2, are expected to have the same sets of CCS values, though MS2 transitions
+        // may have distinct ion mobilities. All transitions may have different ion mobilities and/or extraction widths
+        // than those currently held if a settings change and reimport has caused them to be recalculated.
         public IonMobilityFilterSet Merge(IonMobilityFilterSet ionMobilities, bool isMs1)
         {
             if (Count == 0)
             {
                 return ionMobilities;
             }
+            else
+            {
+                Assume.AreEqual(Count, ionMobilities.Count);
+            }
 
             var result = ionMobilities._filters;
-            foreach (var ionMobility in ionMobilities)
+            for (var index = 0; index < Count; index++)
             {
-                // Look for entries with same CCS but otherwise differing values, such as after a settings change that affects window size
-                var existing = _filters.FirstOrDefault(f => 
-                    (f.CollisionalCrossSectionSqA.HasValue && Equals(f.CollisionalCrossSectionSqA, ionMobility.CollisionalCrossSectionSqA)) ||
-                    (f.HasIonMobilityValue && Equals(f.IonMobilityAndCCS.IonMobility, ionMobility.IonMobilityAndCCS.IonMobility)));
-                if (existing == null && Count == 1)
-                {
-                    existing = _filters.First();
-                }
-                if (existing == null)
-                {
-                    result.Add(ionMobility);
-                    continue;
-                }
-
-                var updated = existing.Merge(ionMobility);
-                if (!Equals(existing, updated))
-                {
-                    result = result.Where(f => !Equals(f, existing)).ToHashSet();
-                    result.Add(updated);
-                }
+                var revised = ionMobilities[index];
+                var existing = _filters[index];
+                result[index] = existing.Merge(revised, isMs1);
             }
             return Equals(result, _filters) ? this : new IonMobilityFilterSet(result);
         }
@@ -876,7 +903,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool Equals(IonMobilityFilterSet other)
         {
             return !ReferenceEquals(null, other) && 
-                   (ReferenceEquals(this, other) || _filters.SetEquals(other._filters));
+                   (ReferenceEquals(this, other) || _filters.SequenceEqual(other._filters));
         }
 
         public override bool Equals(object obj)
@@ -966,7 +993,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return EMPTY;
             }
 
-            var result = new HashSet<IonMobilityFilter>();
+            var result = new List<IonMobilityFilter>();
             foreach (var value in protoIonMobilityFilters.Values)
             {
                 var im = IonMobilityAndCCS.GetIonMobilityAndCCS(
@@ -980,7 +1007,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (_filters.All(item => (item.HighEnergyIonMobilityOffset ?? 0) == 0))
                 return this;
-            var result = new HashSet<IonMobilityFilter>();
+            var result = new List<IonMobilityFilter>();
             foreach (var item in _filters)
             {
                 result.Add(item.ApplyOffset());
@@ -990,14 +1017,14 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
 
-        public void WriteXML(XmlWriter writer, IonMobilityFilter.SerializationElementType parentElementType)
+        public void WriteXML(XmlWriter writer, IonMobilityFilter.SerializationElementType parentElementType, DocumentFormat skylineVersion)
         {
             if (!IsEmpty)
             {
                 foreach (var filter in _filters.Where(f => !IonMobilityFilter.IsNullOrEmpty(f)))
                 {
                     writer.WriteStartElement(DocumentSerializer.EL.ion_mobility_filter);
-                    filter.WriteAttributes(writer, parentElementType);
+                    filter.WriteAttributes(writer, parentElementType, skylineVersion);
                     writer.WriteEndElement();
                 }
             }
@@ -1119,22 +1146,43 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool HasIonMobilityValue { get { return IonMobilityAndCCS.HasIonMobilityValue; } }
         public bool IsEmpty { get { return !HasIonMobilityValue; } }
 
-        /// <summary>
-        /// Populate values in this with non-empty values in other
-        /// </summary>
-        public IonMobilityFilter Merge(IonMobilityFilter other)
+        // Used by TransitionGroupDocNode.AddChromInfo to aggregate ion mobility information from all transitions.
+        // All transitions, whether MS1 or MS2, are expected to have the same sets of CCS values, though MS2 transitions
+        // may have distinct ion mobilities. All transitions may have different ion mobilities and/or extraction widths
+        // than those currently held if a settings change and reimport has caused them to be recalculated.
+        public IonMobilityFilter Merge(IonMobilityFilter other, bool isMs1)
         {
+            var val = this;
 
-            var val = Equals(other.IonMobilityExtractionWindowWidth, IonMobilityExtractionWindowWidth) ? 
-                this : 
-                ChangeProp(ImClone(this), im => im.IonMobilityExtractionWindowWidth = other.IonMobilityExtractionWindowWidth);
+            // Filling in MS1 or MS2 data, or just more of what we already know
+            if (isMs1)
+            {
+                // We expect these all to be the same for MS1, but can't assert that here because we
+                // may be in the process of re-import with a different filter setting.
+                if (!Equals(other.IonMobilityAndCCS, val.IonMobilityAndCCS))
+                    val = ChangeProp(ImClone(val), im => im.IonMobilityAndCCS = other.IonMobilityAndCCS);
+                if (!Equals(other.IonMobilityExtractionWindowWidth, IonMobilityExtractionWindowWidth))
+                    val = ChangeProp(ImClone(this), im => im.IonMobilityExtractionWindowWidth = other.IonMobilityExtractionWindowWidth);
+            }
+            else
+            {
+                // We expect these all to be the same for MS/MS, but can't assert that here because we
+                // may be in the process of re-import with a different filter setting.
+                // CCS isn't really a fragment concept, they carry around the CCS of the parent ion if they have a CCS at all
+                var thisHighEnergyIonMobility =
+                    IonMobilityAndCCS.IonMobility.Mobility.Value + (HighEnergyIonMobilityOffset ?? 0);
+                var otherHighEnergyIonMobility =
+                    other.IonMobilityAndCCS.IonMobility.Mobility.Value +(other.HighEnergyIonMobilityOffset ?? 0);
+                if (!Equals(otherHighEnergyIonMobility, thisHighEnergyIonMobility))
+                   val = ChangeProp(ImClone(val), im => im.IonMobilityAndCCS = IonMobilityAndCCS.ChangeHighEnergyIonMobilityOffset(otherHighEnergyIonMobility- IonMobilityAndCCS.IonMobility.Mobility.Value));
+            }
 
-            var ionMobilityAndCCS = val.IonMobilityAndCCS.Merge(other.IonMobilityAndCCS);
-            val = Equals(ionMobilityAndCCS, IonMobilityAndCCS) ? 
-                val : 
-                ChangeProp(ImClone(val), im => im.IonMobilityAndCCS = ionMobilityAndCCS);
-
+            if (!IonMobilityExtractionWindowWidth.HasValue && other.IonMobilityExtractionWindowWidth.HasValue)
+                val = ChangeProp(ImClone(this), im => im.IonMobilityExtractionWindowWidth = other.IonMobilityExtractionWindowWidth);
+            if (other.CollisionalCrossSectionSqA.HasValue && !Equals(other.CollisionalCrossSectionSqA, val.CollisionalCrossSectionSqA))
+                val = ChangeProp(ImClone(val), im => im.IonMobilityAndCCS = IonMobilityAndCCS.ChangeCollisionalCrossSection(other.CollisionalCrossSectionSqA));
             return val;
+
         }
 
 
@@ -1221,8 +1269,13 @@ namespace pwiz.Skyline.Model.DocSettings
             return success;
         }
 
-        public enum SerializationElementType { TransitionChromInfo, TransitionGroupChromInfo, LegacyMeasuredIonMObility }
-        public void WriteAttributes(XmlWriter writer, SerializationElementType serializationElementType)
+        public enum SerializationElementType { TransitionChromInfo, TransitionGroupChromInfo, LegacyMeasuredIonMobility }
+
+        private double? PersistRound(double? val)
+        {
+            return val.HasValue ? Math.Round(val.Value, 6) : (double?)null;
+        }
+        public void WriteAttributes(XmlWriter writer, SerializationElementType serializationElementType, DocumentFormat skylineVersion)
         {
             if (IsEmpty)
                 return;
@@ -1230,25 +1283,28 @@ namespace pwiz.Skyline.Model.DocSettings
             if (serializationElementType == SerializationElementType.TransitionGroupChromInfo)
             {
                 // Express in terms of ms1 vs fragment
-                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_ms1, IonMobilityAndCCS.IonMobility.Mobility);
-                var ion_mobility_fragment = IonMobilityAndCCS.IonMobility.Mobility.HasValue ?
-                    (double?) (IonMobilityAndCCS.IonMobility.Mobility.Value + (IonMobilityAndCCS.HighEnergyIonMobilityOffset ?? 0)) :
-                    null;
-                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_fragment, ion_mobility_fragment);
+                writer.WriteAttributeNullable(skylineVersion < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY ? 
+                        DocumentSerializer.ATTR.ion_mobility_ms1 :
+                        DocumentSerializer.ATTR.ion_mobility, 
+                    PersistRound(IonMobilityAndCCS.IonMobility.Mobility));
+                if (skylineVersion < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY)
+                {
+                    var ion_mobility_fragment = IonMobilityAndCCS.IonMobility.Mobility.HasValue ?
+                        (double?) (IonMobilityAndCCS.IonMobility.Mobility.Value + (IonMobilityAndCCS.HighEnergyIonMobilityOffset ?? 0)) :
+                        null;
+                    writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_fragment, PersistRound(ion_mobility_fragment));
+                }
             }
             else
             {
                 // Express in terms of mobility and high energy offset
-                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility, IonMobilityAndCCS.IonMobility.Mobility);
+                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility, PersistRound(IonMobilityAndCCS.IonMobility.Mobility));
                 if ((IonMobilityAndCCS.HighEnergyIonMobilityOffset ?? 0) != 0)
-                    writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_high_energy_offset, IonMobilityAndCCS.HighEnergyIonMobilityOffset);
+                    writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_high_energy_offset, PersistRound(IonMobilityAndCCS.HighEnergyIonMobilityOffset));
             }
-            writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_window, IonMobilityExtractionWindowWidth);
-            if (serializationElementType != SerializationElementType.TransitionChromInfo)
-            {
-                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ccs, CollisionalCrossSectionSqA);
-                writer.WriteAttributeString(DocumentSerializer.ATTR.ion_mobility_type, IonMobilityUnits.ToString());
-            }
+            writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_window, PersistRound(IonMobilityExtractionWindowWidth));
+            writer.WriteAttributeNullable(DocumentSerializer.ATTR.ccs, CollisionalCrossSectionSqA);
+            writer.WriteAttributeString(DocumentSerializer.ATTR.ion_mobility_type, IonMobilityUnits.ToString());
         }
 
         public static IonMobilityFilter ReadXMLAttributes(XmlReader reader)
@@ -1354,7 +1410,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="chargedPeptide"></param>
         /// <returns>ion mobility, or null</returns>
         public abstract IList<IonMobilityAndCCS> GetIonMobilityInfo(LibKey chargedPeptide);
-        public abstract ImmutableDictionary<LibKey, List<IonMobilityAndCCS>> GetIonMobilityDict();
+        public abstract LibKeyMap<List<IonMobilityAndCCS>> GetIonMobilityLibKeyMap();
 
         public virtual int Count { get { return -1; } }  // How many entries in library?
 
@@ -1369,8 +1425,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public virtual string PersistencePath { get { return null; } }
 
-        public virtual string PersistMinimized(string pathDestDir, SrmDocument document, IDictionary<LibKey, LibKey> smallMoleculeConversionInfo)
+        public virtual string PersistMinimized(string pathDestDir, SrmDocument document, IDictionary<LibKey, LibKey> smallMoleculeConversionInfo, out IonMobilityDb loadedDatabase)
         {
+            loadedDatabase = null;
             return null;
         }
 

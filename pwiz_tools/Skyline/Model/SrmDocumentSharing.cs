@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Model
                     if (tempDir == null)
                         tempDir = new TemporaryDirectory();
                     string tempDbPath = Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary
-                        .PersistMinimized(tempDir.DirPath, Document, null);
+                        .PersistMinimized(tempDir.DirPath, Document, null, out _);
                     if (tempDbPath != null)
                         zip.AddFile(tempDbPath);
                 }
@@ -434,7 +434,6 @@ namespace pwiz.Skyline.Model
             using (var scansSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCANS_EXT, true))
             using (var peaksSaver = new FileSaver(targetSkydFile + ChromatogramCache.PEAKS_EXT, true))
             using (var scoreSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCORES_EXT, true))
-            using (var ionMobilitySaver = new FileSaver(targetSkydFile + ChromatogramCache.IMFILTERS_EXT, true))
             {
                 var minimizer = Document.Settings.MeasuredResults.GetChromCacheMinimizer(Document);
                 var settings = new ChromCacheMinimizer.Settings().ChangeCacheFormat(cacheFormat);
@@ -451,7 +450,7 @@ namespace pwiz.Skyline.Model
                         ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(stats.PercentComplete));
                     }
                     
-                }, skydSaver.FileStream, scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream, ionMobilitySaver.FileStream);
+                }, skydSaver.FileStream, scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream);
                 skydSaver.Commit();
             }
         }

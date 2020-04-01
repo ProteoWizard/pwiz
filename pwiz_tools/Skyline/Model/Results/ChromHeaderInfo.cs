@@ -842,9 +842,231 @@ namespace pwiz.Skyline.Model.Results
     }
 
     /// <summary>
+    /// Version 15 of ChromTransition adds multiple conformer support to ion mobility information
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
+    public struct ChromTransition
+    {
+        private double _product;
+        private float _extractionWidth;
+        private int _ionMobilityIndexStart; // Lookup into ion mobility table for start of multiple conformers range: -1 means "none"
+        private int _ionMobilityIndexEnd;  // Lookup into ion mobility table for end of range: -1 means "none", single CCS value will have start==end
+        private ushort _flagBits;
+        private ushort _align1;
+        [Flags]
+        public enum FlagValues
+        {
+            unknown = 0x00,
+            ms1 = 0x01,
+            fragment = 0x02,
+            sim = 0x03,
+
+            missing_mass_errors = 0x04,
+        }
+
+        const FlagValues MASK_SOURCE = (FlagValues)0x03;
+
+        public ChromTransition(double product, float extractionWidth, int ionMobilityIndexStart, int ionMobilityIndexEnd, ChromSource source) : this()
+        {
+            _product = product;
+            _extractionWidth = extractionWidth;
+            _ionMobilityIndexStart = ionMobilityIndexStart;
+            _ionMobilityIndexEnd = ionMobilityIndexEnd;
+            Source = source;
+        }
+
+        public ChromTransition(ChromTransition8 chromTransition8, IList<ChromIonMobilityFilter> ionMobilityTable) : this(chromTransition8.Product,
+            chromTransition8.ExtractionWidth, -1, -1, chromTransition8.Source)
+        {
+            // Deal with previous generation ion mobility encoding
+            if (chromTransition8.IonMobilityValue > 0)
+            {
+                var imStart = ionMobilityTable.Count;
+                var imFilter = ChromIonMobilityFilter.GetChromIonMobilityFilter(0, // This will be corrected once we read the old headers
+                    chromTransition8.IonMobilityValue, chromTransition8.IonMobilityExtractionWidth, 
+                    eIonMobilityUnits.none); // This will be corrected once we read the old headers
+                if (imStart > 0 && Equals(imFilter, ionMobilityTable.Last()))
+                {
+                    imStart--; // Same as in previous transition (pretty common in fragments of same precursor)
+                }
+                else
+                {
+                    ionMobilityTable.Add(imFilter);
+                }
+                _ionMobilityIndexStart = _ionMobilityIndexEnd = imStart;
+            }
+        }
+
+        public ChromTransition(ChromTransition5 chromTransition5) : this(chromTransition5.Product,
+            // There was an issue with Manage Results > Rescore, which made it possible to corrupt
+            // the chromatogram source until a commit by Nick in March 2014, and Brian introduced
+            // the next version of this struct in the May, 2014. So considering the source unknown
+            // for these older files seems safest, since we are moving to paying attention to the
+            // source for chromatogram to transition matching.
+            chromTransition5.ExtractionWidth, -1, -1, ChromSource.unknown)
+        {
+        }
+
+        public ChromTransition(ChromTransition4 chromTransition4)
+            : this(chromTransition4.Product, 0, -1, -1, ChromSource.unknown)
+        {
+        }
+
+        public double Product { get { return _product; } }
+        public float ExtractionWidth { get { return _extractionWidth; } }  // In m/z
+
+        public int IonMobilityIndexStart { get { return _ionMobilityIndexStart; } }
+        public int IonMobilityIndexEnd { get { return _ionMobilityIndexEnd; } }
+
+        public FlagValues Flags
+        {
+            get { return (FlagValues)_flagBits; }
+            set { _flagBits = (ushort)value; }
+        }
+
+        public ChromSource Source
+        {
+            get
+            {
+                switch (Flags & MASK_SOURCE)
+                {
+                    case FlagValues.unknown:
+                        return ChromSource.unknown;
+                    case FlagValues.fragment:
+                        return ChromSource.fragment;
+                    case FlagValues.ms1:
+                        return ChromSource.ms1;
+                    default:
+                        return ChromSource.sim;
+                }
+            }
+            set
+            {
+                Flags = GetSourceFlags(value) | (Flags & ~MASK_SOURCE);
+            }
+        }
+
+        public bool MissingMassErrors
+        {
+            get { return (Flags & FlagValues.missing_mass_errors) != 0; }
+            set { Flags = (Flags & ~FlagValues.missing_mass_errors) | (value ? FlagValues.missing_mass_errors : 0); }
+        }
+
+        public static FlagValues GetSourceFlags(ChromSource source)
+        {
+            switch (source)
+            {
+                case ChromSource.unknown:
+                    return FlagValues.unknown;
+                case ChromSource.fragment:
+                    return FlagValues.fragment;
+                case ChromSource.ms1:
+                    return FlagValues.ms1;
+                default:
+                    return FlagValues.sim;
+            }
+        }
+
+        // Set default block size for BlockedArray<ChromTransition>
+        public const int DEFAULT_BLOCK_SIZE = 100 * 1024 * 1024;  // 100 megabytes
+
+        // sizeof(ChromPeak)
+        public static int SizeOf
+        {
+            get { unsafe { return sizeof(ChromTransition); } }
+        }
+
+        #region Fast file I/O
+
+        /// <summary>
+        /// Update the ion mobility indexing for cache joining
+        /// N.B. there's no need to be immutable in this context 
+        /// </summary>
+        public ChromTransition Offset(int ionMobilityOffset)
+        {
+            if (IonMobilityIndexStart >= 0)
+            {
+                _ionMobilityIndexStart += ionMobilityOffset;
+                _ionMobilityIndexEnd += ionMobilityOffset;
+            }
+            return this;
+        }
+
+        public static StructSerializer<ChromTransition> StructSerializer(int structSizeOnDisk)
+        {
+            return new StructSerializer<ChromTransition>()
+            {
+                DirectSerializer = DirectSerializer.Create(ReadArray, null),
+                ItemSizeOnDisk = structSizeOnDisk,
+            };
+        }
+
+        /// <summary>
+        /// Direct read of an entire array throw p-invoke of Win32 WriteFile.  This seems
+        /// to coexist with FileStream reading that the write version, but its use case
+        /// is tightly limited.
+        /// <para>
+        /// Contributed by Randy Kern.  See:
+        /// http://randy.teamkern.net/2009/02/reading-arrays-from-files-in-c-without-extra-copy.html
+        /// </para>
+        /// </summary>
+        /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
+        /// <param name="count">Number of elements to read</param>
+        /// <returns>New array of elements</returns>
+        private static unsafe ChromTransition[] ReadArray(SafeHandle file, int count)
+        {
+            ChromTransition[] results = new ChromTransition[count];
+            fixed (ChromTransition* p = results)
+            {
+                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromTransition) * count);
+            }
+
+            return results;
+        }
+
+        public static ChromTransition[] ReadArray(Stream stream, int count)
+        {
+            return new StructSerializer<ChromTransition>().ReadArray(stream, count);
+        }
+
+        public static int GetStructSize(CacheFormatVersion cacheFormatVersion)
+        {
+            if (cacheFormatVersion < CacheFormatVersion.Five)
+            {
+                return 4;
+            }
+            if (cacheFormatVersion <= CacheFormatVersion.Six)
+            {
+                return 16;
+            }
+            return 24;
+        }
+
+        //
+        // NOTE: writing is handled by ChromatogramCache::WriteStructs, so any members
+        // added here need to be added there - and in the proper order!
+        // 
+
+        #endregion
+
+        #region object overrides
+
+        /// <summary>
+        /// For debugging only, not user-facing
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format(@"mz{0:F04} im{1},{2} {3}", Product, _ionMobilityIndexStart, _ionMobilityIndexEnd, Source);
+        }
+
+        #endregion
+
+    }
+
+    /// <summary>
     /// Version 8 of ChromTransition adds ion mobility information
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack=4)]
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct ChromTransition8
     {
         private double _product;
@@ -864,7 +1086,7 @@ namespace pwiz.Skyline.Model.Results
             missing_mass_errors = 0x04,
         }
 
-        const FlagValues MASK_SOURCE = (FlagValues) 0x03;
+        const FlagValues MASK_SOURCE = (FlagValues)0x03;
 
         public ChromTransition8(double product, float extractionWidth, float ionMobilityValue, float ionMobilityExtractionWidth, ChromSource source) : this()
         {
@@ -876,7 +1098,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         // For backward compatibility serialization
-        public ChromTransition8(ChromTransition chromTransition, IList<ChromIonMobilityFilter> filters): this()
+        public ChromTransition8(ChromTransition chromTransition, IList<ChromIonMobilityFilter> filters) : this()
         {
             _product = chromTransition.Product;
             _extractionWidth = chromTransition.ExtractionWidth;
@@ -895,7 +1117,7 @@ namespace pwiz.Skyline.Model.Results
             // for these older files seems safest, since we are moving to paying attention to the
             // source for chromatogram to transition matching.
             chromTransition5.ExtractionWidth, 0, 0, ChromSource.unknown)
-        {            
+        {
         }
 
         public ChromTransition8(ChromTransition4 chromTransition4)
@@ -904,14 +1126,14 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public double Product { get { return _product; } }
-        public float ExtractionWidth { get { return _extractionWidth; }}  // In m/z
+        public float ExtractionWidth { get { return _extractionWidth; } }  // In m/z
         public float IonMobilityValue { get { return _ionMobilityValue; } } // Units depend on ion mobility type
         public float IonMobilityExtractionWidth { get { return _ionMobilityExtractionWidth; } } // Units depend on ion mobility type
 
         public FlagValues Flags
         {
-            get { return (FlagValues) _flagBits; }
-            set { _flagBits = (ushort) value; }
+            get { return (FlagValues)_flagBits; }
+            set { _flagBits = (ushort)value; }
         }
 
         public ChromSource Source
@@ -1041,209 +1263,6 @@ namespace pwiz.Skyline.Model.Results
 
     }
 
-    /// <summary>
-    /// Version 15 of ChromTransition adds multiple conformer support to ion mobility information
-    /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    public struct ChromTransition
-    {
-        private double _product;
-        private float _extractionWidth;
-        private int _ionMobilityIndexStart; // Lookup into ion mobility table for start of multiple conformers range: -1 means "none"
-        private int _ionMobilityIndexEnd;  // Lookup into ion mobility table for end of range: -1 means "none", single CCS value will have start==end
-        private ushort _flagBits;
-        private ushort _align1;
-        [Flags]
-        public enum FlagValues
-        {
-            unknown = 0x00,
-            ms1 = 0x01,
-            fragment = 0x02,
-            sim = 0x03,
-
-            missing_mass_errors = 0x04,
-        }
-
-        const FlagValues MASK_SOURCE = (FlagValues)0x03;
-
-        public ChromTransition(double product, float extractionWidth, int ionMobilityIndexStart, int ionMobilityIndexEnd, ChromSource source) : this()
-        {
-            _product = product;
-            _extractionWidth = extractionWidth;
-            _ionMobilityIndexStart = ionMobilityIndexStart;
-            _ionMobilityIndexEnd = ionMobilityIndexEnd;
-            Source = source;
-        }
-
-        public ChromTransition(ChromTransition8 chromTransition8, IList<ChromIonMobilityFilter> ionMobilityTable) : this(chromTransition8.Product,
-            chromTransition8.ExtractionWidth, -1, -1, chromTransition8.Source)
-        {
-            // Deal with previous generation ion mobility encoding
-            if (chromTransition8.IonMobilityValue > 0)
-            {
-                var imStart = ionMobilityTable.Count;
-                var imFilter = ChromIonMobilityFilter.GetChromIonMobilityFilter(0, // This will be corrected once we read the old headers
-                    chromTransition8.IonMobilityValue, chromTransition8.IonMobilityExtractionWidth, 
-                    eIonMobilityUnits.none); // This will be corrected once we read the old headers
-                _ionMobilityIndexStart = _ionMobilityIndexEnd = imStart;
-                ionMobilityTable.Add(imFilter);
-            }
-        }
-
-        public ChromTransition(ChromTransition5 chromTransition5) : this(chromTransition5.Product,
-            // There was an issue with Manage Results > Rescore, which made it possible to corrupt
-            // the chromatogram source until a commit by Nick in March 2014, and Brian introduced
-            // the next version of this struct in the May, 2014. So considering the source unknown
-            // for these older files seems safest, since we are moving to paying attention to the
-            // source for chromatogram to transition matching.
-            chromTransition5.ExtractionWidth, -1, -1, ChromSource.unknown)
-        {
-        }
-
-        public ChromTransition(ChromTransition4 chromTransition4)
-            : this(chromTransition4.Product, 0, -1, -1, ChromSource.unknown)
-        {
-        }
-
-        public double Product { get { return _product; } }
-        public float ExtractionWidth { get { return _extractionWidth; } }  // In m/z
-
-        public int IonMobilityIndexStart { get { return _ionMobilityIndexStart; } }
-        public int IonMobilityIndexEnd { get { return _ionMobilityIndexEnd; } }
-
-        public FlagValues Flags
-        {
-            get { return (FlagValues)_flagBits; }
-            set { _flagBits = (ushort)value; }
-        }
-
-        public ChromSource Source
-        {
-            get
-            {
-                switch (Flags & MASK_SOURCE)
-                {
-                    case FlagValues.unknown:
-                        return ChromSource.unknown;
-                    case FlagValues.fragment:
-                        return ChromSource.fragment;
-                    case FlagValues.ms1:
-                        return ChromSource.ms1;
-                    default:
-                        return ChromSource.sim;
-                }
-            }
-            set
-            {
-                Flags = GetSourceFlags(value) | (Flags & ~MASK_SOURCE);
-            }
-        }
-
-        public bool MissingMassErrors
-        {
-            get { return (Flags & FlagValues.missing_mass_errors) != 0; }
-            set { Flags = (Flags & ~FlagValues.missing_mass_errors) | (value ? FlagValues.missing_mass_errors : 0); }
-        }
-
-        public static FlagValues GetSourceFlags(ChromSource source)
-        {
-            switch (source)
-            {
-                case ChromSource.unknown:
-                    return FlagValues.unknown;
-                case ChromSource.fragment:
-                    return FlagValues.fragment;
-                case ChromSource.ms1:
-                    return FlagValues.ms1;
-                default:
-                    return FlagValues.sim;
-            }
-        }
-
-        // Set default block size for BlockedArray<ChromTransition>
-        public const int DEFAULT_BLOCK_SIZE = 100 * 1024 * 1024;  // 100 megabytes
-
-        // sizeof(ChromPeak)
-        public static int SizeOf
-        {
-            get { unsafe { return sizeof(ChromTransition); } }
-        }
-
-        #region Fast file I/O
-
-        public static StructSerializer<ChromTransition> StructSerializer(int structSizeOnDisk)
-        {
-            return new StructSerializer<ChromTransition>()
-            {
-                DirectSerializer = DirectSerializer.Create(ReadArray, null),
-                ItemSizeOnDisk = structSizeOnDisk,
-            };
-        }
-
-        /// <summary>
-        /// Direct read of an entire array throw p-invoke of Win32 WriteFile.  This seems
-        /// to coexist with FileStream reading that the write version, but its use case
-        /// is tightly limited.
-        /// <para>
-        /// Contributed by Randy Kern.  See:
-        /// http://randy.teamkern.net/2009/02/reading-arrays-from-files-in-c-without-extra-copy.html
-        /// </para>
-        /// </summary>
-        /// <param name="file">File handler returned from <see cref="FileStream.SafeFileHandle"/></param>
-        /// <param name="count">Number of elements to read</param>
-        /// <returns>New array of elements</returns>
-        private static unsafe ChromTransition[] ReadArray(SafeHandle file, int count)
-        {
-            ChromTransition[] results = new ChromTransition[count];
-            fixed (ChromTransition* p = results)
-            {
-                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromTransition) * count);
-            }
-
-            return results;
-        }
-
-        public static ChromTransition[] ReadArray(Stream stream, int count)
-        {
-            return new StructSerializer<ChromTransition>().ReadArray(stream, count);
-        }
-
-        public static int GetStructSize(CacheFormatVersion cacheFormatVersion)
-        {
-            if (cacheFormatVersion < CacheFormatVersion.Five)
-            {
-                return 4;
-            }
-            if (cacheFormatVersion <= CacheFormatVersion.Six)
-            {
-                return 16;
-            }
-            return 24;
-        }
-
-        //
-        // NOTE: writing is handled by ChromatogramCache::WriteStructs, so any members
-        // added here need to be added there - and in the proper order!
-        // 
-
-        #endregion
-
-        #region object overrides
-
-        /// <summary>
-        /// For debugging only, not user-facing
-        /// </summary>
-        public override string ToString()
-        {
-            return string.Format(@"mz{0:F04} im{1},{2} {3}", Product, _ionMobilityIndexStart, _ionMobilityIndexEnd, Source);
-        }
-
-        #endregion
-
-
-
-    }
-
 
     // A chromatogram may be extracted using more than one ion mobility filter
     // (the "multiple conformers" case), so these are kept in their own table
@@ -1302,7 +1321,7 @@ namespace pwiz.Skyline.Model.Results
         {
             return new StructSerializer<ChromIonMobilityFilter>()
             {
-                DirectSerializer = DirectSerializer.Create(ReadArray, null),
+                DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray),
                 ItemSizeOnDisk = structSizeOnDisk,
             };
         }
@@ -1333,6 +1352,14 @@ namespace pwiz.Skyline.Model.Results
         public static ChromIonMobilityFilter[] ReadArray(Stream stream, int count)
         {
             return new StructSerializer<ChromIonMobilityFilter>().ReadArray(stream, count);
+        }
+
+        public static unsafe void WriteArray(SafeHandle file, ChromIonMobilityFilter[] imFilters)
+        {
+            fixed (ChromIonMobilityFilter* p = imFilters)
+            {
+                FastWrite.WriteBytes(file, (byte*)p, sizeof(ChromIonMobilityFilter) * imFilters.Length);
+            }
         }
 
         public static int GetStructSize(CacheFormatVersion cacheFormatVersion)

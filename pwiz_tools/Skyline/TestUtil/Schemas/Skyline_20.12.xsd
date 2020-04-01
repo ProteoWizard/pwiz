@@ -1699,14 +1699,6 @@
     <xs:attribute name="step_count_medium" type="xs:positiveInteger" use="required"/>
     <xs:attribute name="step_count_fine" type="xs:positiveInteger" use="required"/>
   </xs:complexType>
-  <xs:complexType name="peptide_result_ion_mobility_filter_type">
-        <!--  Collisional Cross Section in square Angstroms -->
-        <xs:attribute name="ccs" type="xs:double" use="optional"/>
-        <xs:attribute name="ion_mobility_ms1" type="xs:double" use="optional"/>
-        <xs:attribute name="ion_mobility_fragment" type="xs:double" use="optional"/>
-        <xs:attribute name="ion_mobility_window" type="xs:double" use="optional"/>
-        <xs:attribute name="ion_mobility_type" type="xs:string" use="optional"/>
-  </xs:complexType>
   <xs:complexType name="transition_peak_ion_mobility_filter_type">
         <!--  Collisional Cross Section in square Angstroms -->
         <xs:attribute name="ccs" type="xs:double" use="optional"/>
@@ -1763,7 +1755,7 @@
     <xs:complexContent>
       <xs:extension base="peptide_result_type">
         <xs:sequence>
-          <xs:element name="ion_mobility_filter" type="peptide_result_ion_mobility_filter_type" minOccurs="0" maxOccurs="unbounded"/> <!--  Supports multiple CCS conformers -->
+          <xs:element name="ion_mobility_filter" type="transition_peak_ion_mobility_filter_type" minOccurs="0" maxOccurs="unbounded"/> <!--  Supports multiple CCS conformers -->
           <xs:element name="note" type="note_type" minOccurs="0" maxOccurs="1"/>
           <xs:element name="annotation" type="annotation_type" minOccurs="0"
               maxOccurs="unbounded"/>

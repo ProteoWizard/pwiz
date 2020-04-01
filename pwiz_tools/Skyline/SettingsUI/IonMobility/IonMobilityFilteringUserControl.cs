@@ -230,7 +230,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     return null;
                 return Convert.ToDouble(textIonMobilityFilterResolvingPower.Text);
             }
-            set { textIonMobilityFilterResolvingPower.Text = value.HasValue ? value.ToString() : string.Empty; }
+            set
+            {
+                textIonMobilityFilterResolvingPower.Text = value.HasValue ? value.ToString() : string.Empty;
+            }
         }
 
         #endregion

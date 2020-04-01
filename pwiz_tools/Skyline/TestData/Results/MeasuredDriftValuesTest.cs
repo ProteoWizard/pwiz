@@ -104,9 +104,9 @@ namespace pwiz.SkylineTestData.Results
                     IonMobilityLibrary.CreateFromResults(
                         document, docContainer.DocumentFilePath, true,
                         libraryName0, dbPath0));
-                var result = newIMFiltering.IonMobilityLibrary.GetIonMobilityDict();
+                var result = newIMFiltering.IonMobilityLibrary.GetIonMobilityLibKeyMap().AsDictionary();
                 Assert.AreEqual(1, result.Count);
-                const double expectedDT = 4.0019;
+                var expectedDT = 4.0019;
                 var expectedOffset = .4829;
                 Assert.AreEqual(expectedDT, result.Values.First().First().IonMobility.Mobility.Value, .001);
                 Assert.AreEqual(expectedOffset, result.Values.First().First().HighEnergyIonMobilityOffset??0, .001);
@@ -114,13 +114,16 @@ namespace pwiz.SkylineTestData.Results
                 // Check ability to update, and to preserve unchanged
                 var revised = new List<PrecursorIonMobilities>();
                 var libKey = result.Keys.First();
-                revised.Add(new PrecursorIonMobilities(libKey, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(4, eIonMobilityUnits.drift_time_msec), null, 0.234)));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
-                var libKey2 = new LibKey("DEADEELS", asSmallMolecules ? Adduct.NonProteomicProtonatedFromCharge(2) : Adduct.DOUBLY_PROTONATED);
+                revised.Add(new PrecursorIonMobilities(libKey, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(expectedDT=4, eIonMobilityUnits.drift_time_msec), null, expectedOffset=0.234)));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
+                var pepSequence = "DEADEELS";
+                var libKey2 = asSmallMolecules ?
+                    new LibKey(SmallMoleculeLibraryAttributes.Create(pepSequence, "C12H5", null, null, null, null), Adduct.M_PLUS_2H) : 
+                    new LibKey(pepSequence, Adduct.DOUBLY_PROTONATED);
                 revised.Add(new PrecursorIonMobilities(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, eIonMobilityUnits.drift_time_msec), null, 0.123)));
                 var libraryName = "test";
                 var dbPath = testFilesDir.GetTestPath(libraryName+IonMobilityDb.EXT);
                 var imDb = IonMobilityDb.CreateIonMobilityDb(dbPath, libraryName, false, revised);
-                var newLibIM = new IonMobilityLibrary(libraryName, dbPath);
+                var newLibIM = new IonMobilityLibrary(libraryName, dbPath, imDb);
                 var ionMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(
                     IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, 40, 0, 0, 0);
                 var calculator = ionMobilityWindowWidthCalculator;
@@ -128,7 +131,7 @@ namespace pwiz.SkylineTestData.Results
                     document.Settings.ChangeTransitionIonMobilityFiltering(
                         imf => imf.ChangeFilterWindowWidthCalculator(calculator).
                             ChangeLibrary(newLibIM)));
-                result = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.GetIonMobilityDict();
+                result = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.GetIonMobilityLibKeyMap().AsDictionary();
                 Assert.AreEqual(2, result.Count);
                 Assert.AreEqual(expectedDT, result[libKey].First().IonMobility.Mobility.Value, .001);
                 Assert.AreEqual(expectedOffset, result[libKey].First().HighEnergyIonMobilityOffset??0, .001);
@@ -141,7 +144,7 @@ namespace pwiz.SkylineTestData.Results
                     document.Settings.ChangeTransitionIonMobilityFiltering(
                         imf => imf.ChangeFilterWindowWidthCalculator(ionMobilityWindowWidthCalculator).
                             ChangeLibrary(newLibIM)));
-                result = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.GetIonMobilityDict();
+                result = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.GetIonMobilityLibKeyMap().AsDictionary();
                 Assert.AreEqual(2, result.Count);
                 Assert.AreEqual(expectedDT, result[libKey].First().IonMobility.Mobility.Value, .001);
                 Assert.AreEqual(expectedOffset, result[libKey].First().HighEnergyIonMobilityOffset??0, .001);

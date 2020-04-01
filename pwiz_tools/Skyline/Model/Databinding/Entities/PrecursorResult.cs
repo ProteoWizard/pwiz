@@ -158,9 +158,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters) ? null
-                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters.Where(im => im.IonMobilityUnits == eIonMobilityUnits.drift_time_msec)
-                        .Select(im => im.IonMobilityAndCCS.IonMobility.Mobility).ToArray());
+                return IonMobilityMS1;
             }
         }
 
@@ -170,10 +168,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters) ? null
-                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters
-                        .Where(im => im.IonMobilityUnits == eIonMobilityUnits.drift_time_msec)
-                        .Select(im => im.IonMobilityAndCCS.IonMobility.Mobility.HasValue ? im.IonMobilityAndCCS.IonMobility.Mobility.Value + im.HighEnergyIonMobilityOffset??0 : im.IonMobilityAndCCS.IonMobility.Mobility).ToArray());
+                return IonMobilityFragment;
             }
         }
 
@@ -184,11 +179,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters)
-                    ? null
-                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters
-                        .Where(im => im.IonMobilityUnits == eIonMobilityUnits.drift_time_msec)
-                        .Select(im => im.IonMobilityExtractionWindowWidth).ToArray());
+                return IonMobilityWindow;
             }
         }
 
@@ -201,14 +192,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     : new FormattableList<double?>(ChromInfo.IonMobilityFilters.Select(im => im.IonMobilityAndCCS.IonMobility.Mobility).ToArray());
             }
         }
+
+        [Obsolete("use TransititionResult.IonMobilityFragment instead")]
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public FormattableList<double?> IonMobilityFragment  // Multiple conformers (multiple CCS per ion) are supported, so this has to be a list
+        public FormattableList<double?> IonMobilityFragment  
         {
             get
             {
-                return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters) ? null
-                    : new FormattableList<double?>(ChromInfo.IonMobilityFilters
-                        .Select(im => im.IonMobilityAndCCS.IonMobility.Mobility.HasValue ? im.IonMobilityAndCCS.IonMobility.Mobility.Value + im.HighEnergyIonMobilityOffset ?? 0 : im.IonMobilityAndCCS.IonMobility.Mobility).ToArray());
+                return null; // Ion mobility can vary per fragment
             }
         }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]

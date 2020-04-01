@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Model.Results
 {
     /// <summary>
     /// Finds ion mobilities by examining loaded results in a document.
+    /// N.B. does not attempting to find multiple conformers
     /// </summary>
     public class IonMobilityFinder : IDisposable
     {

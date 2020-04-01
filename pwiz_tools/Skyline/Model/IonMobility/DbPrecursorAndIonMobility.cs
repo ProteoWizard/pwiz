@@ -141,6 +141,12 @@ namespace pwiz.Skyline.Model.IonMobility
                 return hashCode;
             }
         }
+
+        public override string ToString() // For debugging convenience
+        {
+            return string.Format(@"{0}/ccs{1}/im{2}/he{3}/{4}", DbPrecursorIon, CollisionalCrossSectionNullable,
+                IonMobilityNullable, HighEnergyIonMobilityOffsetNullable, IonMobilityUnits);
+        }
     }
 
     /// <summary>
@@ -185,10 +191,10 @@ namespace pwiz.Skyline.Model.IonMobility
             {
                 PeptideModifiedSequence = string.Empty;
                 var smallMoleculeLibraryAttributes = target.Molecule.GetSmallMoleculeLibraryAttributes();
-                MoleculeName = smallMoleculeLibraryAttributes.MoleculeName;
-                ChemicalFormula = smallMoleculeLibraryAttributes.ChemicalFormula;
-                InChiKey = smallMoleculeLibraryAttributes.InChiKey;
-                OtherKeys = smallMoleculeLibraryAttributes.OtherKeys;
+                MoleculeName = smallMoleculeLibraryAttributes.MoleculeName ?? string.Empty;
+                ChemicalFormula = smallMoleculeLibraryAttributes.ChemicalFormula ?? string.Empty;
+                InChiKey = smallMoleculeLibraryAttributes.InChiKey ?? string.Empty;
+                OtherKeys = smallMoleculeLibraryAttributes.OtherKeys ?? string.Empty;
             }
         }
 
@@ -272,6 +278,13 @@ namespace pwiz.Skyline.Model.IonMobility
                 return hashCode;
             }
         }
+
+        public override string ToString() // For debugging convenience
+        {
+            return Target.ToSerializableString();
+        }
+
+
         #endregion
     }
 
@@ -373,7 +386,7 @@ namespace pwiz.Skyline.Model.IonMobility
             {
                 return new LibKey(target.Sequence, _adduct.AdductCharge);
             }
-            return new LibKey(target.Molecule.PrimaryEquivalenceKey, _adduct);
+            return new LibKey(target.Molecule.GetSmallMoleculeLibraryAttributes(), _adduct);
         }
 
         public virtual bool EqualsIgnoreId(DbPrecursorIon other)
@@ -408,6 +421,12 @@ namespace pwiz.Skyline.Model.IonMobility
                 return hashCode;
             }
         }
+
+        public override string ToString() // For debugging convenience
+        {
+            return string.Format(@"{0}[{1}]", DbMolecule, _adduct);
+        }
+
     }
 
 }

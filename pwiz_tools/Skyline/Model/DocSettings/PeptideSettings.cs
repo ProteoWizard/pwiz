@@ -652,7 +652,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 !obsoleteSpectralLibraryIonMobilityWindowWidthCalculator.IsEmpty ||
                 obsoleteUseSpectralLibraryDriftTimes)
             {
-                var dir = Path.GetDirectoryName(reader.BaseURI);
+                var dir =string.IsNullOrEmpty(reader.BaseURI) ? Directory.GetCurrentDirectory() : Path.GetDirectoryName(reader.BaseURI);
                 ObsoleteIonMobilityValues =
                     (obsoleteDriftTimePredictor == null
                         ? TransitionIonMobilityFiltering.EMPTY

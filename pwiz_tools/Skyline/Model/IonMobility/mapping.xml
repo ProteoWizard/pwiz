@@ -28,7 +28,7 @@
       <column name="id" not-null="true"/>
       <generator class="native" />
     </id>
-    <many-to-one name="DbMolecule" column="moleculeId" not-null="true"/>
+    <many-to-one name="DbMolecule" column="moleculeId" not-null="true" fetch="join"/>
     <property name="PrecursorAdduct" column="precursorAdduct"/>
   </class>
 
@@ -37,7 +37,7 @@
       <column name="id" not-null="true"/>
       <generator class="native" />
     </id>
-    <many-to-one name="DbPrecursorIon" column="ionId" not-null="true"/>
+    <many-to-one name="DbPrecursorIon" column="ionId" not-null="true" fetch="join"/>
     <property name="CollisionalCrossSectionSqA"/>
     <property name="IonMobility"/>
     <property name="IonMobilityUnits"/>

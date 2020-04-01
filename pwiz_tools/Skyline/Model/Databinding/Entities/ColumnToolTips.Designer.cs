@@ -461,7 +461,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A measure of ion mobility, in square angstroms, which is typically converted to appropriate units (eg drift time, inverseK0) and used in extracting chromatograms from ion mobility mass spectra..
+        ///   Looks up a localized string similar to A measure of ion mobility, in square angstroms, which is typically converted to appropriate units (eg drift time, inverseK0) and used in extracting chromatograms from ion mobility mass spectra. An ion may have more than one CCS value, this is the &quot;multiple conformers&quot; case..
         /// </summary>
         public static string CollisionalCrossSection {
             get {
@@ -1169,7 +1169,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Center of the ion mobility filter window used in chromatogram extraction for a fragment ion. This may differ from the value for precursor ions , as fragment ions may move faster due to more energetic collisions,.
+        ///   Looks up a localized string similar to Center of the ion mobility filter window (or windows, in the case of multiple conformers) used in chromatogram extraction for a fragment ion. This may differ from the value for precursor ions , as fragment ions may move faster due to more energetic collisions,.
         /// </summary>
         public static string IonMobilityFragment {
             get {
@@ -1178,7 +1178,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Center of the ion mobility filter window used in chromatogram extraction for a precursor ion..
+        ///   Looks up a localized string similar to Center of the ion mobility filter window (or windows, in the case of multiple conformers) used in chromatogram extraction for a precursor ion..
         /// </summary>
         public static string IonMobilityMS1 {
             get {
@@ -1196,7 +1196,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Width of the ion mobility filter window used in chromatogram extraction..
+        ///   Looks up a localized string similar to Width(s) of the ion mobility filter window  (or windows, in the case of multiple conformers) used in chromatogram extraction..
         /// </summary>
         public static string IonMobilityWindow {
             get {

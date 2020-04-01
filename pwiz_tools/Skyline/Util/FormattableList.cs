@@ -47,6 +47,12 @@ namespace pwiz.Skyline.Util
                 _list.Select(item => ValueToString(item, format, formatProvider)));
         }
 
+        // Provided for testing purposes only
+        public T[] ToArray()
+        {
+            return _list == null ? null : _list.ToArray();
+        }
+
         public override string ToString()
         {
             if (_list == null)

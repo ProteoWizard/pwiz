@@ -250,12 +250,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             try
             {
                 var db = IonMobilityDb.GetIonMobilityDb(path, null); // TODO: (copied from iRT code) LongWaitDlg
-                var dbPrecursors = db.GetIonMobilityPrecursors().ToArray(); // Avoid multiple enumeration
+                var dbIonMobilities = db.GetIonMobilities().ToArray(); // Avoid multiple enumeration
 
-                LoadLibrary(dbPrecursors);
+                LoadLibrary(dbIonMobilities);
 
                 // Clone all of the peptides to use for comparison in OkDialog
-                _originalMobilitiesFlat = dbPrecursors.Select(p => new ValidatingIonMobilityPrecursor(p)).ToArray();
+                _originalMobilitiesFlat = dbIonMobilities.Select(p => new ValidatingIonMobilityPrecursor(p)).ToArray();
 
                 textDatabase.Text = path;
             }
