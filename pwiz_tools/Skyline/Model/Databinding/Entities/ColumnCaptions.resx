@@ -117,1117 +117,1089 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AbsFoldChange" xml:space="preserve">
+  <data name="AbsFoldChange">
     <value>Absolute Fold Change</value>
   </data>
-  <data name="AbsLog2FoldChange" xml:space="preserve">
+  <data name="AbsLog2FoldChange">
     <value>Absolute Log 2 Fold Change</value>
   </data>
-  <data name="Accuracy" xml:space="preserve">
+  <data name="Accuracy">
     <value>Accuracy</value>
   </data>
-  <data name="AcquiredTime" xml:space="preserve">
+  <data name="AcquiredTime">
     <value>Acquired Time</value>
   </data>
-  <data name="AdjustedPValue" xml:space="preserve">
+  <data name="AdjustedPValue">
     <value>Adjusted P-Value</value>
   </data>
-  <data name="AllInfoMessage" xml:space="preserve">
+  <data name="AllInfoMessage">
     <value>All Info Message</value>
   </data>
-  <data name="AnalyteConcentration" xml:space="preserve">
+  <data name="AnalyteConcentration">
     <value>Analyte Concentration</value>
   </data>
-  <data name="Area" xml:space="preserve">
+  <data name="Area">
     <value>Area</value>
   </data>
-  <data name="AreaNormalized" xml:space="preserve">
+  <data name="AreaNormalized">
     <value>Area Normalized</value>
   </data>
-  <data name="AreaRatio" xml:space="preserve">
+  <data name="AreaRatio">
     <value>Area Ratio</value>
   </data>
-  <data name="AttributeAreaProportion" xml:space="preserve">
+  <data name="AttributeAreaProportion">
     <value>Attribute Area Proportion</value>
   </data>
-  <data name="AttributeGroupId" xml:space="preserve">
+  <data name="AttributeGroupId">
     <value>Attribute Group ID</value>
   </data>
-  <data name="AuditLogRow" xml:space="preserve">
+  <data name="AuditLogRow">
     <value>Audit Log Row</value>
   </data>
-  <data name="AuditLogRowId" xml:space="preserve">
+  <data name="AuditLogRowId">
     <value>Entry Id</value>
   </data>
-  <data name="AuditLogDetailRowId" xml:space="preserve">
+  <data name="AuditLogDetailRowId">
     <value>Detail Id</value>
   </data>
-  <data name="AutoSelectMolecules" xml:space="preserve">
+  <data name="AutoSelectMolecules">
     <value>Auto Select Molecules</value>
   </data>
-  <data name="AutoSelectPeptides" xml:space="preserve">
+  <data name="AutoSelectPeptides">
     <value>Auto Select Peptides</value>
   </data>
-  <data name="AutoSelectPrecursors" xml:space="preserve">
+  <data name="AutoSelectPrecursors">
     <value>Auto Select Precursors</value>
   </data>
-  <data name="AutoSelectTransitions" xml:space="preserve">
+  <data name="AutoSelectTransitions">
     <value>Auto Select Transitions</value>
   </data>
-  <data name="AverageMassErrorPPM" xml:space="preserve">
+  <data name="AverageMassErrorPPM">
     <value>Average Mass Error PPM</value>
   </data>
-  <data name="AverageMasses" xml:space="preserve">
+  <data name="AverageMasses">
     <value>Average Masses</value>
   </data>
-  <data name="AverageMeasuredRetentionTime" xml:space="preserve">
+  <data name="AverageMeasuredRetentionTime">
     <value>Average Measured Retention Time</value>
   </data>
-  <data name="Background" xml:space="preserve">
+  <data name="Background">
     <value>Background</value>
   </data>
-  <data name="BatchFiguresOfMerit" xml:space="preserve">
+  <data name="BatchFiguresOfMerit">
     <value>Batch Figures Of Merit</value>
   </data>
-  <data name="BatchLimitOfDetection" xml:space="preserve">
+  <data name="BatchLimitOfDetection">
     <value>Batch Limit Of Detection</value>
   </data>
-  <data name="BatchLimitOfQuantification" xml:space="preserve">
+  <data name="BatchLimitOfQuantification">
     <value>Batch Limit Of Quantification</value>
   </data>
-  <data name="BatchName" xml:space="preserve">
+  <data name="BatchName">
     <value>Batch Name</value>
   </data>
-  <data name="BeginPos" xml:space="preserve">
+  <data name="BeginPos">
     <value>Begin Pos</value>
   </data>
-  <data name="BestReplicate" xml:space="preserve">
+  <data name="BestReplicate">
     <value>Best Replicate</value>
   </data>
-  <data name="BestRetentionTime" xml:space="preserve">
+  <data name="BestRetentionTime">
     <value>Best Retention Time</value>
   </data>
-  <data name="CalculatedConcentration" xml:space="preserve">
+  <data name="CalculatedConcentration">
     <value>Calculated Concentration</value>
   </data>
-  <data name="CalibrationCurve" xml:space="preserve">
+  <data name="CalibrationCurve">
     <value>Calibration Curve</value>
   </data>
-  <data name="CAS" xml:space="preserve">
+  <data name="CAS">
     <value>CAS</value>
   </data>
-  <data name="Chromatogram" xml:space="preserve">
+  <data name="Chromatogram">
     <value>Chromatogram</value>
   </data>
-  <data name="ChromatogramExtractionWidth" xml:space="preserve">
+  <data name="ChromatogramExtractionWidth">
     <value>Chromatogram Extraction Width</value>
   </data>
-  <data name="ChromatogramIonMobility" xml:space="preserve">
+  <data name="ChromatogramIonMobility">
     <value>Chromatogram Ion Mobility</value>
   </data>
-  <data name="ChromatogramIonMobilityExtractionWidth" xml:space="preserve">
+  <data name="ChromatogramIonMobilityExtractionWidth">
     <value>Chromatogram Ion Mobility Extraction Width</value>
   </data>
-  <data name="ChromatogramIonMobilityUnits" xml:space="preserve">
+  <data name="ChromatogramIonMobilityUnits">
     <value>Chromatogram Ion Mobility Units</value>
   </data>
-  <data name="ChromatogramPrecursorMz" xml:space="preserve">
+  <data name="ChromatogramPrecursorMz">
     <value>Chromatogram Precursor M/Z</value>
   </data>
-  <data name="ChromatogramProductMz" xml:space="preserve">
+  <data name="ChromatogramProductMz">
     <value>Chromatogram Product M/Z</value>
   </data>
-  <data name="ChromatogramSource" xml:space="preserve">
+  <data name="ChromatogramSource">
     <value>Chromatogram Source</value>
   </data>
-  <data name="CleavageAa" xml:space="preserve">
+  <data name="CleavageAa">
     <value>Cleavage Aa</value>
   </data>
-  <data name="Coeluting" xml:space="preserve">
+  <data name="Coeluting">
     <value>Coeluting</value>
   </data>
-  <data name="CollisionalCrossSection" xml:space="preserve">
+  <data name="CollisionalCrossSection">
     <value>Collisional Cross Section</value>
   </data>
-  <data name="CollisionEnergy" xml:space="preserve">
+  <data name="CollisionEnergy">
     <value>Collision Energy</value>
   </data>
-  <data name="ConcentrationMultiplier" xml:space="preserve">
+  <data name="ConcentrationMultiplier">
     <value>Concentration Multiplier</value>
   </data>
-  <data name="ConfidenceLevel" xml:space="preserve">
+  <data name="ConfidenceLevel">
     <value>Confidence Level</value>
   </data>
-  <data name="CountTruncated" xml:space="preserve">
+  <data name="CountTruncated">
     <value>Count Truncated</value>
   </data>
-  <data name="Cv" xml:space="preserve">
+  <data name="Cv">
     <value>Cv</value>
   </data>
-  <data name="CvArea" xml:space="preserve">
+  <data name="CvArea">
     <value>Cv Area</value>
   </data>
-  <data name="CvAreaNormalized" xml:space="preserve">
+  <data name="CvAreaNormalized">
     <value>Cv Area Normalized</value>
   </data>
-  <data name="CvAreaRatio" xml:space="preserve">
+  <data name="CvAreaRatio">
     <value>Cv Area Ratio</value>
   </data>
-  <data name="CvBestRetentionTime" xml:space="preserve">
+  <data name="CvBestRetentionTime">
     <value>Cv Best Retention Time</value>
   </data>
-  <data name="CvFwhm" xml:space="preserve">
+  <data name="CvFwhm">
     <value>Cv Fwhm</value>
   </data>
-  <data name="CvMaxFwhm" xml:space="preserve">
+  <data name="CvMaxFwhm">
     <value>Cv Max Fwhm</value>
   </data>
-  <data name="CvMaxHeight" xml:space="preserve">
+  <data name="CvMaxHeight">
     <value>Cv Max Height</value>
   </data>
-  <data name="CvRetentionTime" xml:space="preserve">
+  <data name="CvRetentionTime">
     <value>Cv Retention Time</value>
   </data>
-  <data name="CvTotalArea" xml:space="preserve">
+  <data name="CvTotalArea">
     <value>Cv Total Area</value>
   </data>
-  <data name="CvTotalAreaNormalized" xml:space="preserve">
+  <data name="CvTotalAreaNormalized">
     <value>Cv Total Area Normalized</value>
   </data>
-  <data name="CvTotalAreaRatio" xml:space="preserve">
+  <data name="CvTotalAreaRatio">
     <value>Cv Total Area Ratio</value>
   </data>
-  <data name="DeclusteringPotential" xml:space="preserve">
+  <data name="DeclusteringPotential">
     <value>Declustering Potential</value>
   </data>
-  <data name="DecoyMzShift" xml:space="preserve">
+  <data name="DecoyMzShift">
     <value>Decoy Mz Shift</value>
   </data>
-  <data name="DetailReason" xml:space="preserve">
+  <data name="DetailReason">
     <value>Detailed Reason</value>
   </data>
-  <data name="DetectionQValue" xml:space="preserve">
+  <data name="DetectionQValue">
     <value>Detection Q Value</value>
   </data>
-  <data name="DetectionZScore" xml:space="preserve">
+  <data name="DetectionZScore">
     <value>Detection Z Score</value>
   </data>
-  <data name="DegreesOfFreedom" xml:space="preserve">
+  <data name="DegreesOfFreedom">
     <value>Degrees Of Freedom</value>
   </data>
-  <data name="Details" xml:space="preserve">
+  <data name="Details">
     <value>Details</value>
   </data>
-  <data name="DriftTimeMS1" xml:space="preserve">
+  <data name="DriftTimeMS1">
     <value>Drift Time MS1</value>
   </data>
-  <data name="DriftTimeFragment" xml:space="preserve">
+  <data name="DriftTimeFragment">
     <value>Drift Time Fragment</value>
   </data>
-  <data name="DriftTimeWindow" xml:space="preserve">
+  <data name="DriftTimeWindow">
     <value>Drift Time Window</value>
   </data>
-  <data name="EndPos" xml:space="preserve">
+  <data name="EndPos">
     <value>End Pos</value>
   </data>
-  <data name="EndTime" xml:space="preserve">
+  <data name="EndTime">
     <value>End Time</value>
   </data>
-  <data name="ErrorMessage" xml:space="preserve">
+  <data name="ErrorMessage">
     <value>Error Message</value>
   </data>
-  <data name="EstimatedValue" xml:space="preserve">
+  <data name="EstimatedValue">
     <value>Estimated Value</value>
   </data>
-  <data name="ExcludeFromCalibration" xml:space="preserve">
+  <data name="ExcludeFromCalibration">
     <value>Exclude From Calibration</value>
   </data>
-  <data name="ExplicitAnalyteConcentration" xml:space="preserve">
+  <data name="ExplicitAnalyteConcentration">
     <value>Explicit Analyte Concentration</value>
   </data>
-  <data name="ExplicitCollisionEnergy" xml:space="preserve">
+  <data name="ExplicitCollisionEnergy">
     <value>Explicit Collision Energy</value>
   </data>
-  <data name="ExplicitCompensationVoltage" xml:space="preserve">
+  <data name="ExplicitCompensationVoltage">
     <value>Explicit Compensation Voltage</value>
   </data>
-  <data name="ExplicitConeVoltage" xml:space="preserve">
+  <data name="ExplicitConeVoltage">
     <value>Explicit Cone Voltage</value>
   </data>
-  <data name="ExplicitDeclusteringPotential" xml:space="preserve">
+  <data name="ExplicitDeclusteringPotential">
     <value>Explicit Declustering Potential</value>
   </data>
-  <data name="ExplicitDriftTimeHighEnergyOffsetMsec" xml:space="preserve">
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
     <value>Explicit Drift Time High Energy Offset Msec</value>
   </data>
-  <data name="ExplicitCollisionalCrossSection" xml:space="preserve">
+  <data name="ExplicitCollisionalCrossSection">
     <value>Explicit Collisional Cross Section</value>
   </data>
-  <data name="ExplicitDriftTimeMsec" xml:space="preserve">
+  <data name="ExplicitDriftTimeMsec">
     <value>Explicit Drift Time Msec</value>
   </data>
-  <data name="ExplicitGlobalStandardArea" xml:space="preserve">
+  <data name="ExplicitGlobalStandardArea">
     <value>Explicit Global Standard Area</value>
   </data>
-  <data name="ExplicitIonMobility" xml:space="preserve">
+  <data name="ExplicitIonMobility">
     <value>Explicit Ion Mobility</value>
   </data>
-  <data name="ExplicitIonMobilityHighEnergyOffset" xml:space="preserve">
+  <data name="ExplicitIonMobilityHighEnergyOffset">
     <value>Explicit Ion Mobility High Energy Offset</value>
   </data>
-  <data name="ExplicitIonMobilityUnits" xml:space="preserve">
+  <data name="ExplicitIonMobilityUnits">
     <value>Explicit Ion Mobility Units</value>
   </data>
-  <data name="ExplicitRetentionTime" xml:space="preserve">
+  <data name="ExplicitRetentionTime">
     <value>Explicit Retention Time</value>
   </data>
-  <data name="ExplicitRetentionTimeWindow" xml:space="preserve">
+  <data name="ExplicitRetentionTimeWindow">
     <value>Explicit Retention Time Window</value>
   </data>
-  <data name="ExplicitSLens" xml:space="preserve">
+  <data name="ExplicitSLens">
     <value>Explicit SLens</value>
   </data>
-  <data name="FiguresOfMerit" xml:space="preserve">
+  <data name="FiguresOfMerit">
     <value>Figures Of Merit</value>
   </data>
-  <data name="FileIndex" xml:space="preserve">
+  <data name="FileIndex">
     <value>File Index</value>
   </data>
-  <data name="FileName" xml:space="preserve">
+  <data name="FileName">
     <value>File Name</value>
   </data>
-  <data name="Files" xml:space="preserve">
+  <data name="Files">
     <value>Files</value>
   </data>
-  <data name="FoldChange" xml:space="preserve">
+  <data name="FoldChange">
     <value>Fold Change</value>
   </data>
-  <data name="FoldChangeResult" xml:space="preserve">
+  <data name="FoldChangeResult">
     <value>Fold Change Result</value>
   </data>
-  <data name="FragmentIon" xml:space="preserve">
+  <data name="FragmentIon">
     <value>Fragment Ion</value>
   </data>
-  <data name="FragmentIonOrdinal" xml:space="preserve">
+  <data name="FragmentIonOrdinal">
     <value>Fragment Ion Ordinal</value>
   </data>
-  <data name="FragmentIonType" xml:space="preserve">
+  <data name="FragmentIonType">
     <value>Fragment Ion Type</value>
   </data>
-  <data name="FullNames" xml:space="preserve">
-    <value>Full Names</value>
-  </data>
-  <data name="FullScanFilterWidth" xml:space="preserve">
+  <data name="FullNames"><value>Full Names</value></data>
+  <data name="FullScanFilterWidth">
     <value>Full Scan Filter Width</value>
   </data>
-  <data name="Fwhm" xml:space="preserve">
+  <data name="Fwhm">
     <value>Fwhm</value>
   </data>
-  <data name="FwhmDegenerate" xml:space="preserve">
+  <data name="FwhmDegenerate">
     <value>Fwhm Degenerate</value>
   </data>
-  <data name="Group" xml:space="preserve">
+  <data name="Group">
     <value>Group</value>
   </data>
-  <data name="Height" xml:space="preserve">
+  <data name="Height">
     <value>Height</value>
   </data>
-  <data name="HMDB" xml:space="preserve">
+  <data name="HMDB">
     <value>HMDB</value>
   </data>
-  <data name="Identified" xml:space="preserve">
+  <data name="Identified">
     <value>Identified</value>
   </data>
-  <data name="InChiKey" xml:space="preserve">
+  <data name="InChiKey">
     <value>InChiKey</value>
   </data>
-  <data name="InChI" xml:space="preserve">
+  <data name="InChI">
     <value>InChI</value>
   </data>
-  <data name="Intensities" xml:space="preserve">
+  <data name="Intensities">
     <value>Intensities</value>
   </data>
-  <data name="Intercept" xml:space="preserve">
+  <data name="Intercept">
     <value>Intercept</value>
   </data>
-  <data name="InternalStandardConcentration" xml:space="preserve">
+  <data name="InternalStandardConcentration">
     <value>Internal Standard Concentration</value>
   </data>
-  <data name="InterpolatedData" xml:space="preserve">
+  <data name="InterpolatedData">
     <value>Interpolated Data</value>
   </data>
-  <data name="InterpolatedIntensities" xml:space="preserve">
+  <data name="InterpolatedIntensities">
     <value>Interpolated Intensities</value>
   </data>
-  <data name="InterpolatedMassErrors" xml:space="preserve">
+  <data name="InterpolatedMassErrors">
     <value>Interpolated Mass Errors</value>
   </data>
-  <data name="InterpolatedNumberOfPoints" xml:space="preserve">
+  <data name="InterpolatedNumberOfPoints">
     <value>Interpolated Number of Points</value>
   </data>
-  <data name="InterpolatedSpectrumIds" xml:space="preserve">
+  <data name="InterpolatedSpectrumIds">
     <value>Interpolated Spectrum Ids</value>
   </data>
-  <data name="InterpolatedTimes" xml:space="preserve">
+  <data name="InterpolatedTimes">
     <value>Interpolated Times</value>
   </data>
-  <data name="IonMobilityFragment" xml:space="preserve">
+  <data name="IonMobilityFragment">
     <value>Ion Mobility Fragment</value>
   </data>
-  <data name="IonMobilityMS1" xml:space="preserve">
+  <data name="IonMobilityMS1">
     <value>Ion Mobility MS1</value>
   </data>
-  <data name="IonMobilityWindow" xml:space="preserve">
+  <data name="IonMobilityWindow">
     <value>Ion Mobility Window</value>
   </data>
-  <data name="IonMobilityUnits" xml:space="preserve">
+  <data name="IonMobilityUnits">
     <value>Ion Mobility Units</value>
   </data>
-  <data name="IonName" xml:space="preserve">
+  <data name="IonName">
     <value>Ion Name</value>
   </data>
-  <data name="IonFormula" xml:space="preserve">
+  <data name="IonFormula">
     <value>Ion Formula</value>
   </data>
-  <data name="IsDecoy" xml:space="preserve">
+  <data name="IsDecoy">
     <value>Is Decoy</value>
   </data>
-  <data name="IsotopeDistIndex" xml:space="preserve">
+  <data name="IsotopeDistIndex">
     <value>Isotope Dist Index</value>
   </data>
-  <data name="IsotopeDistProportion" xml:space="preserve">
+  <data name="IsotopeDistProportion">
     <value>Isotope Dist Proportion</value>
   </data>
-  <data name="IsotopeDistRank" xml:space="preserve">
+  <data name="IsotopeDistRank">
     <value>Isotope Dist Rank</value>
   </data>
-  <data name="IsotopeDotProduct" xml:space="preserve">
+  <data name="IsotopeDotProduct">
     <value>Isotope Dot Product</value>
   </data>
-  <data name="IsotopeLabelType" xml:space="preserve">
+  <data name="IsotopeLabelType">
     <value>Isotope Label Type</value>
   </data>
-  <data name="KEGG" xml:space="preserve">
+  <data name="KEGG">
     <value>KEGG</value>
   </data>
-  <data name="Key" xml:space="preserve">
+  <data name="Key">
     <value>Key</value>
   </data>
-  <data name="LibraryDotProduct" xml:space="preserve">
+  <data name="LibraryDotProduct">
     <value>Library Dot Product</value>
   </data>
-  <data name="LibraryIntensity" xml:space="preserve">
+  <data name="LibraryIntensity">
     <value>Library Intensity</value>
   </data>
-  <data name="LibraryName" xml:space="preserve">
+  <data name="LibraryName">
     <value>Library Name</value>
   </data>
-  <data name="LibraryProbabilityScore" xml:space="preserve">
+  <data name="LibraryProbabilityScore">
     <value>Library Probability Score</value>
   </data>
-  <data name="LibraryRank" xml:space="preserve">
+  <data name="LibraryRank">
     <value>Library Rank</value>
   </data>
-  <data name="LibraryScore1" xml:space="preserve">
+  <data name="LibraryScore1">
     <value>Library Score1</value>
   </data>
-  <data name="LibraryScore2" xml:space="preserve">
+  <data name="LibraryScore2">
     <value>Library Score2</value>
   </data>
-  <data name="LibraryScore3" xml:space="preserve">
+  <data name="LibraryScore3">
     <value>Library Score3</value>
   </data>
-  <data name="LibraryType" xml:space="preserve">
+  <data name="LibraryType">
     <value>Library Type</value>
   </data>
-  <data name="LimitOfDetection" xml:space="preserve">
+  <data name="LimitOfDetection">
     <value>Limit Of Detection</value>
   </data>
-  <data name="LimitOfQuantification" xml:space="preserve">
+  <data name="LimitOfQuantification">
     <value>Limit Of Quantification</value>
   </data>
-  <data name="LinearFit" xml:space="preserve">
+  <data name="LinearFit">
     <value>Linear Fit</value>
   </data>
-  <data name="Log2FoldChange" xml:space="preserve">
+  <data name="Log2FoldChange">
     <value>Log 2 Fold Change</value>
   </data>
-  <data name="Losses" xml:space="preserve">
+  <data name="Losses">
     <value>Losses</value>
   </data>
-  <data name="LossFormulas" xml:space="preserve">
+  <data name="LossFormulas">
     <value>Loss Formulas</value>
   </data>
-  <data name="LossNeutralMass" xml:space="preserve">
+  <data name="LossNeutralMass">
     <value>Loss Neutral Mass</value>
   </data>
-  <data name="MassErrorPPM" xml:space="preserve">
+  <data name="MassErrorPPM">
     <value>Mass Error PPM</value>
   </data>
-  <data name="MassErrors" xml:space="preserve">
+  <data name="MassErrors">
     <value>Mass Errors</value>
   </data>
-  <data name="Max" xml:space="preserve">
+  <data name="Max">
     <value>Max</value>
   </data>
-  <data name="MaxBestRetentionTime" xml:space="preserve">
+  <data name="MaxBestRetentionTime">
     <value>Max Best Retention Time</value>
   </data>
   <data name="MaxDetectionQValue" xml:space="preserve">
     <value>Max Detection Q Value</value>
   </data>
-  <data name="MaxEndTime" xml:space="preserve">
+  <data name="MaxEndTime">
     <value>Max End Time</value>
   </data>
-  <data name="MaxFoldChange" xml:space="preserve">
+  <data name="MaxFoldChange">
     <value>Max Fold Change</value>
   </data>
-  <data name="MaxFwhm" xml:space="preserve">
+  <data name="MaxFwhm">
     <value>Max Fwhm</value>
   </data>
-  <data name="MaxHeight" xml:space="preserve">
+  <data name="MaxHeight">
     <value>Max Height</value>
   </data>
-  <data name="MaxRetentionTime" xml:space="preserve">
+  <data name="MaxRetentionTime">
     <value>Max Retention Time</value>
-  </data>
-  <data name="Mean" xml:space="preserve">
-    <value>Mean</value>
-  </data>
-  <data name="MeanArea" xml:space="preserve">
-    <value>Mean Area</value>
-  </data>
-  <data name="MeanAreaNormalized" xml:space="preserve">
-    <value>Mean Area Normalized</value>
-  </data>
-  <data name="MeanAreaRatio" xml:space="preserve">
-    <value>Mean Area Ratio</value>
-  </data>
-  <data name="MeanBestRetentionTime" xml:space="preserve">
-    <value>Mean Best Retention Time</value>
-  </data>
-  <data name="MeanFwhm" xml:space="preserve">
-    <value>Mean Fwhm</value>
-  </data>
-  <data name="MeanMaxFwhm" xml:space="preserve">
-    <value>Mean Max Fwhm</value>
-  </data>
-  <data name="MeanMaxHeight" xml:space="preserve">
-    <value>Mean Max Height</value>
-  </data>
-  <data name="MeanRetentionTime" xml:space="preserve">
-    <value>Mean Retention Time</value>
-  </data>
-  <data name="MeanTotalArea" xml:space="preserve">
-    <value>Mean Total Area</value>
-  </data>
-  <data name="MeanTotalAreaNormalized" xml:space="preserve">
-    <value>Mean Total Area Normalized</value>
-  </data>
-  <data name="MeanTotalAreaRatio" xml:space="preserve">
-    <value>Mean Total Area Ratio</value>
   </data>
   <data name="MedianDetectionQValue" xml:space="preserve">
     <value>Median Detection Q Value</value>
   </data>
-  <data name="Min" xml:space="preserve">
+  <data name="Mean">
+    <value>Mean</value>
+  </data>
+  <data name="MeanArea">
+    <value>Mean Area</value>
+  </data>
+  <data name="MeanAreaNormalized">
+    <value>Mean Area Normalized</value>
+  </data>
+  <data name="MeanAreaRatio">
+    <value>Mean Area Ratio</value>
+  </data>
+  <data name="MeanBestRetentionTime">
+    <value>Mean Best Retention Time</value>
+  </data>
+  <data name="MeanFwhm">
+    <value>Mean Fwhm</value>
+  </data>
+  <data name="MeanMaxFwhm">
+    <value>Mean Max Fwhm</value>
+  </data>
+  <data name="MeanMaxHeight">
+    <value>Mean Max Height</value>
+  </data>
+  <data name="MeanRetentionTime">
+    <value>Mean Retention Time</value>
+  </data>
+  <data name="MeanTotalArea">
+    <value>Mean Total Area</value>
+  </data>
+  <data name="MeanTotalAreaNormalized">
+    <value>Mean Total Area Normalized</value>
+  </data>
+  <data name="MeanTotalAreaRatio">
+    <value>Mean Total Area Ratio</value>
+  </data>
+  <data name="Min">
     <value>Min</value>
   </data>
-  <data name="MinBestRetentionTime" xml:space="preserve">
+  <data name="MinBestRetentionTime">
     <value>Min Best Retention Time</value>
   </data>
   <data name="MinDetectionQValue" xml:space="preserve">
     <value>Min Detection Q Value</value>
   </data>
-  <data name="MinFoldChange" xml:space="preserve">
+  <data name="MinFoldChange">
     <value>Min Fold Change</value>
   </data>
-  <data name="MinRetentionTime" xml:space="preserve">
+  <data name="MinRetentionTime">
     <value>Min Retention Time</value>
   </data>
-  <data name="MinStartTime" xml:space="preserve">
+  <data name="MinStartTime">
     <value>Min Start Time</value>
   </data>
-  <data name="MissedCleavages" xml:space="preserve">
+  <data name="MissedCleavages">
     <value>Missed Cleavages</value>
   </data>
-  <data name="ModifiedAreaProportion" xml:space="preserve">
+  <data name="ModifiedAreaProportion">
     <value>Modified Area Proportion</value>
   </data>
-  <data name="ModifiedSequence" xml:space="preserve">
+  <data name="ModifiedSequence">
     <value>Modified Sequence</value>
   </data>
-  <data name="ModifiedSequenceAverageMasses" xml:space="preserve">
-    <value>Modified Sequence Average Masses</value>
-  </data>
-  <data name="ModifiedSequenceFullNames" xml:space="preserve">
-    <value>Modified Sequence Full Names</value>
-  </data>
-  <data name="ModifiedSequenceMonoisotopicMasses" xml:space="preserve">
-    <value>Modified Sequence Monoisotopic Masses</value>
-  </data>
-  <data name="ModifiedSequenceThreeLetterCodes" xml:space="preserve">
-    <value>Modified Sequence Three Letter Codes</value>
-  </data>
-  <data name="ModifiedSequenceUnimodIds" xml:space="preserve">
-    <value>Modified Sequence Unimod Ids</value>
-  </data>
-  <data name="ModifiedTime" xml:space="preserve">
+  <data name="ModifiedSequenceAverageMasses"><value>Modified Sequence Average Masses</value></data>
+  <data name="ModifiedSequenceFullNames"><value>Modified Sequence Full Names</value></data>
+  <data name="ModifiedSequenceMonoisotopicMasses"><value>Modified Sequence Monoisotopic Masses</value></data>
+  <data name="ModifiedSequenceThreeLetterCodes"><value>Modified Sequence Three Letter Codes</value></data>
+  <data name="ModifiedSequenceUnimodIds"><value>Modified Sequence Unimod Ids</value></data>
+  <data name="ModifiedTime">
     <value>Modified Time</value>
   </data>
-  <data name="Molecule" xml:space="preserve">
+  <data name="Molecule">
     <value>Molecule</value>
   </data>
-  <data name="MoleculeListLocator" xml:space="preserve">
+  <data name="MoleculeListLocator">
     <value>Molecule List Locator</value>
   </data>
-  <data name="MoleculeName" xml:space="preserve">
+  <data name="MoleculeName">
     <value>Molecule Name</value>
   </data>
-  <data name="MoleculeFormula" xml:space="preserve">
+  <data name="MoleculeFormula">
     <value>Molecule Formula</value>
   </data>
-  <data name="MoleculeList" xml:space="preserve">
+  <data name="MoleculeList">
     <value>Molecule List</value>
   </data>
-  <data name="MoleculeListName" xml:space="preserve">
+  <data name="MoleculeListName">
     <value>Molecule List Name</value>
   </data>
-  <data name="MoleculeListNote" xml:space="preserve">
+  <data name="MoleculeListNote">
     <value>Molecule List Note</value>
   </data>
-  <data name="MoleculeLists" xml:space="preserve">
+  <data name="MoleculeLists">
     <value>Molecule Lists</value>
   </data>
-  <data name="MoleculeLocator" xml:space="preserve">
+  <data name="MoleculeLocator">
     <value>Molecule Locator</value>
   </data>
-  <data name="MoleculeNote" xml:space="preserve">
+  <data name="MoleculeNote">
     <value>Molecule Note</value>
   </data>
-  <data name="MoleculePeakFoundRatio" xml:space="preserve">
+  <data name="MoleculePeakFoundRatio">
     <value>Molecule Peak Found Ratio</value>
   </data>
-  <data name="MoleculeResult" xml:space="preserve">
+  <data name="MoleculeResult">
     <value>Molecule Result</value>
   </data>
-  <data name="MoleculeResultLocator" xml:space="preserve">
+  <data name="MoleculeResultLocator">
     <value>Molecule Result Locator</value>
   </data>
-  <data name="MoleculeResults" xml:space="preserve">
+  <data name="MoleculeResults">
     <value>Molecule Results</value>
   </data>
-  <data name="MoleculeRetentionTime" xml:space="preserve">
+  <data name="MoleculeRetentionTime">
     <value>Molecule Retention Time</value>
   </data>
-  <data name="Molecules" xml:space="preserve">
+  <data name="Molecules">
     <value>Molecules</value>
   </data>
-  <data name="MonoisotopicMasses" xml:space="preserve">
-    <value>Monoisotopic Masses</value>
-  </data>
-  <data name="MsLevel" xml:space="preserve">
+  <data name="MonoisotopicMasses"><value>Monoisotopic Masses</value></data>
+  <data name="MsLevel">
     <value>MS Level</value>
   </data>
-  <data name="NextAa" xml:space="preserve">
+  <data name="NextAa">
     <value>Next Aa</value>
   </data>
-  <data name="NormalizationMethod" xml:space="preserve">
+  <data name="NormalizationMethod">
     <value>Normalization Method</value>
   </data>
-  <data name="NormalizedArea" xml:space="preserve">
+  <data name="NormalizedArea">
     <value>Normalized Area</value>
   </data>
-  <data name="NumberOfPoints" xml:space="preserve">
+  <data name="NumberOfPoints">
     <value>Number of Points</value>
   </data>
-  <data name="OptCollisionEnergy" xml:space="preserve">
+  <data name="OptCollisionEnergy">
     <value>Opt Collision Energy</value>
   </data>
-  <data name="OptCompensationVoltage" xml:space="preserve">
+  <data name="OptCompensationVoltage">
     <value>Opt Compensation Voltage</value>
   </data>
-  <data name="OptDeclusteringPotential" xml:space="preserve">
+  <data name="OptDeclusteringPotential">
     <value>Opt Declustering Potential</value>
   </data>
-  <data name="OptStep" xml:space="preserve">
+  <data name="OptStep">
     <value>Opt Step</value>
   </data>
-  <data name="PeakRank" xml:space="preserve">
+  <data name="PeakRank">
     <value>Peak Rank</value>
   </data>
-  <data name="PeakRankByLevel" xml:space="preserve">
+  <data name="PeakRankByLevel">
     <value>Peak Rank By Level</value>
   </data>
-  <data name="Peptide" xml:space="preserve">
+  <data name="Peptide">
     <value>Peptide</value>
   </data>
-  <data name="PeptideDocumentLocation" xml:space="preserve">
+  <data name="PeptideDocumentLocation">
     <value>Peptide Document Location</value>
   </data>
-  <data name="PeptideLocator" xml:space="preserve">
+  <data name="PeptideLocator">
     <value>Peptide Locator</value>
   </data>
-  <data name="PeptideModifiedSequence" xml:space="preserve">
+  <data name="PeptideModifiedSequence">
     <value>Peptide Modified Sequence</value>
   </data>
-  <data name="PeptideModifiedSequenceAverageMasses" xml:space="preserve">
-    <value>Peptide Modified Sequence Average Masses</value>
-  </data>
-  <data name="PeptideModifiedSequenceFullNames" xml:space="preserve">
-    <value>Peptide Modified Sequence Full Names</value>
-  </data>
-  <data name="PeptideModifiedSequenceMonoisotopicMasses" xml:space="preserve">
-    <value>Peptide Modified Sequence Monoisotopic Masses</value>
-  </data>
-  <data name="PeptideModifiedSequenceThreeLetterCodes" xml:space="preserve">
-    <value>Peptide Modified Sequence Three Letter Codes</value>
-  </data>
-  <data name="PeptideModifiedSequenceUnimodIds" xml:space="preserve">
-    <value>Peptide Modified Sequence Unimod Ids</value>
-  </data>
-  <data name="PeptideNote" xml:space="preserve">
+  <data name="PeptideModifiedSequenceAverageMasses"><value>Peptide Modified Sequence Average Masses</value></data>
+  <data name="PeptideModifiedSequenceFullNames"><value>Peptide Modified Sequence Full Names</value></data>
+  <data name="PeptideModifiedSequenceMonoisotopicMasses"><value>Peptide Modified Sequence Monoisotopic Masses</value></data>
+  <data name="PeptideModifiedSequenceThreeLetterCodes"><value>Peptide Modified Sequence Three Letter Codes</value></data>
+  <data name="PeptideModifiedSequenceUnimodIds"><value>Peptide Modified Sequence Unimod Ids</value></data>
+  <data name="PeptideNote">
     <value>Peptide Note</value>
   </data>
-  <data name="PeptidePeakFoundRatio" xml:space="preserve">
+  <data name="PeptidePeakFoundRatio">
     <value>Peptide Peak Found Ratio</value>
   </data>
-  <data name="PeptideResult" xml:space="preserve">
+  <data name="PeptideResult">
     <value>Peptide Result</value>
   </data>
-  <data name="PeptideResultDocumentLocation" xml:space="preserve">
+  <data name="PeptideResultDocumentLocation">
     <value>Peptide Result Document Location</value>
   </data>
-  <data name="PeptideResultLocator" xml:space="preserve">
+  <data name="PeptideResultLocator">
     <value>Peptide Result Locator</value>
   </data>
-  <data name="PeptideResults" xml:space="preserve">
+  <data name="PeptideResults">
     <value>Peptide Results</value>
   </data>
-  <data name="PeptideRetentionTime" xml:space="preserve">
+  <data name="PeptideRetentionTime">
     <value>Peptide Retention Time</value>
   </data>
-  <data name="Peptides" xml:space="preserve">
+  <data name="Peptides">
     <value>Peptides</value>
   </data>
-  <data name="PeptideSequence" xml:space="preserve">
+  <data name="PeptideSequence">
     <value>Peptide Sequence</value>
   </data>
-  <data name="PeptideSequenceLength" xml:space="preserve">
+  <data name="PeptideSequenceLength">
     <value>Peptide Sequence Length</value>
   </data>
-  <data name="PointCount" xml:space="preserve">
+  <data name="PointCount">
     <value>Point Count</value>
   </data>
-  <data name="PointsAcrossPeak" xml:space="preserve">
+  <data name="PointsAcrossPeak">
     <value>Points Across Peak</value>
   </data>
-  <data name="Precursor" xml:space="preserve">
+  <data name="Precursor">
     <value>Precursor</value>
   </data>
-  <data name="PrecursorAccuracy" xml:space="preserve">
+  <data name="PrecursorAccuracy">
     <value>Precursor Accuracy</value>
   </data>
-  <data name="PrecursorAdduct" xml:space="preserve">
+  <data name="PrecursorAdduct">
     <value>Precursor Adduct</value>
   </data>
-  <data name="PrecursorCalculatedConcentration" xml:space="preserve">
+  <data name="PrecursorCalculatedConcentration">
     <value>Precursor Calculated Concentration</value>
   </data>
-  <data name="PrecursorCharge" xml:space="preserve">
+  <data name="PrecursorCharge">
     <value>Precursor Charge</value>
   </data>
-  <data name="PrecursorConcentration" xml:space="preserve">
+  <data name="PrecursorConcentration">
     <value>Precursor Concentration</value>
   </data>
-  <data name="PrecursorIonName" xml:space="preserve">
+  <data name="PrecursorIonName">
     <value>Precursor Ion Name</value>
   </data>
-  <data name="PrecursorIonFormula" xml:space="preserve">
+  <data name="PrecursorIonFormula">
     <value>Precursor Ion Formula</value>
   </data>
-  <data name="PrecursorLocator" xml:space="preserve">
+  <data name="PrecursorLocator">
     <value>Precursor Locator</value>
   </data>
-  <data name="PrecursorMz" xml:space="preserve">
+  <data name="PrecursorMz">
     <value>Precursor Mz</value>
   </data>
-  <data name="PrecursorNeutralFormula" xml:space="preserve">
+  <data name="PrecursorNeutralFormula">
     <value>Precursor Neutral Formula</value>
   </data>
-  <data name="PrecursorNeutralMass" xml:space="preserve">
+  <data name="PrecursorNeutralMass">
     <value>Precursor Neutral Mass</value>
   </data>
-  <data name="PrecursorNormalizedArea" xml:space="preserve">
+  <data name="PrecursorNormalizedArea">
     <value>Precursor Normalized Area</value>
   </data>
-  <data name="PrecursorNote" xml:space="preserve">
+  <data name="PrecursorNote">
     <value>Precursor Note</value>
   </data>
-  <data name="PrecursorPeakFoundRatio" xml:space="preserve">
+  <data name="PrecursorPeakFoundRatio">
     <value>Precursor Peak Found Ratio</value>
   </data>
-  <data name="PrecursorQuantification" xml:space="preserve">
+  <data name="PrecursorQuantification">
     <value>Precursor Quantification</value>
   </data>
-  <data name="PrecursorReplicateNote" xml:space="preserve">
+  <data name="PrecursorReplicateNote">
     <value>Precursor Replicate Note</value>
   </data>
-  <data name="PrecursorResult" xml:space="preserve">
+  <data name="PrecursorResult">
     <value>Precursor Result</value>
   </data>
-  <data name="PrecursorResultLocator" xml:space="preserve">
+  <data name="PrecursorResultLocator">
     <value>Precursor Result Locator</value>
   </data>
-  <data name="PrecursorResults" xml:space="preserve">
+  <data name="PrecursorResults">
     <value>Precursor Results</value>
   </data>
-  <data name="PrecursorResultsSummary" xml:space="preserve">
+  <data name="PrecursorResultsSummary">
     <value>Precursor Results Summary</value>
   </data>
-  <data name="Precursors" xml:space="preserve">
+  <data name="Precursors">
     <value>Precursors</value>
   </data>
-  <data name="PredictedResultRetentionTime" xml:space="preserve">
+  <data name="PredictedResultRetentionTime">
     <value>Predicted Result Retention Time</value>
   </data>
-  <data name="PredictedRetentionTime" xml:space="preserve">
+  <data name="PredictedRetentionTime">
     <value>Predicted Retention Time</value>
   </data>
-  <data name="PreviousAa" xml:space="preserve">
+  <data name="PreviousAa">
     <value>Previous Aa</value>
   </data>
-  <data name="ProductAdduct" xml:space="preserve">
+  <data name="ProductAdduct">
     <value>Product Adduct</value>
   </data>
-  <data name="ProductCharge" xml:space="preserve">
+  <data name="ProductCharge">
     <value>Product Charge</value>
   </data>
-  <data name="ProductDecoyMzShift" xml:space="preserve">
+  <data name="ProductDecoyMzShift">
     <value>Product Decoy Mz Shift</value>
   </data>
-  <data name="ProductIonFormula" xml:space="preserve">
+  <data name="ProductIonFormula">
     <value>Product Ion Formula</value>
   </data>
-  <data name="ProductMz" xml:space="preserve">
+  <data name="ProductMz">
     <value>Product Mz</value>
   </data>
-  <data name="ProductNeutralFormula" xml:space="preserve">
+  <data name="ProductNeutralFormula">
     <value>Product Neutral Formula</value>
   </data>
-  <data name="ProductNeutralMass" xml:space="preserve">
+  <data name="ProductNeutralMass">
     <value>Product Neutral Mass</value>
   </data>
-  <data name="Protein" xml:space="preserve">
+  <data name="Protein">
     <value>Protein</value>
   </data>
-  <data name="ProteinAccession" xml:space="preserve">
+  <data name="ProteinAccession">
     <value>Protein Accession</value>
   </data>
-  <data name="ProteinDescription" xml:space="preserve">
+  <data name="ProteinDescription">
     <value>Protein Description</value>
   </data>
-  <data name="ProteinGene" xml:space="preserve">
+  <data name="ProteinGene">
     <value>Protein Gene</value>
   </data>
-  <data name="ProteinLocator" xml:space="preserve">
+  <data name="ProteinLocator">
     <value>Protein Locator</value>
   </data>
-  <data name="ProteinName" xml:space="preserve">
+  <data name="ProteinName">
     <value>Protein Name</value>
   </data>
-  <data name="ProteinNote" xml:space="preserve">
+  <data name="ProteinNote">
     <value>Protein Note</value>
   </data>
-  <data name="ProteinPreferredName" xml:space="preserve">
+  <data name="ProteinPreferredName">
     <value>Protein Preferred Name</value>
   </data>
-  <data name="Proteins" xml:space="preserve">
+  <data name="Proteins">
     <value>Proteins</value>
   </data>
-  <data name="ProteinSequence" xml:space="preserve">
+  <data name="ProteinSequence">
     <value>Protein Sequence</value>
   </data>
-  <data name="ProteinSpecies" xml:space="preserve">
+  <data name="ProteinSpecies">
     <value>Protein Species</value>
   </data>
-  <data name="PValue" xml:space="preserve">
+  <data name="PValue">
     <value>P-Value</value>
   </data>
-  <data name="QuadraticCoefficient" xml:space="preserve">
+  <data name="QuadraticCoefficient">
     <value>Quadratic Coefficient</value>
   </data>
-  <data name="Quantification" xml:space="preserve">
+  <data name="Quantification">
     <value>Quantification</value>
   </data>
-  <data name="Quantitative" xml:space="preserve">
+  <data name="Quantitative">
     <value>Quantitative</value>
   </data>
-  <data name="Range" xml:space="preserve">
+  <data name="Range">
     <value>Range</value>
   </data>
-  <data name="RangeBestRetentionTime" xml:space="preserve">
+  <data name="RangeBestRetentionTime">
     <value>Range Best Retention Time</value>
   </data>
-  <data name="RangeRetentionTime" xml:space="preserve">
+  <data name="RangeRetentionTime">
     <value>Range Retention Time</value>
   </data>
-  <data name="RatioDotProduct" xml:space="preserve">
+  <data name="RatioDotProduct">
     <value>Ratio Dot Product</value>
   </data>
-  <data name="RatioToStandard" xml:space="preserve">
+  <data name="RatioToStandard">
     <value>Ratio To Standard</value>
   </data>
-  <data name="RawData" xml:space="preserve">
+  <data name="RawData">
     <value>Raw Data</value>
   </data>
-  <data name="RawIntensities" xml:space="preserve">
+  <data name="RawIntensities">
     <value>Raw Intensities</value>
   </data>
-  <data name="RawMassErrors" xml:space="preserve">
+  <data name="RawMassErrors">
     <value>Raw Mass Errors</value>
   </data>
-  <data name="RawNumberOfPoints" xml:space="preserve">
+  <data name="RawNumberOfPoints">
     <value>Raw Number of Points</value>
   </data>
-  <data name="RawSpectrumIds" xml:space="preserve">
+  <data name="RawSpectrumIds">
     <value>Raw Spectrum Ids</value>
   </data>
-  <data name="RawTimes" xml:space="preserve">
+  <data name="RawTimes">
     <value>Raw Times</value>
   </data>
-  <data name="Reason" xml:space="preserve">
+  <data name="Reason">
     <value>Reason</value>
   </data>
-  <data name="Replicate" xml:space="preserve">
+  <data name="Replicate">
     <value>Replicate</value>
   </data>
-  <data name="ReplicateCalibrationCurve" xml:space="preserve">
+  <data name="ReplicateCalibrationCurve">
     <value>Replicate Calibration Curve</value>
   </data>
-  <data name="ReplicateCount" xml:space="preserve">
+  <data name="ReplicateCount">
     <value>Replicate Count</value>
   </data>
-  <data name="ReplicateErrorMessage" xml:space="preserve">
+  <data name="ReplicateErrorMessage">
     <value>Replicate Error Message</value>
   </data>
-  <data name="ReplicateIndex" xml:space="preserve">
+  <data name="ReplicateIndex">
     <value>Replicate Index</value>
   </data>
-  <data name="ReplicateIntercept" xml:space="preserve">
+  <data name="ReplicateIntercept">
     <value>Replicate Intercept</value>
   </data>
-  <data name="ReplicateLocator" xml:space="preserve">
+  <data name="ReplicateLocator">
     <value>Replicate Locator</value>
   </data>
-  <data name="ReplicateName" xml:space="preserve">
+  <data name="ReplicateName">
     <value>Replicate Name</value>
   </data>
-  <data name="ReplicatePath" xml:space="preserve">
+  <data name="ReplicatePath">
     <value>Replicate Path</value>
   </data>
-  <data name="ReplicatePointCount" xml:space="preserve">
+  <data name="ReplicatePointCount">
     <value>Replicate Point Count</value>
   </data>
-  <data name="ReplicateQuadraticCoefficient" xml:space="preserve">
+  <data name="ReplicateQuadraticCoefficient">
     <value>Replicate Quadratic Coefficient</value>
   </data>
-  <data name="ReplicateRSquared" xml:space="preserve">
+  <data name="ReplicateRSquared">
     <value>Replicate R Squared</value>
   </data>
-  <data name="ReplicateSlope" xml:space="preserve">
+  <data name="ReplicateSlope">
     <value>Replicate Slope</value>
   </data>
-  <data name="Replicates" xml:space="preserve">
+  <data name="Replicates">
     <value>Replicates</value>
   </data>
-  <data name="ReplicateTurningPoint" xml:space="preserve">
+  <data name="ReplicateTurningPoint">
     <value>Replicate Turning Point</value>
   </data>
-  <data name="ResultFile" xml:space="preserve">
+  <data name="ResultFile">
     <value>Result File</value>
   </data>
-  <data name="ResultFileLocator" xml:space="preserve">
+  <data name="ResultFileLocator">
     <value>Result File Locator</value>
   </data>
-  <data name="Results" xml:space="preserve">
+  <data name="Results">
     <value>Results</value>
   </data>
-  <data name="RetentionTime" xml:space="preserve">
+  <data name="RetentionTime">
     <value>Retention Time</value>
   </data>
-  <data name="RetentionTimeCalculatorScore" xml:space="preserve">
+  <data name="RetentionTimeCalculatorScore">
     <value>Retention Time Calculator Score</value>
   </data>
-  <data name="RSquared" xml:space="preserve">
+  <data name="RSquared">
     <value>R Squared</value>
   </data>
-  <data name="SampleDilutionFactor" xml:space="preserve">
+  <data name="SampleDilutionFactor">
     <value>Sample Dilution Factor</value>
   </data>
-  <data name="SampleName" xml:space="preserve">
+  <data name="SampleName">
     <value>Sample Name</value>
   </data>
-  <data name="SampleType" xml:space="preserve">
+  <data name="SampleType">
     <value>Sample Type</value>
   </data>
-  <data name="SkylineVersion" xml:space="preserve">
+  <data name="SkylineVersion">
     <value>Skyline Version</value>
   </data>
-  <data name="Slope" xml:space="preserve">
+  <data name="Slope">
     <value>Slope</value>
   </data>
-  <data name="SMILES" xml:space="preserve">
+  <data name="SMILES">
     <value>SMILES</value>
   </data>
-  <data name="SpectrumIds" xml:space="preserve">
+  <data name="SpectrumIds">
     <value>Spectrum Ids</value>
   </data>
-  <data name="StandardError" xml:space="preserve">
+  <data name="StandardError">
     <value>Standard Error</value>
   </data>
-  <data name="StandardType" xml:space="preserve">
+  <data name="StandardType">
     <value>Standard Type</value>
   </data>
-  <data name="StartTime" xml:space="preserve">
+  <data name="StartTime">
     <value>Start Time</value>
   </data>
-  <data name="Stdev" xml:space="preserve">
+  <data name="Stdev">
     <value>Stdev</value>
   </data>
-  <data name="StdevArea" xml:space="preserve">
+  <data name="StdevArea">
     <value>Stdev Area</value>
   </data>
-  <data name="StdevAreaNormalized" xml:space="preserve">
+  <data name="StdevAreaNormalized">
     <value>Stdev Area Normalized</value>
   </data>
-  <data name="StdevAreaRatio" xml:space="preserve">
+  <data name="StdevAreaRatio">
     <value>Stdev Area Ratio</value>
   </data>
-  <data name="StdevBestRetentionTime" xml:space="preserve">
+  <data name="StdevBestRetentionTime">
     <value>Stdev Best Retention Time</value>
   </data>
-  <data name="StdevFwhm" xml:space="preserve">
+  <data name="StdevFwhm">
     <value>Stdev Fwhm</value>
   </data>
-  <data name="StdevMaxFwhm" xml:space="preserve">
+  <data name="StdevMaxFwhm">
     <value>Stdev Max Fwhm</value>
   </data>
-  <data name="StdevMaxHeight" xml:space="preserve">
+  <data name="StdevMaxHeight">
     <value>Stdev Max Height</value>
   </data>
-  <data name="StdevRetentionTime" xml:space="preserve">
+  <data name="StdevRetentionTime">
     <value>Stdev Retention Time</value>
   </data>
-  <data name="StdevTotalArea" xml:space="preserve">
+  <data name="StdevTotalArea">
     <value>Stdev Total Area</value>
   </data>
-  <data name="StdevTotalAreaNormalized" xml:space="preserve">
+  <data name="StdevTotalAreaNormalized">
     <value>Stdev Total Area Normalized</value>
   </data>
-  <data name="StdevTotalAreaRatio" xml:space="preserve">
+  <data name="StdevTotalAreaRatio">
     <value>Stdev Total Area Ratio</value>
   </data>
-  <data name="SummaryMessage" xml:space="preserve">
+  <data name="SummaryMessage">
     <value>Summary Message</value>
   </data>
-  <data name="ThreeLetterCodes" xml:space="preserve">
-    <value>Three Letter Codes</value>
-  </data>
-  <data name="TicArea" xml:space="preserve">
+  <data name="ThreeLetterCodes"><value>Three Letter Codes</value></data>
+  <data name="TicArea">
     <value>Total Ion Current Area</value>
   </data>
-  <data name="TotalArea" xml:space="preserve">
+  <data name="TotalArea">
     <value>Total Area</value>
   </data>
-  <data name="Time" xml:space="preserve">
+  <data name="Time">
     <value>Time</value>
   </data>
-  <data name="Times" xml:space="preserve">
+  <data name="Times">
     <value>Times</value>
   </data>
-  <data name="TimeStamp" xml:space="preserve">
+  <data name="TimeStamp">
     <value>Time Stamp</value>
   </data>
-  <data name="TotalAreaFragment" xml:space="preserve">
+  <data name="TotalAreaFragment">
     <value>Total Area Fragment</value>
   </data>
-  <data name="TotalAreaMs1" xml:space="preserve">
+  <data name="TotalAreaMs1">
     <value>Total Area MS1</value>
   </data>
-  <data name="TotalAreaNormalized" xml:space="preserve">
+  <data name="TotalAreaNormalized">
     <value>Total Area Normalized</value>
   </data>
-  <data name="TotalAreaRatio" xml:space="preserve">
+  <data name="TotalAreaRatio">
     <value>Total Area Ratio</value>
   </data>
-  <data name="TotalBackground" xml:space="preserve">
+  <data name="TotalBackground">
     <value>Total Background</value>
   </data>
-  <data name="TotalBackgroundFragment" xml:space="preserve">
+  <data name="TotalBackgroundFragment">
     <value>Total Background Fragment</value>
   </data>
-  <data name="TotalBackgroundMs1" xml:space="preserve">
+  <data name="TotalBackgroundMs1">
     <value>Total Background MS1</value>
   </data>
-  <data name="TransitionCount" xml:space="preserve">
+  <data name="TransitionCount">
     <value>Transition Count</value>
   </data>
-  <data name="Transition" xml:space="preserve">
+  <data name="Transition">
     <value>Transition</value>
   </data>
-  <data name="TransitionIsDecoy" xml:space="preserve">
+  <data name="TransitionIsDecoy">
     <value>Transition Is Decoy</value>
   </data>
-  <data name="TransitionLocator" xml:space="preserve">
+  <data name="TransitionLocator">
     <value>Transition Locator</value>
   </data>
-  <data name="TransitionNote" xml:space="preserve">
+  <data name="TransitionNote">
     <value>Transition Note</value>
   </data>
-  <data name="TransitionReplicateNote" xml:space="preserve">
+  <data name="TransitionReplicateNote">
     <value>Transition Replicate Note</value>
   </data>
-  <data name="TransitionResult" xml:space="preserve">
+  <data name="TransitionResult">
     <value>Transition Result</value>
   </data>
-  <data name="TransitionResultLocator" xml:space="preserve">
+  <data name="TransitionResultLocator">
     <value>Transition Result Locator</value>
   </data>
-  <data name="TransitionResults" xml:space="preserve">
+  <data name="TransitionResults">
     <value>Transition Results</value>
   </data>
-  <data name="TransitionResultsSummary" xml:space="preserve">
+  <data name="TransitionResultsSummary">
     <value>Transition Results Summary</value>
   </data>
-  <data name="Transitions" xml:space="preserve">
+  <data name="Transitions">
     <value>Transitions</value>
   </data>
-  <data name="Truncated" xml:space="preserve">
+  <data name="Truncated">
     <value>Truncated</value>
   </data>
-  <data name="TurningPoint" xml:space="preserve">
+  <data name="TurningPoint">
     <value>Turning Point</value>
   </data>
-  <data name="TValue" xml:space="preserve">
+  <data name="TValue">
     <value>T-Value</value>
   </data>
-  <data name="UndoRedoMessage" xml:space="preserve">
+  <data name="UndoRedoMessage">
     <value>Undo Redo Message</value>
   </data>
-  <data name="UnimodIds" xml:space="preserve">
-    <value>Unimod Ids</value>
-  </data>
-  <data name="User" xml:space="preserve">
+  <data name="UnimodIds"><value>Unimod Ids</value></data>
+  <data name="User">
     <value>User</value>
   </data>
-  <data name="UserSetPeak" xml:space="preserve">
+  <data name="UserSetPeak">
     <value>User Set Peak</value>
   </data>
-  <data name="UserSetTotal" xml:space="preserve">
+  <data name="UserSetTotal">
     <value>User Set Total</value>
   </data>
-  <data name="UTCTime" xml:space="preserve">
+  <data name="UTCTime">
     <value>UTC Time</value>
   </data>
   <data name="SampleId" xml:space="preserve">
