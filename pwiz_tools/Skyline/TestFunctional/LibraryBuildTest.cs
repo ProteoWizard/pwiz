@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -57,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestLibraryBuild()
         {
             TestFilesZip = @"TestFunctional\LibraryBuildTest.zip";
-using (new Assume.DebugOnFail("BSPRATT-UW3")) // If any AsertEx or Assume fails on BSPRATT-UW3, invoke debugger instead of failing  TODO(bspratt) remove this once debugged
+using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) // If any AsertEx or Assume fails on BSPRATT-UW3, invoke debugger instead of failing  TODO(bspratt) remove this once debugged
                 RunFunctionalTest();
         }
 
@@ -149,7 +150,7 @@ using (new Assume.DebugOnFail("BSPRATT-UW3")) // If any AsertEx or Assume fails 
             BuildLibraryValid("heavy_adduct.ssl", true, false, false, 1);
             // Make sure explorer handles this adduct type
             var viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-            RunUI(() => Assume.IsTrue(viewLibUI.GraphItem.IonLabels.Any()));
+            RunUI(() => AssertEx.IsTrue(viewLibUI.GraphItem.IonLabels.Any()));
             RunUI(viewLibUI.CancelDialog);
 
             // Barbara added code to ProteoWizard to rebuild a missing or invalid mzXML index

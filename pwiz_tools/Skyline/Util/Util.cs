@@ -1967,34 +1967,22 @@ namespace pwiz.Skyline.Util
     public static class Assume
     {
 
-        private static string _machineNamePatternForInvokeDebuggerOnFail; // When set, if machine name contains this string we will invoke the debugger rather than fail.
+        public static bool InvokeDebuggerOnFail { get; private set; } // When set, we will invoke the debugger rather than fail.
         public class DebugOnFail : IDisposable
         {
-            private string _initialValue;
+            private bool _pushPopInvokeDebuggerOnFail;
 
-            public DebugOnFail(string machineNamePattern)
+            public DebugOnFail(bool invokeDebuggerOnFail = true)
             {
-                _initialValue = _machineNamePatternForInvokeDebuggerOnFail;
-                _machineNamePatternForInvokeDebuggerOnFail = machineNamePattern;
+                _pushPopInvokeDebuggerOnFail = InvokeDebuggerOnFail; // Push
+                InvokeDebuggerOnFail = invokeDebuggerOnFail;
             }
 
             public void Dispose()
             {
-                _machineNamePatternForInvokeDebuggerOnFail = _initialValue;
+                InvokeDebuggerOnFail = _pushPopInvokeDebuggerOnFail; // Pop
             }
         }
-
-        public static bool InvokeDebuggerOnFail
-        {
-            get
-            {
-                if (String.IsNullOrEmpty(_machineNamePatternForInvokeDebuggerOnFail))
-                    return false;
-                return (_machineNamePatternForInvokeDebuggerOnFail.Equals(@"*") ||
-                        Environment.MachineName.Contains(_machineNamePatternForInvokeDebuggerOnFail));
-            }
-        }
-
 
         public static void IsTrue(bool condition, string error = "")
         {
