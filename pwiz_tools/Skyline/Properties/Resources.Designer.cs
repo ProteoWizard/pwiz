@@ -12323,6 +12323,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} proteins and {1} peptides added.
+        /// </summary>
+        public static string FastaImporter_Import__0__proteins_and__1__peptides_added {
+            get {
+                return ResourceManager.GetString("FastaImporter_Import__0__proteins_and__1__peptides_added", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adding protein {0}.
         /// </summary>
         public static string FastaImporter_Import_Adding_protein__0__ {

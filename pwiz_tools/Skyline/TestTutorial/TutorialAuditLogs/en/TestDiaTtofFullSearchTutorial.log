@@ -498,7 +498,7 @@ Undo Redo : Pasted 12 values into the document grid
 Summary   : Pasted 12 values into the document grid
 All Info  :
 Pasted 12 values into the document grid
-Document grid > View name is "Replicates"
+Document grid > Report name is "Replicates"
 Set Condition of 1_SW-A to "A"
 Set BioReplicate of 1_SW-A to "1"
 Set Condition of 2_SW-B to "B"
@@ -518,7 +518,7 @@ B	2
 A	3
 B	3
 
-View name = "Replicates"
+Report name = "Replicates"
 
 Undo Redo : Group Comparison : "By Condition" was added
 Summary   : Settings > Document Settings -- Group Comparisons : "By Condition" was added

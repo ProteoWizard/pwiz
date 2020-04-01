@@ -296,7 +296,10 @@ namespace pwiz.Skyline.Util
             int i = RemoveExisting(item);
             if (i != -1 && i < index)
                 index--;
-            _dict.Add(item.GetKey(), item);
+            if (item == null)
+                Assume.Fail(@"unexpected null item");
+            else
+                _dict.Add(item.GetKey(), item);
             base.InsertItem(index, item);
         }
 
@@ -309,6 +312,12 @@ namespace pwiz.Skyline.Util
         protected override void SetItem(int index, TValue item)
         {
             TKey key = this[index].GetKey();
+
+            if (item == null)
+            {
+                Assume.Fail(@"unexpected null item");
+                return;
+            }
 
             // If setting to a list item that has a different key
             // from what is at this location currently, then any
@@ -1957,6 +1966,24 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public static class Assume
     {
+
+        public static bool InvokeDebuggerOnFail { get; private set; } // When set, we will invoke the debugger rather than fail.
+        public class DebugOnFail : IDisposable
+        {
+            private bool _pushPopInvokeDebuggerOnFail;
+
+            public DebugOnFail(bool invokeDebuggerOnFail = true)
+            {
+                _pushPopInvokeDebuggerOnFail = InvokeDebuggerOnFail; // Push
+                InvokeDebuggerOnFail = invokeDebuggerOnFail;
+            }
+
+            public void Dispose()
+            {
+                InvokeDebuggerOnFail = _pushPopInvokeDebuggerOnFail; // Pop
+            }
+        }
+
         public static void IsTrue(bool condition, string error = "")
         {
             if (!condition)
@@ -2001,6 +2028,14 @@ namespace pwiz.Skyline.Util
 
         public static void Fail(string error = "")
         {
+            if (InvokeDebuggerOnFail)
+            {
+                Console.WriteLine();
+                if (!string.IsNullOrEmpty(error))
+                    Console.WriteLine(error);
+                Console.WriteLine(@"error encountered, launching debugger as requested by Assume.DebugOnFail");
+                Debugger.Launch();
+            }
             throw new AssumptionException(error);
         }
 
