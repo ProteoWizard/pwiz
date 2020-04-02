@@ -142,6 +142,10 @@
     <Reference Condition="'$(Platform)' == 'x64'" Include="MethodConverter">
       <HintPath>Method\Shimadzu\x64\MethodConverter.dll</HintPath>
     </Reference>
+    <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.ConcurrencyVisualizer.Markers, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
@@ -2889,6 +2893,14 @@
     </Content>
     <Content Condition=" '$(Platform)' == 'x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\timsdata.dll">
       <Link>timsdata.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\prmscheduler.dll">
+      <Link>prmscheduler.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition=" '$(Platform)' == 'x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\prmscheduler.dll">
+      <Link>prmscheduler.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\Thermo\BuildThermoMethod.exe">

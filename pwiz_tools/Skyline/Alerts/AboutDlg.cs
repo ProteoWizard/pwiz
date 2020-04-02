@@ -20,6 +20,7 @@
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.CLI.Bruker.PrmScheduling;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -34,6 +35,43 @@ namespace pwiz.Skyline.Alerts
             // Designer has problems getting images from resources
             pictureSkylineIcon.Image = Resources.SkylineImg;
             pictureProteoWizardIcon.Image = Resources.ProteoWizard;
+
+            InputTarget makeTarget(int id, double rtStart, double rtEnd, double isoMz, double imStart, double imEnd)
+            {
+                return new InputTarget()
+                {
+                    external_id = id.ToString(),
+                    time_in_seconds_begin = rtStart,
+                    time_in_seconds_end = rtEnd,
+                    isolation_mz = isoMz,
+                    one_over_k0_lower_limit = imStart,
+                    one_over_k0_upper_limit = imEnd,
+                    charge = 2, collision_energy = -1,
+                    isolation_width = 3,
+                    one_over_k0 = (imStart+imEnd)/2,
+                    time_in_seconds = (rtStart+rtEnd)/2,
+                    monoisotopic_mz = isoMz
+                };
+            };
+
+            using (var s = new Scheduler(@"C:\pwiz.git\pwiz\pwiz\utility\bindings\CLI\timstof_prm_scheduler"))
+            {
+                var targetList = new TargetList
+                {
+                    makeTarget(1, -53.2000, 146.8000, 784.8662, 1.0216, 1.0497),
+                    makeTarget(2, -15.4000, 184.6000, 523.7778, 0.8433, 0.8716),
+                    makeTarget(3, 5.0000, 205.0000, 576.2796, 0.8592, 0.8874),
+                    makeTarget(4, 10.4000, 210.4000, 569.2863, 0.9010, 0.9292)
+                };
+                s.SetAdditionalMeasurementParameters(new AdditionalMeasurementParameters {ms1_repetition_time = 10});
+                s.SchedulePrmTargets(targetList, null);
+
+                var timeSegmentList = new TimeSegmentList();
+                var schedulingEntryList = new SchedulingEntryList();
+                s.GetScheduling(timeSegmentList, schedulingEntryList);
+                foreach (var time in timeSegmentList)
+                    textBox1.AppendText(string.Format("{0}-{1}\r\n", time.time_in_seconds_begin, time.time_in_seconds_end));
+            }
         }
 
         private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
