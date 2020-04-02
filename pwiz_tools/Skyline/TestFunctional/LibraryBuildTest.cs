@@ -548,7 +548,10 @@ using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) 
                 OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
             }
 
-            TryWaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(_libraryName));
+            string nonredundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
+            TryWaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(_libraryName) &&
+                                        File.Exists(nonredundantBuildPath));
+
             WaitForConditionUI(() => !PeptideSettingsUI.IsBuildingLibrary);
             var messageDlg = FindOpenForm<MessageDlg>();
             if (messageDlg != null)
