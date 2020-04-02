@@ -296,10 +296,8 @@ namespace pwiz.Skyline.Util
             int i = RemoveExisting(item);
             if (i != -1 && i < index)
                 index--;
-            if (item == null)
-                Assume.Fail(@"unexpected null item");
-            else
-                _dict.Add(item.GetKey(), item);
+            // ReSharper disable once PossibleNullReferenceException
+            _dict.Add(item.GetKey(), item);
             base.InsertItem(index, item);
         }
 
@@ -313,16 +311,11 @@ namespace pwiz.Skyline.Util
         {
             TKey key = this[index].GetKey();
 
-            if (item == null)
-            {
-                Assume.Fail(@"unexpected null item");
-                return;
-            }
-
             // If setting to a list item that has a different key
             // from what is at this location currently, then any
             // existing value with the same key must be removed
             // from its current location.
+            // ReSharper disable once PossibleNullReferenceException
             if (!Equals(key, item.GetKey()))
             {
                 int i = RemoveExisting(item);
