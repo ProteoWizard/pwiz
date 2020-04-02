@@ -569,6 +569,9 @@ precursor.</value>
   <data name="MaxRetentionTime">
     <value>Maximum of the transition RetentionTime values.</value>
   </data>
+  <data name="Median">
+    <value>Median</value>
+  </data>
   <data name="Mean">
     <value>Mean</value>
   </data>

@@ -1490,7 +1490,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A  maximum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model..
+        ///   Looks up a localized string similar to A  maximum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mPro
+        ///phet model..
         /// </summary>
         public static string MaxDetectionQValue {
             get {
@@ -1650,6 +1651,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MeanTotalAreaRatio {
             get {
                 return ResourceManager.GetString("MeanTotalAreaRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median.
+        /// </summary>
+        public static string Median {
+            get {
+                return ResourceManager.GetString("Median", resourceCulture);
             }
         }
         

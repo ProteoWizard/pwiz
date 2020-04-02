@@ -589,6 +589,9 @@
   <data name="MaxRetentionTime">
     <value>Max Retention Time</value>
   </data>
+  <data name="Median">
+    <value>Median</value>
+  </data>
   <data name="MedianDetectionQValue" xml:space="preserve">
     <value>Median Detection Q Value</value>
   </data>
