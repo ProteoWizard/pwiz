@@ -1301,7 +1301,9 @@ namespace pwiz.ProteowizardWrapper
 
         private static int GetMsLevel(Precursor precursor)
         {
-            var msLevelParam = precursor.userParam("ms level");
+            var msLevelParam = precursor.isolationWindow.userParam("ms level");
+            if (msLevelParam.empty())
+                msLevelParam = precursor.userParam("ms level");
             return msLevelParam.empty() ? 1 : (int)msLevelParam.value;
 
         }

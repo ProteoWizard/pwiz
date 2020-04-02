@@ -79,16 +79,11 @@ namespace pwiz.Skyline.Model.GroupComparison
         public SrmDocument ApplyChangesToDocument(SrmDocument doc, GroupComparisonDef groupDef)
         {
             var groupComparisons = doc.Settings.DataSettings.GroupComparisonDefs.ToList();
-            int index =
-                groupComparisons.FindIndex(def => def.Name == GroupComparisonName);
-            if (index < 0)
-            {
-                groupComparisons.Add(groupDef);
-            }
-            else
-            {
-                groupComparisons[index] = groupDef;
-            }
+            int index = groupComparisons.FindIndex(def => def.Name == GroupComparisonName);
+            if (index < 0 || Equals(groupDef, groupComparisons[index]))
+                return doc;
+
+            groupComparisons[index] = groupDef;
             doc =
                 doc.ChangeSettings(
                     doc.Settings.ChangeDataSettings(

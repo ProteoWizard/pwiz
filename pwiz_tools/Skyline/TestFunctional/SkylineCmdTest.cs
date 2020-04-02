@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -87,6 +88,39 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
         }
+
+        /// <summary>
+        /// Tests running SkylineCmd.exe when it is not in the same folder as Skyline.exe, in which
+        /// case it fails.
+        /// </summary>
+        [TestMethod]
+        public void TestSkylineCmdInEmptyDirectory()
+        {
+            var tempPath = TestContext.GetTestPath("SkylineCmdTempDirectory" + Guid.NewGuid());
+            Directory.CreateDirectory(tempPath);
+            var destFileName = Path.Combine(tempPath, "SkylineCmd.exe");
+            File.Copy(FindSkylineCmdExe(), destFileName);
+            var processStartInfo = GetProcessStartInfo(string.Empty);
+            processStartInfo.FileName = destFileName;
+            var processRunner = new ProcessRunner { OutputEncoding = Encoding.UTF8 };
+            IProgressStatus status = new ProgressStatus(string.Empty);
+            string output = null;
+            try
+            {
+                processRunner.Run(processStartInfo, null, null, ref status, null);
+                Assert.Fail("IOException should have been thrown");
+            }
+            catch (IOException ioException)
+            {
+                output = ioException.Message;
+            }
+            // Make sure the error message says it tries loading "Skyline.exe" and "Skyline-daily.exe" from the
+            // same directory as SkylineCmd.exe
+            StringAssert.Contains(output, "Skyline.exe");
+            StringAssert.Contains(output, "Skyline-daily.exe");
+            StringAssert.Contains(output, tempPath);
+        }
+
 
         private string RunWithOutput(string args)
         {

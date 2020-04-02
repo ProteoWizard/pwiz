@@ -1,0 +1,137 @@
+Undo Redo : 离子对设置 -- 过滤器 已更改
+Summary   : 设置 > 离子对设置 -- 过滤器 已更改
+All Info  :
+离子对设置 -- 过滤器 已更改
+设置 > 离子对设置 -- 过滤器 > 子离子选择开始 从 "质荷比 > 母离子" 更改到 "离子 3"
+设置 > 离子对设置 -- 过滤器 > 子离子选择结束 从 "3 个离子" 更改到 "最后一个离子 - 1"
+
+Undo Redo : 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+Summary   : 设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+All Info  :
+肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 氨基酸 是 "K"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N 是 真
+
+Undo Redo : 已插入肽段 IEAIPQIDK
+Summary   : 已插入肽段 IEAIPQIDK
+All Info  :
+已插入肽段 IEAIPQIDK
+Extra Info: 肽段序列	蛋白质名称	蛋白质描述
+IEAIPQIDK	GST-tag	
+		
+
+Undo Redo : 已从 9 文件导入结果
+Summary   : 已从 9 文件导入结果
+All Info  :
+已从 9 文件导入结果
+导入结果设置 > 文件名称 : 包含 "FOXN1-GST.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_1.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_2.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_3.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_4.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_5.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_6.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_7.mzML"
+导入结果设置 > 文件名称 : 包含 "Standard_8.mzML"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "FOXN1-GST.mzML",
+    "Standard_1.mzML",
+    "Standard_2.mzML",
+    "Standard_3.mzML",
+    "Standard_4.mzML",
+    "Standard_5.mzML",
+    "Standard_6.mzML",
+    "Standard_7.mzML",
+    "Standard_8.mzML"
+],
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
+
+Undo Redo : 肽段设置 -- 定量 已更改
+Summary   : 设置 > 肽段设置 -- 定量 已更改
+All Info  :
+肽段设置 -- 定量 已更改
+设置 > 肽段设置 -- 定量 > 回归拟合 从 "无" 更改到 "线性"
+设置 > 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于重的比率"
+设置 > 肽段设置 -- 定量 > 单位 从 缺失 更改到 "fmol/ul"
+
+Undo Redo : 已将 16 值粘贴到文档网格
+Summary   : 已将 16 值粘贴到文档网格
+All Info  :
+已将 16 值粘贴到文档网格
+文档网格 > 查看名称 是 "重复测定"
+将 Standard_1 的 样品类型 设定为 "标准"
+将 Standard_1 的 分析物浓度 设定为 "40"
+将 Standard_2 的 样品类型 设定为 "标准"
+将 Standard_2 的 分析物浓度 设定为 "12.5"
+将 Standard_3 的 样品类型 设定为 "标准"
+将 Standard_3 的 分析物浓度 设定为 "5"
+将 Standard_4 的 样品类型 设定为 "标准"
+将 Standard_4 的 分析物浓度 设定为 "2.5"
+将 Standard_5 的 样品类型 设定为 "标准"
+将 Standard_5 的 分析物浓度 设定为 "1"
+将 Standard_6 的 样品类型 设定为 "标准"
+将 Standard_6 的 分析物浓度 设定为 "0.5"
+将 Standard_7 的 样品类型 设定为 "标准"
+将 Standard_7 的 分析物浓度 设定为 "0.25"
+将 Standard_8 的 样品类型 设定为 "标准"
+将 Standard_8 的 分析物浓度 设定为 "0.1"
+Extra Info: 标准	40
+标准	12.5
+标准	5
+标准	2.5
+标准	1
+标准	0.5
+标准	0.25
+标准	0.1
+
+查看名称 = "重复测定"
+
+Undo Redo : 已更改 GST-tag > IEAIPQIDK > 517.8022++ (heavy) 的峰界限
+Summary   : 已更改 GST-tag > IEAIPQIDK > 517.8022++ (heavy) 的峰界限
+All Info  :
+已更改 GST-tag > IEAIPQIDK > 517.8022++ (heavy) 的峰界限
+已将“FOXN1-GST”中的 GST-tag > IEAIPQIDK > 517.8022++ (heavy) 所有峰的开始时间从 20.54 更改到 20.64
+已将“FOXN1-GST”中的 GST-tag > IEAIPQIDK > 517.8022++ (heavy) 所有峰的结束时间从 21.08 更改到 21.15
+
+Reason Changed: 已更改 GST-tag > IEAIPQIDK > 517.8022++ (heavy) 的峰界限 
+Reason: '' to 'Changed peak integration as instructed by the tutorial'
+
+Undo Redo : 在校准重复测定 Standard_5 中排除肽段 IEAIPQIDK
+Summary   : 在校准重复测定 Standard_5 中排除肽段 IEAIPQIDK
+All Info  :
+在校准重复测定 Standard_5 中排除肽段 IEAIPQIDK
+
+Undo Redo : 在校准重复测定 Standard_6 中排除肽段 IEAIPQIDK
+Summary   : 在校准重复测定 Standard_6 中排除肽段 IEAIPQIDK
+All Info  :
+在校准重复测定 Standard_6 中排除肽段 IEAIPQIDK
+
+Undo Redo : 在校准重复测定 Standard_7 中排除肽段 IEAIPQIDK
+Summary   : 在校准重复测定 Standard_7 中排除肽段 IEAIPQIDK
+All Info  :
+在校准重复测定 Standard_7 中排除肽段 IEAIPQIDK
+
+Undo Redo : 在校准重复测定 Standard_8 中排除肽段 IEAIPQIDK
+Summary   : 在校准重复测定 Standard_8 中排除肽段 IEAIPQIDK
+All Info  :
+在校准重复测定 Standard_8 中排除肽段 IEAIPQIDK
+
+Reason Changed: 在校准重复测定 Standard_8 中排除肽段 IEAIPQIDK 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: 在校准重复测定 Standard_7 中排除肽段 IEAIPQIDK 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: 在校准重复测定 Standard_6 中排除肽段 IEAIPQIDK 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: 在校准重复测定 Standard_5 中排除肽段 IEAIPQIDK 
+Reason: '' to 'Excluded standard below LOD'
+

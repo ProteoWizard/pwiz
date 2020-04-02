@@ -69,6 +69,12 @@ Extra Info: ファイル名 =
 ファイルにシングルインジェクション繰り返し測定を追加 = 真,
 同時にインポートするファイル = "多く"
 
+Undo Redo : トランジションの設定－Integration>Integrate Allが真に変更されました
+Summary   : 設定>トランジションの設定－Integration>Integrate Allが真に変更されました
+All Info  :
+トランジションの設定－Integration>Integrate Allが真に変更されました
+設定>トランジションの設定－Integration>Integrate Allは偽から真に変更されました
+
 Undo Redo : ペプチド設定－定量化が変更されました
 Summary   : 設定>ペプチド設定－定量化が変更されました
 All Info  :
