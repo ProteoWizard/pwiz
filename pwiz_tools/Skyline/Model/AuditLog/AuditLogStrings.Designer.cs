@@ -1493,7 +1493,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Excluding peptide {0} in calibration of replicate {1}.
+        ///   Looks up a localized string similar to Excluding peptide {0} replicate {1} from calibration curve.
         /// </summary>
         public static string set_excluded_standard {
             get {
@@ -1502,7 +1502,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Including peptide {0} in calibration of replicate {1}.
+        ///   Looks up a localized string similar to Including peptide {0} replicate {1} in calibration curve.
         /// </summary>
         public static string set_included_standard {
             get {

@@ -232,7 +232,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to View name.
+        ///   Looks up a localized string similar to Report name.
         /// </summary>
         public static string BatchModifyInfo_ViewName {
             get {
