@@ -646,20 +646,20 @@ namespace TestRunner
                                 {
                                     passedIndex = passedIndex ?? i;
 
-                                    if (!IsFixedLeakIterations)
+                                    if (!IsFixedLeakIterations && !leakHanger.IsTestMode)
                                         break;
                                 }
 
                                 // Report leak message at LeakCheckIterations, not the expanded count from GetLeakCheckIterations(test)
-                                if (GetLeakCheckReportEarly(test) && iterationCount + 1 == Math.Min(numLeakCheckIterations, LeakCheckIterations))
+                                if (leakHanger.IsTestMode ||
+                                    GetLeakCheckReportEarly(test) && iterationCount + 1 == Math.Min(numLeakCheckIterations, LeakCheckIterations))
                                 {
                                     leakMessage = minDeltas.Value.GetLeakMessage(LeakThresholds, test.TestMethod.Name);
                                     if (leakMessage != null)
                                     {
                                         runTests.Log(leakMessage);
-                                        // runTests.Log("# Entering infinite loop.");
-                                        //
-                                        // leakHanger.Wait();
+                                        runTests.Log("# Entering infinite loop.");
+                                        leakHanger.Wait();
 
                                         runTestForever = true; // Once we break out of the loop, just keep running this test
                                     }
@@ -811,6 +811,11 @@ namespace TestRunner
             private DateTime _startTime;
             // ReSharper restore NotAccessedField.Local
 
+            public bool IsTestMode
+            {
+                get { return false; }
+            }
+
             public bool EndWait
             {
                 get { return _endWait; }
@@ -827,6 +832,8 @@ namespace TestRunner
                     Thread.Sleep(5000);
                     _iterationCount++;
                 }
+
+                RunTests.MemoryManagement.HeapDiagnostics = true;
             }
         }
 
