@@ -103,9 +103,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string ToString()
         {
             if (Median.HasValue)
-            {
-                return String.Format(Formats.PValue, Median);
-            }
+                return ((double)Median).ToString(Formats.PValue);
             return "N/A";
         }
     }
