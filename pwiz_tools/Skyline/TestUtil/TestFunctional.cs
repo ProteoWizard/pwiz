@@ -157,6 +157,16 @@ namespace pwiz.SkylineTestUtil
             test();
         }
 
+        /// <summary>
+        /// For use when <see cref="ShowStartPage"/> is true to initiate audit logging when
+        /// Skyline is first shown.
+        /// </summary>
+        protected void ShowSkyline(Action act)
+        {
+            ShowDialog<SkylineWindow>(act);
+            SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
+        }
+
         protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
@@ -178,9 +188,11 @@ namespace pwiz.SkylineTestUtil
             Assert.IsNotNull(dlg);
 
             // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
-            // TODO: Find something more reliable. This sets the Skyline icon on windows which do not use it
-            if (IsPauseForScreenShots && dlg.ShowIcon && dlg.Icon.Handle != SkylineWindow.Icon.Handle)
-                RunUI(() => dlg.Icon = SkylineWindow.Icon);
+            if (IsPauseForScreenShots && dlg.ShowIcon)
+            {
+                if (ReferenceEquals(dlg, SkylineWindow) || dlg.Icon.Handle != SkylineWindow.Icon.Handle)
+                    RunUI(() => dlg.Icon = Resources.Skyline_Release1);
+            }
             return dlg;
         }
 
@@ -1271,18 +1283,17 @@ namespace pwiz.SkylineTestUtil
 
         private void BeginAuditLogging()
         {
-            if (ShowStartPage)
-                return;
-            CleanupAuditLogs(); // Clean-up before to avoid appending to an existing autid log
-            SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
+            CleanupAuditLogs(); // Clean-up before to avoid appending to an existing audit log
+            if (SkylineWindow != null)
+                SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
             AuditLogEntry.ConvertPathsToFileNames = AuditLogConvertPathsToFileNames;
         }
 
         private void EndAuditLogging()
         {
-            if (ShowStartPage)
-                return;
             AuditLogEntry.ConvertPathsToFileNames = false;
+            if (SkylineWindow == null)
+                return;
             SkylineWindow.DocumentChangedEvent -= OnDocumentChangedLogging;
             VerifyAuditLogCorrect();
             CleanupAuditLogs(); // Clean-up after to avoid appending to an existing autid log - if passed, then it matches expected

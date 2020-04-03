@@ -25,9 +25,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
-using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -43,24 +41,18 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class SmallMoleculesMethodDevAndCEOptimizationTutorialTest : AbstractFunctionalTest
+    public class SmallMolMethodDevCEOptTutorialTest : AbstractFunctionalTest
     {
         protected override bool UseRawFiles
         {
             get { return !ForceMzml && ExtensionTestContext.CanImportWatersRaw; }
         }
 
-        protected override bool ShowStartPage
-        {
-            get { return true; }  // So we can point out the UI mode control
-        }
-
-
         [TestMethod]
-        public void TestSmallMoleculesMethodDevAndCEOptimizationTutorial()
+        public void TestSmallMolMethodDevCEOptTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
 
             ForceMzml = true; // Prefer mzML as being the more efficient download
             LinkPdf = "https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Small%20Molecule%20Method%20Dev%20and%20CE%20Opt.pdf";
@@ -70,7 +62,7 @@ namespace pwiz.SkylineTestTutorial
                 (UseRawFiles
                    ? @"https://skyline.gs.washington.edu/tutorials/SmallMolMethodCE.zip"
                    : @"https://skyline.gs.washington.edu/tutorials/SmallMolMethodCE_mzML.zip"),
-                @"TestTutorial\SmallMoleculesMethodDevAndCEOptimizationViews.zip"
+                @"TestTutorial\SmallMolMethodDevCEOptViews.zip"
             };
             RunFunctionalTest();
         }
@@ -84,19 +76,9 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            // Setting the UI mode, p 2  
-            var startPage = WaitForOpenForm<StartPage>();
-            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
-            PauseForScreenShot<StartPage>("Start Window proteomic", 2);
-            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
-            PauseForScreenShot<StartPage>("Start Window small molecule", 3);
-            RunUI(() => startPage.DoAction(skylineWindow => true));
-            WaitForOpenForm<SkylineWindow>();
-            var libraryMatchPanel = FindOpenForm<GraphSpectrum>();
-            if (libraryMatchPanel != null)
-                RunUI(libraryMatchPanel.Close);
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
 
-            // Inserting a Transition List, p. 2
+            // Inserting a Transition List, p. 4
             {
                 var doc = SkylineWindow.Document;
 
@@ -107,7 +89,7 @@ namespace pwiz.SkylineTestTutorial
                     AdjustSequenceTreePanelWidth();
                 });
 
-                PauseForScreenShot<SkylineWindow>("after paste from csv", 3);
+                PauseForScreenShot<SkylineWindow>("Main window after paste from csv", 4);
 
                 var docTargets = WaitForDocumentChange(doc);
 
