@@ -33,7 +33,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
-    public enum RegressionMethodRT { linear, kde, loess }
+    public enum RegressionMethodRT { linear, kde, log, loess }
 
     /// <summary>
     /// Contains all of the retention time alignments that are relevant for a <see cref="SrmDocument"/>

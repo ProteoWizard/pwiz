@@ -784,4 +784,16 @@ greater peak area.</value>
   <data name="_ims_library_res" xml:space="preserve">
     <value>Resolving power of ion mobility dimension used to filter around ion mobility values from the spectral libraries.</value>
   </data>
+  <data name="_refine_gc_fold_change_cutoff" xml:space="preserve">
+    <value>Keep only targets with a group comparision fold change above this cutoff. (optional for group comparison refinement)</value>
+  </data>
+  <data name="_refine_gc_ms_level" xml:space="preserve">
+    <value>The MS level (1 or 2) to use in calculating peak areas for a group comparison refinement. Defaults to level 2 if both levels are present, and otherwise uses whichever level is present.</value>
+  </data>
+  <data name="_refine_gc_name" xml:space="preserve">
+    <value>The name of a previously defined group comparison to use in refining for significantly changing targets. Specify the argument multiple times with multiple names to keep the union of multiple comparisons.</value>
+  </data>
+  <data name="_refine_gc_p_value_cutoff" xml:space="preserve">
+    <value>Keep only targets with a group comparison adjusted p value below the specified cut-off. (required for group comparison refinement)</value>
+  </data>
 </root>

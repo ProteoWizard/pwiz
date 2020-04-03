@@ -527,10 +527,14 @@ namespace seems
                 {
                     ReaderList readerList = ReaderList.FullReaderList;
                     var readerConfig = new ReaderConfig
-                        {
-                            simAsSpectra = Program.SimAsSpectra,
-                            srmAsSpectra = Program.SrmAsSpectra
-                        };
+                    {
+                        simAsSpectra = Properties.Settings.Default.SimAsSpectra,
+                        srmAsSpectra = Properties.Settings.Default.SrmAsSpectra,
+                        combineIonMobilitySpectra = Properties.Settings.Default.CombineIonMobilitySpectra,
+                        ignoreZeroIntensityPoints = Properties.Settings.Default.IgnoreZeroIntensityPoints,
+                        acceptZeroLengthSpectra = Properties.Settings.Default.AcceptZeroLengthSpectra,
+                        allowMsMsWithoutPrecursor = false
+                    };
 
                     MSDataList msInfo = new MSDataList();
                     readerList.read( fileInfo.FullName, msInfo, readerConfig );

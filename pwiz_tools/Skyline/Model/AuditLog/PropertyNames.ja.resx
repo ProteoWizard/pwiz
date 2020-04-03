@@ -1448,4 +1448,7 @@
   <data name="RefinementSettings_MSLevel" xml:space="preserve">
     <value>MSレベル</value>
   </data>
+  <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
+    <value>定量</value>
+  </data>
 </root>

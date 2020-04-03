@@ -91,5 +91,41 @@ void ExtraZeroSamplesFilter::remove_zeros(const vector<double>& x, const vector<
 }
 
 
+int ExtraZeroSamplesFilter::count_non_zeros(const vector<double>& x, const vector<double>& y, bool preserveFlankingZeros)
+{
+    if (x.size() != y.size())
+        throw runtime_error("[ExtraZeroSamplesFilter::count_zeros()] x and y arrays must be the same size");
+
+    int count = 0;
+
+    if (preserveFlankingZeros)
+    {
+        if (y.size() > 3)
+        {
+            // leave flanking zeros around non-zero data points
+            int i, end = y.size() - 1;
+            for (i = 0; i < end; ++i)
+            {
+                if (y[i] || y[i + 1] || (i && y[i - 1]))
+                    ++count;
+            }
+
+            if (y[i] || y[i - 1])
+                ++count;
+        }
+        else
+        {
+            count = x.size();
+        }
+    }
+    else
+    {
+        count = std::count_if(y.begin(), y.end(), [](const double& v) { return v != 0; });
+    }
+
+    return count;
+}
+
+
 } // namespace analysis
 } // namespace pwiz

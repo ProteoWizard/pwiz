@@ -284,8 +284,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         {
             scan.instrumentConfigurationPtr = msd_.instrumentConfigurationPtrs.back();
 
-            result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), UO_nanometer);
-            result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
+            if (scanInfo->basePeakMass() > 0)
+            {
+                result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), UO_nanometer);
+                result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
+            }
             result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
 
             scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass(), UO_nanometer));
@@ -451,6 +454,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             for (const auto& precursorInfo : boost::adaptors::reverse(precursorInfoList)) // highest ms level first
             {
                 precursor.clear();
+                precursor.isolationWindow.clear();
                 selectedIon.clear();
 
                 double isolationMz = precursorInfo.isolationMZ;
@@ -468,7 +472,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
                 precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
                 precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
-                precursor.userParams.push_back(UserParam("ms level", lexical_cast<string>(precursorInfo.msLevel)));
+                precursor.isolationWindow.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
 
                 ActivationType activationType = scanInfo->activationType();
                 if (activationType == ActivationType_Unknown)
@@ -648,7 +652,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                     if (ie.msOrder != MSOrder_ParentScan)
                         precursor.selectedIons.push_back(selectedIon);
 
-                    precursor.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
+                    precursor.isolationWindow.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
                     result->precursors.push_back(precursor);
 
                     if (ie.msOrder == MSOrder_ParentScan)
@@ -707,7 +711,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                     //    precursor.activation.set(MS_collision_energy, electronvoltActivationEnergy.get(), UO_electronvolt);
 
                     precursor.selectedIons.push_back(selectedIon);
-                    precursor.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
+                    precursor.isolationWindow.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
                     result->precursors.push_back(precursor);
                 }
             }
@@ -818,7 +822,16 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 
         for (long n=1; n <= numControllers; ++n)
         {
-            rawfile_->setCurrentController((ControllerType) controllerType, n);
+            try
+            {
+                rawfile_->setCurrentController((ControllerType) controllerType, n);
+            }
+            catch (exception& e)
+            {
+                warn_once(("[SpectrumList_Thermo::createIndex] error setting controller to " + lexical_cast<std::string>(ControllerTypeStrings[controllerType]) + ": " + e.what()).c_str());
+                continue;
+            }
+
             long numSpectra = rawfile_->getLastScanNumber();
             switch (controllerType)
             {

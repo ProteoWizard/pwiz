@@ -1758,14 +1758,11 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (!overwrite)
                     {
                         var modName = mod.Name;
-                        foreach (StaticMod existingMod in defSet.StaticModList)
+                        if (defSet.StaticModList.Any(existingMod => Equals(existingMod.Name, modName)))
                         {
-                            if (Equals(existingMod.Name, modName))
-                            {
-                                throw new InvalidDataException(
-                                    string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
-                                                  modName));
-                            }
+                            throw new InvalidDataException(
+                                string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                    modName));
                         }
                     }
                 }
@@ -1781,14 +1778,11 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (!overwrite)
                         {
                             var modName = mod.Name;
-                            foreach (StaticMod existingMod in defSet.HeavyModList)
+                            if (defSet.HeavyModList.Any(existingMod => Equals(existingMod.Name, modName)))
                             {
-                                if (Equals(existingMod.Name, modName))
-                                {
-                                    throw new InvalidDataException(
-                                        string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
-                                                      modName));
-                                }
+                                throw new InvalidDataException(
+                                    string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                        modName));
                             }
                         }
                     }
@@ -2212,9 +2206,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public int GroupCount
         {
-            get {  return _groupCount; }
             // Avoid divide by zero errors by always having at least 1 group
-            set { _groupCount = value != 0 ? value : 1; }
+            get {  return _groupCount != 0 ? _groupCount : 1; }
+            set { _groupCount = value; }
         }
 
         public int? MoleculeCount

@@ -340,6 +340,7 @@ namespace pwiz.SkylineTestUtil
 
             // Save profile snapshot if we are profiling.
             DotTraceProfile.Save();
+            Settings.Init();
 
 //            var log = new Log<AbstractUnitTest>();
 //            log.Info(

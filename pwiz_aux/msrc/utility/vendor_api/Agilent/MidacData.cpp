@@ -287,22 +287,22 @@ const set<Transition>& MidacDataImpl::getTransitions() const
     return transitions_;
 }
 
-const automation_vector<double>& MidacDataImpl::getTicTimes(bool ms1Only) const
+const BinaryData<double>& MidacDataImpl::getTicTimes(bool ms1Only) const
 {
     return ms1Only ? ticTimesMs1_ : ticTimes_;
 }
 
-const automation_vector<double>& MidacDataImpl::getBpcTimes(bool ms1Only) const
+const BinaryData<double>& MidacDataImpl::getBpcTimes(bool ms1Only) const
 {
     return ms1Only ? bpcTimesMs1_ : bpcTimes_;
 }
 
-const automation_vector<float>& MidacDataImpl::getTicIntensities(bool ms1Only) const
+const BinaryData<float>& MidacDataImpl::getTicIntensities(bool ms1Only) const
 {
     return ms1Only ? ticIntensitiesMs1_ : ticIntensities_;
 }
 
-const automation_vector<float>& MidacDataImpl::getBpcIntensities(bool ms1Only) const
+const BinaryData<float>& MidacDataImpl::getBpcIntensities(bool ms1Only) const
 {
     return ms1Only ? bpcIntensitiesMs1_ : bpcIntensities_;
 }

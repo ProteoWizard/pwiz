@@ -231,6 +231,9 @@
   <data name="TransitionInstrument_IsDynamicMin" xml:space="preserve">
     <value>Dynamic min product m/z</value>
   </data>
+  <data name="TransitionInstrument_TriggeredAcquisition" xml:space="preserve">
+    <value>Triggered Acquisition</value>
+  </data>
   <data name="MeasuredIon_IsFragment" xml:space="preserve">
     <value>Intense fragment</value>
   </data>
@@ -755,6 +758,9 @@
   <data name="Annotations_ColorBrush" xml:space="preserve">
     <value>Color</value>
   </data>
+  <data name="PeptideDocNode_ExplicitModsTyped" xml:space="preserve">
+    <value>Isotope modifications</value>
+  </data>
   <data name="PeptideDocNode_ExplicitModsHeavy" xml:space="preserve">
     <value>Heavy modifications</value>
   </data>
@@ -1202,7 +1208,7 @@
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
     <value>Isotope label type</value>
   </data>
-  <data name="TransitionGroupDocNode_PrecursorConcentration">
+  <data name="TransitionGroupDocNode_PrecursorConcentration" xml:space="preserve">
     <value>Precursor concentration</value>
   </data>
   <data name="UniquePeptideSettings_ProteinPeptideSelections" xml:space="preserve">
@@ -1374,7 +1380,7 @@
     <value>Column Sorts</value>
   </data>
   <data name="BatchModifyInfo_ViewName" xml:space="preserve">
-    <value>View name</value>
+    <value>Report name</value>
   </data>
   <data name="ColumnSort_ListSortDirection" xml:space="preserve">
     <value>Direction</value>
@@ -1447,5 +1453,38 @@
   </data>
   <data name="RefinementSettings_MSLevel" xml:space="preserve">
     <value>MS level</value>
+  </data>
+  <data name="RefinementSettings_AdjustedPValueCutoff" xml:space="preserve">
+    <value>Adjusted p value cutoff</value>
+  </data>
+  <data name="RefinementSettings_FoldChangeCutoff" xml:space="preserve">
+    <value>Fold change cutoff</value>
+  </data>
+  <data name="RefinementSettings_MSLevelGroupComparison" xml:space="preserve">
+    <value>MS Level</value>
+  </data>
+  <data name="RefinementSettings_GroupComparisonDefs" xml:space="preserve">
+    <value>Group comparisons</value>
+  </data>
+  <data name="PeptideChromInfo_ExcludeFromCalibration" xml:space="preserve">
+    <value>Exclude From Calibration</value>
+  </data>
+  <data name="PeptideChromInfo_AnalyteConcentration" xml:space="preserve">
+    <value>Analyte Concentration</value>
+  </data>
+  <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
+    <value>Quantitative</value>
+  </data>
+  <data name="TransitionIntegration_IsIntegrateAll" xml:space="preserve">
+    <value>Integrate All</value>
+  </data>
+  <data name="TransitionSettings_Integration" xml:space="preserve">
+    <value>Integration</value>
+  </data>
+  <data name="PeptideIntegration_PeakScoringModel" xml:space="preserve">
+    <value>Peak scoring model</value>
+  </data>
+  <data name="PeptideSettings_Integration" xml:space="preserve">
+    <value>Integration</value>
   </data>
 </root>

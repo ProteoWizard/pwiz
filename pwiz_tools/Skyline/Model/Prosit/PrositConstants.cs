@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Prosit
             public StaticMod Mod;
         }
 
-        private static readonly HashSet<PrositAA> PrositAAs = new HashSet<PrositAA>()
+        private static readonly IList<PrositAA> PrositAAs = new List<PrositAA>
         {
             new PrositAA('A', 1), new PrositAA('C', 2), new PrositAA('D', 3),
             new PrositAA('E', 4), new PrositAA('F', 5), new PrositAA('G', 6),
@@ -58,8 +58,9 @@ namespace pwiz.Skyline.Model.Prosit
             new PrositAA('S', 16), new PrositAA('T', 17), new PrositAA('V', 18),
             new PrositAA('W', 19), new PrositAA('Y', 20),
 
-            // Mods
+            // Mods - order has meaning - giving the first mod for an AA priority during testing
             new PrositAA('C', 2, UniMod.DictStructuralModNames[@"Carbamidomethyl (C)"]),
+            new PrositAA('C', 2, UniMod.DictStructuralModNames[@"Propionamide (C)"]),   // Apparently has very similar fragmentation and RT as above (see https://skyline.ms/announcements/home/support/thread.view?rowId=44151)
             new PrositAA('M', 21, UniMod.DictStructuralModNames[@"Oxidation (M)"])
         };
 
@@ -72,7 +73,7 @@ namespace pwiz.Skyline.Model.Prosit
         public static readonly Dictionary<string, PrositAA> MODIFICATIONS =
             PrositAAs.Where(paa => paa.Mod != null).ToDictionary(paa => paa.Mod.Name, paa => paa);
 
-        public static readonly Dictionary<int, PrositAA> MODIFICATIONS_REVERSE =
-            MODIFICATIONS.ToDictionary(kvp => kvp.Value.PrositIndex, kvp => kvp.Value);
+        public static readonly Dictionary<int, PrositAA[]> MODIFICATIONS_REVERSE =
+            MODIFICATIONS.GroupBy(kvp => kvp.Value.PrositIndex).ToDictionary(g => g.Key, g => g.Select(kvp => kvp.Value).ToArray());
     }
 }

@@ -135,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
+    <Compile Include="DiaSwathTutorialTest.cs" />
     <Compile Include="PerfImportHundredsOfReplicatesTest.cs" />
     <Compile Include="HiResMetabolomicsTutorial.cs" />
     <Compile Include="ImportMassOnlyMoleculesTest.cs" />
@@ -163,6 +164,7 @@
     <Compile Include="PerfPeakTest.cs" />
     <Compile Include="PerfPeakViewConvert.cs" />
     <Compile Include="PerfThermoFAIMSTest.cs" />
+    <Compile Include="PerfTicAreaTest.cs" />
     <Compile Include="PerfUniquePeptidesTest.cs" />
     <Compile Include="SmallMolDriftTimePredictorTest.cs" />
   </ItemGroup>
@@ -230,6 +232,8 @@
     <EmbeddedResource Include="ThermoDIA.ChorusRequest.xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="DiaSwathQEViews.zip" />
+    <None Include="DiaSwathTTOFViews.zip" />
     <None Include="DriftTimePredictorExtra.zip" />
     <None Include="DriftTimePredictorViews.zip" />
     <None Include="PerfImportHundredsOfReplicatesTest.zip" />

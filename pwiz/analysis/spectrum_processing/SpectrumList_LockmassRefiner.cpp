@@ -73,21 +73,20 @@ PWIZ_API_DECL bool SpectrumList_LockmassRefiner::accept(const msdata::SpectrumLi
     return true;
 }
 
-PWIZ_API_DECL SpectrumPtr SpectrumList_LockmassRefiner::spectrum(size_t index, DetailLevel detailLevel) const
+PWIZ_API_DECL SpectrumPtr SpectrumList_LockmassRefiner::spectrum(size_t index, bool getBinaryData) const
 {
-    // for full metadata, defaultArrayLength must be accurate, so go ahead and do peak picking anyway
-    return (int) detailLevel >= (int) DetailLevel_FullMetadata ? spectrum(index, true) : inner_->spectrum(index, detailLevel);
+    return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
 }
 
 
-PWIZ_API_DECL SpectrumPtr SpectrumList_LockmassRefiner::spectrum(size_t index, bool getBinaryData) const
+PWIZ_API_DECL SpectrumPtr SpectrumList_LockmassRefiner::spectrum(size_t index, DetailLevel detailLevel) const
 {
     SpectrumPtr s;
 
     SpectrumList_PeakPicker* peakPicker = dynamic_cast<SpectrumList_PeakPicker*>(&*inner_);
     detail::SpectrumList_Waters* waters = dynamic_cast<detail::SpectrumList_Waters*>(peakPicker ? &*peakPicker->inner() : &*inner_);
     if (waters)
-        s = waters->spectrum(index, getBinaryData, mzPositiveScans_, mzNegativeScans_, tolerance_, peakPicker ? peakPicker->msLevels() : pwiz::util::IntegerSet());
+        s = waters->spectrum(index, detailLevel, mzPositiveScans_, mzNegativeScans_, tolerance_, peakPicker ? peakPicker->msLevels() : pwiz::util::IntegerSet());
     else
         s = inner_->spectrum(index, true);
 

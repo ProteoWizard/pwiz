@@ -281,13 +281,13 @@ bool Baf2SqlSpectrum::hasProfileData() const { return getProfileDataSize() > 0; 
 size_t Baf2SqlSpectrum::getLineDataSize() const { return lineIntensityArrayId_.is_initialized() ? storage_->getArrayNumElements(lineIntensityArrayId_.get()) : 0; }
 size_t Baf2SqlSpectrum::getProfileDataSize() const { return profileIntensityArrayId_.is_initialized() ? storage_->getArrayNumElements(profileIntensityArrayId_.get()) : 0; }
 
-void Baf2SqlSpectrum::readArray(uint64_t id, automation_vector<double> & result) const
+void Baf2SqlSpectrum::readArray(uint64_t id, pwiz::util::BinaryData<double> & result) const
 {
     size_t n = static_cast<size_t>(storage_->getArrayNumElements(id));
     readArray(id, result, n);
 }
 
-void Baf2SqlSpectrum::readArray(uint64_t id, automation_vector<double> & result, size_t n) const
+void Baf2SqlSpectrum::readArray(uint64_t id, pwiz::util::BinaryData<double> & result, size_t n) const
 {
 
     if (n > std::numeric_limits<size_t>::max())
@@ -295,7 +295,7 @@ void Baf2SqlSpectrum::readArray(uint64_t id, automation_vector<double> & result,
         BOOST_THROW_EXCEPTION(std::runtime_error("Array too large."));
     }
 
-    result.resize_no_initialize(n);
+    result.resize(n);
     if ((n>0) && (baf2sql_array_read_double(storage_->getHandle(), id, &result[0]) == 0))
     {
         baf2sql::throwLastBaf2SqlError();
@@ -303,7 +303,7 @@ void Baf2SqlSpectrum::readArray(uint64_t id, automation_vector<double> & result,
 }
 
 
-void Baf2SqlSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+void Baf2SqlSpectrum::getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
     if (!lineIntensityArrayId_.is_initialized())
     {
@@ -321,7 +321,7 @@ void Baf2SqlSpectrum::getLineData(automation_vector<double>& mz, automation_vect
     readArray(lineMzArrayId_.get(), mz, n);  // Assume mz and intensity arrays are same length, for best read speed
 }
 
-void Baf2SqlSpectrum::getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+void Baf2SqlSpectrum::getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
     if (!profileIntensityArrayId_.is_initialized())
     {

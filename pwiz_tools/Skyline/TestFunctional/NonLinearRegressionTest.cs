@@ -20,6 +20,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -43,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\RunToRunRegressionTest.zip";
 
-             var documentPath = TestFilesDir.GetTestPath("alpha-crystallin_data.sky");
+            var documentPath = TestFilesDir.GetTestPath("alpha-crystallin_data.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
             WaitForDocumentLoaded();
 
@@ -83,11 +84,12 @@ namespace pwiz.SkylineTestFunctional
             WaitForPaneCondition<RTLinearRegressionGraphPane>(summary, pane => !pane.IsCalculating);
 
             //Make sure Loess is not refined. Too slow
-            Assert.IsFalse(graphPane.IsRefined);
+            Assert.IsTrue(graphPane.RegressionRefinedNull);
 
-            var loessFunction = (PiecewiseLinearRegressionFunction) graphPane.RegressionRefined.Conversion;
+            // ReSharper disable once PossibleInvalidCastException
+            var loessFunction = (LoessRegression) graphPane.RegressionRefined.Conversion;
 
-            Assert.AreEqual(3.6941, loessFunction.RMSD, 0.0001);
+            Assert.AreEqual(4.0552, loessFunction.Rmsd, 0.0001);
             Assert.AreEqual(22, kdeFunction.LinearFunctionsCount);
         }        
     }

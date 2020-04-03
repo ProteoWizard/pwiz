@@ -138,7 +138,8 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
     msd.id = bfs::basename(p);
 
     // reset controller which may have been changed by Spectrum/ChromatogramList index enumeration
-    rawfile.setCurrentController(Controller_MS, 1);
+    if (rawfile.getNumberOfControllersOfType(Controller_MS) > 0)
+        rawfile.setCurrentController(Controller_MS, 1);
 
     auto instData = rawfile.getInstrumentData();
 

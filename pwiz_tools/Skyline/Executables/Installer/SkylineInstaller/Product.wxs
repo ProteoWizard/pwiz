@@ -612,6 +612,9 @@
       <Component Id="SkylineCmd.exe">
         <File Source="$(var.Skyline.TargetDir)/SkylineCmd.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="SkylineCmd.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/SkylineCmd.exe.config" KeyPath="yes"/>
+      </Component>
       <Component Id="SkylineCmd.pdb">
         <File Source="$(var.Skyline.TargetDir)/SkylineCmd.pdb" KeyPath="yes"/>
       </Component>

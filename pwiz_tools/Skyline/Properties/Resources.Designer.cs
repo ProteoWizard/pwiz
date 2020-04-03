@@ -516,6 +516,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Regression.
+        /// </summary>
+        public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression {
+            get {
+                return ResourceManager.GetString("AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Regression Attempted.
         /// </summary>
         public static string AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted {
@@ -2999,11 +3008,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Linear equation calculation.
+        ///   Looks up a localized string similar to Regression equation calculation.
         /// </summary>
-        public static string CalibrateIrtDlg_btnGraph_Click_Linear_equation_calculation {
+        public static string CalibrateIrtDlg_btnGraph_Click_Regression_equation_calculation {
             get {
-                return ResourceManager.GetString("CalibrateIrtDlg_btnGraph_Click_Linear_equation_calculation", resourceCulture);
+                return ResourceManager.GetString("CalibrateIrtDlg_btnGraph_Click_Regression_equation_calculation", resourceCulture);
             }
         }
         
@@ -3124,24 +3133,6 @@ namespace pwiz.Skyline.Properties {
         public static string CalibrateIrtDlg_TryGetLine_The_standard_must_have_two_fixed_points {
             get {
                 return ResourceManager.GetString("CalibrateIrtDlg_TryGetLine_The_standard_must_have_two_fixed_points", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to iRT.
-        /// </summary>
-        public static string CalibrateIrtDlg_UpdateControls_iRT {
-            get {
-                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls_iRT", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to RT.
-        /// </summary>
-        public static string CalibrateIrtDlg_UpdateControls_RT {
-            get {
-                return ResourceManager.GetString("CalibrateIrtDlg_UpdateControls_RT", resourceCulture);
             }
         }
         
@@ -3334,6 +3325,33 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ChooseIrtStandardPeptides_OkDialog_Transition_list_field_must_contain_a_path_to_a" +
                         "_valid_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Known iRTs.
+        /// </summary>
+        public static string ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library iRTs.
+        /// </summary>
+        public static string ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptidesDlg_OkDialog_Library_iRTs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear regression.
+        /// </summary>
+        public static string ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptidesDlg_OkDialog_Linear_regression", resourceCulture);
             }
         }
         
@@ -8165,6 +8183,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to N/A.
+        /// </summary>
+        public static string DisplayEquation_N_A {
+            get {
+                return ResourceManager.GetString("DisplayEquation_N_A", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Column.
         /// </summary>
         public static string DisplayGraphsTypeExtension_LOCALIZED_VALUES_Column {
@@ -12234,6 +12261,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} proteins and {1} peptides added.
+        /// </summary>
+        public static string FastaImporter_Import__0__proteins_and__1__peptides_added {
+            get {
+                return ResourceManager.GetString("FastaImporter_Import__0__proteins_and__1__peptides_added", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adding protein {0}.
         /// </summary>
         public static string FastaImporter_Import_Adding_protein__0__ {
@@ -13901,6 +13937,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to iRT.
+        /// </summary>
+        public static string IIrtRegression_DisplayEquation_iRT {
+            get {
+                return ResourceManager.GetString("IIrtRegression_DisplayEquation_iRT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measured RT.
+        /// </summary>
+        public static string IIrtRegression_DisplayEquation_Measured_RT {
+            get {
+                return ResourceManager.GetString("IIrtRegression_DisplayEquation_Measured_RT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document must be saved before results may be imported..
         /// </summary>
         public static string ImportDocResultsDlg_OkDialog_The_document_must_be_saved_before_results_may_be_imported {
@@ -15078,6 +15132,33 @@ namespace pwiz.Skyline.Properties {
         public static string IrtDb_MakeDocumentXml_iRT_standards {
             get {
                 return ResourceManager.GetString("IrtDb_MakeDocumentXml_iRT_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear.
+        /// </summary>
+        public static string IrtRegressionType_Linear {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_Linear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Logarithmic.
+        /// </summary>
+        public static string IrtRegressionType_Logarithmic {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_Logarithmic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lowess.
+        /// </summary>
+        public static string IrtRegressionType_Lowess {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_Lowess", resourceCulture);
             }
         }
         
@@ -17794,7 +17875,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Scoring model converged (iteration {0} - {1:#,#} peaks at {2:0.#%} FDR).
+        ///   Looks up a localized string similar to Scoring model converged (iteration {0} - {1:#,#} peaks at {2:0.##%} FDR).
         /// </summary>
         public static string MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_ {
             get {
@@ -17822,7 +17903,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Training scoring model (iteration {0} of {1} - {2:#,#} peaks at {3:0.#%} FDR).
+        ///   Looks up a localized string similar to Training scoring model (iteration {0} of {1} - {2:#,#} peaks at {3:0.##%} FDR).
         /// </summary>
         public static string MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_ {
             get {
@@ -22278,6 +22359,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 1.
+        /// </summary>
+        public static string RefineDlg_MSLevel_1 {
+            get {
+                return ResourceManager.GetString("RefineDlg_MSLevel_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 2.
+        /// </summary>
+        public static string RefineDlg_MSLevel_2 {
+            get {
+                return ResourceManager.GetString("RefineDlg_MSLevel_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Global standards.
         /// </summary>
         public static string RefineDlg_NormalizationMethod_Global_standards {
@@ -22602,11 +22701,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Fixed points.
+        ///   Looks up a localized string similar to Fixed points (linear).
         /// </summary>
-        public static string RegressionOption_All_Fixed_points {
+        public static string RegressionOption_All_Fixed_points__linear_ {
             get {
-                return ResourceManager.GetString("RegressionOption_All_Fixed_points", resourceCulture);
+                return ResourceManager.GetString("RegressionOption_All_Fixed_points__linear_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fixed points (logarithmic).
+        /// </summary>
+        public static string RegressionOption_All_Fixed_points__logarithmic_ {
+            get {
+                return ResourceManager.GetString("RegressionOption_All_Fixed_points__logarithmic_", resourceCulture);
             }
         }
         
@@ -24807,6 +24915,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Skyline_Release {
+            get {
+                object obj = ResourceManager.GetObject("Skyline_Release", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        public static System.Drawing.Icon Skyline_Release1 {
+            get {
+                object obj = ResourceManager.GetObject("Skyline_Release1", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         public static System.Drawing.Icon SkylineData {
@@ -25370,6 +25498,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Apply Peak to .
+        /// </summary>
+        public static string SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Store Panorama upload location.
         /// </summary>
         public static string SkylineWindow_ChangeDocPanoramaUri_Store_Panorama_upload_location {
@@ -25572,6 +25709,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_EditNote_Edit_Note {
             get {
                 return ResourceManager.GetString("SkylineWindow_EditNote_Edit_Note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apply Peak to Group.
+        /// </summary>
+        public static string SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group {
+            get {
+                return ResourceManager.GetString("SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group", resourceCulture);
             }
         }
         
@@ -26211,6 +26357,16 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The standard peptides do not appear to be on the iRT-C18 scale. Would you like to recalibrate them to this scale?.
+        /// </summary>
+        public static string SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassListIrts_The_standard_peptides_do_not_appear_to_be_on_the" +
+                        "_iRT_C18_scale__Would_you_like_to_recalibrate_them_to_this_scale_", resourceCulture);
             }
         }
         
@@ -27447,6 +27603,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The document must be fully loaded before importing a peptide search..
+        /// </summary>
+        public static string SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before" +
+                        "_importing_a_peptide_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must save this document before importing a peptide search..
         /// </summary>
         public static string SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_ {
@@ -27575,6 +27741,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ShowRefineDlg_Refine {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowRefineDlg_Refine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refining document.
+        /// </summary>
+        public static string SkylineWindow_ShowRefineDlg_Refining_document {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowRefineDlg_Refining_document", resourceCulture);
             }
         }
         

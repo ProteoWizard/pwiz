@@ -91,13 +91,13 @@ namespace pwiz.SkylineTestFunctional
                     i++;
                 }
             }
-            // There are 236 total transitions, 186 of which have decent peaks
-            Assert.AreEqual(186, countPeaksProperPolarity, "countPeaksProperPolarity: " + string.Join(", ",properList));
-            // 135 of them are positive, so will not match chromatograms artificially marked negative in the mzML
-            Assert.AreEqual(91, countPeaksNegPolarity, "countPeaksNegPolarity"); // Should probably be 93, see CONSIDER note above
-            // 131 are negative, so will not match chromatograms artificially marked positive in the mzML
-            Assert.AreEqual(94, countPeaksNoPolarity, "countPeaksNoPolarity");
-            // Note that 91+94 != 186 : as it happens there is a negative transition 136,136 that matches when it's faked up as postive
+            // There are 236 total transitions, 186 of which have decent peaks, but only 98 of those match given explicit retention times
+            Assert.AreEqual(98, countPeaksProperPolarity, "countPeaksProperPolarity: " + string.Join(", ",properList));
+            // 74 of them are positive, so will not match chromatograms artificially marked negative in the mzML
+            Assert.AreEqual(26, countPeaksNegPolarity, "countPeaksNegPolarity"); // Should probably be 93, see CONSIDER note above
+            // 26 are negative, so will not match chromatograms artificially marked positive in the mzML
+            Assert.AreEqual(74, countPeaksNoPolarity, "countPeaksNoPolarity");
+            // Note that 26+74 != 98 : as it happens there is a negative transition 136,136 that matches when it's faked up as positive
             testFilesDir.Dispose();
         }
 

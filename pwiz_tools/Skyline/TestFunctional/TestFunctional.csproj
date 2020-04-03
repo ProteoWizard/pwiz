@@ -159,7 +159,13 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
+    <Compile Include="ExplicitAnalyteConcentrationTest.cs" />
+    <Compile Include="GroupComparisonRefineTest.cs" />
+    <Compile Include="LongWaitDlgResizeTest.cs" />
+    <Compile Include="ReimportPeakBoundariesTest.cs" />
+    <Compile Include="RescoreImportDocumentTest.cs" />
     <Compile Include="RescoreRawChromatogramsTest.cs" />
+    <Compile Include="SettingsChangeReimportTest.cs" />
     <Compile Include="SkypTest.cs" />
     <Compile Include="AddLibraryTest.cs" />
     <Compile Include="AreaCVHistogramTest.cs" />
@@ -324,6 +330,7 @@
     <Compile Include="AssayLibraryImportTest.cs" />
     <Compile Include="PeakBoundaryCompareTest.cs" />
     <Compile Include="SwathIsolationListsTest.cs" />
+    <Compile Include="TriggeredAcquisitionTest.cs" />
     <Compile Include="UIModeTest.cs" />
     <Compile Include="UniquePeptidesDialogTest.cs" />
     <Compile Include="UniquePeptidesSettingsTest.cs" />
@@ -404,6 +411,7 @@
     <None Include="EditNoteTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />
     <None Include="EncyclopeDiaTest.zip" />
+    <None Include="ExplicitAnalyteConcentrationTest.zip" />
     <None Include="ExplicitPeakBoundsTest.zip" />
     <None Include="ExplicitPeakScoreTest.zip" />
     <None Include="ExplicitRTTest.zip" />
@@ -461,17 +469,20 @@
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="QuantitativeTest.zip" />
+    <None Include="ReimportPeakBoundariesTest.zip" />
     <None Include="ReintegrateDlgTest.zip" />
     <None Include="RemovePrefixSuffixTest.zip" />
     <None Include="RenameProteinsTest.zip" />
     <None Include="ReportSharingTest.zip" />
     <None Include="ReportSummaryTest.zip" />
+    <None Include="RescoreImportDocumentTest.zip" />
     <None Include="RescoreRawChromatogramsTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />
     <None Include="RetentionTimeFilterTest.zip" />
     <None Include="RowActionsTest.zip" />
     <None Include="RunToRunRegressionTest.zip" />
     <None Include="SaveAsPreviousVersionTest.zip" />
+    <None Include="SettingsChangeReimportTest.zip" />
     <None Include="ShareSettingsTest.zip" />
     <None Include="SingleReplicateResponseCurveTest.zip" />
     <None Include="SkylineCmdTest.zip" />
@@ -493,6 +504,7 @@
     <None Include="ToolStoreDlgTest.zip" />
     <None Include="ToolUpdatesTest.zip" />
     <None Include="TreeRestorationTest.zip" />
+    <None Include="TriggeredAcquisitionTest.zip" />
     <None Include="UIModeTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />

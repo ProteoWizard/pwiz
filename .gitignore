@@ -113,7 +113,6 @@ StyleCopReport.xml
 *.tlh
 *.tmp
 *.tmp_proj
-*.log
 *.vspscc
 *.vssscc
 .builds
@@ -362,6 +361,7 @@ ASALocalRun/
 *.nvuser
 
 /build-nt-x86
+/*.log
 /libraries/boost_1_*
 /libraries/expat*
 /libraries/hdf5*
@@ -399,9 +399,14 @@ Reader*Test.data
 /pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/*.cs
 /pwiz_tools/Skyline/ProtocolBuffers/tmp/*.cs
 /pwiz_tools/Skyline/SkylineTester test list.txt
+/pwiz_tools/Skyline/SkylineTester.log
 SkylineTester Results
 /b64.bat
 /b32.bat
+/bs64.bat
+/bs32.bat
+/bso64.bat
+/bso32.bat
 /BrowseOnly/pwiz.tlog/unsuccessfulbuild
 /BrowseOnly/pwiz.tlog/pwiz.lastbuildstate
 /BrowseOnly/pwiz.tlog/metagen.write.1.tlog
