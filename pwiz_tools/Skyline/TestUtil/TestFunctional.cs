@@ -150,6 +150,16 @@ namespace pwiz.SkylineTestUtil
             test();
         }
 
+        /// <summary>
+        /// For use when <see cref="ShowStartPage"/> is true to initiate audit logging when
+        /// Skyline is first shown.
+        /// </summary>
+        protected void ShowSkyline(Action act)
+        {
+            ShowDialog<SkylineWindow>(act);
+            SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
+        }
+
         protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
@@ -545,6 +555,53 @@ namespace pwiz.SkylineTestUtil
             }
             return null;
         }
+
+        public static Form TryWaitForOpenForm(Type formType, int millis = WAIT_TIME, Func<bool> stopCondition = null) 
+        {
+            int waitCycles = GetWaitCycles(millis);
+            for (int i = 0; i < waitCycles; i++)
+            {
+                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+
+                Form tForm = FindOpenForm(formType);
+                if (tForm != null)
+                {
+                    string formTypeName = tForm.GetType().Name;
+                    var multipleViewProvider = tForm as IMultipleViewProvider;
+                    if (multipleViewProvider != null)
+                    {
+                        formTypeName += "." + multipleViewProvider.ShowingFormView.GetType().Name;
+                        var formName = "(" + formType.Name + ")";
+                        RunUI(() =>
+                        {
+                            if (tForm.Text.EndsWith(formName))
+                                tForm.Text = tForm.Text.Replace(formName, "(" + formTypeName + ")");
+                        });
+                    }
+
+                    if (_formLookup == null)
+                        _formLookup = new FormLookup();
+                    Assert.IsNotNull(_formLookup.GetTest(formTypeName),
+                        formType + " must be added to TestRunnerLib\\TestRunnerFormLookup.csv");
+
+                    if (Program.PauseForms != null && Program.PauseForms.Remove(formTypeName))
+                    {
+                        var formSeen = new FormSeen();
+                        formSeen.Saw(formType);
+                        PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
+                    }
+
+                    return tForm;
+                }
+
+                if (stopCondition != null && stopCondition())
+                    break;
+
+                Thread.Sleep(SLEEP_INTERVAL);
+            }
+            return null;
+        }
+
 
         public static TDlg WaitForOpenForm<TDlg>(int millis = WAIT_TIME) where TDlg : Form
         {
@@ -1114,18 +1171,17 @@ namespace pwiz.SkylineTestUtil
 
         private void BeginAuditLogging()
         {
-            if (ShowStartPage)
-                return;
-            CleanupAuditLogs(); // Clean-up before to avoid appending to an existing autid log
+            CleanupAuditLogs(); // Clean-up before to avoid appending to an existing audit log
+            if (SkylineWindow != null)
             SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
             AuditLogEntry.ConvertPathsToFileNames = AuditLogConvertPathsToFileNames;
         }
 
         private void EndAuditLogging()
         {
-            if (ShowStartPage)
-                return;
             AuditLogEntry.ConvertPathsToFileNames = false;
+            if (SkylineWindow == null)
+                return;
             SkylineWindow.DocumentChangedEvent -= OnDocumentChangedLogging;
             VerifyAuditLogCorrect();
             CleanupAuditLogs(); // Clean-up after to avoid appending to an existing autid log - if passed, then it matches expected
@@ -1512,6 +1568,18 @@ namespace pwiz.SkylineTestUtil
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
+        }
+
+        protected void AdjustSequenceTreePanelWidth(bool colorLegend = false)
+        {
+            int newWidth = SkylineWindow.SequenceTree.WidthToEnsureAllItemsVisible();
+            if (colorLegend)
+                newWidth += 10;
+
+            var seqPanel = SkylineWindow.DockPanel.Contents.OfType<SequenceTreeForm>().FirstOrDefault();
+            var sequencePanel = seqPanel as DockableFormEx;
+            if (sequencePanel != null)
+                sequencePanel.DockPanel.DockLeftPortion = (double)newWidth / sequencePanel.Width * sequencePanel.DockPanel.DockLeftPortion;
         }
 
         public static void RemovePeptide(string peptideSequence, bool isDecoy = false)
