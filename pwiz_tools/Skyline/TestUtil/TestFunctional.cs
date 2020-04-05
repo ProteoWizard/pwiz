@@ -1743,9 +1743,11 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
-        protected void AdjustSequenceTreePanelWidth()
+        protected void AdjustSequenceTreePanelWidth(bool colorLegend = false)
         {
             int newWidth = SkylineWindow.SequenceTree.WidthToEnsureAllItemsVisible();
+            if (colorLegend)
+                newWidth += 10;
 
             var seqPanel = SkylineWindow.DockPanel.Contents.OfType<SequenceTreeForm>().FirstOrDefault();
             var sequencePanel = seqPanel as DockableFormEx;

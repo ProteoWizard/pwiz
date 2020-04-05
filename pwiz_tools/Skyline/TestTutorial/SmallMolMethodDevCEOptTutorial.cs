@@ -18,13 +18,13 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -59,9 +59,9 @@ namespace pwiz.SkylineTestTutorial
 
             TestFilesZipPaths = new[]
             {
-                (UseRawFiles
-                   ? @"https://skyline.gs.washington.edu/tutorials/SmallMolMethodCE.zip"
-                   : @"https://skyline.gs.washington.edu/tutorials/SmallMolMethodCE_mzML.zip"),
+                UseRawFiles
+                    ? @"https://skyline.gs.washington.edu/tutorials/SmallMolMethodCE.zip"
+                    : @"https://skyline.gs.washington.edu/tutorials/SmallMolMethodCE_mzML.zip",
                 @"TestTutorial\SmallMolMethodDevCEOptViews.zip"
             };
             RunFunctionalTest();
@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestTutorial
         {
             RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
 
-            // Inserting a Transition List, p. 4
+            // Inserting a Transition List, p. 5
             {
                 var doc = SkylineWindow.Document;
 
@@ -89,90 +89,67 @@ namespace pwiz.SkylineTestTutorial
                     AdjustSequenceTreePanelWidth();
                 });
 
-                PauseForScreenShot<SkylineWindow>("Main window after paste from csv", 4);
+                PauseForScreenShot<SkylineWindow>("Main window after paste from csv", 5);
 
                 var docTargets = WaitForDocumentChange(doc);
 
                 AssertEx.IsDocumentState(docTargets, null, 3, 18, 36, 36);
                 Assert.IsFalse(docTargets.MoleculeTransitions.Any(t => t.Transition.IsPrecursor()));
 
-                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-                RunUI(() =>
                 {
-                    // Predicition Settings
-                    transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Prediction;
-                    transitionSettingsUI.PrecursorMassType = MassType.Monoisotopic;
-                    transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
-                    transitionSettingsUI.RegressionCEName = "Waters Xevo"; // Collision Energy
-                    transitionSettingsUI.RegressionDPName = Resources.SettingsList_ELEMENT_NONE_None; // Declustering Potential
-                    transitionSettingsUI.OptimizationLibraryName = Resources.SettingsList_ELEMENT_NONE_None; // Optimization Library
-                    transitionSettingsUI.RegressionCOVName = Resources.SettingsList_ELEMENT_NONE_None; // Compensation Voltage
-
-                    transitionSettingsUI.UseOptimized = false;
-                });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Prediction tab", 4);
+                    var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                    RunUI(() =>
+                    {
+                        // Predicition Settings
+                        transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Prediction;
+                        transitionSettingsUI.RegressionCEName = "Waters Xevo"; // Collision Energy
+                    });
+                    PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Prediction tab", 6);
 
 
-                RunUI(() =>
-                {
-                    // Filter Settings
-                    transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Filter;
-                    transitionSettingsUI.SelectedPeptidesSmallMolsSubTab = 1;
-                    transitionSettingsUI.SmallMoleculePrecursorAdducts = Adduct.M_MINUS.AdductFormula;
-                    transitionSettingsUI.SmallMoleculeFragmentAdducts = Adduct.M_MINUS.AdductFormula;
-                    transitionSettingsUI.SmallMoleculeFragmentTypes = TransitionFilter.SMALL_MOLECULE_FRAGMENT_CHAR;
-                    transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
-                    transitionSettingsUI.SetAutoSelect = true;
-                });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab", 4);
+                    RunUI(() =>
+                    {
+                        // Filter Settings
+                        transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Filter;
+                        transitionSettingsUI.SmallMoleculePrecursorAdducts = Adduct.M_MINUS.AdductFormula;
+                        transitionSettingsUI.SmallMoleculeFragmentAdducts = Adduct.M_MINUS.AdductFormula;
+                        transitionSettingsUI.SmallMoleculeFragmentTypes = TransitionFilter.SMALL_MOLECULE_FRAGMENT_CHAR;
+                    });
+                    PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab", 7);
 
+                    OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+                    WaitForDocumentChange(docTargets);
+                }
 
-                RunUI(() =>
-                {
-                    // Instrument Settings
-                    transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Instrument;
-                    transitionSettingsUI.MinMz = 50;
-                    transitionSettingsUI.MaxMz = 1500;
-                    transitionSettingsUI.MZMatchTolerance = .055;
-                    transitionSettingsUI.MinTime = null;
-                    transitionSettingsUI.MaxTime = null;
-                });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Instrument tab", 4);
-
-                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
-                WaitForDocumentChange(docTargets);
-
-                RunUI(() => SkylineWindow.SaveDocument(GetTestPath("EnergyMet_demo.sky")));
+                RunUI(() => SkylineWindow.SaveDocument(GetTestPath("EnergyMet.sky")));
 
 
                 // Export method - 2 minutes
-                var exportMethodDlg2 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
-                RunUI(() =>
                 {
-                    exportMethodDlg2.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
-                    exportMethodDlg2.MethodType = ExportMethodType.Standard;
-                    exportMethodDlg2.RunLength = 2;
-                    exportMethodDlg2.OptimizeType = ExportOptimize.NONE;
-                    exportMethodDlg2.SetTemplateFile("VerifyETemplate.exp");
-                });
-                PauseForScreenShot<ExportMethodDlg>("Exporting 2 minute method", 5);
-
-                OkDialog(exportMethodDlg2, exportMethodDlg2.CancelDialog);
-                WaitForClosedForm(exportMethodDlg2);
-
+                    var exportMethodDlg2 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+                    RunUI(() =>
+                    {
+                        exportMethodDlg2.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
+                        exportMethodDlg2.MethodType = ExportMethodType.Standard;
+                        exportMethodDlg2.RunLength = 2;
+                        exportMethodDlg2.SetTemplateFile("VerifyETemplate.exp");
+                    });
+                    PauseForScreenShot<ExportMethodDlg>("Exporting 2 minute method", 9);
+                    OkDialog(exportMethodDlg2, exportMethodDlg2.CancelDialog);
+                }
 
                 // Export transition list
-                var exportTransitionList = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
-                RunUI(() =>
                 {
-                    exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
-                    exportTransitionList.MethodType = ExportMethodType.Standard;
-                    exportTransitionList.RunLength = 2;
-                    exportTransitionList.OptimizeType = ExportOptimize.NONE;
-                });
-                PauseForScreenShot<ExportMethodDlg>("Exporting transition list", 6);
-                OkDialog(exportTransitionList, exportTransitionList.CancelDialog);
-                WaitForClosedForm(exportTransitionList);
+                    var exportTransitionList = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                    RunUI(() =>
+                    {
+                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
+                        exportTransitionList.MethodType = ExportMethodType.Standard;
+                        exportTransitionList.RunLength = 2;
+                    });
+                    PauseForScreenShot<ExportMethodDlg>("Exporting transition list", 10);
+                    OkDialog(exportTransitionList, exportTransitionList.CancelDialog);
+                }
 
                 using (new WaitDocumentChange(1, true))
                 {
@@ -184,51 +161,45 @@ namespace pwiz.SkylineTestTutorial
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Unscheduled"));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 7);
+                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 11);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
  
                     var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
-                    PauseForScreenShot<ImportResultsNameDlg>("Import Results common name form", 7);
+                    PauseForScreenShot<ImportResultsNameDlg>("Import Results common name form", 12);
                     OkDialog(importResultsNameDlg, importResultsNameDlg.OkDialog);
-
                     OkDialog(importResultsDlg1,importResultsDlg1.OkDialog);
                 }
 
                 SelectNode(SrmDocument.Level.Molecules, 0);
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
 
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 8);
+                PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 13);
 
                 // Renaming replicates
-                var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
-                for (var i = 0; i < 2; i++)
                 {
-                    doc = SkylineWindow.Document;
-                    var chromatograms = doc.Settings.MeasuredResults.Chromatograms;
-                    var chrom = chromatograms[i];
-                    RunUI(() =>
+                    var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+                    string[] repNames = new[] { "2 min", "5 min" };
+                    RunUI(() => manageResultsDlg.Left = SkylineWindow.Right + 50);
+                    for (var i = 0; i < 2; i++)
                     {
-                        manageResultsDlg.SelectedChromatograms = new[] { chrom };
-                    });
+                        doc = SkylineWindow.Document;
+                        var chromatograms = doc.Settings.MeasuredResults.Chromatograms;
+                        var chrom = chromatograms[i];
+                        RunUI(() =>
+                        {
+                            manageResultsDlg.SelectedChromatograms = new[] { chrom };
+                        });
 
-                    var renameDlg = ShowDialog<RenameResultDlg>(manageResultsDlg.RenameResult);
-                    var newName = i == 0 ? "unscheduled_2min" : "unscheduled_5min";
-                    RunUI(() =>
-                    {
-                        renameDlg.ReplicateName = newName;
-                    });
-                    if (i == 0)
-                        PauseForScreenShot<SkylineWindow>("Renaming replicate", 10);
-                    RunUI(() =>
-                    {
-                        renameDlg.OkDialog();
-                    });
-                    WaitForClosedForm(renameDlg);
+                        var renameDlg = ShowDialog<RenameResultDlg>(manageResultsDlg.RenameResult);
+                        RunUI(() => renameDlg.ReplicateName = repNames[i]);
+                        if (i == 0)
+                            PauseForScreenShot<SkylineWindow>("Manage Results and Rename Replicate (PrtScn and select in Paint)", 14);
+                        OkDialog(renameDlg, renameDlg.OkDialog);
+                    }
+                    OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
                 }
-                RunUI(manageResultsDlg.OkDialog);
-                WaitForClosedForm(manageResultsDlg);
 
-                PauseForScreenShot<SkylineWindow>("Renamed", 10);
+                PauseForScreenShot<SkylineWindow>("Skyline window (renamed)", 15);
 
                 var docResults = SkylineWindow.Document;
 
@@ -246,59 +217,66 @@ namespace pwiz.SkylineTestTutorial
                 }
                 if (!string.IsNullOrEmpty(msg))
                     Assert.IsTrue(string.IsNullOrEmpty(msg), msg);
-                RestoreViewOnScreen(9);
+                RunUI(() =>
+                {
+                    SkylineWindow.ShowPeakAreaReplicateComparison();
+                    SkylineWindow.ShowRTReplicateGraph();
+                    SkylineWindow.ArrangeGraphsTiled();
+                });
+                RestoreViewOnScreen(16);
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
                 WaitForGraphs();
                 RunUI(() =>
                 {
-                    AdjustSequenceTreePanelWidth();
-                    var ch = SkylineWindow.GraphChromatograms.FirstOrDefault((chrom) => chrom.NameSet == "unscheduled_2min");
-                    ch?.ZoomTo(.85, 2.1, 1.9e+8);
+                    SkylineWindow.Size = new Size(1054, 587);
+                    AdjustSequenceTreePanelWidth(true);
                 });
 
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 10);
+                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 16);
 
                 // Set zoom to show better peak separation in 5 minute run
-                for (var index = 0; index < 2; index++)
+                for (var i = 0; i < 2; i++)
                 {
-                    var indexChrom = index;
                     WaitForGraphs();
-                    RunUI(() => SkylineWindow.GraphChromatograms.ToArray()[indexChrom].ZoomTo(.8, 1.8, 1.39e+8));
+                    RunUI(() => SkylineWindow.GraphChromatograms.ToArray()[i].ZoomTo(.8, 1.8, 1.39e+8));
                     WaitForGraphs();
                 }
-                PauseForScreenShot<SkylineWindow>("Skyline window showing relative peak separation", 12);
+                PauseForScreenShot<SkylineWindow>("Skyline window showing relative peak separation", 17);
 
                 // Set time window
-                var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-                RunUI(() =>
                 {
-                    // ReSharper disable once RedundantCast
-                    peptideSettingsDlg.SelectedTab = (PeptideSettingsUI.TABS)0; //regular enum does not work because of the hidden tabs in the Small Molecule mode.
-                    peptideSettingsDlg.UseMeasuredRT(true);
-                    peptideSettingsDlg.TimeWindow = 1;
-                });
-                PauseForScreenShot<PeptideSettingsUI>("Setting scheduled transition list time window", 12);
-                RunUI(()=>peptideSettingsDlg.OkDialog());
+                    var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                    RunUI(() =>
+                    {
+                        // ReSharper disable once RedundantCast
+                        peptideSettingsDlg.SelectedTab = (PeptideSettingsUI.TABS)0; //regular enum does not work because of the hidden tabs in the Small Molecule mode.
+                        peptideSettingsDlg.TimeWindow = 1;
+                    });
+                    PauseForScreenShot<PeptideSettingsUI>("Setting scheduled transition list time window", 18);
+                    OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+                }
 
                 // Export transition list
-                var exportTransitionList2 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
-                RunUI(() =>
                 {
-                    exportTransitionList2.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
-                    exportTransitionList2.MethodType = ExportMethodType.Scheduled;
-                    exportTransitionList2.OptimizeType = ExportOptimize.NONE;
-                });
-                PauseForScreenShot<ExportMethodDlg>("Exporting scheduled transition list", 12);
+                    var exportTransitionList = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                    RunUI(() =>
+                    {
+                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
+                        exportTransitionList.MethodType = ExportMethodType.Scheduled;
+                        exportTransitionList.OptimizeType = ExportOptimize.NONE;
+                    });
+                    PauseForScreenShot<ExportMethodDlg>("Exporting scheduled transition list", 19);
 
-                var schedulingOptionsDlg = ShowDialog<SchedulingOptionsDlg>(() => exportTransitionList2.OkDialog(GetTestPath("scheduled_5min.csv")));
-                RunUI(() =>
-                {
-                    schedulingOptionsDlg.Algorithm = ExportSchedulingAlgorithm.Single;
-                    schedulingOptionsDlg.ReplicateNum = 1;
-                });
-                PauseForScreenShot<SchedulingOptionsDlg>("Exporting scheduled transition list - choose replicate", 12);
-                OkDialog(schedulingOptionsDlg, schedulingOptionsDlg.OkDialog);
-                WaitForClosedForm(exportTransitionList2);
+                    var schedulingOptionsDlg = ShowDialog<SchedulingOptionsDlg>(() => exportTransitionList.OkDialog(GetTestPath("EnergyMet_5minutes_scheduled.csv")));
+                    RunUI(() =>
+                    {
+                        schedulingOptionsDlg.Algorithm = ExportSchedulingAlgorithm.Single;
+                        schedulingOptionsDlg.ReplicateNum = 1;  // 5 min
+                    });
+                    PauseForScreenShot<SchedulingOptionsDlg>("Exporting scheduled transition list - choose replicate", 19);
+                    OkDialog(schedulingOptionsDlg, schedulingOptionsDlg.OkDialog);
+                    WaitForClosedForm(exportTransitionList);
+                }
 
                 using (new WaitDocumentChange(1, true))
                 {
@@ -314,81 +292,64 @@ namespace pwiz.SkylineTestTutorial
 
                     var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
                     RunUI(() => importResultsNameDlg.IsRemove = false);
-                    PauseForScreenShot<ImportResultsNameDlg>("Import Results common name form, not changing names", 14);
+                    PauseForScreenShot<ImportResultsNameDlg>("Import Results common name form, not changing names", 20);
                     OkDialog(importResultsNameDlg, importResultsNameDlg.OkDialog);
                 }
 
                 // Remove 2 minute gradient
                 // Renaming replicates
-                var manageResultsDlg2 = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
-                PauseForScreenShot<SkylineWindow>("Ready to remove", 20);
-
-                RunUI(() =>
+                string[] newNames = { "1:1_1", "1:1_2", "2:1_2", "1:2_2" };
                 {
-                    doc = SkylineWindow.DocumentUI;
-                    var chromatograms = doc.Settings.MeasuredResults.Chromatograms;
-                    var chrom = chromatograms[0];
-                    manageResultsDlg2.SelectedChromatograms = new[] { chrom };
-                    manageResultsDlg2.RemoveReplicates();
-                });
-                for (var i = 1; i < 5; i++)
-                {
-                    var iC = i;
-                    RunUI(() =>
-                    {
-                        doc = SkylineWindow.DocumentUI;
-                        var chromatograms = doc.Settings.MeasuredResults.Chromatograms;
-                        var chrom = chromatograms[iC];
-                        manageResultsDlg2.SelectedChromatograms = new[] { chrom };
-                    });
+                    var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+                    SelectReplicate(manageResultsDlg, 0);
 
-                    var renameDlg = ShowDialog<RenameResultDlg>(manageResultsDlg2.RenameResult);
-                    string newName;
-                    switch (i)
+                    PauseForScreenShot<SkylineWindow>("Manage Results removing 2 min", 21);
+
+                    RunUI(manageResultsDlg.RemoveReplicates);
+
+                    for (var i = 0; i < newNames.Length; i++)
                     {
-                        case 1:
-                            newName = "1:1_1";
-                            break;
-                        case 2:
-                            newName = "1:1_2";
-                            break;
-                        case 3:
-                            newName = "2:1_2";
-                            break;
-                        default:
-                            newName = "1:2_2";
-                            break;
+                        SelectReplicate(manageResultsDlg, i + 1);
+                        RunDlg<RenameResultDlg>(manageResultsDlg.RenameResult, renameDlg =>
+                        {
+                            renameDlg.ReplicateName = newNames[i];
+                            renameDlg.OkDialog();
+                        });
                     }
-                    RunUI(() =>
-                    {
-                        renameDlg.ReplicateName = newName;
-                        renameDlg.OkDialog();
-                    });
-                    WaitForClosedForm(renameDlg);
+
+                    PauseForScreenShot<SkylineWindow>("Manage Results replicate renamed", 22);
+                    OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
                 }
 
-                PauseForScreenShot<SkylineWindow>("Renaming replicates", 15);
-                RunUI(manageResultsDlg2.OkDialog);
-                WaitForClosedForm(manageResultsDlg2);
-
                 SelectNode(SrmDocument.Level.Molecules, 0);
-                PauseForScreenShot<SkylineWindow>("Inspecting ratios", 16);
+                RunUI(() =>
+                {
+                    var molNode = SkylineWindow.SelectedNode;
+                    molNode.Expand();
+                    Assert.AreEqual(2, molNode.Nodes.Count);
+                    molNode.Nodes[0].Expand();
+                    molNode.Nodes[1].Expand();
+                    SkylineWindow.ArrangeGraphsTabbed();
+                });
+                PauseForScreenShot<SkylineWindow>("Skyline window with calibration data", 23);
 
                 // Linearity
-
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
                 RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates));
-                
-                IDictionary<string, Tuple<SampleType, double?>> sampleTypes =
-                    new Dictionary<string, Tuple<SampleType, double?>> {
-                        {"1:1_1", new Tuple<SampleType, double?>(SampleType.STANDARD,1)},
-                        {"1:1_2", new Tuple<SampleType, double?>(SampleType.STANDARD,1)},
-                        {"2:1_2", new Tuple<SampleType, double?>(SampleType.STANDARD,2)},
-                        {"1:2_2", new Tuple<SampleType, double?>(SampleType.STANDARD,.5)},
-                    };
-                SetDocumentGridSampleTypesAndConcentrations(sampleTypes);
-                PauseForScreenShot<DocumentGridForm>("Document Grid - sample types and concentrations ", 17);
-                OkDialog(documentGrid, documentGrid.Close); // Hide the document grid
+
+                double[] concentrations = {1, 1, 2, 0.5};
+                var namedConcentrations = newNames.Select((n, i) => new Tuple<string, double?>(n, concentrations[i]));
+                SetDocumentGridSampleTypesAndConcentrations(namedConcentrations.ToDictionary(t => t.Item1,
+                    t => new Tuple<SampleType, double?>(SampleType.STANDARD, t.Item2)));
+                RunUI(() =>
+                {
+                    var gridFloatingWindow = documentGrid.Parent.Parent;
+                    gridFloatingWindow.Size = new Size(370, 230);
+                    gridFloatingWindow.Top = SkylineWindow.Top;
+                    gridFloatingWindow.Left = SkylineWindow.Right + 20;
+                });
+                PauseForScreenShot<DocumentGridForm>("Document Grid - sample types and concentrations ", 23);
+                RunUI(() => SkylineWindow.ShowDocumentGrid(false));
 
                 using (new WaitDocumentChange(1, true))
                 {
@@ -402,69 +363,63 @@ namespace pwiz.SkylineTestTutorial
                         peptideSettingsUI.QuantRegressionFit = RegressionFit.LINEAR;
                         peptideSettingsUI.QuantNormalizationMethod =
                             new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);
-                        peptideSettingsUI.QuantRegressionWeighting = RegressionWeighting.NONE;
-                        peptideSettingsUI.QuantMsLevel = null; // All
                         peptideSettingsUI.QuantUnits = "ratio to heavy";
                     });
 
-                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings - Quantitation", 17);
+                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings - Quantitation", 24);
                     OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 }
 
                 var calibrationForm = ShowDialog<CalibrationForm>(() => SkylineWindow.ShowCalibrationForm());
-                PauseForScreenShot<CalibrationForm>("Calibration Curve ", 18);
+                RunUI(() =>
+                {
+                    var calibrationFloatingWindow = calibrationForm.Parent.Parent;
+                    calibrationFloatingWindow.Width = 565;
+                    calibrationFloatingWindow.Top = SkylineWindow.Top;
+                    calibrationFloatingWindow.Left = SkylineWindow.Right + 20;
+                });
+                PauseForScreenShot<CalibrationForm>("Calibration Curve ", 25);
                 OkDialog(calibrationForm, calibrationForm.Close); // Hide the calibration window
 
-                var transitionSettingsUI2 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-                RunUI(() =>
                 {
-                    // Prediction Settings
-                    transitionSettingsUI2.SelectedTab = TransitionSettingsUI.TABS.Prediction;
-                    transitionSettingsUI2.PrecursorMassType = MassType.Monoisotopic;
-                    transitionSettingsUI2.FragmentMassType = MassType.Monoisotopic;
-                    transitionSettingsUI2.RegressionCEName = "Waters Xevo"; // Collision Energy
-                    transitionSettingsUI2.RegressionDPName =
-                        Resources.SettingsList_ELEMENT_NONE_None; // Declustering Potential
-                    transitionSettingsUI2.OptimizationLibraryName =
-                        Resources.SettingsList_ELEMENT_NONE_None; // Optimization Library
-                    transitionSettingsUI2.RegressionCOVName =
-                        Resources.SettingsList_ELEMENT_NONE_None; // Compensation Voltage
-                });
+                    var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                    RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Prediction);
+                    var editCurrentCE = ShowDialog<EditCEDlg>(transitionSettingsUI.EditCECurrent);
+                    RunUI(() =>
+                    {
+                        editCurrentCE.StepSize = 2;
+                        editCurrentCE.StepCount = 5;
+                    });
+                    PauseForScreenShot<EditCEDlg>("Edit Collision Energy Equation form", 26);
 
-                var editCurrentCE = ShowDialog<EditCEDlg>(transitionSettingsUI2.EditCECurrent); 
-                RunUI(() =>
-                {
-                    editCurrentCE.StepSize = 2;
-                    editCurrentCE.StepCount = 5;
-                });
-                PauseForScreenShot<EditCEDlg>("Edit Collision Energy Equation form", 18);
-
-                RunUI(() =>
-                {
-                    editCurrentCE.OkDialog();
-                    transitionSettingsUI2.UseOptimized = true;
-                    transitionSettingsUI2.OptimizeType = OptimizedMethodType.Transition.GetLocalizedString();
-                });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Prediction tab", 18);
-                RunUI(transitionSettingsUI2.OkDialog);
+                    RunUI(() =>
+                    {
+                        editCurrentCE.OkDialog();
+                        transitionSettingsUI.UseOptimized = true;
+                        transitionSettingsUI.OptimizeType = OptimizedMethodType.Transition.GetLocalizedString();
+                    });
+                    PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Prediction tab", 27);
+                    OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+                }
 
                 // Export transition lists
-                var exportTransitionList3 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
-                RunUI(() =>
                 {
-                    exportTransitionList3.ExportStrategy = ExportStrategy.Buckets;
-                    exportTransitionList3.IgnoreProteins = true;
-                    exportTransitionList3.MaxTransitions = 100;
-                    exportTransitionList3.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
-                    exportTransitionList3.MethodType = ExportMethodType.Scheduled;
-                    exportTransitionList3.OptimizeType = ExportOptimize.CE;
-                });
-                PauseForScreenShot<ExportMethodDlg>("Exporting scheduled transition list", 19);
+                    var exportTransitionList = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                    RunUI(() =>
+                    {
+                        exportTransitionList.ExportStrategy = ExportStrategy.Buckets;
+                        exportTransitionList.IgnoreProteins = true;
+                        exportTransitionList.MaxTransitions = 100;
+                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
+                        exportTransitionList.MethodType = ExportMethodType.Scheduled;
+                        exportTransitionList.OptimizeType = ExportOptimize.CE;
+                    });
+                    PauseForScreenShot<ExportMethodDlg>("Exporting scheduled transition list", 28);
 
-                var schedDlg = ShowDialog<SchedulingOptionsDlg>(() => exportTransitionList3.OkDialog(GetTestPath("TL_CE_Opt")));
-                PauseForScreenShot<SchedulingOptionsDlg>("Scheduling", 19);
-                RunUI(schedDlg.OkDialog);
-                WaitForClosedForm(exportTransitionList3);
+                    var scheduleDlg = ShowDialog<SchedulingOptionsDlg>(() => exportTransitionList.OkDialog(GetTestPath("EnergyMet_5minutes_ceopt.csv")));
+                    PauseForScreenShot<SchedulingOptionsDlg>("Scheduling", 29);
+                    OkDialog(scheduleDlg, scheduleDlg.OkDialog);
+                }
 
                 // Import CE optimization runs
                 using (new WaitDocumentChange(1, true))
@@ -483,49 +438,61 @@ namespace pwiz.SkylineTestTutorial
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("CE Optimization"));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 20);
+                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 31);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
-                    PauseForScreenShot<SkylineWindow>("Skyline shows new replicate \"CE Optimization\"", 32);
-                    RunUI(() =>
-                    {
-                        SkylineWindow.Size = new Size(1600, 960);
-                        AdjustSequenceTreePanelWidth();
-                        SkylineWindow.ShowSingleTransition();
-                        SkylineWindow.ShowSplitChromatogramGraph(true);
-                    });
-                    PauseForScreenShot<SkylineWindow>("Split graph", 21);
-
-                    RunUI(() =>
-                    {
-                        SkylineWindow.ShowPeakAreaLegend(false);
-                    });
-                    PauseForScreenShot<SkylineWindow>("No legend", 24);
-
-                    // Show Pentose-P
-                    SelectNode(SrmDocument.Level.Molecules, 6);
-                    PauseForScreenShot<SkylineWindow>("Pentose-P", 24);
-
-                    // Export final transition list
-                    var exportTransitionList4 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
-                    RunUI(() =>
-                    {
-                        exportTransitionList4.ExportStrategy = ExportStrategy.Single;
-                        exportTransitionList4.IgnoreProteins = true;
-                        exportTransitionList4.MaxTransitions = 100;
-                        exportTransitionList4.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
-                        exportTransitionList4.MethodType = ExportMethodType.Scheduled;
-                        exportTransitionList4.OptimizeType = ExportOptimize.NONE;
-                    });
-                    PauseForScreenShot<ExportMethodDlg>("Exporting final optimized transition list", 25);
-
-                    var schedDlg2 = ShowDialog<SchedulingOptionsDlg>(() => exportTransitionList4.OkDialog(GetTestPath("TL_CE_Final.csv")));
-                    PauseForScreenShot<SchedulingOptionsDlg>("Final Scheduling", 26);
-                    RunUI(schedDlg2.OkDialog);
-
                 }
 
-            }
+                PauseForScreenShot<SkylineWindow>("Skyline shows new replicate \"CE Optimization\"", 32);
+                RunUI(() =>
+                {
+                    SkylineWindow.Size = new Size(1600, 960);
+                    SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.replicate);
+                    SkylineWindow.AutoZoomBestPeak();
+                    AdjustSequenceTreePanelWidth();
+                    SkylineWindow.ShowSingleTransition();
+                    SkylineWindow.ShowSplitChromatogramGraph(true);
+                });
+                PauseForScreenShot<SkylineWindow>("Split graph", 33);
 
+                RunUI(() =>
+                {
+                    SkylineWindow.ShowPeakAreaLegend(false);
+                });
+                PauseForScreenShot<SkylineWindow>("No legend", 34);
+
+                // Show Pentose-P
+                SelectNode(SrmDocument.Level.Molecules, 6);
+                PauseForScreenShot<SkylineWindow>("Pentose-P", 35);
+
+                // Export final transition list
+                {
+                    var exportTransitionList = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                    RunUI(() =>
+                    {
+                        exportTransitionList.ExportStrategy = ExportStrategy.Single;
+                        exportTransitionList.IgnoreProteins = true;
+                        exportTransitionList.MaxTransitions = 100;
+                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
+                        exportTransitionList.MethodType = ExportMethodType.Scheduled;
+                    });
+                    PauseForScreenShot<ExportMethodDlg>("Exporting final optimized transition list", 36);
+
+                    var scheduleDlg = ShowDialog<SchedulingOptionsDlg>(() => exportTransitionList.OkDialog(GetTestPath("EnergyMet_5minutes_optimal.csv")));
+                    PauseForScreenShot<SchedulingOptionsDlg>("Final Scheduling", 37);
+                    OkDialog(scheduleDlg, scheduleDlg.OkDialog);
+                }
+            }
+        }
+
+        private static void SelectReplicate(ManageResultsDlg manageResultsDlg, int replicateIndex)
+        {
+            RunUI(() =>
+            {
+                manageResultsDlg.SelectedChromatograms = new[]
+                {
+                    SkylineWindow.DocumentUI.Settings.MeasuredResults.Chromatograms[replicateIndex]
+                };
+            });
         }
     }
 }

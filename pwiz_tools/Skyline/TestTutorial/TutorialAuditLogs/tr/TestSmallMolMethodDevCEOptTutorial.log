@@ -74,8 +74,8 @@ Undo Redo : Managed results
 Summary   : Managed results
 All Info  :
 Managed results
-Renamed replicate 1 to unscheduled_2min
-Renamed replicate 2 to unscheduled_5min
+Renamed replicate 1 to 2 min
+Renamed replicate 2 to 5 min
 
 Undo Redo : Molecule Settings -- Prediction > Time window changed to "1"
 Summary   : Settings > Molecule Settings -- Prediction > Time window changed to "1"
@@ -105,11 +105,11 @@ Undo Redo : Managed results
 Summary   : Managed results
 All Info  :
 Managed results
-Renamed replicate unscheduled_5min to 1:1_1
+Renamed replicate 5 min to 1:1_1
 Renamed replicate ID33140_03a_WAA253_4814_092017 to 1:1_2
 Renamed replicate ID33141_03a_WAA253_4814_092017 to 2:1_2
 Renamed replicate ID33142_03a_WAA253_4814_092017 to 1:2_2
-Removed replicate unscheduled_2min
+Removed replicate 2 min
 
 Undo Redo : Set Sample Type of 1:1_1 to "Standard"
 Summary   : Set Sample Type of 1:1_1 to "Standard"
