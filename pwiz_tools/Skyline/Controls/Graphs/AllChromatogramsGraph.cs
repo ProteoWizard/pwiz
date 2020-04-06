@@ -21,6 +21,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
+using System.Security;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -138,6 +141,63 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             graphChromatograms.Finish();
         }
+
+        private bool _inCreateHandle;
+        /// <summary>
+        /// Override CreateHandle in order to try to track down intermittent test failures.
+        /// "HandleProcessCorruptedStateExceptions" just in case a type of exception is getting thrown
+        /// that cannot be caught by ordinary C# code.
+        /// TODO(nicksh): Remove this override once the intermittent failure is figured out
+        /// </summary>
+        [HandleProcessCorruptedStateExceptions]
+        [SecurityCritical]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        protected override void CreateHandle()
+        {
+            Assume.IsFalse(_inCreateHandle);
+            if (Program.FunctionalTest && Program.MainWindow != null && Program.MainWindow.InvokeRequired)
+            {
+                throw new ApplicationException(@"AllChromatogramsGraph.CreateHandle called on wrong thread");
+            }
+
+            try
+            {
+                _inCreateHandle = true;
+                base.CreateHandle();
+            }
+            catch (Exception e)
+            {
+                Console.Out.WriteLine(@"Exception in AllChromatogramsGraph CreateHandle {0}", e);
+                throw new Exception(@"Exception in AllChromatogramsGraph", e);
+            }
+            finally
+            {
+                _inCreateHandle = false;
+            }
+        }
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// Also, check "_inCreateHandle" in the hopes of tracking down intermittent test failures.
+        /// TODO(nicksh): Move this function back to AllChromatogramsGraph.Designer.cs once the
+        /// test failures are figured out.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        protected override void Dispose(bool disposing)
+        {
+            if (_inCreateHandle)
+            {
+                Console.Out.WriteLine(@"AllChromatogramsGraph _inCreateHandle is {0}", _inCreateHandle);
+            }
+
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
 
         private void ElapsedTimer_Tick(object sender, EventArgs e)
         {

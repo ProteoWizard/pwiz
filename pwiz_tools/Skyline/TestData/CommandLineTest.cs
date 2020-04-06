@@ -3114,6 +3114,16 @@ namespace pwiz.SkylineTestData
             {
                 return MyFolderState;
             }
+
+            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
+            {
+                return FolderOperationStatus.OK;
+            }
+
+            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+            {
+                return FolderOperationStatus.OK;
+            }
         }
 
         private class TestPanoramaClientThrowsException : TestPanoramaClient
