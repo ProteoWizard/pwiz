@@ -40,6 +40,7 @@ using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
@@ -555,53 +556,6 @@ namespace pwiz.SkylineTestUtil
             }
             return null;
         }
-
-        public static Form TryWaitForOpenForm(Type formType, int millis = WAIT_TIME, Func<bool> stopCondition = null) 
-        {
-            int waitCycles = GetWaitCycles(millis);
-            for (int i = 0; i < waitCycles; i++)
-            {
-                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
-
-                Form tForm = FindOpenForm(formType);
-                if (tForm != null)
-                {
-                    string formTypeName = tForm.GetType().Name;
-                    var multipleViewProvider = tForm as IMultipleViewProvider;
-                    if (multipleViewProvider != null)
-                    {
-                        formTypeName += "." + multipleViewProvider.ShowingFormView.GetType().Name;
-                        var formName = "(" + formType.Name + ")";
-                        RunUI(() =>
-                        {
-                            if (tForm.Text.EndsWith(formName))
-                                tForm.Text = tForm.Text.Replace(formName, "(" + formTypeName + ")");
-                        });
-                    }
-
-                    if (_formLookup == null)
-                        _formLookup = new FormLookup();
-                    Assert.IsNotNull(_formLookup.GetTest(formTypeName),
-                        formType + " must be added to TestRunnerLib\\TestRunnerFormLookup.csv");
-
-                    if (Program.PauseForms != null && Program.PauseForms.Remove(formTypeName))
-                    {
-                        var formSeen = new FormSeen();
-                        formSeen.Saw(formType);
-                        PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
-                    }
-
-                    return tForm;
-                }
-
-                if (stopCondition != null && stopCondition())
-                    break;
-
-                Thread.Sleep(SLEEP_INTERVAL);
-            }
-            return null;
-        }
-
 
         public static TDlg WaitForOpenForm<TDlg>(int millis = WAIT_TIME) where TDlg : Form
         {
