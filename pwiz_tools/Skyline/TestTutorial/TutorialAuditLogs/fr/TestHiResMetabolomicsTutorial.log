@@ -24,7 +24,6 @@ All Info  :
 Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y" to "y, p"
 Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
-Settings > Transition Settings -- Integration > Integrate All changed from False to True
 Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
 Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "2"
 Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "Orbitrap"
