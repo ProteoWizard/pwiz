@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util;
