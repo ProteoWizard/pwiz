@@ -113,7 +113,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SmallMoleculesMethodDevAndCEOptimizationTutorial.cs" />
+    <Compile Include="SmallMolMethodDevCEOptTutorial.cs" />
     <Compile Include="SmallMoleculesQuantificationTutorial.cs" />
     <Compile Include="SmallMoleculesTutorial.cs" />
     <Compile Include="AbsoluteQuantTutorialTest.cs" />
@@ -208,7 +208,7 @@
     <None Include="MethodRefinementViews.zip" />
     <None Include="Ms1FullScanFilteringViews.zip" />
     <None Include="PeakPickingViews.zip" />
-    <None Include="SmallMoleculesMethodDevAndCEOptimizationViews.zip" />
+    <None Include="SmallMolMethodDevCEOptViews.zip" />
     <None Include="SmallMoleculesQuantificationViews.zip" />
     <None Include="SmallMoleculeViews.zip" />
     <None Include="SRMViews.zip" />
