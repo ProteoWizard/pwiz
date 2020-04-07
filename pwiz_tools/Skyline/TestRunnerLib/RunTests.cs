@@ -371,8 +371,8 @@ namespace TestRunnerLib
                     var allStrings = new List<KeyValuePair<string, int>>();
                     foreach (var heapCount in heapCounts)
                     {
-                        allSizes.AddRange(heapCount.CommittedSizes);
-                        allStrings.AddRange(heapCount.StringCounts);
+                        allSizes.AddRange(heapCount.CommittedSizes.Take(sizeOutputs));
+                        allStrings.AddRange(heapCount.StringCounts.Take(stringOutputs));
                     }
 
                     Log("# HEAP SIZES (top {0})", sizeOutputs);
