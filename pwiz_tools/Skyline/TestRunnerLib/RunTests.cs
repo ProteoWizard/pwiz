@@ -183,7 +183,7 @@ namespace TestRunnerLib
             return Path.Combine(runnerExeDirectory, assembly);
         }
 
-        public bool Run(TestInfo test, int pass, int testNumber, string dmpDir)
+        public bool Run(TestInfo test, int pass, int testNumber, string dmpDir, bool heapOutput)
         {
             TeamCityStartTest(test);
 
@@ -362,6 +362,27 @@ namespace TestRunnerLib
 //                Log("# Handles " + string.Join("\t", handleCounts.Where(c => c.Count() > 14).Select(c => c.Key + ": " + c.Count())) + Environment.NewLine);
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
+
+                if (heapOutput && ReportSystemHeaps)
+                {
+                    const int sizeOutputs = 50;
+                    const int stringOutputs = 50;
+                    var allSizes = new List<KeyValuePair<long, int>>();
+                    var allStrings = new List<KeyValuePair<string, int>>();
+                    foreach (var heapCount in heapCounts)
+                    {
+                        allSizes.AddRange(heapCount.CommittedSizes);
+                        allStrings.AddRange(heapCount.StringCounts);
+                    }
+
+                    Log("# HEAP SIZES (top {0})", sizeOutputs);
+                    foreach (var size in allSizes.OrderByDescending(x => x.Value).Take(sizeOutputs))
+                        Log("# ({0}) {1}", size.Value, size.Key);
+
+                    Log("# HEAP STRINGS (top {0})", stringOutputs);
+                    foreach (var size in allStrings.OrderByDescending(x => x.Value).Take(stringOutputs))
+                        Log("# ({0}) \"{1}\"", size.Value, size.Key);
+                }
 
                 TeamCityFinishTest(test);
 
