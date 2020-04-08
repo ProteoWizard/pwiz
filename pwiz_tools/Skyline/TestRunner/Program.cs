@@ -565,7 +565,7 @@ namespace TestRunner
                         }
                         continue;
                     }
-                    if (!runTests.Run(test, 0, testNumber, dmpDir))
+                    if (!runTests.Run(test, 0, testNumber, dmpDir, false))
                         removeList.Add(test);
                 }
                 runTests.Skyline.Set("NoVendorReaders", false);
@@ -615,6 +615,7 @@ namespace TestRunner
                         // Run test repeatedly until we can confidently assess the leak status.
                         var numLeakCheckIterations = GetLeakCheckIterations(test);
                         var runTestForever = false;
+                        var hangIteration = -1;
                         var listValues = new List<LeakTracking>();
                         LeakTracking? minDeltas = null;
                         int? passedIndex = null;
@@ -625,7 +626,7 @@ namespace TestRunner
                         {
                             // Run the test in the next language.
                             runTests.Language = new CultureInfo(qualityLanguages[i%qualityLanguages.Length]);
-                            if (!runTests.Run(test, 1, testNumber, dmpDir))
+                            if (!runTests.Run(test, 1, testNumber, dmpDir, hangIteration >= 0 && (i - hangIteration) % 100 == 0))
                             {
                                 failed = true;
                                 removeList.Add(test);
@@ -658,10 +659,12 @@ namespace TestRunner
                                     if (leakMessage != null)
                                     {
                                         runTests.Log(leakMessage);
-                                        runTests.Log("# Entering infinite loop.");
-                                        leakHanger.Wait();
+                                        // runTests.Log("# Entering infinite loop.");
+                                        // leakHanger.Wait();
 
                                         runTestForever = true; // Once we break out of the loop, just keep running this test
+                                        hangIteration = i;
+                                        RunTests.MemoryManagement.HeapDiagnostics = true;
                                     }
                                 }
                             }
@@ -768,7 +771,7 @@ namespace TestRunner
                                 }
                                 break;
                             }
-                            if (!runTests.Run(test, pass, testNumber, dmpDir))
+                            if (!runTests.Run(test, pass, testNumber, dmpDir, false))
                             {
                                 removeList.Add(test);
                                 i = languages.Length - 1;   // Don't run other languages.
