@@ -55,7 +55,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private const int RETRY_INTERVAL = 10;
         private const int RETRY_COUNTDOWN = 30;
-
         //private static readonly Log LOG = new Log<AllChromatogramsGraph>();
 
         public AllChromatogramsGraph()
