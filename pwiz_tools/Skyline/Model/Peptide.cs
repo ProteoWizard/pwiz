@@ -700,7 +700,7 @@ namespace pwiz.Skyline.Model
     /// Use this where we would formerly have just passed a string with a peptide sequence,
     /// but now may be interested in generalized small molecules.
     /// </summary>
-    public class Target : IComparable<Target>, IEquatable<Target>, IAuditLogObject
+    public class Target : IComparable, IEquatable<Target>, IAuditLogObject
     {
         public static readonly Target EMPTY = new Target(string.Empty);
         public Target(string sequence)
@@ -742,10 +742,12 @@ namespace pwiz.Skyline.Model
                    (right == null ? 0 : -1) :
                    left.CompareTo(right);
         }
-        public int CompareTo(Target other)
+
+        public int CompareTo(object obj)
         {
-            if (other == null)
-                return 1;
+            if (ReferenceEquals(this, obj)) return 0;
+            if (ReferenceEquals(null, obj)) return 1;
+            if (!(obj is Target other)) return 1;
             if (IsProteomic)
                 return other.IsProteomic ? string.CompareOrdinal(Sequence, other.Sequence) : 1;
             return other.IsProteomic ? -1 : Molecule.CompareTo(other.Molecule);

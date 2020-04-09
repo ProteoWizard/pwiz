@@ -1151,7 +1151,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                var name = Path.GetFileNameWithoutExtension(newdoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.PersistencePath) +
+                var name = Path.GetFileNameWithoutExtension(newdoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath) +
                            Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules;
                 var path = Path.Combine(pathForLibraryFiles, name + IonMobilityDb.EXT);
                 var db = IonMobilityDb.CreateIonMobilityDb(path, name, false).UpdateIonMobilities(mapped);

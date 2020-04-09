@@ -333,34 +333,34 @@
   <data name="&gt;&gt;btnImportFromLibrary.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="labelNumPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="labelNumPrecursorIons.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
-  <data name="labelNumPeptides.AutoSize" type="System.Boolean, mscorlib">
+  <data name="labelNumPrecursorIons.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labelNumPeptides.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="labelNumPrecursorIons.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 439</value>
   </data>
-  <data name="labelNumPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>56, 13</value>
+  <data name="labelNumPrecursorIons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>82, 13</value>
   </data>
-  <data name="labelNumPeptides.TabIndex" type="System.Int32, mscorlib">
+  <data name="labelNumPrecursorIons.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
-  <data name="labelNumPeptides.Text" xml:space="preserve">
-    <value>0 peptides</value>
+  <data name="labelNumPrecursorIons.Text" xml:space="preserve">
+    <value>0 precursor ions</value>
   </data>
-  <data name="&gt;&gt;labelNumPeptides.Name" xml:space="preserve">
-    <value>labelNumPeptides</value>
+  <data name="&gt;&gt;labelNumPrecursorIons.Name" xml:space="preserve">
+    <value>labelNumPrecursorIons</value>
   </data>
-  <data name="&gt;&gt;labelNumPeptides.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelNumPrecursorIons.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;labelNumPeptides.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelNumPrecursorIons.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelNumPeptides.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelNumPrecursorIons.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <data name="btnCreateDb.Location" type="System.Drawing.Point, System.Drawing">
@@ -408,10 +408,10 @@
   <data name="addSpectralLibraryContextMenuItem.Text" xml:space="preserve">
     <value>Add Spectral &amp;Library...</value>
   </data>
-  <data name="addIRTDatabaseContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="addIonMobilityDatabaseContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 22</value>
   </data>
-  <data name="addIRTDatabaseContextMenuItem.Text" xml:space="preserve">
+  <data name="addIonMobilityDatabaseContextMenuItem.Text" xml:space="preserve">
     <value>Add iRT &amp;Database...</value>
   </data>
   <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing">
@@ -453,7 +453,7 @@
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="gridViewMeasuredPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="gridViewIonMobilities.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <metadata name="columnTarget.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -498,36 +498,30 @@
   <data name="columnHighEnergyIonMobilityOffset.HeaderText" xml:space="preserve">
     <value>High Energy Ion Mobility Offset</value>
   </data>
-  <data name="gridViewMeasuredPeptides.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="gridViewIonMobilities.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 171</value>
   </data>
-  <data name="gridViewMeasuredPeptides.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="gridViewIonMobilities.Size" type="System.Drawing.Size, System.Drawing">
     <value>838, 257</value>
   </data>
-  <data name="gridViewMeasuredPeptides.TabIndex" type="System.Int32, mscorlib">
+  <data name="gridViewIonMobilities.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
-  <data name="gridViewMeasuredPeptides.ToolTip" xml:space="preserve">
-    <value>Import collisional cross section values from external files</value>
+  <data name="&gt;&gt;gridViewIonMobilities.Name" xml:space="preserve">
+    <value>gridViewIonMobilities</value>
+  </data>
+  <data name="&gt;&gt;gridViewIonMobilities.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;gridViewIonMobilities.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;gridViewIonMobilities.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <metadata name="toolTipMeasuredPeptidesGrid.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>300, 17</value>
   </metadata>
-  <data name="gridViewMeasuredPeptides.ToolTip1" xml:space="preserve">
-    <value>Paste tables of measured collisional cross section values here</value>
-  </data>
-  <data name="&gt;&gt;gridViewMeasuredPeptides.Name" xml:space="preserve">
-    <value>gridViewMeasuredPeptides</value>
-  </data>
-  <data name="&gt;&gt;gridViewMeasuredPeptides.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=20.1.1.23, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;gridViewMeasuredPeptides.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;gridViewMeasuredPeptides.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="btnUseResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -628,7 +622,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.23, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;bindingSourceLibrary.Name" xml:space="preserve">
     <value>bindingSourceLibrary</value>
@@ -654,17 +648,17 @@
   <data name="&gt;&gt;addSpectralLibraryContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;addIRTDatabaseContextMenuItem.Name" xml:space="preserve">
-    <value>addIRTDatabaseContextMenuItem</value>
+  <data name="&gt;&gt;addIonMobilityDatabaseContextMenuItem.Name" xml:space="preserve">
+    <value>addIonMobilityDatabaseContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;addIRTDatabaseContextMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;addIonMobilityDatabaseContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnTarget.Name" xml:space="preserve">
     <value>columnTarget</value>
   </data>
   <data name="&gt;&gt;columnTarget.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.TargetColumn, Skyline-daily, Version=20.1.1.23, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.TargetColumn, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;columnAdduct.Name" xml:space="preserve">
     <value>columnAdduct</value>
@@ -712,6 +706,6 @@
     <value>EditIonMobilityLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.23, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

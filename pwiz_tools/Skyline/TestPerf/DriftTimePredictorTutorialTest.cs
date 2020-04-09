@@ -29,6 +29,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
@@ -89,11 +90,11 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 SkylineWindow.OpenFile(legacyFile_19_1_9);
             });
             VerifyCombinedIonMobility(WaitForDocumentLoaded());
-
+            var oldDoc = SkylineWindow.Document;
             string skyFile = TestFilesDirs[0].GetTestPath(@"DriftTimePrediction\BSA-Training.sky");
             RunUI(() => SkylineWindow.OpenFile(skyFile));
 
-            var document = WaitForDocumentLoaded(240*1000); // 4 minutes
+            var document = WaitForDocumentChangeLoaded(oldDoc,240*1000); // 4 minutes
             RunUI(() => SkylineWindow.Size = new Size(880, 560));
             RestoreViewOnScreen(2);
             PauseForScreenShot("Document open - full window", 2);
@@ -234,21 +235,24 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 PauseForScreenShot("Setting ion mobility filter width calculation values", 18);
 
 
-                var dlgIonMobilityLib = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
-                const string predictorName = "BSA";
+                var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
+                const string libraryName = "BSA";
+                var databasePath = TestFilesDirs[1].GetTestPath(libraryName + IonMobilityDb.EXT);
+
                 RunUI(() =>
                 {
-                    dlgIonMobilityLib.LibraryName = predictorName;
-                    dlgIonMobilityLib.SetOffsetHighEnergySpectraCheckbox(true);
-                    dlgIonMobilityLib.GetIonMobilitiesFromResults();
+                    editIonMobilityLibraryDlg.LibraryName = libraryName;
+                    editIonMobilityLibraryDlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
+                    editIonMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
+                    editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
 
                 });
                 PauseForScreenShot("Edit ion mobility library form", 18);
 
                 // Check that a new value was calculated for all precursors
-                RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, dlgIonMobilityLib.IonMobilityLibrary.Count));
+                RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, editIonMobilityLibraryDlg.LibraryMobilitiesFlatCount));
 
-                OkDialog(dlgIonMobilityLib, () => dlgIonMobilityLib.OkDialog());
+                OkDialog(editIonMobilityLibraryDlg, () => editIonMobilityLibraryDlg.OkDialog());
 
                 PauseForScreenShot<TransitionSettingsUI.IonMobilityTab>("Transition Settings - Ion Mobility", 19);
 

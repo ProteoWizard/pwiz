@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
     public class IonMobilityDb : Immutable, IValidating, IDisposable
     {
-        public const string EXT = ".imdb";
+        public const string EXT = ".imsdb";
 
         public static string FILTER_IONMOBILITYLIBRARY
         {

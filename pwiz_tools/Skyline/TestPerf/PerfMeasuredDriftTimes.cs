@@ -51,6 +51,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
+IsPauseForScreenShots = true;
             string skyFile = TestFilesDir.GetTestPath("test_measured_drift_times_perf.sky");
             Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we don't have to reload the raw files, which have moved relative to skyd file 
             RunUI(() => SkylineWindow.OpenFile(skyFile));
@@ -62,25 +63,30 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("local.sky")); // Avoid "document changed since last edit" message
                 document = SkylineWindow.DocumentUI;
             });
-
             List<ValidatingIonMobilityPrecursor> curatedDTs = null;
             var measuredDTs = new List<List<ValidatingIonMobilityPrecursor>>();
             var precursors = new LibKeyIndex(document.MoleculePrecursorPairs.Select(
                 p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct).LibraryKey));
+PauseForScreenShot(@"Legacy ion mobility values loaded, placed in .imdb database file");
             for (var pass = 0; pass < 2; pass++)
             {
                 // Verify ability to extract predictions from raw data
                 var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
                     () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
-
+PauseForScreenShot("new Transition Settings tab");
                 // Simulate user picking Edit Current from the Ion Mobility Library combo control
                 var ionMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.EditIonMobilityLibrary);
+PauseForScreenShot("next, we'll update values with 'Use Results' button");
                 RunUI(() =>
                 {
                     if (curatedDTs == null)
                         curatedDTs = ionMobilityLibraryDlg.LibraryMobilitiesFlat.ToList();
                     ionMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
                     ionMobilityLibraryDlg.GetIonMobilitiesFromResults();
+                });
+PauseForScreenShot("values updated");
+                RunUI(() =>
+                {
                     measuredDTs.Add(ionMobilityLibraryDlg.LibraryMobilitiesFlat.ToList());
                     ionMobilityLibraryDlg.OkDialog();
                 });
@@ -97,19 +103,20 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     var cdt = curatedDTs[n];
                     var key = cdt.Precursor;
-                    var measuredDT = measuredDTs[pass][n].IonMobility;
-                    var measuredHEO = measuredDTs[pass][n].HighEnergyIonMobilityOffset;
+                    var indexM = measuredDTs[pass].FindIndex(m => m.Precursor.Equals(key));
+                    var measured = measuredDTs[pass][indexM];
+                    var measuredDT = measured.IonMobility;
+                    var measuredHEO = measured.HighEnergyIonMobilityOffset;
                     if (precursors.ItemsMatching(key, true).Any())
                     {
                         count++;
-                        Assert.AreNotEqual(cdt.IonMobility, measuredDT, "measured drift time should differ somewhat for "+key);
+                        AssertEx.AreNotEqual(cdt.IonMobility, measuredDT, "measured drift time should differ somewhat for "+measured.Precursor);
                     }
 
-                    var curated = curatedDTs[n];
-                    Assert.AreEqual(curated.IonMobility, measuredDT, 1.0, "measured drift time differs too much for " + key);
-                    Assert.AreEqual(curated.HighEnergyIonMobilityOffset, measuredHEO, 2.0, "measured drift time high energy offset differs too much for " + key);
+                    AssertEx.AreEqual(cdt.IonMobility, measuredDT, 1.0, "measured drift time differs too much for " + key);
+                    AssertEx.AreEqual(cdt.HighEnergyIonMobilityOffset, measuredHEO, 2.0, "measured drift time high energy offset differs too much for " + key);
                 }
-                Assert.AreEqual(document.MoleculeTransitionGroupCount, count, "did not find drift times for all precursors"); // Expect to find a value for each precursor
+                AssertEx.AreEqual(document.MoleculeTransitionGroupCount, count, "did not find drift times for all precursors"); // Expect to find a value for each precursor
 
                 if (pass == 1)
                     break;
@@ -126,7 +133,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 });
 
                 document = WaitForDocumentChange(document);
-                Assert.AreEqual(1, document.Settings.MeasuredResults.Chromatograms.Count);
+                AssertEx.AreEqual(1, document.Settings.MeasuredResults.Chromatograms.Count);
             }
             // Results should be slightly different without the training set of chromatograms to contain a potentially stronger peak
             var ccount = 0;
@@ -142,12 +149,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     if (validatingIonMobilityPeptide0.HighEnergyIonMobilityOffset == validatingIonMobilityPeptide1.HighEnergyIonMobilityOffset)
                         noChange.Add(key);
                 }
-                Assert.AreEqual(validatingIonMobilityPeptide0.IonMobility, validatingIonMobilityPeptide1.IonMobility, 1.0, "averaged measured drift time differs for " + key);
-                Assert.AreEqual(validatingIonMobilityPeptide0.HighEnergyIonMobilityOffset, validatingIonMobilityPeptide1.HighEnergyIonMobilityOffset, 2.0, "averaged measured drift time high energy offset differs for " + key);
-                Assert.AreEqual(validatingIonMobilityPeptide0.CollisionalCrossSectionSqA, validatingIonMobilityPeptide1.CollisionalCrossSectionSqA, 1.0, "averaged measured CCS differs for " + key);
+                AssertEx.AreEqual(validatingIonMobilityPeptide0.IonMobility, validatingIonMobilityPeptide1.IonMobility, 1.0, "averaged measured drift time differs for " + key);
+                AssertEx.AreEqual(validatingIonMobilityPeptide0.HighEnergyIonMobilityOffset, validatingIonMobilityPeptide1.HighEnergyIonMobilityOffset, 2.0, "averaged measured drift time high energy offset differs for " + key);
+                AssertEx.AreEqual(validatingIonMobilityPeptide0.CollisionalCrossSectionSqA, validatingIonMobilityPeptide1.CollisionalCrossSectionSqA, 1.0, "averaged measured CCS differs for " + key);
             }
-            Assert.AreEqual(document.MoleculeTransitionGroupCount, ccount, "did not find drift times for all precursors"); // Expect to find a value for each precursor
-            Assert.IsTrue(noChange.Count < ccount/2,"expected most values to shift a little without the nice clean training data");
+            AssertEx.AreEqual(document.MoleculeTransitionGroupCount, ccount, "did not find drift times for all precursors"); // Expect to find a value for each precursor
+            AssertEx.IsTrue(noChange.Count < ccount/2,"expected most values to shift a little without the nice clean training data");
 
 
             // And finally verify ability to reimport with altered drift filter (would formerly fail on an erroneous Assume)

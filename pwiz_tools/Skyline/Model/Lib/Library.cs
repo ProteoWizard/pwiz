@@ -2598,6 +2598,8 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public struct LibKey
     {
+        public static LibKey EMPTY = new LibKey(SmallMoleculeLibraryAttributes.EMPTY, Adduct.EMPTY);
+
         public LibKey(LibraryKey libraryKey) : this()
         {
             LibraryKey = libraryKey;

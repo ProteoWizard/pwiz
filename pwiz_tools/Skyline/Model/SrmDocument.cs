@@ -2444,7 +2444,7 @@ namespace pwiz.Skyline.Model
                        $@"Actual full document:\n{textActual}\n";
             }
 
-            return @"Expected document does not match actual, but the difference does not appear in the XML representation.";
+            return @"Expected document does not match actual, but the difference does not appear in the XML representation. Difference may be in a library instead.";
         }
 
         #region object overrides

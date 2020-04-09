@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -34,7 +35,7 @@ namespace pwiz.Skyline.Model.IonMobility
     /// This reflects the way IM data is stored in the .imdb format, where multiple conformers are represented by
     /// multiple DbIonMobilityValues with a common precursor ion.
     /// </summary>
-    public class DbPrecursorAndIonMobility : DbEntity, IEquatable<DbPrecursorAndIonMobility>
+    public class DbPrecursorAndIonMobility : DbEntity, IEquatable<DbPrecursorAndIonMobility>, IComparable
     {
         public override Type EntityClass
         {
@@ -70,6 +71,37 @@ namespace pwiz.Skyline.Model.IonMobility
                 IonMobilityUnits), CollisionalCrossSectionNullable, HighEnergyIonMobilityOffset);
         }
 
+        public virtual Target PeptideModSeq // For DataGridView use
+        {
+            get { return DbPrecursorIon.DbMolecule.Target; }
+            set
+            {
+                var molecule = new DbMolecule(value);
+                if (!Equals(molecule, DbPrecursorIon.DbMolecule))
+                    DbPrecursorIon = new DbPrecursorIon(molecule, DbPrecursorIon.GetPrecursorAdduct());
+            }
+        }
+
+        public virtual string PrecursorAdduct // For DataGridView use
+        {
+            get { return DbPrecursorIon.GetPrecursorAdduct().ToString(); }
+            set
+            {
+                if (Adduct.TryParse(value, out var adduct))
+                    if (!Equals(adduct, DbPrecursorIon.GetPrecursorAdduct()))
+                        DbPrecursorIon = new DbPrecursorIon(DbPrecursorIon.DbMolecule, adduct);
+            }
+        }
+
+        public virtual string IonMobilityUnitsDisplay  // For DataGridView use
+        {
+            get { return IonMobilityFilter.IonMobilityUnitsL10NString(IonMobilityUnits); }
+            set
+            {
+                IonMobilityUnits = IonMobilityFilter.IonMobilityUnitsFromL10NString(value);
+            }
+        }
+
         public virtual DbPrecursorIon DbPrecursorIon { get; set; }
 
         public virtual double CollisionalCrossSectionSqA { get; set; }
@@ -97,11 +129,6 @@ namespace pwiz.Skyline.Model.IonMobility
 
 
         public virtual eIonMobilityUnits IonMobilityUnits { get; set; }
-
-        public virtual string DisplayUnits()
-        {
-            return IonMobilityFilter.IonMobilityUnitsL10NString(IonMobilityUnits);
-        }
 
         public virtual bool EqualsIgnoreId(DbPrecursorAndIonMobility other)
         {
@@ -147,13 +174,29 @@ namespace pwiz.Skyline.Model.IonMobility
             return string.Format(@"{0}/ccs{1}/im{2}/he{3}/{4}", DbPrecursorIon, CollisionalCrossSectionNullable,
                 IonMobilityNullable, HighEnergyIonMobilityOffsetNullable, IonMobilityUnits);
         }
+
+        public virtual int CompareTo(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return 0;
+            if (ReferenceEquals(null, obj)) return 1;
+            if (!(obj is DbPrecursorAndIonMobility other)) return 1;
+            var dbPrecursorIonComparison = Comparer<DbPrecursorIon>.Default.Compare(DbPrecursorIon, other.DbPrecursorIon);
+            if (dbPrecursorIonComparison != 0) return dbPrecursorIonComparison;
+            var collisionalCrossSectionSqAComparison = CollisionalCrossSectionSqA.CompareTo(other.CollisionalCrossSectionSqA);
+            if (collisionalCrossSectionSqAComparison != 0) return collisionalCrossSectionSqAComparison;
+            var ionMobilityUnitsComparison = IonMobilityUnits.CompareTo(other.IonMobilityUnits);
+            if (ionMobilityUnitsComparison != 0) return ionMobilityUnitsComparison;
+            var ionMobilityComparison = IonMobility.CompareTo(other.IonMobility);
+            if (ionMobilityComparison != 0) return ionMobilityComparison;
+            return HighEnergyIonMobilityOffset.CompareTo(other.HighEnergyIonMobilityOffset);
+        }
     }
 
     /// <summary>
     /// A DbMolecule corresponds to Skyline's Target class, and represents either a peptide or a small molecule.
     /// A single DbMolecule may be referenced by more than one DbPrecursorIon.
     /// </summary>
-    public class DbMolecule : DbEntity, IPeptideData, IEquatable<DbMolecule>
+    public class DbMolecule : DbEntity, IPeptideData, IEquatable<DbMolecule>, IComparable
     {
         public override Type EntityClass
         {
@@ -279,6 +322,14 @@ namespace pwiz.Skyline.Model.IonMobility
             }
         }
 
+        public virtual int CompareTo(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return 0;
+            if (ReferenceEquals(null, obj)) return 1;
+            if (!(obj is DbMolecule other)) return 1;
+            return Target.CompareTo(other.Target);
+        }
+
         public override string ToString() // For debugging convenience
         {
             return Target.ToSerializableString();
@@ -291,7 +342,7 @@ namespace pwiz.Skyline.Model.IonMobility
     /// <summary>
     /// A DbPrecursorIon is a DbMolecule and an adduct, which together define an ion.
     /// </summary>
-    public class DbPrecursorIon : DbEntity, IEquatable<DbPrecursorIon>
+    public class DbPrecursorIon : DbEntity, IEquatable<DbPrecursorIon>, IComparable
     {
         public override Type EntityClass
         {
@@ -427,6 +478,15 @@ namespace pwiz.Skyline.Model.IonMobility
             return string.Format(@"{0}[{1}]", DbMolecule, _adduct);
         }
 
+        public virtual int CompareTo(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return 0;
+            if (ReferenceEquals(null, obj)) return 1;
+            if (!(obj is DbPrecursorIon other)) return 1;
+            var dbMoleculeComparison = Comparer<DbMolecule>.Default.Compare(DbMolecule, other.DbMolecule);
+            if (dbMoleculeComparison != 0) return dbMoleculeComparison;
+            return Comparer<Adduct>.Default.Compare(_adduct, other._adduct);
+        }
     }
 
 }

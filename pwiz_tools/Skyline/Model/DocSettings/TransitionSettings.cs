@@ -80,8 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren(true)]
         public TransitionIonMobilityFiltering IonMobilityFiltering { get; private set; }
-
-
+        
         public bool IsMeasurablePrecursor(double mz)
         {
             if (!Instrument.IsMeasurable(mz))

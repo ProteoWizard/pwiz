@@ -28,6 +28,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -89,19 +90,22 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             RunUI(()=>transitionSettingsDlg.IonMobilityControl.IonMobilityFilterResolvingPower = 40);
 
             // Simulate user picking Add from the ion mobility Predictor combo control
-            var driftTimePredictorDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.AddIonMobilityLibrary);
+            var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.AddIonMobilityLibrary);
+            var testlibName = "test_tims";
+            var databasePath = TestFilesDir.GetTestPath(testlibName + IonMobilityDb.EXT);
             RunUI(() =>
             {
-                driftTimePredictorDlg.SetOffsetHighEnergySpectraCheckbox(true);
-                driftTimePredictorDlg.LibraryName = "test_tims";
-                driftTimePredictorDlg.GetIonMobilitiesFromResults();
+                editIonMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
+                editIonMobilityLibraryDlg.LibraryName = testlibName;
+                editIonMobilityLibraryDlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
+                editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
             });
             // PauseTest(); // Uncomment this to inspect ion mobility finder results
             RunUI(() =>
             {
-                driftTimePredictorDlg.OkDialog();
+                editIonMobilityLibraryDlg.OkDialog();
             });
-            WaitForClosedForm(driftTimePredictorDlg);
+            WaitForClosedForm(editIonMobilityLibraryDlg);
             RunUI(() =>
             {
                 transitionSettingsDlg.OkDialog();

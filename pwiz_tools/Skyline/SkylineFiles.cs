@@ -318,12 +318,16 @@ namespace pwiz.Skyline
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
                         string skylineDocumentHash;
-                        using (var reader = new HashingStreamReaderWithProgress(path, progressMonitor))
+                        using (var hashingStreamReader = new HashingStreamReaderWithProgress(path, progressMonitor))
                         {
+                            // Wrap stream in XmlReader so that BaseUri is known
+                            var reader = XmlReader.Create(hashingStreamReader,
+                                new XmlReaderSettings() { IgnoreWhitespace = true },
+                                path);
+
                             XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
-                            var xmlReader = new XmlTextReader(path, reader); // So that we can get path from BaseURI
-                            document = (SrmDocument) ser.Deserialize(xmlReader);
-                            skylineDocumentHash = reader.Stream.Done();
+                            document = (SrmDocument) ser.Deserialize(reader);
+                            skylineDocumentHash = hashingStreamReader.Stream.Done();
                         }
 
                         try
@@ -699,14 +703,14 @@ namespace pwiz.Skyline
             IonMobilityLibrarySpec result;
             if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibrarySpec.Name, out result))
             {
-                if (result != null && File.Exists(result.PersistencePath))
+                if (result != null && File.Exists(result.FilePath))
                     return result;
             }
             if (documentPath == null)
                 return null;
 
             // First look for the file name in the document directory
-            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibrarySpec.PersistencePath);
+            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibrarySpec.FilePath);
             if (filePath != null)
             {
                 try
@@ -729,7 +733,7 @@ namespace pwiz.Skyline
                     ItemName = ionMobilityLibrarySpec.Name,
                     ItemType = Resources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library,
                     Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_FindIonMobilityDatabase_ion_mobility_library_files, IonMobilityDb.EXT),
-                    FileHint = Path.GetFileName(ionMobilityLibrarySpec.PersistencePath),
+                    FileHint = Path.GetFileName(ionMobilityLibrarySpec.FilePath),
                     FileDlgInitialPath = Path.GetDirectoryName(documentPath),
                     Title = Resources.SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library
                 })

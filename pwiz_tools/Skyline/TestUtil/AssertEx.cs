@@ -618,7 +618,8 @@ namespace pwiz.SkylineTestUtil
 
         private static void ValidationCallBack(object sender, ValidationEventArgs args)
         {
-            string message = @"XML Validation error: " + args.Message;
+            string message = String.Format(CultureInfo.InvariantCulture, "XML Validation error using Skyline_{0}.xsd:",
+                SrmDocument.FORMAT_VERSION) + args.Message;
             if (null != args.Exception)
             {
                 message = TextUtil.SpaceSeparate(message, string.Format("Line {0} Position {1}", args.Exception.LineNumber, args.Exception.LinePosition));
@@ -1241,20 +1242,20 @@ namespace pwiz.SkylineTestUtil
         {
 
             if (convertedGroup.IsotopeDist == null)
-                Assume.IsNull(group.IsotopeDist);
+                IsNull(group.IsotopeDist);
             else if (conversionMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
-                Assume.IsTrue(convertedGroup.IsotopeDist.IsSimilar(group.IsotopeDist));
+                IsTrue(convertedGroup.IsotopeDist.IsSimilar(group.IsotopeDist));
 
             if (conversionMode == RefinementSettings.ConvertToSmallMoleculesMode.masses_only && group.Results != null)
             {
                 // All we can really expect is that retention times agree - but nothing beyond that, not even the peak width
-                Assume.AreEqual(group.Results.Count, convertedGroup.Results.Count);
+                AreEqual(group.Results.Count, convertedGroup.Results.Count);
                 for (var i = 0; i < group.Results.Count; i++)
                 {
-                    Assume.AreEqual(group.Results[i].Count, convertedGroup.Results[i].Count);
+                    AreEqual(group.Results[i].Count, convertedGroup.Results[i].Count);
                     for (var j = 0; j < group.Results[i].Count; j++)
                     {
-                        Assume.AreEqual(group.Results[i][j].RetentionTime, convertedGroup.Results[i][j].RetentionTime, group + " vs " + convertedGroup);
+                        AreEqual(group.Results[i][j].RetentionTime, convertedGroup.Results[i][j].RetentionTime, group + " vs " + convertedGroup);
                     }
                 }
                 return;

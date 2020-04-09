@@ -682,6 +682,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion mobility library settings.
+        /// </summary>
+        public static string EditIonMobilityLibraryDlgSettings {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlgSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility library.
+        /// </summary>
+        public static string EditIonMobilityLibraryDlgSettings_IonMobilityLibrary {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlgSettings_IonMobilityLibrary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility library values.
+        /// </summary>
+        public static string EditIonMobilityLibraryDlgSettings_LibraryIonMobilities {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlgSettings_LibraryIonMobilities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Empty Proteins.
         /// </summary>
         public static string EmptyProteinsSettings {
@@ -1524,6 +1551,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string IonMobilityAndCCS_Units {
             get {
                 return ResourceManager.GetString("IonMobilityAndCCS_Units", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility library file.
+        /// </summary>
+        public static string IonMobilityLibrarySpec_FilePathAuditLog {
+            get {
+                return ResourceManager.GetString("IonMobilityLibrarySpec_FilePathAuditLog", resourceCulture);
             }
         }
         
@@ -3189,15 +3225,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string RetentionScoreCalculatorSpec_AuditLogPersistencePath {
             get {
                 return ResourceManager.GetString("RetentionScoreCalculatorSpec_AuditLogPersistencePath", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to iRT database modified.
-        /// </summary>
-        public static string RetentionScoreCalculatorSpec_PersistenceModifiedTime {
-            get {
-                return ResourceManager.GetString("RetentionScoreCalculatorSpec_PersistenceModifiedTime", resourceCulture);
             }
         }
         

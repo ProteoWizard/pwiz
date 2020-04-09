@@ -92,28 +92,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     }
                 }
             }
-            Assert.AreEqual(472345.4375, maxHeight, 1); 
+            AssertEx.AreEqual(472345.4375, maxHeight, 1); 
 
             // Does CCS show up in reports?
             TestReports(doc1);
 
         }
-
-        private string RemoveReplicateReference(string text, string replicateName)
-        {
-            // Remove reference to replicate with file type that we don't need to handle at this time
-            var open = text.IndexOf(string.Format("<replicate name=\"{0}\">", replicateName), StringComparison.Ordinal);
-            var close = text.IndexOf("</replicate>", open, StringComparison.Ordinal) + 12;
-            var snip = text.Substring(0, open) + text.Substring(close);
-            while ((open = snip.IndexOf(replicateName, StringComparison.Ordinal)) != -1)
-            {
-                open = snip.LastIndexOf('<', open);
-                close = snip.IndexOf(">", open, StringComparison.Ordinal);
-                snip = snip.Substring(0, open) + snip.Substring(close + 1);
-            }
-            return snip;
-        }
-
 
         private void TestReports(SrmDocument doc1, string msg = null)
         {
@@ -131,11 +115,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityUnits",
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityWindow"
                 });
-            CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, .97, msg);
-            CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityFragment", row, .97, msg); 
-            CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
-            CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.03, msg);
-            CheckFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 392.02, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, .97, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityFragment", row, null, msg); 
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.03, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 392.02, msg);
             EnableDocumentGridColumns(documentGrid,
                 Resources.ReportSpecList_GetDefaults_Peptide_RT_Results,
                 210, null);
@@ -161,43 +145,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 if (MsDataFileImpl.ForceUncombinedIonMobility && (rt == 28.02 || rt == 22.81))
                     continue;
 
-                CheckFieldByName(documentGrid, "PeptideRetentionTime", row, rt, msg, true);
+                var recordNewValues = false;
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                CheckDocumentResultsGridFieldByName(documentGrid, "PeptideRetentionTime", row, rt, msg, recordNewValues);
             }
 
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
         }
 
-        private static int ValuesRecordedCount;
-
-        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null, bool recordValues = false)
-        {
-            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
-            RunUI(() =>
-            {
-                // By checking the 1th row we check both the single file and two file cases
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as double?;
-                Assert.AreEqual(expected.HasValue, val.HasValue, name + (msg ?? string.Empty));
-                if (!IsRecordMode || !recordValues)
-                    Assert.AreEqual(expected ?? 0, val ?? 0, 0.005, name + (msg ?? string.Empty));
-                else
-                {
-                    Console.Write(@"{0:0.##}, ", val);
-                    if (++ValuesRecordedCount % 18 == 0)
-                        Console.WriteLine();
-                }
-            });
-        }
-
-        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null)
-        {
-            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
-            RunUI(() =>
-            {
-                // By checking the 1th row we check both the single file and two file cases
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
-                Assert.AreEqual(expected, val, name + (msg ?? string.Empty));
-            });
-        }
     }
 }

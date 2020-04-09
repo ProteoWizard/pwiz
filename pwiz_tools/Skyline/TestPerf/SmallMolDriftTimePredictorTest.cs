@@ -21,6 +21,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
@@ -38,7 +39,7 @@ namespace TestPerf
         private const string SULFA_MIX = "Sulfa Mix 1.0ms.d";
 
         [TestMethod]
-        public void TestDriftTimePredictorSmallMolecules()
+        public void TestDriftTimePredictorSmallMolecules()  // N.B. the term "Drift Time Predictor" is a historical curiosity, leaving it alone for test history continuity
         {
             // RunPerfTests = true; // Enables perftests to run from the IDE (you don't want to commit this line without commenting it out)
 
@@ -83,21 +84,24 @@ namespace TestPerf
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
             }
             document = WaitForDocumentLoaded();
-
+PauseTest();
             var area = document.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
+            AssertEx.IsTrue(area > 0);
 
             // Locate drift peaks
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
             RunUI(() => transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50);
-            var calibrationDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
+            var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
             const string libName = "Sulfa";
+            var databasePath = TestFilesDir.GetTestPath(libName + IonMobilityDb.EXT);
             RunUI(() =>
             {
-                calibrationDlg.LibraryName = libName;
-                calibrationDlg.GetIonMobilitiesFromResults();
+                editIonMobilityLibraryDlg.LibraryName = libName;
+                editIonMobilityLibraryDlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
+                editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
             });
-            OkDialog(calibrationDlg, () => calibrationDlg.OkDialog());
+            OkDialog(editIonMobilityLibraryDlg, () => editIonMobilityLibraryDlg.OkDialog());
 
             RunUI(() =>
             {
@@ -117,10 +121,10 @@ namespace TestPerf
             });
 
             docFiltered = WaitForDocumentChangeLoaded(docFiltered); 
-
             // If drift filtering was engaged, peak area should be less
             var areaFiltered = docFiltered.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
-            Assume.IsTrue(area > areaFiltered);
+            AssertEx.IsTrue(area > areaFiltered);
+            AssertEx.IsTrue(areaFiltered > 0);
 
         }
 

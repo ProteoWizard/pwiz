@@ -138,6 +138,9 @@
   <data name="eIonMobilityUnits_none" xml:space="preserve">
     <value>None</value>
   </data>
+  <data name="eIonMobilityUnits_unknown" xml:space="preserve">
+    <value>unknown</value>
+  </data>
   <data name="FullScanAcquisitionMethod_DDA" xml:space="preserve">
     <value>DDA</value>
   </data>

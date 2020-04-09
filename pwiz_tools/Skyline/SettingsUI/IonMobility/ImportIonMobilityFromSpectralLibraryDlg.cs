@@ -36,8 +36,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
     public partial class ImportIonMobilityFromSpectralLibraryDlg : FormEx
     {
         private CollisionalCrossSectionGridViewDriver _gridViewDriver;
+        private IList<ValidatingIonMobilityPrecursor> _existing;
 
-        public ImportIonMobilityFromSpectralLibraryDlg(IEnumerable<LibrarySpec> librarySpecs, CollisionalCrossSectionGridViewDriver gridViewDriver)
+        public ImportIonMobilityFromSpectralLibraryDlg(IEnumerable<LibrarySpec> librarySpecs, IList<ValidatingIonMobilityPrecursor> existing, CollisionalCrossSectionGridViewDriver gridViewDriver)
         {
             InitializeComponent();
 
@@ -46,6 +47,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 comboLibrary.SelectedIndex = 0; // The obvious choice
             ComboHelper.AutoSizeDropDown(comboLibrary);
             _gridViewDriver = gridViewDriver;
+            _existing = existing;
         }
 
         public SpectralLibrarySource Source
@@ -122,7 +124,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
 
             // Have we got everything we need to populate the caller's grid view?
-            message = _gridViewDriver.ImportFromSpectralLibrary(librarySpec);
+            message = _gridViewDriver.ImportFromSpectralLibrary(librarySpec, _existing);
             if (message == null)
             {
                 DialogResult = DialogResult.OK;

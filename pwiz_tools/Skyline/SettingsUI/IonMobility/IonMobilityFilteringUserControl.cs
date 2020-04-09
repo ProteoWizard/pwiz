@@ -33,9 +33,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
     {
         private SettingsListComboDriver<IonMobilityLibrarySpec> _driverIonMobilityLib;
         private TransitionIonMobilityFiltering _ionMobilityFiltering { get; set; }
+        private bool ShowPeakWidthTypeControl { get; set; } // False when offering only resolving power settings, as in peptide import wizard
 
         public IonMobilityFilteringUserControl()
         {
+            ShowPeakWidthTypeControl = true;
             InitializeComponent();
             UpdateIonMobilityFilterWindowWidthControls();
         }
@@ -45,12 +47,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             _ionMobilityFiltering = documentContainer.Document.Settings.TransitionSettings.IonMobilityFiltering;
 
-            _driverIonMobilityLib = new SettingsListComboDriver<IonMobilityLibrarySpec>(comboIonMobilityLibrary, Settings.Default.IonMobilityLibraryList);
-            string selDT = (_ionMobilityFiltering.IonMobilityLibrary == null ? null : _ionMobilityFiltering.IonMobilityLibrary.Name);
-            _driverIonMobilityLib.LoadList(selDT);
-
-            cbUseSpectralLibraryIonMobilities.Checked = textIonMobilityFilterResolvingPower.Enabled =
-                defaultState ?? _ionMobilityFiltering.UseSpectralLibraryIonMobilityValues; 
             var imsWindowCalc = _ionMobilityFiltering.FilterWindowWidthCalculator;
 
             var resolvingPower = imsWindowCalc?.ResolvingPower ?? 0;
@@ -72,6 +68,15 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
 
             UpdateIonMobilityFilterWindowWidthControls();
+
+            _driverIonMobilityLib = new SettingsListComboDriver<IonMobilityLibrarySpec>(comboIonMobilityLibrary, Settings.Default.IonMobilityLibraryList);
+            var hasLib = _ionMobilityFiltering.IonMobilityLibrary != null && !_ionMobilityFiltering.IonMobilityLibrary.IsNone;
+            var libName = (_ionMobilityFiltering.IonMobilityLibrary == null ? null : _ionMobilityFiltering.IonMobilityLibrary.Name);
+            _driverIonMobilityLib.LoadList(libName);
+
+            cbUseSpectralLibraryIonMobilities.Checked = textIonMobilityFilterResolvingPower.Enabled =
+                defaultState ?? (_ionMobilityFiltering.UseSpectralLibraryIonMobilityValues || hasLib);
+
         }
 
         // For use in import search wizard, where we want to show a very simple interface
@@ -79,6 +84,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             // Assume that resolving power is the proper choice of window width calculation
             comboBoxWindowType.SelectedIndex = (int)IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
+            ShowPeakWidthTypeControl = false;
             // Hide other width calculator types, hide ion mobility library chooser
             var retainedControls = new Control[]
             {
@@ -142,11 +148,15 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     if (Equals(value, item.ToString()))
                     {
                         _driverIonMobilityLib.Combo.SelectedItem = item;
+                        UpdateIonMobilityFilterWindowWidthControls();
                         return;
                     }
                 }
-                _driverIonMobilityLib.Combo.Items.Add(value);
+
+                var insertAt = _driverIonMobilityLib.Combo.Items.Count - 3; // Place before <Add>, <Edit Current...>, and <Edit List....>
+                _driverIonMobilityLib.Combo.Items.Insert(insertAt, value);
                 _driverIonMobilityLib.Combo.SelectedItem = value;
+                UpdateIonMobilityFilterWindowWidthControls(); 
             }
         }
 
@@ -209,10 +219,14 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             UpdateIonMobilityFilterWindowWidthControls();
         }
 
-        public void SetWindowWidthType(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType widthType)
+        public IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType WindowWidthType
         {
-            comboBoxWindowType.SelectedIndex = (int)widthType;
-            UpdateIonMobilityFilterWindowWidthControls();
+            get { return (IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType)comboBoxWindowType.SelectedIndex; }
+            set
+            {
+                comboBoxWindowType.SelectedIndex = (int) value;
+                UpdateIonMobilityFilterWindowWidthControls();
+            }
         }
 
         public bool IsUseSpectralLibraryIonMobilities
@@ -302,7 +316,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 var helper = new MessageBoxHelper(this.ParentForm, false);
                 var result = ValidateIonMobilitySettings(helper);
                 if (result != null)
-                    _ionMobilityFiltering = result;
+                    _ionMobilityFiltering = _ionMobilityFiltering == null 
+                        ? result
+                        : _ionMobilityFiltering.ChangeFilterWindowWidthCalculator(result.FilterWindowWidthCalculator);
             }
             catch (Exception e)
             {
@@ -358,64 +374,68 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             var useSpectralLibraryIonMobilities = cbUseSpectralLibraryIonMobilities.Checked;
 
-            var ionMobilityWindowWidthCalculator = IonMobilityWindowWidthCalculator.EMPTY;
-            if (useSpectralLibraryIonMobilities)
+            if (ShowPeakWidthTypeControl &&
+                (ionMobilityLibrarySpec == null || ionMobilityLibrarySpec.IsNone) &&
+                !useSpectralLibraryIonMobilities)
             {
-                double resolvingPower = 0;
-                double widthAtDt0 = 0;
-                double widthAtDtMax = 0;
-                double fixedPeakWidth = 0;
-                var peakWidthType = (IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType) comboBoxWindowType.SelectedIndex;
-                string errmsg;
-                switch (peakWidthType)
-                {
-                    case IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.linear_range:
-                        if (!helper.ValidateDecimalTextBox(textIonMobilityFilterWidthAtMobility0, out widthAtDt0))
-                            return null;
-                        if (!helper.ValidateDecimalTextBox(textIonMobilityFilterWidthAtMobilityMax, out widthAtDtMax))
-                            return null;
-                        errmsg = ValidateWidth(widthAtDt0);
-                        if (errmsg != null)
-                        {
-                            helper.ShowTextBoxError(textIonMobilityFilterWidthAtMobility0, errmsg);
-                            return null;
-                        }
-
-                        errmsg = ValidateWidth(widthAtDtMax);
-                        if (errmsg != null)
-                        {
-                            helper.ShowTextBoxError(textIonMobilityFilterWidthAtMobilityMax, errmsg);
-                            return null;
-                        }
-
-                        break;
-                    case IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power:
-                        if (!helper.ValidateDecimalTextBox(textIonMobilityFilterResolvingPower, out resolvingPower))
-                            return null;
-                        errmsg = ValidateResolvingPower(resolvingPower);
-                        if (errmsg != null)
-                        {
-                            helper.ShowTextBoxError(textIonMobilityFilterResolvingPower, errmsg);
-                            return null;
-                        }
-
-                        break;
-                    default: // Fixed width
-                        if (!helper.ValidateDecimalTextBox(textIonMobilityFilterFixedWidth, out fixedPeakWidth))
-                            return null;
-                        errmsg = ValidateFixedWindow(fixedPeakWidth);
-                        if (errmsg != null)
-                        {
-                            helper.ShowTextBoxError(textIonMobilityFilterFixedWidth, errmsg);
-                            return null;
-                        }
-
-                        break;
-                }
-
-                ionMobilityWindowWidthCalculator =
-                    new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax, fixedPeakWidth);
+                // No need for a window width calculator, so we don't care if width parameters are blank
+                return TransitionIonMobilityFiltering.EMPTY;
             }
+
+            var peakWidthType = ShowPeakWidthTypeControl ? 
+                (IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType)comboBoxWindowType.SelectedIndex :
+                IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
+            double resolvingPower = 0;
+            double widthAtDt0 = 0;
+            double widthAtDtMax = 0;
+            double fixedPeakWidth = 0;
+            
+            string errmsg;
+            switch (peakWidthType)
+            {
+                case IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.linear_range:
+                    if (!helper.ValidateDecimalTextBox(textIonMobilityFilterWidthAtMobility0, out widthAtDt0))
+                        return null;
+                    if (!helper.ValidateDecimalTextBox(textIonMobilityFilterWidthAtMobilityMax, out widthAtDtMax))
+                        return null;
+                    errmsg = ValidateWidth(widthAtDt0);
+                    if (errmsg != null)
+                    {
+                        helper.ShowTextBoxError(textIonMobilityFilterWidthAtMobility0, errmsg);
+                        return null;
+                    }
+
+                    errmsg = ValidateWidth(widthAtDtMax);
+                    if (errmsg != null)
+                    {
+                        helper.ShowTextBoxError(textIonMobilityFilterWidthAtMobilityMax, errmsg);
+                        return null;
+                    }
+                    break;
+                case IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power:
+                    if (!helper.ValidateDecimalTextBox(textIonMobilityFilterResolvingPower, out resolvingPower))
+                        return null;
+                    errmsg = ValidateResolvingPower(resolvingPower);
+                    if (errmsg != null)
+                    {
+                        helper.ShowTextBoxError(textIonMobilityFilterResolvingPower, errmsg);
+                        return null;
+                    }
+                    break;
+                case IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width: // Fixed width
+                    if (!helper.ValidateDecimalTextBox(textIonMobilityFilterFixedWidth, out fixedPeakWidth))
+                        return null;
+                    errmsg = ValidateFixedWindow(fixedPeakWidth);
+                    if (errmsg != null)
+                    {
+                        helper.ShowTextBoxError(textIonMobilityFilterFixedWidth, errmsg);
+                        return null;
+                    }
+                    break;
+            }
+
+            var ionMobilityWindowWidthCalculator =
+                new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax, fixedPeakWidth);
             return new TransitionIonMobilityFiltering(ionMobilityLibrarySpec, useSpectralLibraryIonMobilities, ionMobilityWindowWidthCalculator);
         }
 

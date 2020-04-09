@@ -286,6 +286,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to unknown.
+        /// </summary>
+        public static string eIonMobilityUnits_unknown {
+            get {
+                return ResourceManager.GetString("eIonMobilityUnits_unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DDA.
         /// </summary>
         public static string FullScanAcquisitionMethod_DDA {

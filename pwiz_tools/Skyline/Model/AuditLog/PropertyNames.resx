@@ -1505,4 +1505,16 @@
   <data name="TransitionSettings_IonMobilityFiltering" xml:space="preserve">
     <value>Ion Mobility</value>
   </data>
+  <data name="EditIonMobilityLibraryDlgSettings" xml:space="preserve">
+    <value>Ion mobility library settings</value>
+  </data>
+  <data name="IonMobilityLibrarySpec_FilePathAuditLog" xml:space="preserve">
+    <value>Ion mobility library file</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlgSettings_IonMobilityLibrary" xml:space="preserve">
+    <value>Ion mobility library</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlgSettings_LibraryIonMobilities" xml:space="preserve">
+  <value>Ion mobility library values</value>
+  </data>
 </root>

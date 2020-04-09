@@ -30,6 +30,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
@@ -40,9 +41,47 @@ using DatabaseOpeningException = pwiz.Skyline.Model.IonMobility.DatabaseOpeningE
 
 namespace pwiz.Skyline.SettingsUI.IonMobility
 {
-    public partial class EditIonMobilityLibraryDlg : FormEx
+    public partial class EditIonMobilityLibraryDlg : FormEx, IAuditLogModifier<EditIonMobilityLibraryDlg.EditIonMobilityLibraryDlgSettings>
     {
         private readonly IEnumerable<IonMobilityLibrarySpec> _existingLibs;
+
+        public sealed class EditIonMobilityLibraryDlgSettings : AuditLogOperationSettings<EditIonMobilityLibraryDlgSettings>
+        {
+            private SrmDocument.DOCUMENT_TYPE _docType;
+            public override MessageInfo MessageInfo
+            {
+                get { return new MessageInfo(MessageType.edited_ion_mobility_library, _docType, IonMobilityLibrary.Name, IonMobilityLibrary.FilePath); }
+            }
+
+            public EditIonMobilityLibraryDlgSettings()
+            {
+                IonMobilityLibrary = Model.IonMobility.IonMobilityLibrary.NONE;
+                LibraryIonMobilities = new List<ValidatingIonMobilityPrecursor>();
+                _docType = SrmDocument.DOCUMENT_TYPE.none;
+            }
+
+            public object GetDefaultObject(ObjectInfo<object> info) { return new EditIonMobilityLibraryDlgSettings(); }
+
+            public EditIonMobilityLibraryDlgSettings(IonMobilityLibrarySpec ionMobilityLibrary, IList<ValidatingIonMobilityPrecursor> ionMobilities, SrmDocument.DOCUMENT_TYPE docType)
+            {
+                IonMobilityLibrary = ionMobilityLibrary;
+                LibraryIonMobilities = ionMobilities;
+                _docType = docType;
+            }
+
+
+            [Track]
+            public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
+
+            [TrackChildren]
+            public IList<ValidatingIonMobilityPrecursor> LibraryIonMobilities { get; private set; }
+        }
+        public EditIonMobilityLibraryDlgSettings FormSettings
+        {
+            get { return new EditIonMobilityLibraryDlgSettings(IonMobilityLibrary, LibraryMobilitiesFlat, ModeUI); }
+        }
+
+
 
         public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
 
@@ -70,35 +109,43 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             Icon = Resources.Skyline;
             var smallMoleculeUI = Program.MainWindow.Document.HasSmallMolecules || Program.MainWindow.ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic;
 
-            _gridViewLibraryDriver = new CollisionalCrossSectionGridViewDriver(gridViewMeasuredPeptides,
+            _gridViewLibraryDriver = new CollisionalCrossSectionGridViewDriver(gridViewIonMobilities,
                 bindingSourceLibrary,
                 new SortableBindingList<ValidatingIonMobilityPrecursor>());
-            columnIonMobilityUnits.MaxDropDownItems = Enum.GetNames(typeof(eIonMobilityUnits)).Length;
-            for (int i = 0; i < columnIonMobilityUnits.MaxDropDownItems; i++)
-                columnIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString((eIonMobilityUnits) i));
+
+            // Show window width caclulation types in L10N, watch out for special type "unknown" which does not display
+            object[] namesL10n = Enumerable.Range(0, Enum.GetNames(typeof(eIonMobilityUnits)).Length)
+                .Select(n => IonMobilityFilter.IonMobilityUnitsL10NString((eIonMobilityUnits) n)).Where(s => s != null)
+                .ToArray();
+            columnIonMobilityUnits.MaxDropDownItems = namesL10n.Length;
+            columnIonMobilityUnits.Items.AddRange(namesL10n);
 
             if (smallMoleculeUI)
             {
-                gridViewMeasuredPeptides.Columns[COLUMN_TARGET].HeaderText = Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Molecule;
-                gridViewMeasuredPeptides.Columns[COLUMN_ADDUCT].HeaderText = Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct;
+                gridViewIonMobilities.Columns[COLUMN_TARGET].HeaderText = Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Molecule;
+                gridViewIonMobilities.Columns[COLUMN_ADDUCT].HeaderText = Resources.EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct;
             }
 
             if (library != null)
             {
                 textLibraryName.Text = _editingName = library.Name;
-                string databaseStartPath = library.DatabasePath;
+                string databaseStartPath = library.FilePath;
 
                 OpenDatabase(databaseStartPath);
             }
 
             UpdateControls();
+
+            // If there are high energy IM offsets be sure to show them
+            if (LibraryMobilitiesFlat.Any(item => item.HighEnergyIonMobilityOffset != 0))
+                cbOffsetHighEnergySpectra.Checked = true;
         }
 
         private void OnLoad(object sender, EventArgs e)
         {
             // If you set this in the Designer, DataGridView has a defect that causes it to throw an
             // exception if the the cursor is positioned over the record selector column during loading.
-            gridViewMeasuredPeptides.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            gridViewIonMobilities.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         }
 
         private bool DatabaseChanged
@@ -130,7 +177,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
-        // Flat (multiple conformers occupy multiple lines) representation, as in .imdb file
+        // Flat (multiple conformers occupy multiple lines) representation
         public IList<ValidatingIonMobilityPrecursor> LibraryMobilitiesFlat 
         {
             get { return _gridViewLibraryDriver.Items; }
@@ -166,15 +213,21 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
-
-                    CreateDatabase(dlg.FileName, LibraryName);
-                    textDatabase.Focus();
+                    var fileName = dlg.FileName;
+                    CreateDatabaseFile(fileName);
                 }
             }
         }
 
-        public void CreateDatabase(string path, string libraryName)
+        public void CreateDatabaseFile(string fileName)
+        {
+            Settings.Default.ActiveDirectory = Path.GetDirectoryName(fileName);
+
+            CreateDatabase(fileName, LibraryName);
+            textDatabase.Focus();
+        }
+
+        private void CreateDatabase(string path, string libraryName)
         {
             //The file that was just created does not have a schema, so SQLite won't touch it.
             //The file must have a schema or not exist for use with SQLite, so we'll delete
@@ -193,9 +246,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             //Create file, initialize db
             try
             {
-                IonMobilityDb.CreateIonMobilityDb(path, libraryName, false);
+                IonMobilityLibrary = new IonMobilityLibrary(libraryName, path, 
+                    IonMobilityDb.CreateIonMobilityDb(path, libraryName, false));
 
                 textDatabase.Text = path;
+
+                UpdateControls();
             }
             catch (DatabaseOpeningException x)
             {
@@ -258,6 +314,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 _originalMobilitiesFlat = dbIonMobilities.Select(p => new ValidatingIonMobilityPrecursor(p)).ToArray();
 
                 textDatabase.Text = path;
+                IonMobilityLibrary = new IonMobilityLibrary(LibraryName, path, db);
             }
             catch (DatabaseOpeningException e)
             {
@@ -315,7 +372,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             // This function MessageBox.Show's error messages
             if (!ValidateIonMobilitiesList(LibraryMobilitiesFlat, textLibraryName.Text ?? string.Empty))
             {
-                gridViewMeasuredPeptides.Focus();
+                gridViewIonMobilities.Focus();
                 return;                
             }
 
@@ -393,7 +450,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var existingLines = new Dictionary<string, int>();
             int redundantRows = 0;
             int rownum = 0;
-            foreach (DataGridViewRow row in gridViewMeasuredPeptides.Rows)
+            foreach (DataGridViewRow row in gridViewIonMobilities.Rows)
             {
                 if (!row.IsNewRow)
                 {
@@ -433,25 +490,25 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 }
             }
             if (redundantRows > 0)
-                gridViewMeasuredPeptides.DoDelete(); // delete rows with selected columns
-            UpdateNumPeptides(); // update the count display
+                gridViewIonMobilities.DoDelete(); // delete rows with selected columns
+            UpdateNumPrecursorIons(); // update the count display
         }
 
         private void gridViewLibrary_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
-            UpdateNumPeptides(); // update the count display
+            UpdateNumPrecursorIons(); // update the count display
         }
 
         private void gridViewLibrary_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
         {
-            UpdateNumPeptides();
+            UpdateNumPrecursorIons();
         }
 
-        private void UpdateNumPeptides()
+        private void UpdateNumPrecursorIons()
         {
-            labelNumPeptides.Text = ModeUIAwareStringFormat(LibraryMobilitiesFlat.Count == 1
-                    ? Resources.EditIonMobilityLibraryDlg_UpdateNumPeptides__0__Peptide
-                    : Resources.EditIonMobilityLibraryDlg_UpdateNumPeptides__0__Peptides,
+            labelNumPrecursorIons.Text = ModeUIAwareStringFormat(LibraryMobilitiesFlat.Count <= 1
+                    ? Resources.EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ion
+                    : Resources.EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ions,
                 LibraryMobilitiesFlat.Count);
         }
 
@@ -548,11 +605,14 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     longWaitDlg.PerformWork(this, 100, broker =>
                     {
                         dict = Model.IonMobility.IonMobilityLibrary.CreateFromResults(
-                            document, documentFilePath, useHighEnergyOffset, broker);
+                            document, documentFilePath, useHighEnergyOffset,
+                            broker);
                     });
                     if (!longWaitDlg.IsCanceled && dict != null)
                     {
-                        // Set display units based on what we found in the data
+                        // Preserve existing values that weren't updated by this search
+                        dict = MergeWithExisting(LibraryMobilitiesFlat, dict);
+                        // And update display
                         UpdateMeasuredDriftTimesControl(dict);
                     }
                 }
@@ -563,10 +623,46 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
+        public static Dictionary<LibKey, IonMobilityAndCCS> MergeWithExisting(IList<ValidatingIonMobilityPrecursor> previous, Dictionary<LibKey, IonMobilityAndCCS> dict)
+        {
+            if (previous.Any()) // Any existing entries?
+            {
+                // Add any existing values that weren't updated to this dictionary
+                // Also check for equivalent (varying precision modifications) precursors in the document, prefer the existing version 
+                var found = LibKeyMap<IonMobilityAndCCS>.FromDictionary(dict); // LibKeyMap can match modifications written at varying precisions
+                foreach (var existing in previous)
+                {
+                    // Determine whether the document uses a different representation of the same precursor
+                    var match = found.KeyPairsMatching(existing.Precursor, true).ToArray();
+                    if (match.Length == 0)
+                    {
+                        // Document did not contain the library precursor, retain it
+                        dict.Add(existing.Precursor, existing.GetIonMobilityAndCCS());
+                    }
+                    else
+                    {
+                        // Document contained the library precursor, but is it using same modification precision etc?
+                        if (!dict.ContainsKey(existing.Precursor))
+                        {
+                            // Document and library use different representation of precursor
+                            // Prefer the one already in the library
+                            foreach (var kvp in match)
+                            {
+                                dict.Remove(kvp.Key);
+                                dict.Add(existing.Precursor, kvp.Value);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return dict;
+        }
+
         private void UpdateMeasuredDriftTimesControl(Dictionary<LibKey, IonMobilityAndCCS> ionMobilities)
         {
 
-            // List any measured ion mobility values, taking care to show only those matching display units
+            // List any measured ion mobility values
             _gridViewLibraryDriver.SetTablePrecursors(ionMobilities.Select(item => new ValidatingIonMobilityPrecursor(item.Key, item.Value)));
 
             cbOffsetHighEnergySpectra.Checked = ionMobilities.Any(item => item.Value.HighEnergyIonMobilityOffset != 0);
@@ -579,7 +675,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             textDatabase.Enabled = !string.IsNullOrEmpty(LibraryName); // Need a name before we can create a database
 
-            cbOffsetHighEnergySpectra.Enabled = btnUseResults.Enabled = btnImportFromLibrary.Enabled = gridViewMeasuredPeptides.Enabled =
+            cbOffsetHighEnergySpectra.Enabled = btnUseResults.Enabled = btnImportFromLibrary.Enabled = gridViewIonMobilities.Enabled =
                 (IonMobilityLibrary != null); // Need a database before we can populate it
 
             _gridViewLibraryDriver.SetColumnVisibility(COLUMN_HIGH_ENERGY_OFFSET, cbOffsetHighEnergySpectra.Checked);
@@ -653,13 +749,13 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public void ImportFromSpectralLibrary()
         {
-            using (var importFromLibraryDlg = new ImportIonMobilityFromSpectralLibraryDlg(Settings.Default.SpectralLibraryList, this))
+            using (var importFromLibraryDlg = new ImportIonMobilityFromSpectralLibraryDlg(Settings.Default.SpectralLibraryList, Items, this))
             {
                 importFromLibraryDlg.ShowDialog(MessageParent);
             }
         }
 
-        public string ImportFromSpectralLibrary(LibrarySpec librarySpec)
+        public string ImportFromSpectralLibrary(LibrarySpec librarySpec, IList<ValidatingIonMobilityPrecursor> existing)
         {
             var libraryManager = ((ILibraryBuildNotificationContainer)Program.MainWindow).LibraryManager;
             Library library = null;
@@ -686,7 +782,30 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                             if (fileCount != 0)
                             {
                                 peptideCollisionalCrossSections = CollectIonMobilitiesAndCollisionalCrossSections(monitor, GetIonMobilityProviders(library), fileCount);
-                                success = peptideCollisionalCrossSections != null && peptideCollisionalCrossSections.Any();
+                                if (peptideCollisionalCrossSections != null)
+                                {
+                                    var found = peptideCollisionalCrossSections.ToArray();
+                                    success = found.Any();
+                                    if (success && existing.Any())
+                                    {
+                                        // Combine with any existing entries
+                                        var dict = new Dictionary<LibKey, IonMobilityAndCCS>();
+                                        foreach (var item in found)
+                                        {
+                                            var libkey = item.Precursor;
+                                            var value = item.GetIonMobilityAndCCS();
+                                            if (!dict.ContainsKey(libkey)) // Not expecting multiple conformers from a spectral library
+                                                dict.Add(libkey, value);
+                                        }
+                                        dict = EditIonMobilityLibraryDlg.MergeWithExisting(existing, dict);
+                                        var updated = new List<ValidatingIonMobilityPrecursor>();
+                                        foreach (var kvp in dict)
+                                        {
+                                            updated.Add(new ValidatingIonMobilityPrecursor(kvp.Key, kvp.Value));
+                                        }
+                                        peptideCollisionalCrossSections = updated;
+                                    }
+                                }
                             }
                             if (!success)
                             {
@@ -724,7 +843,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             if (peptideCollisionalCrossSections == null)
                 return null;
-
             SetTablePrecursors(peptideCollisionalCrossSections);
             return null;
         }
@@ -864,15 +982,27 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 return Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_at_a_minimum_contain_columns_for_peptide_and_adduct__along_with_collisional_cross_section_and_or_ion_mobility_;
             }
 
-            var target = columns[EditIonMobilityLibraryDlg.COLUMN_TARGET] as string;
-            var adduct = columns[EditIonMobilityLibraryDlg.COLUMN_ADDUCT] as string;
-            var collisionalCrossSection = columns[EditIonMobilityLibraryDlg.COLUMN_CCS] as string;
-            var ionMobility = (columns.Length > EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY) ?
-                columns[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY] as string : string.Empty;
-            var highEnergyOffset = (columns.Length > EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET) ?
-                columns[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET] as string : string.Empty;
-            var units = (columns.Length > EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY_UNITS) ?
-                columns[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY_UNITS] as string : string.Empty;
+            var target = columns[EditIonMobilityLibraryDlg.COLUMN_TARGET] == null
+                ? String.Empty
+                : columns[EditIonMobilityLibraryDlg.COLUMN_TARGET].ToString();
+            var adduct = columns[EditIonMobilityLibraryDlg.COLUMN_ADDUCT] == null
+                ? String.Empty
+                : columns[EditIonMobilityLibraryDlg.COLUMN_ADDUCT].ToString();
+            var collisionalCrossSection = columns[EditIonMobilityLibraryDlg.COLUMN_CCS] == null
+                ? null
+                : columns[EditIonMobilityLibraryDlg.COLUMN_CCS].ToString();
+            var ionMobility = (columns.Length > EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY) &&
+                              columns[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY] != null
+                ? columns[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY].ToString()
+                : string.Empty;
+            var highEnergyOffset = (columns.Length > EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET) &&
+                                   columns[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET] != null
+                ? columns[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET].ToString()
+                : string.Empty;
+            var units = (columns.Length > EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY_UNITS) &&
+                        columns[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY_UNITS] != null
+                ? columns[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY_UNITS].ToString()
+                : string.Empty;
 
             var messages = new List<string>();
 
@@ -917,7 +1047,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     parsedAdduct.AdductCharge, TransitionGroup.MAX_PRECURSOR_CHARGE));
             }
 
-            double dCollisionalCrossSection;
             if (string.IsNullOrWhiteSpace(collisionalCrossSection) && string.IsNullOrWhiteSpace(ionMobility))
             {
                 messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_collisional_cross_section_value_on_line__0__, lineNumber));
@@ -925,6 +1054,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
             else if (!string.IsNullOrWhiteSpace(collisionalCrossSection))
             {
+                double dCollisionalCrossSection;
                 if (!double.TryParse(collisionalCrossSection, out dCollisionalCrossSection))
                 {
                     messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_collisional_cross_section_on_line__1__,
@@ -941,14 +1071,14 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 }
             }
 
-            double dIonMobility;
-            if (string.IsNullOrWhiteSpace(ionMobility) && string.IsNullOrWhiteSpace(ionMobility))
+            if (string.IsNullOrWhiteSpace(ionMobility) && string.IsNullOrWhiteSpace(collisionalCrossSection))
             {
                 messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_ion_mobility_value_on_line__0__, lineNumber));
                 badCell = EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY;
             }
             else if (!string.IsNullOrWhiteSpace(ionMobility))
             {
+                double dIonMobility;
                 if (!double.TryParse(ionMobility, out dIonMobility))
                 {
                     messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_ion_mobility_on_line__1__,
@@ -978,6 +1108,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Unrecognized_ion_mobility_units___0___on_line__1_,
                     units,
                     lineNumber));
+                // Inform the user of the strings we will accept
+                messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Supported_units_include___0_,
+                    string.Join(@",", IonMobilityFilter.KnownIonMobilityTypes)));
                 badCell = EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY_UNITS;
             }
 

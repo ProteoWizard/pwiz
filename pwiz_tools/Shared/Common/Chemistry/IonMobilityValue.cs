@@ -26,7 +26,8 @@ namespace pwiz.Common.Chemistry
         none,
         drift_time_msec,
         inverse_K0_Vsec_per_cm2,
-        compensation_V
+        compensation_V,
+        unknown // Keep this as last in list, used only in XML deserialization of older Skyline document
     }
 
     public sealed class IonMobilityValue : Immutable, IComparable<IonMobilityValue>
@@ -80,6 +81,14 @@ namespace pwiz.Common.Chemistry
         {
             return value == Mobility ? this : GetIonMobilityValue(value, Units);
         }
+        public IonMobilityValue ChangeIonMobilityUnits(eIonMobilityUnits units)
+        {
+            return Equals(units, Units) ?
+                this :
+                units == eIonMobilityUnits.none ? EMPTY : ChangeProp(ImClone(this), im => im.Units = units);
+        }
+
+
 
         /// <summary>
         /// Merge non-empty parts of other into a copy of this
@@ -89,7 +98,12 @@ namespace pwiz.Common.Chemistry
             var val = this;
             if (other.Units != eIonMobilityUnits.none)
             {
-                if (other.HasValue)
+                if (Equals(other.Units, eIonMobilityUnits.unknown))
+                {
+                    if (other.HasValue)
+                        val = val.ChangeIonMobility(other.Mobility, Units);
+                }
+                else if (other.HasValue)
                 {
                     val = other;
                 }

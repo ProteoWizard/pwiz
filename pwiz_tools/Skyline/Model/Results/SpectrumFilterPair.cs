@@ -36,6 +36,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _filterByTime;
         private readonly double _maxTime;
         private readonly double _minTime;
+        private readonly IonMobilityFilterSet _ionMobilityFilters;
+
         public SpectrumFilterPair(PrecursorTextId precursorTextId, Color peptideColor, int id, double? minTime, double? maxTime,
             bool highAccQ1, bool highAccQ3)
         {
@@ -56,7 +58,7 @@ namespace pwiz.Skyline.Model.Results
                 // If not min and max, then it should be neither. Asymmetric limits not supported.
                 Assume.IsTrue(!minTime.HasValue && !maxTime.HasValue);
             }
-            IonMobilityFilters = precursorTextId.IonMobility;
+            _ionMobilityFilters = precursorTextId.IonMobility;
             HighAccQ1 = highAccQ1;
             HighAccQ3 = highAccQ3;
 
@@ -81,7 +83,11 @@ namespace pwiz.Skyline.Model.Results
         public int? BestWindowGroup { get; private set; }
         public double? BestWindowGroupDistance { get; private set; }
         public IList<int> OtherWindowGroups { get; private set; }
-        public IonMobilityFilterSet IonMobilityFilters { get; private set; } // As used by Ms1Product filters - ms2ProductFilters may use a high energy offset version that differs
+
+        public IonMobilityFilterSet IonMobilityFilters  // As used by Ms1Product filters - ms2ProductFilters may use a high energy offset version that differs
+        {
+            get { return _ionMobilityFilters; }
+        }
         private bool HasCombinedIonMobility { get; set; } // When true, data was read in 3-array format, which affects spectrum ID format
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
@@ -220,8 +226,8 @@ namespace pwiz.Skyline.Model.Results
                 for (int targetIndex = 0; targetIndex < targetCount; targetIndex++)
                 {
                     var productFilter = productFilters[targetIndex];
-                    // Ensure uncombined IM spectra are within range
-                    if (spectrum.IonMobilities == null &&
+                    // Ensure uncombined IM spectra (non-3-array, one IM value per scan) are within range
+                    if (spectrum.IonMobilities == null && // Non-null in 3-array format
                         !productFilter.IonMobilityFilters.ContainsIonMobility(spectrum.IonMobility, useIonMobilityHighEnergyOffset))
                     {
                         continue;
@@ -382,13 +388,16 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ContainsIonMobilityValue(double ionMobilityValue, bool useHighEnergyOffset)
         {
-            return IonMobilityFilters.Any(im =>
-            {
-                var testval = ionMobilityValue + (useHighEnergyOffset ? (im.HighEnergyIonMobilityOffset??0) : 0);
-                var halfWin = im.IonMobilityExtractionWindowWidth / 2;
-                return im.IonMobilityAndCCS.IonMobility.Mobility - halfWin <= testval &&
-                       testval <= im.IonMobilityAndCCS.IonMobility.Mobility + halfWin;
-            });
+            return IonMobilityFilters.IsEmpty || // An empty filter contains all values
+                   IonMobilityFilters.Any(filter =>
+                   {
+                       var mobility = useHighEnergyOffset ?
+                           ionMobilityValue + (filter.HighEnergyIonMobilityOffset ?? 0) :
+                           ionMobilityValue;
+                       var halfWin = filter.IonMobilityExtractionWindowWidth / 2;
+                       return filter.IonMobilityAndCCS.IonMobility.Mobility - halfWin <= mobility &&
+                              mobility <= filter.IonMobilityAndCCS.IonMobility.Mobility + halfWin;
+                   });
         }
 
         public bool IsKnownWindowGroup(int windowGroup)

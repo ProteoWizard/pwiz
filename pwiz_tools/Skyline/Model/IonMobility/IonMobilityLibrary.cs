@@ -39,16 +39,13 @@ namespace pwiz.Skyline.Model.IonMobility
 
         private IonMobilityDb _database;
 
-        public IonMobilityLibrary(string name, string databasePath, IonMobilityDb loadedDatabase)
-            : base(name)
+        public IonMobilityLibrary(string name, string filePath, IonMobilityDb loadedDatabase)
+            : base(name, filePath)
         {
-            DatabasePath = databasePath;
             _database = loadedDatabase;
         }
 
         public override int Count { get { return _database == null || _database.DictLibrary == null ? -1 : _database.DictLibrary.Count; } }  // How many entries in library?
-
-        public string DatabasePath { get; private set; }
 
         public override bool IsNone
         {
@@ -64,24 +61,19 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             if (_database != null)
                 return this;
-            var database = IonMobilityDb.GetIonMobilityDb(DatabasePath, loadMonitor);
+            var database = IonMobilityDb.GetIonMobilityDb(FilePath, loadMonitor);
             // Check for the case where an exception was handled by the progress monitor
             if (database == null)
                 return null;
             return ChangeDatabase(database);
         }
 
-        public override string PersistencePath
-        {
-            get { return DatabasePath; }
-        }
-
         /// <summary>
-        /// Saves the database to a new directory with only the charged peptides used
+        /// Saves the database to a new directory with only the ions used
         /// in a given document.
         /// </summary>
         /// <param name="pathDestDir">The directory to save to</param>
-        /// <param name="document">The document for which charged peptides are to be kept</param>
+        /// <param name="document">The document for which ions are to be kept</param>
         /// <param name="smallMoleculeConversionMap">Used for changing charge,modifedSeq to adduct,molecule in small molecule conversion</param>
         /// <param name="loadedDatabase">Returns in-memory representation of the revised ion mobility table</param>
         /// <returns>The full path to the file saved</returns>
@@ -90,7 +82,7 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             RequireUsable();
 
-            var fname = Path.GetFileName(PersistencePath);
+            var fname = Path.GetFileName(FilePath);
             if (smallMoleculeConversionMap != null && fname != null && 
                 !fname.Contains(BiblioSpecLiteSpec.DotConvertedToSmallMolecules))
             {
@@ -161,8 +153,10 @@ namespace pwiz.Skyline.Model.IonMobility
                 }
                 else
                 {
-                    // Multiple conformer, or just a redundant line?
-                    if (!mobilities.Any(m => Equals(m, ionMobilityAndCcs)))
+                    // Multiple conformer, or just a redundant line? Discard if this CCS+units pair is already in list
+                    if (!mobilities.Any(m => 
+                        Equals(m.CollisionalCrossSectionSqA, ionMobilityAndCcs.CollisionalCrossSectionSqA) &&
+                        Equals(m.Units, ionMobilityAndCcs.Units)))
                     {
                         mobilities.Add(ionMobilityAndCcs);
                     }
@@ -192,17 +186,18 @@ namespace pwiz.Skyline.Model.IonMobility
         public static IonMobilityLibrary CreateFromDictionary(string libraryName, string dbDir, IDictionary<LibKey, List<IonMobilityAndCCS>> dict)
         {
             var fname = Path.GetFullPath(dbDir.Contains(IonMobilityDb.EXT) ? dbDir : Path.Combine(dbDir, libraryName + IonMobilityDb.EXT));
+            IonMobilityDb ionMobilityDb;
             using (var fs = new FileSaver(fname))
             {
-                var ionMobilityDb = IonMobilityDb.CreateIonMobilityDb(fs.SafeName, libraryName, false);
+                ionMobilityDb = IonMobilityDb.CreateIonMobilityDb(fs.SafeName, libraryName, false);
                 if (dict != null)
                 {
                     var list = dict.Select(kvp => new PrecursorIonMobilities(kvp.Key, kvp.Value));
                     ionMobilityDb = ionMobilityDb.UpdateIonMobilities(list);
                 }
                 fs.Commit();
-                return new IonMobilityLibrary(libraryName, fname, ionMobilityDb);
             }
+            return new IonMobilityLibrary(libraryName, fname, ionMobilityDb);
         }
 
         public static IonMobilityLibrary CreateFromList(string libraryName, string dbDir, IList<ValidatingIonMobilityPrecursor> list)
@@ -260,7 +255,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public IonMobilityLibrary ChangeDatabasePath(string path)
         {
-            return ChangeProp(ImClone(this), im => im.DatabasePath = path);
+            return ChangeProp(ImClone(this), im => im.FilePath = path);
         }
 
         public IonMobilityLibrary ChangeDatabase(IonMobilityDb database)
@@ -292,7 +287,7 @@ namespace pwiz.Skyline.Model.IonMobility
         public override void ReadXml(XmlReader reader)
         {
             base.ReadXml(reader);
-            DatabasePath = reader.GetAttribute(ATTR.database_path);
+            FilePath = reader.GetAttribute(ATTR.database_path);
             // Consume tag
             reader.Read();
         }
@@ -300,7 +295,7 @@ namespace pwiz.Skyline.Model.IonMobility
         public override void WriteXml(XmlWriter writer)
         {
             base.WriteXml(writer);
-            writer.WriteAttribute(ATTR.database_path, DatabasePath ?? String.Empty);
+            writer.WriteAttribute(ATTR.database_path, FilePath ?? String.Empty);
         }
 
         public override void WriteXml(XmlWriter writer, IonMobilityWindowWidthCalculator extraInfoForPre20_12)
@@ -340,7 +335,26 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other) && Equals(other.DatabasePath, DatabasePath); // N.B. omitting Equals(other._database, _database) as timestamps will likely differ even if otherwise equal
+            if (!base.Equals(other))
+                return false;
+            if (!Equals(Count, other.Count))
+                return false;
+            if (Count <= 0)
+                return true; // Both empty
+            foreach (var key in _database.DictLibrary.LibKeys)
+            {
+                if (!other._database.DictLibrary.TryGetValue(key, out var otherValues))
+                    return false;
+                _database.DictLibrary.TryGetValue(key, out var values);
+                if (values.Count != otherValues.Count)
+                    return false;
+                foreach (var ionMobilityAndCcs in values)
+                {
+                    if (!otherValues.Contains(ionMobilityAndCcs))
+                        return false;
+                }
+            }
+            return true;
         }
 
         public override bool Equals(object obj)
@@ -355,7 +369,7 @@ namespace pwiz.Skyline.Model.IonMobility
             unchecked
             {
                 int result = base.GetHashCode();
-                result = (result*397) ^ DatabasePath.GetHashCode();
+                result = (result*397) ^ FilePath.GetHashCode();
                 result = (result*397) ^ (_database != null ? _database.GetHashCode() : 0);
                 return result;
             }

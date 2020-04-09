@@ -873,7 +873,10 @@ namespace pwiz.Skyline
                 string hash;
                 using (var hashingStreamReader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
                 {
-                    var reader = new XmlTextReader(skylineFile, hashingStreamReader);  // Wrap in  XmlTextReader so that BaseUri is known
+                    // Wrap stream in XmlReader so that BaseUri is known
+                    var reader = XmlReader.Create(hashingStreamReader, 
+                        new XmlReaderSettings() { IgnoreWhitespace = true }, 
+                        skylineFile);  
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
@@ -1075,12 +1078,12 @@ namespace pwiz.Skyline
             IonMobilityLibrarySpec result;
             if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibSpec.Name, out result))
             {
-                if (result.IsNone || File.Exists(result.PersistencePath))
+                if (result.IsNone || File.Exists(result.FilePath))
                     return result;                
             }
 
             // First look for the file name in the document directory
-            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibSpec.PersistencePath);
+            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibSpec.FilePath);
             if (filePath != null)
             {
                 try
@@ -1096,7 +1099,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            _out.WriteLine(Resources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__, Path.GetFileName(ionMobilityLibSpec.PersistencePath));
+            _out.WriteLine(Resources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__, Path.GetFileName(ionMobilityLibSpec.FilePath));
             return null;
         }
 

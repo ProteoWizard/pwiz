@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return HasDriftTimePrediction &&
                        TransitionSettings.IonMobilityFiltering.IonMobilityLibrary != null &&
                     !TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.IsNone &&
-                       TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.PersistencePath != null;
+                       TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath != null;
             }
         }
 
@@ -1652,7 +1652,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // cancel
                 return null;
             }
-            if (ionMobilityLibSpec.PersistencePath == ionMobilityLibrary.PersistencePath)
+            if (ionMobilityLibSpec.FilePath == ionMobilityLibrary.FilePath)
             {
                 return this;
             }

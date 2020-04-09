@@ -1748,6 +1748,7 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="analyte_concentration" type="xs:double" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

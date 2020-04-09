@@ -125,7 +125,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var searchResultsList = new[] {searchResults};
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage ==
                                 ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchResultsList);
                 importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
@@ -138,13 +138,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Verify document library was built
             string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(skyfile);
             string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
-            Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
+            AssertEx.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
-            Assert.IsTrue(librarySettings.HasDocumentLibrary);
+            AssertEx.IsTrue(librarySettings.HasDocumentLibrary);
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the files should be found, and we should
             // just be able to move to the next page.
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
+            RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
             RunUI(() =>
             {
                 var importResultsControl = (ImportResultsControl) importPeptideSearchDlg.ImportResultsControl;
@@ -181,7 +181,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // We're on the "Import FASTA" page of the wizard.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("human_and_yeast.fasta"));
             });
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
@@ -233,7 +233,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var results = doc1.Settings.MeasuredResults;
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
-                Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
+                AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
                     tolerance, true, out var chromGroupInfo));
 
                 foreach (var chromGroup in chromGroupInfo)
@@ -244,8 +244,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     }
                 }
             }
-            Assert.IsTrue(errmsg.Length == 0, errmsg);
-            Assert.AreEqual(1093421, maxHeight, 1); 
+            AssertEx.IsTrue(errmsg.Length == 0, errmsg);
+            AssertEx.AreEqual(1093421, maxHeight, 1); 
 
             // Does CCS show up in reports?
             TestReports(doc1);
@@ -267,36 +267,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityUnits",
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityWindow"
                 });
-            CheckFieldByName(documentGrid, "IonMobilityMS1", row, 0.832, msg);
-            CheckFieldByName(documentGrid, "IonMobilityFragment", row, (double?)null, msg); // Document is all precursor
-            CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
-            CheckFieldByName(documentGrid, "IonMobilityWindow", row, 0.04, msg);
-            CheckFieldByName(documentGrid, "CollisionalCrossSection", row, 337.4821, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, 0.832, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityFragment", row, (double?)null, msg); // Document is all precursor
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.04, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 337.4821, msg);
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
         }
 
-        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null)
-        {
-            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult." + name);
-            RunUI(() =>
-            {
-                // By checking the 1th row we check both the single file and two file cases
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as double?;
-                Assert.AreEqual(expected.HasValue, val.HasValue, name + (msg ?? string.Empty));
-                Assert.AreEqual(expected ?? 0, val ?? 0, 0.005, name + (msg ?? string.Empty));
-            });
-        }
-
-        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null)
-        {
-            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult." + name);
-            RunUI(() =>
-            {
-                // By checking the 1th row we check both the single file and two file cases
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
-                Assert.AreEqual(expected, val, name + (msg ?? string.Empty));
-            });
-        }
     }
 }

@@ -25,6 +25,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Util.Extensions;
 
@@ -36,8 +37,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
     /// In the UI, the multiple conformer case is handled by two lines with the same ion
     /// and different ion mobilities.
     /// </summary>
-    public class ValidatingIonMobilityPrecursor : DbPrecursorAndIonMobility
+    public class ValidatingIonMobilityPrecursor : DbPrecursorAndIonMobility, IAuditLogComparable
     {
+
+//        public static ValidatingIonMobilityPrecursor EMPTY =
+//            new ValidatingIonMobilityPrecursor(LibKey.EMPTY, IonMobilityAndCCS.EMPTY);
+
         public ValidatingIonMobilityPrecursor(LibKey libKey, IonMobilityAndCCS ionMobility) :
             base(new DbPrecursorIon(libKey.Target, libKey.Adduct), 
                 ionMobility.CollisionalCrossSectionSqA, ionMobility.IonMobility.Mobility??0, ionMobility.IonMobility.Units, ionMobility.HighEnergyIonMobilityOffset)
@@ -122,6 +127,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return string.Format(@"{0} ccs={1} im={2}{3}", Precursor.ToString() , CollisionalCrossSectionSqA, IonMobility, IonMobilityUnits);
         }
 
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return null;
+        }
     }
 
 

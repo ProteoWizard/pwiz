@@ -10982,4 +10982,13 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="FastaImporter_Import__0__proteins_and__1__peptides_added" xml:space="preserve">
     <value>{0} proteins and {1} peptides added</value>
   </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Supported_units_include___0_" xml:space="preserve">
+    <value>Supported units include: {0}</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ion" xml:space="preserve">
+    <value>{0} Precursor Ion</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ions" xml:space="preserve">
+    <value>{0} Precursor Ions</value>
+  </data>
 </root>

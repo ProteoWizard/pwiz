@@ -4137,6 +4137,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Supported units include: {0}.
+        /// </summary>
+        public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_Supported_units_include___0_ {
+            get {
+                return ResourceManager.GetString("CollisionalCrossSectionGridViewDriverBase_ValidateRow_Supported_units_include___0" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The collisional cross section {0} must be greater than zero on line {1}..
         /// </summary>
         public static string CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_collisional_cross_section__0__must_be_greater_than_zero_on_line__1__ {
@@ -9261,6 +9271,24 @@ namespace pwiz.Skyline.Properties {
         public static string EditIonMobilityLibraryDlg_UpdateNumPeptides__0__Peptides {
             get {
                 return ResourceManager.GetString("EditIonMobilityLibraryDlg_UpdateNumPeptides__0__Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Precursor Ion.
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ion {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Precursor Ions.
+        /// </summary>
+        public static string EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ions {
+            get {
+                return ResourceManager.GetString("EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ions", resourceCulture);
             }
         }
         

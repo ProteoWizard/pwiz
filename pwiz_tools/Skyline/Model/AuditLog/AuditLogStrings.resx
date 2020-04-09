@@ -644,6 +644,10 @@
   <data name="start_log_existing_doc" xml:space="preserve">
     <value>Start of audit log for already existing document</value>
   </data>
+  <data name="edited_ion_mobility_library" xml:space="preserve">
+    <value>Edited ion mobility library {0} ({1})</value>
+    <comment>{0} is library name, {1} is library file location</comment>
+  </data>
   <data name="AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified" xml:space="preserve">
     <value>The following audit log entries were modified:
 

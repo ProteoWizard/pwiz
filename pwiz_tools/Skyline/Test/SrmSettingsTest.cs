@@ -1149,7 +1149,7 @@ namespace pwiz.SkylineTest
 
             var pred = CheckIonMobilitySettingsBackwardCompatibility("<predict_drift_time name=\"test\" resolving_power=\"100\"></predict_drift_time>");
             var libFileName = "test.imdb";
-            Assert.AreEqual(TestContext.GetTestPath(libFileName), pred.IonMobilityLibrary.PersistencePath);
+            Assert.AreEqual(TestContext.GetTestPath(libFileName), pred.IonMobilityLibrary.FilePath);
             Assert.AreEqual("test", pred.IonMobilityLibrary.Name);
             Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, pred.FilterWindowWidthCalculator.WindowWidthMode);
             Assert.AreEqual(0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);

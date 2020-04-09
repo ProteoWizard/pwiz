@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model
                 if (Document.Settings.HasOptimizationLibraryPersisted)
                     zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath);
                 if (Document.Settings.HasIonMobilityLibraryPersisted)
-                    zip.AddFile(transitionSettings.IonMobilityFiltering.IonMobilityLibrary.PersistencePath);
+                    zip.AddFile(transitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath);
                     
                 var libfiles = new HashSet<string>();
                 foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)

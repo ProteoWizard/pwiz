@@ -43,6 +43,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -584,6 +585,39 @@ namespace pwiz.SkylineTestUtil
                 else
                     yield return " null ";  // To help values line up
             }
+        }
+
+        private static int ValuesRecordedCount;
+        public void CheckDocumentResultsGridFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null, bool recordValues = false)
+        {
+            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
+            double? actual = null;
+            RunUI(() =>
+            {
+                var list = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as FormattableList<double?>; // Some ion mobility fields present as lists to support multiple conformers
+                actual = list == null ? documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as double? : list.ToArray()[0];
+            });
+            if (!recordValues)
+            {
+                AssertEx.AreEqual(expected.HasValue, actual.HasValue, name + (msg ?? string.Empty));
+                AssertEx.AreEqual(expected ?? 0, actual ?? 0, 0.005, name + (msg ?? string.Empty));
+            }
+            else
+            {
+                Console.Write(@"{0:0.##}, ", actual);
+                if (++ValuesRecordedCount % 18 == 0)
+                    Console.WriteLine();
+            }
+        }
+
+        public void CheckDocumentResultsGridFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null)
+        {
+            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
+            RunUI(() =>
+            {
+                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
+                AssertEx.AreEqual(expected, val, name + (msg ?? string.Empty));
+            });
         }
     }
 }

@@ -102,6 +102,11 @@ namespace pwiz.Skyline.Model.Lib
             return _index.ItemsMatching(libraryKey, matchAdductAlso).Select(GetItem);
         }
 
+        public IEnumerable<KeyValuePair<LibKey, TItem>> KeyPairsMatching(LibraryKey libraryKey, bool matchAdductAlso)
+        {
+            return _index.ItemsMatching(libraryKey, matchAdductAlso).Select(GetKeyPair);
+        }
+
         public IDictionary<LibKey, TItem> AsDictionary()
         {
             return new LibKeyDictionary(this);
@@ -110,6 +115,12 @@ namespace pwiz.Skyline.Model.Lib
         private TItem GetItem(LibKeyIndex.IndexItem indexItem)
         {
             return _allItems[indexItem.OriginalIndex];
+        }
+
+        private KeyValuePair<LibKey, TItem> GetKeyPair(LibKeyIndex.IndexItem indexItem)
+        {
+            var item = _allItems[indexItem.OriginalIndex];
+            return new KeyValuePair<LibKey, TItem>(new LibKey(indexItem.LibraryKey), item);
         }
 
         public bool TryGetValue(LibKey key, out TItem value)

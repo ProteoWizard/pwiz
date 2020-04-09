@@ -429,8 +429,14 @@ namespace pwiz.Skyline.Model.Serialization
                     !string.IsNullOrEmpty(reader.GetAttribute(ATTR.drift_time)))
                 {
                     var ionMobilityFilter = IonMobilityFilter.ReadXMLAttributes(reader);
+                    if (ionMobilityFilter.IonMobilityUnits == eIonMobilityUnits.unknown)
+                    {
+                        ionMobilityFilter = ionMobilityFilter.ChangeIonMobilityUnits(fileInfo.IonMobilityUnits);
+                    }
                     if (!IonMobilityFilter.IsNullOrEmpty(ionMobilityFilter))
+                    {
                         ionMobilities = IonMobilityFilterSet.GetIonMobilityFilterSet(new[] {ionMobilityFilter});
+                    }
                 }
 
                 var annotations = Annotations.EMPTY;

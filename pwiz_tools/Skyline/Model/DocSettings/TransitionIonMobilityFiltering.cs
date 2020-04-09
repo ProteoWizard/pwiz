@@ -30,6 +30,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -118,15 +119,15 @@ namespace pwiz.Skyline.Model.DocSettings
             // Defer further validation to the SrmSettings object
         }
 
-        public List<IonMobilityAndCCS> GetIonMobilityInfo(LibKey peptide,
+        public List<IonMobilityAndCCS> GetIonMobilityInfo(LibKey ion,
             IIonMobilityFunctionsProvider ionMobilityFunctionsProvider)
         {
-            var ionMobilities = GetIonMobilityInfoFromLibrary(peptide);
+            var ionMobilities = GetIonMobilityInfoFromLibrary(ion);
             // Convert from CCS to ion mobility if possible
             if (ionMobilities != null && 
                 ionMobilityFunctionsProvider != null &&
                 ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter &&
-                peptide.PrecursorMz.HasValue)
+                ion.PrecursorMz.HasValue)
             {
                 var result = new List<IonMobilityAndCCS>();
                 foreach (var im in ionMobilities)
@@ -136,7 +137,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         var ionMobilityValue = ionMobilityFunctionsProvider.IonMobilityFromCCS(
                             im.CollisionalCrossSectionSqA.Value,
-                            peptide.PrecursorMz.Value, peptide.Charge);
+                            ion.PrecursorMz.Value, ion.Charge);
                         if (!Equals(ionMobilityValue, im.IonMobility))
                         {
                             updated = IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue,
@@ -173,10 +174,10 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Get the ion mobility(ies) for the charged peptide, and the width of the window
         /// centered on each 
         /// </summary>
-        public IonMobilityFilterSet GetIonMobilityInfo(LibKey peptide,
+        public IonMobilityFilterSet GetIonMobilityInfo(LibKey ion,
             IIonMobilityFunctionsProvider ionMobilityFunctionsProvider, double ionMobilityRangeMax)
         {
-            var ionMobilities = GetIonMobilityInfo(peptide, ionMobilityFunctionsProvider);
+            var ionMobilities = GetIonMobilityInfo(ion, ionMobilityFunctionsProvider);
             if (ionMobilities != null)
             {
                 var result = new List<IonMobilityFilter>();
@@ -723,8 +724,7 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track] public double? CollisionalCrossSectionSqA { get; private set; }
 
         [Track]
-        public double?
-            HighEnergyIonMobilityOffset
+        public double? HighEnergyIonMobilityOffset
         {
             get;
             private set;
@@ -772,7 +772,14 @@ namespace pwiz.Skyline.Model.DocSettings
                 this :
                 ChangeProp(ImClone(this), im => im.HighEnergyIonMobilityOffset = offset);
         }
-        
+
+        public IonMobilityAndCCS ChangeIonMobilityUnits(eIonMobilityUnits units)
+        {
+            return Equals(units, IonMobility.Units) ?
+                this : 
+                ChangeProp(ImClone(this), im => im.IonMobility = im.IonMobility.ChangeIonMobilityUnits(units));
+        }
+
         public bool HasCollisionalCrossSection { get { return (CollisionalCrossSectionSqA ?? 0) != 0; } }
         public bool HasIonMobilityValue { get { return IonMobility.HasValue; } }
         public bool IsEmpty { get { return !HasIonMobilityValue && !HasCollisionalCrossSection; } }
@@ -816,7 +823,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString() // For debug convenience
         {
-            return string.Format(@"ccs{0}/{1}/he{2}", CollisionalCrossSectionSqA, IonMobility, HighEnergyIonMobilityOffset);
+            return string.Format(@"ccs{0}/{1}/he{2}/{3}", CollisionalCrossSectionSqA, IonMobility, HighEnergyIonMobilityOffset, Units);
         }
     }
 
@@ -1119,6 +1126,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 ionMobilityExtractionWindowWidth);
         }
 
+        public IonMobilityFilter ChangeIonMobilityUnits(eIonMobilityUnits units)
+        {
+            if (Equals(IonMobilityUnits, units))
+                return this;
+            return ChangeProp(ImClone(this), im => im.IonMobilityAndCCS = IonMobilityAndCCS.ChangeIonMobilityUnits(units));
+
+        }
+
+
         // Returns an updated copy of itself with high energy offset applied to mobility value, then zeroed out
         public IonMobilityFilter ApplyOffset()
         {
@@ -1144,7 +1160,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public eIonMobilityUnits IonMobilityUnits { get { return HasIonMobilityValue ? IonMobilityAndCCS.IonMobility.Units : eIonMobilityUnits.none; } }
 
         public bool HasIonMobilityValue { get { return IonMobilityAndCCS.HasIonMobilityValue; } }
-        public bool IsEmpty { get { return !HasIonMobilityValue; } }
+        public bool IsEmpty { get { return IonMobilityAndCCS.IsEmpty; } }
 
         // Used by TransitionGroupDocNode.AddChromInfo to aggregate ion mobility information from all transitions.
         // All transitions, whether MS1 or MS2, are expected to have the same sets of CCS values, though MS2 transitions
@@ -1249,12 +1265,15 @@ namespace pwiz.Skyline.Model.DocSettings
                     Thread.CurrentThread.CurrentUICulture = tryCulture;
                     foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
                     {
-                        var ionMobilityUnitsL10NString = IonMobilityUnitsL10NString(u);
-                        if (string.Equals(units, ionMobilityUnitsL10NString, StringComparison.OrdinalIgnoreCase))
+                        if (u != eIonMobilityUnits.none)
                         {
-                            result = u;
-                            success = true;
-                            break;
+                            var ionMobilityUnitsL10NString = IonMobilityUnitsL10NString(u);
+                            if (string.Equals(units, ionMobilityUnitsL10NString, StringComparison.OrdinalIgnoreCase))
+                            {
+                                result = u;
+                                success = true;
+                                break;
+                            }
                         }
                     }
                     if (success)
@@ -1267,6 +1286,27 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             return success;
+        }
+
+        public static string[] KnownIonMobilityTypes
+        {
+            get
+            {
+                var result = new List<string>();
+                var currentCulture = Thread.CurrentThread.CurrentUICulture;
+                foreach (var culture in new[] { @"en", @"zh-CHS", @"ja" })
+                {
+                    var tryCulture = new CultureInfo(culture);
+                    Thread.CurrentThread.CurrentUICulture = tryCulture;
+                    foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
+                    {
+                        if (u != eIonMobilityUnits.none && u!= eIonMobilityUnits.unknown)
+                            result.Add(IonMobilityUnitsL10NString(u));
+                    }
+                }
+                Thread.CurrentThread.CurrentUICulture = currentCulture;
+                return result.ToArray();
+            }
         }
 
         public enum SerializationElementType { TransitionChromInfo, TransitionGroupChromInfo, LegacyMeasuredIonMobility }
@@ -1327,7 +1367,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     var ionMobilityWindow = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.ion_mobility_window);
                     string ionMobilityUnitsString = reader.GetAttribute(DocumentSerializer.ATTR.ion_mobility_type);
-                    var ionMobilityUnits = SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(ionMobilityUnitsString);
+                    var ionMobilityUnits = string.IsNullOrEmpty(ionMobilityUnitsString) ? eIonMobilityUnits.unknown :
+                        SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(ionMobilityUnitsString);
                     var highEnergyOffset = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.ion_mobility_high_energy_offset);
                     var im = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(
                         ionMobility.Value,
@@ -1399,9 +1440,18 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public abstract class IonMobilityLibrarySpec : XmlNamedElement, IIonMobilityLibrary
     {
-        protected IonMobilityLibrarySpec(string name)
+        protected IonMobilityLibrarySpec(string name, string filePath)
             : base(name)
         {
+            FilePath = filePath;
+        }
+
+        public string FilePath { get; protected set; }
+
+        [Track]
+        public AuditLogPath FilePathAuditLog
+        {
+            get { return AuditLogPath.Create(FilePath); }
         }
 
         /// <summary>
@@ -1423,12 +1473,19 @@ namespace pwiz.Skyline.Model.DocSettings
             return this;
         }
 
-        public virtual string PersistencePath { get { return null; } }
-
         public virtual string PersistMinimized(string pathDestDir, SrmDocument document, IDictionary<LibKey, LibKey> smallMoleculeConversionInfo, out IonMobilityDb loadedDatabase)
         {
             loadedDatabase = null;
             return null;
+        }
+
+        public bool Equals(IonMobilityLibrarySpec other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            if (!(base.Equals(other) && Equals(other.FilePath, FilePath)))
+                return false;
+            return true;
         }
 
         /// <summary>
@@ -1441,6 +1498,7 @@ namespace pwiz.Skyline.Model.DocSettings
         // Special XML writing capability for backward compatibility
         public virtual void WriteXml(XmlWriter writer, IonMobilityWindowWidthCalculator extraInfoForPre20_12)
         {
+            Assume.Fail(@"not implemented");// TODO(bspratt)
         }
 
     }
