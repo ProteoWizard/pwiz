@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -104,6 +105,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public virtual DbPrecursorIon DbPrecursorIon { get; set; }
 
+        [Track]
         public virtual double CollisionalCrossSectionSqA { get; set; }
 
         public virtual double? CollisionalCrossSectionNullable
@@ -112,6 +114,7 @@ namespace pwiz.Skyline.Model.IonMobility
             set { CollisionalCrossSectionSqA = value ?? 0; }
         }
 
+        [Track]
         public virtual double IonMobility { get; set; }
         public virtual double? IonMobilityNullable
         {
@@ -119,6 +122,7 @@ namespace pwiz.Skyline.Model.IonMobility
             set { IonMobility = value ?? 0; }
         }
 
+        [Track]
         public virtual double HighEnergyIonMobilityOffset { get; set; }
 
         public virtual double? HighEnergyIonMobilityOffsetNullable
@@ -128,6 +132,7 @@ namespace pwiz.Skyline.Model.IonMobility
         }
 
 
+        [Track]
         public virtual eIonMobilityUnits IonMobilityUnits { get; set; }
 
         public virtual bool EqualsIgnoreId(DbPrecursorAndIonMobility other)

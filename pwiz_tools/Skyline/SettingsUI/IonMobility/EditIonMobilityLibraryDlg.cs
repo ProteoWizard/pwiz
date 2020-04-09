@@ -43,7 +43,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 {
     public partial class EditIonMobilityLibraryDlg : FormEx, IAuditLogModifier<EditIonMobilityLibraryDlg.EditIonMobilityLibraryDlgSettings>
     {
-        private readonly IEnumerable<IonMobilityLibrarySpec> _existingLibs;
+        private readonly IEnumerable<IonMobilityLibrary> _existingLibs;
 
         public sealed class EditIonMobilityLibraryDlgSettings : AuditLogOperationSettings<EditIonMobilityLibraryDlgSettings>
         {
@@ -62,7 +62,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             public object GetDefaultObject(ObjectInfo<object> info) { return new EditIonMobilityLibraryDlgSettings(); }
 
-            public EditIonMobilityLibraryDlgSettings(IonMobilityLibrarySpec ionMobilityLibrary, IList<ValidatingIonMobilityPrecursor> ionMobilities, SrmDocument.DOCUMENT_TYPE docType)
+            public EditIonMobilityLibraryDlgSettings(IonMobilityLibrary ionMobilityLibrary, IList<ValidatingIonMobilityPrecursor> ionMobilities, SrmDocument.DOCUMENT_TYPE docType)
             {
                 IonMobilityLibrary = ionMobilityLibrary;
                 LibraryIonMobilities = ionMobilities;
@@ -71,7 +71,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
 
             [Track]
-            public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
+            public IonMobilityLibrary IonMobilityLibrary { get; private set; }
 
             [TrackChildren]
             public IList<ValidatingIonMobilityPrecursor> LibraryIonMobilities { get; private set; }
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
 
 
-        public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
+        public IonMobilityLibrary IonMobilityLibrary { get; private set; }
 
         private ValidatingIonMobilityPrecursor[] _originalMobilitiesFlat;
         private readonly CollisionalCrossSectionGridViewDriver _gridViewLibraryDriver;
@@ -100,7 +100,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public const int COLUMN_HIGH_ENERGY_OFFSET = 5;
 
 
-        public EditIonMobilityLibraryDlg(IonMobilityLibrary library, IEnumerable<IonMobilityLibrarySpec> existingLibs)
+        public EditIonMobilityLibraryDlg(IonMobilityLibrary library, IEnumerable<IonMobilityLibrary> existingLibs)
         {
             _existingLibs = existingLibs;
 

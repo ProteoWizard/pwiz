@@ -246,13 +246,23 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.Prediction, Prediction) &&
-                   Equals(obj.Filter, Filter) &&
-                   Equals(obj.IonMobilityFiltering, IonMobilityFiltering) &&
-                   Equals(obj.Libraries, Libraries) &&
-                   Equals(obj.Integration, Integration) &&
-                   Equals(obj.Instrument, Instrument) &&
-                   Equals(obj.FullScan, FullScan);
+
+            // N.B. This multi-statement implementation makes debugging easier
+            if (!Equals(obj.Prediction, Prediction))
+                return false;
+            if (!Equals(obj.Filter, Filter))
+                return false;
+            if (!Equals(obj.IonMobilityFiltering, IonMobilityFiltering))
+                return false;
+            if (!Equals(obj.Libraries, Libraries))
+                return false;
+            if (!Equals(obj.Integration, Integration))
+                return false;
+            if (!Equals(obj.Instrument, Instrument))
+                return false;
+            if (!Equals(obj.FullScan, FullScan))
+                return false;
+            return true;
         }
 
         public override bool Equals(object obj)

@@ -27,7 +27,6 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
-using System.Xml.XmlConfiguration;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
@@ -697,11 +696,11 @@ namespace pwiz.Skyline
             return document.ChangeSettings(settings);
         }
 
-        private IonMobilityLibrarySpec FindIonMobilityLibrary(IWin32Window parent, string documentPath, IonMobilityLibrarySpec ionMobilityLibrarySpec)
+        private IonMobilityLibrary FindIonMobilityLibrary(IWin32Window parent, string documentPath, IonMobilityLibrary ionMobilityLibrary)
         {
 
-            IonMobilityLibrarySpec result;
-            if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibrarySpec.Name, out result))
+            IonMobilityLibrary result;
+            if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibrary.Name, out result))
             {
                 if (result != null && File.Exists(result.FilePath))
                     return result;
@@ -710,14 +709,12 @@ namespace pwiz.Skyline
                 return null;
 
             // First look for the file name in the document directory
-            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibrarySpec.FilePath);
+            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibrary.FilePath);
             if (filePath != null)
             {
                 try
                 {
-                    var ionMobilityLib = ionMobilityLibrarySpec as IonMobilityLibrary;
-                    if (ionMobilityLib != null)
-                        return ionMobilityLib.ChangeDatabasePath(filePath);
+                    return ionMobilityLibrary.ChangeDatabasePath(filePath);
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch 
@@ -730,10 +727,10 @@ namespace pwiz.Skyline
             {
                 using (var dlg = new MissingFileDlg
                 {
-                    ItemName = ionMobilityLibrarySpec.Name,
+                    ItemName = ionMobilityLibrary.Name,
                     ItemType = Resources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library,
                     Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_FindIonMobilityDatabase_ion_mobility_library_files, IonMobilityDb.EXT),
-                    FileHint = Path.GetFileName(ionMobilityLibrarySpec.FilePath),
+                    FileHint = Path.GetFileName(ionMobilityLibrary.FilePath),
                     FileDlgInitialPath = Path.GetDirectoryName(documentPath),
                     Title = Resources.SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library
                 })
@@ -745,9 +742,7 @@ namespace pwiz.Skyline
 
                         try
                         {
-                            var ionMobilityLib = ionMobilityLibrarySpec as IonMobilityLibrary;
-                            if (ionMobilityLib != null)
-                                return ionMobilityLib.ChangeDatabasePath(dlg.FilePath);
+                            return ionMobilityLibrary.ChangeDatabasePath(dlg.FilePath);
                         }
                         catch (DatabaseOpeningException e)
                         {

@@ -48,22 +48,22 @@ namespace pwiz.Skyline.Model.DocSettings
     public class TransitionIonMobilityFiltering : Immutable, IValidating, IXmlSerializable, IEquatable<TransitionIonMobilityFiltering>
     {
 
-        public static TransitionIonMobilityFiltering EMPTY = new TransitionIonMobilityFiltering(IonMobility.IonMobilityLibrary.NONE, false, IonMobilityWindowWidthCalculator.EMPTY);
+        public static TransitionIonMobilityFiltering EMPTY = new TransitionIonMobilityFiltering(IonMobilityLibrary.NONE, false, IonMobilityWindowWidthCalculator.EMPTY);
 
         public static bool IsNullOrEmpty(TransitionIonMobilityFiltering f) { return f == null || f.IsEmpty; }
 
         public TransitionIonMobilityFiltering(string name, string dbDir, IDictionary<LibKey, List<IonMobilityAndCCS>> dict, bool useSpectralLibraryIonMobilityValues, IonMobilityWindowWidthCalculator filterWindowWidthCalculator)
         {
-            IonMobilityLibrary = IonMobility.IonMobilityLibrary.CreateFromDictionary(name, dbDir, dict);
+            IonMobilityLibrary = IonMobilityLibrary.CreateFromDictionary(name, dbDir, dict);
             UseSpectralLibraryIonMobilityValues = useSpectralLibraryIonMobilityValues;
             FilterWindowWidthCalculator = filterWindowWidthCalculator;
 
             Validate();
         }
 
-        public TransitionIonMobilityFiltering(IonMobilityLibrarySpec ionMobilityLibrary, bool useSpectralLibraryIonMobilityValues, IonMobilityWindowWidthCalculator filterWindowWidthCalculator)
+        public TransitionIonMobilityFiltering(IonMobilityLibrary ionMobilityLibrary, bool useSpectralLibraryIonMobilityValues, IonMobilityWindowWidthCalculator filterWindowWidthCalculator)
         {
-            IonMobilityLibrary = ionMobilityLibrary ?? IonMobility.IonMobilityLibrary.NONE;
+            IonMobilityLibrary = ionMobilityLibrary ?? IonMobilityLibrary.NONE;
             UseSpectralLibraryIonMobilityValues = useSpectralLibraryIonMobilityValues;
             FilterWindowWidthCalculator = filterWindowWidthCalculator;
 
@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren]
 
-        public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
+        public IonMobilityLibrary IonMobilityLibrary { get; private set; }
 
         [Track]
         public bool UseSpectralLibraryIonMobilityValues { get; private set; }
@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.FilterWindowWidthCalculator = prop);
         }
 
-        public TransitionIonMobilityFiltering ChangeLibrary(IonMobilityLibrarySpec prop)
+        public TransitionIonMobilityFiltering ChangeLibrary(IonMobilityLibrary prop)
         {
             return ChangeProp(ImClone(this), im => im.IonMobilityLibrary = prop);
         }
@@ -252,7 +252,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             if (IonMobilityLibrary == null)
             {
-                IonMobilityLibrary = IonMobility.IonMobilityLibrary.NONE;
+                IonMobilityLibrary = IonMobilityLibrary.NONE;
             }
             Validate();
         }
@@ -265,9 +265,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write ion mobility library info
             if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
             {
-                var imLib = IonMobilityLibrary as IonMobilityLibrary;
-                if (imLib != null)
-                    writer.WriteElement(imLib);
+                writer.WriteElement(IonMobilityLibrary);
             }
 
         }
@@ -277,9 +275,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(IonMobilityLibrary, other.IonMobilityLibrary) && 
-                   UseSpectralLibraryIonMobilityValues == other.UseSpectralLibraryIonMobilityValues && 
-                   Equals(FilterWindowWidthCalculator, other.FilterWindowWidthCalculator);
+            if (!Equals(IonMobilityLibrary, other.IonMobilityLibrary))
+                return false;
+            if (UseSpectralLibraryIonMobilityValues != other.UseSpectralLibraryIonMobilityValues)
+                return false;
+            if (!Equals(FilterWindowWidthCalculator, other.FilterWindowWidthCalculator))
+                return false;
+            return true;
         }
 
         public override bool Equals(object obj)
@@ -1431,78 +1433,6 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
     }
-
-    public interface IIonMobilityLibrary
-    {
-        string Name { get; }
-        IList<IonMobilityAndCCS> GetIonMobilityInfo(LibKey chargedPeptide); // An ion may have multiple conformers (CCS values)
-    }
-
-    public abstract class IonMobilityLibrarySpec : XmlNamedElement, IIonMobilityLibrary
-    {
-        protected IonMobilityLibrarySpec(string name, string filePath)
-            : base(name)
-        {
-            FilePath = filePath;
-        }
-
-        public string FilePath { get; protected set; }
-
-        [Track]
-        public AuditLogPath FilePathAuditLog
-        {
-            get { return AuditLogPath.Create(FilePath); }
-        }
-
-        /// <summary>
-        /// Get the ion mobility(ies) for the charged molecule.
-        /// </summary>
-        /// <param name="chargedPeptide"></param>
-        /// <returns>ion mobility, or null</returns>
-        public abstract IList<IonMobilityAndCCS> GetIonMobilityInfo(LibKey chargedPeptide);
-        public abstract LibKeyMap<List<IonMobilityAndCCS>> GetIonMobilityLibKeyMap();
-
-        public virtual int Count { get { return -1; } }  // How many entries in library?
-
-        public virtual bool IsUsable { get { return true; } }
-
-        public virtual bool IsNone { get { return false; } }
-
-        public virtual IonMobilityLibrarySpec Initialize(IProgressMonitor loadMonitor)
-        {
-            return this;
-        }
-
-        public virtual string PersistMinimized(string pathDestDir, SrmDocument document, IDictionary<LibKey, LibKey> smallMoleculeConversionInfo, out IonMobilityDb loadedDatabase)
-        {
-            loadedDatabase = null;
-            return null;
-        }
-
-        public bool Equals(IonMobilityLibrarySpec other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            if (!(base.Equals(other) && Equals(other.FilePath, FilePath)))
-                return false;
-            return true;
-        }
-
-        /// <summary>
-        /// For serialization
-        /// </summary>
-        public IonMobilityLibrarySpec()
-        {
-        }
-
-        // Special XML writing capability for backward compatibility
-        public virtual void WriteXml(XmlWriter writer, IonMobilityWindowWidthCalculator extraInfoForPre20_12)
-        {
-            Assume.Fail(@"not implemented");// TODO(bspratt)
-        }
-
-    }
-
 
 
 }

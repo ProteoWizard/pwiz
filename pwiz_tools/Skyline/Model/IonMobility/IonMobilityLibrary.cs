@@ -24,40 +24,53 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.IonMobility
 {
     [XmlRoot("ion_mobility_library")]
-    public class IonMobilityLibrary : IonMobilityLibrarySpec
+    public class IonMobilityLibrary : XmlNamedElement
     {
         public static readonly IonMobilityLibrary NONE = new IonMobilityLibrary(@"None", String.Empty, null);
 
         private IonMobilityDb _database;
+        public string FilePath { get; protected set; }
 
-        public IonMobilityLibrary(string name, string filePath, IonMobilityDb loadedDatabase)
-            : base(name, filePath)
+        public IonMobilityLibrary(string name, string filePath, IonMobilityDb loadedDatabase) : base(name)
         {
+            FilePath = filePath;
             _database = loadedDatabase;
         }
 
-        public override int Count { get { return _database == null || _database.DictLibrary == null ? -1 : _database.DictLibrary.Count; } }  // How many entries in library?
+        [Track]
+        public AuditLogPath FilePathAuditLog
+        {
+            get { return AuditLogPath.Create(FilePath); }
+        }
 
-        public override bool IsNone
+        [TrackChildren]
+        public LibKeyMap<List<IonMobilityAndCCS>> IonMobilityValues
+        {
+            get { return _database == null ? null : _database.DictLibrary; }
+        }
+
+        public int Count { get { return _database == null || _database.DictLibrary == null ? -1 : _database.DictLibrary.Count; } }  // How many entries in library?
+
+        public bool IsNone
         {
             get { return Name == NONE.Name; }
         }
 
-        public override bool IsUsable
+        public bool IsUsable
         {
             get { return _database != null; }
         }
 
-        public override IonMobilityLibrarySpec Initialize(IProgressMonitor loadMonitor)
+        public IonMobilityLibrary Initialize(IProgressMonitor loadMonitor)
         {
             if (_database != null)
                 return this;
@@ -77,7 +90,7 @@ namespace pwiz.Skyline.Model.IonMobility
         /// <param name="smallMoleculeConversionMap">Used for changing charge,modifedSeq to adduct,molecule in small molecule conversion</param>
         /// <param name="loadedDatabase">Returns in-memory representation of the revised ion mobility table</param>
         /// <returns>The full path to the file saved</returns>
-        public override string PersistMinimized(string pathDestDir,
+        public string PersistMinimized(string pathDestDir,
             SrmDocument document, IDictionary<LibKey, LibKey> smallMoleculeConversionMap, out IonMobilityDb loadedDatabase)
         {
             RequireUsable();
@@ -206,14 +219,14 @@ namespace pwiz.Skyline.Model.IonMobility
             return CreateFromDictionary(libraryName, dbDir, dict);
         }
 
-        public override IList<IonMobilityAndCCS> GetIonMobilityInfo(LibKey key)
+        public IList<IonMobilityAndCCS> GetIonMobilityInfo(LibKey key)
         {
             if (_database != null)
                 return _database.GetIonMobilityInfo(key);
             return null;
         }
 
-        public override LibKeyMap<List<IonMobilityAndCCS>> GetIonMobilityLibKeyMap()
+        public LibKeyMap<List<IonMobilityAndCCS>> GetIonMobilityLibKeyMap()
         {
             if (_database != null)
                 return _database.DictLibrary;
@@ -298,7 +311,7 @@ namespace pwiz.Skyline.Model.IonMobility
             writer.WriteAttribute(ATTR.database_path, FilePath ?? String.Empty);
         }
 
-        public override void WriteXml(XmlWriter writer, IonMobilityWindowWidthCalculator extraInfoForPre20_12)
+        public void WriteXml(XmlWriter writer, IonMobilityWindowWidthCalculator extraInfoForPre20_12)
         {
             if (extraInfoForPre20_12 == null)
             {
@@ -306,7 +319,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 return;
             }
 
-            // Write the contents of the currently-in-use .imdb to old style in-document serialization
+            // Write the contents of the currently-in-use .imsdb to old style in-document serialization
             var libKeyMap = GetIonMobilityLibKeyMap();
             if (libKeyMap == null)
                 return;
@@ -336,6 +349,8 @@ namespace pwiz.Skyline.Model.IonMobility
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             if (!base.Equals(other))
+                return false;
+            if (!Equals(other.FilePath, FilePath))
                 return false;
             if (!Equals(Count, other.Count))
                 return false;

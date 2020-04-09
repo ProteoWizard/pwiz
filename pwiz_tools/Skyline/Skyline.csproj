@@ -554,7 +554,7 @@
     <Compile Include="SettingsUI\IonMobility\IonMobilityFilteringUserControl.Designer.cs">
       <DependentUpon>IonMobilityFilteringUserControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\IonMobility\ValidatingIonMobilityPrecursor.cs" />
+    <Compile Include="Model\IonMobility\ValidatingIonMobilityPrecursor.cs" />
     <Compile Include="SettingsUI\Irt\UseCurrentCalculatorDlg.cs">
       <SubType>Form</SubType>
     </Compile>

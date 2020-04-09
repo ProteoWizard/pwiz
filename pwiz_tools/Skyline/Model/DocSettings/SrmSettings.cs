@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
@@ -1637,7 +1638,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 predict.ChangeOptimizationLibrary(!libNew.IsNone ? libNew : OptimizationLibrary.NONE));
         }
 
-        public SrmSettings ConnectIonMobilityLibrary(Func<IonMobilityLibrarySpec, IonMobilityLibrarySpec> findIonMobilityLibSpec)
+        public SrmSettings ConnectIonMobilityLibrary(Func<IonMobilityLibrary, IonMobilityLibrary> findIonMobilityLibSpec)
         {
             if (TransitionSettings.IonMobilityFiltering.IonMobilityLibrary == null)
                 return this;

@@ -110,6 +110,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.textDatabase, "textDatabase");
             this.textDatabase.Name = "textDatabase";
+            this.textDatabase.ReadOnly = true;
             // 
             // label2
             // 

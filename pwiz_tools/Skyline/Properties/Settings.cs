@@ -856,10 +856,9 @@ namespace pwiz.Skyline.Properties
             set => this[typeof(IrtStandardList).Name] = value;
         }
 
-        public IonMobilityLibrarySpec GetIonMobilityLibraryByName(string name)
+        public IonMobilityLibrary GetIonMobilityLibraryByName(string name)
         {
-            IonMobilityLibrarySpec dtLib;
-            return !IonMobilityLibraryList.TryGetValue(name, out dtLib) ? null : dtLib;
+            return !IonMobilityLibraryList.TryGetValue(name, out var dtLib) ? null : dtLib;
         }
 
         [UserScopedSettingAttribute]
@@ -2155,37 +2154,33 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults => 1;
     }
 
-    public sealed class IonMobilityLibraryList : SettingsListNotifying<IonMobilityLibrarySpec>
+    public sealed class IonMobilityLibraryList : SettingsListNotifying<IonMobilityLibrary>
     {
-        public override bool AcceptList(Control owner, IList<IonMobilityLibrarySpec> listNew)
+        public override bool AcceptList(Control owner, IList<IonMobilityLibrary> listNew)
         {
             return true;
         }
 
-        public override IonMobilityLibrarySpec EditItem(Control owner, IonMobilityLibrarySpec item,
-            IEnumerable<IonMobilityLibrarySpec> existing, object tag)
+        public override IonMobilityLibrary EditItem(Control owner, IonMobilityLibrary item,
+            IEnumerable<IonMobilityLibrary> existing, object tag)
         {
-            var lib = item as IonMobilityLibrary;
-            if (item == null || lib != null)
+            using (var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(item, existing))
             {
-                using (var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(lib, existing))
+                if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
                 {
-                    if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
-                    {
-                        return editIonMobilityLibraryDlg.IonMobilityLibrary;
-                    }
+                    return editIonMobilityLibraryDlg.IonMobilityLibrary;
                 }
             }
 
             return null;
         }
 
-        public override IonMobilityLibrarySpec CopyItem(IonMobilityLibrarySpec item)
+        public override IonMobilityLibrary CopyItem(IonMobilityLibrary item)
         {
-            return (IonMobilityLibrarySpec)item.ChangeName(string.Empty);
+            return (IonMobilityLibrary)item.ChangeName(string.Empty);
         }
 
-        public override IEnumerable<IonMobilityLibrarySpec> GetDefaults(int revisionIndex)
+        public override IEnumerable<IonMobilityLibrary> GetDefaults(int revisionIndex)
         {
             return new[] { IonMobilityLibrary.NONE };
         }
@@ -2204,13 +2199,13 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        private static readonly IXmlElementHelper<IonMobilityLibrarySpec>[] ION_MOBILITY_LIB_HELPERS =
+        private static readonly IXmlElementHelper<IonMobilityLibrary>[] ION_MOBILITY_LIB_HELPERS =
         {
-            new XmlElementHelperSuper<IonMobilityLibrary, IonMobilityLibrarySpec>(),
+            new XmlElementHelperSuper<IonMobilityLibrary, IonMobilityLibrary>(),
         };
 
 
-        protected override IXmlElementHelper<IonMobilityLibrarySpec>[] GetXmlElementHelpers()
+        protected override IXmlElementHelper<IonMobilityLibrary>[] GetXmlElementHelpers()
         {
             return ION_MOBILITY_LIB_HELPERS;
         }
@@ -2219,7 +2214,7 @@ namespace pwiz.Skyline.Properties
 
         public override string Label { get { return Resources.IonMobilityLibraryList_Label_Ion_Mobility_Libraries_; } }
 
-        public bool CanEditItem(IonMobilityLibrarySpec item)
+        public bool CanEditItem(IonMobilityLibrary item)
         {
             return item != null && !GetDefaults().Contains(item);
         }

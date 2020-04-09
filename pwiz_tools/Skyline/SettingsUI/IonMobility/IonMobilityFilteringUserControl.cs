@@ -22,16 +22,21 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.SettingsUI.IonMobility
 {
+    /// <summary>
+    /// U.I code for ion mobility settings shared by Import Wizard and Transition Settings
+    /// </summary>
     public partial class IonMobilityFilteringUserControl : UserControl
     {
-        private SettingsListComboDriver<IonMobilityLibrarySpec> _driverIonMobilityLib;
+        private SettingsListComboDriver<IonMobilityLibrary> _driverIonMobilityLib;
         private TransitionIonMobilityFiltering _ionMobilityFiltering { get; set; }
         private bool ShowPeakWidthTypeControl { get; set; } // False when offering only resolving power settings, as in peptide import wizard
 
@@ -69,7 +74,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             UpdateIonMobilityFilterWindowWidthControls();
 
-            _driverIonMobilityLib = new SettingsListComboDriver<IonMobilityLibrarySpec>(comboIonMobilityLibrary, Settings.Default.IonMobilityLibraryList);
+            _driverIonMobilityLib = new SettingsListComboDriver<IonMobilityLibrary>(comboIonMobilityLibrary, Settings.Default.IonMobilityLibraryList);
             var hasLib = _ionMobilityFiltering.IonMobilityLibrary != null && !_ionMobilityFiltering.IonMobilityLibrary.IsNone;
             var libName = (_ionMobilityFiltering.IonMobilityLibrary == null ? null : _ionMobilityFiltering.IonMobilityLibrary.Name);
             _driverIonMobilityLib.LoadList(libName);
@@ -281,20 +286,20 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             labelFixedWidth.Visible = textIonMobilityFilterFixedWidth.Visible =
                 comboBoxWindowType.SelectedIndex == (int)IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width;
 
+            // The various window width value text boxes all need to be in the same location
             if (labelWidthAtMobilityZero.Location.X > labelResolvingPower.Location.X)
             {
-                var dX = labelWidthAtMobilityZero.Location.X - labelResolvingPower.Location.X;
-                labelWidthAtMobilityZero.Location = new Point(labelWidthAtMobilityZero.Location.X - dX, labelWidthAtMobilityZero.Location.Y);
-                labelWidthAtMobilityMax.Location = new Point(labelWidthAtMobilityMax.Location.X - dX, labelWidthAtMobilityMax.Location.Y);
-                textIonMobilityFilterWidthAtMobility0.Location = new Point(textIonMobilityFilterWidthAtMobility0.Location.X - dX, textIonMobilityFilterWidthAtMobility0.Location.Y);
-                textIonMobilityFilterWidthAtMobilityMax.Location = new Point(textIonMobilityFilterWidthAtMobilityMax.Location.X - dX, textIonMobilityFilterWidthAtMobilityMax.Location.Y);
+                labelWidthAtMobilityZero.Location = labelResolvingPower.Location;
+                textIonMobilityFilterWidthAtMobility0.Location = textIonMobilityFilterResolvingPower.Location;
+                labelWidthAtMobilityMax.Location = new Point(labelResolvingPower.Location.X, labelWidthAtMobilityMax.Location.Y);
+                textIonMobilityFilterWidthAtMobilityMax.Location = new Point(textIonMobilityFilterResolvingPower.Location.X, textIonMobilityFilterWidthAtMobilityMax.Location.Y);
 
-                dX = labelFixedWidth.Location.X - labelResolvingPower.Location.X;
-                labelFixedWidth.Location = new Point(labelFixedWidth.Location.X - dX, labelFixedWidth.Location.Y);
-                textIonMobilityFilterFixedWidth.Location = new Point(textIonMobilityFilterFixedWidth.Location.X - dX, textIonMobilityFilterFixedWidth.Location.Y);
+                labelFixedWidth.Location = labelResolvingPower.Location;
+                textIonMobilityFilterFixedWidth.Location = textIonMobilityFilterResolvingPower.Location;
+
             }
 
-            var library = SelectedIonMobilityLibrarySpec();
+            var library = GetSelectedIonMobilityLibrary();
             var enable = cbUseSpectralLibraryIonMobilities.Checked ||
                          comboIonMobilityLibrary.Visible && (library != null && !library.IsNone);
             labelResolvingPower.Enabled = textIonMobilityFilterResolvingPower.Enabled = enable;
@@ -322,7 +327,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
             catch (Exception e)
             {
-                Alerts.MessageDlg.ShowException(this, e);
+                MessageDlg.ShowException(this, e);
             }
         }
 
@@ -348,7 +353,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 }
                 catch (Exception e)
                 {
-                    Alerts.MessageDlg.ShowException(this, e);
+                    MessageDlg.ShowException(this, e);
                 }
             }
             UpdateIonMobilityFilterWindowWidthControls();
@@ -370,12 +375,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         private TransitionIonMobilityFiltering ValidateIonMobilitySettings(MessageBoxHelper helper)
         { 
-            var ionMobilityLibrarySpec = SelectedIonMobilityLibrarySpec();
+            var IonMobilityLibrary = GetSelectedIonMobilityLibrary();
 
             var useSpectralLibraryIonMobilities = cbUseSpectralLibraryIonMobilities.Checked;
 
             if (ShowPeakWidthTypeControl &&
-                (ionMobilityLibrarySpec == null || ionMobilityLibrarySpec.IsNone) &&
+                (IonMobilityLibrary == null || IonMobilityLibrary.IsNone) &&
                 !useSpectralLibraryIonMobilities)
             {
                 // No need for a window width calculator, so we don't care if width parameters are blank
@@ -436,18 +441,18 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             var ionMobilityWindowWidthCalculator =
                 new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax, fixedPeakWidth);
-            return new TransitionIonMobilityFiltering(ionMobilityLibrarySpec, useSpectralLibraryIonMobilities, ionMobilityWindowWidthCalculator);
+            return new TransitionIonMobilityFiltering(IonMobilityLibrary, useSpectralLibraryIonMobilities, ionMobilityWindowWidthCalculator);
         }
 
-        private IonMobilityLibrarySpec SelectedIonMobilityLibrarySpec()
+        private IonMobilityLibrary GetSelectedIonMobilityLibrary()
         {
             var selectedItem = comboIonMobilityLibrary.SelectedItem;
             if (selectedItem == null)
                 return null;
             string nameDt = selectedItem.ToString();
-            var ionMobilityLibrarySpec =
+            var IonMobilityLibrary =
                 Settings.Default.GetIonMobilityLibraryByName(nameDt);
-            return ionMobilityLibrarySpec;
+            return IonMobilityLibrary;
         }
 
         public static string ValidateWidth(double width)

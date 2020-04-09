@@ -25,6 +25,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
@@ -51,7 +52,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-IsPauseForScreenShots = true;
+            // IsPauseForScreenShots = true; // For a quick demo when you need it
             string skyFile = TestFilesDir.GetTestPath("test_measured_drift_times_perf.sky");
             Program.ExtraRawFileSearchFolder = TestFilesDir.PersistentFilesDir; // So we don't have to reload the raw files, which have moved relative to skyd file 
             RunUI(() => SkylineWindow.OpenFile(skyFile));
@@ -67,16 +68,16 @@ IsPauseForScreenShots = true;
             var measuredDTs = new List<List<ValidatingIonMobilityPrecursor>>();
             var precursors = new LibKeyIndex(document.MoleculePrecursorPairs.Select(
                 p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct).LibraryKey));
-PauseForScreenShot(@"Legacy ion mobility values loaded, placed in .imdb database file");
+            PauseForScreenShot(@"Legacy ion mobility values loaded, placed in .imdb database file"); // For a quick demo when you need it
             for (var pass = 0; pass < 2; pass++)
             {
                 // Verify ability to extract predictions from raw data
                 var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
                     () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
-PauseForScreenShot("new Transition Settings tab");
+                PauseForScreenShot("new Transition Settings tab"); // For a quick demo when you need it
                 // Simulate user picking Edit Current from the Ion Mobility Library combo control
                 var ionMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.EditIonMobilityLibrary);
-PauseForScreenShot("next, we'll update values with 'Use Results' button");
+                PauseForScreenShot("next, we'll update values with 'Use Results' button"); // For a quick demo when you need it
                 RunUI(() =>
                 {
                     if (curatedDTs == null)
@@ -84,7 +85,7 @@ PauseForScreenShot("next, we'll update values with 'Use Results' button");
                     ionMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
                     ionMobilityLibraryDlg.GetIonMobilitiesFromResults();
                 });
-PauseForScreenShot("values updated");
+                PauseForScreenShot("values updated");// For a quick demo when you need it
                 RunUI(() =>
                 {
                     measuredDTs.Add(ionMobilityLibraryDlg.LibraryMobilitiesFlat.ToList());

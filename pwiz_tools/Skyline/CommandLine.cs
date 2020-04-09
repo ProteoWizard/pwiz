@@ -1072,11 +1072,10 @@ namespace pwiz.Skyline
             return document.ChangeSettings(settings);
         }
 
-        private IonMobilityLibrarySpec FindIonMobilityDatabase(string documentPath, IonMobilityLibrarySpec ionMobilityLibSpec)
+        private IonMobilityLibrary FindIonMobilityDatabase(string documentPath, IonMobilityLibrary ionMobilityLibSpec)
         {
 
-            IonMobilityLibrarySpec result;
-            if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibSpec.Name, out result))
+            if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibSpec.Name, out var result))
             {
                 if (result.IsNone || File.Exists(result.FilePath))
                     return result;                

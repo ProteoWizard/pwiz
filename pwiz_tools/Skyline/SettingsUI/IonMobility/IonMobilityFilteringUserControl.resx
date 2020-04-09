@@ -127,7 +127,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="cbUseSpectralLibraryIonMobilities.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 67</value>
+    <value>17, 78</value>
   </data>
   <data name="cbUseSpectralLibraryIonMobilities.Size" type="System.Drawing.Size, System.Drawing">
     <value>270, 17</value>
@@ -217,7 +217,7 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="textIonMobilityFilterFixedWidth.Location" type="System.Drawing.Point, System.Drawing">
-    <value>187, 167</value>
+    <value>150, 172</value>
   </data>
   <data name="textIonMobilityFilterFixedWidth.Size" type="System.Drawing.Size, System.Drawing">
     <value>115, 20</value>
@@ -241,7 +241,7 @@
     <value>True</value>
   </data>
   <data name="labelFixedWidth.Location" type="System.Drawing.Point, System.Drawing">
-    <value>184, 150</value>
+    <value>147, 155</value>
   </data>
   <data name="labelFixedWidth.Size" type="System.Drawing.Size, System.Drawing">
     <value>63, 13</value>
@@ -274,7 +274,7 @@
     <value>Fixed</value>
   </data>
   <data name="comboBoxWindowType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 120</value>
+    <value>17, 131</value>
   </data>
   <data name="comboBoxWindowType.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 21</value>
@@ -301,7 +301,7 @@
     <value>True</value>
   </data>
   <data name="labelWindowType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 103</value>
+    <value>14, 114</value>
   </data>
   <data name="labelWindowType.Size" type="System.Drawing.Size, System.Drawing">
     <value>72, 13</value>
@@ -328,7 +328,7 @@
     <value>3</value>
   </data>
   <data name="textIonMobilityFilterWidthAtMobilityMax.Location" type="System.Drawing.Point, System.Drawing">
-    <value>249, 167</value>
+    <value>249, 172</value>
   </data>
   <data name="textIonMobilityFilterWidthAtMobilityMax.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -357,7 +357,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>5</value>
   </data>
   <data name="textIonMobilityFilterWidthAtMobility0.Location" type="System.Drawing.Point, System.Drawing">
-    <value>126, 167</value>
+    <value>249, 132</value>
   </data>
   <data name="textIonMobilityFilterWidthAtMobility0.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -392,7 +392,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>NoControl</value>
   </data>
   <data name="labelWidthAtMobilityMax.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 151</value>
+    <value>246, 155</value>
   </data>
   <data name="labelWidthAtMobilityMax.Size" type="System.Drawing.Size, System.Drawing">
     <value>83, 13</value>
@@ -422,7 +422,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>NoControl</value>
   </data>
   <data name="labelResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 149</value>
+    <value>147, 114</value>
   </data>
   <data name="labelResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
     <value>89, 13</value>
@@ -452,7 +452,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>NoControl</value>
   </data>
   <data name="labelWidthAtMobilityZero.Location" type="System.Drawing.Point, System.Drawing">
-    <value>123, 151</value>
+    <value>246, 114</value>
   </data>
   <data name="labelWidthAtMobilityZero.Size" type="System.Drawing.Size, System.Drawing">
     <value>69, 13</value>
@@ -476,7 +476,7 @@ W = (W0 + M*(Wmax-W0)/imMax)</value>
     <value>10</value>
   </data>
   <data name="textIonMobilityFilterResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 167</value>
+    <value>147, 132</value>
   </data>
   <data name="textIonMobilityFilterResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>

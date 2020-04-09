@@ -1528,7 +1528,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Offset ion mobility values for high energy spectra.
+        ///   Looks up a localized string similar to High energy offset.
         /// </summary>
         public static string IonMobilityAndCCS_HighEnergyIonMobilityOffset {
             get {
@@ -1537,7 +1537,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Offset ion mobility values for high energy spectra.
+        ///   Looks up a localized string similar to High energy offset.
         /// </summary>
         public static string IonMobilityAndCCS_HighEnergyIonMobilityValueOffset {
             get {
@@ -1546,7 +1546,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ion mobility units.
+        ///   Looks up a localized string similar to Units.
         /// </summary>
         public static string IonMobilityAndCCS_Units {
             get {

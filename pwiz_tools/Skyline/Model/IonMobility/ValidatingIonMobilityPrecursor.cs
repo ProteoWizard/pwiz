@@ -17,21 +17,18 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.Chemistry;
-using pwiz.Skyline.Model;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using System.Collections.Generic;
-using System.Linq;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Util.Extensions;
 
-namespace pwiz.Skyline.SettingsUI.IonMobility
+namespace pwiz.Skyline.Model.IonMobility
 {
-
     /// <summary>
     /// A  ValidatingIonMobilityPrecursor consists of an ion and a single ion mobility.
     /// In the UI, the multiple conformer case is handled by two lines with the same ion
@@ -80,6 +77,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
         }
 
+        [Track]
         public LibKey Precursor
         {
             get { return base.DbPrecursorIon.GetLibKey(); }
@@ -132,7 +130,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return null;
         }
     }
-
 
     /// <summary>
     /// A PrecursorIonMobilities object consists of a single precursor ion, and one

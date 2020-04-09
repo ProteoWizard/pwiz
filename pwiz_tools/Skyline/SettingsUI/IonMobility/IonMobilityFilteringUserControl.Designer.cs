@@ -104,6 +104,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             // 
             // comboBoxWindowType
             // 
+            this.comboBoxWindowType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxWindowType.FormattingEnabled = true;
             this.comboBoxWindowType.Items.AddRange(new object[] {
             resources.GetString("comboBoxWindowType.Items"),
