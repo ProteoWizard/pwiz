@@ -2023,6 +2023,31 @@ namespace pwiz.Skyline.Util
         {
             if (InvokeDebuggerOnFail)
             {
+                // Try to launch devenv with our solution sln so it presents in the list of debugger options.
+                // This makes for better code navigation and easier debugging.
+                try
+                {
+                    var path = @"\pwiz_tools\Skyline";
+                    var basedir = AppDomain.CurrentDomain.BaseDirectory;
+                    if (!string.IsNullOrEmpty(basedir))
+                    {
+                        var index = basedir.IndexOf(path, StringComparison.Ordinal);
+                        var solutionPath = basedir.Substring(0, index + path.Length);
+                        var skylineSln = Path.Combine(solutionPath, "Skyline.sln");
+                        // Try to give user a hint as to which debugger to pick
+                        var skylineTesterSln = Path.Combine(solutionPath, "USE THIS FOR ASSUME FAIL DEBUGGING.sln");
+                        if (File.Exists(skylineTesterSln))
+                            File.Delete(skylineTesterSln);
+                        File.Copy(skylineSln, skylineTesterSln);
+                        Process.Start(skylineTesterSln);
+                        Thread.Sleep(20000); // Wait for it to fire up sp it's offered in the list of debuggers
+                    }
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                }
+
                 Console.WriteLine();
                 if (!string.IsNullOrEmpty(error))
                     Console.WriteLine(error);
