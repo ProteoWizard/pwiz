@@ -367,21 +367,23 @@ namespace TestRunnerLib
                 {
                     const int sizeOutputs = 50;
                     const int stringOutputs = 50;
-                    var allSizes = new List<KeyValuePair<long, int>>();
-                    var allStrings = new List<KeyValuePair<string, int>>();
-                    foreach (var heapCount in heapCounts)
+                    var allSizes = new List<Tuple<int, long, int>>();
+                    var allStrings = new List<Tuple<int, string, int>>();
+                    for (int i = 0; i < heapCounts.Length; i++)
                     {
-                        allSizes.AddRange(heapCount.CommittedSizes.Take(sizeOutputs));
-                        allStrings.AddRange(heapCount.StringCounts.Take(stringOutputs));
+                        var heapCount = heapCounts[i];
+                        allSizes.AddRange(heapCount.CommittedSizes.Take(sizeOutputs).Select(p =>
+                            new Tuple<int, long, int>(i, p.Key, p.Value)));
+                        allStrings.AddRange(heapCount.StringCounts.Take(stringOutputs).Select(p =>
+                            new Tuple<int, string, int>(i, p.Key, p.Value)));
                     }
 
-                    Log("# HEAP SIZES (top {0})", sizeOutputs);
-                    foreach (var size in allSizes.OrderByDescending(x => x.Value).Take(sizeOutputs))
-                        Log("# ({0}) {1}", size.Value, size.Key);
-
-                    Log("# HEAP STRINGS (top {0})", stringOutputs);
-                    foreach (var size in allStrings.OrderByDescending(x => x.Value).Take(stringOutputs))
-                        Log("# ({0}) \"{1}\"", size.Value, size.Key);
+                    var sizeText = allSizes.OrderByDescending(s => s.Item3).Take(sizeOutputs)
+                        .Select(s => string.Format("{0}:{1}:{2}", s.Item1, s.Item2, s.Item3));
+                    Log("# HEAP SIZES (top {0}) - {1}\r\n", sizeOutputs, string.Join(", ", sizeText));
+                    var stringText = allStrings.OrderByDescending(s => s.Item3).Take(stringOutputs)
+                        .Select(s => string.Format("{0}:\"{1}\":{2}", s.Item1, s.Item2, s.Item3));
+                    Log("# HEAP STRINGS (top {0}) - {1}\r\n", stringOutputs, string.Join(", ", stringText));
                 }
 
                 TeamCityFinishTest(test);
@@ -524,10 +526,11 @@ namespace TestRunnerLib
                 var buffer = new IntPtr[count];
                 GetProcessHeaps(count, buffer);
                 var sizes = new HeapAllocationSizes[count];
-                var committedSizes = HeapDiagnostics ? new Dictionary<long, int>() : null;
-                var stringCounts = HeapDiagnostics ? new Dictionary<string, int>() : null;
                 for (int i = 0; i < count; i++)
                 {
+                    var committedSizes = HeapDiagnostics ? new Dictionary<long, int>() : null;
+                    var stringCounts = HeapDiagnostics ? new Dictionary<string, int>() : null;
+
                     var h = buffer[i];
                     HeapLock(h);
                     var e = new PROCESS_HEAP_ENTRY();
