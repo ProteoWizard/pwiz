@@ -548,11 +548,14 @@ using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) 
                 OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
             }
 
-            string nonredundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
-            WaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(_libraryName));
-            WaitForConditionUI(() => File.Exists(nonredundantBuildPath));
+            string nonRedundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
+            WaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(_libraryName),
+                string.Format("Failed waiting for the library {0} in Peptide Settings", _libraryName));
+            WaitForConditionUI(() => File.Exists(nonRedundantBuildPath),
+                string.Format("Failed waiting for the non-redundant library {0}", nonRedundantBuildPath));
+            WaitForConditionUI(() => !PeptideSettingsUI.IsBuildingLibrary,
+                string.Format("Failed waiting for library {0} build to complete", _libraryName));
 
-            WaitForConditionUI(() => !PeptideSettingsUI.IsBuildingLibrary);
             var messageDlg = FindOpenForm<MessageDlg>();
             if (messageDlg != null)
                 Assert.Fail("Unexpected MessageDlg: " + messageDlg.DetailedMessage);
