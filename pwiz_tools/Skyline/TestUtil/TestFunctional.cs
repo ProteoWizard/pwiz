@@ -1620,7 +1620,7 @@ namespace pwiz.SkylineTestUtil
                 if (Program.TestExceptions.Count == 0)
                 {
                     // Long wait for library build notifications
-                    RunUI(() => SkylineWindow.RemoveLibraryBuildNotification());
+                    SkylineWindow.RemoveLibraryBuildNotification(); // Remove off UI thread to avoid deadlocking
                     WaitForConditionUI(() => !OpenForms.Any(f => f is BuildLibraryNotification));
                     // Short wait for anything else
                     WaitForConditionUI(5000, () => OpenForms.Count() == 1);
