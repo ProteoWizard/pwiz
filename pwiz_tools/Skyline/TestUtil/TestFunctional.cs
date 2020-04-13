@@ -1060,10 +1060,6 @@ namespace pwiz.SkylineTestUtil
                 // Run test in new thread (Skyline on main thread).
                 Program.Init();
                 InitializeSkylineSettings();
-                if (Program.PauseSeconds != 0)
-                {
-                    ForceMzml = false;
-                }
 
                 var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
                 LocalizationHelper.InitThread(threadTest);
