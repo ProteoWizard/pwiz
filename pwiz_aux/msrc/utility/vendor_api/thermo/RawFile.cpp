@@ -2507,19 +2507,26 @@ std::string RawFileThreadImpl::getSampleID() const
 
 std::string RawFileThreadImpl::getTrailerExtraValue(long scanNumber, const string& name) const
 {
+    if (rawFile_->getCurrentController().type != Controller_MS)
+        return "";
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
         if (findItr == rawFile_->trailerExtraIndexByName.end())
             return "";
 
-        return ToStdString(raw_->GetTrailerExtraValue(scanNumber, findItr->second)->ToString());
+        auto result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
+        return result == nullptr ? "" : ToStdString(result->ToString());
     }
     CATCH_AND_FORWARD_EX(name)
 }
 
 double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const string& name) const
 {
+    if (rawFile_->getCurrentController().type != Controller_MS)
+        return 0.0;
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
@@ -2534,6 +2541,9 @@ double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const stri
 
 long RawFileThreadImpl::getTrailerExtraValueLong(long scanNumber, const string& name) const
 {
+    if (rawFile_->getCurrentController().type != Controller_MS)
+        return 0;
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);

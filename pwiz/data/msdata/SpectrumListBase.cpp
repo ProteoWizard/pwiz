@@ -34,7 +34,7 @@ namespace {
 PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::warn_once(const char * msg) const
 {
     boost::lock_guard<boost::mutex> g(m);
-    if (warn_msg_hashes_.insert(hash_(msg)).second) // .second is true iff value is new
+    if (warn_msg_hashes_.insert(hash(msg)).second) // .second is true iff value is new
         std::cerr << msg << std::endl;
 }
 
@@ -77,4 +77,9 @@ PWIZ_API_DECL size_t pwiz::msdata::SpectrumListBase::checkNativeIdFindResult(siz
         warn_once(e.what()); // TODO: log exception
         return size();
     }
+}
+
+size_t pwiz::msdata::SpectrumListBase::hash(const char* msg) const
+{
+    return boost::hash_range(msg, msg + strlen(msg));
 }
