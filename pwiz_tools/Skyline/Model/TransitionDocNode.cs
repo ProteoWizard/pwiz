@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -52,14 +53,21 @@ namespace pwiz.Skyline.Model
                                  TransitionQuantInfo transitionQuantInfo,
                                  ExplicitTransitionValues explicitTransitionValues,
                                  Results<TransitionChromInfo> results)
-            : base(id, annotations)
+            : this(new ComplexFragmentIon(id, losses), annotations, mass, transitionQuantInfo, explicitTransitionValues, results)
         {
-            Losses = losses;
-            if (losses != null)
-                mass -= losses.Mass;
+        }
+
+        public TransitionDocNode(ComplexFragmentIon fragmentIon, Annotations annotations, TypedMass mass,
+            TransitionQuantInfo transitionQuantInfo, ExplicitTransitionValues explicitTransitionValues,
+            Results<TransitionChromInfo> results) : base(fragmentIon.Transition, annotations)
+        {
+            var id = Transition;
+            ComplexFragmentIon = fragmentIon;
+            if (Losses != null)
+                mass -= Losses.Mass;
             Mz = id.IsCustom() ?
-                  new SignedMz(id.Adduct.MzFromNeutralMass(mass), id.IsNegative()) : 
-                  new SignedMz(SequenceMassCalc.GetMZ(mass, id.Adduct) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift), id.IsNegative());
+                new SignedMz(id.Adduct.MzFromNeutralMass(mass), id.IsNegative()) :
+                new SignedMz(SequenceMassCalc.GetMZ(mass, id.Adduct) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift), id.IsNegative());
             MzMassType = mass.MassType;
             IsotopeDistInfo = transitionQuantInfo.IsotopeDistInfo;
             LibInfo = transitionQuantInfo.LibInfo;
@@ -97,7 +105,11 @@ namespace pwiz.Skyline.Model
 
         public bool IsDecoy { get { return Transition.DecoyMassShift.HasValue; } }
 
-        public TransitionLosses Losses { get; private set; }
+        public ComplexFragmentIon ComplexFragmentIon { get; private set; }
+        public TransitionLosses Losses
+        {
+            get { return ComplexFragmentIon.TransitionLosses; }
+        }
 
         public bool HasLoss { get { return Losses != null; } }
 

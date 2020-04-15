@@ -48,13 +48,19 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Constructs a ModifiedSequence from SrmSettings and PeptideDocNode.
         /// </summary>
-        public static ModifiedSequence GetModifiedSequence(SrmSettings settings, ISequenceContainer peptide, IsotopeLabelType labelType)
+        public static ModifiedSequence GetModifiedSequence(SrmSettings settings, ISequenceContainer peptide,
+            IsotopeLabelType labelType)
         {
             if (!peptide.Target.IsProteomic)
             {
                 return null;
             }
-            var unmodifiedSequence = peptide.Target.Sequence;
+
+            return GetModifiedSequence(settings, peptide.Target.Sequence, peptide.ExplicitMods, labelType);
+        }
+
+        public static ModifiedSequence GetModifiedSequence(SrmSettings settings, string unmodifiedSequence, ExplicitMods peptideExplicitMods, IsotopeLabelType labelType) 
+        {
             List<IsotopeLabelType> implicitLabelTypes = new List<IsotopeLabelType>();
             implicitLabelTypes.Add(IsotopeLabelType.light);
             if (!labelType.IsLight)
@@ -62,25 +68,25 @@ namespace pwiz.Skyline.Model
                 implicitLabelTypes.Add(labelType);
             }
             List<Modification> explicitMods = new List<Modification>();
-            if (null != peptide.ExplicitMods)
+            if (null != peptideExplicitMods)
             {
-                var staticBaseMods = peptide.ExplicitMods.GetStaticBaseMods(labelType);
+                var staticBaseMods = peptideExplicitMods.GetStaticBaseMods(labelType);
                 if (staticBaseMods != null)
                 {
                     implicitLabelTypes.Clear();
                 }
-                var labelMods = peptide.ExplicitMods.GetModifications(labelType);
+                var labelMods = peptideExplicitMods.GetModifications(labelType);
                 if (labelMods != null)
                 {
-                    if (!peptide.ExplicitMods.IsVariableStaticMods)
+                    if (!peptideExplicitMods.IsVariableStaticMods)
                     {
                         implicitLabelTypes.Remove(labelType);
                     }
                 }
                 else if (!labelType.IsLight)
                 {
-                    labelMods = peptide.ExplicitMods.GetModifications(IsotopeLabelType.light);
-                    if (labelMods != null && !peptide.ExplicitMods.IsVariableStaticMods)
+                    labelMods = peptideExplicitMods.GetModifications(IsotopeLabelType.light);
+                    if (labelMods != null && !peptideExplicitMods.IsVariableStaticMods)
                     {
                         implicitLabelTypes.Remove(IsotopeLabelType.light);
                     }
@@ -328,6 +334,11 @@ namespace pwiz.Skyline.Model
             public ExplicitMod ExplicitMod { get; private set; }
             public StaticMod StaticMod { get { return ExplicitMod.Modification; } }
             public int IndexAA {get { return ExplicitMod.IndexAA; } }
+            public Modification ChangeIndexAa(int newIndexAa)
+            {
+                return new Modification(new ExplicitMod(newIndexAa, ExplicitMod.Modification), MonoisotopicMass, AverageMass);
+            }
+
             public string Name { get { return StaticMod.Name; } }
             public string ShortName { get { return StaticMod.ShortName; } }
             public string Formula { get { return StaticMod.Formula; } }

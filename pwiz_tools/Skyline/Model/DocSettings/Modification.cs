@@ -1009,6 +1009,11 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return CrosslinkMods.Count != 0; }
         }
 
+        public CrosslinkMod GetCrosslinkMod(ModificationSite modificationSite)
+        {
+            return CrosslinkMods.FirstOrDefault(mod => modificationSite.Equals(mod.ModificationSite));
+        }
+
         public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)
         {
             int index = GetModIndex(labelType);

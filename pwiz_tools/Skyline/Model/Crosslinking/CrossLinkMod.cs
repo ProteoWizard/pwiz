@@ -27,10 +27,18 @@ namespace pwiz.Skyline.Model.Crosslinking
             MoleculeMassOffset moleculeMassOffset = CrosslinkerDef.FormulaMass.GetMoleculeMassOffset(massType);
             foreach (var linkedPeptide in LinkedPeptides)
             {
-                moleculeMassOffset = moleculeMassOffset.Add(linkedPeptide.GetNeutralFormula(settings, labelType));
+                moleculeMassOffset = moleculeMassOffset.Plus(linkedPeptide.GetNeutralFormula(settings, labelType));
             }
 
             return moleculeMassOffset;
+        }
+
+        public ModificationSite ModificationSite
+        {
+            get
+            {
+                return new ModificationSite(IndexAa, CrosslinkerDef.Name);
+            }
         }
     }
 }

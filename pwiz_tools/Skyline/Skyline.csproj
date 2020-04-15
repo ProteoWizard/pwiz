@@ -390,8 +390,10 @@
     </Compile>
     <Compile Include="Model\AuditLog\ReflectorEnumerator.cs" />
     <Compile Include="Model\AuditLog\ReflectorToString.cs" />
-    <Compile Include="Model\Crosslinking\CrossLinkerDef.cs" />
-    <Compile Include="Model\Crosslinking\CrossLinkMod.cs" />
+    <Compile Include="Model\Crosslinking\ComplexFragmentIon.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkerDef.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkMod.cs" />
+    <Compile Include="Model\Crosslinking\ModificationSite.cs" />
     <Compile Include="Model\Crosslinking\LinkedPeptide.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -441,6 +443,7 @@
     <Compile Include="Model\AuditLog\PropertyName.cs" />
     <Compile Include="Model\ExplicitTransitionValues.cs" />
     <Compile Include="Model\FormulaMass.cs" />
+    <Compile Include="Model\FragmentedMolecule.cs" />
     <Compile Include="Model\GroupComparisonRefinementData.cs" />
     <Compile Include="Model\Irt\IrtPeptidePicker.cs" />
     <Compile Include="Model\Irt\Regression.cs" />

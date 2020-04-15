@@ -818,13 +818,15 @@ namespace pwiz.Skyline.Model
         private double CalcCrosslinkedPrecursorMz(SrmSettings settings, ExplicitMods mods,
             out IsotopeDistInfo isotopeDist, out TypedMass mass)
         {
+            var isotopeAbundances =
+                settings.TransitionSettings.FullScan.IsotopeAbundances ?? BioMassCalc.DEFAULT_ABUNDANCES;
             MassType massType = settings.TransitionSettings.Prediction.PrecursorMassType;
             IPrecursorMassCalc massCalc =
                 settings.GetPrecursorCalc(IsCustomIon ? IsotopeLabelType.light : LabelType, mods);
             MoleculeMassOffset moleculeMassOffset = GetNeutralFormula(settings, mods);
             MassDistribution massDistribution = massCalc.GetMZDistributionFromFormula(
                 moleculeMassOffset.Molecule.ToString(), Adduct.SINGLY_PROTONATED,
-                settings.TransitionSettings.FullScan.IsotopeAbundances);
+                isotopeAbundances);
             massDistribution = massDistribution.OffsetAndDivide(moleculeMassOffset.MassOffset - BioMassCalc.MassProton, 1);
             TypedMass monoMassH = new TypedMass(massDistribution.MostAbundanceMass + BioMassCalc.MassProton,
                 MassType.MonoisotopicMassH);
@@ -871,15 +873,27 @@ namespace pwiz.Skyline.Model
                 {
                     return new MoleculeMassOffset(Molecule.Empty, massType.IsMonoisotopic() ? CustomMolecule.MonoisotopicMass : CustomMolecule.AverageMass);
                 }
+                return new MoleculeMassOffset(Molecule.ParseExpression(CustomMolecule.Formula), 0);
             }
-            IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(IsotopeLabelType.light, mods);
+            IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(LabelType, mods);
             MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(Peptide.Sequence)), 0);
             foreach (var crosslink in mods.CrosslinkMods)
             {
-                moleculeMassOffset = moleculeMassOffset.Add(crosslink.GetNeutralFormula(settings, LabelType));
+                moleculeMassOffset = moleculeMassOffset.Plus(crosslink.GetNeutralFormula(settings, LabelType));
             }
 
             return moleculeMassOffset;
+        }
+
+        public MoleculeMassOffset GetFragmentFormula(SrmSettings settings, ExplicitMods mods, Transition transition, TransitionLosses losses)
+        {
+            MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
+            var modifiedSequence =
+                ModifiedSequence.GetModifiedSequence(settings, TransitionGroup.Peptide.Sequence, mods, LabelType);
+            var fragmentedMolecule = FragmentedMolecule.EMPTY.ChangeModifiedSequence(modifiedSequence);
+            fragmentedMolecule = fragmentedMolecule.ChangeFragmentIon(transition.IonType, transition.Ordinal);
+            fragmentedMolecule = fragmentedMolecule.ChangeFragmentLosses(losses.Losses.Select(loss => loss.Loss));
+            return new MoleculeMassOffset(fragmentedMolecule.FragmentFormula, 0);
         }
 
         private static MassDistribution ShiftMzDistribution(MassDistribution massDist, int massShift)
