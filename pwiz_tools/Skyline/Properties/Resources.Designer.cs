@@ -31583,6 +31583,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Max m/z {0} must not be less than min m/z {1}..
+        /// </summary>
+        public static string TransitionSettingsControl_GetTransitionSettings_Max_m_z__0__must_not_be_less_than_min_m_z__1__ {
+            get {
+                return ResourceManager.GetString("TransitionSettingsControl_GetTransitionSettings_Max_m_z__0__must_not_be_less_than" +
+                        "_min_m_z__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} must contain a comma separated list of integers describing charge states between {1} and {2}..
         /// </summary>
         public static string TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__ {

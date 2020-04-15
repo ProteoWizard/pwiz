@@ -19,6 +19,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             _documentContainer = documentContainer;
             InitializeComponent();
+
+            foreach (string item in TransitionFilter.GetStartFragmentFinderLabels())
+                comboRangeFrom.Items.Add(item);
+            foreach (string item in TransitionFilter.GetEndFragmentFinderLabels())
+                comboRangeTo.Items.Add(item);
+
             SetFields(_documentContainer.Document.Settings.TransitionSettings);
             PeptideIonTypes = PeptideIonTypes.Union(new[] { IonType.precursor, IonType.y }).ToArray(); // Add p, y if not already set
             InitialPeptideIonTypes = PeptideIonTypes.ToArray();
@@ -39,13 +45,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public TransitionFilterAndLibrariesSettings(TransitionSettingsControl control)
                 : this(FixWhitespace(control.txtPeptidePrecursorCharges.Text),
                     FixWhitespace(control.txtPrecursorIonCharges.Text), FixWhitespace(control.txtIonTypes.Text),
-                    control.ExclusionUseDIAWindow, control.IonMatchTolerance, control.MinIonCount, control.IonCount)
+                    control.ExclusionUseDIAWindow, control.IonMatchTolerance, control.MinIonCount, control.IonCount,
+                    control.IonRangeFrom, control.IonRangeTo, control.MinIonMz, control.MaxIonMz)
             {
             }
 
             public TransitionFilterAndLibrariesSettings(string peptidePrecursorCharges, string peptideIonCharges,
                 string peptideIonTypes, bool exclusionUseDiaWindow, double ionMatchTolerance, int minIonCount,
-                int ionCount)
+                int ionCount, string ionRangeFrom, string ionRangeTo, double minIonMz, double maxIonMz)
             {
                 PeptidePrecursorCharges = peptidePrecursorCharges;
                 PeptideIonCharges = peptideIonCharges;
@@ -54,6 +61,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 IonMatchTolerance = ionMatchTolerance;
                 MinIonCount = minIonCount;
                 IonCount = ionCount;
+                IonRangeFrom = ionRangeFrom;
+                IonRangeTo = ionRangeTo;
+                MinIonMz = minIonMz;
+                MaxIonMz = maxIonMz;
             }
 
             public static TransitionFilterAndLibrariesSettings GetDefault(TransitionSettings transitionSettings)
@@ -62,7 +73,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     transitionSettings.Filter.PeptideProductChargesString,
                     transitionSettings.Filter.PeptideIonTypesString, transitionSettings.Filter.ExclusionUseDIAWindow,
                     transitionSettings.Libraries.IonMatchTolerance, transitionSettings.Libraries.MinIonCount,
-                    transitionSettings.Libraries.IonCount);
+                    transitionSettings.Libraries.IonCount, transitionSettings.Filter.FragmentRangeFirst.Label,
+                    transitionSettings.Filter.FragmentRangeLast.Label, transitionSettings.Instrument.MinMz,
+                    transitionSettings.Instrument.MaxMz);
             }
 
             [Track]
@@ -79,6 +92,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public int MinIonCount { get; private set; }
             [Track]
             public int IonCount { get; private set; }
+            [Track]
+            public string IonRangeFrom { get; private set; }
+            [Track]
+            public string IonRangeTo { get; private set; }
+            [Track]
+            public double MinIonMz { get; private set; }
+            [Track]
+            public double MaxIonMz { get; private set; }
         }
 
         public void SetFields(TransitionSettings settings)
@@ -90,6 +111,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             IonMatchTolerance = settings.Libraries.IonMatchTolerance;
             MinIonCount = settings.Libraries.MinIonCount;
             IonCount = settings.Libraries.IonCount;
+            IonRangeFrom = settings.Filter.FragmentRangeFirst.Label;
+            IonRangeTo = settings.Filter.FragmentRangeLast.Label;
+            MinIonMz = settings.Instrument.MinMz;
+            MaxIonMz = settings.Instrument.MaxMz;
+        }
+
+        public bool IonFilter
+        {
+            get { return panelIonFilter.Visible; }
+            set { panelIonFilter.Visible = value; }
         }
 
         public Adduct[] PeptidePrecursorCharges
@@ -137,17 +168,45 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { txtIonCount.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        public string IonRangeFrom
+        {
+            get { return comboRangeFrom.SelectedItem.ToString(); }
+            set { comboRangeFrom.SelectedItem = value; }
+        }
+
+        public string IonRangeTo
+        {
+            get { return comboRangeTo.SelectedItem.ToString(); }
+            set { comboRangeTo.SelectedItem = value; }
+        }
+
+        public int MinIonMz
+        {
+            get { return int.Parse(txtMinMz.Text, LocalizationHelper.CurrentCulture); }
+            set { txtMinMz.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public int MaxIonMz
+        {
+            get { return int.Parse(txtMaxMz.Text, LocalizationHelper.CurrentCulture); }
+            set { txtMaxMz.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
         public void Initialize(ImportPeptideSearchDlg.Workflow workflow)
         {
             if (workflow != ImportPeptideSearchDlg.Workflow.dia)
             {
                 int offset = lblTolerance.Top - cbExclusionUseDIAWindow.Top;
-                Array.ForEach(new Control[] {lblTolerance, txtTolerance, lblToleranceUnits, lblIonCount, txtIonCount, lblIonCountUnits}, c => c.Top -= offset);
+                foreach (var control in Controls.Cast<Control>().Where(c => c.Top > cbExclusionUseDIAWindow.Top))
+                    control.Top -= offset;
+                // Array.ForEach(new Control[] {lblTolerance, txtTolerance, lblToleranceUnits, lblIonCount, txtIonCount, lblIonCountUnits}, c => c.Top -= offset);
                 cbExclusionUseDIAWindow.Hide();
             }
             // If these are just the document defaults, use something more appropriate for DIA
             else
             {
+                IonFilter = true;
+
                 var settingsCurrent = _documentContainer.Document.Settings.TransitionSettings;
                 var settings = settingsCurrent;
                 var defSettings = SrmSettingsList.GetDefault().TransitionSettings;
@@ -222,7 +281,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             bool exclusionUseDIAWindow = cbExclusionUseDIAWindow.Visible && cbExclusionUseDIAWindow.Checked;
             var filter = new TransitionFilter(peptidePrecursorCharges, peptideProductCharges, peptideIonTypes,
                 settings.Filter.SmallMoleculePrecursorAdducts, settings.Filter.SmallMoleculeFragmentAdducts, settings.Filter.SmallMoleculeIonTypes, 
-                settings.Filter.FragmentRangeFirstName, settings.Filter.FragmentRangeLastName,
+                IonFilter ? IonRangeFrom : settings.Filter.FragmentRangeFirst.Label,
+                IonFilter ? IonRangeTo : settings.Filter.FragmentRangeLast.Label,
                 settings.Filter.MeasuredIons, settings.Filter.PrecursorMzWindow, exclusionUseDIAWindow, settings.Filter.AutoSelect);
             Helpers.AssignIfEquals(ref filter, settings.Filter);
 
@@ -248,11 +308,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return null;
             }
 
+            var minIonMz = settings.Instrument.MinMz;
+            var maxIonMz = settings.Instrument.MaxMz;
+            if (IonFilter)
+            {
+                if (!helper.ValidateNumberTextBox(txtMinMz, TransitionInstrument.MIN_MEASUREABLE_MZ, TransitionInstrument.MAX_MEASURABLE_MZ, out minIonMz))
+                    return null;
+                if (!helper.ValidateNumberTextBox(txtMaxMz, TransitionInstrument.MIN_MEASUREABLE_MZ, TransitionInstrument.MAX_MEASURABLE_MZ, out maxIonMz))
+                    return null;
+            }
+
+            if (minIonMz > maxIonMz)
+            {
+                helper.ShowTextBoxError(txtMaxMz, string.Format(Resources.TransitionSettingsControl_GetTransitionSettings_Max_m_z__0__must_not_be_less_than_min_m_z__1__, maxIonMz, minIonMz));
+                return null;
+            }
+
+            var instrument = new TransitionInstrument(minIonMz, maxIonMz, settings.Instrument.IsDynamicMin,
+                settings.Instrument.MzMatchTolerance, settings.Instrument.MaxTransitions,
+                settings.Instrument.MaxInclusions, settings.Instrument.MinTime, settings.Instrument.MaxTime);
+            Helpers.AssignIfEquals(ref instrument, settings.Instrument);
+
             TransitionLibraryPick pick = settings.Libraries.Pick != TransitionLibraryPick.none ? settings.Libraries.Pick : TransitionLibraryPick.all;
             var libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, pick);
             Helpers.AssignIfEquals(ref libraries, settings.Libraries);
 
-            return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, settings.Instrument, settings.FullScan);
+            return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, settings.FullScan);
         }
     }
 }

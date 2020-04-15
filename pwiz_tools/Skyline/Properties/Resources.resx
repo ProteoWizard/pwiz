@@ -10976,4 +10976,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="FastaImporter_Import__0__proteins_and__1__peptides_added" xml:space="preserve">
     <value>{0} proteins and {1} peptides added</value>
   </data>
+  <data name="TransitionSettingsControl_GetTransitionSettings_Max_m_z__0__must_not_be_less_than_min_m_z__1__" xml:space="preserve">
+    <value>Max m/z {0} must not be less than min m/z {1}.</value>
+  </data>
 </root>
