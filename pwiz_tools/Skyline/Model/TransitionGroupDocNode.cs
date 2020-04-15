@@ -755,6 +755,17 @@ namespace pwiz.Skyline.Model
 
         private double CalcPrecursorMZ(SrmSettings settings, ExplicitMods mods, out IsotopeDistInfo isotopeDist, out TypedMass mass)
         {
+            if (mods.HasCrosslinks)
+            {
+                return CalcCrosslinkedPrecursorMz(settings, mods, out isotopeDist, out mass);
+            }
+
+            return CalcSelfPrecursorMZ(settings, mods, out isotopeDist, out mass);
+        }
+
+
+        private double CalcSelfPrecursorMZ(SrmSettings settings, ExplicitMods mods, out IsotopeDistInfo isotopeDist, out TypedMass mass)
+        {
             var seq = TransitionGroup.Peptide.Target;
             var adduct = TransitionGroup.PrecursorAdduct;
             IsotopeLabelType labelType = TransitionGroup.LabelType;
@@ -798,15 +809,77 @@ namespace pwiz.Skyline.Model
                 {
                     massDist = calc.GetMZDistributionSinglePoint(mz);
                 }
-                isotopeDist = new IsotopeDistInfo(massDist, mass, adduct,
-                    settings.TransitionSettings.FullScan.GetPrecursorFilterWindow,
-                    // Centering resolution must be inversely proportional to charge state
-                    // High charge states can bring major peaks close enough toghether to
-                    // cause them to be combined and centered in isotope distribution valleys
-                    TransitionFullScan.ISOTOPE_PEAK_CENTERING_RES / (1 + Math.Abs(adduct.AdductCharge/ 15.0)),
-                    TransitionFullScan.MIN_ISOTOPE_PEAK_ABUNDANCE);
+
+                isotopeDist = GetIsotopeDistInfo(settings, massDist, mass);
             }
             return mz;
+        }
+
+        private double CalcCrosslinkedPrecursorMz(SrmSettings settings, ExplicitMods mods,
+            out IsotopeDistInfo isotopeDist, out TypedMass mass)
+        {
+            MassType massType = settings.TransitionSettings.Prediction.PrecursorMassType;
+            IPrecursorMassCalc massCalc =
+                settings.GetPrecursorCalc(IsCustomIon ? IsotopeLabelType.light : LabelType, mods);
+            MoleculeMassOffset moleculeMassOffset = GetNeutralFormula(settings, mods);
+            MassDistribution massDistribution = massCalc.GetMZDistributionFromFormula(
+                moleculeMassOffset.Molecule.ToString(), Adduct.SINGLY_PROTONATED,
+                settings.TransitionSettings.FullScan.IsotopeAbundances);
+            massDistribution = massDistribution.OffsetAndDivide(moleculeMassOffset.MassOffset - BioMassCalc.MassProton, 1);
+            TypedMass monoMassH = new TypedMass(massDistribution.MostAbundanceMass + BioMassCalc.MassProton,
+                MassType.MonoisotopicMassH);
+            TypedMass averageMassH = new TypedMass(massDistribution.AverageMass + BioMassCalc.MassProton,
+                MassType.AverageMassH);
+            mass = massType.IsMonoisotopic() ? monoMassH : averageMassH;
+            var mzDistribution = massDistribution.OffsetAndDivide(PrecursorCharge * BioMassCalc.MassProton, PrecursorCharge);
+            if (TransitionGroup.DecoyMassShift.HasValue)
+                mzDistribution = ShiftMzDistribution(mzDistribution, TransitionGroup.DecoyMassShift.Value);
+            if (settings.TransitionSettings.FullScan.IsHighResPrecursor)
+            {
+                isotopeDist = GetIsotopeDistInfo(settings, mzDistribution, monoMassH);
+            }
+            else
+            {
+                isotopeDist = null;
+            }
+
+            double precursorMz = massType.IsMonoisotopic()
+                ? mzDistribution.MostAbundanceMass
+                : mzDistribution.AverageMass;
+            return precursorMz;
+        }
+
+        private IsotopeDistInfo GetIsotopeDistInfo(SrmSettings settings, MassDistribution massDist, TypedMass monoMassH)
+        {
+            var adduct = PrecursorAdduct;
+            return new IsotopeDistInfo(massDist, monoMassH, PrecursorAdduct,
+                settings.TransitionSettings.FullScan.GetPrecursorFilterWindow,
+                // Centering resolution must be inversely proportional to charge state
+                // High charge states can bring major peaks close enough toghether to
+                // cause them to be combined and centered in isotope distribution valleys
+                TransitionFullScan.ISOTOPE_PEAK_CENTERING_RES / (1 + Math.Abs(adduct.AdductCharge / 15.0)),
+                TransitionFullScan.MIN_ISOTOPE_PEAK_ABUNDANCE);
+
+        }
+
+        public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, ExplicitMods mods)
+        {
+            MassType massType = settings.TransitionSettings.Prediction.PrecursorMassType;
+            if (IsCustomIon)
+            {
+                if (string.IsNullOrEmpty(CustomMolecule.Formula))
+                {
+                    return new MoleculeMassOffset(Molecule.Empty, massType.IsMonoisotopic() ? CustomMolecule.MonoisotopicMass : CustomMolecule.AverageMass);
+                }
+            }
+            IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(IsotopeLabelType.light, mods);
+            MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(Peptide.Sequence)), 0);
+            foreach (var crosslink in mods.CrosslinkMods)
+            {
+                moleculeMassOffset = moleculeMassOffset.Add(crosslink.GetNeutralFormula(settings, LabelType));
+            }
+
+            return moleculeMassOffset;
         }
 
         private static MassDistribution ShiftMzDistribution(MassDistribution massDist, int massShift)

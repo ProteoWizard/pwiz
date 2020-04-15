@@ -25,6 +25,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -856,6 +857,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 modifications.AddRange(heavyMods);
             }
             _modifications = MakeReadOnly(modifications.ToArray());
+            CrosslinkMods = ImmutableList<CrosslinkMod>.EMPTY;
         }
 
         /// <summary>
@@ -998,6 +1000,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<ExplicitMod> HeavyModifications
         {
             get { return GetModifications(IsotopeLabelType.heavy); }
+        }
+
+        public ImmutableList<CrosslinkMod> CrosslinkMods { get; private set; }
+
+        public bool HasCrosslinks
+        {
+            get { return CrosslinkMods.Count != 0; }
         }
 
         public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)
@@ -1173,6 +1182,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public ExplicitMods ChangeIsVariableStaticMods(bool prop)
         {
             return ChangeProp(ImClone(this), im => im.IsVariableStaticMods = prop);
+        }
+
+        public ExplicitMods ChangeCrosslinkMods(IEnumerable<CrosslinkMod> crosslinkMods)
+        {
+            return ChangeProp(ImClone(this), im => im.CrosslinkMods = ImmutableList.ValueOfOrEmpty(crosslinkMods));
         }
 
         #endregion
