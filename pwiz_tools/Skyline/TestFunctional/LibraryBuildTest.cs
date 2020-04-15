@@ -595,6 +595,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(messageDlg, messageDlg.OkDialog);           
             CheckLibraryExistence(redundantBuildPath, false);
             CheckLibraryExistence(nonredundantBuildPath, false);
+
+            WaitForConditionUI(() => !PeptideSettingsUI.IsBuildingLibrary);
         }
 
         private void BuildLibraryIrt(bool addIrts, bool recalibrate, bool addPredictor)
