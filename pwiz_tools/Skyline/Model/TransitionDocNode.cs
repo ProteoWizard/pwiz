@@ -47,13 +47,15 @@ namespace pwiz.Skyline.Model
         }
 
         public TransitionDocNode(Transition id,
-                                 Annotations annotations,
-                                 TransitionLosses losses,
-                                 TypedMass mass,
-                                 TransitionQuantInfo transitionQuantInfo,
-                                 ExplicitTransitionValues explicitTransitionValues,
-                                 Results<TransitionChromInfo> results)
-            : this(new ComplexFragmentIon(id, losses), annotations, mass, transitionQuantInfo, explicitTransitionValues, results)
+            Annotations annotations,
+            TransitionLosses losses,
+            TypedMass mass,
+            TransitionQuantInfo transitionQuantInfo,
+            ExplicitTransitionValues explicitTransitionValues,
+            Results<TransitionChromInfo> results)
+            : this(new ComplexFragmentIon(id, losses), annotations,
+                losses == null ? mass : mass - losses.Mass,
+                transitionQuantInfo, explicitTransitionValues, results)
         {
         }
 
@@ -63,8 +65,6 @@ namespace pwiz.Skyline.Model
         {
             var id = Transition;
             ComplexFragmentIon = fragmentIon;
-            if (Losses != null)
-                mass -= Losses.Mass;
             Mz = id.IsCustom() ?
                 new SignedMz(id.Adduct.MzFromNeutralMass(mass), id.IsNegative()) :
                 new SignedMz(SequenceMassCalc.GetMZ(mass, id.Adduct) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift), id.IsNegative());

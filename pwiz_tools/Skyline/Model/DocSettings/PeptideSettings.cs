@@ -1263,6 +1263,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public int MaxVariableMods { get; private set; }
         [Track]
         public int MaxNeutralLosses { get; private set; }
+
+        public int MaxCrosslinkFragmentations
+        {
+            get { return MaxNeutralLosses; }
+        }
         public int CountLabelTypes { get { return _modifications.Count; } }
 
         [Track]

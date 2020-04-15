@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -885,17 +886,6 @@ namespace pwiz.Skyline.Model
             return moleculeMassOffset;
         }
 
-        public MoleculeMassOffset GetFragmentFormula(SrmSettings settings, ExplicitMods mods, Transition transition, TransitionLosses losses)
-        {
-            MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
-            var modifiedSequence =
-                ModifiedSequence.GetModifiedSequence(settings, TransitionGroup.Peptide.Sequence, mods, LabelType);
-            var fragmentedMolecule = FragmentedMolecule.EMPTY.ChangeModifiedSequence(modifiedSequence);
-            fragmentedMolecule = fragmentedMolecule.ChangeFragmentIon(transition.IonType, transition.Ordinal);
-            fragmentedMolecule = fragmentedMolecule.ChangeFragmentLosses(losses.Losses.Select(loss => loss.Loss));
-            return new MoleculeMassOffset(fragmentedMolecule.FragmentFormula, 0);
-        }
-
         private static MassDistribution ShiftMzDistribution(MassDistribution massDist, int massShift)
         {
             double shift = SequenceMassCalc.GetPeptideInterval(massShift);
@@ -1122,8 +1112,25 @@ namespace pwiz.Skyline.Model
         public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings, ExplicitMods mods, double precursorMz,
             IsotopeDistInfo isotopeDist, SpectrumHeaderInfo libInfo, Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, bool useFilter)
         {
-            return TransitionGroup.GetTransitions(settings, this, mods, precursorMz, isotopeDist, libInfo, transitionRanks,
+            SrmSettings simpleFilterSettings = settings;
+            if (mods.HasCrosslinks)
+            {
+                var transitionSettings = simpleFilterSettings.TransitionSettings;
+                transitionSettings = transitionSettings.ChangeInstrument(transitionSettings.Instrument
+                    .ChangeMinMz(int.MinValue).ChangeMaxMz(int.MaxValue));
+                simpleFilterSettings = simpleFilterSettings.ChangeTransitionSettings(transitionSettings);
+            }
+            var simpleTransitions = TransitionGroup.GetTransitions(simpleFilterSettings, this, mods, precursorMz, isotopeDist, libInfo, transitionRanks,
                 useFilter);
+            if (!mods.HasCrosslinks)
+            {
+                return simpleTransitions;
+            }
+
+            var simpleFragmentIons = simpleTransitions.Select(transition => transition.ComplexFragmentIon);
+            var complexFragmentIons = mods.PermuteComplexFragmentIons(settings, settings.PeptideSettings.Modifications.MaxCrosslinkFragmentations, simpleFragmentIons);
+            return complexFragmentIons.Select(complexFragmentIon =>
+                complexFragmentIon.MakeTransitionDocNode(settings, mods));
         }
 
         public DocNode EnsureChildren(PeptideDocNode parent, ExplicitMods mods, SrmSettings settings)

@@ -1009,6 +1009,22 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return CrosslinkMods.Count != 0; }
         }
 
+        public IEnumerable<ComplexFragmentIon> PermuteComplexFragmentIons(SrmSettings settings, int maxCleavageCount,
+            IEnumerable<ComplexFragmentIon> complexFragmentIons)
+        {
+            var result = complexFragmentIons;
+            foreach (var crosslinkMod in CrosslinkMods)
+            {
+                foreach (var linkedPeptide in crosslinkMod.LinkedPeptides)
+                {
+                    result = linkedPeptide.PermuteFragmentIons(settings, maxCleavageCount,
+                        crosslinkMod.ModificationSite, result);
+                }
+            }
+
+            return result;
+        }
+
         public CrosslinkMod GetCrosslinkMod(ModificationSite modificationSite)
         {
             return CrosslinkMods.FirstOrDefault(mod => modificationSite.Equals(mod.ModificationSite));
