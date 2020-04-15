@@ -53,6 +53,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
+        private bool ReportLibraryBuildFailures { get; set; }
 
         [TestMethod]
         public void TestLibraryBuild()
@@ -538,6 +539,7 @@ namespace pwiz.SkylineTestFunctional
         private void BuildLibraryValid(string inputDir, IEnumerable<string> inputFiles,
             bool keepRedundant, bool filterPeptides, bool append, int expectedSpectra, int expectedAmbiguous = 0)
         {
+            ReportLibraryBuildFailures = true;
             BuildLibrary(inputDir, inputFiles, null, keepRedundant, false, filterPeptides, append, null);
 
             if (expectedAmbiguous > 0)
@@ -547,17 +549,19 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
             }
 
+            if (!TryWaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(_libraryName)))
+            {
+                var messageDlg = FindOpenForm<MessageDlg>();
+                if (messageDlg != null)
+                    AssertEx.Fail("Unexpected MessageDlg: " + messageDlg.DetailedMessage);
+                AssertEx.Fail("Failed waiting for the library {0} in Peptide Settings", _libraryName);
+            }
             string nonRedundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
-            WaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Contains(_libraryName),
-                string.Format("Failed waiting for the library {0} in Peptide Settings", _libraryName));
             WaitForConditionUI(() => File.Exists(nonRedundantBuildPath),
                 string.Format("Failed waiting for the non-redundant library {0}", nonRedundantBuildPath));
             WaitForConditionUI(() => !PeptideSettingsUI.IsBuildingLibrary,
                 string.Format("Failed waiting for library {0} build to complete", _libraryName));
 
-            var messageDlg = FindOpenForm<MessageDlg>();
-            if (messageDlg != null)
-                Assert.Fail("Unexpected MessageDlg: " + messageDlg.DetailedMessage);
             RunUI(() => PeptideSettingsUI.PickedLibraries = new[] { _libraryName });
             OkDialog(PeptideSettingsUI, PeptideSettingsUI.OkDialog);
 
@@ -577,6 +581,7 @@ namespace pwiz.SkylineTestFunctional
             string nonredundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
             FileEx.SafeDelete(nonredundantBuildPath);
 
+            ReportLibraryBuildFailures = false;
             BuildLibrary(TestFilesDir.GetTestPath("library_errors"), new[] {inputFile}, libraryPath, false, false,
                 false, false, null);
 
@@ -616,6 +621,10 @@ namespace pwiz.SkylineTestFunctional
         {
             PeptideSettingsUI = FindOpenForm<PeptideSettingsUI>() ??
                                 ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+
+            // Control console output on failure for diagnosing nightly test failures
+            PeptideSettingsUI.ReportLibraryBuildFailure = ReportLibraryBuildFailures;
+            
             // Allow a person watching to see what is going on in the Library tab
             RunUI(() =>
             {
