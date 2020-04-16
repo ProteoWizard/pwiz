@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -59,8 +58,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestLibraryBuild()
         {
             TestFilesZip = @"TestFunctional\LibraryBuildTest.zip";
-using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) // If any AsertEx or Assume fails on BSPRATT-UW3, invoke debugger instead of failing  TODO(bspratt) remove this once debugged
-                RunFunctionalTest();
+            RunFunctionalTest();
         }
 
         protected override void DoTest()
@@ -596,6 +594,8 @@ using (new Assume.DebugOnFail(Environment.MachineName.Contains("BSPRATT-UW3"))) 
             OkDialog(messageDlg, messageDlg.OkDialog);           
             CheckLibraryExistence(redundantBuildPath, false);
             CheckLibraryExistence(nonredundantBuildPath, false);
+
+            WaitForConditionUI(() => !PeptideSettingsUI.IsBuildingLibrary);
         }
 
         private void BuildLibraryIrt(bool addIrts, bool recalibrate, bool addPredictor)
