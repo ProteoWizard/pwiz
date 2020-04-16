@@ -1,25 +1,26 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using EnvDTE;
+using System.Xml;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
     public class LinkedPeptide : Immutable
     {
-        public LinkedPeptide(Peptide peptide, int indexAa, ExplicitMods explicitMods)
+        public LinkedPeptide(Peptide peptide, int aaIndex, ExplicitMods explicitMods)
         {
             Peptide = peptide;
-            IndexAa = indexAa;
+            AaIndex = aaIndex;
             ExplicitMods = explicitMods;
         }
 
         public Peptide Peptide { get; private set; }
-        public int IndexAa { get; private set; }
+        public int AaIndex { get; private set; }
 
         public ExplicitMods ExplicitMods { get; private set; }
 
@@ -42,43 +43,20 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public IEnumerable<ComplexFragmentIon> ListComplexFragmentIons(SrmSettings settings, int maxFragmentEventCount)
         {
-            // var linkedFragmentIonLists = new List<KeyValuePair<ModificationSite, IList<ComplexFragmentIon>>>();
-            // foreach (var crosslinkMod in ExplicitMods.CrosslinkMods)
-            // {
-            //     foreach (var linkedPeptide in crosslinkMod.LinkedPeptides)
-            //     {
-            //         linkedFragmentIonLists.Add(new KeyValuePair<ModificationSite, IList<ComplexFragmentIon>>(
-            //             crosslinkMod.ModificationSite,
-            //             ImmutableList.ValueOf(linkedPeptide.ListComplexFragmentIons(settings, maxFragmentEventCount))));
-            //
-            //     }
-            // }
-
             IEnumerable<ComplexFragmentIon> result = ListSimpleFragmentIons(settings);
             return ExplicitMods.PermuteComplexFragmentIons(settings, maxFragmentEventCount, result);
-            foreach (var crosslinkMod in ExplicitMods.CrosslinkMods)
-            {
-                foreach (var linkedPeptide in crosslinkMod.LinkedPeptides)
-                {
-                    var linkedFragmentIonList = ImmutableList.ValueOf(linkedPeptide.ListComplexFragmentIons(settings, maxFragmentEventCount));
-                    result = result.SelectMany(cfi => PermuteFragmentIon(settings, maxFragmentEventCount, cfi,
-                        crosslinkMod.ModificationSite, linkedFragmentIonList));
-                }
-            }
-
-            return result;
         }
 
-        public IEnumerable<ComplexFragmentIon> PermuteFragmentIons(SrmSettings settings, int maxCleavageEvents,
+        public IEnumerable<ComplexFragmentIon> PermuteFragmentIons(SrmSettings settings, int maxFragmentationCount,
             ModificationSite modificationSite, IEnumerable<ComplexFragmentIon> fragmentIons)
         {
-            var linkedFragmentIonList = ImmutableList.ValueOf(ListComplexFragmentIons(settings, maxCleavageEvents));
+            var linkedFragmentIonList = ImmutableList.ValueOf(ListComplexFragmentIons(settings, maxFragmentationCount));
             return fragmentIons.SelectMany(cfi =>
-                PermuteFragmentIon(settings, maxCleavageEvents, cfi, modificationSite, linkedFragmentIonList));
+                PermuteFragmentIon(settings, maxFragmentationCount, cfi, modificationSite, linkedFragmentIonList));
 
         }
         private IEnumerable<ComplexFragmentIon> PermuteFragmentIon(SrmSettings settings, 
-            int maxCleavageEvents,
+            int maxFragmentationCount,
             ComplexFragmentIon fragmentIon,
             ModificationSite modificationSite,
             IList<ComplexFragmentIon> linkedFragmentIons)
@@ -88,7 +66,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 yield return fragmentIon;
                 yield break;
             }
-            int fragmentCountRemaining = maxCleavageEvents - fragmentIon.GetFragmentationEventCount();
+            int fragmentCountRemaining = maxFragmentationCount - fragmentIon.GetFragmentationEventCount();
             foreach (var linkedFragmentIon in linkedFragmentIons)
             {
                 if (linkedFragmentIon.GetFragmentationEventCount() > fragmentCountRemaining)
@@ -112,6 +90,51 @@ namespace pwiz.Skyline.Model.Crosslinking
                 yield return new ComplexFragmentIon(transitionDocNode.Transition, transitionDocNode.Losses)
                     .ChangeAdduct(Adduct.EMPTY);
             }
+        }
+
+        private enum EL
+        {
+            linked_peptide,
+        }
+
+        private enum ATTR
+        {
+            sequence,
+            aa_index
+        }
+        public void WriteToXml(DocumentWriter documentWriter, XmlWriter writer)
+        {
+            writer.WriteStartElement(EL.linked_peptide);
+            writer.WriteAttribute(ATTR.sequence, Peptide.Sequence);
+            if (!Equals(ExplicitMods, ExplicitMods.EMPTY))
+            {
+                documentWriter.WriteExplicitMods(writer, Peptide.Sequence, ExplicitMods);
+            }
+            writer.WriteEndElement();
+        }
+
+        public static LinkedPeptide ReadFromXml(DocumentReader documentReader, XmlReader reader)
+        {
+            if (!reader.IsStartElement(EL.linked_peptide))
+            {
+                return null;
+            }
+
+            var sequence = reader.GetAttribute(ATTR.sequence);
+            int aaIndex = reader.GetIntAttribute(ATTR.aa_index);
+            var peptide = new Peptide(sequence);
+            var explicitMods = ExplicitMods.EMPTY;
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+            }
+            else
+            {
+                reader.ReadStartElement();
+                explicitMods = documentReader.ReadExplicitMods(reader, peptide);
+                reader.ReadEndElement();
+            }
+            return new LinkedPeptide(peptide, aaIndex, explicitMods);
         }
     }
 }

@@ -308,7 +308,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteEndElement();
         }
 
-        private void WriteExplicitMods(XmlWriter writer, string sequence, ExplicitMods mods)
+        public void WriteExplicitMods(XmlWriter writer, string sequence, ExplicitMods mods)
         {
             if (mods == null ||
                 string.IsNullOrEmpty(sequence) && !mods.HasIsotopeLabels)
@@ -336,6 +336,11 @@ namespace pwiz.Skyline.Model.Serialization
 
                 WriteExplicitMods(writer, EL.explicit_heavy_modifications,
                     EL.explicit_modification, labelType, heavyMods.Modifications, sequence);
+            }
+
+            foreach (var crosslinkMod in mods.CrosslinkMods)
+            {
+                crosslinkMod.WriteToXml(this, writer);
             }
             writer.WriteEndElement();
         }

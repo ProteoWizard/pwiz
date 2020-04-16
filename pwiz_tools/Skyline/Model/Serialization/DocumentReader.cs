@@ -28,6 +28,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
@@ -948,11 +949,12 @@ namespace pwiz.Skyline.Model.Serialization
             reader.Skip();
         }
 
-        private ExplicitMods ReadExplicitMods(XmlReader reader, Peptide peptide)
+        public ExplicitMods ReadExplicitMods(XmlReader reader, Peptide peptide)
         {
             IList<ExplicitMod> staticMods = null;
             TypedExplicitModifications staticTypedMods = null;
             IList<TypedExplicitModifications> listHeavyMods = null;
+            List<CrosslinkMod> crosslinkMods = new List<CrosslinkMod>();
             bool isVariable = false;
 
             if (reader.IsStartElement(EL.variable_modifications))
@@ -1003,16 +1005,26 @@ namespace pwiz.Skyline.Model.Serialization
                         listHeavyMods.Add(new TypedExplicitModifications(peptide,
                             IsotopeLabelType.heavy, new ExplicitMod[0]));
                     }
+
+                    while (true)
+                    {
+                        var crosslinkMod = CrosslinkMod.ReadFromXml(this, reader);
+                        if (crosslinkMod == null)
+                        {
+                            break;
+                        }
+                        crosslinkMods.Add(crosslinkMod);
+                    }
                     reader.ReadEndElement();
                 }
             }
-            if (staticMods == null && listHeavyMods == null)
+            if (staticMods == null && listHeavyMods == null && crosslinkMods.Count == 0)
                 return null;
 
             listHeavyMods = (listHeavyMods != null ?
                 listHeavyMods.ToArray() : new TypedExplicitModifications[0]);
 
-            return new ExplicitMods(peptide, staticMods, listHeavyMods, isVariable);
+            return new ExplicitMods(peptide, staticMods, listHeavyMods, isVariable).ChangeCrosslinkMods(crosslinkMods);
         }
 
         private TypedExplicitModifications ReadExplicitMods(XmlReader reader, string name,

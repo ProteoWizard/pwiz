@@ -10,6 +10,7 @@ namespace pwiz.Skyline.Model
 {
     public class FormulaMass : Immutable, IXmlSerializable
     {
+        public static readonly FormulaMass EMPTY = new FormulaMass(string.Empty);
         public FormulaMass(string formula) : this(formula, 0, 0)
         {
         }
@@ -91,6 +92,7 @@ namespace pwiz.Skyline.Model
             Formula = reader.GetAttribute(ATTR.formula) ?? string.Empty;
             MonoMassOffset = reader.GetDoubleAttribute(ATTR.mono_mass_offset);
             AverageMassOffset = reader.GetDoubleAttribute(ATTR.average_mass_offset);
+            reader.Read();
         }
 
         void IXmlSerializable.WriteXml(XmlWriter writer)

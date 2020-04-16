@@ -98,5 +98,29 @@ namespace pwiz.SkylineTest
 
             Assert.AreNotEqual(0, complexFragmentIons.Length);
         }
+
+        [TestMethod]
+        public void TestCrosslinkModSerialization()
+        {
+            var settings = SrmSettingsList.GetDefault();
+            var crosslinkerDef = new CrosslinkerDef("disulfide", new FormulaMass("-H2"));
+            settings = settings.ChangePeptideSettings(settings.PeptideSettings.ChangeModifications(
+                settings.PeptideSettings.Modifications.ChangeCrosslinkingSettings(
+                    CrosslinkingSettings.DEFAULT.ChangeCrosslinkers(new[] {crosslinkerDef})
+                )));
+            var mainPeptide = new Peptide("MERCURY");
+            var transitionGroup = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
+            var linkedPeptide = new LinkedPeptide(new Peptide("ARSENIC"), 2, ExplicitMods.EMPTY);
+            var crosslinkMod = new CrosslinkMod(3, crosslinkerDef, new[] { linkedPeptide });
+            var explicitModsWithCrosslink = ExplicitMods.EMPTY
+                .ChangePeptide(mainPeptide)
+                .ChangeCrosslinkMods(new[] { crosslinkMod });
+            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings,
+                explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+            var peptideDocNode = new PeptideDocNode(mainPeptide, settings, explicitModsWithCrosslink, null, ExplicitRetentionTimeInfo.EMPTY, new []{transitionGroupDocNode}, false);
+            var peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", null, new []{peptideDocNode});
+            var srmDocument = (SrmDocument) new SrmDocument(settings).ChangeChildren(new[] {peptideGroupDocNode});
+            AssertEx.Serializable(srmDocument);
+        }
     }
 }

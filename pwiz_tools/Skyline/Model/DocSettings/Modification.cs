@@ -1009,7 +1009,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return CrosslinkMods.Count != 0; }
         }
 
-        public IEnumerable<ComplexFragmentIon> PermuteComplexFragmentIons(SrmSettings settings, int maxCleavageCount,
+        public IEnumerable<ComplexFragmentIon> PermuteComplexFragmentIons(SrmSettings settings, int maxFragmentationCount,
             IEnumerable<ComplexFragmentIon> complexFragmentIons)
         {
             var result = complexFragmentIons;
@@ -1017,17 +1017,12 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 foreach (var linkedPeptide in crosslinkMod.LinkedPeptides)
                 {
-                    result = linkedPeptide.PermuteFragmentIons(settings, maxCleavageCount,
+                    result = linkedPeptide.PermuteFragmentIons(settings, maxFragmentationCount,
                         crosslinkMod.ModificationSite, result);
                 }
             }
 
             return result;
-        }
-
-        public CrosslinkMod GetCrosslinkMod(ModificationSite modificationSite)
-        {
-            return CrosslinkMods.FirstOrDefault(mod => modificationSite.Equals(mod.ModificationSite));
         }
 
         public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)

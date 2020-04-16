@@ -21,7 +21,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public CrosslinkingSettings ChangeCrosslinkers(IEnumerable<CrosslinkerDef> crosslinkers)
         {
-            return ChangeProp(ImClone(this), im => Crosslinkers = ImmutableList.ValueOfOrEmpty(crosslinkers));
+            return ChangeProp(ImClone(this), im => im.Crosslinkers = ImmutableList.ValueOfOrEmpty(crosslinkers));
         }
         public int MaxFragmentations { get; private set; }
 
@@ -69,12 +69,16 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             MaxFragmentations = reader.GetIntAttribute(ATTR.max_fragmentations);
-            bool empty = reader.IsEmptyElement;
-            reader.Read();
             var crosslinkers = new List<CrosslinkerDef>();
-            if (!empty)
+            if (reader.IsEmptyElement)
             {
+                reader.Read();
+            }
+            else
+            {
+                reader.ReadStartElement();
                 reader.ReadElements(crosslinkers);
+                reader.ReadEndElement();
             }
             Crosslinkers = ImmutableList.ValueOf(crosslinkers);
         }
@@ -85,12 +89,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             writer.WriteElements(Crosslinkers);
         }
 
-        public class CrosslinkingDefaultValues : DefaultValues
+        public static CrosslinkingSettings Deserialize(XmlReader reader)
         {
-            public override bool IsDefault(object obj, object parentObject)
-            {
-                return Equals(obj, DEFAULT);
-            }
+            return reader.Deserialize(new CrosslinkingSettings());
         }
     }
   

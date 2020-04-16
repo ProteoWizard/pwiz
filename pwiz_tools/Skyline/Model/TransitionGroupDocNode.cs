@@ -1121,7 +1121,7 @@ namespace pwiz.Skyline.Model
             }
 
             var simpleFragmentIons = simpleTransitions.Select(transition => transition.ComplexFragmentIon);
-            var complexFragmentIons = mods.PermuteComplexFragmentIons(settings, settings.PeptideSettings.Modifications.MaxCrosslinkFragmentations, simpleFragmentIons);
+            var complexFragmentIons = mods.PermuteComplexFragmentIons(settings, settings.PeptideSettings.Modifications.CrosslinkingSettings.MaxFragmentations, simpleFragmentIons);
             return complexFragmentIons.Select(complexFragmentIon =>
                 complexFragmentIon.MakeTransitionDocNode(settings, mods));
         }

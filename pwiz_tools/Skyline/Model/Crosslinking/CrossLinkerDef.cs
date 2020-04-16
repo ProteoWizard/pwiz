@@ -30,11 +30,13 @@ namespace pwiz.Skyline.Model.Crosslinking
             if (reader.IsEmptyElement)
             {
                 reader.Read();
-                return;
             }
-
-            reader.Read();
-            IntactFormula = reader.DeserializeElement<FormulaMass>(EL.intact_molecule);
+            else
+            {
+                reader.ReadStartElement();
+                IntactFormula = reader.DeserializeElement<FormulaMass>(EL.intact_molecule);
+                reader.ReadEndElement();
+            }
         }
 
         public override void WriteXml(XmlWriter writer)

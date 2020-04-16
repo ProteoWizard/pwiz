@@ -325,6 +325,28 @@
                 <xs:attribute name="isotope_label" type="xs:string"/>
               </xs:complexType>
             </xs:element>
+            <xs:element name="crosslinking" minOccurs="0" maxOccurs="1">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="crosslinker" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:sequence>
+                        <xs:element name="intact_molecule">
+                          <xs:complexType>
+                            <xs:attribute name="formula" type="xs:string"/>
+                            <xs:attribute name="mono_mass_offset" type="xs:double" />
+                            <xs:attribute name="average_mass_offset" type="xs:double" />
+                          </xs:complexType>
+                        </xs:element>
+                      </xs:sequence>
+                      <xs:attribute name="name" type="xs:string" />
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="name" type="xs:string" />
+                <xs:attribute name="max_fragmentations" type="xs:integer"/>
+              </xs:complexType>
+            </xs:element>
           </xs:sequence>
           <xs:attribute name="max_variable_mods" type="xs:nonNegativeInteger"
               use="required"/>
@@ -885,41 +907,7 @@
               </xs:sequence>
             </xs:complexType>
           </xs:element>
-          <xs:element name="explicit_modifications" minOccurs="0" maxOccurs="1">
-            <xs:complexType>
-              <xs:sequence>
-                <xs:element name="explicit_static_modifications" minOccurs="0"
-                    maxOccurs="1">
-                  <xs:complexType>
-                    <xs:sequence>
-                      <xs:element name="explicit_modification"
-                          type="modification_type" minOccurs="0"
-                          maxOccurs="unbounded"/>
-                    </xs:sequence>
-                  </xs:complexType>
-                </xs:element>
-                <xs:element name="explicit_heavy_modifications" minOccurs="0"
-                    maxOccurs="unbounded">
-                  <xs:complexType>
-                    <xs:sequence>
-                      <xs:element name="explicit_modification" minOccurs="0"
-                          maxOccurs="unbounded">
-                        <xs:complexType>
-                          <xs:complexContent>
-                            <xs:extension base="modification_type">
-                              <xs:attribute name="isotope_label"
-                              type="xs:string"/>
-                            </xs:extension>
-                          </xs:complexContent>
-                        </xs:complexType>
-                      </xs:element>
-                    </xs:sequence>
-                    <xs:attribute name="isotope_label" type="xs:string"/>
-                  </xs:complexType>
-                </xs:element>
-              </xs:sequence>
-            </xs:complexType>
-          </xs:element>
+          <xs:element name="explicit_modifications" type="explicit_modifications_type" minOccurs="0" maxOccurs="1"/>
           <xs:element minOccurs="0" name="implicit_modifications">
             <xs:complexType>
               <xs:sequence>
@@ -1036,6 +1024,56 @@
         </xs:attribute>
       </xs:extension>
     </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="explicit_modifications_type">
+    <xs:sequence>
+      <xs:element name="explicit_static_modifications" minOccurs="0"
+          maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="explicit_modification"
+                type="modification_type" minOccurs="0"
+                maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="explicit_heavy_modifications" minOccurs="0"
+          maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="explicit_modification" minOccurs="0"
+                maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:complexContent>
+                  <xs:extension base="modification_type">
+                    <xs:attribute name="isotope_label"
+                    type="xs:string"/>
+                  </xs:extension>
+                </xs:complexContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="isotope_label" type="xs:string"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="crosslink">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="linked_peptide" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="explicit_modifications" type="explicit_modifications_type" minOccurs="0"/>
+                </xs:sequence>
+                <xs:attribute name="sequence" type="xs:string" />
+                <xs:attribute name="aa_index" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="crosslinker_name" type="xs:string" />
+          <xs:attribute name="aa_index" type="xs:integer" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
   </xs:complexType>
   <!-- ================================================================== -->
   <!-- BEGIN schema elements for TransitionGroupDocNode -->

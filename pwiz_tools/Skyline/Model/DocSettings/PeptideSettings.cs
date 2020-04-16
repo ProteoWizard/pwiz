@@ -97,9 +97,6 @@ namespace pwiz.Skyline.Model.DocSettings
         [TrackChildren(true)]
         public QuantificationSettings Quantification { get; private set; }
 
-        [TrackChildren(true, defaultValues: typeof(CrosslinkingSettings.CrosslinkingDefaultValues))]
-        public CrosslinkingSettings Crosslinking { get; private set; }
-
         #region Property change methods
 
         public PeptideSettings ChangeEnzyme(Enzyme prop)
@@ -220,12 +217,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 Modifications = reader.DeserializeElement<PeptideModifications>();
                 Integration = reader.DeserializeElement<PeptideIntegration>();
                 Quantification = reader.DeserializeElement<QuantificationSettings>();
-                Crosslinking = reader.DeserializeElement<CrosslinkingSettings>();
                 reader.ReadEndElement();
             }
 
             Quantification = Quantification ?? QuantificationSettings.DEFAULT;
-            Crosslinking = Crosslinking ?? CrosslinkingSettings.DEFAULT;
             // Defer validation to the SrmSettings object
         }
 
@@ -244,8 +239,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElement(Integration);
             if (!Equals(Quantification, QuantificationSettings.DEFAULT))
                 writer.WriteElement(Quantification);
-            if (!Equals(Crosslinking, CrosslinkingSettings.DEFAULT))
-                writer.WriteElement(Crosslinking);
         }
 
         #endregion
@@ -1224,7 +1217,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int DEFAULT_MAX_NEUTRAL_LOSSES = 1;
         public const int MIN_MAX_NEUTRAL_LOSSES = 1;
         public const int MAX_MAX_NEUTRAL_LOSSES = 5;
-        public const int DEFAULT_MAX_CROSSLINK_FRAGMENTATIONS = 1;
 
         [ThreadStatic]
         private static PeptideModifications _serializationContext;
@@ -1264,7 +1256,7 @@ namespace pwiz.Skyline.Model.DocSettings
             _modifications = MakeReadOnly(modifications.ToArray());
 
             InternalStandardTypes = internalStandardTypes;
-            MaxCrosslinkFragmentations = DEFAULT_MAX_CROSSLINK_FRAGMENTATIONS;
+            CrosslinkingSettings = CrosslinkingSettings.DEFAULT;
 
             DoValidate();
         }
@@ -1274,11 +1266,9 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public int MaxNeutralLosses { get; private set; }
 
-        [Track(defaultValues:typeof(DefaultValuesOne))]
-        public int MaxCrosslinkFragmentations { get; private set; }
+        [Track]
+        public CrosslinkingSettings CrosslinkingSettings{ get; private set; }
 
-        [TrackChildren]
-        public ImmutableList<CrosslinkerDef> Crosslinkers { get; private set; }
         public int CountLabelTypes { get { return _modifications.Count; } }
 
         [Track]
@@ -1467,14 +1457,9 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeModifications(IsotopeLabelType.light, prop);
         }
 
-        public PeptideModifications ChangeCrosslinkers(IEnumerable<CrosslinkerDef> crosslinkers)
+        public PeptideModifications ChangeCrosslinkingSettings(CrosslinkingSettings crosslinkingSettings)
         {
-            return ChangeProp(ImClone(this), im => im.Crosslinkers = ImmutableList.ValueOfOrEmpty(crosslinkers));
-        }
-
-        public PeptideModifications ChangeMaxCrosslinkFragmentations(int value)
-        {
-            return ChangeProp(ImClone(this), im => im.MaxCrosslinkFragmentations = value);
+            return ChangeProp(ImClone(this), im => im.CrosslinkingSettings = crosslinkingSettings);
         }
 
         /// <summary>
@@ -1684,7 +1669,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var list = new List<TypedModifications>();
             var internalStandardTypes = new[] {IsotopeLabelType.heavy};
-            var crosslinkers = new List<CrosslinkerDef>();
+            CrosslinkingSettings crosslinkingSettings = CrosslinkingSettings.DEFAULT;
 
             MaxVariableMods = reader.GetIntAttribute(ATTR.max_variable_mods, DEFAULT_MAX_VARIABLE_MODS);
             MaxNeutralLosses = reader.GetIntAttribute(ATTR.max_neutral_losses, DEFAULT_MAX_NEUTRAL_LOSSES);
@@ -1777,7 +1762,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     throw new InvalidDataException(string.Format(Resources.PeptideModifications_ReadXml_Internal_standard_type__0__not_found,
                                                                  internalStandardNames[iMissingType]));
                 }
-                reader.ReadElements(crosslinkers);
+
+                crosslinkingSettings = reader.DeserializeElement<CrosslinkingSettings>();
                 reader.ReadEndElement();
             }
 
@@ -1786,7 +1772,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             _modifications = MakeReadOnly(list.ToArray());
             InternalStandardTypes = internalStandardTypes;
-            Crosslinkers = ImmutableList.ValueOf(crosslinkers);
+            CrosslinkingSettings = crosslinkingSettings;
             DoValidate();
         }
 
@@ -1803,11 +1789,6 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write attibutes
             writer.WriteAttribute(ATTR.max_variable_mods, MaxVariableMods);
             writer.WriteAttribute(ATTR.max_neutral_losses, MaxNeutralLosses);
-            if (MaxCrosslinkFragmentations != DEFAULT_MAX_CROSSLINK_FRAGMENTATIONS)
-            {
-                writer.WriteAttribute(ATTR.max_crosslink_fragmentations, MaxCrosslinkFragmentations);
-            }
-
             if (InternalStandardTypes.Count == 0)
             {
                 writer.WriteAttribute(ATTR.internal_standard, IsotopeLabelType.NONE_NAME);
@@ -1840,9 +1821,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteEndElement();
             }
 
-            foreach (var crosslinkerDef in Crosslinkers)
+            if (!Equals(CrosslinkingSettings, CrosslinkingSettings.DEFAULT))
             {
-                writer.WriteElement(crosslinkerDef);
+                writer.WriteElement(CrosslinkingSettings);
             }
         }
 
@@ -1859,8 +1840,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    ArrayUtil.EqualsDeep(obj.InternalStandardTypes, InternalStandardTypes) &&
                    ArrayUtil.EqualsDeep(obj._modifications, _modifications) &&
                    HasHeavyModifications == obj.HasHeavyModifications &&
-                   MaxCrosslinkFragmentations == obj.MaxCrosslinkFragmentations &&
-                   Crosslinkers.Equals(obj.Crosslinkers);
+                   Equals(CrosslinkingSettings, obj.CrosslinkingSettings);
         }
 
         public override bool Equals(object obj)
@@ -1880,8 +1860,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ InternalStandardTypes.GetHashCodeDeep();
                 result = (result * 397) ^ _modifications.GetHashCodeDeep();
                 result = (result * 397) ^ HasHeavyModifications.GetHashCode();
-                result = (result * 397) ^ MaxCrosslinkFragmentations.GetHashCode();
-                result = (result * 397) ^ Crosslinkers.GetHashCode();
+                result = (result * 397) ^ CrosslinkingSettings.GetHashCode();
                 return result;
             }
         }
