@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -69,6 +70,33 @@ namespace pwiz.SkylineTest
                 null, null, false);
             var mainFullFormula = mainTransitionGroup.GetNeutralFormula(srmSettings, explicitMods);
             Assert.AreEqual(fullFormula, mainFullFormula);
+        }
+
+        [TestMethod]
+        public void TestPermuteComplexIons()
+        {
+            var mainPeptide = new Peptide("MERCURY");
+            var srmSettings = SrmSettingsList.GetDefault();
+            var transitionFilter = srmSettings.TransitionSettings.Filter;
+            transitionFilter = transitionFilter
+                .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_1.Name)
+                .ChangeFragmentRangeLastName(@"last ion")
+                .ChangePeptideIonTypes(new[]{IonType.precursor,IonType.y});
+            srmSettings =  srmSettings.ChangeTransitionSettings(
+                srmSettings.TransitionSettings.ChangeFilter(transitionFilter));
+
+            var transitionGroup = new TransitionGroup(mainPeptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
+            var crosslinkerDef = new CrosslinkerDef("disulfide", new FormulaMass("-H2"));
+            var linkedPeptide = new LinkedPeptide(new Peptide("ARSENIC"), 2, ExplicitMods.EMPTY);
+            var crosslinkMod = new CrosslinkMod(3, crosslinkerDef, new[] { linkedPeptide });
+            var explicitModsWithCrosslink = ExplicitMods.EMPTY.ChangeCrosslinkMods(new[] { crosslinkMod });
+            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings,
+                explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+            var choices = transitionGroupDocNode.GetPrecursorChoices(srmSettings, explicitModsWithCrosslink, true)
+                .Cast<TransitionDocNode>().ToArray();
+            var complexFragmentIons = choices.Select(transition => transition.ComplexFragmentIon).ToArray();
+
+            Assert.AreNotEqual(0, complexFragmentIons.Length);
         }
     }
 }

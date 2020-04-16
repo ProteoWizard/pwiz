@@ -105,30 +105,13 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             var transitionGroupDocNode =
                 GetTransitionGroupDocNode(settings, IsotopeLabelType.light, Adduct.SINGLY_PROTONATED);
-            foreach (var transition in transitionGroupDocNode.TransitionGroup.GetTransitions(settings,
+            foreach (var transitionDocNode in transitionGroupDocNode.TransitionGroup.GetTransitions(settings,
                 transitionGroupDocNode, ExplicitMods, transitionGroupDocNode.PrecursorMz,
                 transitionGroupDocNode.IsotopeDist, null, null, true))
             {
-                yield return new ComplexFragmentIon(transition.Transition, transition.Losses);
+                yield return new ComplexFragmentIon(transitionDocNode.Transition, transitionDocNode.Losses)
+                    .ChangeAdduct(Adduct.EMPTY);
             }
-        }
-
-        public IEnumerable<ComplexFragmentIon> PermuteComplexFragmentIonForCrosslink(
-            SrmSettings settings,
-            ComplexFragmentIon complexFragmentIon,
-            CrosslinkMod crossLinkMod,
-            int maxFragmentEventCount)
-        {
-            if (!complexFragmentIon.IncludesAaIndex(crossLinkMod.IndexAa))
-            {
-                return new []{complexFragmentIon};
-            }
-
-            var modificationSite = crossLinkMod.ModificationSite;
-            return crossLinkMod.ListComplexIonPermutations(settings,
-                    maxFragmentEventCount)
-                .Select(children => complexFragmentIon.ChangeChildren(children.Select(child =>
-                    new KeyValuePair<ModificationSite, ComplexFragmentIon>(modificationSite, child))));
         }
     }
 }

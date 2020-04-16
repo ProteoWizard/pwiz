@@ -1113,13 +1113,6 @@ namespace pwiz.Skyline.Model
             IsotopeDistInfo isotopeDist, SpectrumHeaderInfo libInfo, Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, bool useFilter)
         {
             SrmSettings simpleFilterSettings = settings;
-            if (mods.HasCrosslinks)
-            {
-                var transitionSettings = simpleFilterSettings.TransitionSettings;
-                transitionSettings = transitionSettings.ChangeInstrument(transitionSettings.Instrument
-                    .ChangeMinMz(int.MinValue).ChangeMaxMz(int.MaxValue));
-                simpleFilterSettings = simpleFilterSettings.ChangeTransitionSettings(transitionSettings);
-            }
             var simpleTransitions = TransitionGroup.GetTransitions(simpleFilterSettings, this, mods, precursorMz, isotopeDist, libInfo, transitionRanks,
                 useFilter);
             if (!mods.HasCrosslinks)

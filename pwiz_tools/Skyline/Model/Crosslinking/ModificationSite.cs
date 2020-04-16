@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace pwiz.Skyline.Model.Crosslinking
 {
     public class ModificationSite : IComparable<ModificationSite>
@@ -47,6 +48,11 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return result;
+        }
+
+        public override string ToString()
+        {
+            return (AaIndex + 1) + @":" + ModName;
         }
     }
 }
