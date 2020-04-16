@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 throw new ArgumentException();
             }
             var result =
-                crosslinkMod.CrosslinkerDef.FormulaMass.GetMoleculeMassOffset(GetMassType(settings));
+                crosslinkMod.CrosslinkerDef.IntactFormula.GetMoleculeMassOffset(GetMassType(settings));
             for (int iChild = 0; iChild < children.Count; iChild++)
             {
                 var linkedPeptide = crosslinkMod.LinkedPeptides[iChild];

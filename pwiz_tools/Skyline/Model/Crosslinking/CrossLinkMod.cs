@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, IsotopeLabelType labelType)
         {
             var massType = settings.TransitionSettings.Prediction.PrecursorMassType;
-            MoleculeMassOffset moleculeMassOffset = CrosslinkerDef.FormulaMass.GetMoleculeMassOffset(massType);
+            MoleculeMassOffset moleculeMassOffset = CrosslinkerDef.IntactFormula.GetMoleculeMassOffset(massType);
             foreach (var linkedPeptide in LinkedPeptides)
             {
                 moleculeMassOffset = moleculeMassOffset.Plus(linkedPeptide.GetNeutralFormula(settings, labelType));

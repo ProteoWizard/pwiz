@@ -1,26 +1,32 @@
 ﻿using System;
-using JetBrains.Annotations;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class FormulaMass : Immutable
+    public class FormulaMass : Immutable, IXmlSerializable
     {
         public FormulaMass(string formula) : this(formula, 0, 0)
         {
-            Formula = formula;
         }
 
-        private FormulaMass(string formula, double monoMassOffset, double averageMassOffset)
+        public FormulaMass(string formula, double monoMassOffset, double averageMassOffset)
         {
+            Formula = formula ?? string.Empty;
+            MonoMassOffset = monoMassOffset;
+            AverageMassOffset = averageMassOffset;
         }
 
-        [CanBeNull]
+        [Track(defaultValues:typeof(DefaultValuesNull))]
         public string Formula { get; private set; }
 
+        [Track(defaultValues: typeof(DefaultValuesZero))]
         public double MonoMassOffset { get; private set; }
+        [Track(defaultValues: typeof(DefaultValuesZero))]
         public double AverageMassOffset { get; private set; }
 
         protected bool Equals(FormulaMass other)
@@ -42,11 +48,16 @@ namespace pwiz.Skyline.Model
         {
             unchecked
             {
-                var hashCode = (Formula != null ? Formula.GetHashCode() : 0);
+                var hashCode = Formula.GetHashCode();
                 hashCode = (hashCode * 397) ^ MonoMassOffset.GetHashCode();
                 hashCode = (hashCode * 397) ^ AverageMassOffset.GetHashCode();
                 return hashCode;
             }
+        }
+
+        XmlSchema IXmlSerializable.GetSchema()
+        {
+            return null;
         }
 
         public MoleculeMassOffset GetMoleculeMassOffset(MassType massType)
@@ -57,6 +68,47 @@ namespace pwiz.Skyline.Model
                 molecule = Molecule.ParseExpression(Formula);
             }
             return new MoleculeMassOffset(molecule, massType.IsMonoisotopic() ? MonoMassOffset : AverageMassOffset);
+        }
+
+        private enum ATTR
+        {
+            formula,
+            mono_mass_offset,
+            average_mass_offset
+        }
+
+        private FormulaMass()
+        {
+
+        }
+        void IXmlSerializable.ReadXml(XmlReader reader)
+        {
+            if (null != Formula)
+            {
+                throw new InvalidOperationException();
+            }
+
+            Formula = reader.GetAttribute(ATTR.formula) ?? string.Empty;
+            MonoMassOffset = reader.GetDoubleAttribute(ATTR.mono_mass_offset);
+            AverageMassOffset = reader.GetDoubleAttribute(ATTR.average_mass_offset);
+        }
+
+        void IXmlSerializable.WriteXml(XmlWriter writer)
+        {
+            writer.WriteAttributeIfString(ATTR.formula, Formula);
+            if (MonoMassOffset != 0)
+            {
+                writer.WriteAttribute(ATTR.mono_mass_offset, MonoMassOffset);
+            }
+            if (AverageMassOffset != 0)
+            {
+                writer.WriteAttribute(ATTR.average_mass_offset, AverageMassOffset);
+            }
+        }
+
+        public static FormulaMass Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new FormulaMass());
         }
     }
 }

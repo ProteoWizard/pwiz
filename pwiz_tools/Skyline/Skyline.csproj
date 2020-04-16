@@ -392,6 +392,7 @@
     <Compile Include="Model\AuditLog\ReflectorToString.cs" />
     <Compile Include="Model\Crosslinking\ComplexFragmentIon.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkerDef.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkingSettings.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkMod.cs" />
     <Compile Include="Model\Crosslinking\ModificationSite.cs" />
     <Compile Include="Model\Crosslinking\LinkedPeptide.cs" />

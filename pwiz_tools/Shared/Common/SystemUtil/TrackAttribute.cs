@@ -415,6 +415,14 @@ namespace pwiz.Common.SystemUtil
         }
     }
 
+    public class DefaultValuesOne : DefaultValues
+    {
+        protected override IEnumerable<object> _values
+        {
+            get { yield return 1; }
+        }
+    }
+
     public abstract class TrackAttributeBase : Attribute
     {
         protected TrackAttributeBase(bool isTab, bool ignoreName, bool ignoreDefaultParent, Type defaultValues,
