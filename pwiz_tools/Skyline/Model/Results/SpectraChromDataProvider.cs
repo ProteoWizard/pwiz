@@ -479,7 +479,7 @@ namespace pwiz.Skyline.Model.Results
                     var key = new ChromKey(
                         collector.ModifiedSequence,
                         collector.PrecursorMz,
-                        collector.IonMobility,
+                        pairProduct.Key.IonMobilityFilters, 
                         pairProduct.Key.TargetMz,
                         0,
                         pairProduct.Key.FilterWidth,

@@ -2731,6 +2731,11 @@ namespace pwiz.Skyline.Model.Results
             return _allTransitions[_groupHeaderInfo.StartTransitionIndex + transitionIndex];
         }
 
+        public bool HasIonMobilityFilters
+        {
+            get { return _allIonMobilityFilters.Count > 0; }
+        }
+
         public IonMobilityFilterSet GetIonMobilityFilterSet(int filterIndexStart, int filterIndexEnd)
         {
             if (filterIndexStart < 0)

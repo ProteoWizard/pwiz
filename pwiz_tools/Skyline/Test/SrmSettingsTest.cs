@@ -27,6 +27,7 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -1148,7 +1149,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<DriftTimePredictor>(predictorV19, DocumentFormat.VERSION_19_1);
 
             var pred = CheckIonMobilitySettingsBackwardCompatibility("<predict_drift_time name=\"test\" resolving_power=\"100\"></predict_drift_time>");
-            var libFileName = "test.imdb";
+            var libFileName = "test"+IonMobilityDb.EXT;
             Assert.AreEqual(TestContext.GetTestPath(libFileName), pred.IonMobilityLibrary.FilePath);
             Assert.AreEqual("test", pred.IonMobilityLibrary.Name);
             Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, pred.FilterWindowWidthCalculator.WindowWidthMode);
@@ -1169,11 +1170,11 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0, pred1.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
             Assert.AreEqual(0, pred1.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
             Assert.AreEqual(100, pred1.FilterWindowWidthCalculator.ResolvingPower);
-            Assert.AreEqual(17.0, pred1.GetIonMobilityInfo(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), null).First().IonMobility.Mobility);
-            Assert.AreEqual(123.45, pred1.GetIonMobilityInfo(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), null).First().CollisionalCrossSectionSqA);
-            Assert.AreEqual(17.0, pred1.GetIonMobilityInfo(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), null).First().GetHighEnergyIonMobility() ?? 0); // Apply the high energy offset
-            Assert.IsNull(pred1.GetIonMobilityInfo(new LibKey("JLMN", Adduct.QUINTUPLY_PROTONATED), null)); // Should not find a value for that charge state
-            Assert.IsNull(pred1.GetIonMobilityInfo(new LibKey("LMNJK", Adduct.QUINTUPLY_PROTONATED), null)); // Should not find a value for that peptide
+            Assert.AreEqual(17.0, pred1.GetIonMobilityInfo(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), null, true).First().IonMobility.Mobility);
+            Assert.AreEqual(123.45, pred1.GetIonMobilityInfo(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), null, true).First().CollisionalCrossSectionSqA);
+            Assert.AreEqual(17.0, pred1.GetIonMobilityInfo(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), null, true).First().GetHighEnergyIonMobility() ?? 0); // Apply the high energy offset
+            Assert.IsNull(pred1.GetIonMobilityInfo(new LibKey("JLMN", Adduct.QUINTUPLY_PROTONATED), null, true)); // Should not find a value for that charge state
+            Assert.IsNull(pred1.GetIonMobilityInfo(new LibKey("LMNJK", Adduct.QUINTUPLY_PROTONATED), null, true)); // Should not find a value for that peptide
 
             // Check for enforcement of valid resolving power
             CheckIonMobilitySettingsBackwardCompatibility(predictor1.Replace("100", "0"),Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
@@ -1184,10 +1185,10 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0, pred2.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
             Assert.AreEqual(0, pred2.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
             Assert.AreEqual(100, pred2.FilterWindowWidthCalculator.ResolvingPower);
-            Assert.AreEqual(17.0, pred2.GetIonMobilityInfo(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), null).First().IonMobility.Mobility);
-            Assert.AreEqual(16.0, pred2.GetIonMobilityInfo(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), null).First().GetHighEnergyIonMobility() ?? 0); // Apply the high energy offset
-            Assert.IsNull(pred2.GetIonMobilityInfo(new LibKey("JLMN", Adduct.QUINTUPLY_PROTONATED), null)); // Should not find a value for that charge state
-            Assert.IsNull(pred2.GetIonMobilityInfo(new LibKey("LMNJK", Adduct.QUINTUPLY_PROTONATED), null)); // Should not find a value for that peptide
+            Assert.AreEqual(17.0, pred2.GetIonMobilityInfo(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), null, true).First().IonMobility.Mobility);
+            Assert.AreEqual(16.0, pred2.GetIonMobilityInfo(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), null, true).First().GetHighEnergyIonMobility() ?? 0); // Apply the high energy offset
+            Assert.IsNull(pred2.GetIonMobilityInfo(new LibKey("JLMN", Adduct.QUINTUPLY_PROTONATED), null, true)); // Should not find a value for that charge state
+            Assert.IsNull(pred2.GetIonMobilityInfo(new LibKey("LMNJK", Adduct.QUINTUPLY_PROTONATED), null, true)); // Should not find a value for that peptide
 
             // Check using drift time predictor with only measured drift times, and a high energy scan drift time offset, and linear width
             var predictor3 =

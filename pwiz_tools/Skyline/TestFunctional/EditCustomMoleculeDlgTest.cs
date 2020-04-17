@@ -429,7 +429,7 @@ namespace pwiz.SkylineTestFunctional
             double driftTimeMax = 1000.0;
             var centerDriftTime = newdoc.Settings.GetIonMobilityFilters(
                 newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), newdoc.MoleculeTransitions.First(), 
-                null, null, driftTimeMax).First();
+                null, null, driftTimeMax, true).First();
             Assert.AreEqual(TESTVALUES_GROUP.IonMobility.Value, centerDriftTime.IonMobilityAndCCS.IonMobility.Mobility.Value, .0001);
             Assert.AreEqual(TESTVALUES_TRAN.IonMobilityHighEnergyOffset.Value, centerDriftTime.HighEnergyIonMobilityOffset ?? 0, .0001);
             Assert.AreEqual(0, centerDriftTime.IonMobilityExtractionWindowWidth??0, .0001);

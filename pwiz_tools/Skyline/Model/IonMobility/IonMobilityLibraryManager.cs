@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 IonMobilityLibrary libResult;
                 if (!_loadedIonMobilityeLibraries.TryGetValue(dtLib.Name, out libResult))
                 {
-                    libResult = (IonMobilityLibrary) dtLib.Initialize(new LoadMonitor(this, container, dtLib));
+                    libResult = dtLib.Initialize(new LoadMonitor(this, container, dtLib));
                     if (libResult != null)
                         _loadedIonMobilityeLibraries.Add(libResult.Name, libResult);
                 }
@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Model.IonMobility
             if (document == null)
                 return null;
             var ionMobilityFiltering = document.Settings.TransitionSettings.IonMobilityFiltering;
-            return ionMobilityFiltering?.IonMobilityLibrary as IonMobilityLibrary;
+            return ionMobilityFiltering?.IonMobilityLibrary;
         }
 
     }

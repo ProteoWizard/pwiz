@@ -4678,9 +4678,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
     <value>Error: to export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction.</value>
   </data>
-  <data name="DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__" xml:space="preserve">
-    <value>Problem using results to populate drift time library:</value>
-  </data>
   <data name="TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_" xml:space="preserve">
     <value>CSV (Comma delimited)</value>
   </data>
@@ -10990,5 +10987,8 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ions" xml:space="preserve">
     <value>{0} Precursor Ions</value>
+  </data>
+  <data name="IonMobilityFinder_ProcessMSLevel_Problem_using_results_to_populate_ion_mobility_library_" xml:space="preserve">
+    <value>Problem using results to populate ion mobility library:</value>
   </data>
 </root>

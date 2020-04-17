@@ -4675,9 +4675,6 @@
   <data name="CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
     <value>错误：如要导出预定方法，您必须首先在肽段设置/预测中选择一个保留时间预测器。</value>
   </data>
-  <data name="DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__" xml:space="preserve">
-    <value>使用结果填入漂移时间库有问题：</value>
-  </data>
   <data name="TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_" xml:space="preserve">
     <value>CSV （以逗号分隔）</value>
   </data>

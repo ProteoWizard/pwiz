@@ -68,7 +68,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var measuredDTs = new List<List<ValidatingIonMobilityPrecursor>>();
             var precursors = new LibKeyIndex(document.MoleculePrecursorPairs.Select(
                 p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct).LibraryKey));
-            PauseForScreenShot(@"Legacy ion mobility values loaded, placed in .imdb database file"); // For a quick demo when you need it
+            PauseForScreenShot(@"Legacy ion mobility values loaded, placed in .imsdb database file"); // For a quick demo when you need it
             for (var pass = 0; pass < 2; pass++)
             {
                 // Verify ability to extract predictions from raw data

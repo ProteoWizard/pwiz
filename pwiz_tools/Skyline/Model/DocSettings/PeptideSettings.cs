@@ -2050,10 +2050,11 @@ namespace pwiz.Skyline.Model.DocSettings
             var ionMobilitiesDict = new Dictionary<LibKey, List<IonMobilityAndCCS>>();
             foreach (var lib in _libraries.Where(l => l != null))
             {
-                // Get drift times for all files in each library
-                if (lib.TryGetIonMobilityInfos(targetIons, out var ionMobilities) && ionMobilities != null) 
+                // Get ion mobilities for all files in each library
+                if (lib.TryGetIonMobilityInfos(targetIons, out var ionMobilities) && ionMobilities != null)
                 {
-                    foreach (var dt in ionMobilities.GetIonMobilityDict())
+                    var ionMobilityAndCcsDict = ionMobilities.GetIonMobilityDict();
+                    foreach (var dt in ionMobilityAndCcsDict)
                     {
                         List<IonMobilityAndCCS> listTimes;
                         if (!ionMobilitiesDict.TryGetValue(dt.Key, out listTimes))
@@ -2086,7 +2087,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         /// <summary>
         /// Get all ion mobilities from libs associated with this filepath.  Then look at all the others
-        /// and get any values that don't appear in the inital set (how that list is used - averaged etc - is determined elsewhere).
+        /// and get any values that don't appear in the initial set (how that list is used - averaged etc - is determined elsewhere).
         /// TODO(bspratt): It would be more maintainable if this and other things we get from libraries (like RT)
         /// shared some kind of common interface so there is guaranteed consistent behavior around how we pick from
         /// other libraries when the ostensibly correct library doesn't have values we need
@@ -2094,7 +2095,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool TryGetSpectralLibraryIonMobilities(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             Assume.IsTrue(IsLoaded);
-            // Get driftimes from library for this file, if any
+            // Get ion mobilities from spectral library for this ms data file, if any
             ionMobilities = GetLibraryDriftTimesForFilePath(targetIons, filePath);
             var resultDict = ionMobilities == null ?
                 new Dictionary<LibKey, IonMobilityAndCCS[]>() :

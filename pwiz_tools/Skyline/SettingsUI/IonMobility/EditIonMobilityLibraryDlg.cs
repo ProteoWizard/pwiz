@@ -30,7 +30,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
@@ -41,47 +40,9 @@ using DatabaseOpeningException = pwiz.Skyline.Model.IonMobility.DatabaseOpeningE
 
 namespace pwiz.Skyline.SettingsUI.IonMobility
 {
-    public partial class EditIonMobilityLibraryDlg : FormEx, IAuditLogModifier<EditIonMobilityLibraryDlg.EditIonMobilityLibraryDlgSettings>
+    public partial class EditIonMobilityLibraryDlg : FormEx
     {
         private readonly IEnumerable<IonMobilityLibrary> _existingLibs;
-
-        public sealed class EditIonMobilityLibraryDlgSettings : AuditLogOperationSettings<EditIonMobilityLibraryDlgSettings>
-        {
-            private SrmDocument.DOCUMENT_TYPE _docType;
-            public override MessageInfo MessageInfo
-            {
-                get { return new MessageInfo(MessageType.edited_ion_mobility_library, _docType, IonMobilityLibrary.Name, IonMobilityLibrary.FilePath); }
-            }
-
-            public EditIonMobilityLibraryDlgSettings()
-            {
-                IonMobilityLibrary = Model.IonMobility.IonMobilityLibrary.NONE;
-                LibraryIonMobilities = new List<ValidatingIonMobilityPrecursor>();
-                _docType = SrmDocument.DOCUMENT_TYPE.none;
-            }
-
-            public object GetDefaultObject(ObjectInfo<object> info) { return new EditIonMobilityLibraryDlgSettings(); }
-
-            public EditIonMobilityLibraryDlgSettings(IonMobilityLibrary ionMobilityLibrary, IList<ValidatingIonMobilityPrecursor> ionMobilities, SrmDocument.DOCUMENT_TYPE docType)
-            {
-                IonMobilityLibrary = ionMobilityLibrary;
-                LibraryIonMobilities = ionMobilities;
-                _docType = docType;
-            }
-
-
-            [Track]
-            public IonMobilityLibrary IonMobilityLibrary { get; private set; }
-
-            [TrackChildren]
-            public IList<ValidatingIonMobilityPrecursor> LibraryIonMobilities { get; private set; }
-        }
-        public EditIonMobilityLibraryDlgSettings FormSettings
-        {
-            get { return new EditIonMobilityLibraryDlgSettings(IonMobilityLibrary, LibraryMobilitiesFlat, ModeUI); }
-        }
-
-
 
         public IonMobilityLibrary IonMobilityLibrary { get; private set; }
 
@@ -158,7 +119,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 if (_originalMobilitiesFlat.Length != LibraryMobilitiesFlat.Count)
                     return true;
 
-                var ionMobilities = Model.IonMobility.IonMobilityLibrary.FlatListToMultiConformerDictionary(LibraryMobilitiesFlat);
+                var ionMobilities = IonMobilityLibrary.FlatListToMultiConformerDictionary(LibraryMobilitiesFlat);
                 foreach (var item in _originalMobilitiesFlat)
                 {
                     if (ionMobilities.TryGetValue(item.Precursor, out var value))
@@ -379,7 +340,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             try
             {
                 IonMobilityLibrary =
-                    Model.IonMobility.IonMobilityLibrary.CreateFromList(textLibraryName.Text, path, LibraryMobilitiesFlat);
+                    IonMobilityLibrary.CreateFromList(textLibraryName.Text, path, LibraryMobilitiesFlat);
             }
             catch (DatabaseOpeningException x)
             {
@@ -514,8 +475,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public static string ValidateUniquePrecursors(IEnumerable<ValidatingIonMobilityPrecursor> precursorIonMobilities, out List<ValidatingIonMobilityPrecursor> minimalSet)
         {
-            var dict = Model.IonMobility.IonMobilityLibrary.FlatListToMultiConformerDictionary(precursorIonMobilities);
-            minimalSet = Model.IonMobility.IonMobilityLibrary.MultiConformerDictionaryToFlatList(dict); // The conversion to dict removed any duplicates
+            var dict = IonMobilityLibrary.FlatListToMultiConformerDictionary(precursorIonMobilities);
+            minimalSet = IonMobilityLibrary.MultiConformerDictionaryToFlatList(dict); // The conversion to dict removed any duplicates
             var multiConformers = new HashSet<LibKey>();
             foreach (var pair in dict)
             {
@@ -604,7 +565,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     Dictionary<LibKey, IonMobilityAndCCS> dict = null;
                     longWaitDlg.PerformWork(this, 100, broker =>
                     {
-                        dict = Model.IonMobility.IonMobilityLibrary.CreateFromResults(
+                        dict = IonMobilityLibrary.CreateFromResults(
                             document, documentFilePath, useHighEnergyOffset,
                             broker);
                     });

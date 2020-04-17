@@ -1042,7 +1042,7 @@ namespace pwiz.SkylineTestUtil
             File.WriteAllText(tmpSky, xmlSaved);
             using (var cmd = new Skyline.CommandLine())
             {
-                IsTrue(cmd.OpenSkyFile(tmpSky)); // Handles any path shifts in database files, like our .imdb file
+                IsTrue(cmd.OpenSkyFile(tmpSky)); // Handles any path shifts in database files, like our .imsdb file
                 var docLoad = cmd.Document;
                 using (var docContainer = new ResultsTestDocumentContainer(null, tmpSky))
                 {

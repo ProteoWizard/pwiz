@@ -1367,7 +1367,7 @@ namespace pwiz.Skyline.Model
                                     if (!keepUserSet || notUserSet || missmatchedEmptyReintegrated)
                                     {
                                         ChromPeak peak = ChromPeak.EMPTY;
-                                        IonMobilityFilterSet ionMobility = IonMobilityFilterSet.EMPTY;
+                                        var ionMobility = IonMobilityFilterSet.EMPTY;
                                         if (info != null)
                                         {
                                             // If the peak boundaries have been set by the user, make sure this peak matches
@@ -1781,6 +1781,7 @@ namespace pwiz.Skyline.Model
 
                 var listChromInfoLists = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList());
                 var results = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listChromInfoLists);
+
 
                 var nodeGroupNew = nodeGroup;
                 if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
@@ -2337,8 +2338,11 @@ namespace pwiz.Skyline.Model
                 if (info == null)
                     return;
 
-                // Aggregate ion mobility information across all transitions
-                IonMobilityFilters = IonMobilityFilters.Merge(info.IonMobilityFilters, nodeTran.Transition.IsPrecursor());
+                // Note precursor ion mobility
+                if (nodeTran.Transition.IsPrecursor() || IonMobilityFilterSet.IsNullOrEmpty(IonMobilityFilters))
+                {
+                    IonMobilityFilters = info.IonMobilityFilters;
+                }
 
                 ResultsCount++;
 

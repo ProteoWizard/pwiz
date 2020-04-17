@@ -27,14 +27,11 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -205,7 +202,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 foreach (var nodeGroup in pep.TransitionGroups)
                 {
                     var calculatedDriftTime = doc1.Settings.GetIonMobilityFilters(
-                        pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0).First().IonMobilityAndCCS;
+                        pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0, false).First().IonMobilityAndCCS;
                     var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorAdduct);
                     IonMobilityAndCCS[] infoValueExplicitDT;
                     if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))
@@ -248,27 +245,17 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             AssertEx.AreEqual(1093421, maxHeight, 1); 
 
             // Does CCS show up in reports?
-            TestReports(doc1);
+            TestReports();
         }
 
-        private void TestReports(SrmDocument doc1, string msg = null)
+        private void TestReports(string msg = null)
         {
             // Verify reports working for CCS
             var row = 0;
-            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-            EnableDocumentGridColumns(documentGrid,
-                Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List,
-                doc1.PeptideTransitionCount * doc1.MeasuredResults.Chromatograms.Count,
-                new[]
-                {
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CollisionalCrossSection",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityMS1",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityFragment",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityUnits",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityWindow"
-                });
-            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, 0.832, msg);
-            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityFragment", row, (double?)null, msg); // Document is all precursor
+            var documentGrid = EnableDocumentGridIonMobilityResultsColumns();
+            var imPrecursor = 0.832;
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, imPrecursor, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "TransitionResult.IonMobilityFragment", row, imPrecursor, msg); // Document is all precursor
             CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
             CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.04, msg);
             CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 337.4821, msg);

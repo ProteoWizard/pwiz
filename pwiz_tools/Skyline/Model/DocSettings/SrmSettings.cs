@@ -883,8 +883,9 @@ namespace pwiz.Skyline.Model.DocSettings
             TransitionDocNode nodeTran,
             LibraryIonMobilityInfo libraryIonMobilityInfo,
             IIonMobilityFunctionsProvider instrumentInfo, // For converting CCS to IM if needed
-            double ionMobilityMax)
+            double ionMobilityMax, bool isMseData)
         {
+            var needHighEnergyOffset = nodeTran != null && isMseData && !nodeTran.IsMs1;
             if (nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.HasValue && instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
             {
                 // Use the explicitly specified CCS value
@@ -892,7 +893,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
                 var result = IonMobilityAndCCS.GetIonMobilityAndCCS(im,
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
-                    ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
+                    needHighEnergyOffset ?(ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0) : 0);
                 // Now get the resolving power
                 double windowIM;
                 if (TransitionSettings.IonMobilityFiltering.IonMobilityLibrary != null)
@@ -914,7 +915,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Use the explicitly specified DT value
                 var result = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, nodeGroup.ExplicitValues.IonMobilityUnits),
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
-                    ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
+                    needHighEnergyOffset ? (ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0) : 0);
                 // Now get the resolving power
                 double windowIM;
                 if (TransitionSettings.IonMobilityFiltering.IonMobilityLibrary != null && !TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.IsNone)
@@ -935,7 +936,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return GetIonMobilityHelper(nodePep, nodeGroup,
                     instrumentInfo,
-                    libraryIonMobilityInfo, ionMobilityMax);
+                    libraryIonMobilityInfo, ionMobilityMax, needHighEnergyOffset);
             }
         }
 
@@ -946,13 +947,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public IonMobilityFilterSet GetIonMobilityHelper(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
             IIonMobilityFunctionsProvider ionMobilityFunctionsProvider,
             LibraryIonMobilityInfo libraryIonMobilityInfo,
-            double ionMobilityMax)
+            double ionMobilityMax, bool needHighEnergyOffset)
         {
             foreach (var typedSequence in GetTypedSequences(nodePep.Target, nodePep.ExplicitMods, nodeGroup.PrecursorAdduct))
             {
                 var chargedPeptide = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct);
 
-                var result = TransitionSettings.IonMobilityFiltering.GetIonMobilityInfo(chargedPeptide, ionMobilityFunctionsProvider, ionMobilityMax);
+                var result = TransitionSettings.IonMobilityFiltering.GetIonMobilityInfo(chargedPeptide, ionMobilityFunctionsProvider, ionMobilityMax, needHighEnergyOffset);
                 if (result != null && result.Any())
                 {
                     return result;
@@ -960,7 +961,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 if (libraryIonMobilityInfo != null)
                 {
-                    var dt = libraryIonMobilityInfo.GetLibraryMeasuredIonMobilityAndHighEnergyOffset(chargedPeptide, nodeGroup.PrecursorMz, ionMobilityFunctionsProvider);
+                    var dt = libraryIonMobilityInfo.GetLibraryMeasuredIonMobilityAndHighEnergyOffset(chargedPeptide, nodeGroup.PrecursorMz, ionMobilityFunctionsProvider, needHighEnergyOffset);
                     if (dt.IonMobility.HasValue && TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues)
                     {
                         var ionMobilityWindow = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(dt.IonMobility.Mobility.Value, ionMobilityMax);
@@ -1242,7 +1243,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public LibraryIonMobilityInfo GetIonMobilities(LibKey[] targetIons, MsDataFileUri filePath)
         {
-            // Look in ion mobility library if available
+            // Look in ion mobility library (.imsdb) if available then spectral libs if requested
             var imFiltering = TransitionSettings.IonMobilityFiltering;
             if (imFiltering != null)
             {

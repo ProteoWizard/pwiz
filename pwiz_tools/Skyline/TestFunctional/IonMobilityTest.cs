@@ -149,6 +149,7 @@ namespace pwiz.SkylineTestFunctional
                 });
                 // Expect to be warned about multiple conformer
                 var warnDlg = ShowDialog<MessageDlg>(() => ionMobilityLibDlg1.DoPasteLibrary());
+PauseTest();
                 RunUI(() =>
                 {
                     warnDlg.OkDialog();
@@ -182,7 +183,7 @@ namespace pwiz.SkylineTestFunctional
                     // Go back to the first library we created
                     transitionSettingsDlg2.IonMobilityControl.SelectedIonMobilityLibrary= testlibName;
                 });
-
+PauseTest();
                 RunUI(transitionSettingsDlg2.OkDialog);
 
                 /*
@@ -210,10 +211,17 @@ namespace pwiz.SkylineTestFunctional
                 double driftTimeMax = 1000.0;
                 var node = FindNodes("ANELLINV", Adduct.SINGLY_PROTONATED);
                 var centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, true);
                 AssertEx.AreEqual(DRIFTTIME_ANELLINVK, centerIonMobility.First().IonMobilityAndCCS.IonMobility.Mobility);
                 AssertEx.AreEqual(2 * DRIFTTIME_ANELLINVK / resolvingPower, centerIonMobility.First().IonMobilityExtractionWindowWidth);
                 AssertEx.AreEqual(DRIFTTIME_ANELLINVK + HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, centerIonMobility.First().IonMobilityAndCCS.GetHighEnergyIonMobility());
+
+                var centerIonMobilityNoHighEnergy = doc.Settings.GetIonMobilityHelper(
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, false);
+                AssertEx.AreEqual(DRIFTTIME_ANELLINVK, centerIonMobilityNoHighEnergy.First().IonMobilityAndCCS.IonMobility.Mobility);
+                AssertEx.AreEqual(2 * DRIFTTIME_ANELLINVK / resolvingPower, centerIonMobilityNoHighEnergy.First().IonMobilityExtractionWindowWidth);
+                AssertEx.AreEqual(DRIFTTIME_ANELLINVK, centerIonMobilityNoHighEnergy.First().IonMobilityAndCCS.GetHighEnergyIonMobility());
+
 
                 //
                 // Test importing collisional cross sections from a spectral lib that has drift times but no high energy offset info
@@ -362,24 +370,24 @@ namespace pwiz.SkylineTestFunctional
                 // Do some DT calculations with this new library
                 node = FindNodes("ANELLINVK", Adduct.DOUBLY_PROTONATED);
                 centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, true);
                 double ccs = 3.8612432898618; // should have imported CCS without any transformation
                 AssertEx.AreEqual(ccs, centerIonMobility.First().IonMobilityAndCCS.CollisionalCrossSectionSqA, .000001);
                 node = FindNodes("ANGTTVLVGMPAGAK", Adduct.DOUBLY_PROTONATED);
                 centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, true);
                 var dt = 4.99820623749102; 
                 AssertEx.AreEqual(dt, centerIonMobility.First().IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
                 AssertEx.AreEqual(2 * dt / resolvingPower, centerIonMobility.First().IonMobilityExtractionWindowWidth ?? 0, .000001);
 
                 node = FindNodes("DEADEELS", Adduct.TRIPLY_PROTONATED);
                 centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax); // Should fail to find anything
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, true); // Should fail to find anything
                 AssertEx.IsTrue(centerIonMobility.IsEmpty);
 
                 node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
                 centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, true);
                 AssertEx.AreEqual(deadeelsDT, centerIonMobility.First().IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
                 AssertEx.AreEqual(deadeelsDT+deadeelsDTHighEnergyOffset, centerIonMobility.First().IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001);
                 AssertEx.AreEqual(2 * (deadeelsDT / resolvingPower), centerIonMobility.First().IonMobilityExtractionWindowWidth??0, .0001); // Directly measured, should match
@@ -402,7 +410,7 @@ namespace pwiz.SkylineTestFunctional
                 doc = WaitForDocumentChangeLoaded(doc);
                 node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
                 centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, true);
                 AssertEx.AreEqual(deadeelsDT, centerIonMobility.First().IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
                 AssertEx.AreEqual(deadeelsDT-0.1, centerIonMobility.First().IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001); // High energy value should now be same as low energy value
                 AssertEx.AreEqual(2 * (deadeelsDT / resolvingPower), centerIonMobility.First().IonMobilityExtractionWindowWidth??0, .0001); // Directly measured, should match
@@ -432,7 +440,7 @@ namespace pwiz.SkylineTestFunctional
                 doc = WaitForDocumentChangeLoaded(doc);
                 node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
                 centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, true);
                 AssertEx.AreEqual(deadeelsDT, centerIonMobility.First().IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
                 AssertEx.AreEqual(deadeelsDT-0.1, centerIonMobility.First().IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001); // High energy value should now be same as low energy value
                 AssertEx.AreEqual(widthAtDtZero + deadeelsDT * (widthAtDtMax - widthAtDtZero) / driftTimeMax, centerIonMobility.First().IonMobilityExtractionWindowWidth??0, .0001);
@@ -450,7 +458,7 @@ namespace pwiz.SkylineTestFunctional
                 doc = WaitForDocumentChangeLoaded(doc);
                 node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
                 centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+                    node.NodePep, node.NodeGroup, null, null, driftTimeMax, true);
                 AssertEx.AreEqual(deadeelsDT, centerIonMobility.First().IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
                 AssertEx.AreEqual(deadeelsDT-0.1, centerIonMobility.First().IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001); // High energy value should now be same as low energy value
                 AssertEx.AreEqual(fixedWidth, centerIonMobility.First().IonMobilityExtractionWindowWidth??0, .0001);
@@ -469,14 +477,13 @@ namespace pwiz.SkylineTestFunctional
             var pasteBuilder = new StringBuilder();
             foreach (var item in mobilities)
             {
-                var dbIonMobilityValue = item.IonMobility;
                 var target = item.Precursor.Target;
                 var adduct = item.Precursor.Adduct;
                 pasteBuilder.Append(adjustSeq(target.ToString()))
                     .Append('\t')
                     .Append(adduct)
                     .Append('\t')
-                    .Append(item.CollisionalCrossSectionSqA == 0 ? string.Empty : item.CollisionalCrossSectionSqA.ToString(CultureInfo.InvariantCulture))
+                    .Append(item.CollisionalCrossSectionSqA == 0 ? string.Empty : item.CollisionalCrossSectionSqA.ToString(CultureInfo.CurrentCulture))
                     .Append('\t')
                     .Append(item.IonMobility == 0 ? string.Empty : item.IonMobility.ToString(CultureInfo.CurrentCulture))
                     .Append('\t')
@@ -497,7 +504,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.ThrowsException<DatabaseOpeningException>(() => IonMobilityDb.GetIonMobilityDb(null, null),
                 Resources.IonMobilityDb_GetIonMobilityDb_Please_provide_a_path_to_an_existing_ion_mobility_library_);
 
-            const string badfilename = "nonexistent_file.imdb";
+            const string badfilename = "nonexistent_file.imsdb";
             AssertEx.ThrowsException<DatabaseOpeningException>(
                 () => IonMobilityDb.GetIonMobilityDb(badfilename, null),
                 String.Format(
@@ -615,7 +622,6 @@ namespace pwiz.SkylineTestFunctional
             TestParser(EditIonMobilityLibraryDlg.COLUMN_ADDUCT, "dog",
                 string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Could_not_parse_adduct_description___0___on_line__1_, "dog", lineNumber));
             TestParser(EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY, (17.9).ToString(CultureInfo.CurrentCulture), null);
-            TestParser(EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY, "17.9", null);
             TestParser(EditIonMobilityLibraryDlg.COLUMN_ADDUCT, "",
                 string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_adduct_description_on_line__0_, lineNumber));
 
@@ -683,7 +689,7 @@ namespace pwiz.SkylineTestFunctional
             dtValues[EditIonMobilityLibraryDlg.COLUMN_ADDUCT] = "+2";
             dtValues[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY] = (0.2).ToString(CultureInfo.CurrentCulture);
             dtValues[EditIonMobilityLibraryDlg.COLUMN_CCS] = "1";
-            dtValues[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET] = "-0.1";
+            dtValues[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET] = (-0.1).ToString(CultureInfo.CurrentCulture);
             dtValues[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY_UNITS] = @"ドリフト時間(ms)"; // Japanese, tests our ability to handle cross-culture imports
             return dtValues;
         }
@@ -742,10 +748,9 @@ namespace pwiz.SkylineTestFunctional
                 ionMobilityLibraryDlg.OkDialog();
             });
             WaitForClosedForm(ionMobilityLibraryDlg);
-            var pepSetDlg = transitionSettingsDlg;
             RunUI(() =>
             {
-                pepSetDlg.OkDialog();
+                transitionSettingsDlg.OkDialog();
             });
             WaitForClosedForm(transitionSettingsDlg);
             doc = WaitForDocumentChange(doc);
@@ -780,10 +785,11 @@ namespace pwiz.SkylineTestFunctional
             var refSpectra = GetRefSpectra(exported);
             AssertEx.IsTrue(refSpectra.All(r => (r.IonMobility??0) > 0));
 
-            // Verify exception handling by deleting the msdata file
-            File.Delete(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5));
+
+            // Deleting the msdata file prevents us from reading the raw IM data, expect an exception
+            File.Delete(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5)); // So we can't read raw IMS data
             transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
-                            () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
             RunUI(() => transitionSettingsDlg.IonMobilityControl.IonMobilityFilterResolvingPower = resolvingPower);
             var driftTimePredictorDoomedDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg.IonMobilityControl.AddIonMobilityLibrary);
 
@@ -799,7 +805,7 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg =>
                 {
                     AssertEx.AreComparableStrings(
-                        Resources.DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__,
+                        Resources.IonMobilityFinder_ProcessMSLevel_Problem_using_results_to_populate_ion_mobility_library_,
                         messageDlg.Message);
                     messageDlg.OkDialog();
                 });
@@ -812,5 +818,6 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForClosedForm(transitionSettingsDlg);
         }
+
     }
 }

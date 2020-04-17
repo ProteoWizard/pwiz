@@ -166,7 +166,7 @@ namespace pwiz.SkylineTestData.Results
 
                 if (withDriftTimeFilter)
                 {
-                    // Verify that the .imdb pr .blib file goes out in the share zipfile
+                    // Verify that the .imsdb or .blib file goes out in the share zipfile
                     for (int complete = 0; complete <= 1; complete++)
                     {
                         var sharePath =
@@ -176,18 +176,18 @@ namespace pwiz.SkylineTestData.Results
                         share.Share(new SilentProgressMonitor());
 
                         var files = share.ListEntries().ToArray();
-                        var imdbFile = "waters-mobility.filtered-scaled.blib";
+                        var imsdbFile = "waters-mobility.filtered-scaled.blib";
                         if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
                         {
-                            var ext = "." + imdbFile.Split('.').Last();
-                            imdbFile = imdbFile.Replace(ext, BiblioSpecLiteSpec.DotConvertedToSmallMolecules + ext);
+                            var ext = "." + imsdbFile.Split('.').Last();
+                            imsdbFile = imsdbFile.Replace(ext, BiblioSpecLiteSpec.DotConvertedToSmallMolecules + ext);
                         }
-                        AssertEx.IsTrue(files.Contains(imdbFile));
-                        // And round trip it to make sure we haven't left out any new features in minimized imdb or blib files
+                        AssertEx.IsTrue(files.Contains(imsdbFile));
+                        // And round trip it to make sure we haven't left out any new features in minimized imsdb or blib files
                         share.Extract(new SilentProgressMonitor());
                         using(var cmdline = new CommandLine())
                         {
-                            AssertEx.IsTrue(cmdline.OpenSkyFile(share.DocumentPath)); // Handles any path shifts in database files, like our .imdb file
+                            AssertEx.IsTrue(cmdline.OpenSkyFile(share.DocumentPath)); // Handles any path shifts in database files, like our .imsdb file
                             var document2 = cmdline.Document;
                             AssertEx.IsNotNull(document2);
 
@@ -204,7 +204,7 @@ namespace pwiz.SkylineTestData.Results
                             foreach (TransitionGroupDocNode nodeGroup in pep.Children)
                             {
                                 var centerDriftTime = document2.Settings.GetIonMobilityFilters(
-                                    pep, nodeGroup, null, im, null, driftTimeMax).First();
+                                    pep, nodeGroup, null, im, null, driftTimeMax, true).First();
                                 AssertEx.AreEqual(3.86124, centerDriftTime.IonMobilityAndCCS.IonMobility.Mobility.Value, .0001, testModeStr + " ccs");
                                 AssertEx.AreEqual(expectedWidth, centerDriftTime.IonMobilityExtractionWindowWidth.Value, .0001, testModeStr + " dtWidth");
                             }

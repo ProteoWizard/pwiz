@@ -20,7 +20,6 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
-using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
@@ -193,13 +192,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [Obsolete("use TransititionResult.IonMobilityFragment instead")]
+        [Obsolete("use TransitionResult.IonMobilityFragment instead")]
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
         public FormattableList<double?> IonMobilityFragment  
         {
             get
             {
-                return null; // Ion mobility can vary per fragment
+                return null; // Ion mobility can vary per fragment, this isn't really a precursor-level thing as we initially considered
             }
         }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]

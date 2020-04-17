@@ -111,6 +111,7 @@ namespace pwiz.Skyline.Model.Results
             var libraryIonMobilityInfo = document.Settings.GetIonMobilities(moleculesThisPass.SelectMany(
                     node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(document.Settings, node))).ToArray(), msDataFileUri);
             var ionMobilityMax = maxObservedIonMobilityValue ?? 0;
+            var needHighEnergyOffset = IsMseData();
 
             // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't reliably share times with any ion mobility scheme
             if (instrumentInfo != null && instrumentInfo.IonMobilityUnits != eIonMobilityUnits.none)
@@ -125,7 +126,7 @@ namespace pwiz.Skyline.Model.Results
                         node => node.TransitionGroups.Select(nodeGroup => new PeptidePrecursorPair(node, nodeGroup))))
                     {
                         var ionMobility = document.Settings.GetIonMobilityFilters(
-                            pair.NodePep, pair.NodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax);
+                            pair.NodePep, pair.NodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, needHighEnergyOffset);
                         _isIonMobilityFiltered = ionMobility.Any(im =>im.HasIonMobilityValue);
                         if (_isIonMobilityFiltered)
                         {
@@ -254,9 +255,10 @@ namespace pwiz.Skyline.Model.Results
                             }
                         }
 
+                        // Get ion mobility filter for precursor
                         var ionMobilityFilters = document.Settings.GetIonMobilityFilters(
-                            nodePep, nodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax);
-
+                            nodePep, nodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, needHighEnergyOffset);
+                        
                         SpectrumFilterPair filter;
                         var textId = nodePep.ModifiedTarget; // Modified Sequence for peptides, or some other string for custom ions
                         var mz = new SignedMz(nodeGroup.PrecursorMz, nodeGroup.PrecursorCharge < 0);
@@ -273,9 +275,9 @@ namespace pwiz.Skyline.Model.Results
                             filterCount += filter.AddQ3FilterValues((from TransitionDocNode nodeTran in nodeGroup.Children select nodeTran).
                                 Select(nodeTran =>
                                 {
-                                    var ionMobilityFiltersQ3 = nodeTran.ExplicitValues.IonMobilityHighEnergyOffset.HasValue ?
-                                        document.Settings.GetIonMobilityFilters(nodePep, nodeGroup, nodeTran, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax) :
-                                        ionMobilityFilters;
+                                    var ionMobilityFiltersQ3 =
+                                        document.Settings.GetIonMobilityFilters(nodePep, nodeGroup, nodeTran, libraryIonMobilityInfo, 
+                                            _ionMobilityFunctionsProvider, ionMobilityMax, needHighEnergyOffset);
                                     return new SpectrumFilterValues(nodeTran.Mz, ionMobilityFiltersQ3);
                                 }), calcWindowsQ3);
                         }
@@ -290,9 +292,9 @@ namespace pwiz.Skyline.Model.Results
                                                      where !nodeTran.IsMs1 select nodeTran).
                                 Select(nodeTran =>
                                 {
-                                    var ionMobilityFiltersQ3 = nodeTran.ExplicitValues.IonMobilityHighEnergyOffset.HasValue ?
-                                        document.Settings.GetIonMobilityFilters(nodePep, nodeGroup, nodeTran, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax) :
-                                        ionMobilityFilters;
+                                    var ionMobilityFiltersQ3 =
+                                        document.Settings.GetIonMobilityFilters(nodePep, nodeGroup, nodeTran, libraryIonMobilityInfo, 
+                                            _ionMobilityFunctionsProvider, ionMobilityMax, needHighEnergyOffset);
                                     return new SpectrumFilterValues(nodeTran.Mz, ionMobilityFiltersQ3);
                                 }), 
                                 calcWindowsQ3);
@@ -976,7 +978,7 @@ namespace pwiz.Skyline.Model.Results
 
         private bool UseIonMobilityHighEnergyOffset()
         {
-            return (_isWatersMse || _isAgilentMse) && _mseLevel > 1;
+            return IsMseData() && _mseLevel > 1;
         }
 
         public bool HasProductFilterPairs(double? retentionTime, IList<MsPrecursor> precursors)

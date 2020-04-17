@@ -25,7 +25,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -126,7 +125,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
 
             // Does CCS show up in reports?
-            TestReports(doc1);
+            TestReports();
 
         }
 
@@ -169,30 +168,20 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
 
-        private void TestReports(SrmDocument doc1, string msg = null)
+        private void TestReports(string msg = null)
         {
             // Verify reports working for CCS
             var row = 0;
-            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-            EnableDocumentGridColumns(documentGrid,
-                Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List,
-                doc1.PeptideTransitionCount,
-                new[]
-                {
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CollisionalCrossSection",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityMS1",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityFragment",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityUnits",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityWindow"
-                });
-            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, 1.1732, msg);
-            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityFragment", row, (double ?)null, msg); // Fragment mobility is N/A for a precursor
+            var documentGrid = EnableDocumentGridIonMobilityResultsColumns();
+            var imPrecursor = 1.1732;
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, imPrecursor, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "TransitionResult.IonMobilityFragment", row, imPrecursor, msg); // Document is all precursors
             CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
             CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.12, msg);
             CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 473.2742, msg);
             EnableDocumentGridColumns(documentGrid,
                 Resources.ReportSpecList_GetDefaults_Peptide_RT_Results,
-                doc1.PeptideCount * doc1.MeasuredResults.Chromatograms.Count, null);
+                SkylineWindow.Document.PeptideCount * SkylineWindow.Document.MeasuredResults.Chromatograms.Count);
             foreach (var rt in new[] {
                 14.35, 14.34, 14.33, 14.33, 14.15, 14.12, 14.11, 14.11, 14.63, 14.61, 14.61, 14.61, 14.75, 14.74, 14.72, 14.73, 14.06, 14.04,
                 14.03, 14.03, 14.43, 14.43, 14.42, 14.43, 14.36, 14.37, 14.35, 14.35, 14.31, 14.31, 14.29, 14.28, 14.48, 14.49, 14.47, 14.48,

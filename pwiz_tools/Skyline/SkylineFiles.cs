@@ -688,7 +688,7 @@ namespace pwiz.Skyline
 
         private SrmDocument ConnectIonMobilityLibrary(IWin32Window parent, SrmDocument document, string documentPath)
         {
-            var settings = document.Settings.ConnectIonMobilityLibrary(imdb => FindIonMobilityLibrary(parent, documentPath, imdb));
+            var settings = document.Settings.ConnectIonMobilityLibrary(imsdb => FindIonMobilityLibrary(parent, documentPath, imsdb));
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))

@@ -28,10 +28,8 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
@@ -141,12 +139,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // Launch import peptide search wizard
             WaitForDocumentLoaded();
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
-            var basename = _testCase==1 ? "40minG_WBP_wide_z2-3_mid_BSA_5pmol_01" : "09_BSAtrypticdigest_5uL_IMQTOF_AltFramesdtramp_dAJS009";
-            var nextFile = _testCase == 1 ? null : "10_BSAtrypticdigest_5uL_IMQTOF_AltFramesdtramp_dAJS010.d";
+            var basename = _testCase == 1 ? "40minG_WBP_wide_z2-3_mid_BSA_5pmol_01" : "09_BSAtrypticdigest_5uL_IMQTOF_AltFramesdtramp_dAJS009";
             var searchResults = GetTestPath(basename+".pep.xml");
-
-            var doc = SkylineWindow.Document;
 
             if (CCSonly || !useDriftTimes)
             {
@@ -156,8 +150,23 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 fileContents = fileContents.Replace(" DT=", " xx="); 
                 if (!useDriftTimes)
                     fileContents = fileContents.Replace(" CCS=", " xxx=");
-                File.WriteAllText(mzxmlFile, fileContents);                    
+                File.WriteAllText(mzxmlFile, fileContents);
+
+                // Disable use of any existing ion mobility libraries
+                var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(
+                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+                RunUI(() =>
+                {
+                    transitionSettingsDlg.IonMobilityControl.SetUseSpectralLibraryIonMobilities(false);
+                    transitionSettingsDlg.IonMobilityControl.SelectedIonMobilityLibrary = Resources.SettingsList_ELEMENT_NONE_None;
+                    transitionSettingsDlg.OkDialog();
+                });
+                WaitForClosedForm(transitionSettingsDlg);
             }
+
+            
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            var nextFile = _testCase == 1 ? null : "10_BSAtrypticdigest_5uL_IMQTOF_AltFramesdtramp_dAJS010.d";
 
             var searchResultsList = new[] {searchResults};
             RunUI(() =>
@@ -169,6 +178,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = false;
             });
 
+            var doc = SkylineWindow.Document;
             RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             doc = WaitForDocumentChange(doc);
 
@@ -321,7 +331,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     foreach (var nodeGroup in pep.TransitionGroups)
                     {
                         var calculatedDriftTime = doc1.Settings.GetIonMobilityFilters(
-                            pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0).First();
+                            pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0, true).First();
                         var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorAdduct);
                         IonMobilityAndCCS[] infoValueExplicitDT;
                         if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))
@@ -375,13 +385,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             // Does CCS show up in reports?
             var expectedDtWindow = _testCase == 1 ? 0.74 : 0.94;
-            TestReports(doc1, 0, expectedDtWindow);
+            TestReports( 0, expectedDtWindow);
 
             if (nextFile != null)
             {
                 // Verify that we can use library generated for one file as the default for another without its own library
                 ImportResults(nextFile);
-                TestReports(SkylineWindow.Document, 1, expectedDtWindow); 
+                TestReports( 1, expectedDtWindow); 
             }
 
             // And verify roundtrip of ion mobility 
@@ -392,7 +402,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 SkylineWindow.NewDocument(true);
                 SkylineWindow.OpenFile(skyfile);
             });
-            TestReports(SkylineWindow.Document, 1, expectedDtWindow);
+            TestReports(1, expectedDtWindow);
 
             // Watch for problem with reimport after changed DT window
             var docResolvingPower = SkylineWindow.Document;
@@ -416,28 +426,18 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             WaitForDocumentChangeLoaded(docReimport);
             var expectedDtWindow0 = _testCase == 2 ? 1.175 : 0.92;
             var expectedDtWindow1 = _testCase == 2 ? 0.94 : 0.92;
-            TestReports(SkylineWindow.Document, 0, expectedDtWindow0, string.Format(" row {0} case {1} ccsOnly {2}", 0, _testCase, CCSonly));
-            TestReports(SkylineWindow.Document, 1, expectedDtWindow1, string.Format(" row {0} case {1} ccsOnly {2}", 1, _testCase, CCSonly));
+            TestReports(0, expectedDtWindow0, string.Format(" row {0} case {1} ccsOnly {2}", 0, _testCase, CCSonly));
+            TestReports(1, expectedDtWindow1, string.Format(" row {0} case {1} ccsOnly {2}", 1, _testCase, CCSonly));
 
         }
 
-        private void TestReports(SrmDocument doc1, int row, double expectedDtWindow, string msg = null)
+        private void TestReports(int row, double expectedDtWindow, string msg = null)
         {
             // Verify reports working for CCS
-            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-            EnableDocumentGridColumns(documentGrid,
-                Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List,
-                doc1.PeptideTransitionCount * doc1.MeasuredResults.Chromatograms.Count,
-                new[]
-                {
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CollisionalCrossSection",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityMS1",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityFragment",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityUnits",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityWindow"
-                });
-            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, _testCase == 1 ? 18.43 : 23.50, msg);
-            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityFragment", row, (double?)null, msg); // Document is all precursor
+            var documentGrid = EnableDocumentGridIonMobilityResultsColumns();
+            var imPrecursor = _testCase == 1 ? 18.43 : 23.50;
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, imPrecursor, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "TransitionResult.IonMobilityFragment", row, imPrecursor, msg); // Document is all precursor
             CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.drift_time_msec), msg);
             CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, expectedDtWindow, msg);
             CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, _testCase == 1 ? 292.4 : 333.34, msg);

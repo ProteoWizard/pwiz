@@ -1381,15 +1381,16 @@ namespace pwiz.Skyline.Model.Results
             {
                 var imFilterStart = -1;
                 var imFilterEnd = -1;
+                var isMs2 = Equals(chromData.Key.Source, ChromSource.fragment);
                 if (CacheFormat.FormatVersion >= CacheFormatVersion.FIRST_MULTIPLE_CCS)
                 {
                     // Ion mobility filters get written to a table, and indexed from here
                     var mobilities =
-                        chromDataSet.IonMobilityFilters.Where(im => !im.IsEmpty).Select(im =>
-                            ChromIonMobilityFilter.GetChromIonMobilityFilter((float)(im.CollisionalCrossSectionSqA ?? 0),
-                                (float)(im.IonMobilityAndCCS.IonMobility.Mobility ?? 0),
-                                (float)im.IonMobilityExtractionWindowWidth,
-                                im.IonMobilityUnits)).ToArray();
+                        chromDataSet.IonMobilityFilters.Where(im => !im.IsEmpty).Select(im => ChromIonMobilityFilter.GetChromIonMobilityFilter(
+                            (float) (im.CollisionalCrossSectionSqA ?? 0),
+                            (float) ((im.IonMobilityAndCCS.IonMobility.Mobility ?? 0) + (isMs2 ? (im.IonMobilityAndCCS.HighEnergyIonMobilityOffset ?? 0) : 0)),
+                            (float) im.IonMobilityExtractionWindowWidth,
+                            im.IonMobilityUnits)).ToArray();
                     if (mobilities.Length > 0)
                     {
                         // Avoid duplicating filters used by sibling fragments

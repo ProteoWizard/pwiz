@@ -538,6 +538,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CCS.
+        /// </summary>
+        public static string DbPrecursorAndIonMobility_CollisionalCrossSectionSqA {
+            get {
+                return ResourceManager.GetString("DbPrecursorAndIonMobility_CollisionalCrossSectionSqA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to High energy offset.
+        /// </summary>
+        public static string DbPrecursorAndIonMobility_HighEnergyIonMobilityOffset {
+            get {
+                return ResourceManager.GetString("DbPrecursorAndIonMobility_HighEnergyIonMobilityOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mobility.
+        /// </summary>
+        public static string DbPrecursorAndIonMobility_IonMobility {
+            get {
+                return ResourceManager.GetString("DbPrecursorAndIonMobility_IonMobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Units.
+        /// </summary>
+        public static string DbPrecursorAndIonMobility_IonMobilityUnits {
+            get {
+                return ResourceManager.GetString("DbPrecursorAndIonMobility_IonMobilityUnits", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exclude potential ragged ends.
         /// </summary>
         public static string DigestSettings_ExcludeRaggedEnds {
@@ -678,33 +714,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string EditCustomMoleculeSettings_OptionalExplicitValues {
             get {
                 return ResourceManager.GetString("EditCustomMoleculeSettings_OptionalExplicitValues", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ion mobility library settings.
-        /// </summary>
-        public static string EditIonMobilityLibraryDlgSettings {
-            get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlgSettings", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ion mobility library.
-        /// </summary>
-        public static string EditIonMobilityLibraryDlgSettings_IonMobilityLibrary {
-            get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlgSettings_IonMobilityLibrary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ion mobility library values.
-        /// </summary>
-        public static string EditIonMobilityLibraryDlgSettings_LibraryIonMobilities {
-            get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlgSettings_LibraryIonMobilities", resourceCulture);
             }
         }
         
@@ -1537,15 +1546,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to High energy offset.
-        /// </summary>
-        public static string IonMobilityAndCCS_HighEnergyIonMobilityValueOffset {
-            get {
-                return ResourceManager.GetString("IonMobilityAndCCS_HighEnergyIonMobilityValueOffset", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Units.
         /// </summary>
         public static string IonMobilityAndCCS_Units {
@@ -1555,11 +1555,20 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ion mobility library file.
+        ///   Looks up a localized string similar to File path.
         /// </summary>
-        public static string IonMobilityLibrarySpec_FilePathAuditLog {
+        public static string IonMobilityLibrary_FilePathAuditLog {
             get {
-                return ResourceManager.GetString("IonMobilityLibrarySpec_FilePathAuditLog", resourceCulture);
+                return ResourceManager.GetString("IonMobilityLibrary_FilePathAuditLog", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library ion mobility values.
+        /// </summary>
+        public static string IonMobilityLibrary_IonMobilityValues {
+            get {
+                return ResourceManager.GetString("IonMobilityLibrary_IonMobilityValues", resourceCulture);
             }
         }
         
@@ -4129,7 +4138,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ion Mobility.
+        ///   Looks up a localized string similar to Ion mobility.
         /// </summary>
         public static string TransitionSettings_IonMobilityFiltering {
             get {
@@ -4170,6 +4179,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string UniquePeptideSettings_ProteinPeptideSelections {
             get {
                 return ResourceManager.GetString("UniquePeptideSettings_ProteinPeptideSelections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion.
+        /// </summary>
+        public static string ValidatingIonMobilityPrecursor_Precursor {
+            get {
+                return ResourceManager.GetString("ValidatingIonMobilityPrecursor_Precursor", resourceCulture);
             }
         }
         

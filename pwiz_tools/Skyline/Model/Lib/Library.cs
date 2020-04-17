@@ -1358,7 +1358,7 @@ namespace pwiz.Skyline.Model.Lib
         /// to CCS if possible.
         /// CONSIDER: we now support multiple conformers, is there maybe some difference magnitude at which we should not be averaging (based on resolving power maybe)?
         /// </summary>
-        public IonMobilityAndCCS GetLibraryMeasuredIonMobilityAndHighEnergyOffset(LibKey chargedPeptide, double mz, IIonMobilityFunctionsProvider ionMobilityFunctionsProvider)
+        public IonMobilityAndCCS GetLibraryMeasuredIonMobilityAndHighEnergyOffset(LibKey chargedPeptide, double mz, IIonMobilityFunctionsProvider ionMobilityFunctionsProvider, bool needHighEnergyOffset)
         {
             IonMobilityAndCCS[] ionMobilities;
             if ((!_dictLibKeyIonMobility.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
@@ -1390,7 +1390,9 @@ namespace pwiz.Skyline.Model.Lib
             }
             if (!ionMobility.HasValue)
                 return IonMobilityAndCCS.EMPTY;
-            var highEnergyDriftTimeOffsetMsec = new Statistics(ionMobilityInfos.Select(im => im.HighEnergyIonMobilityOffset??0)).Median(); // Median is more tolerant of errors than Average
+            var highEnergyDriftTimeOffsetMsec = needHighEnergyOffset ?
+                new Statistics(ionMobilityInfos.Select(im => im.HighEnergyIonMobilityOffset??0)).Median() : // Median is more tolerant of errors than Average
+                0;
             return IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, ccs, highEnergyDriftTimeOffsetMsec);
         }
 

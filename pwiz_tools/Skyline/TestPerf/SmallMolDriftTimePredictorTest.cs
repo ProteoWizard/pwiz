@@ -25,7 +25,6 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf 
@@ -84,7 +83,6 @@ namespace TestPerf
                 OkDialog(openDataSourceDialog, openDataSourceDialog.Open);
             }
             document = WaitForDocumentLoaded();
-PauseTest();
             var area = document.MoleculePrecursorPairs.First().NodeGroup.Results.First().First().AreaMs1;
             AssertEx.IsTrue(area > 0);
 

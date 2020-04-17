@@ -8513,16 +8513,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Problem using results to populate drift time library:.
-        /// </summary>
-        public static string DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__ {
-            get {
-                return ResourceManager.GetString("DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_t" +
-                        "ime_library__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Resolving power must be greater than 0..
         /// </summary>
         public static string DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_ {
@@ -14946,6 +14936,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("IonMobilityFilteringUserControl_ValidateFixedWindow_Fixed_window_size_must_be_gre" +
                         "ater_than_0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Problem using results to populate ion mobility library:.
+        /// </summary>
+        public static string IonMobilityFinder_ProcessMSLevel_Problem_using_results_to_populate_ion_mobility_library_ {
+            get {
+                return ResourceManager.GetString("IonMobilityFinder_ProcessMSLevel_Problem_using_results_to_populate_ion_mobility_l" +
+                        "ibrary_", resourceCulture);
             }
         }
         

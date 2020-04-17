@@ -1064,7 +1064,7 @@ namespace pwiz.Skyline
 
         private SrmDocument ConnectIonMobilityDatabase(SrmDocument document, string documentPath)
         {
-            var settings = document.Settings.ConnectIonMobilityLibrary(imdb => FindIonMobilityDatabase(documentPath, imdb));
+            var settings = document.Settings.ConnectIonMobilityLibrary(imsdb => FindIonMobilityDatabase(documentPath, imsdb));
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))
@@ -1087,9 +1087,7 @@ namespace pwiz.Skyline
             {
                 try
                 {
-                    var lib = ionMobilityLibSpec as IonMobilityLibrary;
-                    if (lib != null)
-                        return lib.ChangeDatabasePath(filePath);
+                    return ionMobilityLibSpec.ChangeDatabasePath(filePath);
                 }
 // ReSharper disable once EmptyGeneralCatchClause
                 catch

@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
     /// <summary>
     /// A DbIonMobilityValue consists of a single precursor ion and ion mobility.
-    /// This reflects the way IM data is stored in the .imdb format, where multiple conformers are represented by
+    /// This reflects the way IM data is stored in the .imsdb format, where multiple conformers are represented by
     /// multiple DbIonMobilityValues with a common precursor ion.
     /// </summary>
     public class DbPrecursorAndIonMobility : DbEntity, IEquatable<DbPrecursorAndIonMobility>, IComparable
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.IonMobility
         }
 
         [Track]
-        public virtual double HighEnergyIonMobilityOffset { get; set; }
+        public virtual double HighEnergyIonMobilityOffset { get; set; } // As in Waters MSe, where product ions fly a bit faster due to added kinetic energy. A negative value means the fragment flies faster (so has a smaller drift time)
 
         public virtual double? HighEnergyIonMobilityOffsetNullable
         {

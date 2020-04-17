@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -99,7 +100,6 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             RestoreViewOnScreen(2);
             PauseForScreenShot("Document open - full window", 2);
             AssertEx.IsDocumentState(document, null, 1, 34, 38, 404);
-
             {
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(() =>
                     SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.FullScan));
@@ -145,6 +145,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             
             WaitForDocumentChangeLoaded(document, 1000 * 60 * 60 * 10); // 10 minutes
 
+            // Does CCS show up in reports?
             // Arrange graphs tiled
             RunUI(() =>
             {
@@ -156,10 +157,10 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
             RunUI(() => SkylineWindow.Size = new Size(1075, 799));
             RestoreViewOnScreen(7);
-            PauseForScreenShot("Zoomed split graph panes onely", 7);
+            PauseForScreenShot("Zoomed split graph panes only", 7);
 
             RunUI(() => SkylineWindow.AutoZoomNone());
-            PauseForScreenShot("Unzoomed split graph panes onely", 8);
+            PauseForScreenShot("Unzoomed split graph panes only", 8);
 
             RunUI(() =>
             {
@@ -278,7 +279,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             }
-
+//PauseTest();
             using (new WaitDocumentChange(1, true, 1000 * 60 * 60 * 5))
             {
                 var choosePredictionReplicates = ShowDialog<ChooseSchedulingReplicatesDlg>(SkylineWindow.ImportResults);
@@ -295,7 +296,9 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             }
             WaitForGraphs();
 
-            // CONSIDER: Test the peak annotations to ensure the filtering happened
+            // Test to ensure the filtering happened
+            if (!IsPauseForScreenShots) // Don't bring up unexpected UI in a screenshot run
+                TestReports();
 
             PauseForScreenShot("Yeast chromatogram and RTs - prtsc-paste-edit", 22);
 
@@ -327,6 +330,8 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             WaitForDocumentChangeLoaded(docFiltered, 1000 * 60 * 60 * 5); // 5 minutes
 
             // TODO: Check peak ranks before and after
+
+            AssertEx.IsFalse(IsRecordMode); // Make sure we turn this off before commit!
         }
 
         private void VerifyCombinedIonMobility(SrmDocument doc)
@@ -351,5 +356,80 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             RunUI(() => Assert.IsTrue(fullScanGraph.TitleText.Contains(clickTimeText),
                 String.Format("Full-scan graph title '{0}' does not contain '{1}'", fullScanGraph.TitleText, clickTimeText)));
         }
+
+        private bool IsRecordMode { get { return false; } }
+
+        private void TestReports(string msg = null)
+        {
+            // Verify reports working for CCS
+            var documentGrid = EnableDocumentGridIonMobilityResultsColumns();
+
+            var expectedIM = new[,]
+            {
+                // Values recorded from master branch - imMS1, imFragment, imWindow
+                {26.47, 26.63, 1.06},
+                {25.65, 25.65, 1.03},
+                {28.75, 28.92, 1.15},
+                {28.26, 28.26, 1.13},
+                {22.87, 22.87, 0.91},
+                {27.77, 27.77, 1.11},
+                {24.51, 24.67, 0.98},
+                {29.41, 29.57, 1.18},
+                {22.22, 22.38, 0.89},
+                {25.81, 26.14, 1.03},
+                {22.71, 22.87, 0.91},
+                {23.36, 23.36, 0.93},
+                {27.77, 27.77, 1.11},
+                {28.43, 28.59, 1.14},
+                {29.41, 27.94, 1.18},
+                {24.02, 24.18, 0.96},
+                {27.77, 27.94, 1.11},
+                {25, 24.83, 1},
+                {30.39, 30.55, 1.22}
+            };
+            double lastMz = -1;
+            var colMz = FindDocumentGridColumn(documentGrid, "Precursor.Mz");
+            var colFragment = FindDocumentGridColumn(documentGrid, "FragmentIon");
+            var precursorIndex = -1;
+            for (var row = 0; row < SkylineWindow.Document.MoleculeTransitions.Count(); row++)
+            {
+                if (IsRecordMode)
+                    Console.Write(@"{");
+                var isFragment = false;
+                RunUI(() =>
+                {
+                    var mz = (double)documentGrid.DataGridView.Rows[row].Cells[colMz.Index].Value;
+                    if (mz != lastMz)
+                    {
+                        lastMz = mz;
+                        precursorIndex++;
+                    }
+                    var fragmentName = documentGrid.DataGridView.Rows[row].Cells[colFragment.Index].Value.ToString();
+                    isFragment = fragmentName.StartsWith("y") || fragmentName.StartsWith("b");
+                });
+
+                var unfilteredReplicate = row % 2 == 0;
+                var expectedPrecursorIM = unfilteredReplicate ? null : (double?)expectedIM[precursorIndex, 0];
+                var expectedFragmentIM = unfilteredReplicate ? null : (double?)expectedIM[precursorIndex, isFragment ? 1 : 0];
+                var expectedWindow = unfilteredReplicate ? null : (double?)expectedIM[precursorIndex, 2];
+                var expectedUnits = IonMobilityFilter.IonMobilityUnitsL10NString(unfilteredReplicate ? eIonMobilityUnits.none : eIonMobilityUnits.drift_time_msec);
+                CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, expectedPrecursorIM, msg, IsRecordMode);
+                CheckDocumentResultsGridFieldByName(documentGrid, "IonMobilityFragment", row, expectedFragmentIM, msg, IsRecordMode); 
+                CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, expectedWindow);
+                CheckDocumentResultsGridFieldByName(documentGrid, "Chromatogram.ChromatogramIonMobility", row, expectedFragmentIM);
+                CheckDocumentResultsGridFieldByName(documentGrid, "Chromatogram.ChromatogramIonMobilityExtractionWidth", row, expectedWindow);
+                CheckDocumentResultsGridFieldByName(documentGrid, "Chromatogram.ChromatogramIonMobilityUnits", row, expectedUnits);
+                if (IsRecordMode)
+                {
+                    CheckDocumentResultsGridValuesRecordedCount = 0; // We're managing our own newlines
+                    Console.WriteLine(@"},");
+                }
+            }
+
+            // And clean up after ourselves
+            RunUI(() => documentGrid.Close());
+        }
+
+
     }
 }

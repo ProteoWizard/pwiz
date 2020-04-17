@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.IonMobility
         /// <summary>
         /// Accepts a list of precursors with potentially multiple ion mobility values ("multiple conformers")
         /// and flattens it out into a list of potentially repeating precursors with different single IM values,
-        /// which is how the .imdb format stores them.
+        /// which is how the .imsdb format stores them.
         /// </summary>
         public IonMobilityDb UpdateIonMobilities(IEnumerable<PrecursorIonMobilities> newMobilities)
         {

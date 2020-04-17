@@ -740,7 +740,7 @@ namespace pwiz.Skyline.Model.Lib
 
                         // Avoid creating a cache which will just report it is corrupted.
                         // Older versions of BlibBuild used to create matches with charge 0.
-                        // Newer versions that handle small molecules may reasonably use negtive charges.
+                        // Newer versions that handle small molecules may reasonably use negative charges.
                         if (charge == 0 || Math.Abs(charge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
                             continue;
                         var retentionTimesByFileId = default(IndexedRetentionTimes);
@@ -2107,6 +2107,7 @@ namespace pwiz.Skyline.Model.Lib
 
             public List<KeyValuePair<int, KeyValuePair<int, double>>> SpectaIdFileIdTimes { get; private set; }
 
+            // List of <RefSpectra Id, <FileId, ionMobility>>
             public List<KeyValuePair<int, KeyValuePair<int, IonMobilityAndCCS>>> SpectraIdFileIdIonMobilities { get; private set;
             }
 

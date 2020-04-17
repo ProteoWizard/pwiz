@@ -121,8 +121,8 @@ namespace pwiz.SkylineTestData.Results
                 revised.Add(new PrecursorIonMobilities(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, eIonMobilityUnits.drift_time_msec), null, 0.123)));
                 var libraryName = "test";
                 var dbPath = testFilesDir.GetTestPath(libraryName+IonMobilityDb.EXT);
-                var imDb = IonMobilityDb.CreateIonMobilityDb(dbPath, libraryName, false, revised);
-                var newLibIM = new IonMobilityLibrary(libraryName, dbPath, imDb);
+                var imsdb = IonMobilityDb.CreateIonMobilityDb(dbPath, libraryName, false, revised);
+                var newLibIM = new IonMobilityLibrary(libraryName, dbPath, imsdb);
                 var ionMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(
                     IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, 40, 0, 0, 0);
                 var calculator = ionMobilityWindowWidthCalculator;

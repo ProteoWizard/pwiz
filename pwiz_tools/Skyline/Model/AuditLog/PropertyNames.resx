@@ -899,7 +899,7 @@
   <data name="IonMobilityPredictor_IonMobilityRows" xml:space="preserve">
     <value>Measured ion mobilities</value>
   </data>
-  <data name="IonMobilityAndCCS_HighEnergyIonMobilityValueOffset" xml:space="preserve">
+  <data name="IonMobilityAndCCS_HighEnergyIonMobilityOffset" xml:space="preserve">
     <value>High energy offset</value>
   </data>
   <data name="IonMobilityAndCCS_Units" xml:space="preserve">
@@ -1499,22 +1499,28 @@
   <data name="TransitionIonMobilityFiltering_UseSpectralLibraryIonMobilityValues" xml:space="preserve">
     <value>Use spectral library ion mobility values</value>
   </data>
-  <data name="IonMobilityAndCCS_HighEnergyIonMobilityOffset" xml:space="preserve">
+  <data name="TransitionSettings_IonMobilityFiltering" xml:space="preserve">
+    <value>Ion mobility</value>
+  </data>
+  <data name="ValidatingIonMobilityPrecursor_Precursor" xml:space="preserve">
+    <value>Ion</value>
+  </data>
+  <data name="DbPrecursorAndIonMobility_CollisionalCrossSectionSqA" xml:space="preserve">
+    <value>CCS</value>
+  </data>
+  <data name="DbPrecursorAndIonMobility_IonMobility" xml:space="preserve">
+    <value>Mobility</value>
+  </data>
+  <data name="DbPrecursorAndIonMobility_HighEnergyIonMobilityOffset" xml:space="preserve">
     <value>High energy offset</value>
   </data>
-  <data name="TransitionSettings_IonMobilityFiltering" xml:space="preserve">
-    <value>Ion Mobility</value>
+  <data name="DbPrecursorAndIonMobility_IonMobilityUnits" xml:space="preserve">
+    <value>Units</value>
   </data>
-  <data name="EditIonMobilityLibraryDlgSettings" xml:space="preserve">
-    <value>Ion mobility library settings</value>
+  <data name="IonMobilityLibrary_FilePathAuditLog" xml:space="preserve">
+    <value>File path</value>
   </data>
-  <data name="IonMobilityLibrarySpec_FilePathAuditLog" xml:space="preserve">
-    <value>Ion mobility library file</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlgSettings_IonMobilityLibrary" xml:space="preserve">
-    <value>Ion mobility library</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlgSettings_LibraryIonMobilities" xml:space="preserve">
-  <value>Ion mobility library values</value>
+  <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
+    <value>Library ion mobility values</value>
   </data>
 </root>

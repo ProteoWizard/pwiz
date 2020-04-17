@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 return IonMobilityFilterSet.IsNullOrEmpty(ChromInfo.IonMobilityFilters) ? null
                     : new FormattableList<double?>(ChromInfo.IonMobilityFilters
-                        .Select(im => im.IonMobilityAndCCS.IonMobility.Mobility.HasValue ? im.IonMobilityAndCCS.IonMobility.Mobility.Value + (im.HighEnergyIonMobilityOffset ?? 0) : im.IonMobilityAndCCS.IonMobility.Mobility).ToArray());
+                        .Select(im => im.IonMobilityAndCCS.IonMobility.Mobility + (im.IonMobilityAndCCS.HighEnergyIonMobilityOffset??0)).ToArray());
             }
         }
 

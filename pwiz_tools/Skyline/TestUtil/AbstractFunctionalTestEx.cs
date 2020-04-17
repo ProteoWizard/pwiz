@@ -263,16 +263,19 @@ namespace pwiz.SkylineTestUtil
             return documentGrid.FindColumn(PropertyPath.Parse(colName));
         }
 
-        public void EnableDocumentGridColumns(DocumentGridForm documentGrid, string viewName, int expectedRows, string[] colNames, string newViewName = null)
+        public void EnableDocumentGridColumns(DocumentGridForm documentGrid, string viewName, int expectedRowsInitial, 
+            string[] additionalColNames = null,
+            string newViewName = null,
+            int? expectedRowsFinal = null)
         {
             RunUI(() => documentGrid.ChooseView(viewName));
-            WaitForCondition(() => (documentGrid.RowCount == expectedRows)); // Let it initialize
-            if (colNames != null)
+            WaitForCondition(() => (documentGrid.RowCount >= expectedRowsInitial)); // Let it initialize
+            if (additionalColNames != null)
             {
                 RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView,
                     viewEditor =>
                     {
-                        foreach (var colName in colNames)
+                        foreach (var colName in additionalColNames)
                         {
                             Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse(colName)));
                             viewEditor.ChooseColumnsTab.AddSelectedColumn();
@@ -280,6 +283,7 @@ namespace pwiz.SkylineTestUtil
                         viewEditor.ViewName = newViewName ?? viewName;
                         viewEditor.OkDialog();
                     });
+                WaitForCondition(() => (documentGrid.RowCount == (expectedRowsFinal??expectedRowsInitial))); // Let it initialize
             }
         }
 
@@ -587,10 +591,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private static int ValuesRecordedCount;
+        public static int CheckDocumentResultsGridValuesRecordedCount;
         public void CheckDocumentResultsGridFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null, bool recordValues = false)
         {
-            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
+            var col = name.StartsWith("TransitionResult") ?
+                FindDocumentGridColumn(documentGrid, "Results!*.Value." + name.Split('.')[1]) :
+                FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
             double? actual = null;
             RunUI(() =>
             {
@@ -605,7 +611,7 @@ namespace pwiz.SkylineTestUtil
             else
             {
                 Console.Write(@"{0:0.##}, ", actual);
-                if (++ValuesRecordedCount % 18 == 0)
+                if (++CheckDocumentResultsGridValuesRecordedCount % 18 == 0)
                     Console.WriteLine();
             }
         }
@@ -618,6 +624,40 @@ namespace pwiz.SkylineTestUtil
                 var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
                 AssertEx.AreEqual(expected, val, name + (msg ?? string.Empty));
             });
+        }
+
+        public DocumentGridForm EnableDocumentGridIonMobilityResultsColumns()
+        {
+            /* Add these IMS related columns to the standard mixed transition list report
+                <column name="Results!*.Value.PrecursorResult.CollisionalCrossSection" />
+                <column name="Results!*.Value.PrecursorResult.IonMobilityMS1" />
+                <column name="Results!*.Value.IonMobilityFragment" />
+                <column name="Results!*.Value.PrecursorResult.IonMobilityUnits" />
+                <column name="Results!*.Value.PrecursorResult.IonMobilityWindow" />
+                <column name="Results!*.Value.Chromatogram.ChromatogramIonMobility" />
+                <column name="Results!*.Value.Chromatogram.ChromatogramIonMobilityExtractionWidth" />
+                <column name="Results!*.Value.Chromatogram.ChromatogramIonMobilityUnits" />
+            */
+
+            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
+
+            EnableDocumentGridColumns(documentGrid,
+                Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List,
+                SkylineWindow.Document.MoleculeTransitionCount,
+                new[]
+                {
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CollisionalCrossSection",
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityMS1",
+                    "Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.IonMobilityFragment",
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityUnits",
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityWindow",
+                    "Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Chromatogram.ChromatogramIonMobility",
+                    "Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Chromatogram.ChromatogramIonMobilityExtractionWidth",
+                    "Proteins!*.Peptides!*.Precursors!*.Transitions!*.Results!*.Value.Chromatogram.ChromatogramIonMobilityUnits"
+                },
+                null,
+                SkylineWindow.Document.MoleculeTransitionCount * (SkylineWindow.Document.MeasuredResults?.Chromatograms.Count ?? 1));
+            return documentGrid;
         }
     }
 }

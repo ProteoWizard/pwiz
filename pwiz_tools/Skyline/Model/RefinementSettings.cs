@@ -35,7 +35,6 @@ using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -1144,7 +1143,7 @@ namespace pwiz.Skyline.Model
                 var mapped = new List<PrecursorIonMobilities>();
                 foreach (var kvp in precursorMap)
                 {
-                    var im = document.Settings.TransitionSettings.IonMobilityFiltering.GetIonMobilityInfo(kvp.Key, null);
+                    var im = document.Settings.TransitionSettings.IonMobilityFiltering.GetIonMobilityInfo(kvp.Key, null, true);
                     if (im != null && im.Count > 0)
                     {
                         mapped.Add(new PrecursorIonMobilities(kvp.Value, im));
