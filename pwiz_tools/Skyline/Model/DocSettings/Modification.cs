@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
@@ -346,6 +347,8 @@ namespace pwiz.Skyline.Model.DocSettings
         private readonly int? _precisionRequired;
         public int PrecisionRequired { get { return _precisionRequired ?? 1; }}
 
+        public CrosslinkerSettings CrosslinkerSettings { get; private set; }
+
         #region Property change methods
 
         public StaticMod ChangeExplicit(bool prop)
@@ -402,7 +405,10 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             return result;
         }
-
+        public StaticMod ChangeCrosslinkerSettings(CrosslinkerSettings crosslinkerSettings)
+        {
+            return ChangeProp(ImClone(this), im => im.CrosslinkerSettings = crosslinkerSettings);
+        }
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -437,6 +443,11 @@ namespace pwiz.Skyline.Model.DocSettings
 //            label_37Cl,
 //            label_81Br,
 // ReSharper restore InconsistentNaming
+        }
+
+        private enum EL
+        {
+            crosslinker
         }
 
         private void Validate()
@@ -561,14 +572,25 @@ namespace pwiz.Skyline.Model.DocSettings
 
             ShortName = reader.GetAttribute(ATTR.short_name);
 
+            bool empty = reader.IsEmptyElement;
             // Consume tag
             reader.Read();
-
-            var listLosses = new List<FragmentLoss>();
-            reader.ReadElements(listLosses);
-            if (listLosses.Count > 0)
+            if (!empty)
             {
-                Losses = listLosses.ToArray();
+                var listLosses = new List<FragmentLoss>();
+                reader.ReadElements(listLosses);
+                if (listLosses.Count > 0)
+                {
+                    Losses = listLosses.ToArray();
+                }
+
+                if (reader.IsStartElement(EL.crosslinker))
+                {
+                    CrosslinkerSettings = CrosslinkerSettings.EMPTY
+                        .ChangeAas(reader.GetAttribute(ATTR.aminoacid))
+                        .ChangeTerminus(reader.GetAttribute(ATTR.terminus, ToModTerminus));
+                    reader.Read();
+                }
                 reader.ReadEndElement();
             }
 
@@ -605,6 +627,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
             if (Losses != null)
                 writer.WriteElements(Losses);
+            if (CrosslinkerSettings != null)
+            {
+                writer.WriteStartElement(EL.crosslinker);
+                writer.WriteAttributeIfString(ATTR.aminoacid, CrosslinkerSettings.Aas);
+                writer.WriteAttributeNullable(ATTR.terminus, CrosslinkerSettings.Terminus);
+                writer.WriteEndElement();
+            }
         }
 
         #endregion
@@ -857,7 +886,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 modifications.AddRange(heavyMods);
             }
             _modifications = MakeReadOnly(modifications.ToArray());
-            CrosslinkMods = ImmutableList<CrosslinkMod>.EMPTY;
         }
 
         /// <summary>
@@ -1002,24 +1030,31 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return GetModifications(IsotopeLabelType.heavy); }
         }
 
-        public ImmutableList<CrosslinkMod> CrosslinkMods { get; private set; }
+        public IEnumerable<ExplicitMod> Crosslinks
+        {
+            get
+            {
+                if (StaticModifications == null)
+                {
+                    return Enumerable.Empty<ExplicitMod>();
+                }
+                return StaticModifications.Where(mod => mod.LinkedPeptide != null);
+            }
+        }
 
         public bool HasCrosslinks
         {
-            get { return CrosslinkMods.Count != 0; }
+            get { return Crosslinks.Any(); }
         }
 
         public IEnumerable<ComplexFragmentIon> PermuteComplexFragmentIons(SrmSettings settings, int maxFragmentationCount,
             IEnumerable<ComplexFragmentIon> complexFragmentIons)
         {
             var result = complexFragmentIons;
-            foreach (var crosslinkMod in CrosslinkMods)
+            foreach (var crosslinkMod in Crosslinks)
             {
-                foreach (var linkedPeptide in crosslinkMod.LinkedPeptides)
-                {
-                    result = linkedPeptide.PermuteFragmentIons(settings, maxFragmentationCount,
-                        crosslinkMod.ModificationSite, result);
-                }
+                result = crosslinkMod.LinkedPeptide.PermuteFragmentIons(settings, maxFragmentationCount,
+                    new ModificationSite(crosslinkMod.IndexAA, crosslinkMod.Modification.Name), result);
             }
 
             return result.Where(cfi=>!cfi.IsEmptyOrphan);
@@ -1120,11 +1155,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 modifications.Add(typedHeavyMods);                
             }
+
             if (ArrayUtil.ReferencesEqual(modifications, _modifications))
                 return this;
             if (modifications.Count == 0)
                 return null;
-            return ChangeProp(ImClone(this), im => im._modifications = MakeReadOnly(modifications));
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._modifications = ImmutableList.ValueOf(modifications);
+            });
         }
 
         /// <summary>
@@ -1200,11 +1239,6 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.IsVariableStaticMods = prop);
         }
 
-        public ExplicitMods ChangeCrosslinkMods(IEnumerable<CrosslinkMod> crosslinkMods)
-        {
-            return ChangeProp(ImClone(this), im => im.CrosslinkMods = ImmutableList.ValueOfOrEmpty(crosslinkMods));
-        }
-
         #endregion
 
         #region object overrides
@@ -1248,7 +1282,7 @@ namespace pwiz.Skyline.Model.DocSettings
             IndexAA = indexAA;
             // In the document context, all static non-variable mods must have the explicit
             // flag off to behave correctly for equality checks.  Only in the
-            // settings context is the explicit flag necessary to destinguish
+            // settings context is the explicit flag necessary to distinguish
             // between the global implicit modifications and the explicit modifications
             // which do not apply to everything.
             if (modification.IsUserSet)
@@ -1259,6 +1293,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public int IndexAA { get; private set; }
         public StaticMod Modification { get; private set; }
 
+        public LinkedPeptide LinkedPeptide { get; private set; }
+
+        public ModificationSite ModificationSite
+        {
+            get { return new ModificationSite(IndexAA, Modification.Name); }
+        }
+
         #region Property change methods
 
         public ExplicitMod ChangeModification(StaticMod prop)
@@ -1266,6 +1307,11 @@ namespace pwiz.Skyline.Model.DocSettings
             if (prop.IsExplicit)
                 prop = prop.ChangeExplicit(false);
             return ChangeProp(ImClone(this), (im, v) => im.Modification = v, prop);
+        }
+
+        public ExplicitMod ChangeLinkedPeptide(LinkedPeptide linkedPeptide)
+        {
+            return ChangeProp(ImClone(this), im => im.LinkedPeptide = linkedPeptide);
         }
 
         #endregion
@@ -1277,7 +1323,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return obj.IndexAA == IndexAA &&
-                Equals(obj.Modification, Modification);
+                Equals(obj.Modification, Modification) &&
+                Equals(obj.LinkedPeptide, LinkedPeptide);
         }
 
         public override bool Equals(object obj)
@@ -1294,6 +1341,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int result = IndexAA;
                 result = (result*397) ^ Modification.GetHashCode();
+                result = (result * 397) ^ (LinkedPeptide == null ? 0 : LinkedPeptide.GetHashCode());
                 return result;
             }
         }

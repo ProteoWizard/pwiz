@@ -954,7 +954,6 @@ namespace pwiz.Skyline.Model.Serialization
             IList<ExplicitMod> staticMods = null;
             TypedExplicitModifications staticTypedMods = null;
             IList<TypedExplicitModifications> listHeavyMods = null;
-            List<CrosslinkMod> crosslinkMods = new List<CrosslinkMod>();
             bool isVariable = false;
 
             if (reader.IsStartElement(EL.variable_modifications))
@@ -1006,25 +1005,16 @@ namespace pwiz.Skyline.Model.Serialization
                             IsotopeLabelType.heavy, new ExplicitMod[0]));
                     }
 
-                    while (true)
-                    {
-                        var crosslinkMod = CrosslinkMod.ReadFromXml(this, reader);
-                        if (crosslinkMod == null)
-                        {
-                            break;
-                        }
-                        crosslinkMods.Add(crosslinkMod);
-                    }
                     reader.ReadEndElement();
                 }
             }
-            if (staticMods == null && listHeavyMods == null && crosslinkMods.Count == 0)
+            if (staticMods == null && listHeavyMods == null)
                 return null;
 
             listHeavyMods = (listHeavyMods != null ?
                 listHeavyMods.ToArray() : new TypedExplicitModifications[0]);
 
-            return new ExplicitMods(peptide, staticMods, listHeavyMods, isVariable).ChangeCrosslinkMods(crosslinkMods);
+            return new ExplicitMods(peptide, staticMods, listHeavyMods, isVariable);
         }
 
         private TypedExplicitModifications ReadExplicitMods(XmlReader reader, string name,
@@ -1049,9 +1039,20 @@ namespace pwiz.Skyline.Model.Serialization
                     if (indexMod == -1)
                         throw new InvalidDataException(string.Format(Resources.TransitionInfo_ReadTransitionLosses_No_modification_named__0__was_found_in_this_document, nameMod));
                     StaticMod modAdd = typedMods.Modifications[indexMod];
-                    listMods.Add(new ExplicitMod(indexAA, modAdd));
-                    // Consume tag
-                    reader.Read();
+                    var explicitMod = new ExplicitMod(indexAA, modAdd);
+                    if (reader.IsEmptyElement)
+                    {
+                        // Consume tag
+                        reader.Read();
+                    }
+                    else
+                    {
+                        reader.Read();
+                        explicitMod = explicitMod.ChangeLinkedPeptide(LinkedPeptide.ReadFromXml(this, reader));
+                        reader.ReadEndElement();
+                    }
+
+                    listMods.Add(explicitMod);
                 }
                 reader.ReadEndElement();
             }

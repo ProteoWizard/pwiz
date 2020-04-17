@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
-using MathNet.Numerics.Distributions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -31,7 +30,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             return new ComplexFragmentIon(transition, null)
             {
                 IsOrphan = true,
-                _fullyQualifyChildren = explicitMods.CrosslinkMods.Count > 1
+                _fullyQualifyChildren = explicitMods.Crosslinks.Skip(1).Any()
             };
         }
 
@@ -108,7 +107,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 case IonType.x:
                 case IonType.y:
                 case IonType.z:
-                    return Transition.CleavageOffset <= aaIndex;
+                    return Transition.CleavageOffset < aaIndex;
                 default:
                     return true;
             }
@@ -117,7 +116,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, ExplicitMods explicitMods)
         {
             var result = GetSimpleFragmentFormula(settings, explicitMods);
-            foreach (var crosslinkMod in explicitMods.CrosslinkMods)
+            foreach (var crosslinkMod in explicitMods.Crosslinks)
             {
                 result = result.Plus(GetCrosslinkFormula(settings, crosslinkMod));
             }
@@ -144,29 +143,26 @@ namespace pwiz.Skyline.Model.Crosslinking
 
 
 
-        public MoleculeMassOffset GetCrosslinkFormula(SrmSettings settings, CrosslinkMod crosslinkMod)
+        public MoleculeMassOffset GetCrosslinkFormula(SrmSettings settings, ExplicitMod explicitMod)
         {
-            var children = GetChildrenAtSite(crosslinkMod.ModificationSite).ToList();
+            var children = GetChildrenAtSite(explicitMod.ModificationSite).ToList();
             if (children.Count == 0)
             {
                 return MoleculeMassOffset.EMPTY;
             }
 
-            if (children.Count != crosslinkMod.LinkedPeptides.Count)
+            if (children.Count != 1)
             {
                 throw new ArgumentException();
             }
-            var result =
-                crosslinkMod.CrosslinkerDef.IntactFormula.GetMoleculeMassOffset(GetMassType(settings));
-            for (int iChild = 0; iChild < children.Count; iChild++)
-            {
-                var linkedPeptide = crosslinkMod.LinkedPeptides[iChild];
-                var childFragmentIon = children[iChild];
-                var childFormula =
-                    childFragmentIon.GetNeutralFormula(settings, linkedPeptide.ExplicitMods);
-                result = result.Plus(childFormula);
-            }
-
+            var result = MoleculeMassOffset.EMPTY;
+            // ;
+            //     explicitMod.CrosslinkerDef.IntactFormula.GetMoleculeMassOffset(GetMassType(settings));
+            var linkedPeptide = explicitMod.LinkedPeptide;
+            var childFragmentIon = children[0];
+            var childFormula =
+                childFragmentIon.GetNeutralFormula(settings, linkedPeptide.ExplicitMods);
+            result = result.Plus(childFormula);
             return result;
         }
 
@@ -224,6 +220,34 @@ namespace pwiz.Skyline.Model.Crosslinking
                 massOffset -= adduct.AdductCharge * BioMassCalc.MassElectron;
             }
             return massDistribution.OffsetAndDivide(massOffset, adduct.AdductCharge);
+        }
+
+        public ComplexFragmentIonName GetName()
+        {
+            ComplexFragmentIonName name;
+            if (IsOrphan)
+            {
+                name = ComplexFragmentIonName.ORPHAN;
+            }
+            else
+            {
+                name = new ComplexFragmentIonName(Transition.IonType, Transition.Ordinal);
+            }
+
+            foreach (var child in Children)
+            {
+                name = name.AddChild(child.Key, child.Value.GetName());
+            }
+
+            if (null != TransitionLosses)
+            {
+                foreach (var loss in TransitionLosses.Losses)
+                {
+                    // TODO
+                }
+            }
+
+            return name;
         }
 
         public override string ToString()

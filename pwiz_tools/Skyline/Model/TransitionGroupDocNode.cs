@@ -756,7 +756,7 @@ namespace pwiz.Skyline.Model
 
         private double CalcPrecursorMZ(SrmSettings settings, ExplicitMods mods, out IsotopeDistInfo isotopeDist, out TypedMass mass)
         {
-            if (mods.HasCrosslinks)
+            if (mods != null && mods.HasCrosslinks)
             {
                 return CalcCrosslinkedPrecursorMz(settings, mods, out isotopeDist, out mass);
             }
@@ -878,11 +878,13 @@ namespace pwiz.Skyline.Model
             }
             IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(LabelType, mods);
             MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(Peptide.Sequence)), 0);
-            foreach (var crosslink in mods.CrosslinkMods)
+            if (mods != null)
             {
-                moleculeMassOffset = moleculeMassOffset.Plus(crosslink.GetNeutralFormula(settings, LabelType));
+                foreach (var crosslink in mods.Crosslinks)
+                {
+                    moleculeMassOffset = moleculeMassOffset.Plus(crosslink.LinkedPeptide.GetNeutralFormula(settings, LabelType));
+                }
             }
-
             return moleculeMassOffset;
         }
 
@@ -1123,7 +1125,7 @@ namespace pwiz.Skyline.Model
             var simpleFragmentIons = simpleTransitions.Select(transition => transition.ComplexFragmentIon)
                 .Append(ComplexFragmentIon.NewOrphanFragmentIon(TransitionGroup, mods));
                 
-            var complexFragmentIons = mods.PermuteComplexFragmentIons(settings, settings.PeptideSettings.Modifications.CrosslinkingSettings.MaxFragmentations, simpleFragmentIons);
+            var complexFragmentIons = mods.PermuteComplexFragmentIons(settings, settings.PeptideSettings.Modifications.MaxNeutralLosses, simpleFragmentIons);
 
             return complexFragmentIons.Select(complexFragmentIon =>
                 complexFragmentIon.MakeTransitionDocNode(settings, mods));

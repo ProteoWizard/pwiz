@@ -1256,7 +1256,6 @@ namespace pwiz.Skyline.Model.DocSettings
             _modifications = MakeReadOnly(modifications.ToArray());
 
             InternalStandardTypes = internalStandardTypes;
-            CrosslinkingSettings = CrosslinkingSettings.DEFAULT;
 
             DoValidate();
         }
@@ -1265,9 +1264,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public int MaxVariableMods { get; private set; }
         [Track]
         public int MaxNeutralLosses { get; private set; }
-
-        [Track]
-        public CrosslinkingSettings CrosslinkingSettings{ get; private set; }
 
         public int CountLabelTypes { get { return _modifications.Count; } }
 
@@ -1455,11 +1451,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideModifications ChangeStaticModifications(IList<StaticMod> prop)
         {
             return ChangeModifications(IsotopeLabelType.light, prop);
-        }
-
-        public PeptideModifications ChangeCrosslinkingSettings(CrosslinkingSettings crosslinkingSettings)
-        {
-            return ChangeProp(ImClone(this), im => im.CrosslinkingSettings = crosslinkingSettings);
         }
 
         /// <summary>
@@ -1669,8 +1660,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var list = new List<TypedModifications>();
             var internalStandardTypes = new[] {IsotopeLabelType.heavy};
-            CrosslinkingSettings crosslinkingSettings = CrosslinkingSettings.DEFAULT;
-
+            
             MaxVariableMods = reader.GetIntAttribute(ATTR.max_variable_mods, DEFAULT_MAX_VARIABLE_MODS);
             MaxNeutralLosses = reader.GetIntAttribute(ATTR.max_neutral_losses, DEFAULT_MAX_NEUTRAL_LOSSES);
 
@@ -1763,7 +1753,6 @@ namespace pwiz.Skyline.Model.DocSettings
                                                                  internalStandardNames[iMissingType]));
                 }
 
-                crosslinkingSettings = reader.DeserializeElement<CrosslinkingSettings>();
                 reader.ReadEndElement();
             }
 
@@ -1772,7 +1761,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
             _modifications = MakeReadOnly(list.ToArray());
             InternalStandardTypes = internalStandardTypes;
-            CrosslinkingSettings = crosslinkingSettings;
             DoValidate();
         }
 
@@ -1820,11 +1808,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElements(heavyMods.Modifications);
                 writer.WriteEndElement();
             }
-
-            if (!Equals(CrosslinkingSettings, CrosslinkingSettings.DEFAULT))
-            {
-                writer.WriteElement(CrosslinkingSettings);
-            }
         }
 
         #endregion
@@ -1839,8 +1822,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    obj.MaxNeutralLosses == MaxNeutralLosses &&
                    ArrayUtil.EqualsDeep(obj.InternalStandardTypes, InternalStandardTypes) &&
                    ArrayUtil.EqualsDeep(obj._modifications, _modifications) &&
-                   HasHeavyModifications == obj.HasHeavyModifications &&
-                   Equals(CrosslinkingSettings, obj.CrosslinkingSettings);
+                   HasHeavyModifications == obj.HasHeavyModifications;
         }
 
         public override bool Equals(object obj)
@@ -1860,7 +1842,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ InternalStandardTypes.GetHashCodeDeep();
                 result = (result * 397) ^ _modifications.GetHashCodeDeep();
                 result = (result * 397) ^ HasHeavyModifications.GetHashCode();
-                result = (result * 397) ^ CrosslinkingSettings.GetHashCode();
                 return result;
             }
         }

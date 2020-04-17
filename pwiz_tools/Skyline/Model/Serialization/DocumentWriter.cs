@@ -337,11 +337,6 @@ namespace pwiz.Skyline.Model.Serialization
                 WriteExplicitMods(writer, EL.explicit_heavy_modifications,
                     EL.explicit_modification, labelType, heavyMods.Modifications, sequence);
             }
-
-            foreach (var crosslinkMod in mods.CrosslinkMods)
-            {
-                crosslinkMod.WriteToXml(this, writer);
-            }
             writer.WriteEndElement();
         }
 
@@ -419,7 +414,10 @@ namespace pwiz.Skyline.Model.Serialization
                     writer.WriteAttribute(ATTR.mass_diff,
                         string.Format(CultureInfo.InvariantCulture, @"{0}{1}", (massDiff < 0 ? string.Empty : @"+"),
                             Math.Round(massDiff, 1)));
-
+                    if (null != mod.LinkedPeptide)
+                    {
+                        mod.LinkedPeptide.WriteToXml(this, writer);
+                    }
                     writer.WriteEndElement();
                 }
             }

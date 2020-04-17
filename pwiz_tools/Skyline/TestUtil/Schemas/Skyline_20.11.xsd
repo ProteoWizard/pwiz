@@ -325,28 +325,6 @@
                 <xs:attribute name="isotope_label" type="xs:string"/>
               </xs:complexType>
             </xs:element>
-            <xs:element name="crosslinking" minOccurs="0" maxOccurs="1">
-              <xs:complexType>
-                <xs:sequence>
-                  <xs:element name="crosslinker" minOccurs="0" maxOccurs="unbounded">
-                    <xs:complexType>
-                      <xs:sequence>
-                        <xs:element name="intact_molecule">
-                          <xs:complexType>
-                            <xs:attribute name="formula" type="xs:string"/>
-                            <xs:attribute name="mono_mass_offset" type="xs:double" />
-                            <xs:attribute name="average_mass_offset" type="xs:double" />
-                          </xs:complexType>
-                        </xs:element>
-                      </xs:sequence>
-                      <xs:attribute name="name" type="xs:string" />
-                    </xs:complexType>
-                  </xs:element>
-                </xs:sequence>
-                <xs:attribute name="name" type="xs:string" />
-                <xs:attribute name="max_fragmentations" type="xs:integer"/>
-              </xs:complexType>
-            </xs:element>
           </xs:sequence>
           <xs:attribute name="max_variable_mods" type="xs:nonNegativeInteger"
               use="required"/>
@@ -1056,23 +1034,6 @@
           <xs:attribute name="isotope_label" type="xs:string"/>
         </xs:complexType>
       </xs:element>
-      <xs:element name="crosslink">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="linked_peptide" minOccurs="0" maxOccurs="unbounded">
-              <xs:complexType>
-                <xs:sequence>
-                  <xs:element name="explicit_modifications" type="explicit_modifications_type" minOccurs="0"/>
-                </xs:sequence>
-                <xs:attribute name="sequence" type="xs:string" />
-                <xs:attribute name="aa_index" type="xs:integer" />
-              </xs:complexType>
-            </xs:element>
-          </xs:sequence>
-          <xs:attribute name="crosslinker_name" type="xs:string" />
-          <xs:attribute name="aa_index" type="xs:integer" />
-        </xs:complexType>
-      </xs:element>
     </xs:sequence>
   </xs:complexType>
   <!-- ================================================================== -->
@@ -1640,6 +1601,17 @@
     </xs:simpleContent>
   </xs:complexType>
   <xs:complexType name="modification_type">
+    <xs:sequence>
+      <xs:element name="linked_peptide" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="explicit_modifications" type="explicit_modifications_type" minOccurs="0"/>
+          </xs:sequence>
+          <xs:attribute name="sequence" type="xs:string" />
+          <xs:attribute name="aa_index" type="xs:integer" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
     <xs:attribute name="index_aa" type="xs:nonNegativeInteger" use="required"/>
     <xs:attribute name="modification_name" type="xs:string" use="required"/>
     <xs:attribute name="mass_diff" type="xs:double" use="optional"/>
@@ -1717,6 +1689,16 @@
           <xs:attribute name="charge" type="xs:integer" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="crosslinker" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="formula" />
+          <xs:attribute name="massdiff_monoisotopic" type="xs:double"/>
+          <xs:attribute name="massdiff_average" type="xs:double"/>
+          <xs:attribute name="aminoacid" type="aminoacid_csv_type"/>
+          <xs:attribute name="terminus" type="terminus_type"/>
+        </xs:complexType>
+      </xs:element>
+
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required"/>
     <xs:attribute name="short_name" type="xs:string"/>

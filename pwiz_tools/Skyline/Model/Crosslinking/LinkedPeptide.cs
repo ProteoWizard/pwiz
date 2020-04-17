@@ -24,6 +24,11 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public ExplicitMods ExplicitMods { get; private set; }
 
+        public LinkedPeptide ChangeExplicitMods(ExplicitMods explicitMods)
+        {
+            return ChangeProp(ImClone(this), im => im.ExplicitMods = explicitMods);
+        }
+
         public TransitionGroup GetTransitionGroup(IsotopeLabelType labelType, Adduct adduct)
         {
             return new TransitionGroup(Peptide, adduct, labelType);
@@ -121,6 +126,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             writer.WriteStartElement(EL.linked_peptide);
             writer.WriteAttribute(ATTR.sequence, Peptide.Sequence);
+            writer.WriteAttribute(ATTR.aa_index, AaIndex);
             if (!Equals(ExplicitMods, ExplicitMods.EMPTY))
             {
                 documentWriter.WriteExplicitMods(writer, Peptide.Sequence, ExplicitMods);
@@ -150,6 +156,48 @@ namespace pwiz.Skyline.Model.Crosslinking
                 reader.ReadEndElement();
             }
             return new LinkedPeptide(peptide, aaIndex, explicitMods);
+        }
+
+        public LinkedPeptide ChangeGlobalMods(IList<StaticMod> staticMods, IList<StaticMod> heavyMods,
+            IList<IsotopeLabelType> heavyLabelTypes)
+        {
+            if (null == ExplicitMods)
+            {
+                return this;
+            }
+
+            var newExplicitMods = ExplicitMods.ChangeGlobalMods(staticMods, heavyMods, heavyLabelTypes);
+            if (ReferenceEquals(newExplicitMods, ExplicitMods))
+            {
+                return this;
+            }
+
+            return ChangeExplicitMods(newExplicitMods);
+        }
+
+        protected bool Equals(LinkedPeptide other)
+        {
+            return Equals(Peptide, other.Peptide) && AaIndex == other.AaIndex &&
+                   Equals(ExplicitMods, other.ExplicitMods);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((LinkedPeptide) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (Peptide != null ? Peptide.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ AaIndex;
+                hashCode = (hashCode * 397) ^ (ExplicitMods != null ? ExplicitMods.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 }
