@@ -669,6 +669,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         public bool IsBuildingLibrary { get; private set; }
+        public bool ReportLibraryBuildFailure { get; set; }
 
         public void ShowBuildLibraryDlg()
         {
@@ -699,6 +700,9 @@ namespace pwiz.Skyline.SettingsUI
 
                         if (!success)
                         {
+                            if (ReportLibraryBuildFailure)
+                                Console.WriteLine(@"Library {0} build failed", builder.LibrarySpec.Name);
+
                             _parent.Invoke(new Action(() =>
                             {
                                 if (Settings.Default.SpectralLibraryList.Contains(builder.LibrarySpec))
