@@ -1022,7 +1022,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            return result;
+            return result.Where(cfi=>!cfi.IsEmptyOrphan);
         }
 
         public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)

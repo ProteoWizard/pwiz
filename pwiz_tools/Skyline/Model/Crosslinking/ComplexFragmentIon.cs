@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
+using MathNet.Numerics.Distributions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -15,12 +16,23 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class ComplexFragmentIon : Immutable
     {
+        private bool _fullyQualifyChildren;
         public ComplexFragmentIon(Transition transition, TransitionLosses transitionLosses)
         {
             Transition = transition;
             Adduct = Transition.Adduct;
             Children = ImmutableSortedList<ModificationSite, ComplexFragmentIon>.EMPTY;
+        }
 
+        public static ComplexFragmentIon NewOrphanFragmentIon(TransitionGroup transitionGroup, ExplicitMods explicitMods)
+        {
+            var transition = new Transition(transitionGroup, IonType.precursor,
+                transitionGroup.Peptide.Sequence.Length - 1, 0, transitionGroup.PrecursorAdduct);
+            return new ComplexFragmentIon(transition, null)
+            {
+                IsOrphan = true,
+                _fullyQualifyChildren = explicitMods.CrosslinkMods.Count > 1
+            };
         }
 
         public Transition Transition { get; private set; }
@@ -30,6 +42,13 @@ namespace pwiz.Skyline.Model.Crosslinking
         public ComplexFragmentIon ChangeAdduct(Adduct adduct)
         {
             return ChangeProp(ImClone(this), im => im.Adduct = adduct);
+        }
+
+        public bool IsOrphan { get; private set; }
+
+        public bool IsEmptyOrphan
+        {
+            get { return IsOrphan && Children.Count == 0; }
         }
 
         [CanBeNull]
@@ -46,10 +65,24 @@ namespace pwiz.Skyline.Model.Crosslinking
             return ChangeProp(ImClone(this), im => im.Children = ImmutableSortedList.FromValues(children));
         }
 
+        public ComplexFragmentIon AddChild(ModificationSite modificationSite, ComplexFragmentIon child)
+        {
+            if (IsOrphan && !IsEmptyOrphan && !child.IsEmptyOrphan)
+            {
+                throw new InvalidOperationException(string.Format("Cannot add {0} to {1}.", child, this));
+            }
+
+            return ChangeProp(ImClone(this), im => im.Children =
+                ImmutableSortedList.FromValues(Children.Append(
+                    new KeyValuePair<ModificationSite, ComplexFragmentIon>(
+                        modificationSite, child.ChangeAdduct(Adduct.EMPTY)))));
+
+        }
+
         public int GetFragmentationEventCount()
         {
             int count = 0;
-            if (!Transition.IsPrecursor())
+            if (!IsOrphan && !Transition.IsPrecursor())
             {
                 count++;
             }
@@ -94,6 +127,10 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public MoleculeMassOffset GetSimpleFragmentFormula(SrmSettings settings, ExplicitMods mods)
         {
+            if (IsOrphan)
+            {
+                return MoleculeMassOffset.EMPTY;
+            }
             var modifiedSequence =
                 ModifiedSequence.GetModifiedSequence(settings, Transition.Group.Peptide.Sequence, mods, LabelType);
             var fragmentedMolecule = FragmentedMolecule.EMPTY.ChangeModifiedSequence(modifiedSequence);
@@ -191,8 +228,15 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public override string ToString()
         {
+            if (IsEmptyOrphan)
+            {
+                return @"-";
+            }
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.Append(Transition.GetFragmentIonName(CultureInfo.InvariantCulture));
+            if (!IsOrphan)
+            { 
+                stringBuilder.Append(Transition.GetFragmentIonName(CultureInfo.InvariantCulture));
+            }
             if (TransitionLosses != null)
             {
                 double loss = TransitionLosses.Mass;
@@ -219,7 +263,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 return string.Empty;
             }
 
-            if (Children.Count == 1)
+            if (Children.Count == 1 && !_fullyQualifyChildren)
             {
                 return @"{" + Children[0].Value + @"}";
             }

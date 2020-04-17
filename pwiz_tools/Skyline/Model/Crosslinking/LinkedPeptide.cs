@@ -61,7 +61,8 @@ namespace pwiz.Skyline.Model.Crosslinking
             ModificationSite modificationSite,
             IList<ComplexFragmentIon> linkedFragmentIons)
         {
-            if (!fragmentIon.IncludesAaIndex(modificationSite.AaIndex))
+            if (fragmentIon.IsOrphan && !fragmentIon.IsEmptyOrphan
+                || !fragmentIon.IncludesAaIndex(modificationSite.AaIndex))
             {
                 yield return fragmentIon;
                 yield break;
@@ -74,8 +75,22 @@ namespace pwiz.Skyline.Model.Crosslinking
                     continue;
                 }
 
-                yield return fragmentIon.ChangeChildren(fragmentIon.Children.Append(
-                    new KeyValuePair<ModificationSite, ComplexFragmentIon>(modificationSite, linkedFragmentIon)));
+                if (fragmentIon.IsOrphan)
+                {
+                    if (linkedFragmentIon.IncludesAaIndex(AaIndex))
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (!linkedFragmentIon.IncludesAaIndex(AaIndex))
+                    {
+                        continue;
+                    }
+                }
+
+                yield return fragmentIon.AddChild(modificationSite, linkedFragmentIon);
             }
         }
 
@@ -83,12 +98,12 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             var transitionGroupDocNode =
                 GetTransitionGroupDocNode(settings, IsotopeLabelType.light, Adduct.SINGLY_PROTONATED);
+            yield return ComplexFragmentIon.NewOrphanFragmentIon(transitionGroupDocNode.TransitionGroup, ExplicitMods);
             foreach (var transitionDocNode in transitionGroupDocNode.TransitionGroup.GetTransitions(settings,
                 transitionGroupDocNode, ExplicitMods, transitionGroupDocNode.PrecursorMz,
                 transitionGroupDocNode.IsotopeDist, null, null, true))
             {
-                yield return new ComplexFragmentIon(transitionDocNode.Transition, transitionDocNode.Losses)
-                    .ChangeAdduct(Adduct.EMPTY);
+                yield return new ComplexFragmentIon(transitionDocNode.Transition, transitionDocNode.Losses);
             }
         }
 

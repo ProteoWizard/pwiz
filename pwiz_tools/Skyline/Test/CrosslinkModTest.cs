@@ -81,13 +81,13 @@ namespace pwiz.SkylineTest
             transitionFilter = transitionFilter
                 .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_1.Name)
                 .ChangeFragmentRangeLastName(@"last ion")
-                .ChangePeptideIonTypes(new[]{IonType.precursor,IonType.y});
+                .ChangePeptideIonTypes(new[]{IonType.precursor,IonType.y, IonType.b});
             srmSettings =  srmSettings.ChangeTransitionSettings(
                 srmSettings.TransitionSettings.ChangeFilter(transitionFilter));
 
             var transitionGroup = new TransitionGroup(mainPeptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
             var crosslinkerDef = new CrosslinkerDef("disulfide", new FormulaMass("-H2"));
-            var linkedPeptide = new LinkedPeptide(new Peptide("ARSENIC"), 2, ExplicitMods.EMPTY);
+            var linkedPeptide = new LinkedPeptide(new Peptide("ARSENIC"), 6, ExplicitMods.EMPTY);
             var crosslinkMod = new CrosslinkMod(3, crosslinkerDef, new[] { linkedPeptide });
             var explicitModsWithCrosslink = ExplicitMods.EMPTY.ChangeCrosslinkMods(new[] { crosslinkMod });
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings,
