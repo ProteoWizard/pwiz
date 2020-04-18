@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -931,6 +932,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public bool IsPauseForCoverShot { get; set; }
+
         public int PauseStartPage { get; set; }
 
         public static bool IsPauseForAuditLog { get; set; }
@@ -961,7 +964,7 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsPass0 { get { return Program.IsPassZero; } }
 
-        public bool IsFullData { get { return IsPauseForScreenShots || IsDemoMode || IsPass0; } }
+        public bool IsFullData { get { return IsPauseForScreenShots || IsPauseForCoverShot || IsDemoMode || IsPass0; } }
 
         public static bool IsCheckLiveReportsCompatibility { get; set; }
 
@@ -1494,8 +1497,29 @@ namespace pwiz.SkylineTestUtil
 
         public void RestoreViewOnScreen(int pageNum)
         {
+            RestoreViewNameOnScreen(string.Format(@"p{0:0#}", pageNum));
+        }
+
+        public void RestoreCoverViewOnScreen(bool hasSavedView = true)
+        {
+            if (hasSavedView)
+                RestoreViewNameOnScreen("cover");
+            // Make sure Skyline is the standard size for a cover shot - Window size and screen shot size differ
+            // And center it in the screen to have the best chance of not needing to move it before Alt-PtrSc
+            RunUI(() =>
+            {
+                var skylineSize = new Size(1200 + 14, 800 + 7);
+                var screenRect = Screen.FromControl(SkylineWindow).Bounds;
+                var skylineLocation = new Point(screenRect.Left + screenRect.Width / 2 - skylineSize.Width / 2,
+                    screenRect.Top + screenRect.Height / 2 - skylineSize.Height / 2);
+                SkylineWindow.Bounds = new Rectangle(skylineLocation, skylineSize);
+            });
+        }
+
+        private void RestoreViewNameOnScreen(string name)
+        {
             var viewsDir = TestFilesDirs.First(dir => dir.FullPath.EndsWith("Views"));
-            RestoreViewOnScreen(viewsDir.GetTestPath(string.Format(@"p{0:0#}.view", pageNum)));
+            RestoreViewOnScreen(viewsDir.GetTestPath(name + ".view"));
         }
 
         public void RestoreViewOnScreen(string viewFilePath)
