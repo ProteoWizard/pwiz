@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Runtime.CompilerServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
@@ -53,7 +52,7 @@ namespace pwiz.SkylineTest
             var crosslinkedFormula =
                 mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, explicitModsWithCrosslink);
             
-            Assert.AreEqual("C67H108N24O21S3Se", crosslinkedFormula.Molecule.ToString());
+            Assert.AreEqual("C67H112N24O23S3Se", crosslinkedFormula.Molecule.ToString());
         }
 
         [TestMethod]
