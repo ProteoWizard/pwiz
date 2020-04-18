@@ -30,13 +30,13 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         private ComplexFragmentIonName()
         {
-            Losses = ImmutableList<Tuple<ModificationSite, int>>.EMPTY;
+            Losses = ImmutableList<Tuple<ModificationSite, string>>.EMPTY;
             Children = ImmutableList<Tuple<ModificationSite, ComplexFragmentIonName>>.EMPTY;
         }
 
         public IonType IonType { get; private set; }
         public int Ordinal { get; private set; }
-        public ImmutableList<Tuple<ModificationSite, int>> Losses { get; private set; }
+        public ImmutableList<Tuple<ModificationSite, string>> Losses { get; private set; }
         public ImmutableList<Tuple<ModificationSite, ComplexFragmentIonName>> Children { get; private set; }
         public bool IsOrphan { get; private set; }
 
@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 im => { im.Children = ToChildList(Children.Append(Tuple.Create(modificationSite, child))); });
         }
 
-        public ComplexFragmentIonName AddLoss(ModificationSite modificationSite, int lossIndex)
+        public ComplexFragmentIonName AddLoss(ModificationSite modificationSite, string loss)
         {
             if (IsOrphan)
             {
@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             return ChangeProp(ImClone(this), im =>
             {
-                im.Losses = ImmutableList.ValueOf(im.Losses.Append(Tuple.Create(modificationSite, lossIndex)).OrderBy(tuple=>tuple));
+                im.Losses = ImmutableList.ValueOf(im.Losses.Append(Tuple.Create(modificationSite, loss)).OrderBy(tuple=>tuple));
             });
         }
 

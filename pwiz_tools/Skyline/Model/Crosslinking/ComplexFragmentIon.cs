@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -15,12 +13,11 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class ComplexFragmentIon : Immutable
     {
-        private bool _fullyQualifyChildren;
         public ComplexFragmentIon(Transition transition, TransitionLosses transitionLosses)
         {
             Transition = transition;
-            Adduct = Transition.Adduct;
             Children = ImmutableSortedList<ModificationSite, ComplexFragmentIon>.EMPTY;
+            TransitionLosses = transitionLosses;
         }
 
         public static ComplexFragmentIon NewOrphanFragmentIon(TransitionGroup transitionGroup, ExplicitMods explicitMods)
@@ -30,18 +27,10 @@ namespace pwiz.Skyline.Model.Crosslinking
             return new ComplexFragmentIon(transition, null)
             {
                 IsOrphan = true,
-                _fullyQualifyChildren = explicitMods != null && explicitMods.Crosslinks.Skip(1).Any()
             };
         }
 
         public Transition Transition { get; private set; }
-
-        public Adduct Adduct { get; private set; }
-
-        public ComplexFragmentIon ChangeAdduct(Adduct adduct)
-        {
-            return ChangeProp(ImClone(this), im => im.Adduct = adduct);
-        }
 
         public bool IsOrphan { get; private set; }
 
@@ -74,7 +63,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             return ChangeProp(ImClone(this), im => im.Children =
                 ImmutableSortedList.FromValues(Children.Append(
                     new KeyValuePair<ModificationSite, ComplexFragmentIon>(
-                        modificationSite, child.ChangeAdduct(Adduct.EMPTY)))));
+                        modificationSite, child))));
 
         }
 
@@ -246,7 +235,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 foreach (var loss in TransitionLosses.Losses)
                 {
-                    // TODO
+                    name = name.AddLoss(null, loss.ToString());
                 }
             }
 
@@ -255,69 +244,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public override string ToString()
         {
-            if (IsEmptyOrphan)
-            {
-                return @"-";
-            }
-            StringBuilder stringBuilder = new StringBuilder();
-            if (!IsOrphan)
-            { 
-                stringBuilder.Append(Transition.GetFragmentIonName(CultureInfo.InvariantCulture));
-            }
-            if (TransitionLosses != null)
-            {
-                double loss = TransitionLosses.Mass;
-                if (loss >= 0)
-                {
-                    stringBuilder.Append(@"+");
-                }
-
-                stringBuilder.Append(loss.ToString(@"0.#", CultureInfo.InvariantCulture));
-            }
-
-            stringBuilder.Append(ChildrenToString());
-            if (!Adduct.IsEmpty)
-            {
-                stringBuilder.Append(Transition.GetChargeIndicator(Adduct, CultureInfo.InvariantCulture));
-            }
-            return stringBuilder.ToString();
-        }
-
-        private string ChildrenToString()
-        {
-            if (Children.Count == 0)
-            {
-                return string.Empty;
-            }
-
-            if (Children.Count == 1 && !_fullyQualifyChildren)
-            {
-                return @"{" + Children[0].Value + @"}";
-            }
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.Append(@"{");
-            string strComma = string.Empty;
-            foreach (var grouping in Children.ToLookup(kvp => kvp.Key, kvp => kvp.Value))
-            {
-                stringBuilder.Append(strComma);
-                strComma = @",";
-                stringBuilder.Append(grouping.Key);
-                stringBuilder.Append(@":");
-                bool multiple = grouping.Skip(1).Any();
-                if (multiple)
-                {
-                    stringBuilder.Append(@"[");
-                    stringBuilder.Append(string.Join(@",", grouping));
-                    stringBuilder.Append(@"]");
-                }
-                else
-                {
-                    stringBuilder.Append(grouping.First());
-                }
-            }
-
-            stringBuilder.Append(@"}");
-            return stringBuilder.ToString();
+            return GetName().ToString();
         }
 
     }
