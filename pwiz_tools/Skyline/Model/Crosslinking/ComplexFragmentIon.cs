@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using MathNet.Numerics.Distributions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -55,7 +56,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public ComplexFragmentIon AddChild(ModificationSite modificationSite, ComplexFragmentIon child)
         {
-            if (IsOrphan && !IsEmptyOrphan && !child.IsEmptyOrphan)
+            if (IsOrphan && !IsEmptyOrphan)
             {
                 throw new InvalidOperationException(string.Format("Cannot add {0} to {1}.", child, this));
             }
@@ -181,7 +182,18 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             var neutralFormula = GetNeutralFormula(settings, explicitMods);
             var productMass = GetFragmentMass(settings, neutralFormula);
-            return new TransitionDocNode(this, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
+            var complexTransition = Transition;
+            if (Children.Count > 0)
+            {
+                var name = GetName();
+                if (!explicitMods.Crosslinks.Skip(1).Any())
+                {
+                    //name = name.DisqualifyChildren();
+                }
+                complexTransition = complexTransition.ChangeComplexFragmentIonName(name);
+            }
+
+            return new TransitionDocNode(complexTransition, annotations, TransitionLosses, productMass, transitionQuantInfo, explicitTransitionValues, results);
         }
 
         public static TypedMass GetFragmentMass(SrmSettings settings, MoleculeMassOffset formula)

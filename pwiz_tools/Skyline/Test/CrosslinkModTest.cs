@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
@@ -110,7 +111,7 @@ namespace pwiz.SkylineTest
                 mainTransitionGroupDocNode.IsotopeDist,
                 null,
                 null,
-                true).Select(transition => transition.ComplexFragmentIon.GetName()).ToList();
+                true).Select(transition => transition.Transition.GetComplexFragmentIonName()).ToList();
             var modSite = new ModificationSite(0, modName);
             var expectedFragmentIons = new[]
             {
@@ -177,7 +178,7 @@ namespace pwiz.SkylineTest
                 explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
             var choices = transitionGroupDocNode.GetPrecursorChoices(srmSettings, explicitModsWithCrosslink, true)
                 .Cast<TransitionDocNode>().ToArray();
-            var complexFragmentIons = choices.Select(transition => transition.ComplexFragmentIon).ToArray();
+            var complexFragmentIons = choices.Select(transition => transition.Transition.GetComplexFragmentIonName()).ToArray();
 
             Assert.AreNotEqual(0, complexFragmentIons.Length);
         }
@@ -200,6 +201,9 @@ namespace pwiz.SkylineTest
             var peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", null, new []{peptideDocNode});
             var srmDocument = (SrmDocument) new SrmDocument(settings).ChangeChildren(new[] {peptideGroupDocNode});
             AssertEx.Serializable(srmDocument);
+            String docXML = null;
+            AssertEx.RoundTrip(srmDocument, ref docXML);
+            Console.Out.WriteLine(docXML);
         }
 
         [TestMethod]

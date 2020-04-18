@@ -1123,7 +1123,8 @@ namespace pwiz.Skyline.Model
                 return simpleTransitions;
             }
 
-            var simpleFragmentIons = simpleTransitions.Select(transition => transition.ComplexFragmentIon)
+            var simpleFragmentIons = simpleTransitions
+                .Select(transition => new ComplexFragmentIon(transition.Transition, transition.Losses))
                 .Append(ComplexFragmentIon.NewOrphanFragmentIon(TransitionGroup, mods));
                 
             var complexFragmentIons = LinkedPeptide.PermuteComplexFragmentIons(mods, settings, settings.PeptideSettings.Modifications.MaxNeutralLosses, simpleFragmentIons);
