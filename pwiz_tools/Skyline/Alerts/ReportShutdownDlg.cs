@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Alerts
                 var exceptionInfo2 = new StringBuilder();
                 exceptionInfo2.AppendLine(exception.GetType().FullName);
                 exceptionInfo2.AppendLine(exception.Message);
-                exceptionInfo2.AppendLine(ExceptionUtil.GetStackTraceText(exception));
+                exceptionInfo2.AppendLine(ExceptionUtil.GetExceptionText(exception, null));
                 File.WriteAllText(GetExceptionFile(), exceptionInfo2.ToString());
             }
         }
