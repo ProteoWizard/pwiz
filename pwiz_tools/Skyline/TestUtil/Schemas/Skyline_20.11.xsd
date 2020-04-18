@@ -1608,7 +1608,7 @@
             <xs:element name="explicit_modifications" type="explicit_modifications_type" minOccurs="0"/>
           </xs:sequence>
           <xs:attribute name="sequence" type="xs:string" />
-          <xs:attribute name="aa_index" type="xs:integer" />
+          <xs:attribute name="index_aa" type="xs:integer" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>

@@ -25,6 +25,7 @@ using System.Xml;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
@@ -416,10 +417,22 @@ namespace pwiz.Skyline.Model.Serialization
                             Math.Round(massDiff, 1)));
                     if (null != mod.LinkedPeptide)
                     {
-                        mod.LinkedPeptide.WriteToXml(this, writer);
+                        WriteLinkedPeptide(writer, mod.LinkedPeptide);
                     }
                     writer.WriteEndElement();
                 }
+            }
+            writer.WriteEndElement();
+        }
+
+        private void WriteLinkedPeptide(XmlWriter writer, LinkedPeptide linkedPeptide)
+        {
+            writer.WriteStartElement(EL.linked_peptide);
+            writer.WriteAttribute(ATTR.sequence, linkedPeptide.Peptide.Sequence);
+            writer.WriteAttribute(ATTR.index_aa, linkedPeptide.IndexAa);
+            if (null != linkedPeptide.ExplicitMods)
+            {
+                WriteExplicitMods(writer, linkedPeptide.Peptide.Sequence, linkedPeptide.ExplicitMods);
             }
             writer.WriteEndElement();
         }

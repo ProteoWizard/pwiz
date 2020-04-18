@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -1045,19 +1046,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool HasCrosslinks
         {
             get { return Crosslinks.Any(); }
-        }
-
-        public IEnumerable<ComplexFragmentIon> PermuteComplexFragmentIons(SrmSettings settings, int maxFragmentationCount,
-            IEnumerable<ComplexFragmentIon> complexFragmentIons)
-        {
-            var result = complexFragmentIons;
-            foreach (var crosslinkMod in Crosslinks)
-            {
-                result = crosslinkMod.LinkedPeptide.PermuteFragmentIons(settings, maxFragmentationCount,
-                    new ModificationSite(crosslinkMod.IndexAA, crosslinkMod.Modification.Name), result);
-            }
-
-            return result.Where(cfi=>!cfi.IsEmptyOrphan);
         }
 
         public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)

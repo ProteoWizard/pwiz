@@ -885,6 +885,7 @@ namespace pwiz.Skyline.Model
                     moleculeMassOffset = moleculeMassOffset.Plus(crosslink.LinkedPeptide.GetNeutralFormula(settings, LabelType));
                 }
             }
+
             return moleculeMassOffset;
         }
 
@@ -1125,7 +1126,7 @@ namespace pwiz.Skyline.Model
             var simpleFragmentIons = simpleTransitions.Select(transition => transition.ComplexFragmentIon)
                 .Append(ComplexFragmentIon.NewOrphanFragmentIon(TransitionGroup, mods));
                 
-            var complexFragmentIons = mods.PermuteComplexFragmentIons(settings, settings.PeptideSettings.Modifications.MaxNeutralLosses, simpleFragmentIons);
+            var complexFragmentIons = LinkedPeptide.PermuteComplexFragmentIons(mods, settings, settings.PeptideSettings.Modifications.MaxNeutralLosses, simpleFragmentIons);
 
             return complexFragmentIons.Select(complexFragmentIon =>
                 complexFragmentIon.MakeTransitionDocNode(settings, mods));

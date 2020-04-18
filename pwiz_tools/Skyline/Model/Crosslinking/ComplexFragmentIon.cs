@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             return new ComplexFragmentIon(transition, null)
             {
                 IsOrphan = true,
-                _fullyQualifyChildren = explicitMods.Crosslinks.Skip(1).Any()
+                _fullyQualifyChildren = explicitMods != null && explicitMods.Crosslinks.Skip(1).Any()
             };
         }
 
@@ -116,9 +116,12 @@ namespace pwiz.Skyline.Model.Crosslinking
         public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, ExplicitMods explicitMods)
         {
             var result = GetSimpleFragmentFormula(settings, explicitMods);
-            foreach (var crosslinkMod in explicitMods.Crosslinks)
+            if (explicitMods != null)
             {
-                result = result.Plus(GetCrosslinkFormula(settings, crosslinkMod));
+                foreach (var crosslinkMod in explicitMods.Crosslinks)
+                {
+                    result = result.Plus(GetCrosslinkFormula(settings, crosslinkMod));
+                }
             }
 
             return result;

@@ -1048,7 +1048,7 @@ namespace pwiz.Skyline.Model.Serialization
                     else
                     {
                         reader.Read();
-                        explicitMod = explicitMod.ChangeLinkedPeptide(LinkedPeptide.ReadFromXml(this, reader));
+                        explicitMod = explicitMod.ChangeLinkedPeptide(ReadLinkedPeptide(reader));
                         reader.ReadEndElement();
                     }
 
@@ -1057,6 +1057,31 @@ namespace pwiz.Skyline.Model.Serialization
                 reader.ReadEndElement();
             }
             return new TypedExplicitModifications(peptide, typedMods.LabelType, listMods.ToArray());
+        }
+
+        private LinkedPeptide ReadLinkedPeptide(XmlReader reader)
+        {
+            if (!reader.IsStartElement(EL.linked_peptide))
+            {
+                return null;
+            }
+
+            var sequence = reader.GetAttribute(ATTR.sequence);
+            int indexAa = reader.GetIntAttribute(ATTR.index_aa);
+            var peptide = new Peptide(sequence);
+            ExplicitMods explicitMods = null;
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+            }
+            else
+            {
+                reader.ReadStartElement();
+                explicitMods = ReadExplicitMods(reader, peptide);
+                reader.ReadEndElement();
+            }
+            return new LinkedPeptide(peptide, indexAa, explicitMods);
+
         }
 
         private Results<PeptideChromInfo> ReadPeptideResults(XmlReader reader)

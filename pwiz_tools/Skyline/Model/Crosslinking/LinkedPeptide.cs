@@ -1,27 +1,27 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Xml;
+using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
     public class LinkedPeptide : Immutable
     {
-        public LinkedPeptide(Peptide peptide, int aaIndex, ExplicitMods explicitMods)
+        public LinkedPeptide(Peptide peptide, int indexAa, ExplicitMods explicitMods)
         {
             Peptide = peptide;
-            AaIndex = aaIndex;
+            IndexAa = indexAa;
             ExplicitMods = explicitMods;
         }
 
         public Peptide Peptide { get; private set; }
-        public int AaIndex { get; private set; }
+        public int IndexAa { get; private set; }
 
+        [CanBeNull]
         public ExplicitMods ExplicitMods { get; private set; }
 
         public LinkedPeptide ChangeExplicitMods(ExplicitMods explicitMods)
@@ -49,7 +49,8 @@ namespace pwiz.Skyline.Model.Crosslinking
         public IEnumerable<ComplexFragmentIon> ListComplexFragmentIons(SrmSettings settings, int maxFragmentEventCount)
         {
             IEnumerable<ComplexFragmentIon> result = ListSimpleFragmentIons(settings);
-            return ExplicitMods.PermuteComplexFragmentIons(settings, maxFragmentEventCount, result);
+            result = PermuteComplexFragmentIons(ExplicitMods, settings, maxFragmentEventCount, result);
+            return result;
         }
 
         public IEnumerable<ComplexFragmentIon> PermuteFragmentIons(SrmSettings settings, int maxFragmentationCount,
@@ -82,14 +83,14 @@ namespace pwiz.Skyline.Model.Crosslinking
 
                 if (fragmentIon.IsOrphan)
                 {
-                    if (linkedFragmentIon.IncludesAaIndex(AaIndex))
+                    if (linkedFragmentIon.IncludesAaIndex(IndexAa))
                     {
                         continue;
                     }
                 }
                 else
                 {
-                    if (!linkedFragmentIon.IncludesAaIndex(AaIndex))
+                    if (!linkedFragmentIon.IncludesAaIndex(IndexAa))
                     {
                         continue;
                     }
@@ -112,52 +113,6 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        private enum EL
-        {
-            linked_peptide,
-        }
-
-        private enum ATTR
-        {
-            sequence,
-            aa_index
-        }
-        public void WriteToXml(DocumentWriter documentWriter, XmlWriter writer)
-        {
-            writer.WriteStartElement(EL.linked_peptide);
-            writer.WriteAttribute(ATTR.sequence, Peptide.Sequence);
-            writer.WriteAttribute(ATTR.aa_index, AaIndex);
-            if (!Equals(ExplicitMods, ExplicitMods.EMPTY))
-            {
-                documentWriter.WriteExplicitMods(writer, Peptide.Sequence, ExplicitMods);
-            }
-            writer.WriteEndElement();
-        }
-
-        public static LinkedPeptide ReadFromXml(DocumentReader documentReader, XmlReader reader)
-        {
-            if (!reader.IsStartElement(EL.linked_peptide))
-            {
-                return null;
-            }
-
-            var sequence = reader.GetAttribute(ATTR.sequence);
-            int aaIndex = reader.GetIntAttribute(ATTR.aa_index);
-            var peptide = new Peptide(sequence);
-            var explicitMods = ExplicitMods.EMPTY;
-            if (reader.IsEmptyElement)
-            {
-                reader.Read();
-            }
-            else
-            {
-                reader.ReadStartElement();
-                explicitMods = documentReader.ReadExplicitMods(reader, peptide);
-                reader.ReadEndElement();
-            }
-            return new LinkedPeptide(peptide, aaIndex, explicitMods);
-        }
-
         public LinkedPeptide ChangeGlobalMods(IList<StaticMod> staticMods, IList<StaticMod> heavyMods,
             IList<IsotopeLabelType> heavyLabelTypes)
         {
@@ -177,7 +132,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         protected bool Equals(LinkedPeptide other)
         {
-            return Equals(Peptide, other.Peptide) && AaIndex == other.AaIndex &&
+            return Equals(Peptide, other.Peptide) && IndexAa == other.IndexAa &&
                    Equals(ExplicitMods, other.ExplicitMods);
         }
 
@@ -194,10 +149,27 @@ namespace pwiz.Skyline.Model.Crosslinking
             unchecked
             {
                 var hashCode = (Peptide != null ? Peptide.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ AaIndex;
+                hashCode = (hashCode * 397) ^ IndexAa;
                 hashCode = (hashCode * 397) ^ (ExplicitMods != null ? ExplicitMods.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        public static IEnumerable<ComplexFragmentIon> PermuteComplexFragmentIons(
+            [CanBeNull] ExplicitMods mods, 
+            SrmSettings settings, int maxFragmentationCount, IEnumerable<ComplexFragmentIon> complexFragmentIons)
+        {
+            var result = complexFragmentIons;
+            if (mods != null)
+            {
+                foreach (var crosslinkMod in mods.Crosslinks)
+                {
+                    result = crosslinkMod.LinkedPeptide.PermuteFragmentIons(settings, maxFragmentationCount,
+                        new ModificationSite(crosslinkMod.IndexAA, crosslinkMod.Modification.Name), result);
+                }
+            }
+
+            return result.Where(cfi => !cfi.IsEmptyOrphan);
         }
     }
 }

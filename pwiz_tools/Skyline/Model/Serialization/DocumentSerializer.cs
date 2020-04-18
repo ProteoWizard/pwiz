@@ -76,6 +76,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string molecule = "molecule";
             public const string transition_data = "transition_data";
             public const string results_data = "results_data";
+            public const string linked_peptide = "linked_peptide";
             // ReSharper restore LocalizableElement
         }
 
