@@ -8,6 +8,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
@@ -260,6 +261,5 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             return GetName().ToString();
         }
-
     }
 }

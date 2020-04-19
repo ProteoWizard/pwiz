@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model.Serialization
             public TransitionLosses Losses { get; private set; }
 
             public List<KeyValuePair<ModificationSite, ComplexFragmentIonName>> LinkedFragmentIons { get; private set; }
-            public bool LinkedIonIsOrphan { get; private set; }
+            public bool OrphanedCrosslinkIon { get; private set; }
             public Annotations Annotations { get; private set; }
             public TransitionLibInfo LibInfo { get; private set; }
             public Results<TransitionChromInfo> Results { get; private set; }
@@ -274,6 +274,7 @@ namespace pwiz.Skyline.Model.Serialization
                 ProductAdduct = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.product_charge));
                 DecoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
                 Quantitative = reader.GetBoolAttribute(ATTR.quantitative, true);
+                OrphanedCrosslinkIon = reader.GetBoolAttribute(ATTR.orphaned_crosslink_ion);
                 string measuredIonName = reader.GetAttribute(ATTR.measured_ion_name);
                 if (measuredIonName != null)
                 {
@@ -305,12 +306,7 @@ namespace pwiz.Skyline.Model.Serialization
                             Losses = ReadTransitionLosses(reader);
                         else if (reader.IsStartElement(EL.linked_fragment_ion))
                         {
-                            bool isOrphan;
-                            LinkedFragmentIons.Add(ReadLinkedFragmentIon(reader, out isOrphan));
-                            if (isOrphan)
-                            {
-                                LinkedIonIsOrphan = true;
-                            }
+                            LinkedFragmentIons.Add(ReadLinkedFragmentIon(reader));
                         }
                         else if (reader.IsStartElement(EL.transition_lib_info))
                             LibInfo = ReadTransitionLibInfo(reader);
@@ -370,13 +366,22 @@ namespace pwiz.Skyline.Model.Serialization
                 return null;
             }
 
-            private KeyValuePair<ModificationSite, ComplexFragmentIonName> ReadLinkedFragmentIon(XmlReader reader, out bool parentIsOrphan)
+            private KeyValuePair<ModificationSite, ComplexFragmentIonName> ReadLinkedFragmentIon(XmlReader reader)
             {
-                var linkedIon = new ComplexFragmentIonName(reader.GetEnumAttribute(ATTR.fragment_type, IonType.custom),
-                    reader.GetIntAttribute(ATTR.fragment_ordinal));
+                ComplexFragmentIonName linkedIon;
+                string strFragmentType = reader.GetAttribute(ATTR.fragment_type);
+                if (strFragmentType == null)
+                {
+                    // blank fragment type means orphaned fragment ion
+                    linkedIon = ComplexFragmentIonName.ORPHAN;
+                }
+                else
+                {
+                    linkedIon = new ComplexFragmentIonName(TypeSafeEnum.Parse<IonType>(strFragmentType), reader.GetIntAttribute(ATTR.fragment_ordinal));
+                }
+                    
                 var modificationSite = new ModificationSite(reader.GetIntAttribute(ATTR.index_aa),
                     reader.GetAttribute(ATTR.modification_name));
-                parentIsOrphan = reader.GetBoolAttribute(ATTR.orphan);
                 bool empty = reader.IsEmptyElement;
                 reader.Read();
                 if (!empty)
@@ -396,16 +401,7 @@ namespace pwiz.Skyline.Model.Serialization
                         }
                         else if (reader.IsStartElement(EL.linked_fragment_ion))
                         {
-                            bool isOrphan;
-                            var child = ReadLinkedFragmentIon(reader, out isOrphan);
-                            if (isOrphan)
-                            {
-                                if (linkedIon.Children.Count != 0)
-                                {
-                                    throw new InvalidOperationException();
-                                }
-                                linkedIon = ComplexFragmentIonName.ORPHAN;
-                            }
+                            var child = ReadLinkedFragmentIon(reader);
                             linkedIon = linkedIon.AddChild(child.Key, child.Value);
                         }
                     }
@@ -1478,14 +1474,13 @@ namespace pwiz.Skyline.Model.Serialization
             TransitionDocNode node;
             if (info.LinkedFragmentIons.Any())
             {
-                ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, info.Losses, info.LinkedIonIsOrphan);
+                ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, info.Losses, info.OrphanedCrosslinkIon);
                 var crosslinks = mods.Crosslinks.ToDictionary(mod => mod.ModificationSite);
                 foreach (var linkedIon in info.LinkedFragmentIons)
                 {
                     var crosslinkMod = crosslinks[linkedIon.Key];
                     complexFragmentIon = complexFragmentIon.AddChild(linkedIon.Key,
-                        crosslinkMod.LinkedPeptide.MakeComplexFragmentIon(group.LabelType, group.PrecursorAdduct,
-                            linkedIon.Value));
+                        crosslinkMod.LinkedPeptide.MakeComplexFragmentIon(group.LabelType, linkedIon.Value));
                 }
 
                 node = complexFragmentIon.MakeTransitionDocNode(Settings, mods, info.Annotations, quantInfo,
@@ -1495,9 +1490,9 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 node = new TransitionDocNode(transition, info.Annotations, losses,
                     mass, quantInfo, info.ExplicitValues, info.Results);
-                // TODO: move this out of else clause
-                ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
             }
+
+            ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
 
             return node;
         }

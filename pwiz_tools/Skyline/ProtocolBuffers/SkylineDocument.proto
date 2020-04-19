@@ -102,6 +102,8 @@ message SkylineDocumentProto {
 		OptionalDouble explicitSLens = 34;
 		OptionalDouble explicitConeVoltage = 35;
 		OptionalDouble explicitDeclusteringPotential = 36;
+		bool orphanedCrosslinkIon = 37;
+		repeated LinkedIon linkedIons = 38;
 	}
 
 	message OptionalFloat {
@@ -146,13 +148,14 @@ message SkylineDocumentProto {
 		repeated Transition transitions = 1;
 	}
 
-	message ComplexIon {
+	message LinkedIon {
 		IonType ionType = 1;
 		int32 ordinal = 2;
 		int32 modificationIndex = 3;
 		string modificationName = 4;
-		repeated ComplexIon children = 5;
+		repeated LinkedIon children = 5;
 		repeated TransitionLoss losses = 6;
+		bool orphan = 7;
 	}
 }
 

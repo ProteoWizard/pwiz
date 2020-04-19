@@ -1054,11 +1054,10 @@
       <xs:element name="losses" type="transition_losses_type" minOccurs="0" maxOccurs="unbounded" />
       <xs:element name="linked_fragment_ion" type="linked_fragment_ion_type" minOccurs="0"/>
     </xs:sequence>
-    <xs:attribute name="fragment_type" type="fragment_type"/>
+    <xs:attribute name="fragment_type" type="fragment_type" use="optional"/>
     <xs:attribute name="fragment_ordinal" />
     <xs:attribute name="index_aa" type="xs:nonNegativeInteger" use="required"/>
     <xs:attribute name="modification_name" type="xs:string" use="required"/>
-    <xs:attribute name="orphan" type="xs:boolean" />
   </xs:complexType>
 
   <!-- ================================================================== -->
@@ -1354,6 +1353,7 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="orphaned_crosslink_ion" type="xs:boolean" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

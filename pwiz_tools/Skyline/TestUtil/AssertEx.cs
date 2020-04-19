@@ -31,6 +31,7 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -337,6 +338,8 @@ namespace pwiz.SkylineTestUtil
         {
             Serializable(doc, DocumentCloned);
             VerifyModifiedSequences(doc);
+            InvokeWithCompactFormatOption(true, ()=>Serializable(doc, DocumentCloned));
+            InvokeWithCompactFormatOption(false, () => Serializable(doc, DocumentCloned));
         }
 
         public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
@@ -398,6 +401,21 @@ namespace pwiz.SkylineTestUtil
                         AreEqual(expectedModifiedSequence, modifiedSequence.ToString());
                     }
                 }
+            }
+        }
+
+        private static void InvokeWithCompactFormatOption(bool useCompactFormat, Action action)
+        {
+            var compactFormatOptionPrev = Settings.Default.CompactFormatOption;
+            try
+            {
+                Settings.Default.CompactFormatOption =
+                    (useCompactFormat ? CompactFormatOption.ALWAYS : CompactFormatOption.NEVER).Name;
+                action();
+            }
+            finally
+            {
+                Settings.Default.CompactFormatOption = compactFormatOptionPrev;
             }
         }
 

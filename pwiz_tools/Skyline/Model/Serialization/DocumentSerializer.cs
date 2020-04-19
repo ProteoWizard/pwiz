@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string analyte_concentration = "analyte_concentration";
             public const string points_across = "points_across";
             public const string forced_integration = "forced_integration";
-            public const string orphan = "orphan";
+            public const string orphaned_crosslink_ion = "orphaned_crosslink_ion";
             // ReSharper restore LocalizableElement
         }
     }

@@ -6,6 +6,7 @@ using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
@@ -14,8 +15,7 @@ namespace pwiz.Skyline.Model.Crosslinking
     {
         public static readonly ComplexFragmentIonName ORPHAN = new ComplexFragmentIonName()
         {
-            IonType = IonType.precursor,
-            IsOrphan = true,
+            IonType = IonType.custom,
         };
 
         public static readonly ComplexFragmentIonName PRECURSOR
@@ -40,7 +40,10 @@ namespace pwiz.Skyline.Model.Crosslinking
         public int Ordinal { get; private set; }
         public ImmutableList<Tuple<ModificationSite, string>> Losses { get; private set; }
         public ImmutableList<Tuple<ModificationSite, ComplexFragmentIonName>> Children { get; private set; }
-        public bool IsOrphan { get; private set; }
+        public bool IsOrphan
+        {
+            get { return IonType == IonType.custom; }
+        }
 
         private static ImmutableList<Tuple<ModificationSite, ComplexFragmentIonName>> ToChildList(
             IEnumerable<Tuple<ModificationSite, ComplexFragmentIonName>> children)
@@ -231,7 +234,6 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             return fragmentIon;
         }
-
 
 #if false
         public static ComplexFragmentIonName Parse(string source)
@@ -457,5 +459,67 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 #endif
+
+        public IEnumerable<SkylineDocumentProto.Types.LinkedIon> GetLinkedIonProtos()
+        {
+            foreach (var child in Children)
+            {
+                var proto = new SkylineDocumentProto.Types.LinkedIon()
+                {
+                    ModificationIndex = child.Item1.IndexAa,
+                    ModificationName = child.Item1.ModName
+                };
+
+                if (child.Item2.IsOrphan)
+                {
+                    proto.Orphan = true;
+                }
+                else
+                {
+                    proto.IonType = DataValues.ToIonType(child.Item2.IonType);
+                    proto.Ordinal = child.Item2.Ordinal;
+                }
+                proto.Children.AddRange(child.Item2.GetLinkedIonProtos());
+                yield return proto;
+            }
+        }
+
+        public static ComplexFragmentIonName FromLinkedIonProto(SkylineDocumentProto.Types.LinkedIon linkedIon)
+        {
+            ComplexFragmentIonName child;
+            if (linkedIon.Orphan)
+            {
+                child = ORPHAN;
+            }
+            else
+            {
+                child = new ComplexFragmentIonName(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal);
+            }
+
+            child = child.AddLinkedIonProtos(linkedIon.Children);
+            return child;
+        }
+
+        public ComplexFragmentIonName AddLinkedIonProtos(IEnumerable<SkylineDocumentProto.Types.LinkedIon> linkedIons)
+        {
+            var result = this;
+            foreach (var linkedIon in linkedIons)
+            {
+                ComplexFragmentIonName child;
+                if (linkedIon.Orphan)
+                {
+                    child = ORPHAN;
+                }
+                else
+                {
+                    child = new ComplexFragmentIonName(DataValues.FromIonType(linkedIon.IonType), linkedIon.Ordinal);
+                }
+
+                child = child.AddLinkedIonProtos(linkedIon.Children);
+                result = result.AddChild(new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName), child);
+            }
+
+            return result;
+        }
     }
 }

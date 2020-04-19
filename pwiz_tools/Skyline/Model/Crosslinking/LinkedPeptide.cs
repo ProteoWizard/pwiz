@@ -172,9 +172,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             return result.Where(cfi => !cfi.IsEmptyOrphan);
         }
 
-        public ComplexFragmentIon MakeComplexFragmentIon(IsotopeLabelType labelType, Adduct precursorAdduct, ComplexFragmentIonName complexFragmentIonName)
+        public ComplexFragmentIon MakeComplexFragmentIon(IsotopeLabelType labelType, ComplexFragmentIonName complexFragmentIonName)
         {
-            var transitionGroup = GetTransitionGroup(labelType, precursorAdduct);
+            var transitionGroup = GetTransitionGroup(labelType, Adduct.SINGLY_PROTONATED);
             Transition transition;
             if (complexFragmentIonName.IonType == IonType.precursor)
             {
@@ -195,7 +195,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     var explicitMod = crosslinks[child.Item1];
                     result = result.AddChild(explicitMod.ModificationSite,
-                        explicitMod.LinkedPeptide.MakeComplexFragmentIon(labelType, precursorAdduct, child.Item2));
+                        explicitMod.LinkedPeptide.MakeComplexFragmentIon(labelType, child.Item2));
                 }
             }
 

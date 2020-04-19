@@ -626,6 +626,11 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
+            if (nodeTransition.ComplexFragmentIon.IsOrphan)
+            {
+                writer.WriteAttribute(ATTR.orphaned_crosslink_ion, true);
+            }
+
             // Order of elements matters for XSD validation
             WriteAnnotations(writer, nodeTransition.Annotations);
             writer.WriteElementString(EL.precursor_mz, SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz));
@@ -690,7 +695,7 @@ namespace pwiz.Skyline.Model.Serialization
             WriteTransitionLosses(writer, nodeTransition.Losses);
             foreach (var linkedIon in nodeTransition.ComplexFragmentIon.Children)
             {
-                WriteLinkedIon(writer, linkedIon.Key, linkedIon.Value, nodeTransition.ComplexFragmentIon.IsOrphan);
+                WriteLinkedIon(writer, linkedIon.Key, linkedIon.Value);
             }
 
             if (nodeTransition.HasLibInfo)
@@ -752,10 +757,14 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteEndElement();
         }
 
-        private void WriteLinkedIon(XmlWriter writer, ModificationSite modificationSite, ComplexFragmentIon complexFragmentIon, bool isOrphan)
+        private void WriteLinkedIon(XmlWriter writer, ModificationSite modificationSite, ComplexFragmentIon complexFragmentIon)
         {
             writer.WriteStartElement(EL.linked_fragment_ion);
-            writer.WriteAttribute(ATTR.fragment_type, complexFragmentIon.Transition.IonType);
+            if (!complexFragmentIon.IsOrphan)
+            {
+                // blank fragment type means orphaned fragment ion
+                writer.WriteAttribute(ATTR.fragment_type, complexFragmentIon.Transition.IonType);
+            }
             if (complexFragmentIon.Transition.IonType != IonType.precursor)
             {
                 writer.WriteAttribute(ATTR.fragment_ordinal, complexFragmentIon.Transition.Ordinal);
@@ -763,13 +772,9 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttribute(ATTR.index_aa, modificationSite.IndexAa);
             writer.WriteAttribute(ATTR.modification_name, modificationSite.ModName);
             WriteTransitionLosses(writer, complexFragmentIon.TransitionLosses);
-            if (isOrphan)
-            {
-                writer.WriteAttribute(ATTR.orphan, true);
-            }
             foreach (var child in complexFragmentIon.Children)
             {
-                WriteLinkedIon(writer, child.Key, child.Value, complexFragmentIon.IsOrphan);
+                WriteLinkedIon(writer, child.Key, child.Value);
             }
             writer.WriteEndElement();
         }
