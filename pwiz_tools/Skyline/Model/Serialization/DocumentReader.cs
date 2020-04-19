@@ -246,6 +246,9 @@ namespace pwiz.Skyline.Model.Serialization
             public Adduct ProductAdduct { get; private set; }
             public int? DecoyMassShift { get; private set; }
             public TransitionLosses Losses { get; private set; }
+
+            public List<KeyValuePair<ModificationSite, ComplexFragmentIonName>> LinkedFragmentIons { get; private set; }
+            public bool LinkedIonIsOrphan { get; private set; }
             public Annotations Annotations { get; private set; }
             public TransitionLibInfo LibInfo { get; private set; }
             public Results<TransitionChromInfo> Results { get; private set; }
@@ -287,6 +290,7 @@ namespace pwiz.Skyline.Model.Serialization
             public void ReadXmlElements(XmlReader reader, out double? declaredProductMz)
             {
                 declaredProductMz = null;
+                LinkedFragmentIons = new List<KeyValuePair<ModificationSite, ComplexFragmentIonName>>();
                 if (reader.IsEmptyElement)
                 {
                     reader.Read();
@@ -299,6 +303,15 @@ namespace pwiz.Skyline.Model.Serialization
                     {  // The order of these elements may depend on the version of the file being read
                         if (reader.IsStartElement(EL.losses))
                             Losses = ReadTransitionLosses(reader);
+                        else if (reader.IsStartElement(EL.linked_fragment_ion))
+                        {
+                            bool isOrphan;
+                            LinkedFragmentIons.Add(ReadLinkedFragmentIon(reader, out isOrphan));
+                            if (isOrphan)
+                            {
+                                LinkedIonIsOrphan = true;
+                            }
+                        }
                         else if (reader.IsStartElement(EL.transition_lib_info))
                             LibInfo = ReadTransitionLibInfo(reader);
                         else if (reader.IsStartElement(EL.transition_results) || reader.IsStartElement(EL.results_data))
@@ -355,6 +368,51 @@ namespace pwiz.Skyline.Model.Serialization
                     return new TransitionLosses(listLosses, massType);
                 }
                 return null;
+            }
+
+            private KeyValuePair<ModificationSite, ComplexFragmentIonName> ReadLinkedFragmentIon(XmlReader reader, out bool parentIsOrphan)
+            {
+                var linkedIon = new ComplexFragmentIonName(reader.GetEnumAttribute(ATTR.fragment_type, IonType.custom),
+                    reader.GetIntAttribute(ATTR.fragment_ordinal));
+                var modificationSite = new ModificationSite(reader.GetIntAttribute(ATTR.index_aa),
+                    reader.GetAttribute(ATTR.modification_name));
+                parentIsOrphan = reader.GetBoolAttribute(ATTR.orphan);
+                bool empty = reader.IsEmptyElement;
+                reader.Read();
+                if (!empty)
+                {
+                    while (reader.IsStartElement())
+                    {
+                        if (reader.IsStartElement(EL.losses))
+                        {
+                            var losses = ReadTransitionLosses(reader);
+                            if (losses != null)
+                            {
+                                foreach (var loss in losses.Losses)
+                                {
+                                    // TODO
+                                }
+                            }
+                        }
+                        else if (reader.IsStartElement(EL.linked_fragment_ion))
+                        {
+                            bool isOrphan;
+                            var child = ReadLinkedFragmentIon(reader, out isOrphan);
+                            if (isOrphan)
+                            {
+                                if (linkedIon.Children.Count != 0)
+                                {
+                                    throw new InvalidOperationException();
+                                }
+                                linkedIon = ComplexFragmentIonName.ORPHAN;
+                            }
+                            linkedIon = linkedIon.AddChild(child.Key, child.Value);
+                        }
+                    }
+                    reader.ReadEndElement();
+                }
+
+                return new KeyValuePair<ModificationSite, ComplexFragmentIonName>(modificationSite, linkedIon);
             }
 
             private static TransitionLibInfo ReadTransitionLibInfo(XmlReader reader)
@@ -1263,7 +1321,6 @@ namespace pwiz.Skyline.Model.Serialization
 
                 // No heavy transition support in v0.1, and no full-scan filtering
                 var massH = Settings.GetFragmentMass(null, mods, transition, null);
-
                 var node = new TransitionDocNode(transition, info.Losses, massH, TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY);
                 curList.Add(node);
                 ValidateSerializedVsCalculatedProductMz(declaredProductMz, node); // Sanity check
@@ -1417,9 +1474,31 @@ namespace pwiz.Skyline.Model.Serialization
 
             if (group.DecoyMassShift.HasValue && !info.DecoyMassShift.HasValue)
                 throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
-            var node = new TransitionDocNode(transition, info.Annotations, losses,
-                mass, new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, info.LibInfo, info.Quantitative), info.ExplicitValues, info.Results);
-            ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
+            var quantInfo = new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, info.LibInfo, info.Quantitative);
+            TransitionDocNode node;
+            if (info.LinkedFragmentIons.Any())
+            {
+                ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, info.Losses, info.LinkedIonIsOrphan);
+                var crosslinks = mods.Crosslinks.ToDictionary(mod => mod.ModificationSite);
+                foreach (var linkedIon in info.LinkedFragmentIons)
+                {
+                    var crosslinkMod = crosslinks[linkedIon.Key];
+                    complexFragmentIon = complexFragmentIon.AddChild(linkedIon.Key,
+                        crosslinkMod.LinkedPeptide.MakeComplexFragmentIon(group.LabelType, group.PrecursorAdduct,
+                            linkedIon.Value));
+                }
+
+                node = complexFragmentIon.MakeTransitionDocNode(Settings, mods, info.Annotations, quantInfo,
+                    info.ExplicitValues, info.Results);
+            }
+            else
+            {
+                node = new TransitionDocNode(transition, info.Annotations, losses,
+                    mass, quantInfo, info.ExplicitValues, info.Results);
+                // TODO: move this out of else clause
+                ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
+            }
+
             return node;
         }
 

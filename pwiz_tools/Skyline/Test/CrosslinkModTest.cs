@@ -111,7 +111,7 @@ namespace pwiz.SkylineTest
                 mainTransitionGroupDocNode.IsotopeDist,
                 null,
                 null,
-                true).Select(transition => transition.Transition.GetComplexFragmentIonName()).ToList();
+                true).Select(transition => transition.ComplexFragmentIon.GetName()).ToList();
             var modSite = new ModificationSite(0, modName);
             var expectedFragmentIons = new[]
             {
@@ -178,7 +178,7 @@ namespace pwiz.SkylineTest
                 explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
             var choices = transitionGroupDocNode.GetPrecursorChoices(srmSettings, explicitModsWithCrosslink, true)
                 .Cast<TransitionDocNode>().ToArray();
-            var complexFragmentIons = choices.Select(transition => transition.Transition.GetComplexFragmentIonName()).ToArray();
+            var complexFragmentIons = choices.Select(transition => transition.ComplexFragmentIon.GetName()).ToArray();
 
             Assert.AreNotEqual(0, complexFragmentIons.Length);
         }
@@ -190,14 +190,22 @@ namespace pwiz.SkylineTest
                 .ChangeCrosslinkerSettings(CrosslinkerSettings.EMPTY);
             settings = settings.ChangePeptideSettings(settings.PeptideSettings.ChangeModifications(
                 settings.PeptideSettings.Modifications.ChangeStaticModifications(new[] {crosslinkerDef})));
-            var mainPeptide = new Peptide("MERCURY");
+            settings = settings.ChangeTransitionSettings(settings.TransitionSettings.ChangeFilter(
+                settings.TransitionSettings.Filter
+                    .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_1.Name)
+                    .ChangeFragmentRangeLastName(@"last ion")
+                    .ChangePeptideIonTypes(new[] { IonType.precursor, IonType.y, IonType.b })
+            )); var mainPeptide = new Peptide("MERCURY");
             var transitionGroup = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
             var linkedPeptide = new LinkedPeptide(new Peptide("ARSENIC"), 2, null);
             var crosslinkMod = new ExplicitMod(3, crosslinkerDef).ChangeLinkedPeptide(linkedPeptide);
             var explicitModsWithCrosslink = new ExplicitMods(mainPeptide, new[]{crosslinkMod}, new TypedExplicitModifications[0]);
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings,
-                explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+                explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, true);
+            
             var peptideDocNode = new PeptideDocNode(mainPeptide, settings, explicitModsWithCrosslink, null, ExplicitRetentionTimeInfo.EMPTY, new []{transitionGroupDocNode}, false);
+            peptideDocNode = peptideDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL, true);
+            Assert.AreNotEqual(0, peptideDocNode.TransitionCount);
             var peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", null, new []{peptideDocNode});
             var srmDocument = (SrmDocument) new SrmDocument(settings).ChangeChildren(new[] {peptideGroupDocNode});
             AssertEx.Serializable(srmDocument);

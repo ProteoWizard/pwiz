@@ -145,6 +145,15 @@ message SkylineDocumentProto {
 	message TransitionData {
 		repeated Transition transitions = 1;
 	}
+
+	message ComplexIon {
+		IonType ionType = 1;
+		int32 ordinal = 2;
+		int32 modificationIndex = 3;
+		string modificationName = 4;
+		repeated ComplexIon children = 5;
+		repeated TransitionLoss losses = 6;
+	}
 }
 
 message LibraryKeyProto
@@ -165,3 +174,4 @@ message LibraryKeyProto
 	double precursorMz = 9;
 	double retentionTime = 10;
 }
+

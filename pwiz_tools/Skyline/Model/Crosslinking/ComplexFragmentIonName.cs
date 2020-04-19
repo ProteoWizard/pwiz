@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using pwiz.Common.Collections;
@@ -16,7 +17,8 @@ namespace pwiz.Skyline.Model.Crosslinking
             IonType = IonType.precursor,
             IsOrphan = true,
         };
-        public static readonly ComplexFragmentIonName PRECURSOR 
+
+        public static readonly ComplexFragmentIonName PRECURSOR
             = new ComplexFragmentIonName(IonType.precursor, 0);
 
         public ComplexFragmentIonName(IonType ionType, int ordinal) : this()
@@ -43,7 +45,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         private static ImmutableList<Tuple<ModificationSite, ComplexFragmentIonName>> ToChildList(
             IEnumerable<Tuple<ModificationSite, ComplexFragmentIonName>> children)
         {
-            return ImmutableList.ValueOf(children.OrderBy(tuple=>tuple.Item1));
+            return ImmutableList.ValueOf(children.OrderBy(tuple => tuple.Item1));
         }
 
         public ComplexFragmentIonName AddChild(ModificationSite modificationSite, ComplexFragmentIonName child)
@@ -67,10 +69,12 @@ namespace pwiz.Skyline.Model.Crosslinking
                 throw new InvalidOperationException();
             }
 
-            return ChangeProp(ImClone(this), im =>
-            {
-                im.Losses = ImmutableList.ValueOf(im.Losses.Append(Tuple.Create(modificationSite, loss)).OrderBy(tuple=>tuple));
-            });
+            return ChangeProp(ImClone(this),
+                im =>
+                {
+                    im.Losses = ImmutableList.ValueOf(im.Losses.Append(Tuple.Create(modificationSite, loss))
+                        .OrderBy(tuple => tuple));
+                });
         }
 
         protected bool Equals(ComplexFragmentIonName other)
@@ -112,10 +116,21 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public override string ToString()
         {
+            return ToString(CultureInfo.CurrentCulture, false);
+        }
+
+        public string ToPersistedString()
+        {
+            return ToString(CultureInfo.InvariantCulture, true);
+        }
+
+        private string ToString(CultureInfo culture, bool quoteNames)
+        {
             if (IsOrphan && Children.Count == 0)
             {
                 return @"-";
             }
+
             StringBuilder stringBuilder = new StringBuilder();
             if (!IsOrphan)
             {
@@ -181,11 +196,12 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     offset = Transition.OrdinalToOffset(IonType, Ordinal, transitionGroup.Peptide.Length);
                 }
+
                 var transition = new Transition(transitionGroup, IonType, offset, 0, Adduct.SINGLY_PROTONATED);
                 fragmentIon = new ComplexFragmentIon(transition, null);
             }
 
-            var crosslinks = explicitMods.Crosslinks.ToDictionary(mod=>mod.ModificationSite);
+            var crosslinks = explicitMods.Crosslinks.ToDictionary(mod => mod.ModificationSite);
             // TODO: losses
             foreach (var child in Children)
             {
@@ -215,5 +231,231 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             return fragmentIon;
         }
+
+
+#if false
+        public static ComplexFragmentIonName Parse(string source)
+        {
+            using (var tokens = Tokenize(source.GetEnumerator()).GetEnumerator())
+            {
+                return Parse(tokens);
+            }
+        }
+        private static ComplexFragmentIonName Parse(IEnumerator<string> tokens)
+        {
+            var current = ORPHAN;
+            if (tokens.Current != @"{")
+            {
+                if (char.IsDigit(tokens.Current[tokens.Current.Length - 1]))
+                {
+                    current = new ComplexFragmentIonName(TypeSafeEnum.Parse<IonType>(tokens.Current.Substring(0, 1)),
+                        int.Parse(tokens.Current.Substring(1)));
+                }
+                else if (tokens.Current == IonType.precursor.ToString())
+                {
+                    current = PRECURSOR;
+                }
+            }
+
+            while (tokens.MoveNext())
+            {
+                if (tokens.Current == @"{")
+                {
+                    if (!tokens.MoveNext())
+                    {
+                        throw new FormatException();
+                    }
+
+                    ModificationSite currentSite = null;
+                    if (char.IsDigit(tokens.Current[0]))
+                    {
+                        int aaIndex = int.Parse(tokens.Current);
+                        if (!tokens.MoveNext())
+                        {
+                            throw new FormatException();
+                        }
+
+                        if (tokens.Current == @":")
+                        {
+                            if (!tokens.MoveNext())
+                            {
+                                throw new FormatException();
+                            }
+                            currentSite = new ModificationSite(aaIndex, UnquoteString(tokens.Current));
+                            if (!tokens.MoveNext())
+                            {
+                                throw new FormatException();
+                            }
+                        }
+                        else
+                        {
+                            currentSite = new ModificationSite(aaIndex, null);
+                        }
+                    }
+
+                    var child = Parse(tokens);
+                    current = current.AddChild()
+                }
+            }
+            var stack = new Stack<Tuple<ModificationSite, ComplexFragmentIonName>>();
+            ComplexFragmentIonName current = ComplexFragmentIonName.ORPHAN;
+            ModificationSite currentSite = null;
+            using (var tokens = Tokenize(input.GetEnumerator()).GetEnumerator())
+            {
+                string nextToken = null;
+                while (true)
+                {
+                    if (nextToken == null)
+                    {
+                        if (!tokens.MoveNext())
+                        {
+                            break;
+                        }
+
+                        nextToken = tokens.Current;
+                    }
+
+                    if (nextToken == null || nextToken.Length != 0)
+                    {
+                        throw new InvalidOperationException();
+                    }
+                    if (char.IsDigit(nextToken[0]))
+                    {
+                        if (currentSite != null)
+                        {
+                            throw new FormatException();
+                        }
+
+                        currentSite = new ModificationSite(int.Parse(tokens.Current), null);
+                        if (!tokens.MoveNext() || tokens.Current != @":")
+                        {
+                            throw new FormatException();
+                        }
+
+                        if (tokens.Current == @":")
+                        {
+                            if (!tokens.MoveNext())
+                            {
+                                throw new FormatException();
+                            }
+                            currentSite = new ModificationSite(currentSite.AaIndex, tokens.Current);
+                            if (!tokens.MoveNext())
+                            {
+                                throw new FormatException();
+                            }
+                        }
+                        nextToken = tokens.Current;
+                    }
+                    if (nextToken == "{")
+                    {
+                        stack.Push(Tuple.Create(currentSite, current));
+                        currentSite = null;
+                        current = ORPHAN;
+                        continue;
+                    }
+
+                    if (!current.IsOrphan || current.Children.Count != 0)
+                    {
+                        throw new FormatException();
+                    }
+
+                    current = ParseSimpeIonType(nextToken);
+                }
+            }
+        }
+
+        static private ComplexFragmentIonName ParseSimpeIonType(string token)
+        {
+            if (token == IonType.precursor.ToString())
+            {
+                return new ComplexFragmentIonName(IonType.precursor, 0);
+            }
+
+            int ordinal = int.Parse(token.Substring(1));
+            return new ComplexFragmentIonName(TypeSafeEnum.Parse<IonType>(token), ordinal);
+        }
+
+        [SuppressMessage("ReSharper", "LocalizableElement")]
+        private static string UnquoteString(string token)
+        {
+            if (token.Length > 2 && token[0] == token[token.Length - 1])
+            {
+                return token.Substring(1, token.Length - 2).Replace("\"\"", "\"");
+            }
+
+            return token;
+        }
+
+        private static IEnumerable<string> Tokenize(IEnumerator<char> input)
+        {
+            StringBuilder currentToken = new StringBuilder();
+            bool inQuote = false;
+            while (input.MoveNext())
+            {
+                char ch = input.Current;
+                if (inQuote)
+                {
+                    currentToken.Append(ch);
+                    if (ch == '"')
+                    {
+                        inQuote = false;
+                    }
+                    continue;
+                }
+
+                if (ch == '"')
+                {
+                    if (currentToken.Length > 0)
+                    {
+                        if (currentToken[0] != '"')
+                        {
+                            yield return currentToken.ToString();
+                            currentToken.Clear();
+                        }
+                    }
+
+                    currentToken.Append(ch);
+                    inQuote = true;
+                    continue;
+                }
+
+                if (char.IsLetterOrDigit(ch))
+                {
+                    if (currentToken.Length > 0)
+                    {
+                        if (!char.IsLetterOrDigit(currentToken[0]))
+                        {
+                            yield return currentToken.ToString();
+                            currentToken.Clear();
+                        }
+                    }
+
+                    currentToken.Append(ch);
+                    continue;
+                }
+
+                if (currentToken.Length > 0)
+                {
+                    yield return currentToken.ToString();
+                    currentToken.Clear();
+                }
+
+                if (!char.IsWhiteSpace(ch))
+                {
+                    yield return ch.ToString();
+                }
+            }
+
+            if (inQuote)
+            {
+                throw new FormatException();
+            }
+
+            if (currentToken.Length > 0)
+            {
+                yield return currentToken.ToString();
+            }
+        }
+#endif
     }
 }

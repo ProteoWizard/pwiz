@@ -4,18 +4,18 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class ModificationSite : IComparable<ModificationSite>
     {
-        public ModificationSite(int aaIndex, string modName)
+        public ModificationSite(int indexAa, string modName)
         {
-            AaIndex = aaIndex;
+            IndexAa = indexAa;
             ModName = modName;
         }
 
-        public int AaIndex { get; private set; }
+        public int IndexAa { get; private set; }
         public string ModName { get; private set; }
 
         protected bool Equals(ModificationSite other)
         {
-            return AaIndex == other.AaIndex && ModName == other.ModName;
+            return IndexAa == other.IndexAa && ModName == other.ModName;
         }
 
         public override bool Equals(object obj)
@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             unchecked
             {
-                return (AaIndex * 397) ^ (ModName != null ? ModName.GetHashCode() : 0);
+                return (IndexAa * 397) ^ (ModName != null ? ModName.GetHashCode() : 0);
             }
         }
 
@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 return 1;
             }
 
-            int result = AaIndex.CompareTo(other.AaIndex);
+            int result = IndexAa.CompareTo(other.IndexAa);
             if (result == 0)
             {
                 result = StringComparer.Ordinal.Compare(ModName, other.ModName);
@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public override string ToString()
         {
-            return (AaIndex + 1) + @":" + ModName;
+            return (IndexAa + 1) + @":" + ModName;
         }
     }
 }

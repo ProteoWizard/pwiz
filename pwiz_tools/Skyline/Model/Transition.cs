@@ -726,8 +726,7 @@ namespace pwiz.Skyline.Model
                 obj.CleavageOffset == CleavageOffset &&
                 obj.MassIndex == MassIndex &&
                 Equals(obj.Adduct, Adduct) && 
-                obj.DecoyMassShift.Equals(DecoyMassShift) &&
-                Equals(ComplexFragmentIonName, obj.ComplexFragmentIonName);
+                obj.DecoyMassShift.Equals(DecoyMassShift);
             return equal; // For debugging convenience
         }
 
@@ -750,7 +749,6 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ Adduct.GetHashCode();
                 result = (result*397) ^ (DecoyMassShift.HasValue ? DecoyMassShift.Value : 0);
                 result = (result*397) ^ (CustomIon != null ? CustomIon.GetHashCode() : 0);
-                result = (result * 397) ^ (ComplexFragmentIonName != null ? ComplexFragmentIonName.GetHashCode() : 0);
                 return result;
             }
         }
@@ -778,10 +776,6 @@ namespace pwiz.Skyline.Model
                 return text;
             }
 
-            if (ComplexFragmentIonName != null)
-            {
-                return ComplexFragmentIonName + GetChargeIndicator(Adduct);
-            }
             return string.Format(@"{0} - {1}{2}{3}{4}",
                                  AA,
                                  IonType.ToString().ToLowerInvariant(),
@@ -791,24 +785,6 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion // object overrides
-
-        public ComplexFragmentIonName ComplexFragmentIonName { get; private set; }
-
-        public ComplexFragmentIonName GetComplexFragmentIonName()
-        {
-            if (ComplexFragmentIonName != null)
-            {
-                return ComplexFragmentIonName;
-            }
-            return new ComplexFragmentIonName(IonType, Ordinal);
-        }
-
-        public Transition ChangeComplexFragmentIonName(ComplexFragmentIonName complexFragmentIonName)
-        {
-            var result = (Transition) Copy();
-            result.ComplexFragmentIonName = complexFragmentIonName;
-            return result;
-        }
     }
 
     public sealed class TransitionLossKey
@@ -818,6 +794,7 @@ namespace pwiz.Skyline.Model
         {
             Transition = transition.Transition;
             Losses = losses;
+            ComplexFragmentIonName = transition.ComplexFragmentIon.GetName();
             if (Transition.IsCustom())
             {
                 if (!string.IsNullOrEmpty(transition.PrimaryCustomIonEquivalenceKey))
@@ -838,12 +815,14 @@ namespace pwiz.Skyline.Model
         public Transition Transition { get; private set; }
         public TransitionLosses Losses { get; private set; }
         public string CustomIonEquivalenceTestValue { get; private set;  }
+        public ComplexFragmentIonName ComplexFragmentIonName { get; private set; }
 
         public bool Equivalent(TransitionLossKey other)
         {
             return Equals(CustomIonEquivalenceTestValue, other.CustomIonEquivalenceTestValue) &&
                 other.Transition.Equivalent(Transition) &&
-                Equals(other.Losses, Losses);
+                Equals(other.Losses, Losses) &&
+                Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
         }
 
         #region object overrides

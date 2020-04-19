@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using NHibernate.Util;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -175,9 +176,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             Transition tran = nodeTran.Transition;
             string labelPrefix;
             const string labelPrefixSpacer = " - ";
-            if (null != tran.ComplexFragmentIonName)
+            if (nodeTran.ComplexFragmentIon.Children.Count != 0)
             {
-                labelPrefix = @"[" + tran.ComplexFragmentIonName + @"] - ";
+                labelPrefix = @"[" + nodeTran.ComplexFragmentIon + @"] - ";
             }
             else if (tran.IsPrecursor())
             {

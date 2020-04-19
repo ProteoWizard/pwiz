@@ -1076,8 +1076,17 @@ namespace pwiz.Skyline.Model
                         // Avoid overwriting valid transition lib info before the libraries are loaded or for decoys
                         if (libInfo != null && quantInfo.LibInfo == null && (IsDecoy || !settingsNew.PeptideSettings.Libraries.IsLoaded))
                             quantInfo = quantInfo.ChangeLibInfo(nodeTransition.LibInfo);
-                        var nodeNew = new TransitionDocNode(tran, annotations, losses,
-                            massH, quantInfo, explicitValues, results);
+                        TransitionDocNode nodeNew;
+                        if (nodeTransition.ComplexFragmentIon.Children.Count > 0)
+                        {
+                            nodeNew = nodeTransition.ComplexFragmentIon.MakeTransitionDocNode(settingsNew, mods,
+                                nodeTransition.Annotations, quantInfo, explicitValues, results);
+                        }
+                        else
+                        {
+                            nodeNew = new TransitionDocNode(tran, annotations, losses,
+                                massH, quantInfo, explicitValues, results);
+                        }
 
                         Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
                         if (settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeNew.Mz, precursorMz))
@@ -1123,14 +1132,38 @@ namespace pwiz.Skyline.Model
                 return simpleTransitions;
             }
 
-            var simpleFragmentIons = simpleTransitions
-                .Select(transition => new ComplexFragmentIon(transition.Transition, transition.Losses))
-                .Append(ComplexFragmentIon.NewOrphanFragmentIon(TransitionGroup, mods));
-                
-            var complexFragmentIons = LinkedPeptide.PermuteComplexFragmentIons(mods, settings, settings.PeptideSettings.Modifications.MaxNeutralLosses, simpleFragmentIons);
+            return GetComplexTransitions(settings, mods, simpleTransitions);
+        }
 
-            return complexFragmentIons.Select(complexFragmentIon =>
-                complexFragmentIon.MakeTransitionDocNode(settings, mods));
+        public IEnumerable<TransitionDocNode> GetComplexTransitions(SrmSettings settings, ExplicitMods explicitMods,
+            IEnumerable<TransitionDocNode> simpleTransitions)
+        {
+            var instrumentSettings = settings.TransitionSettings.Instrument;
+            var indexAas = explicitMods.Crosslinks.Select(mod => mod.ModificationSite.IndexAa).Distinct().ToList();
+            var simpleFragmentIons = new List<ComplexFragmentIon>();
+            simpleFragmentIons.Add(ComplexFragmentIon.NewOrphanFragmentIon(TransitionGroup, explicitMods));
+            foreach (var simpleTransition in simpleTransitions)
+            {
+                var simpleFragmentIon = simpleTransition.ComplexFragmentIon;
+                if (!indexAas.Any(site => simpleFragmentIon.IncludesAaIndex(site)))
+                {
+                    yield return simpleTransition;
+                }
+                else
+                {
+                    simpleFragmentIons.Add(simpleFragmentIon);
+                }
+            }
+
+            foreach (var complexFragmentIon in LinkedPeptide.PermuteComplexFragmentIons(explicitMods, settings,
+                settings.PeptideSettings.Modifications.MaxNeutralLosses, simpleFragmentIons))
+            {
+                var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(settings, explicitMods);
+                if (instrumentSettings.IsMeasurable(complexTransitionDocNode.Mz, PrecursorMz))
+                {
+                    yield return complexTransitionDocNode;
+                }
+            }
         }
 
         public DocNode EnsureChildren(PeptideDocNode parent, ExplicitMods mods, SrmSettings settings)

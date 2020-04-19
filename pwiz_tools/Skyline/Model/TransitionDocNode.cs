@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -52,20 +53,26 @@ namespace pwiz.Skyline.Model
                                  TransitionQuantInfo transitionQuantInfo,
                                  ExplicitTransitionValues explicitTransitionValues,
                                  Results<TransitionChromInfo> results)
-            : base(id, annotations)
+            : this(new ComplexFragmentIon(id, losses), annotations, losses == null ? mass : mass - losses.Mass, transitionQuantInfo, explicitTransitionValues, results)
         {
-            Losses = losses;
-            if (losses != null)
-                mass -= losses.Mass;
-            Mz = id.IsCustom() ?
-                  new SignedMz(id.Adduct.MzFromNeutralMass(mass), id.IsNegative()) : 
-                  new SignedMz(SequenceMassCalc.GetMZ(mass, id.Adduct) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift), id.IsNegative());
+        }
+
+        public TransitionDocNode(ComplexFragmentIon complexFragmentIon, Annotations annotations, TypedMass mass,
+            TransitionQuantInfo transitionQuantInfo,
+            ExplicitTransitionValues explicitTransitionValues,
+            Results<TransitionChromInfo> results) : base(complexFragmentIon.Transition, annotations)
+        {
+            ComplexFragmentIon = complexFragmentIon;
+            Mz = Transition.IsCustom() ?
+                new SignedMz(Transition.Adduct.MzFromNeutralMass(mass), Transition.IsNegative()) :
+                new SignedMz(SequenceMassCalc.GetMZ(mass, Transition.Adduct) + SequenceMassCalc.GetPeptideInterval(Transition.DecoyMassShift), Transition.IsNegative());
             MzMassType = mass.MassType;
             IsotopeDistInfo = transitionQuantInfo.IsotopeDistInfo;
             LibInfo = transitionQuantInfo.LibInfo;
             Results = results;
             ExplicitQuantitative = transitionQuantInfo.Quantititative;
             ExplicitValues = explicitTransitionValues ?? ExplicitTransitionValues.EMPTY;
+
         }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.transition; } }
@@ -74,6 +81,8 @@ namespace pwiz.Skyline.Model
 
         [TrackChildren(ignoreName:true, defaultValues:typeof(DefaultValuesNull))]
         public CustomIon CustomIon { get { return Transition.CustomIon; } }
+
+        public ComplexFragmentIon ComplexFragmentIon { get; private set; }
 
         [TrackChildren]
         public ExplicitTransitionValues ExplicitValues { get; private set; }
@@ -97,7 +106,10 @@ namespace pwiz.Skyline.Model
 
         public bool IsDecoy { get { return Transition.DecoyMassShift.HasValue; } }
 
-        public TransitionLosses Losses { get; private set; }
+        public TransitionLosses Losses
+        {
+            get { return ComplexFragmentIon.TransitionLosses; }
+        }
 
         public bool HasLoss { get { return Losses != null; } }
 

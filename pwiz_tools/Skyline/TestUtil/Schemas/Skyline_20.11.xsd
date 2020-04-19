@@ -1036,6 +1036,31 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="transition_losses_type">
+    <xs:sequence>
+      <xs:element name="neutral_loss" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="modification_name" type="xs:string"/>
+          <xs:attribute name="loss_index" type="xs:positiveInteger"/>
+          <xs:attribute name="formula" type="xs:string"/>
+          <xs:attribute name="massdiff_monoisotopic" type="xs:double"/>
+          <xs:attribute name="massdiff_average" type="xs:double"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="linked_fragment_ion_type">
+    <xs:sequence>
+      <xs:element name="losses" type="transition_losses_type" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="linked_fragment_ion" type="linked_fragment_ion_type" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="fragment_type" type="fragment_type"/>
+    <xs:attribute name="fragment_ordinal" />
+    <xs:attribute name="index_aa" type="xs:nonNegativeInteger" use="required"/>
+    <xs:attribute name="modification_name" type="xs:string" use="required"/>
+    <xs:attribute name="orphan" type="xs:boolean" />
+  </xs:complexType>
+
   <!-- ================================================================== -->
   <!-- BEGIN schema elements for TransitionGroupDocNode -->
   <!-- ================================================================== -->
@@ -1274,21 +1299,9 @@
     <xs:complexContent>
       <xs:extension base="general_transition_type">
         <xs:sequence>
-          <xs:element name="losses" minOccurs="0" maxOccurs="1">
-            <xs:complexType>
-              <xs:sequence>
-                <xs:element name="neutral_loss" minOccurs="0" maxOccurs="unbounded">
-                  <xs:complexType>
-                    <xs:attribute name="modification_name" type="xs:string"/>
-                    <xs:attribute name="loss_index" type="xs:positiveInteger"/>
-                    <xs:attribute name="formula" type="xs:string"/>
-                    <xs:attribute name="massdiff_monoisotopic" type="xs:double"/>
-                    <xs:attribute name="massdiff_average" type="xs:double"/>
-                  </xs:complexType>
-                </xs:element>
-              </xs:sequence>
-            </xs:complexType>
+          <xs:element name="losses" minOccurs="0" maxOccurs="1" type="transition_losses_type">
           </xs:element>
+          <xs:element name="linked_fragment_ion" minOccurs="0" maxOccurs="unbounded" type="linked_fragment_ion_type"/>
           <xs:element name="transition_lib_info" minOccurs="0" maxOccurs="1">
             <xs:complexType>
               <xs:attribute name="rank" type="xs:positiveInteger" use="required"/>

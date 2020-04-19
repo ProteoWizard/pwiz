@@ -688,6 +688,10 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteElementString(EL.declustering_potential, dp.Value);
             }
             WriteTransitionLosses(writer, nodeTransition.Losses);
+            foreach (var linkedIon in nodeTransition.ComplexFragmentIon.Children)
+            {
+                WriteLinkedIon(writer, linkedIon.Key, linkedIon.Value, nodeTransition.ComplexFragmentIon.IsOrphan);
+            }
 
             if (nodeTransition.HasLibInfo)
             {
@@ -744,6 +748,28 @@ namespace pwiz.Skyline.Model.Serialization
                         writer.WriteAttribute(ATTR.loss_index, indexLoss);
                 }
                 writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
+        }
+
+        private void WriteLinkedIon(XmlWriter writer, ModificationSite modificationSite, ComplexFragmentIon complexFragmentIon, bool isOrphan)
+        {
+            writer.WriteStartElement(EL.linked_fragment_ion);
+            writer.WriteAttribute(ATTR.fragment_type, complexFragmentIon.Transition.IonType);
+            if (complexFragmentIon.Transition.IonType != IonType.precursor)
+            {
+                writer.WriteAttribute(ATTR.fragment_ordinal, complexFragmentIon.Transition.Ordinal);
+            }
+            writer.WriteAttribute(ATTR.index_aa, modificationSite.IndexAa);
+            writer.WriteAttribute(ATTR.modification_name, modificationSite.ModName);
+            WriteTransitionLosses(writer, complexFragmentIon.TransitionLosses);
+            if (isOrphan)
+            {
+                writer.WriteAttribute(ATTR.orphan, true);
+            }
+            foreach (var child in complexFragmentIon.Children)
+            {
+                WriteLinkedIon(writer, child.Key, child.Value, complexFragmentIon.IsOrphan);
             }
             writer.WriteEndElement();
         }

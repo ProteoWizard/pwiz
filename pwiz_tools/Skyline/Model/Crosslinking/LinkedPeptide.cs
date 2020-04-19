@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             IList<ComplexFragmentIon> linkedFragmentIons)
         {
             if (fragmentIon.IsOrphan && !fragmentIon.IsEmptyOrphan
-                || !fragmentIon.IncludesAaIndex(modificationSite.AaIndex))
+                || !fragmentIon.IncludesAaIndex(modificationSite.IndexAa))
             {
                 yield return fragmentIon;
                 yield break;
@@ -170,6 +170,36 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return result.Where(cfi => !cfi.IsEmptyOrphan);
+        }
+
+        public ComplexFragmentIon MakeComplexFragmentIon(IsotopeLabelType labelType, Adduct precursorAdduct, ComplexFragmentIonName complexFragmentIonName)
+        {
+            var transitionGroup = GetTransitionGroup(labelType, precursorAdduct);
+            Transition transition;
+            if (complexFragmentIonName.IonType == IonType.precursor)
+            {
+                transition = new Transition(transitionGroup, complexFragmentIonName.IonType, Peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED);
+            }
+            else
+            {
+                transition = new Transition(transitionGroup, complexFragmentIonName.IonType,
+                    Transition.OrdinalToOffset(complexFragmentIonName.IonType, complexFragmentIonName.Ordinal, Peptide.Length), 
+                    0, Adduct.SINGLY_PROTONATED);
+            }
+            // TODO: losses
+            var result = new ComplexFragmentIon(transition, null, complexFragmentIonName.IsOrphan);
+            if (ExplicitMods != null)
+            {
+                var crosslinks = ExplicitMods.Crosslinks.ToDictionary(explicitMod => explicitMod.ModificationSite);
+                foreach (var child in complexFragmentIonName.Children)
+                {
+                    var explicitMod = crosslinks[child.Item1];
+                    result = result.AddChild(explicitMod.ModificationSite,
+                        explicitMod.LinkedPeptide.MakeComplexFragmentIon(labelType, precursorAdduct, child.Item2));
+                }
+            }
+
+            return result;
         }
     }
 }

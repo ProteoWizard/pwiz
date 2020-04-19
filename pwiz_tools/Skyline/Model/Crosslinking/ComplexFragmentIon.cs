@@ -14,21 +14,19 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class ComplexFragmentIon : Immutable
     {
-        public ComplexFragmentIon(Transition transition, TransitionLosses transitionLosses)
+        public ComplexFragmentIon(Transition transition, TransitionLosses transitionLosses, bool isOrphan = false)
         {
             Transition = transition;
             Children = ImmutableSortedList<ModificationSite, ComplexFragmentIon>.EMPTY;
             TransitionLosses = transitionLosses;
+            IsOrphan = isOrphan;
         }
 
         public static ComplexFragmentIon NewOrphanFragmentIon(TransitionGroup transitionGroup, ExplicitMods explicitMods)
         {
             var transition = new Transition(transitionGroup, IonType.precursor,
                 transitionGroup.Peptide.Sequence.Length - 1, 0, transitionGroup.PrecursorAdduct);
-            return new ComplexFragmentIon(transition, null)
-            {
-                IsOrphan = true,
-            };
+            return new ComplexFragmentIon(transition, null, true);
         }
 
         public Transition Transition { get; private set; }
@@ -182,7 +180,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             var neutralFormula = GetNeutralFormula(settings, explicitMods);
             var productMass = GetFragmentMass(settings, neutralFormula);
-            var complexTransition = Transition;
+            var complexFragmentIon = this;
             if (Children.Count > 0)
             {
                 var name = GetName();
@@ -190,10 +188,12 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     //name = name.DisqualifyChildren();
                 }
-                complexTransition = complexTransition.ChangeComplexFragmentIonName(name);
-            }
 
-            return new TransitionDocNode(complexTransition, annotations, TransitionLosses, productMass, transitionQuantInfo, explicitTransitionValues, results);
+                complexFragmentIon = ChangeProp(ImClone(complexFragmentIon),
+                    im => im.Transition = (Transition) im.Transition.Copy());
+            }
+            // TODO: TransitonQuantInfo is probably wrong since it did not know the correct mass.
+            return new TransitionDocNode(complexFragmentIon, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
         }
 
         public static TypedMass GetFragmentMass(SrmSettings settings, MoleculeMassOffset formula)
@@ -207,8 +207,10 @@ namespace pwiz.Skyline.Model.Crosslinking
         public static MassDistribution GetMassDistribution(SrmSettings settings, Molecule molecule)
         {
             var precursorCalc = settings.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods.EMPTY);
-            return precursorCalc.GetMZDistributionFromFormula(molecule.ToString(), Adduct.EMPTY,
+            var massDistribution = precursorCalc.GetMZDistributionFromFormula(molecule.ToString(), Adduct.SINGLY_PROTONATED,
                 settings.TransitionSettings.FullScan.IsotopeAbundances ?? BioMassCalc.DEFAULT_ABUNDANCES);
+            massDistribution = massDistribution.OffsetAndDivide(-BioMassCalc.MassProton, 1);
+            return massDistribution;
         }
 
         public static MassDistribution GetMzDistribution(SrmSettings settings, MoleculeMassOffset moleculeMassOffset, Adduct adduct)
