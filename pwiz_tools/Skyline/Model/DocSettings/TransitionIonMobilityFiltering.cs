@@ -618,10 +618,12 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.charge, Target.IsProteomic ? Charge.ToString() : Charge.AdductFormula);
             if (IonMobilityInfo.IonMobility.Units != eIonMobilityUnits.none)
             {
-                writer.WriteAttributeNullable(ATTR.ion_mobility, IonMobilityInfo.IonMobility.Mobility);
+                if ((IonMobilityInfo.IonMobility.Mobility ?? 0) != 0)
+                    writer.WriteAttribute(ATTR.ion_mobility, IonMobilityInfo.IonMobility.Mobility);
                 if ((IonMobilityInfo.HighEnergyIonMobilityOffset??0) != 0)
                     writer.WriteAttribute(ATTR.high_energy_ion_mobility_offset, IonMobilityInfo.HighEnergyIonMobilityOffset);
-                writer.WriteAttributeNullable(ATTR.ccs, IonMobilityInfo.CollisionalCrossSectionSqA);
+                if ((IonMobilityInfo.CollisionalCrossSectionSqA ?? 0) != 0)
+                    writer.WriteAttribute(ATTR.ccs, IonMobilityInfo.CollisionalCrossSectionSqA);
                 writer.WriteAttributeString(ATTR.ion_mobility_units, IonMobilityInfo.IonMobility.Units.ToString());
             }
         }

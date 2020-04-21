@@ -149,7 +149,6 @@ namespace pwiz.SkylineTestFunctional
                 });
                 // Expect to be warned about multiple conformer
                 var warnDlg = ShowDialog<MessageDlg>(() => ionMobilityLibDlg1.DoPasteLibrary());
-PauseTest();
                 RunUI(() =>
                 {
                     warnDlg.OkDialog();
@@ -183,7 +182,6 @@ PauseTest();
                     // Go back to the first library we created
                     transitionSettingsDlg2.IonMobilityControl.SelectedIonMobilityLibrary= testlibName;
                 });
-PauseTest();
                 RunUI(transitionSettingsDlg2.OkDialog);
 
                 /*
@@ -221,7 +219,6 @@ PauseTest();
                 AssertEx.AreEqual(DRIFTTIME_ANELLINVK, centerIonMobilityNoHighEnergy.First().IonMobilityAndCCS.IonMobility.Mobility);
                 AssertEx.AreEqual(2 * DRIFTTIME_ANELLINVK / resolvingPower, centerIonMobilityNoHighEnergy.First().IonMobilityExtractionWindowWidth);
                 AssertEx.AreEqual(DRIFTTIME_ANELLINVK, centerIonMobilityNoHighEnergy.First().IonMobilityAndCCS.GetHighEnergyIonMobility());
-
 
                 //
                 // Test importing collisional cross sections from a spectral lib that has drift times but no high energy offset info

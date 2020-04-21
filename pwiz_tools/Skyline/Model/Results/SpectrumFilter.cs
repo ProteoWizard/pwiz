@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model.Results
             var libraryIonMobilityInfo = document.Settings.GetIonMobilities(moleculesThisPass.SelectMany(
                     node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(document.Settings, node))).ToArray(), msDataFileUri);
             var ionMobilityMax = maxObservedIonMobilityValue ?? 0;
-            var needHighEnergyOffset = IsMseData();
+            var needHighEnergyOffset = IsMseData;
 
             // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't reliably share times with any ion mobility scheme
             if (instrumentInfo != null && instrumentInfo.IonMobilityUnits != eIonMobilityUnits.none)
@@ -256,8 +256,10 @@ namespace pwiz.Skyline.Model.Results
                         }
 
                         // Get ion mobility filter for precursor
-                        var ionMobilityFilters = document.Settings.GetIonMobilityFilters(
-                            nodePep, nodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, needHighEnergyOffset);
+                        var ionMobilityFilters = _isIonMobilityFiltered ?
+                            document.Settings.GetIonMobilityFilters(nodePep, nodeGroup, null, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, 
+                                ionMobilityMax, needHighEnergyOffset) :
+                            null;
                         
                         SpectrumFilterPair filter;
                         var textId = nodePep.ModifiedTarget; // Modified Sequence for peptides, or some other string for custom ions
@@ -275,9 +277,10 @@ namespace pwiz.Skyline.Model.Results
                             filterCount += filter.AddQ3FilterValues((from TransitionDocNode nodeTran in nodeGroup.Children select nodeTran).
                                 Select(nodeTran =>
                                 {
-                                    var ionMobilityFiltersQ3 =
+                                    var ionMobilityFiltersQ3 = _isIonMobilityFiltered ?
                                         document.Settings.GetIonMobilityFilters(nodePep, nodeGroup, nodeTran, libraryIonMobilityInfo, 
-                                            _ionMobilityFunctionsProvider, ionMobilityMax, needHighEnergyOffset);
+                                            _ionMobilityFunctionsProvider, ionMobilityMax, needHighEnergyOffset) :
+                                        null;
                                     return new SpectrumFilterValues(nodeTran.Mz, ionMobilityFiltersQ3);
                                 }), calcWindowsQ3);
                         }
@@ -292,9 +295,10 @@ namespace pwiz.Skyline.Model.Results
                                                      where !nodeTran.IsMs1 select nodeTran).
                                 Select(nodeTran =>
                                 {
-                                    var ionMobilityFiltersQ3 =
+                                    var ionMobilityFiltersQ3 = _isIonMobilityFiltered ?
                                         document.Settings.GetIonMobilityFilters(nodePep, nodeGroup, nodeTran, libraryIonMobilityInfo, 
-                                            _ionMobilityFunctionsProvider, ionMobilityMax, needHighEnergyOffset);
+                                            _ionMobilityFunctionsProvider, ionMobilityMax, needHighEnergyOffset) :
+                                        null;
                                     return new SpectrumFilterValues(nodeTran.Mz, ionMobilityFiltersQ3);
                                 }), 
                                 calcWindowsQ3);
@@ -430,7 +434,7 @@ namespace pwiz.Skyline.Model.Results
             _minFilterPairsRT = double.MinValue;
             HasRangeRT = false;
             _rangeFilterPairsIM = new List<Tuple<double, double>>();
-            var isMseData = IsMseData();
+            var isMseData = IsMseData;
             if (FilterPairs != null)
             {
                 double? maxRT = null;
@@ -454,52 +458,55 @@ namespace pwiz.Skyline.Model.Results
                     HasRangeRT = true;
                 }
 
-                if (minRT.HasValue && !IsMseData()) // For MSe data, just start from the beginning lest we drop in mid-cycle
+                if (minRT.HasValue && !isMseData) // For MSe data, just start from the beginning lest we drop in mid-cycle
                     _minFilterPairsRT = minRT.Value;
 
                 // Create a sorted list of active ion mobility windows. When windows overlap, combine them into a single window.
-                foreach (var fp in FilterPairs.Where(fp=> !IonMobilityFilterSet.IsNullOrEmpty(fp.IonMobilityFilters)))
+                if (_isIonMobilityFiltered)
                 {
-                    foreach (var imFilter in fp.IonMobilityFilters.Where(f => !IonMobilityFilter.IsNullOrEmpty(f)))
+                    foreach (var fp in FilterPairs.Where(fp=> !IonMobilityFilterSet.IsNullOrEmpty(fp.IonMobilityFilters)))
                     {
-                        var halfWin = imFilter.IonMobilityExtractionWindowWidth.Value / 2;
-                        var imLow = imFilter.IonMobilityAndCCS.IonMobility.Mobility.Value - halfWin;
-                        var imHigh = imLow + imFilter.IonMobilityExtractionWindowWidth.Value;
-                        _rangeFilterPairsIM.Add(Tuple.Create(imLow, imHigh));
-                    }
-
-                    foreach (var imFilterSet in fp.Ms2ProductFilters.Select(m => m.IonMobilityFilters).Where(f => !IonMobilityFilterSet.IsNullOrEmpty(f)))
-                    {
-                        foreach (var imFilter in imFilterSet.Where(im => !IonMobilityFilter.IsNullOrEmpty(im)))
+                        foreach (var imFilter in fp.IonMobilityFilters.Where(f => !IonMobilityFilter.IsNullOrEmpty(f)))
                         {
                             var halfWin = imFilter.IonMobilityExtractionWindowWidth.Value / 2;
-                            var imLow = imFilter.IonMobilityAndCCS.IonMobility.Mobility.Value +
-                                        (isMseData ? (imFilter.HighEnergyIonMobilityOffset ?? 0) : 0) - halfWin;
+                            var imLow = imFilter.IonMobilityAndCCS.IonMobility.Mobility.Value - halfWin;
                             var imHigh = imLow + imFilter.IonMobilityExtractionWindowWidth.Value;
                             _rangeFilterPairsIM.Add(Tuple.Create(imLow, imHigh));
                         }
-                    }
-                }
-                _rangeFilterPairsIM.Sort((x, y) => x.Item1.CompareTo(y.Item1));
-                for (var i = 0; i < _rangeFilterPairsIM.Count-1;)
-                {
-                    if (_rangeFilterPairsIM[i].Item2 >= _rangeFilterPairsIM[i + 1].Item1)
-                    {
-                        // Ranges overlap, combine them
-                        _rangeFilterPairsIM[i] = Tuple.Create(_rangeFilterPairsIM[i].Item1, _rangeFilterPairsIM[i + 1].Item2);
-                        _rangeFilterPairsIM.RemoveAt(i+1);
-                    }
-                    else
-                    {
-                        i++;
-                    }
-                }
 
-                HasIonMobilityFilters = _rangeFilterPairsIM.Count > 0;
-                if (HasIonMobilityFilters)
-                {
-                    _lowEndFilterPairsIM = _rangeFilterPairsIM[0].Item1;
-                    _highEndFilterPairsIM = _rangeFilterPairsIM.Last().Item2;
+                        foreach (var imFilterSet in fp.Ms2ProductFilters.Select(m => m.IonMobilityFilters).Where(f => !IonMobilityFilterSet.IsNullOrEmpty(f)))
+                        {
+                            foreach (var imFilter in imFilterSet.Where(im => !IonMobilityFilter.IsNullOrEmpty(im)))
+                            {
+                                var halfWin = imFilter.IonMobilityExtractionWindowWidth.Value / 2;
+                                var imLow = imFilter.IonMobilityAndCCS.IonMobility.Mobility.Value +
+                                            (isMseData ? (imFilter.HighEnergyIonMobilityOffset ?? 0) : 0) - halfWin;
+                                var imHigh = imLow + imFilter.IonMobilityExtractionWindowWidth.Value;
+                                _rangeFilterPairsIM.Add(Tuple.Create(imLow, imHigh));
+                            }
+                        }
+                    }
+                    _rangeFilterPairsIM.Sort((x, y) => x.Item1.CompareTo(y.Item1));
+                    for (var i = 0; i < _rangeFilterPairsIM.Count-1;)
+                    {
+                        if (_rangeFilterPairsIM[i].Item2 >= _rangeFilterPairsIM[i + 1].Item1)
+                        {
+                            // Ranges overlap, combine them
+                            _rangeFilterPairsIM[i] = Tuple.Create(_rangeFilterPairsIM[i].Item1, _rangeFilterPairsIM[i + 1].Item2);
+                            _rangeFilterPairsIM.RemoveAt(i+1);
+                        }
+                        else
+                        {
+                            i++;
+                        }
+                    }
+                    
+                    HasIonMobilityFilters = _rangeFilterPairsIM.Count > 0;
+                    if (HasIonMobilityFilters)
+                    {
+                        _lowEndFilterPairsIM = _rangeFilterPairsIM[0].Item1;
+                        _highEndFilterPairsIM = _rangeFilterPairsIM.Last().Item2;
+                    }
                 }
             }
         }
@@ -598,10 +605,13 @@ namespace pwiz.Skyline.Model.Results
             return _indexFilterPairsIM < 0; // A value < 0 means not found in any window
         }
 
-        public bool IsMseData()
+        public bool IsMseData
         {
-            return (EnabledMsMs && _fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA &&
-                    _fullScan.IsolationScheme.IsAllIons);
+            get
+            {
+                return (EnabledMsMs && _fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA &&
+                        _fullScan.IsolationScheme.IsAllIons);
+            }
         }
 
         /*
@@ -844,11 +854,11 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                         continue;
-                    if (pasefAwareFilter.PreFilter(filterPair, isoWin, firstSpectrum, UseIonMobilityHighEnergyOffset()))
+                    if (pasefAwareFilter.PreFilter(filterPair, isoWin, firstSpectrum, UseIonMobilityHighEnergyOffset))
                         continue;
 
                     // This line does the bulk of the work of pulling chromatogram points from spectra
-                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, UseIonMobilityHighEnergyOffset());
+                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, UseIonMobilityHighEnergyOffset);
 
                     filteredSrmSpectrum = pasefAwareFilter.Filter(filteredSrmSpectrum, filterPair, isoWin);
                     if (filteredSrmSpectrum != null)
@@ -976,9 +986,9 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private bool UseIonMobilityHighEnergyOffset()
+        private bool UseIonMobilityHighEnergyOffset
         {
-            return IsMseData() && _mseLevel > 1;
+            get { return _mseLevel > 1 && IsMseData; }
         }
 
         public bool HasProductFilterPairs(double? retentionTime, IList<MsPrecursor> precursors)

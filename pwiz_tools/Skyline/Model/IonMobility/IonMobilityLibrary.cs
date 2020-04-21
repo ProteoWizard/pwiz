@@ -167,9 +167,10 @@ namespace pwiz.Skyline.Model.IonMobility
                 else
                 {
                     // Multiple conformer, or just a redundant line? Discard if this CCS+units pair is already in list
-                    if (!mobilities.Any(m => 
-                        Equals(m.CollisionalCrossSectionSqA, ionMobilityAndCcs.CollisionalCrossSectionSqA) &&
-                        Equals(m.Units, ionMobilityAndCcs.Units)))
+                    if (!mobilities.Any(m =>
+                        ((m.CollisionalCrossSectionSqA.HasValue || ionMobilityAndCcs.CollisionalCrossSectionSqA.HasValue) ?
+                            Equals(m.CollisionalCrossSectionSqA, ionMobilityAndCcs.CollisionalCrossSectionSqA) && Equals(m.Units, ionMobilityAndCcs.Units) :
+                            Equals(m.IonMobility, ionMobilityAndCcs.IonMobility))))
                     {
                         mobilities.Add(ionMobilityAndCcs);
                     }

@@ -1160,7 +1160,7 @@ namespace pwiz.SkylineTest
             var driftTimeMax = 5000;
             var driftTime = 2000;
             Assert.AreEqual(40, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
-            CheckIonMobilitySettingsBackwardCompatibility(predictorV19.Replace("100", "0"), Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
+            CheckIonMobilitySettingsBackwardCompatibility(predictorV19.Replace("100", "0")); // Contains no trained values, so resolving power isn't checked
 
             // Check using drift time predictor with only measured drift times, and no high energy drift offset
             var predictor1 =
@@ -1177,7 +1177,7 @@ namespace pwiz.SkylineTest
             Assert.IsNull(pred1.GetIonMobilityInfo(new LibKey("LMNJK", Adduct.QUINTUPLY_PROTONATED), null, true)); // Should not find a value for that peptide
 
             // Check for enforcement of valid resolving power
-            CheckIonMobilitySettingsBackwardCompatibility(predictor1.Replace("100", "0"),Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
+            CheckIonMobilitySettingsBackwardCompatibility(predictor1.Replace("100", "-1"),Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
 
             // Check using drift time predictor with only measured drift times, and a high energy scan drift time offset
             var pred2 = CheckIonMobilitySettingsBackwardCompatibility("<predict_drift_time name=\"test2\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" ccs=\"0\" high_energy_drift_time_offset=\"-1.0\"/> </predict_drift_time>");

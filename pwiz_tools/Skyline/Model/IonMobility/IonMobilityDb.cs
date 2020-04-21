@@ -188,16 +188,31 @@ namespace pwiz.Skyline.Model.IonMobility
                 }
 
                 // Add or update items that have changed from the old list
-                var newMobilitiesSet = new HashSet<DbPrecursorAndIonMobility>();
-                var newMoleculesSet = new HashSet<DbMolecule>();
-                var newPrecursorsSet = new HashSet<DbPrecursorIon>();
+                var newMobilitiesSet = new List<DbPrecursorAndIonMobility>();
+                var newMoleculesSet = new List<DbMolecule>();
+                var newPrecursorsSet = new List<DbPrecursorIon>();
                 foreach (var itemNew in newMobilities)
                 {
                     // Create a new instance, because not doing this causes a BindingSource leak
-                    newMobilitiesSet.Add(new DbPrecursorAndIonMobility(itemNew));
-                    newPrecursorsSet.Add(new DbPrecursorIon(itemNew.DbPrecursorIon));
-                    newMoleculesSet.Add(new DbMolecule(itemNew.DbPrecursorIon.DbMolecule));
+                    // Also we want to create a non-redundant set
+                    if (!newMobilitiesSet.Any(m => m.EqualsIgnoreId(itemNew)))
+                        newMobilitiesSet.Add(new DbPrecursorAndIonMobility(itemNew));
+                    if (!newPrecursorsSet.Any(m => m.EqualsIgnoreId(itemNew.DbPrecursorIon)))
+                        newPrecursorsSet.Add(new DbPrecursorIon(itemNew.DbPrecursorIon));
+                    if (!newMoleculesSet.Any(m => m.EqualsIgnoreId(itemNew.DbPrecursorIon.DbMolecule)))
+                        newMoleculesSet.Add(new DbMolecule(itemNew.DbPrecursorIon.DbMolecule));
                 }
+
+var foo = newMoleculesSet.ToArray();
+if (foo.Length > 3)
+{
+    var bar = foo[0].GetHashCode();
+    var baz = foo[1].GetHashCode();
+    Console.Write(bar == baz);
+    var biz = foo[0].Equals(foo[1]);
+    Console.Write(!biz);
+}
+
 
                 // Update the molecules table
                 using (var transaction = session.BeginTransaction())

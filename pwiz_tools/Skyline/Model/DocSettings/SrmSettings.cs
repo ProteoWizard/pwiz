@@ -1243,21 +1243,39 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public LibraryIonMobilityInfo GetIonMobilities(LibKey[] targetIons, MsDataFileUri filePath)
         {
-            // Look in ion mobility library (.imsdb) if available then spectral libs if requested
+            // Look in ion mobility library (.imsdb) if available, then fill gaps with spectral libs if requested
             var imFiltering = TransitionSettings.IonMobilityFiltering;
             if (imFiltering != null)
             {
+                var dict = new Dictionary<LibKey, IonMobilityAndCCS[]>();
                 if (imFiltering.IonMobilityLibrary != null && !imFiltering.IonMobilityLibrary.IsNone)
                 {
-                    foreach(var ion in targetIons)
-                        imFiltering.GetIonMobilityInfoFromLibrary(ion);
+                    foreach (var ion in targetIons)
+                    {
+                        var ims = imFiltering.GetIonMobilityInfoFromLibrary(ion);
+                        if (ims != null)
+                        {
+                            dict.Add(ion, ims.ToArray());
+                        }
+                    }
                 }
-                if (imFiltering.UseSpectralLibraryIonMobilityValues)
+                var map = LibKeyMap<IonMobilityAndCCS[]>.FromDictionary(dict);
+                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues)
                 {
                     var libraries = PeptideSettings.Libraries;
-                    if (libraries.TryGetSpectralLibraryIonMobilities(targetIons, filePath, out var ionMobilities))
-                        return ionMobilities;
+                    if (libraries.TryGetSpectralLibraryIonMobilities(targetIons, filePath, out var ionMobilities) && ionMobilities != null)
+                    {
+                        foreach (var im in ionMobilities.GetIonMobilityDict().Where(item => 
+                            !map.TryGetValue(item.Key, out _)))
+                        {
+                            dict.Add(im.Key, im.Value);
+                        }
+                    }
                 }
+
+                return dict.Count > 0
+                    ? new LibraryIonMobilityInfo(filePath.GetFilePath(), true, dict)
+                    : LibraryIonMobilityInfo.EMPTY;
             }
             return null;
         }

@@ -174,15 +174,15 @@ namespace pwiz.Skyline.Model.Results
             int rtCount = 0;
             double lastRT = 0;
 
-            var imRangeHelper = new IonMobilityRangeHelper(spectra, useIonMobilityHighEnergyOffset ? productFilters : null,
-                IonMobilityFilters);
-//            if (spectra.Length > 1)
-//                Console.Write(string.Empty);
-            for (int specIndex = imRangeHelper.IndexFirst; specIndex < spectra.Length; specIndex++)
+            var imRangeHelper =  IonMobilityFilterSet.IsNullOrEmpty(IonMobilityFilters) ? 
+                null : 
+                new IonMobilityRangeHelper(spectra, useIonMobilityHighEnergyOffset ? productFilters : null, IonMobilityFilters);
+            var indexFirst = imRangeHelper?.IndexFirst ?? 0;
+            for (int specIndex = indexFirst; specIndex < spectra.Length; specIndex++)
             {
                 var spectrum = spectra[specIndex];
 
-                if (imRangeHelper.IsBeyondRange(spectrum))
+                if (imRangeHelper != null && imRangeHelper.IsBeyondRange(spectrum))
                     break;
 
                 // If these are spectra from distinct retention times, average them.
@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var productFilter = productFilters[targetIndex];
                     // Ensure uncombined IM spectra (non-3-array, one IM value per scan) are within range
-                    if (spectrum.IonMobilities == null && // Non-null in 3-array format
+                    if ( spectrum.IonMobilities == null && // Non-null in 3-array format
                         !productFilter.IonMobilityFilters.ContainsIonMobility(spectrum.IonMobility, useIonMobilityHighEnergyOffset))
                     {
                         continue;
@@ -456,9 +456,6 @@ namespace pwiz.Skyline.Model.Results
 
         public IonMobilityRangeHelper(MsDataSpectrum[] spectra, SpectrumProductFilter[] productFilters, IonMobilityFilterSet imFilters)
         {
-            if (IonMobilityFilterSet.IsNullOrEmpty(imFilters))
-                return;
-
             // Identify the end of the IM range
             _isDescending = IsDescending(spectra);
             imFilters.GetIonMobilityRange(false, out var startIonMobilityValue, out var endIonMobilityValue);

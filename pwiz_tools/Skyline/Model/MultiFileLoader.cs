@@ -123,7 +123,11 @@ namespace pwiz.Skyline.Model
                         loadingThreads = Math.Max(2, processorCount / 2); // Min of 2, because you really expect more than 1
                         break;
                 }
-                loadingThreads = Math.Min(MAX_PARALLEL_LOAD_FILES, loadingThreads.Value);
+                
+                // On BSPRATT-UW3 the GC bogs down badly with too many files loading at once in tests where we don't have ServerGC
+                // That's an Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz, 3600 Mhz, 8 Core(s), 16 Logical Processor(s)
+                var maxLoadThreads = System.Runtime.GCSettings.IsServerGC ?  MAX_PARALLEL_LOAD_FILES :3;
+                loadingThreads = Math.Min(maxLoadThreads, loadingThreads.Value);
                 loadingThreads = GetBalancedThreadCount(loadingThreads.Value, fileCount);
             }
 

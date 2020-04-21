@@ -1314,12 +1314,14 @@ namespace pwiz.Skyline.Model.Lib
     {
         private readonly LibKeyMap<IonMobilityAndCCS[]> _dictLibKeyIonMobility;
 
+        public static LibraryIonMobilityInfo EMPTY = new LibraryIonMobilityInfo(String.Empty, false, new Dictionary<LibKey, IonMobilityAndCCS[]>());
+
         public LibraryIonMobilityInfo(string path, bool supportMultipleConformers, IDictionary<LibKey, IonMobilityAndCCS[]> dict) 
             : this(path, supportMultipleConformers, new LibKeyMap<IonMobilityAndCCS[]>(
                 ImmutableList.ValueOf(dict.Values), dict.Keys.Select(key=>key.LibraryKey)))
         {
-            
         }
+
         public LibraryIonMobilityInfo(string path, bool supportMultipleConformers, LibKeyMap<IonMobilityAndCCS[]> dictLibKeyIonMobility)
         {
             Name = path;
