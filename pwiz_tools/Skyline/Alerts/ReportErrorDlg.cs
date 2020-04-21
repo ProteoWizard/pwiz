@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Alerts
 
         public ReportErrorDlg(Exception e, StackTrace stackTraceExceptionCaughtAt)
         {
-            Init(e.GetType().Name, e.Message, ExceptionUtil.GetStackTraceText(e, stackTraceExceptionCaughtAt));
+            Init(e.GetType().Name, e.Message, ExceptionUtil.GetExceptionText(e, stackTraceExceptionCaughtAt));
 
             Install.InstallType installType = Install.Type;
 

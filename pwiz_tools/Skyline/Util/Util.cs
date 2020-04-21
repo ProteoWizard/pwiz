@@ -2113,30 +2113,20 @@ namespace pwiz.Skyline.Util
             return ex.Message;
         }
 
-        public static string GetStackTraceText(Exception exception, StackTrace stackTraceExceptionCaughtAt = null, bool showMessage = true)
+        /// <summary>
+        /// Returns text to be used when reporting an unhandled exception to the Skyline.ms.
+        /// </summary>
+        public static string GetExceptionText(Exception exception, StackTrace stackTraceExceptionCaughtAt)
         {
-            StringBuilder stackTrace = new StringBuilder();
-            if (showMessage)
-                stackTrace.AppendLine(@"Stack trace:").AppendLine();
-
-            stackTrace.AppendLine(exception.StackTrace).AppendLine();
-
-            for (var x = exception.InnerException; x != null; x = x.InnerException)
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine(exception.ToString());
+            if (stackTraceExceptionCaughtAt != null)
             {
-                if (ReferenceEquals(x, exception.InnerException))
-                    stackTrace.AppendLine(@"Inner exceptions:");
-                else
-                    stackTrace.AppendLine(@"---------------------------------------------------------------");
-                stackTrace.Append(@"Exception type: ").Append(x.GetType().FullName).AppendLine();
-                stackTrace.Append(@"Error message: ").AppendLine(x.Message);
-                stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
+                stringBuilder.AppendLine(@"Exception caught at: ");
+                stringBuilder.AppendLine(stackTraceExceptionCaughtAt.ToString());
             }
-            if (null != stackTraceExceptionCaughtAt)
-            {
-                stackTrace.AppendLine(@"Exception caught at: ");
-                stackTrace.AppendLine(stackTraceExceptionCaughtAt.ToString());
-            }
-            return stackTrace.ToString();
+
+            return stringBuilder.ToString();
         }
     }
 
