@@ -202,18 +202,6 @@ namespace pwiz.Skyline.Model.IonMobility
                     if (!newMoleculesSet.Any(m => m.EqualsIgnoreId(itemNew.DbPrecursorIon.DbMolecule)))
                         newMoleculesSet.Add(new DbMolecule(itemNew.DbPrecursorIon.DbMolecule));
                 }
-
-var foo = newMoleculesSet.ToArray();
-if (foo.Length > 3)
-{
-    var bar = foo[0].GetHashCode();
-    var baz = foo[1].GetHashCode();
-    Console.Write(bar == baz);
-    var biz = foo[0].Equals(foo[1]);
-    Console.Write(!biz);
-}
-
-
                 // Update the molecules table
                 using (var transaction = session.BeginTransaction())
                 {
