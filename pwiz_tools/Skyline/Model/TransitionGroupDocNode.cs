@@ -882,7 +882,7 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var crosslink in mods.Crosslinks)
                 {
-                    moleculeMassOffset = moleculeMassOffset.Plus(crosslink.LinkedPeptide.GetNeutralFormula(settings, LabelType));
+                    moleculeMassOffset = moleculeMassOffset.Plus(crosslink.Value.GetNeutralFormula(settings, LabelType));
                 }
             }
 
@@ -1139,13 +1139,12 @@ namespace pwiz.Skyline.Model
             IEnumerable<TransitionDocNode> simpleTransitions)
         {
             var instrumentSettings = settings.TransitionSettings.Instrument;
-            var indexAas = explicitMods.Crosslinks.Select(mod => mod.ModificationSite.IndexAa).Distinct().ToList();
             var simpleFragmentIons = new List<ComplexFragmentIon>();
             simpleFragmentIons.Add(ComplexFragmentIon.NewOrphanFragmentIon(TransitionGroup, explicitMods));
             foreach (var simpleTransition in simpleTransitions)
             {
                 var simpleFragmentIon = simpleTransition.ComplexFragmentIon;
-                if (!indexAas.Any(site => simpleFragmentIon.IncludesAaIndex(site)))
+                if (!simpleTransition.Transition.HasAnyCrosslinks(explicitMods.Crosslinks))
                 {
                     yield return simpleTransition;
                 }

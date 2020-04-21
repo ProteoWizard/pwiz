@@ -204,11 +204,11 @@ namespace pwiz.Skyline.Model.Crosslinking
                 fragmentIon = new ComplexFragmentIon(transition, null);
             }
 
-            var crosslinks = explicitMods.Crosslinks.ToDictionary(mod => mod.ModificationSite);
+            var crosslinks = explicitMods.Crosslinks;
             // TODO: losses
             foreach (var child in Children)
             {
-                ExplicitMod crosslinkMod;
+                LinkedPeptide linkedPeptide;
                 if (child.Item1 == null)
                 {
                     if (crosslinks.Count != 1)
@@ -216,19 +216,19 @@ namespace pwiz.Skyline.Model.Crosslinking
                         throw new ArgumentException(@"Must have only one crosslink modification");
                     }
 
-                    crosslinkMod = crosslinks.Values.First();
+                    linkedPeptide = crosslinks.Values.First();
                 }
                 else
                 {
-                    if (!crosslinks.TryGetValue(child.Item1, out crosslinkMod))
+                    if (!crosslinks.TryGetValue(child.Item1, out linkedPeptide))
                     {
                         throw new ArgumentException(string.Format(@"No such crosslink {0}", child.Item1));
                     }
                 }
 
-                var childTransitionGroup = new TransitionGroup(crosslinkMod.LinkedPeptide.Peptide,
+                var childTransitionGroup = new TransitionGroup(linkedPeptide.Peptide,
                     transitionGroup.PrecursorAdduct, transitionGroup.LabelType);
-                var resolvedChild = child.Item2.Resolve(childTransitionGroup, crosslinkMod.LinkedPeptide.ExplicitMods);
+                var resolvedChild = child.Item2.Resolve(childTransitionGroup, linkedPeptide.ExplicitMods);
                 fragmentIon = fragmentIon.AddChild(child.Item1, resolvedChild);
             }
 

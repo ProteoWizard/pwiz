@@ -107,9 +107,12 @@ namespace pwiz.Skyline.Model.Crosslinking
             var result = GetSimpleFragmentFormula(settings, explicitMods);
             if (explicitMods != null)
             {
-                foreach (var crosslinkMod in explicitMods.Crosslinks)
+                foreach (var explicitMod in explicitMods.StaticModifications)
                 {
-                    result = result.Plus(GetCrosslinkFormula(settings, crosslinkMod));
+                    if (explicitMod.LinkedPeptide != null)
+                    {
+                        result = result.Plus(GetCrosslinkFormula(settings, explicitMod));
+                    }
                 }
             }
 

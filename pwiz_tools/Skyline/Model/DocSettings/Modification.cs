@@ -22,8 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using JetBrains.Annotations;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
@@ -664,7 +662,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 !obj.Terminus.Equals(Terminus) ||
                 !obj.AverageMass.Equals(AverageMass) ||
                 !obj.MonoisotopicMass.Equals(MonoisotopicMass) ||
-                !Equals(obj.RelativeRT, RelativeRT))
+                !Equals(obj.RelativeRT, RelativeRT) ||
+                !Equals(obj.CrosslinkerSettings, CrosslinkerSettings))
             {
                 return false;
             }
@@ -783,6 +782,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (MonoisotopicMass.HasValue ? MonoisotopicMass.Value.GetHashCode() : 0);
                 result = (result*397) ^ (_losses != null ? _losses.GetHashCodeDeep() : 0);
                 result = (result*397) ^ (ShortName != null ? ShortName.GetHashCode() : 0);
+                result = (result*397) ^ (CrosslinkerSettings != null ? CrosslinkerSettings.GetHashCode() : 0);
                 return result;
             }
         }
@@ -887,6 +887,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 modifications.AddRange(heavyMods);
             }
             _modifications = MakeReadOnly(modifications.ToArray());
+            Crosslinks = GetLinkedPeptides(StaticModifications);
         }
 
         /// <summary>
@@ -931,6 +932,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 modifications.Add(typedHeavyMods.AddModMasses(staticTypedMods));
             }
             _modifications = MakeReadOnly(modifications.ToArray());
+            Crosslinks = GetLinkedPeptides(StaticModifications);
         }
 
         private static IList<ExplicitMod> MergeExplicitMods(IList<ExplicitMod> modsPrimary,
@@ -1031,21 +1033,25 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return GetModifications(IsotopeLabelType.heavy); }
         }
 
-        public IEnumerable<ExplicitMod> Crosslinks
+        public ImmutableSortedList<ModificationSite, LinkedPeptide> Crosslinks
         {
-            get
-            {
-                if (StaticModifications == null)
-                {
-                    return Enumerable.Empty<ExplicitMod>();
-                }
-                return StaticModifications.Where(mod => mod.LinkedPeptide != null);
-            }
+            get; private set;
         }
 
         public bool HasCrosslinks
         {
             get { return Crosslinks.Any(); }
+        }
+
+        public LinkedPeptide GetLinkedPeptide(ModificationSite modificationSite)
+        {
+            LinkedPeptide linkedPeptide;
+            if (!Crosslinks.TryGetValue(modificationSite, out linkedPeptide))
+            {
+                throw new ArgumentException(@"No linked peptide found at site " + modificationSite);
+            }
+
+            return linkedPeptide;
         }
 
         public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)
@@ -1261,6 +1267,17 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        private static ImmutableSortedList<ModificationSite, LinkedPeptide> GetLinkedPeptides(
+            IEnumerable<ExplicitMod> explicitMods)
+        {
+            if (explicitMods == null)
+            {
+                return ImmutableSortedList<ModificationSite, LinkedPeptide>.EMPTY;
+            }
+            return ImmutableSortedList.FromValues(explicitMods.Where(mod => null != mod.LinkedPeptide)
+                .Select(mod => new KeyValuePair<ModificationSite, LinkedPeptide>(mod.ModificationSite, mod.LinkedPeptide)));
+        }
     }
 
     public sealed class ExplicitMod : Immutable

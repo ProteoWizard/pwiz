@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -714,6 +716,35 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public bool HasAnyCrosslinks(ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinks)
+        {
+            return HasAnyCrosslinks(IonType, CleavageOffset, crosslinks);
+        }
+
+        public static bool HasAnyCrosslinks(IonType ionType, int cleavageOffset,
+            ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinks)
+        {
+            if (crosslinks.Count == 0)
+            {
+                return false;
+            }
+            switch (ionType)
+            {
+                case IonType.precursor:
+                    return true;
+                case IonType.a:
+                case IonType.b:
+                case IonType.c:
+                    return cleavageOffset >= crosslinks.Keys[0].IndexAa;
+                case IonType.x:
+                case IonType.y:
+                case IonType.z:
+                    return cleavageOffset < crosslinks.Keys[crosslinks.Count - 1].IndexAa;
+                default:
+                    return false;
+            }
+        }
+
         #region object overrides
 
         public bool Equals(Transition obj)
@@ -831,7 +862,8 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Transition, Transition) && Equals(other.Losses, Losses);
+            return Equals(other.Transition, Transition) && Equals(other.Losses, Losses) &&
+                   Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
         }
 
         public override bool Equals(object obj)

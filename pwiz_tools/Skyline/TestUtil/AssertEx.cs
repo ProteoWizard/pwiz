@@ -338,8 +338,21 @@ namespace pwiz.SkylineTestUtil
         {
             Serializable(doc, DocumentCloned);
             VerifyModifiedSequences(doc);
-            InvokeWithCompactFormatOption(true, ()=>Serializable(doc, DocumentCloned));
-            InvokeWithCompactFormatOption(false, () => Serializable(doc, DocumentCloned));
+            // Skyline uses a format involving protocol buffers if the document is very large.
+            // Make sure to serialize the document the other way, and make sure it's still the same.
+            bool wasCompactFormat = CompactFormatOption.FromSettings().UseCompactFormat(doc);
+            string oldSetting = Settings.Default.CompactFormatOption;
+            try
+            {
+                Settings.Default.CompactFormatOption =
+                    (wasCompactFormat ? CompactFormatOption.NEVER : CompactFormatOption.ALWAYS).Name;
+                Assert.AreNotEqual(wasCompactFormat, CompactFormatOption.FromSettings().UseCompactFormat(doc));
+                Serializable(doc, DocumentCloned);
+            }
+            finally
+            {
+                Settings.Default.CompactFormatOption = oldSetting;
+            }
         }
 
         public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
@@ -401,21 +414,6 @@ namespace pwiz.SkylineTestUtil
                         AreEqual(expectedModifiedSequence, modifiedSequence.ToString());
                     }
                 }
-            }
-        }
-
-        private static void InvokeWithCompactFormatOption(bool useCompactFormat, Action action)
-        {
-            var compactFormatOptionPrev = Settings.Default.CompactFormatOption;
-            try
-            {
-                Settings.Default.CompactFormatOption =
-                    (useCompactFormat ? CompactFormatOption.ALWAYS : CompactFormatOption.NEVER).Name;
-                action();
-            }
-            finally
-            {
-                Settings.Default.CompactFormatOption = compactFormatOptionPrev;
             }
         }
 

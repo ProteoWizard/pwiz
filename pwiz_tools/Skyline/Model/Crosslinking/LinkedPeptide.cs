@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
@@ -164,8 +165,8 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 foreach (var crosslinkMod in mods.Crosslinks)
                 {
-                    result = crosslinkMod.LinkedPeptide.PermuteFragmentIons(settings, maxFragmentationCount,
-                        new ModificationSite(crosslinkMod.IndexAA, crosslinkMod.Modification.Name), result);
+                    result = crosslinkMod.Value.PermuteFragmentIons(settings, maxFragmentationCount,
+                        crosslinkMod.Key, result);
                 }
             }
 
@@ -190,12 +191,15 @@ namespace pwiz.Skyline.Model.Crosslinking
             var result = new ComplexFragmentIon(transition, null, complexFragmentIonName.IsOrphan);
             if (ExplicitMods != null)
             {
-                var crosslinks = ExplicitMods.Crosslinks.ToDictionary(explicitMod => explicitMod.ModificationSite);
                 foreach (var child in complexFragmentIonName.Children)
                 {
-                    var explicitMod = crosslinks[child.Item1];
-                    result = result.AddChild(explicitMod.ModificationSite,
-                        explicitMod.LinkedPeptide.MakeComplexFragmentIon(labelType, child.Item2));
+                    LinkedPeptide linkedPeptide;
+                    if (!ExplicitMods.Crosslinks.TryGetValue(child.Item1, out linkedPeptide))
+                    {
+                        throw new InvalidOperationException(@"No crosslink at " + child.Item1);
+                    }
+                    result = result.AddChild(child.Item1,
+                        linkedPeptide.MakeComplexFragmentIon(labelType, child.Item2));
                 }
             }
 

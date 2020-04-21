@@ -1475,12 +1475,11 @@ namespace pwiz.Skyline.Model.Serialization
             if (info.LinkedFragmentIons.Any())
             {
                 ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, info.Losses, info.OrphanedCrosslinkIon);
-                var crosslinks = mods.Crosslinks.ToDictionary(mod => mod.ModificationSite);
                 foreach (var linkedIon in info.LinkedFragmentIons)
                 {
-                    var crosslinkMod = crosslinks[linkedIon.Key];
+                    var linkedPeptide = mods.GetLinkedPeptide(linkedIon.Key);
                     complexFragmentIon = complexFragmentIon.AddChild(linkedIon.Key,
-                        crosslinkMod.LinkedPeptide.MakeComplexFragmentIon(group.LabelType, linkedIon.Value));
+                        linkedPeptide.MakeComplexFragmentIon(group.LabelType, linkedIon.Value));
                 }
 
                 node = complexFragmentIon.MakeTransitionDocNode(Settings, mods, info.Annotations, quantInfo,

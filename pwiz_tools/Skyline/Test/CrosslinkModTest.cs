@@ -118,7 +118,8 @@ namespace pwiz.SkylineTest
                 ComplexFragmentIonName.PRECURSOR.AddChild(modSite, ComplexFragmentIonName.PRECURSOR),
                 ComplexFragmentIonName.PRECURSOR.AddChild(modSite, new ComplexFragmentIonName(IonType.y, 1)),
                 new ComplexFragmentIonName(IonType.y, 1), 
-                ComplexFragmentIonName.ORPHAN.AddChild(modSite, new ComplexFragmentIonName(IonType.b, 1))
+                new ComplexFragmentIonName(IonType.b, 1).AddChild(modSite, new ComplexFragmentIonName(IonType.precursor, 0)), 
+                ComplexFragmentIonName.ORPHAN.AddChild(modSite, new ComplexFragmentIonName(IonType.b, 1)),
             };
             CollectionAssert.AreEquivalent(expectedFragmentIons, oneNeutralLossChoices);
         }

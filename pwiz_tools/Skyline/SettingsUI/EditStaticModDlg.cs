@@ -27,6 +27,7 @@ using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -135,6 +136,7 @@ namespace pwiz.Skyline.SettingsUI
                     cb37Cl.Checked = false;
                     cb81Br.Checked = false;
                     cb37Cl.Visible = cb81Br.Visible = false;  // No demonstrated need for this yet
+                    cbCrosslink.Checked = false;
                     listLosses.Items.Clear();
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedIndex = 0;
@@ -182,7 +184,7 @@ namespace pwiz.Skyline.SettingsUI
 
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedItem = modification.RelativeRT.ToString();
-
+                    cbCrosslink.Checked = null != modification.CrosslinkerSettings;
                     listLosses.Items.Clear();
                     if (modification.HasLoss)
                     {
@@ -401,6 +403,10 @@ namespace pwiz.Skyline.SettingsUI
                                          monoMass,
                                          avgMass,
                                          losses);
+            if (cbCrosslink.Checked)
+            {
+                newMod = newMod.ChangeCrosslinkerSettings(CrosslinkerSettings.EMPTY);
+            }
 
             foreach (StaticMod mod in _existing)
             {

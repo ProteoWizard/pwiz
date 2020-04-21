@@ -372,6 +372,13 @@ namespace pwiz.Skyline.Model
                             // Precursor charge can never be lower than product ion charge.
                             if (!adduct.IsValidProductAdduct(PrecursorAdduct, losses))
                                 continue;
+                            if (mods != null && Transition.HasAnyCrosslinks(type, i, mods.Crosslinks))
+                            {
+                                // If the transition is going to be linked to other ions, just return it now without
+                                // checking that its mass is in the correct range, etc.
+                                yield return CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
+                                continue;
+                            }
 
                             double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(massH, losses), adduct);
 
