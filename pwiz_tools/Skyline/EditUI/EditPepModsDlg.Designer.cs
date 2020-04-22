@@ -37,8 +37,10 @@
             this.comboHeavy1_1 = new System.Windows.Forms.ComboBox();
             this.labelAA1 = new System.Windows.Forms.Label();
             this.panelMain = new System.Windows.Forms.Panel();
+            this.btnEditLink1 = new System.Windows.Forms.Button();
             this.btnReset = new System.Windows.Forms.Button();
             this.cbCreateCopy = new System.Windows.Forms.CheckBox();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelMain.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -88,12 +90,19 @@
             // panelMain
             // 
             resources.ApplyResources(this.panelMain, "panelMain");
+            this.panelMain.Controls.Add(this.btnEditLink1);
             this.panelMain.Controls.Add(this.comboHeavy1_1);
             this.panelMain.Controls.Add(this.labelAA1);
             this.panelMain.Controls.Add(this.comboStatic1);
             this.panelMain.Controls.Add(this.label1);
             this.panelMain.Controls.Add(this.labelHeavy1);
             this.panelMain.Name = "panelMain";
+            // 
+            // btnEditLink1
+            // 
+            resources.ApplyResources(this.btnEditLink1, "btnEditLink1");
+            this.btnEditLink1.Name = "btnEditLink1";
+            this.btnEditLink1.UseVisualStyleBackColor = true;
             // 
             // btnReset
             // 
@@ -123,6 +132,7 @@
             this.MinimizeBox = false;
             this.Name = "EditPepModsDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelMain.ResumeLayout(false);
             this.panelMain.PerformLayout();
             this.ResumeLayout(false);
@@ -142,5 +152,6 @@
         private System.Windows.Forms.Panel panelMain;
         private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.CheckBox cbCreateCopy;
+        private System.Windows.Forms.Button btnEditLink1;
     }
 }

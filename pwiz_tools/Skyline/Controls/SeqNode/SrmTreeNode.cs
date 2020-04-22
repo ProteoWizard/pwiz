@@ -1345,5 +1345,10 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         public int RatioIndex { get; private set; }
+
+        public bool FullyQualifyCrosslinks
+        {
+            get { return NodePep?.ExplicitMods?.Crosslinks?.Count > 1; }
+        }
     }
 }

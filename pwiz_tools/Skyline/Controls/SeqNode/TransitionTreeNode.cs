@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public static string DisplayText(TransitionDocNode nodeTran, DisplaySettings settings)
         {
-            return GetLabel(nodeTran, GetResultsText(nodeTran, settings.Index, settings.RatioIndex));
+            return GetLabel(nodeTran, GetResultsText(nodeTran, settings.Index, settings.RatioIndex), settings.FullyQualifyCrosslinks);
         }
 
         private static string GetResultsText(TransitionDocNode nodeTran, int index, int indexRatio)
@@ -171,14 +171,19 @@ namespace pwiz.Skyline.Controls.SeqNode
             return string.Format(Resources.TransitionTreeNode_GetResultsText__0__ratio__1__, label, MathEx.RoundAboveZero(ratio.Value, 2, 4));
         }
 
-        public static string GetLabel(TransitionDocNode nodeTran, string resultsText)
+        public static string GetLabel(TransitionDocNode nodeTran, string resultsText, bool fullyQualifyCrosslinks)
         {
             Transition tran = nodeTran.Transition;
             string labelPrefix;
             const string labelPrefixSpacer = " - ";
             if (nodeTran.ComplexFragmentIon.Children.Count != 0)
             {
-                labelPrefix = @"[" + nodeTran.ComplexFragmentIon + @"] - ";
+                var complexFragmentIonName = nodeTran.ComplexFragmentIon.GetName();
+                if (!fullyQualifyCrosslinks)
+                {
+                    complexFragmentIonName = complexFragmentIonName.DisqualifyChildren();
+                }
+                labelPrefix = @"[" + complexFragmentIonName + Transition.GetMassIndexText(tran.MassIndex) + @"] - ";
             }
             else if (tran.IsPrecursor())
             {

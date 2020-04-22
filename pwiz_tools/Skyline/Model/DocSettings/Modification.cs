@@ -1043,6 +1043,20 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return Crosslinks.Any(); }
         }
 
+        public bool HasMultipleCrosslinks
+        {
+            get
+            {
+                if (Crosslinks.Count == 1)
+                {
+                    var linkedPeptide = Crosslinks.Values[0];
+                    return linkedPeptide.ExplicitMods != null && linkedPeptide.ExplicitMods.HasMultipleCrosslinks;
+                }
+
+                return Crosslinks.Count > 1;
+            }
+        }
+
         public LinkedPeptide GetLinkedPeptide(ModificationSite modificationSite)
         {
             LinkedPeptide linkedPeptide;

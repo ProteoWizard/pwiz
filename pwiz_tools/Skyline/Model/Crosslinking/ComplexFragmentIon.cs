@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using JetBrains.Annotations;
-using MathNet.Numerics.Distributions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
@@ -23,10 +22,10 @@ namespace pwiz.Skyline.Model.Crosslinking
             IsOrphan = isOrphan;
         }
 
-        public static ComplexFragmentIon NewOrphanFragmentIon(TransitionGroup transitionGroup, ExplicitMods explicitMods)
+        public static ComplexFragmentIon NewOrphanFragmentIon(TransitionGroup transitionGroup, ExplicitMods explicitMods, Adduct adduct)
         {
             var transition = new Transition(transitionGroup, IonType.precursor,
-                transitionGroup.Peptide.Sequence.Length - 1, 0, transitionGroup.PrecursorAdduct);
+                transitionGroup.Peptide.Sequence.Length - 1, 0, adduct);
             return new ComplexFragmentIon(transition, null, true);
         }
 
@@ -57,7 +56,12 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             if (IsOrphan && !IsEmptyOrphan)
             {
-                throw new InvalidOperationException(string.Format("Cannot add {0} to {1}.", child, this));
+                throw new InvalidOperationException(string.Format(@"Cannot add {0} to {1}.", child, this));
+            }
+
+            if (child.Transition.MassIndex != 0)
+            {
+                throw new InvalidOperationException(string.Format(@"{0} cannot be a child fragment ion transition.", child.Transition));
             }
 
             return ChangeProp(ImClone(this), im => im.Children =
@@ -187,12 +191,6 @@ namespace pwiz.Skyline.Model.Crosslinking
             var complexFragmentIon = this;
             if (Children.Count > 0)
             {
-                var name = GetName();
-                if (!explicitMods.Crosslinks.Skip(1).Any())
-                {
-                    //name = name.DisqualifyChildren();
-                }
-
                 complexFragmentIon = ChangeProp(ImClone(complexFragmentIon),
                     im => im.Transition = (Transition) im.Transition.Copy());
             }
@@ -263,6 +261,20 @@ namespace pwiz.Skyline.Model.Crosslinking
         public override string ToString()
         {
             return GetName().ToString();
+
+        }
+
+        public bool IsMs1
+        {
+            get
+            {
+                if (IsOrphan)
+                {
+                    return false;
+                }
+                return Transition.IsPrecursor() && null == TransitionLosses &&
+                       Children.Values.All(child => child.IsMs1);
+            }
         }
     }
 }

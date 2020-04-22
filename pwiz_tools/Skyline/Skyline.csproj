@@ -342,6 +342,12 @@
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
     <Compile Include="Controls\PrositUIHelpers.cs" />
     <Compile Include="Controls\TargetColumn.cs" />
+    <Compile Include="EditUI\EditCrosslinkModDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\EditCrosslinkModDlg.Designer.cs">
+      <DependentUpon>EditCrosslinkModDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2241,6 +2247,9 @@
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditCrosslinkModDlg.resx">
+      <DependentUpon>EditCrosslinkModDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.ja.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2995,6 +3004,7 @@
     <None Include="Resources\GenerateDecoys.bmp" />
     <EmbeddedResource Include="Resources\StartPage\WizardBlankDocument-ja.bmp" />
     <EmbeddedResource Include="Resources\StartPage\WizardBlankDocument-zh-CHS.bmp" />
+    <Content Include="Resources\EditLink.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">

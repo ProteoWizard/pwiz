@@ -724,7 +724,7 @@ namespace pwiz.Skyline.Model
         public static bool HasAnyCrosslinks(IonType ionType, int cleavageOffset,
             ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinks)
         {
-            if (crosslinks.Count == 0)
+            if (crosslinks == null || crosslinks.Count == 0)
             {
                 return false;
             }

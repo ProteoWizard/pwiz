@@ -475,7 +475,7 @@ namespace pwiz.Skyline.Model
                 transitionProto.IsotopeDistRank = DataValues.ToOptional(IsotopeDistInfo.Rank);
                 transitionProto.IsotopeDistProportion = DataValues.ToOptional(IsotopeDistInfo.Proportion);
             }
-            if (!Transition.IsPrecursor())
+            if (!Transition.IsPrecursor() || !Equals(Transition.Adduct, Transition.Group.PrecursorAdduct))
             {
                 if (!Transition.IsCustom())
                 {
@@ -617,12 +617,13 @@ namespace pwiz.Skyline.Model
                 : Adduct.FromStringAssumeChargeOnly(adductString);
             if (isCustom)
             {
-                transition = new Transition(group, isPrecursor ? group.PrecursorAdduct :adduct, transitionProto.MassIndex, customIon, ionType);
+                transition = new Transition(group, isPrecursor ? group.PrecursorAdduct : adduct, transitionProto.MassIndex, customIon, ionType);
             }
             else if (isPrecursor)
             {
+                // TODO(nicksh): Make sure this adduct stuff is correct.
                 transition = new Transition(group, ionType, group.Peptide.Length - 1, transitionProto.MassIndex,
-                    group.PrecursorAdduct, DataValues.FromOptional(transitionProto.DecoyMassShift));
+                    adduct.IsEmpty ? group.PrecursorAdduct : adduct, DataValues.FromOptional(transitionProto.DecoyMassShift));
             }
             else
             {
@@ -1021,7 +1022,7 @@ namespace pwiz.Skyline.Model
 
         public override string AuditLogText
         {
-            get { return TransitionTreeNode.GetLabel(this, string.Empty); }
+            get { return TransitionTreeNode.GetLabel(this, string.Empty, true); }
         }
 
     }

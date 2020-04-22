@@ -151,6 +151,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             if (Children.Count != 0)
             {
+                stringBuilder.Append(@"-");
                 if (Children.Count != 1)
                 {
                     stringBuilder.Append(@"[");
@@ -186,7 +187,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             ComplexFragmentIon fragmentIon;
             if (IsOrphan)
             {
-                fragmentIon = ComplexFragmentIon.NewOrphanFragmentIon(transitionGroup, explicitMods);
+                fragmentIon = ComplexFragmentIon.NewOrphanFragmentIon(transitionGroup, explicitMods, Adduct.SINGLY_PROTONATED);
             }
             else
             {

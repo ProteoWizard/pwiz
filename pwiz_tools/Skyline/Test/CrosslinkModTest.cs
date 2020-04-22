@@ -96,7 +96,7 @@ namespace pwiz.SkylineTest
             var mainPeptide = new Peptide("AD");
             var staticMod = new StaticMod(modName, null, null, "-C2");
             var linkedPeptide = new LinkedPeptide(new Peptide("EF"), 1, null);
-            var mainTransitionGroup = new TransitionGroup(mainPeptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
+            var mainTransitionGroup = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
             var mainTransitionGroupDocNode = new TransitionGroupDocNode(mainTransitionGroup,
                 Annotations.EMPTY, srmSettings, null, null, ExplicitTransitionGroupValues.EMPTY, null,
                 new TransitionDocNode[0], false);

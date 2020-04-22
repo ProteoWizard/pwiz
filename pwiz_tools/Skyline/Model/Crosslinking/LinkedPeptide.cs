@@ -105,11 +105,15 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             var transitionGroupDocNode =
                 GetTransitionGroupDocNode(settings, IsotopeLabelType.light, Adduct.SINGLY_PROTONATED);
-            yield return ComplexFragmentIon.NewOrphanFragmentIon(transitionGroupDocNode.TransitionGroup, ExplicitMods);
+            yield return ComplexFragmentIon.NewOrphanFragmentIon(transitionGroupDocNode.TransitionGroup, ExplicitMods, Adduct.SINGLY_PROTONATED);
             foreach (var transitionDocNode in transitionGroupDocNode.TransitionGroup.GetTransitions(settings,
                 transitionGroupDocNode, ExplicitMods, transitionGroupDocNode.PrecursorMz,
                 transitionGroupDocNode.IsotopeDist, null, null, true))
             {
+                if (transitionDocNode.Transition.MassIndex != 0)
+                {
+                    continue;
+                }
                 yield return new ComplexFragmentIon(transitionDocNode.Transition, transitionDocNode.Losses);
             }
         }
