@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             yield return ComplexFragmentIon.NewOrphanFragmentIon(transitionGroupDocNode.TransitionGroup, ExplicitMods, Adduct.SINGLY_PROTONATED);
             foreach (var transitionDocNode in transitionGroupDocNode.TransitionGroup.GetTransitions(settings,
                 transitionGroupDocNode, ExplicitMods, transitionGroupDocNode.PrecursorMz,
-                transitionGroupDocNode.IsotopeDist, null, null, true))
+                transitionGroupDocNode.IsotopeDist, null, null, true, false))
             {
                 if (transitionDocNode.Transition.MassIndex != 0)
                 {

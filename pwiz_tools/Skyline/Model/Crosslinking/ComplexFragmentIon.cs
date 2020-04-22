@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public override string ToString()
         {
-            return GetName().ToString();
+            return GetName() + Transition.GetChargeIndicator(Transition.Adduct);
 
         }
 

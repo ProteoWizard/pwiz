@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -93,6 +94,28 @@ namespace pwiz.Skyline.EditUI
         private void btnEditModifications_Click(object sender, System.EventArgs e)
         {
             MessageDlg.Show(this, "Not yet implemented");
+        }
+
+        public string PeptideSequence
+        {
+            get { return tbxPeptideSequence.Text; }
+            set
+            {
+                tbxPeptideSequence.Text = value;
+            }
+        }
+
+        public int? AttachmentOrdinal
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(tbxAttachmentOrdinal.Text))
+                {
+                    return null;
+                }
+                return Int32.Parse(tbxAttachmentOrdinal.Text);
+            }
+            set { tbxAttachmentOrdinal.Text = value.HasValue ? value.ToString() : string.Empty; }
         }
     }
 }

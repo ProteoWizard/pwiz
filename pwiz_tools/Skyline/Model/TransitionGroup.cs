@@ -178,7 +178,8 @@ namespace pwiz.Skyline.Model
                                                              IsotopeDistInfo isotopeDist,
                                                              SpectrumHeaderInfo libInfo,
                                                              IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
-                                                             bool useFilter)
+                                                             bool useFilter,
+                                                             bool ensureMassesAreMeasurable)
         {
             Assume.IsTrue(ReferenceEquals(groupDocNode.TransitionGroup, this));
             // Get necessary mass calculators and masses
@@ -265,13 +266,13 @@ namespace pwiz.Skyline.Model
             }
 
             // Return precursor ions
-            if (!useFilter || types.Contains(IonType.precursor))
+            if (!useFilter || types.Contains(IonType.precursor) || !ensureMassesAreMeasurable)
             {
                 bool libraryFilter = (pick == TransitionLibraryPick.all || pick == TransitionLibraryPick.filter);
                 foreach (var nodeTran in GetPrecursorTransitions(settings, mods, calcPredictPre, calcPredict ?? calcFilter,
-                    precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter))
+                    precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter, ensureMassesAreMeasurable))
                 {
-                    if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
+                    if (!ensureMassesAreMeasurable || minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
                         yield return nodeTran;
                 }
             }
@@ -372,7 +373,7 @@ namespace pwiz.Skyline.Model
                             // Precursor charge can never be lower than product ion charge.
                             if (!adduct.IsValidProductAdduct(PrecursorAdduct, losses))
                                 continue;
-                            if (Transition.HasAnyCrosslinks(type, i, mods?.Crosslinks))
+                            if (!ensureMassesAreMeasurable)
                             {
                                 // If the transition is going to be linked to other ions, just return it now without
                                 // checking that its mass is in the correct range, etc.
@@ -477,7 +478,8 @@ namespace pwiz.Skyline.Model
                                                              IList<IList<ExplicitLoss>> potentialLosses,
                                                              IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
                                                              bool libraryFilter,
-                                                             bool useFilter)
+                                                             bool useFilter,
+                                                             bool ensureMassesAreMeasurable)
         {
             var tranSettings = settings.TransitionSettings;
             var fullScan = tranSettings.FullScan;
@@ -517,7 +519,7 @@ namespace pwiz.Skyline.Model
 
                 if (losses == null)
                 {
-                    if (precursorMS1 && isotopeDist != null)
+                    if (precursorMS1 && isotopeDist != null && ensureMassesAreMeasurable)
                     {
                         foreach (int i in fullScan.SelectMassIndices(isotopeDist, useFilter))
                         {
@@ -534,7 +536,7 @@ namespace pwiz.Skyline.Model
                 }
                 // If there was loss, it is possible (though not likely) that the ion m/z value
                 // will now fall below the minimum measurable value for the instrument
-                else if (minMz > ionMz)
+                else if (ensureMassesAreMeasurable && minMz > ionMz)
                 {
                     continue;
                 }

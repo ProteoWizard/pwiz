@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -1134,9 +1135,10 @@ namespace pwiz.Skyline.Model
             IsotopeDistInfo isotopeDist, SpectrumHeaderInfo libInfo, Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, bool useFilter)
         {
             SrmSettings simpleFilterSettings = settings;
+            bool hasCrosslinks = mods != null && mods.HasCrosslinks;
             var simpleTransitions = TransitionGroup.GetTransitions(simpleFilterSettings, this, mods, precursorMz, isotopeDist, libInfo, transitionRanks,
-                useFilter);
-            if (mods == null || !mods.HasCrosslinks)
+                useFilter, !hasCrosslinks);
+            if (!hasCrosslinks)
             {
                 return simpleTransitions;
             }
@@ -1168,17 +1170,6 @@ namespace pwiz.Skyline.Model
             var simpleFragmentIons = new List<ComplexFragmentIon>();
             var precursorAdducts = settings.TransitionSettings.Filter.PeptidePrecursorCharges.ToHashSet();
             var productAdducts = settings.TransitionSettings.Filter.PeptideProductCharges.ToHashSet();
-            IList<Adduct> allProductAdducts;
-            if (useFilter)
-            {
-                allProductAdducts = settings.TransitionSettings.Filter.PeptideProductCharges;
-            }
-            else
-            {
-                allProductAdducts = settings.TransitionSettings.Filter.PeptideProductCharges
-                    .Concat(Transition.DEFAULT_PEPTIDE_CHARGES).ToList();
-                allProductAdducts.Sort();
-            }
 
             foreach (var simpleTransition in simpleTransitions)
             {
@@ -1193,26 +1184,32 @@ namespace pwiz.Skyline.Model
                 }
             }
 
+            IList<Adduct> allProductAdducts;
+            if (useFilter)
+            {
+                allProductAdducts = settings.TransitionSettings.Filter.PeptideProductCharges;
+            }
+            else
+            {
+                allProductAdducts = settings.TransitionSettings.Filter.PeptideProductCharges
+                    .Concat(Transition.DEFAULT_PEPTIDE_CHARGES).ToList();
+                allProductAdducts.Sort();
+            }
             // Add ions representing the precursor waiting to be joined with a crosslinked peptide
             foreach (var productAdduct in allProductAdducts)
             {
                 if (productAdduct.IsValidProductAdduct(TransitionGroup.PrecursorAdduct, null))
                 {
-                    simpleFragmentIons.Add(
-                        ComplexFragmentIon.NewOrphanFragmentIon(TransitionGroup, explicitMods, productAdduct));
-                    if (!productAdduct.Equals(PrecursorAdduct))
-                    {
-                        var precursorTransition = new Transition(TransitionGroup, IonType.precursor,
-                            TransitionGroup.Peptide.Sequence.Length - 1, 0, productAdduct);
-                        var newIon = new ComplexFragmentIon(precursorTransition, null);
-                        Assume.IsFalse(simpleFragmentIons.Contains(newIon));
-                        simpleFragmentIons.Add(newIon);
-                    }
+                    var precursorTransition = new Transition(TransitionGroup, IonType.precursor,
+                        Peptide.Sequence.Length - 1, 0, productAdduct);
+
+                    simpleFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, true));
+                    simpleFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, false));
                 }
             }
 
             foreach (var complexFragmentIon in LinkedPeptide.PermuteComplexFragmentIons(explicitMods, settings,
-                settings.PeptideSettings.Modifications.MaxNeutralLosses, simpleFragmentIons))
+                settings.PeptideSettings.Modifications.MaxNeutralLosses, simpleFragmentIons.Distinct()))
             {
                 bool isMs1 = complexFragmentIon.IsMs1;
                 if (isMs1)
