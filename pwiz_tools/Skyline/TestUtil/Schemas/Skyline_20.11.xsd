@@ -1711,7 +1711,6 @@
           <xs:attribute name="terminus" type="terminus_type"/>
         </xs:complexType>
       </xs:element>
-
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required"/>
     <xs:attribute name="short_name" type="xs:string"/>

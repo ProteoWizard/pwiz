@@ -52,7 +52,7 @@ namespace pwiz.SkylineTest
                     var actualMz = actualMassDistribution.MostAbundanceMass;
                     if (Math.Abs(expectedMz - actualMz) > .001)
                     {
-                        Assert.AreEqual(expectedMz, actualMz, .001);
+                        Assert.AreEqual(expectedMz, actualMz, .001, "Ion type {0} Ordinal {1}", ionType, ordinal);
                     }
                 }
             }
