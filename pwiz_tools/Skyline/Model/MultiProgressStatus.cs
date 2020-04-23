@@ -132,6 +132,16 @@ namespace pwiz.Skyline.Model
             get { return ProgressList.Any(status => !string.IsNullOrEmpty(status.WarningMessage)); }
         }
 
+        public string WarningMessage
+        {
+            get
+            {
+                return HasWarnings
+                    ? TextUtil.LineSeparate(ProgressList.Select(status => status.WarningMessage)
+                        .Where(s => !string.IsNullOrEmpty(s))) : null;
+            }
+        }
+
         public bool IsCanceled { get { return State == ProgressState.cancelled; } }
         public bool IsBegin { get { return State == ProgressState.begin; } }
 

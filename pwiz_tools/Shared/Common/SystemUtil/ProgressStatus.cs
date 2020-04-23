@@ -50,6 +50,7 @@ namespace pwiz.Common.SystemUtil
         bool IsFinal { get; }
         bool IsComplete { get; }
         bool IsError { get; }
+        string WarningMessage { get; } // Set when there is no error, but we want to advise user of some condition
         bool IsCanceled { get; }
         bool IsBegin { get; }
     }
