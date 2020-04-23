@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 var linkedPeptides = explicitMods.Crosslinks.ReplaceValues(explicitMods.Crosslinks.Select(
                     entry => MakePeptideFormatter(srmSettings,
                             entry.Value.Peptide, entry.Value.ExplicitMods, heavyLabelTypes, modFontHolder)
-                        .ChangeCrosslinkedIndexAa(entry.Key.IndexAa)));
+                        .ChangeCrosslinkedIndexAa(entry.Value.IndexAa)));
                 peptideFormatter = peptideFormatter.ChangeLinkedPeptides(linkedPeptides);
             }
 

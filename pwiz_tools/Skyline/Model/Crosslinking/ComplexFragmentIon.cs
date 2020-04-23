@@ -194,7 +194,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 complexFragmentIon = ChangeProp(ImClone(complexFragmentIon),
                     im => im.Transition = (Transition) im.Transition.Copy());
             }
-            // TODO: TransitonQuantInfo is probably wrong since it did not know the correct mass.
+            // TODO: TransitionQuantInfo is probably wrong since it did not know the correct mass.
             return new TransitionDocNode(complexFragmentIon, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
         }
 

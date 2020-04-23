@@ -27,18 +27,26 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Digest;
                 peptideSettingsUi.MaxMissedCleavages = 2;
                 peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications;
-
             });
             var editModListDlg = ShowEditStaticModsDlg(peptideSettingsUi);
             RunUI(()=>editModListDlg.AddItem(new StaticMod(crosslinkerName, "K", null, "C8H10O2").ChangeCrosslinkerSettings(CrosslinkerSettings.EMPTY)));
             OkDialog(editModListDlg, editModListDlg.OkDialog);
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
-
+            var transitionSettingsUi = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(()=>
+            {
+                transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.Filter;
+                transitionSettingsUi.PrecursorCharges = "4,3,2";
+                transitionSettingsUi.ProductCharges = "4,3,2,1";
+                transitionSettingsUi.FragmentTypes = "y";
+            });
+            OkDialog(transitionSettingsUi, transitionSettingsUi.OkDialog);
             RunUI(()=>
             {
                 SkylineWindow.Paste("DDSPDLPKLKPDPNTLCDEFK");
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo(1, 0);
             });
+
             var modifyPeptideDlg = ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);
             RunUI(() =>
             {

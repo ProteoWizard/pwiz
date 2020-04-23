@@ -1143,7 +1143,7 @@ namespace pwiz.Skyline.Model
                 return simpleTransitions;
             }
 
-            return RemoveDuplicates(GetComplexTransitions(settings, mods, simpleTransitions, useFilter));
+            return RemoveUnmeasurable(settings, RemoveDuplicates(GetComplexTransitions(settings, mods, simpleTransitions, useFilter)));
         }
 
         public IEnumerable<TransitionDocNode> RemoveDuplicates(IEnumerable<TransitionDocNode> transitions)
@@ -1163,10 +1163,33 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public IEnumerable<TransitionDocNode> RemoveUnmeasurable(SrmSettings settings, IEnumerable<TransitionDocNode> transitions)
+        {
+            var instrumentSettings = settings.TransitionSettings.Instrument;
+            foreach (var transition in transitions)
+            {
+                if (transition.ComplexFragmentIon.IsMs1)
+                {
+                    if (!instrumentSettings.IsMeasurable(transition.Mz))
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (!instrumentSettings.IsMeasurable(transition.Mz, PrecursorMz))
+                    {
+                        continue;
+                    }
+                }
+
+                yield return transition;
+            }
+        }
+
         public IEnumerable<TransitionDocNode> GetComplexTransitions(SrmSettings settings, ExplicitMods explicitMods,
             IEnumerable<TransitionDocNode> simpleTransitions, bool useFilter)
         {
-            var instrumentSettings = settings.TransitionSettings.Instrument;
             var simpleFragmentIons = new List<ComplexFragmentIon>();
             var precursorAdducts = settings.TransitionSettings.Filter.PeptidePrecursorCharges.ToHashSet();
             var productAdducts = settings.TransitionSettings.Filter.PeptideProductCharges.ToHashSet();
@@ -1238,21 +1261,6 @@ namespace pwiz.Skyline.Model
                 }
 
                 var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(settings, explicitMods);
-                if (isMs1)
-                {
-                    if (!instrumentSettings.IsMeasurable(complexTransitionDocNode.Mz))
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (!instrumentSettings.IsMeasurable(complexTransitionDocNode.Mz, PrecursorMz))
-                    {
-                        continue;
-                    }
-                }
-
                 yield return complexTransitionDocNode;
             }
         }

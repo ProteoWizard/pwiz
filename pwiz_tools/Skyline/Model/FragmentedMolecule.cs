@@ -292,22 +292,22 @@ namespace pwiz.Skyline.Model
                     deltas = new[] {Tuple.Create("H", 2), Tuple.Create("O", 1)};
                     break;
                 case IonType.a:
-                    deltas = new[] {Tuple.Create("H", 1), Tuple.Create("C", -1), Tuple.Create("O", -1)};
+                    deltas = new[] {Tuple.Create("H", 0), Tuple.Create("C", -1), Tuple.Create("O", -1)};
                     break;
                 case IonType.b:
-                    deltas = new[] {Tuple.Create("H", 1)};
+                    deltas = new[] {Tuple.Create("H", 0)};
                     break;
                 case IonType.c:
-                    deltas = new[] {Tuple.Create("H", 4), Tuple.Create("N", 1)};
+                    deltas = new[] {Tuple.Create("H", 3), Tuple.Create("N", 1)};
                     break;
                 case IonType.x:
-                    deltas = new[] {Tuple.Create("H", 1), Tuple.Create("O", 2), Tuple.Create("C", 1)};
+                    deltas = new[] {Tuple.Create("H", 0), Tuple.Create("O", 2), Tuple.Create("C", 1)};
                     break;
                 case IonType.y:
-                    deltas = new[] {Tuple.Create("H", 3), Tuple.Create("O", 1)};
+                    deltas = new[] {Tuple.Create("H", 2), Tuple.Create("O", 1)};
                     break;
                 case IonType.z:
-                    deltas = new[] {Tuple.Create("H", 0), Tuple.Create("O", 1), Tuple.Create("N", -1)};
+                    deltas = new[] {Tuple.Create("H", -1), Tuple.Create("O", 1), Tuple.Create("N", -1)};
                     break;
                 default:
                     throw new ArgumentException();

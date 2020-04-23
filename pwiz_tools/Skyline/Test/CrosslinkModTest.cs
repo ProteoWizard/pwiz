@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
@@ -77,7 +78,16 @@ namespace pwiz.SkylineTest
                 new[] {new ExplicitMod(0, staticMod).ChangeLinkedPeptide(linkedPeptide)},
                 new TypedExplicitModifications[0]);
             Assert.AreEqual("C5H14N2O6", mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, modsWithLinkedPeptide).Molecule.ToString());
-
+            var mainComplexFragmentIon = new ComplexFragmentIon(new Transition(mainTransitionGroup, IonType.precursor, mainPeptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null);
+            var linkedComplexFragmentIon = new ComplexFragmentIon(
+                new Transition(linkedPeptide.GetTransitionGroup(IsotopeLabelType.light, Adduct.SINGLY_PROTONATED),
+                    IonType.precursor, linkedPeptide.Peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null);
+            var complexFragmentIon =
+                mainComplexFragmentIon.AddChild(new ModificationSite(0, staticMod.Name), linkedComplexFragmentIon);
+            var transition = complexFragmentIon.MakeTransitionDocNode(srmSettings, modsWithLinkedPeptide);
+            var sequenceMassCalc = new SequenceMassCalc(MassType.Monoisotopic);
+            var expectedMz = sequenceMassCalc.GetPrecursorMass("A") + sequenceMassCalc.GetPrecursorMass("D") - 24 - BioMassCalc.MassProton;
+            Assert.AreEqual(expectedMz, transition.Mz, .00001);
         }
 
         [TestMethod]
@@ -233,5 +243,26 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(b1.IncludesAaIndex(0));
             Assert.IsFalse(b1.IncludesAaIndex(1));
         }
+
+        // [TestMethod]
+        // public void TestComplexIonMz()
+        // {
+        //     //DDSPDLPKLK[SLGKVGTR+C8H10O2]PDPNTLC[Carbamidomethyl (C)]DEFK
+        //     var srmSettings = SrmSettingsList.GetDefault();
+        //     var peptide = new Peptide("DDSPDLPKLKPDPNTLCDEFK");
+        //     var transitionGroup = new TransitionGroup(peptide, Adduct.QUADRUPLY_PROTONATED, IsotopeLabelType.light);
+        //     var y15 = new Transition(transitionGroup, IonType.y,
+        //         Transition.OrdinalToOffset(IonType.y, 15, peptide.Sequence.Length), 0, Adduct.TRIPLY_PROTONATED);
+        //     var complexFragmentIon = new ComplexFragmentIon(y15, null);
+        //     var crosslinkMod = new StaticMod("mymod", "K", null, "C8H10O2");
+        //     var linkedPeptide = new LinkedPeptide(new Peptide("SLGKVGTR"), 3, null);
+        //     var explicitMod = new ExplicitMod(9, crosslinkMod).ChangeLinkedPeptide(linkedPeptide);
+        //     var explicitMods = new ExplicitMods(peptide, new[]{explicitMod}, new TypedExplicitModifications[0]);
+        //     var linkedTransition = new Transition(linkedPeptide.GetTransitionGroup(IsotopeLabelType.light,Adduct.SINGLY_PROTONATED), IonType.precursor, linkedPeptide.Peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED);
+        //     complexFragmentIon = complexFragmentIon.AddChild(explicitMod.ModificationSite,
+        //         new ComplexFragmentIon(linkedTransition, null));
+        //     var complexTransition = complexFragmentIon.MakeTransitionDocNode(srmSettings, explicitMods);
+        //     Assert.AreEqual(919.4932, complexTransition.Mz, 0.0001);
+        // }
     }
 }

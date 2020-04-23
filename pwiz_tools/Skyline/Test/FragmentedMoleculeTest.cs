@@ -49,6 +49,10 @@ namespace pwiz.SkylineTest
                     var actualMassDistribution = FragmentedMolecule.Settings.DEFAULT.GetMassDistribution(
                         fragment.FragmentFormula, 0, 0);
                     var expectedMz = sequenceMassCalc.GetFragmentMass(transition, transitionGroupDocNode.IsotopeDist);
+                    if (expectedMz.IsMassH())
+                    {
+                        expectedMz = new TypedMass(expectedMz.Value - BioMassCalc.MassProton, expectedMz.MassType & ~MassType.bMassH);
+                    }
                     var actualMz = actualMassDistribution.MostAbundanceMass;
                     if (Math.Abs(expectedMz - actualMz) > .001)
                     {
