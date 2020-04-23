@@ -60,7 +60,7 @@ namespace pwiz.Skyline.EditUI
 
         public static string GetEditLinkName(int row)
         {
-            return string.Format(@"{0}{1}", "btnEditLink", row);
+            return string.Format(@"{0}{1}", @"btnEditLink", row);
         }
 
         public static string GetHeavyName(int row, int col)

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -67,8 +65,7 @@ namespace pwiz.SkylineTest
             var linkedPeptide = new LinkedPeptide(new Peptide("D"), 0, null);
             var mainTransitionGroup = new TransitionGroup(mainPeptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
             var mainTransitionGroupDocNode = new TransitionGroupDocNode(mainTransitionGroup, 
-                Annotations.EMPTY, srmSettings, 
-                null, (SpectrumHeaderInfo) null,
+                Annotations.EMPTY, srmSettings, null, null,
                 ExplicitTransitionGroupValues.EMPTY, null, new TransitionDocNode[0], false);
             var modsWithoutLinkedPeptide = new ExplicitMods(mainPeptide, new[]{new ExplicitMod(0, staticMod), }, new TypedExplicitModifications[0]);
             Assert.AreEqual("C3H7NO2", AminoAcidFormulas.Default.GetFormula("A").ToString());
@@ -216,7 +213,7 @@ namespace pwiz.SkylineTest
                 explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, true);
             
             var peptideDocNode = new PeptideDocNode(mainPeptide, settings, explicitModsWithCrosslink, null, ExplicitRetentionTimeInfo.EMPTY, new []{transitionGroupDocNode}, false);
-            peptideDocNode = peptideDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL, true);
+            peptideDocNode = peptideDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL);
             Assert.AreNotEqual(0, peptideDocNode.TransitionCount);
             var peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", null, new []{peptideDocNode});
             var srmDocument = (SrmDocument) new SrmDocument(settings).ChangeChildren(new[] {peptideGroupDocNode});

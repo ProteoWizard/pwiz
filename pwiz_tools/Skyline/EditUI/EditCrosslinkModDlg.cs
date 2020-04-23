@@ -86,14 +86,14 @@ namespace pwiz.Skyline.EditUI
             return new ExplicitMods(peptide, newStaticMods, newHeavyMods);
         }
 
-        private void btnOk_Click(object sender, System.EventArgs e)
+        private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
         }
 
-        private void btnEditModifications_Click(object sender, System.EventArgs e)
+        private void btnEditModifications_Click(object sender, EventArgs e)
         {
-            MessageDlg.Show(this, "Not yet implemented");
+            MessageDlg.Show(this, @"Not yet implemented");
         }
 
         public string PeptideSequence

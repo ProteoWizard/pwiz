@@ -167,8 +167,8 @@ namespace pwiz.Skyline.Model
                 double? minOtherMz = precursorMinMz - fragmentPrecursorMz;
                 double? maxOtherMz = precursorMaxMz - fragmentPrecursorMz;
                 var otherFragmentAbundance = otherFragmentDistribution
-                    .Where(oFrag => !minOtherMz.HasValue || oFrag.Key >= minOtherMz 
-                        && !maxOtherMz.HasValue || oFrag.Key <= maxOtherMz).Sum(frag => frag.Value);
+                    .Where(oFrag => !minOtherMz.HasValue || oFrag.Key >= minOtherMz
+                                    && !maxOtherMz.HasValue || oFrag.Key <= maxOtherMz).Sum(frag => frag.Value);
                 if (otherFragmentAbundance > 0)
                 {
                     result.Add(entry.Key, otherFragmentAbundance * entry.Value);
@@ -409,8 +409,8 @@ namespace pwiz.Skyline.Model
 
                 fragmentedMolecule = fragmentedMolecule.ChangePrecursorMassShift(
                     transitionGroupDocNode.PrecursorAdduct.MassFromMz(
-                        transitionGroupDocNode.PrecursorMz, transitionGroupDocNode.PrecursorMzMassType), 
-                        transitionGroupDocNode.PrecursorMzMassType);
+                        transitionGroupDocNode.PrecursorMz, transitionGroupDocNode.PrecursorMzMassType),
+                    transitionGroupDocNode.PrecursorMzMassType);
             }
             if (transitionDocNode == null || transitionDocNode.IsMs1)
             {
@@ -426,8 +426,8 @@ namespace pwiz.Skyline.Model
             {
                 fragmentedMolecule = fragmentedMolecule.ChangeFragmentMassShift(
                     transitionDocNode.Transition.Adduct.MassFromMz(
-                        transitionDocNode.Mz, transitionDocNode.MzMassType), 
-                        transitionDocNode.MzMassType);
+                        transitionDocNode.Mz, transitionDocNode.MzMassType),
+                    transitionDocNode.MzMassType);
             }
             fragmentedMolecule = fragmentedMolecule
                 .ChangeFragmentCharge(transitionDocNode.Transition.Charge);
