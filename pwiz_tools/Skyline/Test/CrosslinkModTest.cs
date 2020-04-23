@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -264,5 +265,39 @@ namespace pwiz.SkylineTest
         //     var complexTransition = complexFragmentIon.MakeTransitionDocNode(srmSettings, explicitMods);
         //     Assert.AreEqual(919.4932, complexTransition.Mz, 0.0001);
         // }
+
+        [TestMethod]
+        public void TestComplexIonMz()
+        {
+            var srmSettings = SrmSettingsList.GetDefault();
+            var peptide = new Peptide("DLGEEHFKGLVLIAFSQYLQQCPFDEHVK");
+            var linkedPeptide = new LinkedPeptide(new Peptide("LVNELTEFAKTCVADESHAGCEK"), 9, null);
+            var transitionGroup = new TransitionGroup(peptide, Adduct.QUADRUPLY_PROTONATED, IsotopeLabelType.light);
+            var crosslinkMod = new StaticMod("linker", "K", null, "C8H10O2");
+            var explicitMod = new ExplicitMod(7, crosslinkMod).ChangeLinkedPeptide(linkedPeptide);
+            var explicitMods = new ExplicitMods(peptide, new[]{explicitMod}, new List<TypedExplicitModifications>());
+            var linkedTransition =
+                new Transition(linkedPeptide.GetTransitionGroup(IsotopeLabelType.light, Adduct.SINGLY_PROTONATED),
+                    IonType.precursor, linkedPeptide.Peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED);
+            var expectedMzs = new[]
+            {
+                Tuple.Create(IonType.b, 2, 1, 229.1183),
+                Tuple.Create(IonType.b, 10, 3, 1291.2766)
+            };
+            foreach (var tuple in expectedMzs)
+            {
+                int offset = Transition.OrdinalToOffset(tuple.Item1, tuple.Item2, peptide.Sequence.Length);
+                var transition = new Transition(transitionGroup, tuple.Item1, offset, 0, Adduct.FromChargeProtonated(tuple.Item3));
+                var complexFragmentIon = new ComplexFragmentIon(transition, null);
+                if (complexFragmentIon.IncludesAaIndex(explicitMod.IndexAA))
+                {
+                    complexFragmentIon = complexFragmentIon.AddChild(explicitMod.ModificationSite,
+                        new ComplexFragmentIon(linkedTransition, null));
+                }
+                var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(srmSettings, explicitMods);
+                Assert.AreEqual(tuple.Item4, complexTransitionDocNode.Mz, .0001, "{0}{1}{2}", tuple.Item1, tuple.Item2,
+                    Transition.GetChargeIndicator(Adduct.FromChargeProtonated(tuple.Item3)));
+            }
+        }
     }
 }

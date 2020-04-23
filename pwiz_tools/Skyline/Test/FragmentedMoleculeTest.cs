@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
@@ -59,6 +60,31 @@ namespace pwiz.SkylineTest
                         Assert.AreEqual(expectedMz, actualMz, .001, "Ion type {0} Ordinal {1}", ionType, ordinal);
                     }
                 }
+            }
+        }
+
+        [TestMethod]
+        public void TestGetFragmentMz()
+        {
+            var chargeTwoOrdinal4Mzs = new[]
+            {
+                Tuple.Create(IonType.a, 199.1077),
+                Tuple.Create(IonType.b, 213.1052),
+                Tuple.Create(IonType.c, 221.6185),
+                Tuple.Create(IonType.x, 252.1028),
+                Tuple.Create(IonType.y, 239.1132),
+                Tuple.Create(IonType.z, 230.5999)
+            };
+            var precursor = FragmentedMolecule.EMPTY.ChangeModifiedSequence(new ModifiedSequence("PEPTIDE",
+                new ModifiedSequence.Modification[0], MassType.Monoisotopic));
+            foreach (var tuple in chargeTwoOrdinal4Mzs)
+            {
+                var fragment = precursor.ChangeFragmentCharge(2)
+                    .ChangeFragmentIon(tuple.Item1, 4);
+                var mzDistribution = fragment.GetFragmentDistribution(FragmentedMolecule.Settings.DEFAULT, null, null);
+                var maxAbundance = mzDistribution.Values.Max();
+                var monoMz = mzDistribution.First(entry => Equals(entry.Value, maxAbundance)).Key;
+                Assert.AreEqual(tuple.Item2, monoMz, .0001);
             }
         }
     }

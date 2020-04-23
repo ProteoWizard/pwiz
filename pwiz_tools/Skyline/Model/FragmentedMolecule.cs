@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model
             if (null != negative.Key)
             {
                 string message = string.Format(
-                    "Unable to calculate expected distribution because the fragment contains more '{0}' atoms than the precursor.",
+                    @"Unable to calculate expected distribution because the fragment contains more '{0}' atoms than the precursor.",
                     negative.Key);
                 throw new InvalidOperationException(message);
             }
@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model
             {
                 return neutralFormula;
             }
-            return neutralFormula.SetElementCount("H", neutralFormula.GetElementCount("H") + charge);
+            return neutralFormula.SetElementCount(@"H", neutralFormula.GetElementCount(@"H") + charge);
         }
 
         public static ModifiedSequence GetFragmentSequence(ModifiedSequence modifiedSequence, IonType ionType,
@@ -289,25 +289,25 @@ namespace pwiz.Skyline.Model
             switch (ionType)
             {
                 case IonType.precursor:
-                    deltas = new[] {Tuple.Create("H", 2), Tuple.Create("O", 1)};
+                    deltas = new[] {Tuple.Create(@"H", 2), Tuple.Create(@"O", 1)};
                     break;
                 case IonType.a:
-                    deltas = new[] {Tuple.Create("H", 0), Tuple.Create("C", -1), Tuple.Create("O", -1)};
+                    deltas = new[] {Tuple.Create(@"H", 0), Tuple.Create(@"C", -1), Tuple.Create(@"O", -1)};
                     break;
                 case IonType.b:
-                    deltas = new[] {Tuple.Create("H", 0)};
+                    deltas = new[] {Tuple.Create(@"H", 0)};
                     break;
                 case IonType.c:
-                    deltas = new[] {Tuple.Create("H", 3), Tuple.Create("N", 1)};
+                    deltas = new[] {Tuple.Create(@"H", 3), Tuple.Create(@"N", 1)};
                     break;
                 case IonType.x:
-                    deltas = new[] {Tuple.Create("H", 0), Tuple.Create("O", 2), Tuple.Create("C", 1)};
+                    deltas = new[] {Tuple.Create(@"H", 0), Tuple.Create(@"O", 2), Tuple.Create(@"C", 1)};
                     break;
                 case IonType.y:
-                    deltas = new[] {Tuple.Create("H", 2), Tuple.Create("O", 1)};
+                    deltas = new[] {Tuple.Create(@"H", 2), Tuple.Create(@"O", 1)};
                     break;
                 case IonType.z:
-                    deltas = new[] {Tuple.Create("H", -1), Tuple.Create("O", 1), Tuple.Create("N", -1)};
+                    deltas = new[] {Tuple.Create(@"H", -1), Tuple.Create(@"O", 1), Tuple.Create(@"N", -1)};
                     break;
                 default:
                     throw new ArgumentException();

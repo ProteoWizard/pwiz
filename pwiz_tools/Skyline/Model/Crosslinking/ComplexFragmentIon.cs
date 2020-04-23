@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -202,17 +201,28 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
             var massDistribution = GetMassDistribution(settings, formula.Molecule);
-            double mass = massType.IsMonoisotopic() ? massDistribution.MostAbundanceMass : massDistribution.AverageMass;
-            return new TypedMass(mass + BioMassCalc.MassProton, massType | MassType.bMassH);
+            var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(settings);
+            if (massType.IsMonoisotopic())
+            {
+                return new TypedMass(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule, formula.MassOffset, 0), MassType.Monoisotopic);
+            }
+            else
+            {
+                return new TypedMass(fragmentedMoleculeSettings.GetMassDistribution(formula.Molecule, formula.MassOffset, 0).AverageMass, MassType.Average);
+            }
         }
 
         public static MassDistribution GetMassDistribution(SrmSettings settings, Molecule molecule)
         {
-            var precursorCalc = settings.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods.EMPTY);
-            var massDistribution = precursorCalc.GetMZDistributionFromFormula(molecule.ToString(), Adduct.SINGLY_PROTONATED,
-                settings.TransitionSettings.FullScan.IsotopeAbundances ?? BioMassCalc.DEFAULT_ABUNDANCES);
-            massDistribution = massDistribution.OffsetAndDivide(-BioMassCalc.MassProton, 1);
-            return massDistribution;
+            var fragmentedMoleculeSettings = FragmentedMolecule.Settings.DEFAULT;
+            if (null != settings.TransitionSettings.FullScan.IsotopeAbundances)
+            {
+                fragmentedMoleculeSettings =
+                    fragmentedMoleculeSettings.ChangeIsotopeAbundances(settings.TransitionSettings.FullScan
+                        .IsotopeAbundances);
+            }
+
+            return fragmentedMoleculeSettings.GetMassDistribution(molecule, 0, 0);
         }
 
         public static MassDistribution GetMzDistribution(SrmSettings settings, MoleculeMassOffset moleculeMassOffset, Adduct adduct)
