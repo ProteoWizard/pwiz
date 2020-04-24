@@ -54,8 +54,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestExistingExperimentsTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
-            //IsPauseForAuditLog = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+//            IsPauseForAuditLog = true;
 
             ForceMzml = false;
 
@@ -93,7 +94,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            DoMrmerTest();
+            if (!IsPauseForCoverShot)
+                DoMrmerTest();
             DoStudy7Test();
         }
 
@@ -290,6 +292,12 @@ namespace pwiz.SkylineTestTutorial
             // Preparing a Document to Accept the Study 7 Transition List, p. 18
             RunUI(() => SkylineWindow.NewDocument());
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            if (IsPauseForCoverShot)
+            {
+                var modHeavyK = new StaticMod(HEAVY_K, "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
+                    RelativeRT.Matching, null, null, null);
+                AddHeavyMod(modHeavyK, peptideSettingsUI1, "Edit Isotope Modification form", 6);
+            }
             var mod13Cr = new StaticMod("Label:13C(6) (C-term R)", "R", ModTerminus.C, false, null, LabelAtoms.C13,
                                           RelativeRT.Matching, null, null, null);
             AddHeavyMod(mod13Cr, peptideSettingsUI1, "Edit Isotope Modification form", 18);
@@ -577,6 +585,23 @@ namespace pwiz.SkylineTestTutorial
             FindNode("INDISHTQSVSAK");
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas normalized to heave graph metafile", 39);
+
+            if (IsPauseForCoverShot)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    SkylineWindow.AutoZoomBestPeak();
+                });
+                RestoreCoverViewOnScreen();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Parent);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
+                PauseTest("Cover shot at 1200 x 800");
+                return;
+            }
 
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none));
             WaitForGraphs();
