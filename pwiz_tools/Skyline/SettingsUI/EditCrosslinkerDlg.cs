@@ -12,7 +12,7 @@ namespace pwiz.Skyline.SettingsUI
         public EditCrosslinkerDlg(bool isCrosslinker, CrosslinkerSettings crosslinkerSettings)
         {
             InitializeComponent();
-            formulaBox = new FormulaBox(Resources.EditStaticModDlg_EditStaticModDlg_Chemical_formula_,
+            formulaBox = new FormulaBox("Crosslinker chemical formula",
                 Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_,
                 Resources.EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_);
             cbxIsCrosslinker.Checked = isCrosslinker;

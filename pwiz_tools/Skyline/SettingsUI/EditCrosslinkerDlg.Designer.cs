@@ -43,7 +43,7 @@
             this.btnCancel.Location = new System.Drawing.Point(322, 139);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 10;
+            this.btnCancel.TabIndex = 3;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -54,7 +54,7 @@
             this.btnOk.Location = new System.Drawing.Point(241, 139);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 9;
+            this.btnOk.TabIndex = 2;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
@@ -67,7 +67,7 @@
             this.cbxIsCrosslinker.Location = new System.Drawing.Point(12, 10);
             this.cbxIsCrosslinker.Name = "cbxIsCrosslinker";
             this.cbxIsCrosslinker.Size = new System.Drawing.Size(286, 17);
-            this.cbxIsCrosslinker.TabIndex = 12;
+            this.cbxIsCrosslinker.TabIndex = 0;
             this.cbxIsCrosslinker.Text = "This modification can be crosslinked to another peptide";
             this.cbxIsCrosslinker.UseVisualStyleBackColor = true;
             this.cbxIsCrosslinker.CheckedChanged += new System.EventHandler(this.cbxIsCrosslinker_CheckedChanged);
@@ -79,18 +79,21 @@
             this.panelFormula.Location = new System.Drawing.Point(13, 33);
             this.panelFormula.Name = "panelFormula";
             this.panelFormula.Size = new System.Drawing.Size(384, 100);
-            this.panelFormula.TabIndex = 13;
+            this.panelFormula.TabIndex = 1;
             // 
             // EditCrosslinkerDlg
             // 
+            this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(411, 174);
             this.Controls.Add(this.panelFormula);
             this.Controls.Add(this.cbxIsCrosslinker);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Name = "EditCrosslinkerDlg";
+            this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Edit Crosslinker";
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();

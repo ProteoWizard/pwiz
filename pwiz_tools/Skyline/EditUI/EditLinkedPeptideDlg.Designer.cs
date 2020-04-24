@@ -82,7 +82,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.Size = new System.Drawing.Size(284, 74);
-            this.textBox1.TabIndex = 4;
+            this.textBox1.TabIndex = 5;
             // 
             // label3
             // 
@@ -90,7 +90,7 @@
             this.label3.Location = new System.Drawing.Point(15, 97);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(72, 13);
-            this.label3.TabIndex = 5;
+            this.label3.TabIndex = 4;
             this.label3.Text = "Modifications:";
             // 
             // btnEditModifications
@@ -132,6 +132,7 @@
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(314, 313);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
@@ -143,6 +144,7 @@
             this.Controls.Add(this.tbxPeptideSequence);
             this.Controls.Add(this.label1);
             this.Name = "EditLinkedPeptideDlg";
+            this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Edit Linked Peptide";
             this.ResumeLayout(false);
