@@ -1,7 +1,8 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -71,6 +72,12 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(editCrosslinkModDlg, editCrosslinkModDlg.OkDialog);
             OkDialog(modifyPeptideDlg, modifyPeptideDlg.OkDialog);
+            RunUI(()=>SkylineWindow.ShowGraphSpectrum(true));
+            WaitForGraphs();
+            var graphSpectrum = FindOpenForm<GraphSpectrum>();
+            Assert.IsNotNull(graphSpectrum.AvailableSpectra);
+            var availableSpectra = graphSpectrum.AvailableSpectra.ToList();
+            Assert.AreEqual(1, availableSpectra.Count);
         }
     }
 }
