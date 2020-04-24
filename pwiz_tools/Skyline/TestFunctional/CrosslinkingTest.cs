@@ -14,13 +14,14 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestCrosslinking()
         {
+            TestFilesZip = @"TestFunctional\CrosslinkingTest.zip";
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
-            const string crosslinkerName = "MyCrosslinker";
-            //DDSPDLPKLK[SLGKVGTR+C8H10O2]PDPNTLC[Carbamidomethyl (C)]DEFK
+            RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CrosslinkingTest.sky")));
+            const string crosslinkerName = "DSS";
             var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(()=>
             {
@@ -29,7 +30,16 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications;
             });
             var editModListDlg = ShowEditStaticModsDlg(peptideSettingsUi);
-            RunUI(()=>editModListDlg.AddItem(new StaticMod(crosslinkerName, "K", null, "C8H10O2").ChangeCrosslinkerSettings(CrosslinkerSettings.EMPTY)));
+            var editStaticModDlg = ShowDialog<EditStaticModDlg>(editModListDlg.AddItem);
+            RunUI(()=> { editStaticModDlg.Modification = new StaticMod(crosslinkerName, "K", null, "C8H12O3"); });
+            var editCrosslinkerDlg = ShowDialog<EditCrosslinkerDlg>(editStaticModDlg.ShowEditCrosslinkerDlg);
+            RunUI(() =>
+            {
+                editCrosslinkerDlg.IsCrosslinker = true;
+                editCrosslinkerDlg.Formula = "C8H10O2";
+            });
+            OkDialog(editCrosslinkerDlg, editCrosslinkerDlg.OkDialog);
+            OkDialog(editStaticModDlg, editStaticModDlg.OkDialog);
             OkDialog(editModListDlg, editModListDlg.OkDialog);
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
             var transitionSettingsUi = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -40,10 +50,11 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettingsUi.ProductCharges = "4,3,2,1";
                 transitionSettingsUi.FragmentTypes = "y";
             });
+            
             OkDialog(transitionSettingsUi, transitionSettingsUi.OkDialog);
             RunUI(()=>
             {
-                SkylineWindow.Paste("DDSPDLPKLKPDPNTLCDEFK");
+                SkylineWindow.Paste("DDSPDLPKLKPDPNTLCDEFK\r\nSLGKVGTR");
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo(1, 0);
             });
 
@@ -52,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 modifyPeptideDlg.SelectModification(IsotopeLabelType.light, 9, crosslinkerName);
             });
-            var editCrosslinkModDlg = ShowDialog<EditCrosslinkModDlg>(() => modifyPeptideDlg.EditLinkedPeptide(9));
+            var editCrosslinkModDlg = ShowDialog<EditLinkedPeptideDlg>(() => modifyPeptideDlg.EditLinkedPeptide(9));
             RunUI(() =>
             {
                 editCrosslinkModDlg.PeptideSequence = "SLGKVGTR";
@@ -60,7 +71,6 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(editCrosslinkModDlg, editCrosslinkModDlg.OkDialog);
             OkDialog(modifyPeptideDlg, modifyPeptideDlg.OkDialog);
-            PauseTest();
         }
     }
 }

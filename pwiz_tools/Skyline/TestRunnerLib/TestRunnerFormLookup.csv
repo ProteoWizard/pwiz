@@ -46,7 +46,7 @@ DocumentGridForm,TestReportSummary
 DocumentSettingsDlg,TestAnnotations
 EditCEDlg,TestOptimization
 EditCoVDlg,TestOptimization
-EditCrosslinkModDlg,TestCrosslinking
+EditCrosslinkerDlg,TestCrosslinking
 EditCustomMoleculeDlg,TestEditCustomMoleculeDlg
 EditCustomThemeDlg, TestEditCustomTheme
 EditDPDlg,TestEditDialogs
@@ -61,6 +61,7 @@ EditIsolationSchemeDlg,TestCalculateIsolationWindows
 EditIsotopeEnrichmentDlg,TestEditDialogs
 EditLabelTypeListDlg,TestExplicitMultiType
 EditLibraryDlg,TestRetentionTimeAlignment
+EditLinkedPeptideDlg,TestCrosslinking
 EditListDlg`2,TestEditStaticMod
 EditMeasuredIonDlg,TestEditDialogs
 EditNoteDlg,TestEditNote

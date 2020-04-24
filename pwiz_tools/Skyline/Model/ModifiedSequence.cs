@@ -23,6 +23,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using JetBrains.Annotations;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
@@ -97,7 +99,7 @@ namespace pwiz.Skyline.Model
                         .Concat(staticBaseMods ?? Enumerable.Empty<ExplicitMod>());
                     foreach (var mod in modsToAdd)
                     {
-                        explicitMods.Add(MakeModification(unmodifiedSequence, mod));
+                        explicitMods.Add(ResolveModification(settings, labelType, unmodifiedSequence, mod));
                     }
                 }
             }
@@ -132,7 +134,7 @@ namespace pwiz.Skyline.Model
                     {
                         continue;
                     }
-                    explicitMods.Add(MakeModification(unmodifiedSequence, new ExplicitMod(i, staticMod)));
+                    explicitMods.Add(ResolveModification(settings, labelType, unmodifiedSequence, new ExplicitMod(i, staticMod)));
                 }
             }
             return new ModifiedSequence(unmodifiedSequence, explicitMods, settings.TransitionSettings.Prediction.PrecursorMassType);
@@ -419,6 +421,34 @@ namespace pwiz.Skyline.Model
                 }
             }
             return new Modification(explicitMod, monoMass, avgMass);
+        }
+
+        public static Modification ResolveModification(SrmSettings settings, IsotopeLabelType labelType, string unmodifiedSequence,
+            ExplicitMod explicitMod)
+        {
+            if (explicitMod.LinkedPeptide == null || explicitMod.Modification.CrosslinkerSettings == null)
+            {
+                return MakeModification(unmodifiedSequence, explicitMod);
+            }
+
+            
+            var formula = explicitMod.Modification.CrosslinkerSettings.Formula ?? explicitMod.Modification.Formula;
+            MoleculeMassOffset moleculeMassOffset;
+            if (string.IsNullOrEmpty(formula))
+            {
+                moleculeMassOffset = new MoleculeMassOffset(Molecule.Empty, explicitMod.Modification.CrosslinkerSettings.MonoisotopicMass ??
+                                                                            explicitMod.Modification.MonoisotopicMass ?? 0, explicitMod.Modification.CrosslinkerSettings.AverageMass ??
+                                                                                                                            explicitMod.Modification.AverageMass ?? 0);
+            }
+            else
+            {
+                moleculeMassOffset = new MoleculeMassOffset(Molecule.ParseExpression(formula), 0, 0);
+            }
+            moleculeMassOffset = moleculeMassOffset.Plus(explicitMod.LinkedPeptide.GetNeutralFormula(settings, labelType));
+            var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(settings);
+            moleculeMassOffset = fragmentedMoleculeSettings.ReplaceMoleculeWithMassOffset(moleculeMassOffset);
+            Assume.IsTrue(0 == moleculeMassOffset.Molecule.Count);
+            return new Modification(explicitMod, moleculeMassOffset.MonoMassOffset, moleculeMassOffset.AverageMassOffset);
         }
     }
 }

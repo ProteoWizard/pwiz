@@ -586,8 +586,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (reader.IsStartElement(EL.crosslinker))
                 {
                     CrosslinkerSettings = CrosslinkerSettings.EMPTY
-                        .ChangeAas(reader.GetAttribute(ATTR.aminoacid))
-                        .ChangeTerminus(reader.GetAttribute(ATTR.terminus, ToModTerminus));
+                        .ChangeFormula(reader.GetAttribute(ATTR.formula),
+                            reader.GetNullableDoubleAttribute(ATTR.massdiff_monoisotopic),
+                            reader.GetNullableDoubleAttribute(ATTR.massdiff_average));
                     reader.Read();
                 }
                 reader.ReadEndElement();
@@ -629,8 +630,9 @@ namespace pwiz.Skyline.Model.DocSettings
             if (CrosslinkerSettings != null)
             {
                 writer.WriteStartElement(EL.crosslinker);
-                writer.WriteAttributeIfString(ATTR.aminoacid, CrosslinkerSettings.Aas);
-                writer.WriteAttributeNullable(ATTR.terminus, CrosslinkerSettings.Terminus);
+                writer.WriteAttributeIfString(ATTR.formula, CrosslinkerSettings.Formula);
+                writer.WriteAttributeNullable(ATTR.massdiff_monoisotopic, CrosslinkerSettings.MonoisotopicMass);
+                writer.WriteAttributeNullable(ATTR.massdiff_average, CrosslinkerSettings.AverageMass);
                 writer.WriteEndElement();
             }
         }

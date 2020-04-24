@@ -366,6 +366,14 @@ namespace pwiz.Skyline.Model.DocSettings
                                           SequenceModFormatType format = SequenceModFormatType.full_precision,
                                           bool useExplicitModsOnly = false)
         {
+            if (mods != null && mods.HasCrosslinks)
+            {
+                var modifiedSequence = ModifiedSequence.GetModifiedSequence(this, seq.Sequence, mods, labelType);
+                string strModifiedSequence = TransitionSettings.Prediction.PrecursorMassType.IsMonoisotopic()
+                    ? modifiedSequence.MonoisotopicMasses
+                    : modifiedSequence.AverageMasses;
+                return new Target(strModifiedSequence);
+            }
             return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, format, useExplicitModsOnly);
         }
 

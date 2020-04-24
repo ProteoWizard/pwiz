@@ -735,7 +735,7 @@ namespace pwiz.Skyline.EditUI
         {
             LinkedPeptide linkedPeptide;
             _linkedPeptides.TryGetValue(indexAA, out linkedPeptide);
-            using (var dlg = new EditCrosslinkModDlg(linkedPeptide))
+            using (var dlg = new EditLinkedPeptideDlg(linkedPeptide))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {

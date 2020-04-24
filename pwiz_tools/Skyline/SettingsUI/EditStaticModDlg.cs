@@ -38,6 +38,7 @@ namespace pwiz.Skyline.SettingsUI
     public partial class EditStaticModDlg : FormEx, IMultipleViewProvider
     {
         private StaticMod _modification;
+        private CrosslinkerSettings _crosslinkerSettings;
         private readonly StaticMod _originalModification;
         private readonly IEnumerable<StaticMod> _existing;
 
@@ -103,7 +104,10 @@ namespace pwiz.Skyline.SettingsUI
 
             ShowLoss = false;
             if (heavy)
+            {
                 btnLoss.Visible = false;
+                btnCrosslinkerProperties.Visible = false;
+            }
 
 
             Modification = _originalModification = modEditing;
@@ -115,7 +119,6 @@ namespace pwiz.Skyline.SettingsUI
             set
             {
                 var modification = value;
-
                 // Update the dialog.
                 if (modification == null)
                 {
@@ -136,7 +139,6 @@ namespace pwiz.Skyline.SettingsUI
                     cb37Cl.Checked = false;
                     cb81Br.Checked = false;
                     cb37Cl.Visible = cb81Br.Visible = false;  // No demonstrated need for this yet
-                    cbCrosslink.Checked = false;
                     listLosses.Items.Clear();
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedIndex = 0;
@@ -184,7 +186,6 @@ namespace pwiz.Skyline.SettingsUI
 
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedItem = modification.RelativeRT.ToString();
-                    cbCrosslink.Checked = null != modification.CrosslinkerSettings;
                     listLosses.Items.Clear();
                     if (modification.HasLoss)
                     {
@@ -194,7 +195,26 @@ namespace pwiz.Skyline.SettingsUI
                     ShowLoss = listLosses.Items.Count > 0;
                     UpdateMasses();
                 }
+
+                CrosslinkerSettings = modification?.CrosslinkerSettings;
                 _modification = modification;
+            }
+        }
+
+        public CrosslinkerSettings CrosslinkerSettings
+        {
+            get { return _crosslinkerSettings; }
+            set
+            {
+                _crosslinkerSettings = value;
+                if (CrosslinkerSettings == null)
+                {
+                    btnCrosslinkerProperties.Text = "Add Crosslinker...";
+                }
+                else
+                {
+                    btnCrosslinkerProperties.Text = "Edit Crosslinker...";
+                }
             }
         }
 
@@ -403,11 +423,6 @@ namespace pwiz.Skyline.SettingsUI
                                          monoMass,
                                          avgMass,
                                          losses);
-            if (cbCrosslink.Checked)
-            {
-                newMod = newMod.ChangeCrosslinkerSettings(CrosslinkerSettings.EMPTY);
-            }
-
             foreach (StaticMod mod in _existing)
             {
                 if (newMod.Equivalent(mod) && !(_editing && mod.Equals(_originalModification)))
@@ -425,6 +440,11 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     return;
                 }
+            }
+
+            if (CrosslinkerSettings != null)
+            {
+                newMod = newMod.ChangeCrosslinkerSettings(CrosslinkerSettings);
             }
             
             var uniMod = UniMod.GetModification(name, IsStructural);
@@ -802,6 +822,31 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return comboMod.Visible; }
             private set { comboMod.Visible = value; }
+        }
+
+        private void btnCrosslinkerProperties_Click(object sender, EventArgs e)
+        {
+            ShowEditCrosslinkerDlg();
+        }
+
+        public void ShowEditCrosslinkerDlg()
+        {
+            var initialCrosslinkerSettings = CrosslinkerSettings;
+            if (initialCrosslinkerSettings == null)
+            {
+                string formula = _formulaBox.Formula;
+                double? monoMass = string.IsNullOrEmpty(formula) ? _formulaBox.MonoMass : null;
+                double? averageMass = string.IsNullOrEmpty(formula) ? _formulaBox.AverageMass : null;
+                initialCrosslinkerSettings = CrosslinkerSettings.EMPTY.ChangeFormula(formula, monoMass, averageMass);
+            }
+
+            using (var dlg = new EditCrosslinkerDlg(CrosslinkerSettings != null, initialCrosslinkerSettings))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    CrosslinkerSettings = dlg.CrosslinkerSettings;
+                }
+            }
         }
     }
 }

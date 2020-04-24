@@ -1,4 +1,5 @@
-﻿using pwiz.Common.SystemUtil;
+﻿using System;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Crosslinking
@@ -7,22 +8,34 @@ namespace pwiz.Skyline.Model.Crosslinking
     {
         public static readonly CrosslinkerSettings EMPTY 
             = new CrosslinkerSettings();
-        public string Aas { get; private set; }
+        public string Formula { get; private set; }
+        public double? MonoisotopicMass { get; private set; }
+        public double? AverageMass { get; private set; }
 
-        public CrosslinkerSettings ChangeAas(string aas)
+        public CrosslinkerSettings ChangeFormula(string formula, double? monoMass, double? averageMass)
         {
-            return ChangeProp(ImClone(this), im => im.Aas = aas);
-        }
-        public ModTerminus? Terminus { get; private set; }
-
-        public CrosslinkerSettings ChangeTerminus(ModTerminus? modTerminus)
-        {
-            return ChangeProp(ImClone(this), im => im.Terminus = modTerminus);
+            return ChangeProp(ImClone(this), im =>
+            {
+                if (string.IsNullOrEmpty(formula))
+                {
+                    im.Formula = null;
+                    im.MonoisotopicMass = monoMass;
+                    im.AverageMass = averageMass;
+                }
+                else
+                {
+                    im.Formula = formula;
+                    im.MonoisotopicMass = null;
+                    im.AverageMass = averageMass;
+                }
+            });
         }
 
         protected bool Equals(CrosslinkerSettings other)
         {
-            return Aas == other.Aas && Terminus == other.Terminus;
+            return Formula == other.Formula
+                   && Nullable.Equals(MonoisotopicMass, other.MonoisotopicMass)
+                   && Nullable.Equals(AverageMass, other.AverageMass);
         }
 
         public override bool Equals(object obj)
@@ -37,7 +50,10 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             unchecked
             {
-                return ((Aas != null ? Aas.GetHashCode() : 0) * 397) ^ Terminus.GetHashCode();
+                var hashCode = (Formula != null ? Formula.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ MonoisotopicMass.GetHashCode();
+                hashCode = (hashCode * 397) ^ AverageMass.GetHashCode();
+                return hashCode;
             }
         }
     }

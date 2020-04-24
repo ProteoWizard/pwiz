@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 fragmentedMolecule = fragmentedMolecule.ChangeFragmentLosses(TransitionLosses.Losses.Select(loss => loss.Loss));
             }
-            return new MoleculeMassOffset(fragmentedMolecule.FragmentFormula, 0);
+            return new MoleculeMassOffset(fragmentedMolecule.FragmentFormula, 0, 0);
         }
 
 
@@ -200,15 +200,14 @@ namespace pwiz.Skyline.Model.Crosslinking
         public static TypedMass GetFragmentMass(SrmSettings settings, MoleculeMassOffset formula)
         {
             MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
-            var massDistribution = GetMassDistribution(settings, formula.Molecule);
             var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(settings);
             if (massType.IsMonoisotopic())
             {
-                return new TypedMass(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule, formula.MassOffset, 0), MassType.Monoisotopic);
+                return new TypedMass(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule, formula.MonoMassOffset + BioMassCalc.MassProton, 0), MassType.MonoisotopicMassH);
             }
             else
             {
-                return new TypedMass(fragmentedMoleculeSettings.GetMassDistribution(formula.Molecule, formula.MassOffset, 0).AverageMass, MassType.Average);
+                return new TypedMass(fragmentedMoleculeSettings.GetMassDistribution(formula.Molecule, formula.AverageMassOffset + BioMassCalc.MassProton, 0).AverageMass, MassType.AverageMassH);
             }
         }
 
@@ -223,21 +222,6 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return fragmentedMoleculeSettings.GetMassDistribution(molecule, 0, 0);
-        }
-
-        public static MassDistribution GetMzDistribution(SrmSettings settings, MoleculeMassOffset moleculeMassOffset, Adduct adduct)
-        {
-            var massDistribution = GetMassDistribution(settings, moleculeMassOffset.Molecule);
-            double massOffset = moleculeMassOffset.MassOffset;
-            if (adduct.IsProtonated && adduct.GetMassMultiplier() == 1)
-            {
-                massOffset += adduct.AdductCharge * BioMassCalc.MassProton;
-            }
-            else
-            {
-                massOffset -= adduct.AdductCharge * BioMassCalc.MassElectron;
-            }
-            return massDistribution.OffsetAndDivide(massOffset, adduct.AdductCharge);
         }
 
         public ComplexFragmentIonName GetName()

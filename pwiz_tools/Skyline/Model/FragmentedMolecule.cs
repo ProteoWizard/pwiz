@@ -469,10 +469,10 @@ namespace pwiz.Skyline.Model
                 {
                     massDistribution = massDistribution.Add(IsotopeAbundances[entry.Key].Multiply(entry.Value));
                 }
-                if (charge != 0)
+                if (charge != 0 || massShift != 0)
                 {
                     massDistribution = massDistribution.OffsetAndDivide(massShift - charge * BioMassCalc.MassElectron,
-                        Math.Abs(charge));
+                        Math.Max(1, Math.Abs(charge)));
                 }
                 return massDistribution;
             }
@@ -482,6 +482,13 @@ namespace pwiz.Skyline.Model
                 var massDistribution = ChangeIsotopeAbundances(GetMonoisotopicAbundances(IsotopeAbundances))
                     .GetMassDistribution(molecule, massShift, charge);
                 return massDistribution.MostAbundanceMass;
+            }
+
+            public MoleculeMassOffset ReplaceMoleculeWithMassOffset(MoleculeMassOffset moleculeMassOffset)
+            {
+                double monoMass = GetMonoMass(moleculeMassOffset.Molecule, moleculeMassOffset.MonoMassOffset, 0);
+                double averageMass = GetMassDistribution(moleculeMassOffset.Molecule, moleculeMassOffset.AverageMassOffset, 0).AverageMass;
+                return new MoleculeMassOffset(Molecule.Empty, monoMass, averageMass);
             }
 
             protected bool Equals(Settings other)

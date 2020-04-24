@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.EditUI
 {
-    partial class EditCrosslinkModDlg
+    partial class EditLinkedPeptideDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -127,7 +127,7 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // EditCrosslinkModDlg
+            // EditLinkedPeptideDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -142,8 +142,9 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.tbxPeptideSequence);
             this.Controls.Add(this.label1);
-            this.Name = "EditCrosslinkModDlg";
-            this.Text = "EditCrosslinkMod";
+            this.Name = "EditLinkedPeptideDlg";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.Text = "Edit Linked Peptide";
             this.ResumeLayout(false);
             this.PerformLayout();
 

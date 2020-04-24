@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditStaticModDlg));
             this.textName = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
@@ -57,7 +58,8 @@
             this.tbbEditLoss = new System.Windows.Forms.ToolStripButton();
             this.tbbDeleteLoss = new System.Windows.Forms.ToolStripButton();
             this.comboMod = new System.Windows.Forms.ComboBox();
-            this.cbCrosslink = new System.Windows.Forms.CheckBox();
+            this.btnCrosslinkerProperties = new System.Windows.Forms.Button();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelAtoms.SuspendLayout();
             this.panelLoss.SuspendLayout();
@@ -260,11 +262,18 @@
             this.comboMod.SelectedIndexChanged += new System.EventHandler(this.comboMod_SelectedIndexChanged);
             this.comboMod.DropDownClosed += new System.EventHandler(this.comboMod_DropDownClosed);
             // 
-            // cbCrosslink
+            // btnCrosslinkerProperties
             // 
-            resources.ApplyResources(this.cbCrosslink, "cbCrosslink");
-            this.cbCrosslink.Name = "cbCrosslink";
-            this.cbCrosslink.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.btnCrosslinkerProperties, "btnCrosslinkerProperties");
+            this.btnCrosslinkerProperties.Name = "btnCrosslinkerProperties";
+            this.btnCrosslinkerProperties.UseVisualStyleBackColor = true;
+            this.btnCrosslinkerProperties.Click += new System.EventHandler(this.btnCrosslinkerProperties_Click);
+            // 
+            // imageList1
+            // 
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Magenta;
+            this.imageList1.Images.SetKeyName(0, "Delete.bmp");
             // 
             // EditStaticModDlg
             // 
@@ -272,7 +281,7 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.cbCrosslink);
+            this.Controls.Add(this.btnCrosslinkerProperties);
             this.Controls.Add(this.panelLoss);
             this.Controls.Add(this.comboMod);
             this.Controls.Add(this.labelLoss);
@@ -337,6 +346,7 @@
         private System.Windows.Forms.ToolStripButton tbbEditLoss;
         private System.Windows.Forms.ToolStripButton tbbDeleteLoss;
         private System.Windows.Forms.ComboBox comboMod;
-        private System.Windows.Forms.CheckBox cbCrosslink;
+        private System.Windows.Forms.Button btnCrosslinkerProperties;
+        private System.Windows.Forms.ImageList imageList1;
     }
 }

@@ -11,11 +11,11 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class EditCrosslinkModDlg : Form
+    public partial class EditLinkedPeptideDlg : Form
     {
         private ExplicitMods _explicitMods;
 
-        public EditCrosslinkModDlg(LinkedPeptide linkedPeptide)
+        public EditLinkedPeptideDlg(LinkedPeptide linkedPeptide)
         {
             InitializeComponent();
             if (linkedPeptide != null)

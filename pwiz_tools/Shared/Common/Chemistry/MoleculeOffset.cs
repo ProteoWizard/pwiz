@@ -9,20 +9,27 @@ namespace pwiz.Common.Chemistry
 {
     public class MoleculeMassOffset : Immutable, IFormattable
     {
-        public static readonly MoleculeMassOffset EMPTY = new MoleculeMassOffset(Molecule.Empty, 0);
-        public MoleculeMassOffset(Molecule molecule, double massOffset)
+        public static readonly MoleculeMassOffset EMPTY = new MoleculeMassOffset(Molecule.Empty, 0, 0);
+        public MoleculeMassOffset(Molecule molecule, double monoMassOffset, double averageMassOffset)
         {
             Molecule = molecule;
-            MassOffset = massOffset;
+            MonoMassOffset = monoMassOffset;
+            AverageMassOffset = averageMassOffset;
+        }
+
+        public MoleculeMassOffset(Molecule molecule) : this(molecule, 0, 0)
+        {
+
         }
 
         public Molecule Molecule { get; private set; }
-        public double MassOffset { get; private set; }
+        public double MonoMassOffset { get; private set; }
+        public double AverageMassOffset { get; private set; }
 
         public MoleculeMassOffset Plus(MoleculeMassOffset moleculeMassOffset)
         {
             var newMolecule = MoleculeFromEntries(Molecule.Concat(moleculeMassOffset.Molecule));
-            return new MoleculeMassOffset(newMolecule, MassOffset + moleculeMassOffset.MassOffset);
+            return new MoleculeMassOffset(newMolecule, MonoMassOffset + moleculeMassOffset.MonoMassOffset, AverageMassOffset + moleculeMassOffset.AverageMassOffset);
         }
 
         public override string ToString()
@@ -50,21 +57,30 @@ namespace pwiz.Common.Chemistry
                 }
             }
 
-            if (MassOffset != 0)
+            if (MonoMassOffset != 0 || AverageMassOffset != 0)
             {
-                if (MassOffset > 0)
+                if (Equals(MonoMassOffset, AverageMassOffset))
                 {
-                    stringBuilder.Append(@"+");
+                    stringBuilder.Append(ToSignedString(format, formatProvider, MonoMassOffset));
                 }
-                stringBuilder.Append(MassOffset.ToString(format, formatProvider));
+                else
+                {
+                    stringBuilder.Append(@"(" + ToSignedString(format, formatProvider, MonoMassOffset) + "," +
+                                         ToSignedString(format, formatProvider, AverageMassOffset) + ")");
+                }
             }
 
             return stringBuilder.ToString();
         }
 
+        private static string ToSignedString(string format, IFormatProvider formatProvider, double value)
+        {
+            return (value >= 0 ? @"+" : string.Empty) + value.ToString(format, formatProvider);
+        }
+
         protected bool Equals(MoleculeMassOffset other)
         {
-            return Molecule.Equals(other.Molecule) && MassOffset.Equals(other.MassOffset);
+            return Molecule.Equals(other.Molecule) && MonoMassOffset.Equals(other.MonoMassOffset) && AverageMassOffset.Equals(other.AverageMassOffset);
         }
 
         public override bool Equals(object obj)
@@ -79,7 +95,10 @@ namespace pwiz.Common.Chemistry
         {
             unchecked
             {
-                return (Molecule.GetHashCode() * 397) ^ MassOffset.GetHashCode();
+                var hashCode = Molecule.GetHashCode();
+                hashCode = (hashCode * 397) ^ MonoMassOffset.GetHashCode();
+                hashCode = (hashCode * 397) ^ AverageMassOffset.GetHashCode();
+                return hashCode;
             }
         }
 

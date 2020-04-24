@@ -829,7 +829,10 @@ namespace pwiz.Skyline.Model
             MassDistribution massDistribution = massCalc.GetMZDistributionFromFormula(
                 moleculeMassOffset.Molecule.ToString(), Adduct.SINGLY_PROTONATED,
                 isotopeAbundances);
-            massDistribution = massDistribution.OffsetAndDivide(moleculeMassOffset.MassOffset - BioMassCalc.MassProton, 1);
+            double massOffset = massType.IsMonoisotopic()
+                ? moleculeMassOffset.MonoMassOffset
+                : moleculeMassOffset.AverageMassOffset;
+            massDistribution = massDistribution.OffsetAndDivide(massOffset - BioMassCalc.MassProton, 1);
             TypedMass monoMassH = new TypedMass(massDistribution.MostAbundanceMass + BioMassCalc.MassProton,
                 MassType.MonoisotopicMassH);
             TypedMass averageMassH = new TypedMass(massDistribution.AverageMass + BioMassCalc.MassProton,
@@ -868,17 +871,16 @@ namespace pwiz.Skyline.Model
 
         public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, ExplicitMods mods)
         {
-            MassType massType = settings.TransitionSettings.Prediction.PrecursorMassType;
             if (IsCustomIon)
             {
                 if (string.IsNullOrEmpty(CustomMolecule.Formula))
                 {
-                    return new MoleculeMassOffset(Molecule.Empty, massType.IsMonoisotopic() ? CustomMolecule.MonoisotopicMass : CustomMolecule.AverageMass);
+                    return new MoleculeMassOffset(Molecule.Empty, CustomMolecule.MonoisotopicMass, CustomMolecule.AverageMass);
                 }
-                return new MoleculeMassOffset(Molecule.ParseExpression(CustomMolecule.Formula), 0);
+                return new MoleculeMassOffset(Molecule.ParseExpression(CustomMolecule.Formula), 0, 0);
             }
             IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(LabelType, mods);
-            MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(Peptide.Sequence)), 0);
+            MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(Peptide.Sequence)), 0, 0);
             if (mods != null)
             {
                 foreach (var crosslink in mods.Crosslinks)
