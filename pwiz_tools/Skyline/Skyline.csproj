@@ -557,12 +557,6 @@
     <Compile Include="ProtocolBuffers\GeneratedCode\Tensor.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\TensorShape.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\Types.cs" />
-    <Compile Include="SettingsUI\EditCrosslinkerDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\EditCrosslinkerDlg.Designer.cs">
-      <DependentUpon>EditCrosslinkerDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\Irt\UseCurrentCalculatorDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -3122,9 +3116,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCoVDlg.zh-CHS.resx">
       <DependentUpon>EditCoVDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\EditCrosslinkerDlg.resx">
-      <DependentUpon>EditCrosslinkerDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCustomMoleculeDlg.ja.resx">
       <DependentUpon>EditCustomMoleculeDlg.cs</DependentUpon>

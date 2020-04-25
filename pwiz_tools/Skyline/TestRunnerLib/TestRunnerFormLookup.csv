@@ -46,7 +46,6 @@ DocumentGridForm,TestReportSummary
 DocumentSettingsDlg,TestAnnotations
 EditCEDlg,TestOptimization
 EditCoVDlg,TestOptimization
-EditCrosslinkerDlg,TestCrosslinking
 EditCustomMoleculeDlg,TestEditCustomMoleculeDlg
 EditCustomThemeDlg, TestEditCustomTheme
 EditDPDlg,TestEditDialogs

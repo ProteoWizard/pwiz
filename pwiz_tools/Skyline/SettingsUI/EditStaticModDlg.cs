@@ -38,7 +38,6 @@ namespace pwiz.Skyline.SettingsUI
     public partial class EditStaticModDlg : FormEx, IMultipleViewProvider
     {
         private StaticMod _modification;
-        private CrosslinkerSettings _crosslinkerSettings;
         private readonly StaticMod _originalModification;
         private readonly IEnumerable<StaticMod> _existing;
 
@@ -106,7 +105,7 @@ namespace pwiz.Skyline.SettingsUI
             if (heavy)
             {
                 btnLoss.Visible = false;
-                btnCrosslinkerProperties.Visible = false;
+                cbCrosslinker.Visible = false;
             }
 
 
@@ -196,26 +195,15 @@ namespace pwiz.Skyline.SettingsUI
                     UpdateMasses();
                 }
 
-                CrosslinkerSettings = modification?.CrosslinkerSettings;
+                cbCrosslinker.Checked = null != modification?.CrosslinkerSettings;
                 _modification = modification;
             }
         }
 
-        public CrosslinkerSettings CrosslinkerSettings
+        public bool IsCrosslinker
         {
-            get { return _crosslinkerSettings; }
-            set
-            {
-                _crosslinkerSettings = value;
-                if (CrosslinkerSettings == null)
-                {
-                    btnCrosslinkerProperties.Text = "Add Crosslinker...";
-                }
-                else
-                {
-                    btnCrosslinkerProperties.Text = "Edit Crosslinker...";
-                }
-            }
+            get { return cbCrosslinker.Checked; }
+            set { cbCrosslinker.Checked = value; }
         }
 
         public string Formula
@@ -442,9 +430,9 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            if (CrosslinkerSettings != null)
+            if (cbCrosslinker.Checked)
             {
-                newMod = newMod.ChangeCrosslinkerSettings(CrosslinkerSettings);
+                newMod = newMod.ChangeCrosslinkerSettings(CrosslinkerSettings.EMPTY);
             }
             
             var uniMod = UniMod.GetModification(name, IsStructural);
@@ -822,31 +810,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return comboMod.Visible; }
             private set { comboMod.Visible = value; }
-        }
-
-        private void btnCrosslinkerProperties_Click(object sender, EventArgs e)
-        {
-            ShowEditCrosslinkerDlg();
-        }
-
-        public void ShowEditCrosslinkerDlg()
-        {
-            var initialCrosslinkerSettings = CrosslinkerSettings;
-            if (initialCrosslinkerSettings == null)
-            {
-                string formula = _formulaBox.Formula;
-                double? monoMass = string.IsNullOrEmpty(formula) ? _formulaBox.MonoMass : null;
-                double? averageMass = string.IsNullOrEmpty(formula) ? _formulaBox.AverageMass : null;
-                initialCrosslinkerSettings = CrosslinkerSettings.EMPTY.ChangeFormula(formula, monoMass, averageMass);
-            }
-
-            using (var dlg = new EditCrosslinkerDlg(CrosslinkerSettings != null, initialCrosslinkerSettings))
-            {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    CrosslinkerSettings = dlg.CrosslinkerSettings;
-                }
-            }
         }
     }
 }

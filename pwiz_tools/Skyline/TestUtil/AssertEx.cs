@@ -394,6 +394,10 @@ namespace pwiz.SkylineTestUtil
         {
             foreach (var peptide in doc.Peptides)
             {
+                if (peptide.ExplicitMods != null && peptide.ExplicitMods.HasCrosslinks)
+                {
+                    continue;
+                }
                 var peptideModifiedSequence =
                     ModifiedSequence.GetModifiedSequence(doc.Settings, peptide, IsotopeLabelType.light);
                 IsNotNull(peptideModifiedSequence);

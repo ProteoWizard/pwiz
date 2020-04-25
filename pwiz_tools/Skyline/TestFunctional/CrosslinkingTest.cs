@@ -32,14 +32,12 @@ namespace pwiz.SkylineTestFunctional
             });
             var editModListDlg = ShowEditStaticModsDlg(peptideSettingsUi);
             var editStaticModDlg = ShowDialog<EditStaticModDlg>(editModListDlg.AddItem);
-            RunUI(()=> { editStaticModDlg.Modification = new StaticMod(crosslinkerName, "K", null, "C8H12O3"); });
-            var editCrosslinkerDlg = ShowDialog<EditCrosslinkerDlg>(editStaticModDlg.ShowEditCrosslinkerDlg);
-            RunUI(() =>
+            RunUI(()=> {
             {
-                editCrosslinkerDlg.IsCrosslinker = true;
-                editCrosslinkerDlg.Formula = "C8H10O2";
-            });
-            OkDialog(editCrosslinkerDlg, editCrosslinkerDlg.OkDialog);
+                editStaticModDlg.Modification = new StaticMod(crosslinkerName, "K", null, "C8H10O2");
+                editStaticModDlg.IsCrosslinker = true;
+            } });
+
             OkDialog(editStaticModDlg, editStaticModDlg.OkDialog);
             OkDialog(editModListDlg, editModListDlg.OkDialog);
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
@@ -78,6 +76,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(graphSpectrum.AvailableSpectra);
             var availableSpectra = graphSpectrum.AvailableSpectra.ToList();
             Assert.AreEqual(1, availableSpectra.Count);
+            RunUI(()=>SkylineWindow.SaveDocument());
         }
     }
 }

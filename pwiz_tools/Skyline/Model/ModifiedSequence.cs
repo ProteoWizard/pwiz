@@ -23,7 +23,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -432,13 +431,11 @@ namespace pwiz.Skyline.Model
             }
 
             
-            var formula = explicitMod.Modification.CrosslinkerSettings.Formula ?? explicitMod.Modification.Formula;
+            var formula = explicitMod.Modification.Formula;
             MoleculeMassOffset moleculeMassOffset;
             if (string.IsNullOrEmpty(formula))
             {
-                moleculeMassOffset = new MoleculeMassOffset(Molecule.Empty, explicitMod.Modification.CrosslinkerSettings.MonoisotopicMass ??
-                                                                            explicitMod.Modification.MonoisotopicMass ?? 0, explicitMod.Modification.CrosslinkerSettings.AverageMass ??
-                                                                                                                            explicitMod.Modification.AverageMass ?? 0);
+                moleculeMassOffset = new MoleculeMassOffset(Molecule.Empty, explicitMod.Modification.MonoisotopicMass ?? 0, explicitMod.Modification.AverageMass ?? 0);
             }
             else
             {
