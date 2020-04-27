@@ -528,7 +528,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 {
                     // isolationWindow
 
-                    double isolationWidth = 0;
+                    double isolationWidth = precursorInfo.isolationWidth / 2;
 
                     try
                     {
