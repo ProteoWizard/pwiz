@@ -578,7 +578,7 @@ namespace pwiz.Skyline.Model
         }
 
         public static int? ValidateFormulaWithMzAndAdduct(double tolerance, bool useMonoIsotopicMass, ref string moleculeFormula, ref Adduct adduct,
-            TypedMass mz, int? charge, bool? isPositive, out TypedMass monoMass, out TypedMass averageMass, out double? mzCalc)
+            TypedMass mz, int? charge, bool? isPositive, bool isPrecursor, out TypedMass monoMass, out TypedMass averageMass, out double? mzCalc)
         {
             var ion = new CustomIon(moleculeFormula);
             monoMass = ion.GetMass(MassType.Monoisotopic);
@@ -587,7 +587,7 @@ namespace pwiz.Skyline.Model
 
             // Does given charge, if any, agree with mass and mz?
             var adductInferred = adduct;
-            if (adduct.IsEmpty && charge.HasValue)
+            if (adduct.IsEmpty && (charge??0) != 0)
             {
                 adductInferred = Adduct.NonProteomicProtonatedFromCharge(charge.Value);
             }
@@ -610,7 +610,7 @@ namespace pwiz.Skyline.Model
                 maxCharge, new int[0],
                 TransitionCalc.MassShiftType.none, out _, out _);
 
-            if (adductInferred.IsEmpty)
+            if (isPrecursor && adductInferred.IsEmpty)
             {
                 // See if this can be explained by the more common adduct types, possibly with water loss
                 var matches = new Dictionary<double, Adduct>();
@@ -1357,23 +1357,28 @@ namespace pwiz.Skyline.Model
                             double? mzCalc;
                             var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
                             var useMonoisotopicMass = document.Settings.TransitionSettings.Prediction.FragmentMassType.IsMonoisotopic();
+                            var expectIsPositiveCharge = (precursorInfo == null || precursorInfo.Adduct.IsEmpty) ? 
+                                (charge ?? 0) != 0 ? (charge > 0) : (bool?)null:
+                                precursorInfo.Adduct.AdductCharge > 0;
+                            var initialCharge = charge;
+                            var initialAdduct = adduct;
                             charge = ValidateFormulaWithMzAndAdduct(tolerance, useMonoisotopicMass,
-                                ref formula, ref adduct,  mz, charge, (charge??0) != 0 ? (charge > 0) : (bool?)null, out monoMass, out averageMmass, out mzCalc);
+                                ref formula, ref adduct,  mz, charge, expectIsPositiveCharge, getPrecursorColumns, out monoMass, out averageMmass, out mzCalc);
                             row.SetCell(indexFormula, formula);
                             massOk = monoMass < CustomMolecule.MAX_MASS && averageMmass < CustomMolecule.MAX_MASS &&
                                      !(massTooLow = charge.HasValue && (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS)); // Null charge => masses are 0 but meaningless
                             if (adduct.IsEmpty && charge.HasValue)
                             {
-                                adduct = Adduct.FromChargeProtonated(charge);
+                                adduct = Adduct.FromCharge(charge.Value, Adduct.ADDUCT_TYPE.non_proteomic);
                             }
                             if (massOk)
                             {
                                 if (charge.HasValue)
                                 {
                                     row.UpdateCell(indexCharge, charge.Value);
-                                    if (!adduct.IsEmpty)
+                                    if (!Equals(adduct, initialAdduct))
                                     {
-                                        row.UpdateCell(indexAdduct, adduct);
+                                        row.UpdateCell(indexAdduct, adduct); // Show the deduced adduct
                                     }
                                     hasError = false;
                                     return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID);
