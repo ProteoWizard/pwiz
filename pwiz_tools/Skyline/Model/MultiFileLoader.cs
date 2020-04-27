@@ -31,6 +31,7 @@ namespace pwiz.Skyline.Model
     public class MultiFileLoader
     {
         public const int MAX_PARALLEL_LOAD_FILES = 12;
+        public const int MAX_PARALLEL_LOAD_FILES_USER_GC = 3; // On some systems we find that parallel performance suffers when not using ServerGC, as during SkylineTester runs
 
         private readonly QueueWorker<LoadInfo> _worker;
         private readonly Dictionary<MsDataFileUri, int> _loadingPaths;
@@ -105,6 +106,12 @@ namespace pwiz.Skyline.Model
                 simultaneousFileOptions);
         }
 
+        public static int GetMaxLoadThreadCount()
+        {
+            // On some systems we find that parallel performance suffers when not using ServerGC, as during SkylineTester runs, so we lower the max thread count
+            return System.Runtime.GCSettings.IsServerGC ? MAX_PARALLEL_LOAD_FILES : MAX_PARALLEL_LOAD_FILES_USER_GC;
+        }
+
         public static int GetOptimalThreadCount(int? loadingThreads, int? fileCount, int processorCount, ImportResultsSimultaneousFileOptions simultaneousFileOptions)
         {
             if (!loadingThreads.HasValue)
@@ -123,7 +130,10 @@ namespace pwiz.Skyline.Model
                         loadingThreads = Math.Max(2, processorCount / 2); // Min of 2, because you really expect more than 1
                         break;
                 }
-                loadingThreads = Math.Min(MAX_PARALLEL_LOAD_FILES, loadingThreads.Value);
+
+                // On some systems we find that parallel performance suffers when not using ServerGC, as during SkylineTester runs
+                var maxLoadThreads = GetMaxLoadThreadCount();
+                loadingThreads = Math.Min(maxLoadThreads, loadingThreads.Value);
                 loadingThreads = GetBalancedThreadCount(loadingThreads.Value, fileCount);
             }
 
@@ -140,12 +150,16 @@ namespace pwiz.Skyline.Model
             int files = fileCount.Value;
             int fullCycles = files / loadingThreads;
             int remainder = files % loadingThreads;
-            // While there is a remainder (i.e. files do not divide evenly into the avaliable threads)
-            // and reducing the thread count by 1 would not increase the full
+            int totalCycles = fullCycles + (remainder == 0 ? 0 : 1);
+            // While there is a remainder (i.e. files do not divide evenly into the available threads)
+            // and reducing the thread count by 1 would not increase the total cycle count
             while (remainder > 0)
             {
                 int reducedThreads = loadingThreads - 1;
-                if (fullCycles != fileCount.Value / reducedThreads && fileCount.Value % reducedThreads != 0)
+                var revisedFullCycles = files / reducedThreads;
+                var revisedRemainder = files % reducedThreads;
+                var revisedTotalCycles = revisedFullCycles + (revisedRemainder == 0 ? 0 : 1);
+                if (totalCycles != revisedTotalCycles)
                     break;
                 loadingThreads = reducedThreads;
                 remainder = fileCount.Value % loadingThreads;
