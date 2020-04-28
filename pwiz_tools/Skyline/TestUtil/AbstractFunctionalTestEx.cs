@@ -282,6 +282,17 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public void SetCellValue(DataGridView dataGridView, int rowIndex, int columnIndex, object value)
+        {
+            using (new WaitDocumentChange())
+            {
+                dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[columnIndex];
+                dataGridView.BeginEdit(true);
+                dataGridView.CurrentCell.Value = value;
+                dataGridView.EndEdit();
+            }
+        }
+
         /// <summary>
         /// Split or collapse multiple panes in the chromatogram graph.
         /// </summary>

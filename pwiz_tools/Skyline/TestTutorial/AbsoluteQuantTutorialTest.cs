@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestTutorial
             // IsPauseForScreenShots = true;
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
-
+                                                    
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/AbsoluteQuant-1_4.pdf";
 
             TestFilesZipPaths = new[]
@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             var folderAbsoluteQuant = UseRawFiles ? "AbsoluteQuant" : "AbsoluteQuantMzml";
-            // Generating a Transition List, p. 4
+            // Generating a Transition List, p. 5, 6
             {
                 var doc = SkylineWindow.Document;
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestTutorial
                               transitionSettingsUI.RegressionCEName = "Thermo TSQ Vantage";
                               transitionSettingsUI.RegressionDPName = Resources.SettingsList_ELEMENT_NONE_None;
                           });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Prediction tab", 4);
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Prediction tab", 5);
 
                 RunUI(() =>
                           {
@@ -98,30 +98,25 @@ namespace pwiz.SkylineTestTutorial
                               transitionSettingsUI.RangeTo = Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1;
                               transitionSettingsUI.SpecialIons = new string[0];
                           });
-                PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 4);
+                PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 6);
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
                 WaitForDocumentChange(doc);
             }
-            RunUI(() =>
-            {
-                SkylineWindow.GraphSpectrum.Hide();
-            });
 
-            // Configuring Peptide settings p. 4
+            // Configuring Peptide settings p. 7, 8
             PeptideSettingsUI peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() => peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications);
-            //PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modification tab", 5);
 
-            var modHeavyK = new StaticMod("Label:13C(6)15N(2) (C-term K)", "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15,
-                                          RelativeRT.Matching, null, null, null);
-            AddHeavyMod(modHeavyK, peptideSettingsUi, "Edit Isotope Modification over Transition Settings", 5);
+            var modHeavyK = new StaticMod("Label:13C(6)15N(2) (C-term K)", "K", ModTerminus.C, false, null,
+                LabelAtoms.C13 | LabelAtoms.N15, RelativeRT.Matching, null, null, null);
+            AddHeavyMod(modHeavyK, peptideSettingsUi, "Edit Isotope Modification over Transition Settings", 7);
             RunUI(() => peptideSettingsUi.PickedHeavyMods = new[] { modHeavyK.Name });
-            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modification tab with mod added", 5);
+            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modification tab with mod added", 8);
 
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
 
-            // Inserting a peptide sequence p. 5
+            // Inserting a peptide sequence p. 9
             using (new CheckDocumentState(1, 1, 2, 10))
             {
                 RunUI(() => SetClipboardText("IEAIPQIDK\tGST-tag"));
@@ -129,7 +124,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(pasteDlg.PastePeptides);
                 WaitForProteinMetadataBackgroundLoaderCompletedUI();
                 RunUI(() => pasteDlg.Size = new Size(700, 210));
-                PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List", 6);
+                PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List", 9);
 
                 OkDialog(pasteDlg, pasteDlg.OkDialog);
             }
@@ -137,15 +132,11 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ExpandPrecursors);
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
             WaitForCondition(() => File.Exists(GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
-            RunUI( () =>
-            {
-                SkylineWindow.Size = new Size(650, 500);
-                AdjustSequenceTreePanelWidth();
-            });
+            RunUI( () => SkylineWindow.Size = new Size(840, 410));
 
-            PauseForScreenShot("Main window with Targets view", 6);
+            PauseForScreenShot("Main window with Targets view", 9);
 
-            // Exporting a transition list p. 6
+            // Exporting a transition list p. 10
             {
                 var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
                 RunUI(() =>
@@ -155,15 +146,15 @@ namespace pwiz.SkylineTestTutorial
                               exportMethodDlg.OptimizeType = ExportOptimize.NONE;
                               exportMethodDlg.MethodType = ExportMethodType.Standard;
                           });
-                PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List", 7);
+                PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List", 10);
 
                 OkDialog(exportMethodDlg, () =>
                     exportMethodDlg.OkDialog(GetTestPath("Quant_Abs_Thermo_TSQ_Vantage.csv")));
             }
 
-            // Importing RAW files into Skyline p. 7
+            // Importing RAW files into Skyline p. 11, 12
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
-            PauseForScreenShot<ImportResultsDlg>("Import Results - click OK to get shot of Import Results Files and then cancel", 8);
+            PauseForScreenShot<ImportResultsDlg>("Import Results - click OK to get shot of Import Results Files and then cancel", 11);
 
             RunUI(() =>
             {
@@ -189,22 +180,18 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => Equals(8, SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden)),
                 "unexpected visible graphChromatogram count");
 
+            RunUI( () => 
+                        {   //resize the window and activate the first standard chromatogram pane.
+                            RunUI(() => SkylineWindow.Size = new Size(1330, 720));
+                            var chrom = SkylineWindow.GraphChromatograms.First();
+                            chrom.Select();
+                        });
+
             WaitForCondition(10 * 60 * 1000,    // ten minutes
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            PauseForScreenShot("Main window with imported data", 13);
 
-            RunUI(() =>
-            {   //resize the window and activate the first standard chromatogram pane.
-                RunUI(() => SkylineWindow.Size = new Size(1330, 720));
-                var chrom = SkylineWindow.GraphChromatograms.First(
-                        (ch) => Equals("Standard_1", ch.NameSet)
-                ); 
-                chrom.Select();
-                AdjustSequenceTreePanelWidth();
-            });
-
-            PauseForScreenShot("Main window with imported data", 9);
-
-            // Analyzing SRM Data from FOXN1-GST Sample p. 9
+            // Analyzing SRM Data from FOXN1-GST Sample p. 14
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults,
                 importResultsDlg1 =>
                 {
@@ -230,7 +217,6 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 // Total normalization
                 SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
-                AdjustSequenceTreePanelWidth();
             });
 
             RunUI(() => SkylineWindow.ActivateReplicate("FOXN1-GST"));
@@ -248,8 +234,9 @@ namespace pwiz.SkylineTestTutorial
                 int transitionCount = SkylineWindow.DocumentUI.PeptideTransitionGroups.First().TransitionCount;
                 CheckGstGraphs(transitionCount, transitionCount);
             });
-            RestoreViewOnScreen(10);
-            PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for light", 10);
+            RunUI(() => SkylineWindow.Size = new Size(1470, 656));
+            RestoreViewOnScreen(14);
+            PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for light", 14);
 
             RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 1));
             WaitForGraphs();
@@ -259,7 +246,7 @@ namespace pwiz.SkylineTestTutorial
                 int transitionCount = SkylineWindow.DocumentUI.PeptideTransitionGroups.ToArray()[1].TransitionCount;
                 CheckGstGraphs(transitionCount, transitionCount);
             });
-            PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for heavy", 10);
+            PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for heavy", 14);
 
             RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.Molecules, 0));
             WaitForGraphs();
@@ -271,10 +258,9 @@ namespace pwiz.SkylineTestTutorial
                 int transitionGroupCount = SkylineWindow.DocumentUI.Peptides.First().TransitionGroupCount;
                 CheckGstGraphs(transitionGroupCount, transitionGroupCount - 1);
             });
-            RestoreViewOnScreen(11);
-            PauseForScreenShot("Main window with totals graphs for light and heavy and FOXN1-GST", 11);
+            PauseForScreenShot("Main window with totals graphs for light and heavy and FOXN1-GST", 15);
             
-            // Peptide Quantitification Settings p. 11
+            // Peptide Quantitification Settings p. 16
             peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() => peptideSettingsUi.SelectedTab = (PeptideSettingsUI.TABS)5);
             const string quantUnits = "fmol/ul";
@@ -284,12 +270,11 @@ namespace pwiz.SkylineTestTutorial
                 peptideSettingsUi.QuantNormalizationMethod = new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);
                 peptideSettingsUi.QuantUnits = quantUnits;
             });
-            PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings Quantification Tab", 12);
+            PauseForScreenShot("Peptide Settings Quantification Tab", 16);
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
 
             // Specify analyte concentrations of external standards
-            RunUI(()=>SkylineWindow.ShowDocumentGrid(true));
-            var documentGridForm = FindOpenForm<DocumentGridForm>();
+            var documentGridForm = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
             RunUI(() =>
             {
                 documentGridForm.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates);
@@ -316,12 +301,28 @@ namespace pwiz.SkylineTestTutorial
                 // ReSharper restore AccessToModifiedClosure
                 WaitForConditionUI(() => documentGridForm.IsComplete);
             }
-            PauseForScreenShot("Document grid with concentrations filled in", 13);
+            RunUI(() =>
+            {
+                SkylineWindow.Width = 500;
+                var gridFloatingWindow = documentGridForm.Parent.Parent;
+                gridFloatingWindow.Size = new Size(370, 315);
+                gridFloatingWindow.Top = SkylineWindow.Top;
+                gridFloatingWindow.Left = SkylineWindow.Right + 20;
+            });
+            PauseForScreenShot("Document grid with concentrations filled in", 17);
 
-            // View the calibration curve p. 13
-            RunUI(()=>SkylineWindow.ShowCalibrationForm());
-            var calibrationForm = FindOpenForm<CalibrationForm>();
-            PauseForScreenShot<CalibrationForm>("View calibration curve", 14);
+            // View the calibration curve p. 18
+            RunUI(() => SkylineWindow.ShowDocumentGrid(false));
+
+            var calibrationForm = ShowDialog<CalibrationForm>(() => SkylineWindow.ShowCalibrationForm());
+            RunUI(() =>
+            {
+                var calibrationFloatingWindow = calibrationForm.Parent.Parent;
+                calibrationFloatingWindow.Width = 565;
+                calibrationFloatingWindow.Top = SkylineWindow.Top;
+                calibrationFloatingWindow.Left = SkylineWindow.Right + 20;
+            });
+            PauseForScreenShot("View calibration curve", 18);
 
             Assert.AreEqual(CalibrationCurveFitter.AppendUnits(QuantificationStrings.Analyte_Concentration, quantUnits), calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
             Assert.AreEqual(string.Format(QuantificationStrings.CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio, IsotopeLabelType.light.Title, IsotopeLabelType.heavy.Title),

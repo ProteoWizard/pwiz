@@ -22,9 +22,11 @@ Undo Redo : 离子对设置 已更改
 Summary   : 设置 > 离子对设置 已更改
 All Info  :
 离子对设置 已更改
-设置 > 离子对设置 -- 过滤器 > 小分子离子类型 从 "f" 更改到 "f, p"
+设置 > 离子对设置 -- 过滤器 > 离子类型 从 "y" 更改到 "y, p"
+设置 > 离子对设置 -- 过滤器 > 分子离子类型 从 "f" 更改到 "f, p"
+设置 > 离子对设置 -- Integration > Integrate All 从 假 更改到 真
 设置 > 离子对设置 -- 全扫描 > 同位素峰值包含 从 "无" 更改到 "计数"
-设置 > 离子对设置 -- 全扫描 > 峰 从 缺失 更改到 "3"
+设置 > 离子对设置 -- 全扫描 > 峰 从 缺失 更改到 "2"
 设置 > 离子对设置 -- 全扫描 > 母离子质量分析仪 从 "无" 更改到 "Orbitrap （轨道陷）"
 设置 > 离子对设置 -- 全扫描 > 分辨能力 从 缺失 更改到 "70000"
 设置 > 离子对设置 -- 全扫描 > 分辨能力质荷比 从 缺失 更改到 "200"
@@ -76,13 +78,13 @@ Extra Info: 文件名称 =
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个"
 
-Undo Redo : 肽段设置 -- 定量 已更改
-Summary   : 设置 > 肽段设置 -- 定量 已更改
+Undo Redo : 分子设置 -- 定量 已更改
+Summary   : 设置 > 分子设置 -- 定量 已更改
 All Info  :
-肽段设置 -- 定量 已更改
-设置 > 肽段设置 -- 定量 > 回归拟合 从 "无" 更改到 "过零点的线性"
-设置 > 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于重的比率"
-设置 > 肽段设置 -- 定量 > 单位 从 缺失 更改到 "uM"
+分子设置 -- 定量 已更改
+设置 > 分子设置 -- 定量 > 回归拟合 从 "无" 更改到 "过零点的线性"
+设置 > 分子设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于重的比率"
+设置 > 分子设置 -- 定量 > 单位 从 缺失 更改到 "uM"
 
 Undo Redo : 将 GW1_01 的 样品类型 设定为 "质量控制"
 Summary   : 将 GW1_01 的 样品类型 设定为 "质量控制"
@@ -104,68 +106,53 @@ Summary   : 将 NIST1_01 的 样品类型 设定为 "标准"
 All Info  :
 将 NIST1_01 的 样品类型 设定为 "标准"
 
-Undo Redo : 将 NIST1_01 的 分析物浓度 设定为 "2838"
-Summary   : 将 NIST1_01 的 分析物浓度 设定为 "2838"
+Undo Redo : 将 NIST1_01 的 分析物浓度 设定为 "1"
+Summary   : 将 NIST1_01 的 分析物浓度 设定为 "1"
 All Info  :
-将 NIST1_01 的 分析物浓度 设定为 "2838"
+将 NIST1_01 的 分析物浓度 设定为 "1"
 
 Undo Redo : 将 NIST2_01 的 样品类型 设定为 "标准"
 Summary   : 将 NIST2_01 的 样品类型 设定为 "标准"
 All Info  :
 将 NIST2_01 的 样品类型 设定为 "标准"
 
-Undo Redo : 将 NIST2_01 的 分析物浓度 设定为 "2838"
-Summary   : 将 NIST2_01 的 分析物浓度 设定为 "2838"
+Undo Redo : 将 NIST2_01 的 分析物浓度 设定为 "1"
+Summary   : 将 NIST2_01 的 分析物浓度 设定为 "1"
 All Info  :
-将 NIST2_01 的 分析物浓度 设定为 "2838"
+将 NIST2_01 的 分析物浓度 设定为 "1"
 
 Undo Redo : 将 NIST3_01 的 样品类型 设定为 "标准"
 Summary   : 将 NIST3_01 的 样品类型 设定为 "标准"
 All Info  :
 将 NIST3_01 的 样品类型 设定为 "标准"
 
-Undo Redo : 将 NIST3_01 的 分析物浓度 设定为 "2838"
-Summary   : 将 NIST3_01 的 分析物浓度 设定为 "2838"
+Undo Redo : 将 NIST3_01 的 分析物浓度 设定为 "1"
+Summary   : 将 NIST3_01 的 分析物浓度 设定为 "1"
 All Info  :
-将 NIST3_01 的 分析物浓度 设定为 "2838"
+将 NIST3_01 的 分析物浓度 设定为 "1"
 
-Undo Redo : 将 FA 18:2 omega-6 (LA) 的 浓度系数 设定为 "1"
-Summary   : 将 FA 18:2 omega-6 (LA) 的 浓度系数 设定为 "1"
+Undo Redo : 将 FA 18:2 omega-6 (LA) 的 浓度系数 设定为 "2838"
+Summary   : 将 FA 18:2 omega-6 (LA) 的 浓度系数 设定为 "2838"
 All Info  :
-将 FA 18:2 omega-6 (LA) 的 浓度系数 设定为 "1"
+将 FA 18:2 omega-6 (LA) 的 浓度系数 设定为 "2838"
 
-Undo Redo : 将 FA 18:2 omega-6 (LA) 的 校准方法 设定为 "相对于重的比率"
-Summary   : 将 FA 18:2 omega-6 (LA) 的 校准方法 设定为 "相对于重的比率"
+Undo Redo : 将 FA 18:3 omega-3 (ALA) 的 浓度系数 设定为 "54"
+Summary   : 将 FA 18:3 omega-3 (ALA) 的 浓度系数 设定为 "54"
 All Info  :
-将 FA 18:2 omega-6 (LA) 的 校准方法 设定为 "相对于重的比率"
-
-Undo Redo : 将 FA 18:3 omega-3 (ALA) 的 浓度系数 设定为 "0.0192"
-Summary   : 将 FA 18:3 omega-3 (ALA) 的 浓度系数 设定为 "0.0192"
-All Info  :
-将 FA 18:3 omega-3 (ALA) 的 浓度系数 设定为 "0.0192"
+将 FA 18:3 omega-3 (ALA) 的 浓度系数 设定为 "54"
 
 Undo Redo : 将 FA 18:3 omega-3 (ALA) 的 校准方法 设定为 "与替代的比例 FA 22:6 omega-3 (DHA) (Heavy)"
 Summary   : 将 FA 18:3 omega-3 (ALA) 的 校准方法 设定为 "与替代的比例 FA 22:6 omega-3 (DHA) (Heavy)"
 All Info  :
 将 FA 18:3 omega-3 (ALA) 的 校准方法 设定为 "与替代的比例 FA 22:6 omega-3 (DHA) (Heavy)"
 
-Undo Redo : 将 FA 20:4 omega-6 (AA) 的 浓度系数 设定为 "0.3467"
-Summary   : 将 FA 20:4 omega-6 (AA) 的 浓度系数 设定为 "0.3467"
+Undo Redo : 将 FA 20:4 omega-6 (AA) 的 浓度系数 设定为 "984"
+Summary   : 将 FA 20:4 omega-6 (AA) 的 浓度系数 设定为 "984"
 All Info  :
-将 FA 20:4 omega-6 (AA) 的 浓度系数 设定为 "0.3467"
+将 FA 20:4 omega-6 (AA) 的 浓度系数 设定为 "984"
 
-Undo Redo : 将 FA 20:4 omega-6 (AA) 的 校准方法 设定为 "相对于重的比率"
-Summary   : 将 FA 20:4 omega-6 (AA) 的 校准方法 设定为 "相对于重的比率"
+Undo Redo : 将 FA 22:6 omega-3 (DHA) 的 浓度系数 设定为 "118"
+Summary   : 将 FA 22:6 omega-3 (DHA) 的 浓度系数 设定为 "118"
 All Info  :
-将 FA 20:4 omega-6 (AA) 的 校准方法 设定为 "相对于重的比率"
-
-Undo Redo : 将 FA 22:6 omega-3 (DHA) 的 浓度系数 设定为 "0.0416"
-Summary   : 将 FA 22:6 omega-3 (DHA) 的 浓度系数 设定为 "0.0416"
-All Info  :
-将 FA 22:6 omega-3 (DHA) 的 浓度系数 设定为 "0.0416"
-
-Undo Redo : 将 FA 22:6 omega-3 (DHA) 的 校准方法 设定为 "相对于重的比率"
-Summary   : 将 FA 22:6 omega-3 (DHA) 的 校准方法 设定为 "相对于重的比率"
-All Info  :
-将 FA 22:6 omega-3 (DHA) 的 校准方法 设定为 "相对于重的比率"
+将 FA 22:6 omega-3 (DHA) 的 浓度系数 设定为 "118"
 

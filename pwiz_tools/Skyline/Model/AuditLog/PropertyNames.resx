@@ -758,6 +758,9 @@
   <data name="Annotations_ColorBrush" xml:space="preserve">
     <value>Color</value>
   </data>
+  <data name="PeptideDocNode_ExplicitModsTyped" xml:space="preserve">
+    <value>Isotope modifications</value>
+  </data>
   <data name="PeptideDocNode_ExplicitModsHeavy" xml:space="preserve">
     <value>Heavy modifications</value>
   </data>
@@ -1377,7 +1380,7 @@
     <value>Column Sorts</value>
   </data>
   <data name="BatchModifyInfo_ViewName" xml:space="preserve">
-    <value>View name</value>
+    <value>Report name</value>
   </data>
   <data name="ColumnSort_ListSortDirection" xml:space="preserve">
     <value>Direction</value>
@@ -1471,5 +1474,17 @@
   </data>
   <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
     <value>Quantitative</value>
+  </data>
+  <data name="TransitionIntegration_IsIntegrateAll" xml:space="preserve">
+    <value>Integrate All</value>
+  </data>
+  <data name="TransitionSettings_Integration" xml:space="preserve">
+    <value>Integration</value>
+  </data>
+  <data name="PeptideIntegration_PeakScoringModel" xml:space="preserve">
+    <value>Peak scoring model</value>
+  </data>
+  <data name="PeptideSettings_Integration" xml:space="preserve">
+    <value>Integration</value>
   </data>
 </root>

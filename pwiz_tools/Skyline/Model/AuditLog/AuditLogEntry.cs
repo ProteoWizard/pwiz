@@ -503,6 +503,18 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return ReferenceEquals(this, ROOT); }
         }
 
+        public static AuditLogEntry SKIP = new AuditLogEntry { Count = -1, LogIndex = int.MinValue };
+
+        public static AuditLogEntry SkipChange(SrmDocumentPair pair)
+        {
+            return SKIP;
+        }
+
+        public bool IsSkip
+        {
+            get { return ReferenceEquals(this, SKIP); }
+        }
+
         private AuditLogEntry(DateTime timeStampUTC, string reason, SrmDocument.DOCUMENT_TYPE docType,
             string extraInfo = null) : this()
         {

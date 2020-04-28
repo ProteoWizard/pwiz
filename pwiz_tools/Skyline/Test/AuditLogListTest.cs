@@ -26,6 +26,8 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -108,7 +110,6 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(8,  roundtripEntries[100].TimeStampUTC.Hour);
             Assert.AreEqual(27, roundtripEntries[10000].TimeStampUTC.Day);
             Assert.AreEqual(17, roundtripEntries[10000].TimeStampUTC.Hour);
-
         }
 
         private static string Test42FormatSkyl =
@@ -147,5 +148,37 @@ namespace pwiz.SkylineTest
           "</audit_log_entry>\n" +
          "</audit_log>\n" +
         "</audit_log_root>";
+
+        [TestMethod]
+        public void TestAuditLogRef()
+        {
+            const string TEST_PREFIX = "test";
+            const int TEST_ENTRY_COUNT = 3;
+            var document = new SrmDocument(SrmSettingsList.GetDefault());
+            Assert.IsTrue(document.AuditLog.AuditLogEntries.IsRoot);
+            Assert.AreEqual(0, AuditLogEntryRef.PROTOTYPE.ListChildrenOfParent(document).Count());
+            AuditLogEntry headEntry = document.AuditLog.AuditLogEntries;
+            for (int i = 0; i < TEST_ENTRY_COUNT; i++)
+            {
+                var auditLogEntry = AuditLogEntry.CreateTestOnlyEntry(DateTime.UtcNow, SrmDocument.DOCUMENT_TYPE.mixed, TEST_PREFIX + i);
+                headEntry = auditLogEntry.ChangeParent(headEntry);
+            }
+            Assert.IsNotNull(headEntry);
+            Assert.AreEqual(TEST_ENTRY_COUNT, headEntry.Count);
+            document = document.ChangeAuditLog(headEntry);
+            var auditLogRefs = AuditLogEntryRef.PROTOTYPE.ListChildrenOfParent(document).Cast<AuditLogEntryRef>().ToList();
+            Assert.AreEqual(TEST_ENTRY_COUNT, auditLogRefs.Count);
+            var extraLogEntry = AuditLogEntry
+                .CreateTestOnlyEntry(DateTime.UtcNow, SrmDocument.DOCUMENT_TYPE.mixed, "extra entry")
+                .ChangeParent(document.AuditLog.AuditLogEntries);
+            var document2 = document.ChangeAuditLog(extraLogEntry);
+            Assert.AreEqual(TEST_ENTRY_COUNT + 1, AuditLogEntryRef.PROTOTYPE.ListChildrenOfParent(document2).Count());
+            foreach (var auditLogRef in auditLogRefs)
+            {
+                var entry1 = auditLogRef.FindAuditLogEntry(document);
+                var entry2 = auditLogRef.FindAuditLogEntry(document2);
+                Assert.AreEqual(entry1, entry2);
+            }
+        }
     }
 }

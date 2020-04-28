@@ -45,6 +45,7 @@ using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -320,20 +321,8 @@ namespace pwiz.Skyline
                     }
                 }
 
-                UpdateIonTypesMenuItemsVisibility();
-                if (!graphsToolStripMenuItem.Enabled)
-                {
-                    graphsToolStripMenuItem.Enabled = true;
-                    ionTypesMenuItem.Enabled = true;
-                    chargesMenuItem.Enabled = true;
-                    ranksMenuItem.Enabled = true;
+                EnableGraphSpectrum(layoutLock, settingsNew, deserialized);
 
-                    if (!deserialized)
-                    {
-                        layoutLock.EnsureLocked();
-                        ShowGraphSpectrum(Settings.Default.ShowSpectra);
-                    }
-                }
                 var enable = settingsNew.HasResults;
                 bool enableSchedule = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.schedule);
                 bool enableRunToRun = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
@@ -535,6 +524,41 @@ namespace pwiz.Skyline
             FoldChangeForm.CloseInapplicableForms(this);
         }
 
+        public void UpdateGraphSpectrumEnabled()
+        {
+            using (var layoutLock = new DockPanelLayoutLock(dockPanel))
+            {
+                EnableGraphSpectrum(layoutLock, DocumentUI.Settings, false);
+            }
+        }
+
+        private void EnableGraphSpectrum(DockPanelLayoutLock layoutLock, SrmSettings settings, bool deserialized)
+        {
+            bool hasLibraries = settings.PeptideSettings.Libraries.HasLibraries;
+            bool enable = hasLibraries || PrositHelpers.PrositSettingsValid;
+            if (enable)
+            {
+                UpdateIonTypesMenuItemsVisibility();
+            }
+
+            bool enableChanging = graphsToolStripMenuItem.Enabled != enable;
+            if (enableChanging)
+            {
+                graphsToolStripMenuItem.Enabled = enable;
+                ionTypesMenuItem.Enabled = enable;
+                chargesMenuItem.Enabled = enable;
+                ranksMenuItem.Enabled = enable;
+            }
+
+            // Make sure we don't keep a spectrum graph around because it was
+            // persisted when Prosit settings were on and they no longer are
+            if ((enableChanging && !deserialized) || (deserialized && !hasLibraries && !enable))
+            {
+                layoutLock.EnsureLocked();
+                ShowGraphSpectrum(enable && Settings.Default.ShowSpectra);
+            }
+        }
+
         private void RemoveGraphChromFromList(GraphChromatogram graphChrom)
         {
             _listGraphChrom.Remove(graphChrom);
@@ -603,9 +627,8 @@ namespace pwiz.Skyline
             }
             if (ImportingResultsWindow != null)
             {
-                var importingResultsWindowTemp = ImportingResultsWindow;
+                ImportingResultsWindow.Close();
                 ImportingResultsWindow = null;
-                importingResultsWindowTemp.RemoveAsync();
 
                 // Reset progress for the current document
                 _chromatogramManager.ResetProgress(Document);
@@ -4039,7 +4062,8 @@ namespace pwiz.Skyline
                     list.SetValue(calcNew);
 
                     var regressionRTDoc = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
-                    if (regressionRTDoc != null && Equals(calcOld.Name, regressionRTDoc.Calculator.Name))
+                    if (regressionRTDoc != null && Equals(calcOld.Name, regressionRTDoc.Calculator.Name) &&
+                        !Equals(calcNew, regressionRTDoc.Calculator))
                     {
                         ModifyDocument(string.Format(Resources.SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator, calcNew.Name), doc =>
                             doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
@@ -4445,7 +4469,8 @@ namespace pwiz.Skyline
 
                 if (areaCVCountTransitionsToolStripMenuItem.DropDownItems.Count == 0)
                 {
-                    var maxTransCount = Document.PeptideTransitionGroups.Max(g => g.TransitionCount);
+                    var maxTransCount = Document.MoleculeTransitionGroups
+                        .Select(g => g.TransitionCount).Append(0).Max();
                     for (int i = 1; i <= maxTransCount; i++)
                     {
                         var tmp = new ToolStripMenuItem(i.ToString(), null,
@@ -4830,9 +4855,9 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        public void SetAreaCVAnnotation(string annotation, bool update = true)
+        public void SetAreaCVAnnotation(object annotationValue, bool update = true)
         {
-            AreaGraphController.GroupByAnnotation = annotation;
+            AreaGraphController.GroupByAnnotation = annotationValue;
 
             if(update)
                 UpdatePeakAreaGraph();
@@ -6022,6 +6047,11 @@ namespace pwiz.Skyline
                 ModifyDocument(AuditLogStrings.AuditLogForm__clearLogButton_Click_Clear_audit_log,
                     document => document.ChangeAuditLog(AuditLogEntry.ROOT), docPair => AuditLogEntry.ClearLogEntry(docPair.OldDoc));
             } 
+        }
+
+        public AuditLogForm AuditLogForm
+        {
+            get { return _auditLogForm; }
         }
 
         #endregion
