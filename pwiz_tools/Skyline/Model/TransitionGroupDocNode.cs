@@ -820,22 +820,15 @@ namespace pwiz.Skyline.Model
         private double CalcCrosslinkedPrecursorMz(SrmSettings settings, ExplicitMods mods,
             out IsotopeDistInfo isotopeDist, out TypedMass mass)
         {
-            var isotopeAbundances =
-                settings.TransitionSettings.FullScan.IsotopeAbundances ?? BioMassCalc.DEFAULT_ABUNDANCES;
+            var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(settings);
             MassType massType = settings.TransitionSettings.Prediction.PrecursorMassType;
-            IPrecursorMassCalc massCalc =
-                settings.GetPrecursorCalc(IsCustomIon ? IsotopeLabelType.light : LabelType, mods);
             MoleculeMassOffset moleculeMassOffset = GetNeutralFormula(settings, mods);
-            MassDistribution massDistribution = massCalc.GetMZDistributionFromFormula(
-                moleculeMassOffset.Molecule.ToString(), Adduct.SINGLY_PROTONATED,
-                isotopeAbundances);
-            double massOffset = massType.IsMonoisotopic()
-                ? moleculeMassOffset.MonoMassOffset
-                : moleculeMassOffset.AverageMassOffset;
-            massDistribution = massDistribution.OffsetAndDivide(massOffset - BioMassCalc.MassProton, 1);
-            TypedMass monoMassH = new TypedMass(massDistribution.MostAbundanceMass + BioMassCalc.MassProton,
+            var monoAndAverageMass= fragmentedMoleculeSettings.ReplaceMoleculeWithMassOffset(moleculeMassOffset);
+            MassDistribution massDistribution =
+                fragmentedMoleculeSettings.GetMassDistribution(moleculeMassOffset.Molecule, 0, PrecursorCharge);
+            TypedMass monoMassH = new TypedMass(monoAndAverageMass.MonoMassOffset + BioMassCalc.MassProton,
                 MassType.MonoisotopicMassH);
-            TypedMass averageMassH = new TypedMass(massDistribution.AverageMass + BioMassCalc.MassProton,
+            TypedMass averageMassH = new TypedMass(monoAndAverageMass.AverageMassOffset + BioMassCalc.MassProton,
                 MassType.AverageMassH);
             mass = massType.IsMonoisotopic() ? monoMassH : averageMassH;
             var mzDistribution = massDistribution.OffsetAndDivide(PrecursorCharge * BioMassCalc.MassProton, PrecursorCharge);
@@ -850,9 +843,15 @@ namespace pwiz.Skyline.Model
                 isotopeDist = null;
             }
 
-            double precursorMz = massType.IsMonoisotopic()
-                ? mzDistribution.MostAbundanceMass
-                : mzDistribution.AverageMass;
+            double precursorMz;
+            if (massType.IsMonoisotopic())
+            {
+                precursorMz = (monoAndAverageMass.MonoMassOffset / PrecursorCharge) + BioMassCalc.MassProton;
+            }
+            else
+            {
+                precursorMz = (monoAndAverageMass.AverageMassOffset / PrecursorCharge) + BioMassCalc.MassProton;
+            }
             return precursorMz;
         }
 
