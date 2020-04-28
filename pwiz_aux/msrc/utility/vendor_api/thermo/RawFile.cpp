@@ -1875,6 +1875,7 @@ void RawFileImpl::parseInstrumentMethod()
     sregex scanEventIsoWRegex = sregex::compile("\\s*MS.*:.*\\s+IsoW\\s+(\\S+)\\s*");
     sregex repeatedEventRegex = sregex::compile("\\s*Scan Event (\\d+) repeated for top (\\d+)\\s*");
     sregex defaultIsolationWidthRegex = sregex::compile("\\s*MS(\\d+) Isolation Width:\\s*(\\S+)\\s*");
+    sregex defaultIsolationWindowRegex = sregex::compile("\\s*Isolation Window \\(m/z\\) =\\s*(\\S+)\\s*");
     sregex isolationMzOffsetRegex = sregex::compile("\\s*Isolation m/z Offset =\\s*(\\S+)\\s*");
     sregex scanDescriptionRegex = sregex::compile("\\s*Scan Description =\\s*(\\S+)\\s*");
 
@@ -1933,7 +1934,7 @@ void RawFileImpl::parseInstrumentMethod()
         }
 
         // Data Dependent Settings:
-        if (bal::icontains(line, "Data Dependent Settings"))
+        if (bal::icontains(line, "Data Dependent Settings") || bal::icontains(line, "Scan DIAScan"))
         {
             dataDependentSettings = true;
             continue;
@@ -1947,6 +1948,13 @@ void RawFileImpl::parseInstrumentMethod()
                 int msLevel = lexical_cast<int>(what[1]);
                 double isolationWidth = lexical_cast<double>(what[2]);
                 defaultIsolationWidthBySegmentAndMsLevel[scanSegment][msLevel] = isolationWidth;
+                continue;
+            }
+            
+            if (regex_match(line, what, defaultIsolationWindowRegex))
+            {
+                double isolationWidth = lexical_cast<double>(what[1]);
+                defaultIsolationWidthBySegmentAndMsLevel[scanSegment][2] = isolationWidth;
                 continue;
             }
 
@@ -2507,19 +2515,26 @@ std::string RawFileThreadImpl::getSampleID() const
 
 std::string RawFileThreadImpl::getTrailerExtraValue(long scanNumber, const string& name) const
 {
+    if (rawFile_->getCurrentController().type != Controller_MS)
+        return "";
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
         if (findItr == rawFile_->trailerExtraIndexByName.end())
             return "";
 
-        return ToStdString(raw_->GetTrailerExtraValue(scanNumber, findItr->second)->ToString());
+        auto result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
+        return result == nullptr ? "" : ToStdString(result->ToString());
     }
     CATCH_AND_FORWARD_EX(name)
 }
 
 double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const string& name) const
 {
+    if (rawFile_->getCurrentController().type != Controller_MS)
+        return 0.0;
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
@@ -2534,6 +2549,9 @@ double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const stri
 
 long RawFileThreadImpl::getTrailerExtraValueLong(long scanNumber, const string& name) const
 {
+    if (rawFile_->getCurrentController().type != Controller_MS)
+        return 0;
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
