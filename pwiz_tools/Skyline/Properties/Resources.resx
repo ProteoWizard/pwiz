@@ -10977,4 +10977,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
     <value>An error occurred while trying to display the document '{0}'. 
 There might be something wrong with default web browser on this computer.</value>
   </data>
+  <data name="FastaImporter_Import__0__proteins_and__1__peptides_added" xml:space="preserve">
+    <value>{0} proteins and {1} peptides added</value>
+  </data>
 </root>

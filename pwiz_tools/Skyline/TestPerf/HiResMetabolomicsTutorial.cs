@@ -28,7 +28,6 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -47,11 +46,6 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
     [TestClass]
     public class HiResMetabolomicsTutorialTest : AbstractFunctionalTest
     {
-        protected override bool ShowStartPage
-        {
-            get { return true; }  // So we can point out the UI mode control
-        }
-
         [TestMethod]
         public void TestHiResMetabolomicsTutorial()
         {
@@ -86,14 +80,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
         protected override void DoTest()
         {
-            // Setting the UI mode, p 2  
-            var startPage = WaitForOpenForm<StartPage>();
-            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
-            PauseForScreenShot<StartPage>("Start Window proteomic", 2);
-            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
-            PauseForScreenShot<StartPage>("Start Window small molecule", 3);
-            RunUI(() => startPage.DoAction(skylineWindow => true));
-            WaitForOpenForm<SkylineWindow>();
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
 
             // Inserting a Transition List, p. 2
             {
@@ -125,7 +112,8 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
                     }.ToList();
                     RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
-                    WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
+                    TryWaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
+                    RunUI(() => AssertEx.AreEqualDeep(columnsOrdered, pasteDlg.GetColumnNames()));
                     if (retry == 0)
                         PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 4);
 

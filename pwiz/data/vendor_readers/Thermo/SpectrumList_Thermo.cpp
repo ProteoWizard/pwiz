@@ -124,7 +124,7 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
 }
 
 
-InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID massAnalyzerType)
+InstrumentConfigurationPtr SpectrumList_Thermo::findInstrumentConfiguration(const MSData& msd, CVID massAnalyzerType) const
 {
     if (msd.instrumentConfigurationPtrs.empty())
         return InstrumentConfigurationPtr();
@@ -133,11 +133,19 @@ InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID m
     {
         size_t analyzerCount = boost::range::count_if(icPtr->componentList, [](const auto& component) { return component.type == ComponentType_Analyzer; });
 
-        if (icPtr->componentList.analyzer(analyzerCount-1).hasCVParam(massAnalyzerType))
-            return icPtr;
+        try
+        {
+            if (icPtr->componentList.analyzer(analyzerCount - 1).hasCVParam(massAnalyzerType))
+                return icPtr;
+        }
+        catch (out_of_range&)
+        {
+            continue;
+        }
     }
 
-    throw runtime_error("no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName());
+    warn_once(("no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName()).c_str());
+    return InstrumentConfigurationPtr();
 }
 
 inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& scanInfo)
@@ -493,7 +501,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
                 if (addMultiFill)
                 {
-                    precursor.userParams.push_back(UserParam("MultiFillTime", lexical_cast<string>(*fillTimeItr), "xsd:double"));
+                    scan.userParams.push_back(UserParam("MultiFillTime", lexical_cast<string>(*fillTimeItr), "xsd:double"));
                     ++fillTimeItr;
                 }
                 result->precursors.push_back(precursor);
@@ -520,7 +528,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 {
                     // isolationWindow
 
-                    double isolationWidth = 0;
+                    double isolationWidth = precursorInfo.isolationWidth / 2;
 
                     try
                     {

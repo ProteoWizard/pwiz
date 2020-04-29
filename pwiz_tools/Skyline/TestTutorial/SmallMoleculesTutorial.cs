@@ -91,8 +91,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<StartPage>("Start Window proteomic", 2);
             RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
             PauseForScreenShot<StartPage>("Start Window small molecule", 3);
-            RunUI(() => startPage.DoAction(skylineWindow => true));
-            WaitForOpenForm<SkylineWindow>();
+            ShowSkyline(() => startPage.DoAction(skylineWindow => true));
 
             // Inserting a Transition List, p. 5
             {

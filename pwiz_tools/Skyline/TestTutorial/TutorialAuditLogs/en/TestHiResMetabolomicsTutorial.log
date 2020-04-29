@@ -22,9 +22,11 @@ Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed
 All Info  :
 Transition Settings changed
-Settings > Transition Settings -- Filter > Small molecule Ion types changed from "f" to "f, p"
+Settings > Transition Settings -- Filter > Ion types changed from "y" to "y, p"
+Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
 Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
-Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
+Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "2"
 Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "Orbitrap"
 Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "70000"
 Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
@@ -76,13 +78,13 @@ Extra Info: File names =
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"
 
-Undo Redo : Peptide Settings -- Quantification changed
-Summary   : Settings > Peptide Settings -- Quantification changed
+Undo Redo : Molecule Settings -- Quantification changed
+Summary   : Settings > Molecule Settings -- Quantification changed
 All Info  :
-Peptide Settings -- Quantification changed
-Settings > Peptide Settings -- Quantification > Regression fit changed from "None" to "Linear through zero"
-Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
-Settings > Peptide Settings -- Quantification > Units changed from Missing to "uM"
+Molecule Settings -- Quantification changed
+Settings > Molecule Settings -- Quantification > Regression fit changed from "None" to "Linear through zero"
+Settings > Molecule Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
+Settings > Molecule Settings -- Quantification > Units changed from Missing to "uM"
 
 Undo Redo : Set Sample Type of GW1_01 to "Quality Control"
 Summary   : Set Sample Type of GW1_01 to "Quality Control"
@@ -104,68 +106,53 @@ Summary   : Set Sample Type of NIST1_01 to "Standard"
 All Info  :
 Set Sample Type of NIST1_01 to "Standard"
 
-Undo Redo : Set Analyte Concentration of NIST1_01 to "2838"
-Summary   : Set Analyte Concentration of NIST1_01 to "2838"
+Undo Redo : Set Analyte Concentration of NIST1_01 to "1"
+Summary   : Set Analyte Concentration of NIST1_01 to "1"
 All Info  :
-Set Analyte Concentration of NIST1_01 to "2838"
+Set Analyte Concentration of NIST1_01 to "1"
 
 Undo Redo : Set Sample Type of NIST2_01 to "Standard"
 Summary   : Set Sample Type of NIST2_01 to "Standard"
 All Info  :
 Set Sample Type of NIST2_01 to "Standard"
 
-Undo Redo : Set Analyte Concentration of NIST2_01 to "2838"
-Summary   : Set Analyte Concentration of NIST2_01 to "2838"
+Undo Redo : Set Analyte Concentration of NIST2_01 to "1"
+Summary   : Set Analyte Concentration of NIST2_01 to "1"
 All Info  :
-Set Analyte Concentration of NIST2_01 to "2838"
+Set Analyte Concentration of NIST2_01 to "1"
 
 Undo Redo : Set Sample Type of NIST3_01 to "Standard"
 Summary   : Set Sample Type of NIST3_01 to "Standard"
 All Info  :
 Set Sample Type of NIST3_01 to "Standard"
 
-Undo Redo : Set Analyte Concentration of NIST3_01 to "2838"
-Summary   : Set Analyte Concentration of NIST3_01 to "2838"
+Undo Redo : Set Analyte Concentration of NIST3_01 to "1"
+Summary   : Set Analyte Concentration of NIST3_01 to "1"
 All Info  :
-Set Analyte Concentration of NIST3_01 to "2838"
+Set Analyte Concentration of NIST3_01 to "1"
 
-Undo Redo : Set Concentration Multiplier of FA 18:2 omega-6 (LA) to "1"
-Summary   : Set Concentration Multiplier of FA 18:2 omega-6 (LA) to "1"
+Undo Redo : Set Concentration Multiplier of FA 18:2 omega-6 (LA) to "2838"
+Summary   : Set Concentration Multiplier of FA 18:2 omega-6 (LA) to "2838"
 All Info  :
-Set Concentration Multiplier of FA 18:2 omega-6 (LA) to "1"
+Set Concentration Multiplier of FA 18:2 omega-6 (LA) to "2838"
 
-Undo Redo : Set Normalization Method of FA 18:2 omega-6 (LA) to "Ratio to Heavy"
-Summary   : Set Normalization Method of FA 18:2 omega-6 (LA) to "Ratio to Heavy"
+Undo Redo : Set Concentration Multiplier of FA 18:3 omega-3 (ALA) to "54"
+Summary   : Set Concentration Multiplier of FA 18:3 omega-3 (ALA) to "54"
 All Info  :
-Set Normalization Method of FA 18:2 omega-6 (LA) to "Ratio to Heavy"
-
-Undo Redo : Set Concentration Multiplier of FA 18:3 omega-3 (ALA) to "0.0192"
-Summary   : Set Concentration Multiplier of FA 18:3 omega-3 (ALA) to "0.0192"
-All Info  :
-Set Concentration Multiplier of FA 18:3 omega-3 (ALA) to "0.0192"
+Set Concentration Multiplier of FA 18:3 omega-3 (ALA) to "54"
 
 Undo Redo : Set Normalization Method of FA 18:3 omega-3 (ALA) to "Ratio to surrogate FA 22:6 omega-3 (DHA) (Heavy)"
 Summary   : Set Normalization Method of FA 18:3 omega-3 (ALA) to "Ratio to surrogate FA 22:6 omega-3 (DHA) (Heavy)"
 All Info  :
 Set Normalization Method of FA 18:3 omega-3 (ALA) to "Ratio to surrogate FA 22:6 omega-3 (DHA) (Heavy)"
 
-Undo Redo : Set Concentration Multiplier of FA 20:4 omega-6 (AA) to "0.3467"
-Summary   : Set Concentration Multiplier of FA 20:4 omega-6 (AA) to "0.3467"
+Undo Redo : Set Concentration Multiplier of FA 20:4 omega-6 (AA) to "984"
+Summary   : Set Concentration Multiplier of FA 20:4 omega-6 (AA) to "984"
 All Info  :
-Set Concentration Multiplier of FA 20:4 omega-6 (AA) to "0.3467"
+Set Concentration Multiplier of FA 20:4 omega-6 (AA) to "984"
 
-Undo Redo : Set Normalization Method of FA 20:4 omega-6 (AA) to "Ratio to Heavy"
-Summary   : Set Normalization Method of FA 20:4 omega-6 (AA) to "Ratio to Heavy"
+Undo Redo : Set Concentration Multiplier of FA 22:6 omega-3 (DHA) to "118"
+Summary   : Set Concentration Multiplier of FA 22:6 omega-3 (DHA) to "118"
 All Info  :
-Set Normalization Method of FA 20:4 omega-6 (AA) to "Ratio to Heavy"
-
-Undo Redo : Set Concentration Multiplier of FA 22:6 omega-3 (DHA) to "0.0416"
-Summary   : Set Concentration Multiplier of FA 22:6 omega-3 (DHA) to "0.0416"
-All Info  :
-Set Concentration Multiplier of FA 22:6 omega-3 (DHA) to "0.0416"
-
-Undo Redo : Set Normalization Method of FA 22:6 omega-3 (DHA) to "Ratio to Heavy"
-Summary   : Set Normalization Method of FA 22:6 omega-3 (DHA) to "Ratio to Heavy"
-All Info  :
-Set Normalization Method of FA 22:6 omega-3 (DHA) to "Ratio to Heavy"
+Set Concentration Multiplier of FA 22:6 omega-3 (DHA) to "118"
 

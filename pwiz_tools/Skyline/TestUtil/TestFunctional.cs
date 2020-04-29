@@ -157,6 +157,16 @@ namespace pwiz.SkylineTestUtil
             test();
         }
 
+        /// <summary>
+        /// For use when <see cref="ShowStartPage"/> is true to initiate audit logging when
+        /// Skyline is first shown.
+        /// </summary>
+        protected void ShowSkyline(Action act)
+        {
+            ShowDialog<SkylineWindow>(act);
+            SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
+        }
+
         protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
@@ -164,7 +174,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var messageDlg = existingDialog as MessageDlg;
                 if (messageDlg == null)
-                    Assert.IsNull(existingDialog, typeof(TDlg) + " is already open");
+                    AssertEx.IsNull(existingDialog, typeof(TDlg) + " is already open");
                 else
                     Assert.Fail(typeof(TDlg) + " is already open with the message: " + messageDlg.Message);
             }
@@ -178,9 +188,11 @@ namespace pwiz.SkylineTestUtil
             Assert.IsNotNull(dlg);
 
             // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
-            // TODO: Find something more reliable. This sets the Skyline icon on windows which do not use it
-            if (IsPauseForScreenShots && dlg.ShowIcon && dlg.Icon.Handle != SkylineWindow.Icon.Handle)
-                RunUI(() => dlg.Icon = SkylineWindow.Icon);
+            if (IsPauseForScreenShots && dlg.ShowIcon)
+            {
+                if (ReferenceEquals(dlg, SkylineWindow) || dlg.Icon.Handle != SkylineWindow.Icon.Handle)
+                    RunUI(() => dlg.Icon = Resources.Skyline_Release1);
+            }
             return dlg;
         }
 
@@ -580,11 +592,11 @@ namespace pwiz.SkylineTestUtil
                 Form tForm = FindOpenForm(formType);
                 if (tForm != null)
                 {
-                    string formTypeName = formType.Name;
+                    string formTypeName = tForm.GetType().Name;
                     var multipleViewProvider = tForm as IMultipleViewProvider;
                     if (multipleViewProvider != null)
                     {
-                        formTypeName = multipleViewProvider.GetType().Name + "." + formTypeName;
+                        formTypeName += "." + multipleViewProvider.ShowingFormView.GetType().Name;
                         var formName = "(" + formType.Name + ")";
                         RunUI(() =>
                         {
@@ -1271,18 +1283,17 @@ namespace pwiz.SkylineTestUtil
 
         private void BeginAuditLogging()
         {
-            if (ShowStartPage)
-                return;
-            CleanupAuditLogs(); // Clean-up before to avoid appending to an existing autid log
-            SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
+            CleanupAuditLogs(); // Clean-up before to avoid appending to an existing audit log
+            if (SkylineWindow != null)
+                SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
             AuditLogEntry.ConvertPathsToFileNames = AuditLogConvertPathsToFileNames;
         }
 
         private void EndAuditLogging()
         {
-            if (ShowStartPage)
-                return;
             AuditLogEntry.ConvertPathsToFileNames = false;
+            if (SkylineWindow == null)
+                return;
             SkylineWindow.DocumentChangedEvent -= OnDocumentChangedLogging;
             VerifyAuditLogCorrect();
             CleanupAuditLogs(); // Clean-up after to avoid appending to an existing autid log - if passed, then it matches expected
@@ -1299,6 +1310,7 @@ namespace pwiz.SkylineTestUtil
         }
 
         private readonly HashSet<AuditLogEntry> _setSeenEntries = new HashSet<AuditLogEntry>();
+        private readonly Dictionary<int, AuditLogEntry> _lastLoggedEntries = new Dictionary<int, AuditLogEntry>();
 
         private void OnDocumentChangedLogging(object sender, DocumentChangedEventArgs e)
         {
@@ -1322,15 +1334,31 @@ namespace pwiz.SkylineTestUtil
             if (entry.IsRoot)
                 return;
 
+            AuditLogEntry lastLoggedEntry;
             lock (_setSeenEntries)
             {
                 if (_setSeenEntries.Contains(entry))
                     return;
+                lastLoggedEntry = GetLastLogged(entry);
                 _setSeenEntries.Add(entry);
             }
 
             LogNewEntries(entry.Parent);
-            WriteEntryToFile(AuditLogDir, entry);
+            if (lastLoggedEntry == null)
+                WriteEntryToFile(AuditLogDir, entry);
+            else
+                WriteDiffEntryToFile(AuditLogDir, entry, lastLoggedEntry);
+        }
+
+        private AuditLogEntry GetLastLogged(AuditLogEntry entry)
+        {
+            if (_lastLoggedEntries.TryGetValue(entry.LogIndex, out var lastLoggedEntry))
+            {
+                _lastLoggedEntries[entry.LogIndex] = entry;
+                return lastLoggedEntry;
+            }
+            _lastLoggedEntries.Add(entry.LogIndex, entry);
+            return null;
         }
 
         private void VerifyAuditLogCorrect()
@@ -1399,6 +1427,41 @@ namespace pwiz.SkylineTestUtil
                 Directory.CreateDirectory(path);
 
             return Path.Combine(path, TestContext.TestName + ".log");
+        }
+
+        private void WriteDiffEntryToFile(string folderPath, AuditLogEntry entry, AuditLogEntry lastLoggedEntry)
+        {
+            var filePath = GetLogFilePath(folderPath);
+            using (var fs = File.Open(filePath, FileMode.Append))
+            {
+                using (var sw = new StreamWriter(fs))
+                {
+                    sw.Write(AuditLogEntryDiffToString(entry, lastLoggedEntry));
+                }
+            }
+        }
+
+        private string AuditLogEntryDiffToString(AuditLogEntry entry, AuditLogEntry lastLoggedEntry)
+        {
+            Assert.AreEqual(lastLoggedEntry.LogIndex, entry.LogIndex);
+            Assert.AreEqual(lastLoggedEntry.UndoRedo.ToString(), entry.UndoRedo.ToString());
+            Assert.AreEqual(lastLoggedEntry.Summary.ToString(), entry.Summary.ToString());
+            Assert.AreEqual(lastLoggedEntry.AllInfo.Count, entry.AllInfo.Count);
+            var result = string.Empty;
+            if (!Equals(entry.Reason, lastLoggedEntry.Reason))
+                result += string.Format("Reason: '{0}' to '{1}'\r\n", lastLoggedEntry.Reason, entry.Reason);
+            for (int i = 0; i < entry.AllInfo.Count; i++)
+            {
+                var lastReason = lastLoggedEntry.AllInfo[i].Reason;
+                var newReason = entry.AllInfo[i].Reason;
+                if (!Equals(lastReason, newReason))
+                    result += string.Format("Detail Reason {0}: '{1}' to '{2}'\r\n", i, lastReason, newReason);
+            }
+
+            if (!string.IsNullOrEmpty(result))
+                result = result.Insert(0, string.Format("Reason Changed: {0} \r\n", entry.UndoRedo)) + "\r\n";
+
+            return result;
         }
 
         private void WriteEntryToFile(string folderPath, AuditLogEntry entry)
@@ -1557,7 +1620,7 @@ namespace pwiz.SkylineTestUtil
                 if (Program.TestExceptions.Count == 0)
                 {
                     // Long wait for library build notifications
-                    RunUI(() => SkylineWindow.RemoveLibraryBuildNotification());
+                    SkylineWindow.RemoveLibraryBuildNotification(); // Remove off UI thread to avoid deadlocking
                     WaitForConditionUI(() => !OpenForms.Any(f => f is BuildLibraryNotification));
                     // Short wait for anything else
                     WaitForConditionUI(5000, () => OpenForms.Count() == 1);
@@ -1680,9 +1743,11 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
-        protected void AdjustSequenceTreePanelWidth()
+        protected void AdjustSequenceTreePanelWidth(bool colorLegend = false)
         {
             int newWidth = SkylineWindow.SequenceTree.WidthToEnsureAllItemsVisible();
+            if (colorLegend)
+                newWidth += 10;
 
             var seqPanel = SkylineWindow.DockPanel.Contents.OfType<SequenceTreeForm>().FirstOrDefault();
             var sequencePanel = seqPanel as DockableFormEx;
