@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
@@ -1230,7 +1229,7 @@ namespace pwiz.Skyline.Model
             }
 
             foreach (var complexFragmentIon in LinkedPeptide.PermuteComplexFragmentIons(explicitMods, settings,
-                settings.PeptideSettings.Modifications.MaxNeutralLosses, simpleFragmentIons.Distinct()))
+                settings.PeptideSettings.Modifications.MaxNeutralLosses, useFilter, simpleFragmentIons.Distinct()))
             {
                 bool isMs1 = complexFragmentIon.IsMs1;
                 if (isMs1)

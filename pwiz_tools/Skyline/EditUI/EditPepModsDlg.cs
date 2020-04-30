@@ -80,14 +80,18 @@ namespace pwiz.Skyline.EditUI
 
         public EditPepModsDlg(SrmSettings settings, PeptideDocNode nodePeptide, bool allowCrosslinks)
         {
+            InitializeComponent();
+            Icon = Resources.Skyline;
+
             DocSettings = settings;
             NodePeptide = nodePeptide;
             ExplicitMods = nodePeptide.ExplicitMods;
             AllowCrosslinks = allowCrosslinks;
+            if (!AllowCrosslinks)
+            {
+                cbCreateCopy.Visible = false;
+            }
 
-            InitializeComponent();
-
-            Icon = Resources.Skyline;
 
             SuspendLayout();
             ComboBox comboStaticLast = null;
@@ -786,10 +790,12 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
             editLinkButton.Visible = true;
-            if (explicitMod.LinkedPeptide != null)
+            LinkedPeptide linkedPeptide;
+            _linkedPeptides.TryGetValue(indexAA, out linkedPeptide);
+            if (linkedPeptide != null)
             {
-                string strTooltip = (explicitMod.LinkedPeptide.IndexAa + 1) + @":" +
-                                    explicitMod.LinkedPeptide.Peptide.Sequence;
+                string strTooltip = (linkedPeptide.IndexAa + 1) + @":" +
+                                    linkedPeptide.Peptide.Sequence;
                 toolTip.SetToolTip(editLinkButton, strTooltip);
             }
             else

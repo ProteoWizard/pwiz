@@ -149,7 +149,12 @@ namespace pwiz.Skyline.Model.Crosslinking
                 stringBuilder.Append($@"({loss.Item1}[{loss.Item2}])");
             }
 
-            if (Children.Count != 0)
+            if (Children.Count == 1 && Children[0].Item1 == null)
+            {
+                stringBuilder.Append(@"-");
+                stringBuilder.Append(Children[0].Item2);
+            }
+            else if (Children.Count != 0)
             {
                 stringBuilder.Append(@"-");
                 if (Children.Count != 1)

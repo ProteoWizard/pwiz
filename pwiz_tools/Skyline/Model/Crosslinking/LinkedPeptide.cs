@@ -47,17 +47,17 @@ namespace pwiz.Skyline.Model.Crosslinking
             return transitionGroupDocNode.GetNeutralFormula(settings, ExplicitMods);
         }
 
-        public IEnumerable<ComplexFragmentIon> ListComplexFragmentIons(SrmSettings settings, int maxFragmentEventCount)
+        public IEnumerable<ComplexFragmentIon> ListComplexFragmentIons(SrmSettings settings, int maxFragmentEventCount, bool useFilter)
         {
-            IEnumerable<ComplexFragmentIon> result = ListSimpleFragmentIons(settings);
-            result = PermuteComplexFragmentIons(ExplicitMods, settings, maxFragmentEventCount, result);
+            IEnumerable<ComplexFragmentIon> result = ListSimpleFragmentIons(settings, useFilter);
+            result = PermuteComplexFragmentIons(ExplicitMods, settings, maxFragmentEventCount, useFilter, result);
             return result;
         }
 
-        public IEnumerable<ComplexFragmentIon> PermuteFragmentIons(SrmSettings settings, int maxFragmentationCount,
+        public IEnumerable<ComplexFragmentIon> PermuteFragmentIons(SrmSettings settings, int maxFragmentationCount, bool useFilter,
             ModificationSite modificationSite, IEnumerable<ComplexFragmentIon> fragmentIons)
         {
-            var linkedFragmentIonList = ImmutableList.ValueOf(ListComplexFragmentIons(settings, maxFragmentationCount));
+            var linkedFragmentIonList = ImmutableList.ValueOf(ListComplexFragmentIons(settings, maxFragmentationCount, useFilter));
             return fragmentIons.SelectMany(cfi =>
                 PermuteFragmentIon(settings, maxFragmentationCount, cfi, modificationSite, linkedFragmentIonList));
 
@@ -101,14 +101,14 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public IEnumerable<ComplexFragmentIon> ListSimpleFragmentIons(SrmSettings settings)
+        public IEnumerable<ComplexFragmentIon> ListSimpleFragmentIons(SrmSettings settings, bool useFilter)
         {
             var transitionGroupDocNode =
                 GetTransitionGroupDocNode(settings, IsotopeLabelType.light, Adduct.SINGLY_PROTONATED);
             yield return ComplexFragmentIon.NewOrphanFragmentIon(transitionGroupDocNode.TransitionGroup, ExplicitMods, Adduct.SINGLY_PROTONATED);
             foreach (var transitionDocNode in transitionGroupDocNode.TransitionGroup.GetTransitions(settings,
                 transitionGroupDocNode, ExplicitMods, transitionGroupDocNode.PrecursorMz,
-                transitionGroupDocNode.IsotopeDist, null, null, true, false))
+                transitionGroupDocNode.IsotopeDist, null, null, useFilter, false))
             {
                 if (transitionDocNode.Transition.MassIndex != 0)
                 {
@@ -116,23 +116,6 @@ namespace pwiz.Skyline.Model.Crosslinking
                 }
                 yield return new ComplexFragmentIon(transitionDocNode.Transition, transitionDocNode.Losses);
             }
-        }
-
-        public LinkedPeptide ChangeGlobalMods(IList<StaticMod> staticMods, IList<StaticMod> heavyMods,
-            IList<IsotopeLabelType> heavyLabelTypes)
-        {
-            if (null == ExplicitMods)
-            {
-                return this;
-            }
-
-            var newExplicitMods = ExplicitMods.ChangeGlobalMods(staticMods, heavyMods, heavyLabelTypes);
-            if (ReferenceEquals(newExplicitMods, ExplicitMods))
-            {
-                return this;
-            }
-
-            return ChangeExplicitMods(newExplicitMods);
         }
 
         protected bool Equals(LinkedPeptide other)
@@ -162,14 +145,14 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public static IEnumerable<ComplexFragmentIon> PermuteComplexFragmentIons(
             [CanBeNull] ExplicitMods mods, 
-            SrmSettings settings, int maxFragmentationCount, IEnumerable<ComplexFragmentIon> complexFragmentIons)
+            SrmSettings settings, int maxFragmentationCount, bool useFilter, IEnumerable<ComplexFragmentIon> complexFragmentIons)
         {
             var result = complexFragmentIons;
             if (mods != null)
             {
                 foreach (var crosslinkMod in mods.Crosslinks)
                 {
-                    result = crosslinkMod.Value.PermuteFragmentIons(settings, maxFragmentationCount,
+                    result = crosslinkMod.Value.PermuteFragmentIons(settings, maxFragmentationCount, useFilter,
                         crosslinkMod.Key, result);
                 }
             }

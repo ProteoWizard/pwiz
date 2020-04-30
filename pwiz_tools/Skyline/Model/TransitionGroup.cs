@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -379,9 +378,6 @@ namespace pwiz.Skyline.Model
                         Assume.IsTrue(massH.IsMonoIsotopic() == calcPredict.MassType.IsMonoisotopic());
                         foreach (var losses in CalcTransitionLosses(type, i, massType, potentialLosses))
                         {
-                            // Precursor charge can never be lower than product ion charge.
-                            if (!adduct.IsValidProductAdduct(PrecursorAdduct, losses))
-                                continue;
                             if (!ensureMassesAreMeasurable)
                             {
                                 // If the transition is going to be linked to other ions, just return it now without
@@ -389,6 +385,10 @@ namespace pwiz.Skyline.Model
                                 yield return CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
                                 continue;
                             }
+
+                            // Precursor charge can never be lower than product ion charge.
+                            if (!adduct.IsValidProductAdduct(PrecursorAdduct, losses))
+                                continue;
 
                             double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(massH, losses), adduct);
 
