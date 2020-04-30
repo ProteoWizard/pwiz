@@ -9878,6 +9878,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap EditLink {
+            get {
+                object obj = ResourceManager.GetObject("EditLink", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This will reset the list to its default values. Continue?.
         /// </summary>
         public static string EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue {

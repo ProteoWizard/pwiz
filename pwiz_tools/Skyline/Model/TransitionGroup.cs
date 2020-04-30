@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -95,7 +96,16 @@ namespace pwiz.Skyline.Model
 
         public static int CompareTransitions(TransitionDocNode node1, TransitionDocNode node2)
         {
-            Transition tran1 = node1.Transition, tran2 = node2.Transition;
+            int result = CompareTransitionIds(node1.Transition, node2.Transition);
+            if (result == 0)
+            {
+                result = node1.LostMass.CompareTo(node2.LostMass);
+            }
+            return result;
+        }
+
+        public static int CompareTransitionIds(Transition tran1, Transition tran2)
+        {
             int diffType = GetOrder(tran1.IonType) - GetOrder(tran2.IonType);
             if (diffType != 0)
                 return diffType;
@@ -105,7 +115,7 @@ namespace pwiz.Skyline.Model
             int diffOffset = tran1.CleavageOffset - tran2.CleavageOffset;
             if (diffOffset != 0)
                 return diffOffset;
-            return Comparer<double>.Default.Compare(node1.LostMass, node2.LostMass);
+            return 0;
         }
 
         private static int GetOrder(IonType ionType)

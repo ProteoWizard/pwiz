@@ -58,11 +58,10 @@ namespace pwiz.SkylineTestFunctional
             });
 
             var modifyPeptideDlg = ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);
-            RunUI(() =>
+            var editCrosslinkModDlg = ShowDialog<EditLinkedPeptideDlg>(() =>
             {
                 modifyPeptideDlg.SelectModification(IsotopeLabelType.light, 9, crosslinkerName);
             });
-            var editCrosslinkModDlg = ShowDialog<EditLinkedPeptideDlg>(() => modifyPeptideDlg.EditLinkedPeptide(9));
             RunUI(() =>
             {
                 editCrosslinkModDlg.PeptideSequence = "SLGKVGTR";

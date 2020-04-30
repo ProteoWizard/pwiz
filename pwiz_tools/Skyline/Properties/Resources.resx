@@ -10976,4 +10976,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="FastaImporter_Import__0__proteins_and__1__peptides_added" xml:space="preserve">
     <value>{0} proteins and {1} peptides added</value>
   </data>
+  <data name="EditLink" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\EditLink.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

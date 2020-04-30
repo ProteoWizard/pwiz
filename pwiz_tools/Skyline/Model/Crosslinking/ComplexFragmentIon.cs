@@ -11,7 +11,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
-    public class ComplexFragmentIon : Immutable
+    public class ComplexFragmentIon : Immutable, IComparable<ComplexFragmentIon>
     {
         public ComplexFragmentIon(Transition transition, TransitionLosses transitionLosses, bool isOrphan = false)
         {
@@ -269,6 +269,51 @@ namespace pwiz.Skyline.Model.Crosslinking
                 return Transition.IsPrecursor() && null == TransitionLosses &&
                        Children.Values.All(child => child.IsMs1);
             }
+        }
+
+        public int CompareTo(ComplexFragmentIon other)
+        {
+            if (0 == GetFragmentationEventCount())
+            {
+                if (0 != other.GetFragmentationEventCount())
+                {
+                    return -1;
+                }
+            }
+            else if (0 == other.GetFragmentationEventCount())
+            {
+                return 1;
+            }
+            int result = IsOrphan.CompareTo(other.IsOrphan);
+            if (result == 0)
+            {
+                result = TransitionGroup.CompareTransitionIds(Transition, other.Transition);
+            }
+                
+            if (result == 0)
+            {
+                result = Comparer<double?>.Default.Compare(TransitionLosses?.Mass, other.TransitionLosses?.Mass);
+            }
+
+            if (result != 0)
+            {
+                return result;
+            }
+            for (int i = 0; i < Children.Count && i < other.Children.Count; i++)
+            {
+                result = Children[i].Key.CompareTo(other.Children[i].Key);
+                if (result == 0)
+                {
+                    result = Children[i].Value.CompareTo(other.Children[i].Value);
+                }
+
+                if (result != 0)
+                {
+                    return result;
+                }
+            }
+
+            return Children.Count.CompareTo(other.Children.Count);
         }
     }
 }

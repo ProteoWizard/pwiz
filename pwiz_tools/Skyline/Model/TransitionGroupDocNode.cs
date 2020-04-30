@@ -1143,7 +1143,8 @@ namespace pwiz.Skyline.Model
                 return simpleTransitions;
             }
 
-            return RemoveUnmeasurable(settings, RemoveDuplicates(GetComplexTransitions(settings, mods, simpleTransitions, useFilter)));
+            return RemoveUnmeasurable(settings, RemoveDuplicates(GetComplexTransitions(settings, mods, simpleTransitions, useFilter)))
+                .OrderBy(docNode=>docNode.ComplexFragmentIon);
         }
 
         public IEnumerable<TransitionDocNode> RemoveDuplicates(IEnumerable<TransitionDocNode> transitions)
@@ -1152,11 +1153,7 @@ namespace pwiz.Skyline.Model
             foreach (var transition in transitions)
             {
                 var key = transition.Key(this);
-                if (!keys.Add(key))
-                {
-                    Trace.TraceWarning(@"Duplicate transition {0}", key);
-                }
-                else
+                if (keys.Add(key))
                 {
                     yield return transition;
                 }
@@ -1191,7 +1188,6 @@ namespace pwiz.Skyline.Model
             IEnumerable<TransitionDocNode> simpleTransitions, bool useFilter)
         {
             var simpleFragmentIons = new List<ComplexFragmentIon>();
-            var precursorAdducts = settings.TransitionSettings.Filter.PeptidePrecursorCharges.ToHashSet();
             var productAdducts = settings.TransitionSettings.Filter.PeptideProductCharges.ToHashSet();
 
             foreach (var simpleTransition in simpleTransitions)
@@ -1207,7 +1203,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            IList<Adduct> allProductAdducts;
+            IEnumerable<Adduct> allProductAdducts;
             if (useFilter)
             {
                 allProductAdducts = settings.TransitionSettings.Filter.PeptideProductCharges;
@@ -1215,11 +1211,13 @@ namespace pwiz.Skyline.Model
             else
             {
                 allProductAdducts = settings.TransitionSettings.Filter.PeptideProductCharges
-                    .Concat(Transition.DEFAULT_PEPTIDE_CHARGES).ToList();
-                allProductAdducts.Sort();
+                    .Concat(Transition.DEFAULT_PEPTIDE_CHARGES);
             }
+
+            allProductAdducts = allProductAdducts.Append(PrecursorAdduct);
+
             // Add ions representing the precursor waiting to be joined with a crosslinked peptide
-            foreach (var productAdduct in allProductAdducts)
+            foreach (var productAdduct in allProductAdducts.Distinct())
             {
                 if (productAdduct.IsValidProductAdduct(TransitionGroup.PrecursorAdduct, null))
                 {
@@ -1237,12 +1235,9 @@ namespace pwiz.Skyline.Model
                 bool isMs1 = complexFragmentIon.IsMs1;
                 if (isMs1)
                 {
-                    if (useFilter)
+                    if (!PrecursorAdduct.Equals(complexFragmentIon.Transition.Adduct))
                     {
-                        if (!precursorAdducts.Contains(complexFragmentIon.Transition.Adduct))
-                        {
-                            continue;
-                        }
+                        continue;
                     }
                 }
                 else

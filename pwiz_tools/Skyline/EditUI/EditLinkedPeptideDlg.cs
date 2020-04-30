@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
@@ -13,11 +12,15 @@ namespace pwiz.Skyline.EditUI
 {
     public partial class EditLinkedPeptideDlg : Form
     {
+        private SrmSettings _settings;
         private ExplicitMods _explicitMods;
+        private StaticMod _crosslinkMod;
 
-        public EditLinkedPeptideDlg(LinkedPeptide linkedPeptide)
+        public EditLinkedPeptideDlg(SrmSettings settings, LinkedPeptide linkedPeptide, StaticMod crosslinkMod)
         {
             InitializeComponent();
+            _settings = settings;
+            _crosslinkMod = crosslinkMod;
             if (linkedPeptide != null)
             {
                 tbxPeptideSequence.Text = linkedPeptide.Peptide.Sequence;
@@ -29,7 +32,7 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            LinkedPeptide linkedPeptide = null;
+            LinkedPeptide linkedPeptide;
             if (!TryMakeLinkedPeptide(out linkedPeptide))
             {
                 return;
@@ -39,15 +42,48 @@ namespace pwiz.Skyline.EditUI
             DialogResult = DialogResult.OK;
         }
 
-        public bool TryMakeLinkedPeptide(out LinkedPeptide linkedPeptide)
+        private bool TryMakeLinkedPeptide(out LinkedPeptide linkedPeptide)
         {
             linkedPeptide = null;
+            Peptide peptide;
+            if (!TryMakePeptide(out peptide))
+            {
+                return false;
+            }
+
+            string peptideSequence = peptide.Sequence;
+            var messageBoxHelper = new MessageBoxHelper(this);
+            int aaOrdinal;
+            if (!messageBoxHelper.ValidateNumberTextBox(tbxAttachmentOrdinal, 1, peptideSequence.Length, out aaOrdinal))
+            {
+                return false;
+            }
+
+            string validAminoAcids = _crosslinkMod?.AAs;
+            if (!string.IsNullOrEmpty(validAminoAcids))
+            {
+                char aa = peptideSequence[aaOrdinal - 1];
+                if (!validAminoAcids.Contains(aa))
+                {
+                    string message = string.Format("The crosslinker '{0}' cannot attach to the amino acid '{1}'.",
+                        _crosslinkMod.Name, aa);
+                    messageBoxHelper.ShowTextBoxError(tbxAttachmentOrdinal, message);
+                    return false;
+                }
+            }
+            linkedPeptide = new LinkedPeptide(peptide, aaOrdinal - 1, MakeExplicitMods(peptide, _explicitMods));
+            return true;
+        }
+
+        private bool TryMakePeptide(out Peptide peptide)
+        {
+            peptide = null;
             var messageBoxHelper = new MessageBoxHelper(this);
             var peptideSequence = tbxPeptideSequence.Text.Trim();
             if (string.IsNullOrEmpty(peptideSequence))
             {
-                linkedPeptide = null;
-                return true;
+                messageBoxHelper.ShowTextBoxError(tbxPeptideSequence, Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank);
+                return false;
             }
             if (!FastaSequence.IsExSequence(peptideSequence))
             {
@@ -55,13 +91,7 @@ namespace pwiz.Skyline.EditUI
                 return false;
             }
 
-            int aaOrdinal;
-            if (!messageBoxHelper.ValidateNumberTextBox(tbxAttachmentOrdinal, 1, peptideSequence.Length, out aaOrdinal))
-            {
-                return false;
-            }
-            var peptide = new Peptide(peptideSequence);
-            linkedPeptide = new LinkedPeptide(peptide, aaOrdinal - 1, MakeExplicitMods(peptide, _explicitMods));
+            peptide = new Peptide(peptideSequence);
             return true;
         }
 
@@ -93,7 +123,26 @@ namespace pwiz.Skyline.EditUI
 
         private void btnEditModifications_Click(object sender, EventArgs e)
         {
-            MessageDlg.Show(this, @"Not yet implemented");
+            ShowEditModifications();
+        }
+
+        public void ShowEditModifications()
+        {
+            Peptide peptide;
+            if (!TryMakePeptide(out peptide))
+            {
+                return;
+            }
+
+            var explicitMods = MakeExplicitMods(peptide, _explicitMods);
+            var peptideDocNode = new PeptideDocNode(peptide, _settings, explicitMods, null, ExplicitRetentionTimeInfo.EMPTY, new TransitionGroupDocNode[0], false);
+            using (var pepModsDlg = new EditPepModsDlg(_settings, peptideDocNode, false))
+            {
+                if (pepModsDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    _explicitMods = pepModsDlg.ExplicitMods;
+                }
+            }
         }
 
         public string PeptideSequence
@@ -113,7 +162,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     return null;
                 }
-                return Int32.Parse(tbxAttachmentOrdinal.Text);
+                return int.Parse(tbxAttachmentOrdinal.Text);
             }
             set { tbxAttachmentOrdinal.Text = value.HasValue ? value.ToString() : string.Empty; }
         }

@@ -2273,7 +2273,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    using (var dlg = new EditPepModsDlg(DocumentUI.Settings, nodePep))
+                    using (var dlg = new EditPepModsDlg(DocumentUI.Settings, nodePep, true))
                     {
                         dlg.Height = Math.Min(dlg.Height, Screen.FromControl(this).WorkingArea.Height);
                         if (dlg.ShowDialog(this) == DialogResult.OK)

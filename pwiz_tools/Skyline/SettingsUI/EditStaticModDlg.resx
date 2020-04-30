@@ -330,99 +330,6 @@
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="&gt;&gt;cb2H.Name" xml:space="preserve">
-    <value>cb2H</value>
-  </data>
-  <data name="&gt;&gt;cb2H.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cb2H.Parent" xml:space="preserve">
-    <value>panelAtoms</value>
-  </data>
-  <data name="&gt;&gt;cb2H.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;cb18O.Name" xml:space="preserve">
-    <value>cb18O</value>
-  </data>
-  <data name="&gt;&gt;cb18O.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cb18O.Parent" xml:space="preserve">
-    <value>panelAtoms</value>
-  </data>
-  <data name="&gt;&gt;cb18O.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;cb15N.Name" xml:space="preserve">
-    <value>cb15N</value>
-  </data>
-  <data name="&gt;&gt;cb15N.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cb15N.Parent" xml:space="preserve">
-    <value>panelAtoms</value>
-  </data>
-  <data name="&gt;&gt;cb15N.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;cb13C.Name" xml:space="preserve">
-    <value>cb13C</value>
-  </data>
-  <data name="&gt;&gt;cb13C.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cb13C.Parent" xml:space="preserve">
-    <value>panelAtoms</value>
-  </data>
-  <data name="&gt;&gt;cb13C.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;cb37Cl.Name" xml:space="preserve">
-    <value>cb37Cl</value>
-  </data>
-  <data name="&gt;&gt;cb37Cl.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cb37Cl.Parent" xml:space="preserve">
-    <value>panelAtoms</value>
-  </data>
-  <data name="&gt;&gt;cb37Cl.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;cb81Br.Name" xml:space="preserve">
-    <value>cb81Br</value>
-  </data>
-  <data name="&gt;&gt;cb81Br.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cb81Br.Parent" xml:space="preserve">
-    <value>panelAtoms</value>
-  </data>
-  <data name="&gt;&gt;cb81Br.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="panelAtoms.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 149</value>
-  </data>
-  <data name="panelAtoms.Size" type="System.Drawing.Size, System.Drawing">
-    <value>387, 36</value>
-  </data>
-  <data name="panelAtoms.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;panelAtoms.Name" xml:space="preserve">
-    <value>panelAtoms</value>
-  </data>
-  <data name="&gt;&gt;panelAtoms.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelAtoms.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelAtoms.ZOrder" xml:space="preserve">
-    <value>17</value>
-  </data>
   <data name="cb2H.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -585,6 +492,27 @@
   <data name="&gt;&gt;cb81Br.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="panelAtoms.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 149</value>
+  </data>
+  <data name="panelAtoms.Size" type="System.Drawing.Size, System.Drawing">
+    <value>387, 36</value>
+  </data>
+  <data name="panelAtoms.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;panelAtoms.Name" xml:space="preserve">
+    <value>panelAtoms</value>
+  </data>
+  <data name="&gt;&gt;panelAtoms.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelAtoms.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelAtoms.ZOrder" xml:space="preserve">
+    <value>17</value>
+  </data>
   <data name="cbChemicalFormula.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -595,7 +523,7 @@
     <value>106, 17</value>
   </data>
   <data name="cbChemicalFormula.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="cbChemicalFormula.Text" xml:space="preserve">
     <value>&amp;Chemical formula</value>
@@ -771,65 +699,8 @@
   <metadata name="toolBarLosses.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
   </metadata>
-  <data name="&gt;&gt;toolBarLosses.Name" xml:space="preserve">
-    <value>toolBarLosses</value>
-  </data>
-  <data name="&gt;&gt;toolBarLosses.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolBarLosses.Parent" xml:space="preserve">
-    <value>panelLoss</value>
-  </data>
-  <data name="&gt;&gt;toolBarLosses.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="panelLoss.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 274</value>
-  </data>
-  <data name="panelLoss.Size" type="System.Drawing.Size, System.Drawing">
-    <value>238, 70</value>
-  </data>
-  <data name="panelLoss.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
-  </data>
-  <data name="&gt;&gt;panelLoss.Name" xml:space="preserve">
-    <value>panelLoss</value>
-  </data>
-  <data name="&gt;&gt;panelLoss.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelLoss.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelLoss.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <metadata name="toolBarLosses.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <data name="toolBarLosses.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
-  </data>
-  <data name="toolBarLosses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>214, 0</value>
-  </data>
-  <data name="toolBarLosses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 70</value>
-  </data>
-  <data name="toolBarLosses.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
-  </data>
-  <data name="&gt;&gt;toolBarLosses.Name" xml:space="preserve">
-    <value>toolBarLosses</value>
-  </data>
-  <data name="&gt;&gt;toolBarLosses.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolBarLosses.Parent" xml:space="preserve">
-    <value>panelLoss</value>
-  </data>
-  <data name="&gt;&gt;toolBarLosses.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="tbbAddLoss.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -863,6 +734,48 @@
   </data>
   <data name="tbbDeleteLoss.ToolTipText" xml:space="preserve">
     <value>Delete neutral loss</value>
+  </data>
+  <data name="toolBarLosses.Location" type="System.Drawing.Point, System.Drawing">
+    <value>214, 0</value>
+  </data>
+  <data name="toolBarLosses.Size" type="System.Drawing.Size, System.Drawing">
+    <value>24, 70</value>
+  </data>
+  <data name="toolBarLosses.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="&gt;&gt;toolBarLosses.Name" xml:space="preserve">
+    <value>toolBarLosses</value>
+  </data>
+  <data name="&gt;&gt;toolBarLosses.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolBarLosses.Parent" xml:space="preserve">
+    <value>panelLoss</value>
+  </data>
+  <data name="&gt;&gt;toolBarLosses.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelLoss.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 274</value>
+  </data>
+  <data name="panelLoss.Size" type="System.Drawing.Size, System.Drawing">
+    <value>238, 70</value>
+  </data>
+  <data name="panelLoss.TabIndex" type="System.Int32, mscorlib">
+    <value>27</value>
+  </data>
+  <data name="&gt;&gt;panelLoss.Name" xml:space="preserve">
+    <value>panelLoss</value>
+  </data>
+  <data name="&gt;&gt;panelLoss.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelLoss.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelLoss.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="comboMod.IntegralHeight" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -899,7 +812,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAABI
-        CAAAAk1TRnQBSQFMAwEBAAEQAQABEAEAARABAAEQAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
+        CAAAAk1TRnQBSQFMAwEBAAEgAQABIAEAARABAAEQAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
         AUADAAEQAwABAQEAAQgGAAEEGAABgAIAAYADAAKAAQABgAMAAYABAAGAAQACgAIAA8ABAAHAAdwBwAEA
         AfABygGmAQABMwUAATMBAAEzAQABMwEAAjMCAAMWAQADHAEAAyIBAAMpAQADVQEAA00BAANCAQADOQEA
         AYABfAH/AQACUAH/AQABkwEAAdYBAAH/AewBzAEAAcYB1gHvAQAB1gLnAQABkAGpAa0CAAH/ATMDAAFm
@@ -944,16 +857,16 @@
     <value>True</value>
   </data>
   <data name="cbCrosslinker.Location" type="System.Drawing.Point, System.Drawing">
-    <value>277, 109</value>
+    <value>183, 114</value>
   </data>
   <data name="cbCrosslinker.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 17</value>
   </data>
   <data name="cbCrosslinker.TabIndex" type="System.Int32, mscorlib">
-    <value>28</value>
+    <value>7</value>
   </data>
   <data name="cbCrosslinker.Text" xml:space="preserve">
-    <value>Crosslinker</value>
+    <value>C&amp;rosslinker</value>
   </data>
   <data name="&gt;&gt;cbCrosslinker.Name" xml:space="preserve">
     <value>cbCrosslinker</value>

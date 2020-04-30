@@ -78,11 +78,12 @@ namespace pwiz.Skyline.EditUI
             return string.Format(Resources.EditPepModsDlg_GetIsotopeLabelText_Isotope__0__, labelType);
         }
 
-        public EditPepModsDlg(SrmSettings settings, PeptideDocNode nodePeptide)
+        public EditPepModsDlg(SrmSettings settings, PeptideDocNode nodePeptide, bool allowCrosslinks)
         {
             DocSettings = settings;
             NodePeptide = nodePeptide;
             ExplicitMods = nodePeptide.ExplicitMods;
+            AllowCrosslinks = allowCrosslinks;
 
             InitializeComponent();
 
@@ -171,11 +172,11 @@ namespace pwiz.Skyline.EditUI
                         Size = comboStaticLast.Size,
                         TabIndex = comboStaticLast.TabIndex + controlsPerRow
                     });
-                    panelMain.Controls.Add(btnEditLinkLast = new Button()
+                    panelMain.Controls.Add(btnEditLinkLast = new Button
                     {
                         Name = GetEditLinkName(row),
                         Left = btnEditLinkLast.Left,
-                        Top = top,
+                        Top = top - 1,
                         Size = btnEditLinkLast.Size,
                         TabIndex = btnEditLinkLast.TabIndex + controlsPerRow,
                         Image = btnEditLinkLast.Image
@@ -260,6 +261,8 @@ namespace pwiz.Skyline.EditUI
         /// </summary>
         public ExplicitMods ExplicitMods { get; private set; }
 
+        public bool AllowCrosslinks { get; private set; }
+
         /// <summary>
         /// True if a copy of the currently selected peptide should be
         /// made, with the explicit modifications applied.
@@ -302,13 +305,16 @@ namespace pwiz.Skyline.EditUI
         {
             var modsDoc = DocSettings.PeptideSettings.Modifications;
             var modsExp = NodePeptide.ExplicitMods;
-            return type.IsLight
-                ? InitModificationCombo(combo, modsDoc.StaticModifications,
-                    modsExp != null ? modsExp.StaticModifications : null, StaticList, indexAA,
-                    modsExp != null && modsExp.IsVariableStaticMods)
-                : InitModificationCombo(combo, modsDoc.GetModifications(type),
-                    modsExp != null ? modsExp.GetModifications(type) : null, HeavyList, indexAA,
-                    false);
+            if (type.IsLight)
+            {
+                return InitModificationCombo(combo, modsDoc.StaticModifications,
+                    modsExp?.StaticModifications, StaticList, indexAA,
+                    modsExp != null && modsExp.IsVariableStaticMods);
+            }
+
+            return InitModificationCombo(combo, modsDoc.GetModifications(type),
+                modsExp?.GetModifications(type), HeavyList, indexAA,
+                false);
         }
 
         private ComboBox InitModificationCombo(ComboBox combo,
@@ -345,11 +351,17 @@ namespace pwiz.Skyline.EditUI
             }
 
             List<string> listItems = new List<string> {string.Empty};
+            bool hasModOptions = false;
             foreach (StaticMod mod in listSettingsMods)
             {
                 if (!mod.IsMod(aa, indexAA, seq.Length))
                     continue;
+                if (!AllowCrosslinks && mod.CrosslinkerSettings != null)
+                {
+                    continue;
+                }
                 listItems.Add(mod.Name);
+                hasModOptions = true;
 
                 // If the peptide is explicitly modified, then the explicit modifications
                 // indicate the combo selections.
@@ -370,15 +382,19 @@ namespace pwiz.Skyline.EditUI
                         iSelected = listItems.Count - 1;
                 }
             }
-            listItems.Add(Resources.SettingsListComboDriver_Add);
-            listItems.Add(Resources.SettingsListComboDriver_Edit_current);
-            listItems.Add(Resources.SettingsListComboDriver_Edit_list);
+
+            if (AllowCrosslinks)
+            {
+                listItems.Add(Resources.SettingsListComboDriver_Add);
+                listItems.Add(Resources.SettingsListComboDriver_Edit_current);
+                listItems.Add(Resources.SettingsListComboDriver_Edit_list);
+            }
             if (!EqualsItems(combo, listItems))
             {
                 combo.Items.Clear();
                 listItems.ForEach(item => combo.Items.Add(item));
-                // If not just the blank, add and edit items, make sure the drop-down is wid enough
-                if (listItems.Count > 3)
+                // If not just the blank, add and edit items, make sure the drop-down is wide enough
+                if (hasModOptions)
                     ComboHelper.AutoSizeDropDown(combo);
             }
             if (select)
@@ -572,6 +588,18 @@ namespace pwiz.Skyline.EditUI
                     combo.SelectedIndex = selectedIndexLast;
                 }
             }
+            else
+            {
+                string modName = (string) combo.SelectedItem;
+                StaticMod staticMod;
+                if (!string.IsNullOrEmpty(modName) && listSettingsMods.TryGetValue(modName, out staticMod))
+                {
+                    if (!EnsureLinkedPeptide(staticMod, indexAA))
+                    {
+                        combo.SelectedIndex = selectedIndexLast;
+                    }
+                }
+            }
             listSelectedIndex[indexAA] = combo.SelectedIndex;
         }
 
@@ -733,23 +761,76 @@ namespace pwiz.Skyline.EditUI
 
         public void EditLinkedPeptide(int indexAA)
         {
+            var explicitMod = GetExplicitMods(_listComboStatic, StaticList)
+                .FirstOrDefault(mod => mod.IndexAA == indexAA);
             LinkedPeptide linkedPeptide;
             _linkedPeptides.TryGetValue(indexAA, out linkedPeptide);
-            using (var dlg = new EditLinkedPeptideDlg(linkedPeptide))
+            using (var dlg = new EditLinkedPeptideDlg(DocSettings, linkedPeptide, explicitMod?.Modification))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     _linkedPeptides[indexAA] = dlg.LinkedPeptide;
+
                 }
             }
         }
 
         private void UpdateEditLinkButton(int indexAA)
         {
+            var editLinkButton = _listEditLinkButtons[indexAA];
             var explicitMod = GetExplicitMods(_listComboStatic, StaticList)
                 .FirstOrDefault(mod => mod.IndexAA == indexAA);
-            _listEditLinkButtons[indexAA].Visible =
-                explicitMod != null && explicitMod.Modification.CrosslinkerSettings != null;
+            if (explicitMod?.Modification.CrosslinkerSettings == null)
+            {
+                editLinkButton.Visible = false;
+                return;
+            }
+            editLinkButton.Visible = true;
+            if (explicitMod.LinkedPeptide != null)
+            {
+                string strTooltip = (explicitMod.LinkedPeptide.IndexAa + 1) + @":" +
+                                    explicitMod.LinkedPeptide.Peptide.Sequence;
+                toolTip.SetToolTip(editLinkButton, strTooltip);
+            }
+            else
+            {
+                toolTip.SetToolTip(editLinkButton, null);
+            }
+        }
+
+        private bool EnsureLinkedPeptide(StaticMod staticMod, int indexAA)
+        {
+            if (HasAppropriateLinkedPeptide(staticMod, indexAA))
+            {
+                return true;
+            }
+            EditLinkedPeptide(indexAA);
+            return HasAppropriateLinkedPeptide(staticMod, indexAA);
+        }
+
+        private bool HasAppropriateLinkedPeptide(StaticMod staticMod, int indexAA)
+        {
+            if (staticMod?.CrosslinkerSettings == null)
+            {
+                return true;
+            }
+            LinkedPeptide linkedPeptide;
+            _linkedPeptides.TryGetValue(indexAA, out linkedPeptide);
+            if (linkedPeptide == null)
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(staticMod.AAs))
+            {
+                char aa = linkedPeptide.Peptide.Sequence[linkedPeptide.IndexAa];
+                if (!staticMod.AAs.Contains(aa))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
