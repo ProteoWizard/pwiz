@@ -292,15 +292,14 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
                     
                 rawTextSequences = rawTextSequences.Concat(Enumerable.Range(0, pepSequence.Length).Select(aaIndex=>peptideFormatter.GetTextSequenceAtAaIndex(DisplayModificationOption.Current, aaIndex)));
+
+                rawTextSequences = rawTextSequences.Concat(peptideFormatter.GetTextSequencesForLinkedPeptides(DisplayModificationOption.Current));
+
                 if (endPep < label.Length)
                 {
                     string suffix = label.Substring(endPep);
                     rawTextSequences = rawTextSequences.Append(CreatePlainTextSequence(suffix, fonts));
                 }
-
-                rawTextSequences = rawTextSequences.Concat(
-                        peptideFormatter.GetTextSequencesForLinkedPeptides(DisplayModificationOption.Current));
-
                 listTextSequences.AddRange(TextSequence.Coalesce(rawTextSequences));
             }
 

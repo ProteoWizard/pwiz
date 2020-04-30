@@ -31,6 +31,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 {
     public class PeptideFormatter : Immutable
     {
+        public static readonly Color COLOR_CROSSLINK = Color.Green;
         private SequenceInfo _lightSequenceInfo;
 
         private List<Tuple<IsotopeLabelType, SequenceInfo>> _heavySequenceInfos =
@@ -145,17 +146,17 @@ namespace pwiz.Skyline.Controls.SeqNode
             Font font = ModFontHolder.Plain;
             Color color = Color.Black;
             String strAminoAcid = UnmodifiedSequence.Substring(residue, 1);
-            if (residue == CrosslinkedIndexAa)
+
+            var modsAtResidue = GetModificationsAtResidue(displayModificationOption, residue).ToArray();
+            if (residue == CrosslinkedIndexAa || modsAtResidue.Any(labeledMod=> labeledMod.Item2.Any(mod=>mod.ExplicitMod.LinkedPeptide != null)))
             {
                 return new TextSequence()
                 {
-                    Color = Color.Green,
+                    Color = COLOR_CROSSLINK,
                     Font = ModFontHolder.LightAndHeavy,
                     Text = strAminoAcid
                 };
             }
-
-            var modsAtResidue = GetModificationsAtResidue(displayModificationOption, residue).ToArray();
             if (modsAtResidue.Length == 0)
             {
                 return new TextSequence
@@ -210,20 +211,51 @@ namespace pwiz.Skyline.Controls.SeqNode
         public IEnumerable<TextSequence> GetTextSequencesForLinkedPeptides(DisplayModificationOption displayModificationOption)
         {
             var result = new List<TextSequence>();
-            foreach (var linkedPeptide in LinkedPeptides.Values)
+            if (LinkedPeptides.Count == 0)
+            {
+                return result;
+            }
+
+            result.Add(new TextSequence
+            {
+                Color = Color.Black,
+                Font = ModFontHolder.Plain,
+                Text = @"-"
+            });
+            if (LinkedPeptides.Count > 1)
             {
                 result.Add(new TextSequence
                 {
                     Color = Color.Black,
                     Font = ModFontHolder.Plain,
-                    Text = @"-{"
+                    Text = @"["
                 });
+            }
+
+            bool first = true;
+            foreach (var linkedPeptide in LinkedPeptides.Values)
+            {
                 result.AddRange(linkedPeptide.GetTextSequencesForSelfAndChildren(displayModificationOption));
+                if (!first)
+                {
+                    result.Add(new TextSequence
+                    {
+                        Color = Color.Black,
+                        Font = ModFontHolder.Plain,
+                        Text = @","
+                    });
+                }
+
+                first = false;
+            }
+
+            if (LinkedPeptides.Count > 1)
+            {
                 result.Add(new TextSequence
                 {
                     Color = Color.Black,
                     Font = ModFontHolder.Plain,
-                    Text = @"}"
+                    Text = @"]"
                 });
             }
 
