@@ -2023,6 +2023,31 @@ namespace pwiz.Skyline.Util
         {
             if (InvokeDebuggerOnFail)
             {
+                // Try to launch devenv with our solution sln so it presents in the list of debugger options.
+                // This makes for better code navigation and easier debugging.
+                try
+                {
+                    var path = @"\pwiz_tools\Skyline";
+                    var basedir = AppDomain.CurrentDomain.BaseDirectory;
+                    if (!string.IsNullOrEmpty(basedir))
+                    {
+                        var index = basedir.IndexOf(path, StringComparison.Ordinal);
+                        var solutionPath = basedir.Substring(0, index + path.Length);
+                        var skylineSln = Path.Combine(solutionPath, "Skyline.sln");
+                        // Try to give user a hint as to which debugger to pick
+                        var skylineTesterSln = Path.Combine(solutionPath, "USE THIS FOR ASSUME FAIL DEBUGGING.sln");
+                        if (File.Exists(skylineTesterSln))
+                            File.Delete(skylineTesterSln);
+                        File.Copy(skylineSln, skylineTesterSln);
+                        Process.Start(skylineTesterSln);
+                        Thread.Sleep(20000); // Wait for it to fire up sp it's offered in the list of debuggers
+                    }
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                }
+
                 Console.WriteLine();
                 if (!string.IsNullOrEmpty(error))
                     Console.WriteLine(error);
@@ -2088,30 +2113,20 @@ namespace pwiz.Skyline.Util
             return ex.Message;
         }
 
-        public static string GetStackTraceText(Exception exception, StackTrace stackTraceExceptionCaughtAt = null, bool showMessage = true)
+        /// <summary>
+        /// Returns text to be used when reporting an unhandled exception to the Skyline.ms.
+        /// </summary>
+        public static string GetExceptionText(Exception exception, StackTrace stackTraceExceptionCaughtAt)
         {
-            StringBuilder stackTrace = new StringBuilder();
-            if (showMessage)
-                stackTrace.AppendLine(@"Stack trace:").AppendLine();
-
-            stackTrace.AppendLine(exception.StackTrace).AppendLine();
-
-            for (var x = exception.InnerException; x != null; x = x.InnerException)
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine(exception.ToString());
+            if (stackTraceExceptionCaughtAt != null)
             {
-                if (ReferenceEquals(x, exception.InnerException))
-                    stackTrace.AppendLine(@"Inner exceptions:");
-                else
-                    stackTrace.AppendLine(@"---------------------------------------------------------------");
-                stackTrace.Append(@"Exception type: ").Append(x.GetType().FullName).AppendLine();
-                stackTrace.Append(@"Error message: ").AppendLine(x.Message);
-                stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
+                stringBuilder.AppendLine(@"Exception caught at: ");
+                stringBuilder.AppendLine(stackTraceExceptionCaughtAt.ToString());
             }
-            if (null != stackTraceExceptionCaughtAt)
-            {
-                stackTrace.AppendLine(@"Exception caught at: ");
-                stackTrace.AppendLine(stackTraceExceptionCaughtAt.ToString());
-            }
-            return stackTrace.ToString();
+
+            return stringBuilder.ToString();
         }
     }
 
