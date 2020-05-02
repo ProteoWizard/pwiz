@@ -489,6 +489,36 @@
   <data name="&gt;&gt;tabPageGroupComparisons.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="btnAddReport.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAddReport.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnAddReport.Location" type="System.Drawing.Point, System.Drawing">
+    <value>541, 48</value>
+  </data>
+  <data name="btnAddReport.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnAddReport.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="btnAddReport.Text" xml:space="preserve">
+    <value>&amp;Add...</value>
+  </data>
+  <data name="&gt;&gt;btnAddReport.Name" xml:space="preserve">
+    <value>btnAddReport</value>
+  </data>
+  <data name="&gt;&gt;btnAddReport.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddReport.Parent" xml:space="preserve">
+    <value>tabPageReports</value>
+  </data>
+  <data name="&gt;&gt;btnAddReport.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="btnEditReportList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -496,7 +526,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnEditReportList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>541, 48</value>
+    <value>541, 77</value>
   </data>
   <data name="btnEditReportList.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -517,7 +547,7 @@
     <value>tabPageReports</value>
   </data>
   <data name="&gt;&gt;btnEditReportList.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="labelReports.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -547,7 +577,7 @@
     <value>tabPageReports</value>
   </data>
   <data name="&gt;&gt;labelReports.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="chooseViewsControl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -571,7 +601,7 @@
     <value>tabPageReports</value>
   </data>
   <data name="&gt;&gt;chooseViewsControl.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tabPageReports.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
