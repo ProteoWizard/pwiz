@@ -21,6 +21,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -78,6 +79,33 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.OpenFile(documentFilePath);
             });
             Assert.IsNotNull(Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id).GetView(viewName));
+
+            const string addedFromDcoumentSettings = "Added From Document Settings";
+            SetClipboardText("ELVIS\nLIVES");
+            RunUI(SkylineWindow.Paste);
+            Assert.AreEqual(2, SkylineWindow.Document.PeptideCount);
+            documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
+            manageViewsForm = ShowDialog<ManageViewsForm>(documentSettingsDlg.EditReportList);
+            viewEditor = ShowDialog<ViewEditor>(manageViewsForm.AddView);
+            RunUI(()=>
+            {
+                viewEditor.ViewName = addedFromDcoumentSettings;
+                viewEditor.ChooseColumnsTab.AddColumn(PropertyPath.Root
+                    .Property(nameof(SkylineDocument.Proteins)).LookupAllItems()
+                    .Property(nameof(Protein.Peptides)).LookupAllItems());
+                viewEditor.ChooseColumnsTab.AddColumn(PropertyPath.Root
+                    .Property(nameof(SkylineDocument.Proteins)).LookupAllItems()
+                    .Property(nameof(Protein.Peptides)).LookupAllItems()
+                    .Property(nameof(Skyline.Model.Databinding.Entities.Peptide.MoleculeFormula)));
+            });
+
+            var previewForm = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
+            WaitForConditionUI(() => previewForm.IsComplete);
+            Assert.AreEqual(2, previewForm.DataGridView.RowCount);
+            OkDialog(previewForm, previewForm.Close);
+            OkDialog(viewEditor, viewEditor.OkDialog);
+            OkDialog(manageViewsForm, manageViewsForm.OkDialog);
+            OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
         }
     }
 }

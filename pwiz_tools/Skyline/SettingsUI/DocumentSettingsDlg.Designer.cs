@@ -48,6 +48,8 @@ namespace pwiz.Skyline.SettingsUI
             this.chooseViewsControl = new pwiz.Common.DataBinding.Controls.Editor.ChooseViewsControl();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            this.btnEditReportList = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPageAnnotations.SuspendLayout();
             this.tabPageLists.SuspendLayout();
@@ -163,6 +165,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPageReports
             // 
+            this.tabPageReports.Controls.Add(this.btnEditReportList);
             this.tabPageReports.Controls.Add(this.labelReports);
             this.tabPageReports.Controls.Add(this.chooseViewsControl);
             resources.ApplyResources(this.tabPageReports, "tabPageReports");
@@ -199,6 +202,13 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
+            // btnEditReportList
+            // 
+            resources.ApplyResources(this.btnEditReportList, "btnEditReportList");
+            this.btnEditReportList.Name = "btnEditReportList";
+            this.btnEditReportList.UseVisualStyleBackColor = true;
+            this.btnEditReportList.Click += new System.EventHandler(this.btnEditReportList_Click);
+            // 
             // DocumentSettingsDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -213,6 +223,7 @@ namespace pwiz.Skyline.SettingsUI
             this.Name = "DocumentSettingsDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl.ResumeLayout(false);
             this.tabPageAnnotations.ResumeLayout(false);
             this.tabPageLists.ResumeLayout(false);
@@ -243,5 +254,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnAddList;
         private System.Windows.Forms.Button btnManageLists;
         private System.Windows.Forms.CheckedListBox checkedListBoxLists;
+        private System.Windows.Forms.Button btnEditReportList;
     }
 }

@@ -208,5 +208,20 @@ namespace pwiz.Skyline.SettingsUI
         {
             _listsListBoxDriver.EditList();
         }
+
+        private void btnEditReportList_Click(object sender, System.EventArgs e)
+        {
+            EditReportList();
+        }
+
+        public void EditReportList()
+        {
+            var dataSchema = new SkylineDataSchema(DocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var viewContext = new DocumentGridViewContext(dataSchema) {EnablePreview = true};
+            using (var manageViewsForm = new ManageViewsForm(viewContext))
+            {
+                manageViewsForm.ShowDialog(this);
+            }
+        }
     }
 }
