@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using NHibernate.Transform;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -214,6 +216,10 @@ namespace pwiz.Skyline.SettingsUI
 
         protected virtual bool DoRowValidating(int rowIndex)
         {
+            if (rowIndex >= Items.Count)
+            {
+                return true;
+            }
             var row = GridView.Rows[rowIndex];
             if (row.IsNewRow)
                 return true;
