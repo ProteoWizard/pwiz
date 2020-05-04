@@ -886,7 +886,8 @@ namespace pwiz.ProteowizardWrapper
                 RetentionTime = GetStartTime(spectrum),
                 PrecursorsByMsLevel = GetPrecursorsByMsLevel(spectrum),
                 Centroided = IsCentroided(spectrum),
-                NegativeCharge = NegativePolarity(spectrum)
+                NegativeCharge = NegativePolarity(spectrum),
+                ScanDescription = GetScanDescription(spectrum)
             };
             if (IonMobilityUnits == eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
             {
@@ -1543,6 +1544,8 @@ namespace pwiz.ProteowizardWrapper
         public double? MinIonMobility { get; set; }
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
+
+        public string ScanDescription { get; set; }
 
         public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
         {
