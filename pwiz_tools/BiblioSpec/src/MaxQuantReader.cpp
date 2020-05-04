@@ -531,7 +531,7 @@ void MaxQuantReader::parseHeader(string& line)
     }
     
     // check that all required columns were in the file
-    for (size_t i = 0; i < targetColumns_.size(); i++)
+    for (int i = targetColumns_.size() - 1; i >= 0; i--)
     {
         if (targetColumns_[i].position_ < 0)
         {
@@ -541,7 +541,6 @@ void MaxQuantReader::parseHeader(string& line)
             {
                 optionalColumns_.erase(j);
                 targetColumns_.erase(targetColumns_.begin() + i);
-                break;
             }
             else
             {
