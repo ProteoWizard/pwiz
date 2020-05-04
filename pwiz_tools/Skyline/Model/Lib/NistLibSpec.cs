@@ -652,7 +652,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     if (!CreateCache(loader, status, 100 - loadPercent, out var warning))
                         return false;
-                    if (!string.IsNullOrEmpty((warning)))
+                    if (!string.IsNullOrEmpty(warning))
                         status = status.ChangeWarningMessage(warning);
                 }
 

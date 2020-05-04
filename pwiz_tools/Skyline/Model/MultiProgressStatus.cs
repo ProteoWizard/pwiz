@@ -132,13 +132,18 @@ namespace pwiz.Skyline.Model
             get { return ProgressList.Any(status => !string.IsNullOrEmpty(status.WarningMessage)); }
         }
 
-        public string WarningMessage
+        public Exception WarningException
         {
             get
             {
-                return HasWarnings
-                    ? TextUtil.LineSeparate(ProgressList.Select(status => status.WarningMessage)
-                        .Where(s => !string.IsNullOrEmpty(s))) : null;
+                MultiException exception = null;
+                foreach (var progressStatus in ProgressList.Where(status => !string.IsNullOrEmpty(status.WarningMessage)))
+                {
+                    if (exception == null)
+                        exception = new MultiException();
+                    exception.Add(new Exception(progressStatus.WarningMessage));
+                }
+                return exception;
             }
         }
 

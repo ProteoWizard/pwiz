@@ -3717,6 +3717,7 @@ namespace pwiz.Skyline
         private readonly DateTime _waitStart;
         private DateTime _lastOutput;
         private string _lastMessage;
+        private string _lastWarning;
 
         private readonly TextWriter _out;
         private Thread _waitingThread;
@@ -3813,6 +3814,13 @@ namespace pwiz.Skyline
             else if (writeMessage)
             {
                 _out.WriteLine(status.Message);
+            }
+
+            var warning = status.WarningException;
+            if (warning != null && !string.IsNullOrEmpty(warning.Message) && warning.Message != _lastWarning)
+            {
+                _out.WriteLine(warning.Message);
+                _lastWarning = warning.Message;
             }
 
             if (writeMessage)
