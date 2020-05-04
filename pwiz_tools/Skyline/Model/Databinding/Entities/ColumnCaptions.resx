@@ -342,6 +342,9 @@
   <data name="ExcludeFromCalibration">
     <value>Exclude From Calibration</value>
   </data>
+  <data name="ExplicitAnalyteConcentration">
+    <value>Explicit Analyte Concentration</value>
+  </data>
   <data name="ExplicitCollisionEnergy">
     <value>Explicit Collision Energy</value>
   </data>

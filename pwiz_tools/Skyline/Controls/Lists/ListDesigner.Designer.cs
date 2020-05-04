@@ -32,7 +32,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ListDesigner));
             this.bindingSourceListProperties = new System.Windows.Forms.BindingSource(this.components);
             this.panel1 = new System.Windows.Forms.Panel();
-            this.dataGridViewProperties = new System.Windows.Forms.DataGridView();
+            this.dataGridViewProperties = new pwiz.Common.Controls.CommonDataGridView();
             this.colPropertyName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPropertyType = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.bindingNavigator1 = new System.Windows.Forms.BindingNavigator(this.components);
@@ -265,7 +265,7 @@
 
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbxListName;
-        private System.Windows.Forms.DataGridView dataGridViewProperties;
+        private pwiz.Common.Controls.CommonDataGridView dataGridViewProperties;
         private System.Windows.Forms.BindingSource bindingSourceListProperties;
         private System.Windows.Forms.ComboBox comboIdProperty;
         private System.Windows.Forms.Label label2;

@@ -1,0 +1,137 @@
+Undo Redo : トランジションの設定－フィルタが変更されました
+Summary   : 設定>トランジションの設定－フィルタが変更されました
+All Info  :
+トランジションの設定－フィルタが変更されました
+設定>トランジションの設定－フィルタ>プロダクトイオン選択開始は"m/z >プリカーサー"から"イオン3"に変更されました
+設定>トランジションの設定－フィルタ>プロダクトイオン選択終了は"3個のイオン"から"最後のイオン - 1"に変更されました
+
+Undo Redo : ペプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
+Summary   : 設定>ペプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
+All Info  :
+ペプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
+設定>ペプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">アミノ酸は"K"です
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">末端は"C"です
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">13Cは真です
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">15Nは真です
+
+Undo Redo : ペプチドIEAIPQIDKが挿入されました
+Summary   : ペプチドIEAIPQIDKが挿入されました
+All Info  :
+ペプチドIEAIPQIDKが挿入されました
+Extra Info: ペプチドシークエンス	タンパク質名	タンパク質の説明
+IEAIPQIDK	GST-tag	
+		
+
+Undo Redo : 9個のファイルから結果がインポートされました
+Summary   : 9個のファイルから結果がインポートされました
+All Info  :
+9個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："FOXN1-GST.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_1.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_2.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_3.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_4.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_5.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_6.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_7.mzML"が含まれています
+結果設定をインポート>ファイル名："Standard_8.mzML"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
+[
+    "FOXN1-GST.mzML",
+    "Standard_1.mzML",
+    "Standard_2.mzML",
+    "Standard_3.mzML",
+    "Standard_4.mzML",
+    "Standard_5.mzML",
+    "Standard_6.mzML",
+    "Standard_7.mzML",
+    "Standard_8.mzML"
+],
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
+
+Undo Redo : ペプチド設定－定量化が変更されました
+Summary   : 設定>ペプチド設定－定量化が変更されました
+All Info  :
+ペプチド設定－定量化が変更されました
+設定>ペプチド設定－定量化>回帰適合は"なし"から"線形"に変更されました
+設定>ペプチド設定－定量化>正規化メソッドは"なし"から"Heavyに対する比率"に変更されました
+設定>ペプチド設定－定量化>単位は見つかりませんから"fmol/ul"に変更されました
+
+Undo Redo : ドキュメントグリッドに16個の値が貼り付けられました
+Summary   : ドキュメントグリッドに16個の値が貼り付けられました
+All Info  :
+ドキュメントグリッドに16個の値が貼り付けられました
+ドキュメントグリッド>ビュー名は"繰り返し測定"です
+Standard_1の試料タイプが"標準"に設定されました
+Standard_1のアナライト濃度が"40"に設定されました
+Standard_2の試料タイプが"標準"に設定されました
+Standard_2のアナライト濃度が"12.5"に設定されました
+Standard_3の試料タイプが"標準"に設定されました
+Standard_3のアナライト濃度が"5"に設定されました
+Standard_4の試料タイプが"標準"に設定されました
+Standard_4のアナライト濃度が"2.5"に設定されました
+Standard_5の試料タイプが"標準"に設定されました
+Standard_5のアナライト濃度が"1"に設定されました
+Standard_6の試料タイプが"標準"に設定されました
+Standard_6のアナライト濃度が"0.5"に設定されました
+Standard_7の試料タイプが"標準"に設定されました
+Standard_7のアナライト濃度が"0.25"に設定されました
+Standard_8の試料タイプが"標準"に設定されました
+Standard_8のアナライト濃度が"0.1"に設定されました
+Extra Info: 標準	40
+標準	12.5
+標準	5
+標準	2.5
+標準	1
+標準	0.5
+標準	0.25
+標準	0.1
+
+ビュー名 = "繰り返し測定"
+
+Undo Redo : GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました
+Summary   : GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました
+All Info  :
+GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました
+「FOXN1-GST」にあるGST-tag>IEAIPQIDK>517.8022++ (heavy)の全ピークの開始時間が20.54から20.64に変更されました
+「FOXN1-GST」にあるGST-tag>IEAIPQIDK>517.8022++ (heavy)の全ピークの終了時間が21.08から21.15に変更されました
+
+Reason Changed: GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました 
+Reason: '' to 'Changed peak integration as instructed by the tutorial'
+
+Undo Redo : 繰り返し測定Standard_5の校正でペプチドIEAIPQIDKを除外しています
+Summary   : 繰り返し測定Standard_5の校正でペプチドIEAIPQIDKを除外しています
+All Info  :
+繰り返し測定Standard_5の校正でペプチドIEAIPQIDKを除外しています
+
+Undo Redo : 繰り返し測定Standard_6の校正でペプチドIEAIPQIDKを除外しています
+Summary   : 繰り返し測定Standard_6の校正でペプチドIEAIPQIDKを除外しています
+All Info  :
+繰り返し測定Standard_6の校正でペプチドIEAIPQIDKを除外しています
+
+Undo Redo : 繰り返し測定Standard_7の校正でペプチドIEAIPQIDKを除外しています
+Summary   : 繰り返し測定Standard_7の校正でペプチドIEAIPQIDKを除外しています
+All Info  :
+繰り返し測定Standard_7の校正でペプチドIEAIPQIDKを除外しています
+
+Undo Redo : 繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています
+Summary   : 繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています
+All Info  :
+繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています
+
+Reason Changed: 繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: 繰り返し測定Standard_7の校正でペプチドIEAIPQIDKを除外しています 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: 繰り返し測定Standard_6の校正でペプチドIEAIPQIDKを除外しています 
+Reason: '' to 'Excluded standard below LOD'
+
+Reason Changed: 繰り返し測定Standard_5の校正でペプチドIEAIPQIDKを除外しています 
+Reason: '' to 'Excluded standard below LOD'
+

@@ -30,12 +30,13 @@ using System.Xml.Serialization;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -58,6 +59,7 @@ namespace pwiz.Skyline
         private static readonly Func<string> DATE_VALUE = () => CommandArgUsage.CommandArgs_DATE_VALUE;
         private static readonly Func<string> INT_VALUE = () => CommandArgUsage.CommandArgs_INT_VALUE;
         private static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
+        private static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
         private static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
         private static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
         private static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
@@ -171,6 +173,12 @@ namespace pwiz.Skyline
         {
             UsageShown = true;  // Keep from showing the full usage table
             _out.WriteLine(Install.ProgramNameAndVersion);
+            VersionPwiz();
+        }
+        private void VersionPwiz()
+        {
+            UsageShown = true;  // Keep from showing the full usage table
+            _out.WriteLine(@"    ProteoWizard MSData {0}", MsDataFileImpl.InstalledVersion);
         }
 
         private bool ValidateGeneralArgs()
@@ -316,14 +324,7 @@ namespace pwiz.Skyline
 
         private void ParseImportFile(NameValuePair pair)
         {
-            if (pair.Value.StartsWith(ChorusUrl.ChorusUrlPrefix))
-            {
-                ReplicateFile.Add(MsDataFileUri.Parse(pair.Value));
-            }
-            else
-            {
-                ReplicateFile.Add(new MsDataFilePath(pair.ValueFullPath));
-            }
+            ReplicateFile.Add(new MsDataFilePath(pair.ValueFullPath));
         }
 
         private bool ParseImportNamingPattern(NameValuePair pair)
@@ -555,7 +556,7 @@ namespace pwiz.Skyline
 
         // For reintegration
         private static readonly Argument ARG_REINTEGRATE_MODEL_NAME = new DocArgument(@"reintegrate-model-name", NAME_VALUE,
-            (c, p) => c.ReintegratModelName = p.Value);
+            (c, p) => c.ReintegrateModelName = p.Value);
         private static readonly Argument ARG_REINTEGRATE_CREATE_MODEL = new DocArgument(@"reintegrate-create-model",
             (c, p) =>
             {
@@ -563,6 +564,12 @@ namespace pwiz.Skyline
                 if (!c.IsSecondBestModel)
                     c.IsDecoyModel = true;
             });
+        private static readonly Argument ARG_REINTEGRATE_MODEL_TYPE = new DocArgument(@"reintegrate-model-type",
+            Helpers.GetEnumValues<ScoringModelType>().Select(p => p.ToString()).ToArray(),
+            (c, p) => c.ReintegrateModelType = (ScoringModelType)Enum.Parse(typeof(ScoringModelType), p.Value, true)) {WrapValue = true};
+        private static readonly Argument ARG_REINTEGRATE_MODEL_CUTOFFS = new DocArgument(@"reintegrate-model-cutoffs", NUM_LIST_VALUE,
+                (c, p) => c.ReintegrateModelCutoffs = c.ParseNumberList(p))
+            { InternalUse = true };
         private static readonly Argument ARG_REINTEGRATE_MODEL_ITERATION_COUNT = new DocArgument(@"reintegrate-model-iteration-count", INT_VALUE,
             (c, p) => c.ReintegrateModelIterationCount = p.ValueInt) {InternalUse = true};
         private static readonly Argument ARG_REINTEGRATE_MODEL_SECOND_BEST = new DocArgument(@"reintegrate-model-second-best",
@@ -582,30 +589,97 @@ namespace pwiz.Skyline
             { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_REINTEGRATE = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models, false,
-            ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_ITERATION_COUNT,
-            ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_OVERWRITE_PEAKS,
+            ARG_REINTEGRATE_MODEL_NAME, ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_TYPE, ARG_REINTEGRATE_MODEL_ITERATION_COUNT,
+            ARG_REINTEGRATE_MODEL_CUTOFFS, ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_OVERWRITE_PEAKS,
             ARG_REINTEGRATE_LOG_TRAINING, ARG_REINTEGRATE_EXCLUDE_FEATURE)
         {
             Dependencies =
             {
                 { ARG_REINTEGRATE_CREATE_MODEL , ARG_REINTEGRATE_MODEL_NAME },
+                { ARG_REINTEGRATE_MODEL_TYPE , ARG_REINTEGRATE_CREATE_MODEL },
+                { ARG_REINTEGRATE_MODEL_CUTOFFS , ARG_REINTEGRATE_CREATE_MODEL },
                 { ARG_REINTEGRATE_OVERWRITE_PEAKS , ARG_REINTEGRATE_MODEL_NAME },
                 { ARG_REINTEGRATE_MODEL_SECOND_BEST, ARG_REINTEGRATE_CREATE_MODEL},
                 { ARG_REINTEGRATE_MODEL_BOTH, ARG_REINTEGRATE_CREATE_MODEL},
                 { ARG_REINTEGRATE_EXCLUDE_FEATURE, ARG_REINTEGRATE_CREATE_MODEL },
-            }
+            },
+            Validate = c => c.ValidateReintegrateArgs()
         };
 
-        public string ReintegratModelName { get; private set; }
+        private bool ValidateReintegrateArgs()
+        {
+            if (ReintegrateModelType != ScoringModelType.mProphet && ExcludeFeatures.Count > 0)
+            {
+                WriteLine(Resources.CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_);
+                return false;
+            }
+
+            if (ReintegrateModelCutoffs != null)
+            {
+                if (ReintegrateModelType == ScoringModelType.Skyline)
+                {
+                    WriteLine(Resources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_);
+                    return false;
+                }
+
+                double maxCutoff = MProphetPeakScoringModel.DEFAULT_CUTOFFS[0];
+                if (MonotonicallyDecreasing(ReintegrateModelCutoffs, maxCutoff))
+                {
+                    WriteLine(Resources.CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__, string.Join(
+                        CultureInfo.CurrentCulture.TextInfo.ListSeparator, ReintegrateModelCutoffs.Select(c => c.ToString(CultureInfo.CurrentCulture))), maxCutoff);
+                }
+            }
+
+            return true;
+        }
+
+        private bool MonotonicallyDecreasing(List<double> values, double maxValue)
+        {
+            double? lastValue = null;
+            foreach (var value in values)
+            {
+                if (value > maxValue || (lastValue.HasValue && value >= lastValue.Value))
+                    return false;
+                lastValue = value;
+            }
+
+            return true;
+        }
+
+        public enum ScoringModelType
+        {
+            mProphet, // Full mProphet model (default)
+            Skyline,  // Skyline default model with coefficients scaled to estimate unit normal distribution from decoys
+            SkylineML // Skyline Machine Learning - essentially mProphet model with default set of features
+        }
+
+        public string ReintegrateModelName { get; private set; }
+        public List<double> ReintegrateModelCutoffs { get; private set; }
         public int? ReintegrateModelIterationCount { get; private set; }
         public bool IsOverwritePeaks { get; private set; }
         public bool IsCreateScoringModel { get; private set; }
         public bool IsSecondBestModel { get; private set; }
         public bool IsDecoyModel { get; private set; }
         public bool IsLogTraining { get; private set; }
+        public ScoringModelType ReintegrateModelType { get; private set; }
         public List<IPeakFeatureCalculator> ExcludeFeatures { get; private set; }
 
-        public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegratModelName); } }
+        public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegrateModelName); } }
+
+
+        private List<double> ParseNumberList(NameValuePair pair)
+        {
+            try
+            {
+                return pair.Value.Split(new[] {CultureInfo.CurrentCulture.TextInfo.ListSeparator},
+                        StringSplitOptions.RemoveEmptyEntries)
+                    .Select(double.Parse).ToList();
+            }
+            catch (Exception)
+            {
+                throw new ValueInvalidNumberListException(pair.Match, pair.Value);
+            }
+        }
 
         private bool ParseReintegrateExcludeFeature(NameValuePair pair)
         {
@@ -678,6 +752,54 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.IdotProductThreshold = p.ValueDouble);
         public static readonly Argument ARG_REFINE_USE_BEST_RESULT = new RefineArgument(@"refine-use-best-result",
             (c, p) => c.Refinement.UseBestResult = true);
+        // Refinement consistency tab
+        public static readonly Argument ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF = new RefineArgument(@"refine-cv-remove-above-cutoff", NUM_VALUE,
+            (c,p) => c.Refinement.CVCutoff = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_CV_GLOBAL_NORMALIZE = new RefineArgument(@"refine-cv-global-normalize",
+            new[] { NormalizationMethod.GLOBAL_STANDARDS.Name, NormalizationMethod.EQUALIZE_MEDIANS.Name },
+            (c, p) =>
+            {
+                c.Refinement.NormalizationMethod = p.Value.Equals(NormalizationMethod.GLOBAL_STANDARDS.Name)
+                    ? AreaCVNormalizationMethod.global_standards
+                    : AreaCVNormalizationMethod.medians;
+            }) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_CV_REFERENCE_NORMALIZE = new RefineArgument(@"refine-cv-reference-normalize", LABEL_VALUE,
+            (c, p) =>
+            {
+                c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.ratio;
+                c.RefinementCvLabelTypeName = p.Value;
+            }) { WrapValue = true };
+        public static readonly Argument ARG_REFINE_CV_TRANSITIONS = new RefineArgument(@"refine-cv-transitions",
+            new[] { AreaCVTransitions.all.ToString(), AreaCVTransitions.best.ToString() },
+            (c, p) =>
+            {
+                c.Refinement.Transitions = (AreaCVTransitions)Enum.Parse(typeof(AreaCVTransitions), p.Value, false);
+                c.Refinement.CountTransitions = -1;
+            });
+        public static readonly Argument ARG_REFINE_CV_TRANSITIONS_COUNT = new RefineArgument(@"refine-cv-transitions-count", INT_VALUE,
+            (c, p) =>
+            {
+                c.Refinement.Transitions = AreaCVTransitions.count;
+                c.Refinement.CountTransitions = p.ValueInt;
+            });
+        public static readonly Argument ARG_REFINE_CV_MS_LEVEL = new RefineArgument(@"refine-cv-ms-level",
+            Helpers.GetEnumValues<AreaCVMsLevel>().Select(e => e.ToString()).ToArray(),
+            (c, p) => c.Refinement.MSLevel = (AreaCVMsLevel) Enum.Parse(typeof(AreaCVMsLevel), p.Value, true));
+        public static readonly Argument ARG_REFINE_QVALUE_CUTOFF = new RefineArgument(@"refine-qvalue-cutoff", NUM_VALUE,
+            (c, p) => c.Refinement.QValueCutoff = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_MINIMUM_DETECTIONS = new RefineArgument(@"refine-minimum-detections", INT_VALUE,
+            (c, p) => c.Refinement.MinimumDetections = p.ValueInt);
+        // Refinement Group Comparison Tab
+        public static readonly Argument ARG_REFINE_GC_P_VALUE_CUTOFF = new RefineArgument(
+            @"refine-gc-p-value-cutoff", NUM_VALUE,
+            (c, p) => c.Refinement.AdjustedPValueCutoff = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_GC_FOLD_CHANGE_CUTOFF = new RefineArgument(@"refine-gc-fold-change-cutoff",
+            NUM_VALUE,
+            (c, p) => c.Refinement.FoldChangeCutoff = Math.Log(p.ValueDouble, 2));
+        public static readonly Argument ARG_REFINE_GC_MS_LEVEL = new RefineArgument(@"refine-gc-ms-level", NUM_VALUE,
+            (c, p) => c.Refinement.MSLevelGroupComparison = p.ValueInt);
+        public static readonly Argument ARG_REFINE_GROUP_NAME = new RefineArgument(@"refine-gc-name", LABEL_VALUE,
+            (c, p) => c.Refinement.GroupComparisonNames.Add(p.Value));
 
         private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT, false,
@@ -692,10 +814,16 @@ namespace pwiz.Skyline
             ARG_REFINE_MAX_PEAK_RANK, ARG_REFINE_MAX_PRECURSOR_PEAK_ONLY,
             ARG_REFINE_PREFER_LARGER_PRODUCTS, ARG_REFINE_MISSING_RESULTS,
             ARG_REFINE_MIN_TIME_CORRELATION, ARG_REFINE_MIN_DOTP, ARG_REFINE_MIN_IDOTP,
-            ARG_REFINE_USE_BEST_RESULT);
+            ARG_REFINE_USE_BEST_RESULT,
+            ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF, ARG_REFINE_CV_GLOBAL_NORMALIZE, ARG_REFINE_CV_REFERENCE_NORMALIZE,
+            ARG_REFINE_CV_TRANSITIONS, ARG_REFINE_CV_TRANSITIONS_COUNT, ARG_REFINE_CV_MS_LEVEL,
+            ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS,
+            ARG_REFINE_GC_P_VALUE_CUTOFF, ARG_REFINE_GC_FOLD_CHANGE_CUTOFF, ARG_REFINE_GC_MS_LEVEL, ARG_REFINE_GROUP_NAME);
+        
 
         public RefinementSettings Refinement { get; private set; }
         public string RefinementLabelTypeName { get; private set; }   // Must store as string until document is instantiated
+        public string RefinementCvLabelTypeName { get; private set; }   // Must store as string until document is instantiated
 
 
         // For exporting reports
@@ -993,13 +1121,13 @@ namespace pwiz.Skyline
             { WrapValue = true };
         public static readonly Argument ARG_TRAN_FRAGMENT_ION_TYPES = new DocArgument(@"tran-product-ion-types", ION_TYPE_LIST_VALUE,
             (c, p) => c.FilterProductTypes = ParseIonTypes(p)) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", GetDisplayNames(Settings.Default.CollisionEnergyList),
+        public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", () => GetDisplayNames(Settings.Default.CollisionEnergyList),
             (c, p) => c.PredictCEName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", GetDisplayNames(Settings.Default.DeclusterPotentialList),
+        public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", () => GetDisplayNames(Settings.Default.DeclusterPotentialList),
             (c, p) => c.PredictDPName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", GetDisplayNames(Settings.Default.CompensationVoltageList),
+        public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", () => GetDisplayNames(Settings.Default.CompensationVoltageList),
             (c, p) => c.PredictCoVName = p.Value) { WrapValue = true };
-        public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", GetDisplayNames(Settings.Default.OptimizationLibraryList),
+        public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", () => GetDisplayNames(Settings.Default.OptimizationLibraryList),
             (c, p) => c.PredictOpimizationLibraryName = p.Value) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES = new DocArgument(@"full-scan-precursor-res", RP_VALUE,
             (c, p) => c.FullScanPrecursorRes = p.ValueDouble) { WrapValue = true };
@@ -1011,13 +1139,16 @@ namespace pwiz.Skyline
             (c, p) => c.FullScanProductResMz = p.ValueDouble) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_RT_FILTER_TOLERANCE = new DocArgument(@"full-scan-rt-filter-tolerance", MINUTES_VALUE,
             (c, p) => c.FullScanRetentionTimeFilterLength = p.ValueDouble) { WrapValue = true };
+        public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
+                (c, p) => c.IonMobilityLibraryRes = p.ValueDouble)
+            { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
             ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
             ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
             ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ,
             ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
-            ARG_FULL_SCAN_RT_FILTER_TOLERANCE)
+            ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES)
         {            
             LeftColumnWidth = 34,
             Dependencies =
@@ -1090,7 +1221,7 @@ namespace pwiz.Skyline
         public double? FullScanProductResMz { get; private set; }
         public double? FullScanRetentionTimeFilterLength { get; private set; }
 
-        public bool FullScanSetting
+        public bool FullScanSettings
         {
             get
             {
@@ -1100,6 +1231,13 @@ namespace pwiz.Skyline
                         ?? FullScanProductResMz
                         ?? FullScanRetentionTimeFilterLength).HasValue;
             }
+        }
+
+        public double? IonMobilityLibraryRes { get; private set; }
+
+        public bool ImsSettings
+        {
+            get { return IonMobilityLibraryRes.HasValue; }
         }
 
         // For importing a tool from a zip file.
@@ -1402,7 +1540,7 @@ namespace pwiz.Skyline
             (c, p) => c.UseSlens = true)
             { AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_Thermo};
         public static readonly Argument ARG_EXP_RUN_LENGTH = new DocArgument(@"exp-run-length", MINUTES_VALUE,
-            (c, p) => c.RunLength = p.GetValueInt(AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX))
+            (c, p) => c.RunLength = p.GetValueDouble(AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX))
             { AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_RUN_LENGTH_AppliesTo};
 
         private static readonly ArgumentGroup GROUP_EXP_INSTRUMENT = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_EXP_INSTRUMENT_Vendor_specific_method_and_transition_list_options, false,
@@ -1501,8 +1639,8 @@ namespace pwiz.Skyline
 
         public bool AddEnergyRamp { get; private set; }
         public bool UseSlens { get; private set; }
-        private int _runLength;
-        public int RunLength
+        private double _runLength;
+        public double RunLength
         {
             get { return _runLength; }
             set
@@ -1703,8 +1841,6 @@ namespace pwiz.Skyline
 
         private bool ParseArgsInternal(IEnumerable<string> args)
         {
-            ImportThreads = 1;  // CONSIDER: Why here?
-
             _seenArguments.Clear();
 
             foreach (string s in args)
@@ -1825,7 +1961,7 @@ namespace pwiz.Skyline
             public Argument(string name, string[] values, Func<CommandArgs, NameValuePair, bool> processValue)
                 : this(name, () => ValuesToExample(values), processValue)
             {
-                Values = values;
+                _fixedValues = values;
             }
 
             public Argument(string name, string[] values, Action<CommandArgs, NameValuePair> processValue)
@@ -1837,6 +1973,24 @@ namespace pwiz.Skyline
             {
             }
 
+            public Argument(string name, Func<string[]> values, Func<CommandArgs, NameValuePair, bool> processValue)
+                : this(name, () => ValuesToExample(values()), processValue)
+            {
+                _dynamicValues = values;
+            }
+
+            public Argument(string name, Func<string[]> values, Action<CommandArgs, NameValuePair> processValue)
+                : this(name, values, (c, p) =>
+                {
+                    processValue(c, p);
+                    return true;
+                })
+            {
+            }
+
+            private string[] _fixedValues;
+            private Func<string[]> _dynamicValues;
+
             public Func<CommandArgs, NameValuePair, bool> ProcessValue;
 
             public string Name { get; private set; }
@@ -1846,7 +2000,13 @@ namespace pwiz.Skyline
                 get { return CommandArgUsage.ResourceManager.GetString("_" + Name.Replace('-', '_')); }
             }
             public Func<string> ValueExample { get; private set; }
-            public string[] Values { get; private set; }
+            public string[] Values
+            {
+                get
+                {
+                    return _dynamicValues?.Invoke() ?? _fixedValues;
+                }
+            }
             public bool WrapValue { get; set; }
             public bool OptionalValue { get; set; }
             public bool InternalUse { get; set; }
@@ -1950,6 +2110,16 @@ namespace pwiz.Skyline
             }
 
             public DocArgument(string name, string[] values, Action<CommandArgs, NameValuePair> processValue)
+                : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public DocArgument(string name, Func<string[]> values, Func<CommandArgs, NameValuePair, bool> processValue)
+                : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
+            {
+            }
+
+            public DocArgument(string name, Func<string[]> values, Action<CommandArgs, NameValuePair> processValue)
                 : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
             {
             }
@@ -2319,7 +2489,7 @@ namespace pwiz.Skyline
 
             private static string HtmlEncode(string str)
             {
-                string encodedText = HttpUtility.HtmlEncode(str) ?? string.Empty;
+                string encodedText = HttpUtility.HtmlEncode(str ?? string.Empty);
                 return encodedText.Replace(@"-", @"&#8209;");   // Use non-breaking hyphens
             }
         }
@@ -2375,6 +2545,14 @@ namespace pwiz.Skyline
         {
             public ValueInvalidIntException(Argument arg, string value)
                 : base(string.Format(Resources.ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_, value, arg.ArgumentText))
+            {
+            }
+        }
+
+        public class ValueInvalidNumberListException : UsageException
+        {
+            public ValueInvalidNumberListException(Argument arg, string value)
+                : base(string.Format(Resources.ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_, value, arg.ArgumentText))
             {
             }
         }

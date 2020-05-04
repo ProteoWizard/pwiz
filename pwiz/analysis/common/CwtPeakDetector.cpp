@@ -23,16 +23,27 @@
 
 #include "CwtPeakDetector.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/sort_together.hpp"
 
-// Predicate for sorting vectors of ridgeLines 
-bool sortFinalCol (ridgeLine i, ridgeLine j) { return (i.Col<j.Col); } 
+
+namespace {
+    // Predicate for sorting vectors of ridgeLines 
+    bool sortFinalCol(ridgeLine i, ridgeLine j) { return (i.Col < j.Col); }
+
+    // Helper functions used by detect. The client does not need to see these.
+    void ricker2d(const std::vector <double> &, const int, const int, const int, const double, const double, const double, std::vector <double> &);
+    int getColLowBound(const std::vector <double> &, const double);
+    int    getColHighBound(const std::vector <double> &, const double);
+    double scoreAtPercentile(const double, const std::vector <double> &, const int);
+    double convertColToMZ(const std::vector <double> &, const int);
+}
 
 namespace pwiz {
 namespace analysis {
 
 PWIZ_API_DECL
-CwtPeakDetector::CwtPeakDetector(double minSnr, int fixedPeaksKeep, double mzTol )
-: minSnr_(minSnr), fixedPeaksKeep_(fixedPeaksKeep), mzTol_(mzTol)
+CwtPeakDetector::CwtPeakDetector(double minSnr, int fixedPeaksKeep, double mzTol, bool centroid)
+: minSnr_(minSnr), fixedPeaksKeep_(fixedPeaksKeep), mzTol_(mzTol), centroid_(centroid)
 {
     nScales = 10;
 
@@ -53,19 +64,54 @@ CwtPeakDetector::CwtPeakDetector(double minSnr, int fixedPeaksKeep, double mzTol
 
 
 PWIZ_API_DECL
-void CwtPeakDetector::detect(const vector<double>& x, const vector<double>& y,
+void CwtPeakDetector::detect(const vector<double>& x_, const vector<double>& y_,
                                 vector<double>& xPeakValues, vector<double>& yPeakValues,
                                 vector<Peak>* peaks)
 {
 
-    if (x.size() != y.size())
+    if (x_.size() != y_.size())
         throw runtime_error("[CwtPeakDetector::detect()] x and y arrays must be the same size");
 
     //cout << "peakPicking on " << x.size() << " points" << endl;
 
+    if (x_.size() <= 2) return;
+
+    // local array copies
+    vector<double> x(x_), y(y_);
+
+    // ensure data is m/z sorted
+    pwiz::util::sort_together(x, y);
+
+    vector<double> binnedX; binnedX.reserve(x.size());
+    vector<double> binnedY; binnedY.reserve(y.size());
+
+    // bin identical m/z values
+    if (x.size() > 1)
+    {
+        binnedX.push_back(x[0]);
+        binnedY.push_back(y[0]);
+        for (size_t i = 1; i < x.size(); ++i)
+        {
+            if (fabs(binnedX.back() - x[i]) < 1e-6)
+            {
+                for (; i < x.size() && fabs(binnedX.back() - x[i]) < 1e-6; ++i)
+                    binnedY.back() += y[i];
+                --i;
+            }
+            else
+            {
+                binnedX.push_back(x[i]);
+                binnedY.push_back(y[i]);
+            }
+        }
+
+        swap(x, binnedX);
+        swap(y, binnedY);
+    }
+
     int mzLength = x.size(); // number of data points in spectrum
-    if ( mzLength <= 2 ) return;
-    int corrMatrixLength = 2*mzLength-1; // number of data points in a row of the correlation matrix
+    if (mzLength <= 2) return;
+    int corrMatrixLength = 2 * mzLength - 1; // number of data points in a row of the correlation matrix
 
     // Data arrays
     vector < vector<double> > corrMatrix(nScales, vector<double>(corrMatrixLength,0.0)); // correlation matrix
@@ -85,7 +131,7 @@ void CwtPeakDetector::detect(const vector<double>& x, const vector<double>& y,
     getPeakLines( corrMatrix, x, allLines, snrs );
 
     // refine the peak positions and remove peaks using fixedPeaksKeep_, if needed. 
-    xPeakValues.resize(allLines.size()), yPeakValues.resize(allLines.size());
+    xPeakValues.reserve(allLines.size()), yPeakValues.reserve(allLines.size());
     refinePeaks( x, y, allLines, widths, xPeakValues, yPeakValues, snrs );
 
 }
@@ -112,6 +158,9 @@ void CwtPeakDetector::getScales( const vector <double> & mzData, const vector <d
         if ( intensityData[i] != 0.0 || intensityData[i-1] != 0.0 ) 
         {    
             Xspacing[i] = mzData[i] - mzData[i-1];
+            if (Xspacing[i] <= 0)
+                throw runtime_error("[CwtPeakDetector::getScales] m/z profile data are unsorted or contain duplicates");
+
             lastXspacing = Xspacing[i];
         }
         else
@@ -423,24 +472,43 @@ void CwtPeakDetector::refinePeaks( const vector <double> & noisyX, const vector 
         int startFittingPoint = getColLowBound(noisyX,mzCol-offset);
         int endFittingPoint = getColHighBound(noisyX,mzCol+offset);
         
-        // sum up the intensity and find the highest point. If there are multiple
-        // points with the maxIntensity value, take the one with the highest m/z.
         double maxIntensity = 0.0;
         double intensityAccumulator = 0.0;
-        double maxIntensityMZ = 0.0;
-        for (int j = startFittingPoint; j <= endFittingPoint; ++j)
+        double mzCentroid = 0.0;
+        double bestMZ = 0.0;
+
+        // take weighted average of points in the peak to get centroid m/z
+        if (centroid_)
         {
-            intensityAccumulator += noisyY[j];
-            if ( noisyY[j] >= maxIntensity )
+            for (int j = startFittingPoint; j <= endFittingPoint; ++j)
             {
-                maxIntensity = noisyY[j];
-                maxIntensityMZ = noisyX[j];
+                intensityAccumulator += noisyY[j];
+                mzCentroid += noisyY[j]*noisyX[j];
+                if (noisyY[j] >= maxIntensity)
+                    maxIntensity = noisyY[j];
+            }
+            bestMZ = mzCentroid / intensityAccumulator;
+        }
+        // sum up the intensity and find the highest point. If there are multiple
+        // points with the maxIntensity value, take the one with the highest m/z.
+        else
+        {
+            for (int j = startFittingPoint; j <= endFittingPoint; ++j)
+            {
+                intensityAccumulator += noisyY[j];
+                if (noisyY[j] >= maxIntensity)
+                {
+                    maxIntensity = noisyY[j];
+                    bestMZ = noisyX[j];
+                }
             }
         }
 
-            
-        smoothX[i] = maxIntensityMZ; 
-        smoothY[i] = maxIntensity;
+        if (smoothX.empty() || bestMZ != smoothX.back())
+        {
+            smoothX.push_back(bestMZ);
+            smoothY.push_back(maxIntensity);
+        }
 
     }
 
@@ -456,6 +524,8 @@ void CwtPeakDetector::refinePeaks( const vector <double> & noisyX, const vector 
         }
     }
 
+    // peaks are occasionally out of order
+    pwiz::util::sort_together(smoothX, vector<boost::iterator_range<vector<double>::iterator>> { smoothY, snrs });
 
     // possible to list the same peak if two lines are drawn on the same peak
     // and fall back to the same max intensity value (or a very similar max intensity value)
@@ -500,19 +570,20 @@ void CwtPeakDetector::refinePeaks( const vector <double> & noisyX, const vector 
             }
         }
     }
-
 }
 
 } // namespace analysis
 } // namespace msdata
 
 
+namespace {
+
 // helper function that calculates the ricker (mexican hat) wavelet.
 // Designed to handle irregularly spaced data.
 void ricker2d(const vector <double> & Pad_mz, const int col, const int rickerPointsLeft, const int rickerPointsRight, 
                 const double A, const double wsq, const double centralMZ, vector <double> & total)
 {
-	if (rickerPointsRight - rickerPointsLeft >= (int) total.size())
+	if (rickerPointsRight + rickerPointsLeft >= (int) total.size())
 		throw runtime_error("[CwtPeakDetector::ricker2d] invalid input parameters");
 
     for (int i = col-rickerPointsLeft, cnt=0, end = col+rickerPointsRight; i <= end; i++, cnt++) 
@@ -579,3 +650,5 @@ double convertColToMZ( const vector <double> & mzs, const int Col )
     else
         return mzs[ mapIndex ];
 }
+
+} // namespace

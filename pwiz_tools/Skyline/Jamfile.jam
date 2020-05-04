@@ -21,13 +21,43 @@
 ##
 
 
-import modules ;
+import modules generate-version ;
 if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
     import path feature ;
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
+
+    local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
+    local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
+
+    constant SKYLINE_YEAR : 20 ;
+    constant SKYLINE_ORDINAL : 1 ; # A count of official releases made so far this year
+    constant SKYLINE_BRANCH : 1 ; # 0 - release, 1 - daily, 9 - feature complete daily
+
+    # when releasing a patch for a previous year, the day-of-year component will be incremented by 365 for each year difference
+    # (figuring out leap year here seems like overkill)
+    constant SKYLINE_DOY : [ CALC [ CALC [ CALC $(year_2digit) - $(SKYLINE_YEAR) ] * 365 ] + [ day_of_year $(ymd) ] ] ;
+    constant SKYLINE_TIMESTAMP : $(SKYLINE_BRANCH) $(SKYLINE_DOY) ;
+
+    local v = $(SKYLINE_YEAR) $(SKYLINE_ORDINAL) $(SKYLINE_BRANCH) $(SKYLINE_DOY) ;
+    constant SKYLINE_VERSION : $(v:J=) ;
+
+    rule generate-skyline-AssemblyInfo.cs ( name : description : path )
+    {
+        generate-version.AssemblyInfo.cs $(SKYLINE_PATH)/$(path) : $(SKYLINE_YEAR) : $(SKYLINE_ORDINAL) : $(SKYLINE_TIMESTAMP:J=.) : $(PWIZ_GIT_REV)
+            : $(name) $(description) "University of Washington" "Skyline" ;
+    }
+
+    # generate AssemblyInfo.cs for executables
+    generate-skyline-AssemblyInfo.cs "Skyline" : "Targeted Mass Spec Environment" : "Properties/AssemblyInfo.cs" ;
+    generate-skyline-AssemblyInfo.cs "SkylineCmd" : "Command-line access to Skyline" : "SkylineCmd/Properties/AssemblyInfo.cs" ;
+    #generate-skyline-AssemblyInfo.cs "SkylineRunner" : "Command-line access to Skyline" : "SkylineRunner/Properties/AssemblyInfo.cs" ;
+    generate-skyline-AssemblyInfo.cs "TestRunner" : "Command-line testing tool" : "TestRunner/Properties/AssemblyInfo.cs" ;
+    generate-skyline-AssemblyInfo.cs "SkylineTester" : "Testing GUI" : "SkylineTester/Properties/AssemblyInfo.cs" ;
+    generate-skyline-AssemblyInfo.cs "SkylineNightly" : "Nightly Test Runner" : "SkylineNightly/Properties/AssemblyInfo.cs" ;
+    generate-skyline-AssemblyInfo.cs "SkylineNightlyShim" : "Thin wrapper for SkylineNightly, updates SkylineNightly from TeamCity then executes it, passing along any provided args" : "SkylineNightlyShim/Properties/AssemblyInfo.cs" ;
 
     .teamcity-test-decoration = "" ;
     if --teamcity-test-decoration in [ modules.peek : ARGV ]
@@ -110,6 +140,22 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         exit %status%
     }
     
+    rule do_skyline_test_pass1_subset ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_test_pass1_subset
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building Skyline Test Data in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestData /nologo /verbosity:minimal
+        echo Testing subset of Skyline's leak checking (pass1) in $(CONFIGURATION:L) configuration...
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram $(.teamcity-test-decoration)
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+    
     rule do_skyline_test_functional ( targets + : sources * : properties * )
     {
         return [ build-properties $(targets) : $(sources) : $(properties) ] ;
@@ -138,7 +184,20 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building Skyline TestConnected, TestTutorial, TestPerf, SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestConnected /t:TestTutorial /t:TestPerf /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestConnected /t:TestTutorial /t:TestPerf /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+    }
+    
+    rule create_skyline_zips ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions create_skyline_zips
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         echo Creating SkylineTester.zip
@@ -260,6 +319,18 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
+    
+    make TestPass1Subset
+        : # sources
+        : # actions
+            @do_skyline_test_pass1_subset
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
 
     make TestFunctional
         : # sources
@@ -285,5 +356,18 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>Skyline.exe
             # note: we build TestTutorial.dll in do_skyline_build, but it takes too long to run in a Jam build
         ;
+
+    make SkylineTester.zip
+        : # sources
+        : # actions
+            @create_skyline_zips
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+
     explicit InspectCode ;
 }

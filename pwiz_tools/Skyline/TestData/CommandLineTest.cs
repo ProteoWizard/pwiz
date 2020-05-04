@@ -113,10 +113,10 @@ namespace pwiz.SkylineTestData
             RunCommand("--in=" + docPath,
                        "--share-zip=" + outPath);
 
-            Assert.IsTrue(File.Exists(outPath));
+            AssertEx.FileExists(outPath);
 
             var outFilesDir = new TestFilesDir(TestContext, outPath);
-            Assert.IsTrue(File.Exists(outFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky")));
+            AssertEx.FileExists(outFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky"));
         }
 
         [TestMethod]
@@ -457,7 +457,7 @@ namespace pwiz.SkylineTestData
                                        "--exp-file=" + thermoPath);
 
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Thermo_test.csv"), output);
-            Assert.IsTrue(File.Exists(thermoPath));
+            AssertEx.FileExists(thermoPath);
             Assert.AreEqual(doc.MoleculeTransitionCount, File.ReadAllLines(thermoPath).Length);
 
 
@@ -473,7 +473,7 @@ namespace pwiz.SkylineTestData
 
             //check for success
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Agilent_test.csv"), output);
-            Assert.IsTrue(File.Exists(agilentPath));
+            AssertEx.FileExists(agilentPath);
             Assert.AreEqual(doc.MoleculeTransitionCount + 1, File.ReadAllLines(agilentPath).Length);
 
             /////////////////////////
@@ -489,7 +489,7 @@ namespace pwiz.SkylineTestData
 
             //check for success
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AB_Sciex_test.csv"), output);
-            Assert.IsTrue(File.Exists(sciexPath));
+            AssertEx.FileExists(sciexPath);
             Assert.AreEqual(doc.MoleculeTransitionCount, File.ReadAllLines(sciexPath).Length);
 
             /////////////////////////
@@ -505,7 +505,7 @@ namespace pwiz.SkylineTestData
 
             //check for success
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Waters_test.csv"), output);
-            Assert.IsTrue(File.Exists(watersPath));
+            AssertEx.FileExists(watersPath);
             Assert.AreEqual(doc.MoleculeTransitionCount + 1, File.ReadAllLines(watersPath).Length);
 
             // Run it again as a mixed polarity document
@@ -521,9 +521,10 @@ namespace pwiz.SkylineTestData
             var xml = string.Empty;
             AssertEx.RoundTrip(docMixed, ref xml);
             var skyExt = Path.GetExtension(inPath) ?? string.Empty;
+            inPath = PathEx.SafePath(inPath);
             var docPathMixed = inPath.Replace(skyExt, "_mixed_polarity"+skyExt);
             File.WriteAllText(docPathMixed, xml);
-            var ext =  Path.GetExtension(outPath)??string.Empty;
+            var ext =  Path.GetExtension(PathEx.SafePath(outPath))??string.Empty;
             foreach (var polarityFilter in Helpers.GetEnumValues<ExportPolarity>().Reverse())
             {
                 var outname = "polarity_test_" + polarityFilter + ext;
@@ -567,7 +568,9 @@ namespace pwiz.SkylineTestData
             {
                 expected += nPositive;
             }
-            var ext = Path.GetExtension(path) ?? string.Empty;
+
+            path = PathEx.SafePath(path) ?? string.Empty;
+            var ext = Path.GetExtension(path);
             if (mode == ExportPolarity.separate)
             {
                 // Expect a pair of files
@@ -578,7 +581,7 @@ namespace pwiz.SkylineTestData
                 }
                 else
                 {
-                    Assert.IsTrue(File.Exists(path));
+                    AssertEx.FileExists(path);
                     Assert.AreEqual(nNegative + 1, File.ReadAllLines(path).Length, polarityFilter.ToString());
                 }
                 path = path.Replace(ExportPolarity.negative.ToString(), ExportPolarity.positive.ToString());
@@ -594,7 +597,7 @@ namespace pwiz.SkylineTestData
             }
             else
             {
-                Assert.IsTrue(File.Exists(path));
+                AssertEx.FileExists(path);
                 Assert.AreEqual(expected + 1, File.ReadAllLines(path).Count(l => !string.IsNullOrEmpty(l)), polarityFilter.ToString());
             }
         }
@@ -793,7 +796,7 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AgilentTriggered.csv")));
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
-            Assert.IsTrue(File.Exists(agilentTriggeredPath));
+            AssertEx.FileExists(agilentTriggeredPath);
             Assert.AreEqual(doc.PeptideTransitionCount + 1, File.ReadAllLines(agilentTriggeredPath).Length);
 
             // Isolation list export
@@ -808,7 +811,7 @@ namespace pwiz.SkylineTestData
             output = RunCommand(cmd);
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AgilentIsolationList.csv")));
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
-            Assert.IsTrue(File.Exists(agilentIsolationPath));
+            AssertEx.FileExists(agilentIsolationPath);
             doc = ResultsUtil.DeserializeDocument(docPath);
             Assert.AreEqual(doc.PeptideTransitionGroupCount + 1, File.ReadAllLines(agilentIsolationPath).Length);
 
@@ -1000,14 +1003,27 @@ namespace pwiz.SkylineTestData
             CommandArgs.Argument[] valueIntArguments =
             {
                 CommandArgs.ARG_EXP_MAX_TRANS,
-                CommandArgs.ARG_EXP_DWELL_TIME,
-                CommandArgs.ARG_EXP_RUN_LENGTH
+                CommandArgs.ARG_EXP_DWELL_TIME
             };
             foreach (var valueIntArg in valueIntArguments)
             {
                 args[3] = valueIntArg.ArgumentText + "=" + bogusValue;
                 output = RunCommand(args);
                 AssertEx.Contains(output, new CommandArgs.ValueInvalidIntException(valueIntArg, bogusValue).Message);
+            }
+
+            CommandArgs.Argument[] valueDoubleArguments =
+            {
+                CommandArgs.ARG_EXP_RUN_LENGTH,
+                CommandArgs.ARG_IMPORT_LOCKMASS_POSITIVE,
+                CommandArgs.ARG_IMPORT_LOCKMASS_NEGATIVE,
+                CommandArgs.ARG_IMPORT_LOCKMASS_TOLERANCE
+            };
+            foreach (var valueDoubleArg in valueDoubleArguments)
+            {
+                args[3] = valueDoubleArg.ArgumentText + "=" + bogusValue;
+                output = RunCommand(args);
+                AssertEx.Contains(output, new CommandArgs.ValueInvalidDoubleException(valueDoubleArg, bogusValue).Message);
             }
             const int bigValue = 100000000;
             args[3] = "--exp-dwell-time=" + bigValue;
@@ -1341,7 +1357,7 @@ namespace pwiz.SkylineTestData
                                  "--out=" + outPath1);
             Assert.IsTrue(msg.Contains(CommandArgs.ErrorArgsExclusiveText(CommandArgs.ARG_IMPORT_FILE, CommandArgs.ARG_IMPORT_ALL)), msg);
             // output file should not exist
-            Assert.IsFalse(File.Exists(outPath1));
+            AssertEx.FileNotExists(outPath1);
 
 
 
@@ -1354,7 +1370,7 @@ namespace pwiz.SkylineTestData
             // Used to give this error
 //            Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_), msg);
 //            // output file should not exist
-            Assert.IsTrue(File.Exists(outPath0), msg);            
+            AssertEx.FileExists(outPath0, msg);            
             SrmDocument doc0 = ResultsUtil.DeserializeDocument(outPath0);
             Assert.AreEqual(1, doc0.Settings.MeasuredResults.Chromatograms.Count);
             Assert.IsTrue(doc0.Settings.MeasuredResults.ContainsChromatogram(singleName));
@@ -1369,7 +1385,7 @@ namespace pwiz.SkylineTestData
                                  "--out=" + outPath1);
             Assert.IsTrue(msg.Contains(CommandArgs.ErrorArgsExclusiveText(CommandArgs.ARG_IMPORT_NAMING_PATTERN, CommandArgs.ARG_IMPORT_FILE)), msg);
             // output file should not exist
-            Assert.IsFalse(File.Exists(outPath1));
+            AssertEx.FileNotExists(outPath1);
 
 
 
@@ -1380,7 +1396,7 @@ namespace pwiz.SkylineTestData
                                  "--import-naming-pattern=A",
                                  "--out=" + outPath1);
             // output file should not exist
-            Assert.IsFalse(File.Exists(outPath1));
+            AssertEx.FileNotExists(outPath1);
             Assert.IsTrue(msg.Contains(string.Format(Resources.CommandArgs_ParseArgsInternal_Error__Regular_expression___0___does_not_have_any_groups___String, "A")), msg);
 
 
@@ -1391,7 +1407,7 @@ namespace pwiz.SkylineTestData
                       "--import-naming-pattern=invalid",
                       "--out=" + outPath1);
             // output file should not exist
-            Assert.IsTrue(!File.Exists(outPath1));
+            AssertEx.FileNotExists(outPath1);
             Assert.IsTrue(msg.Contains(string.Format(Resources.CommandArgs_ParseArgsInternal_Error__Regular_expression___0___does_not_have_any_groups___String, "invalid")), msg);
 
 
@@ -1403,7 +1419,7 @@ namespace pwiz.SkylineTestData
                              "--import-all=" + testFilesDir.GetTestPath("REP01"),
                              "--import-naming-pattern=.*_(REP[0-9]+)_(.+)",
                              "--out=" + outPath1);
-            Assert.IsFalse(File.Exists(outPath1));
+            AssertEx.FileNotExists(outPath1);
             Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_,"REP1")), msg);
 
 
@@ -1414,7 +1430,7 @@ namespace pwiz.SkylineTestData
                              "--import-all=" + testFilesDir.GetTestPath("REP01"),
                              "--import-naming-pattern=.*_([0-9]+)",
                              "--out=" + outPath1);
-            Assert.IsTrue(File.Exists(outPath1), msg);
+            AssertEx.FileExists(outPath1, msg);
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath1);
             Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
             Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("01"));
@@ -1422,7 +1438,7 @@ namespace pwiz.SkylineTestData
 
 
 
-            Assert.IsFalse(File.Exists(outPath2));
+            AssertEx.FileNotExists(outPath2);
 
             // Test: Import a single file
             // Import REP01\CE_Vantage_15mTorr_0001_REP1_01.raw;
@@ -1431,7 +1447,7 @@ namespace pwiz.SkylineTestData
                        "--import-file=" + rawPath.FilePath,
                        "--import-replicate-name=REP01",
                        "--out=" + outPath2);
-            Assert.IsTrue(File.Exists(outPath2), msg);
+            AssertEx.FileExists(outPath2, msg);
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
             int initialFileCount = 0;
@@ -1517,7 +1533,7 @@ namespace pwiz.SkylineTestData
                 "--import-all-files=" + testFilesDir.FullPath,
                 "--out=" + outPath4);
 
-            Assert.IsTrue(File.Exists(outPath4), msg);
+            AssertEx.FileExists(outPath4, msg);
             doc = ResultsUtil.DeserializeDocument(outPath4);
             Assert.IsTrue(doc.Settings.HasResults);
             Assert.AreEqual(4, doc.Settings.MeasuredResults.Chromatograms.Count,
@@ -1526,7 +1542,6 @@ namespace pwiz.SkylineTestData
             if (File.Exists(badFileMoved))
                 File.Move(badFileMoved, badFilePath);
             File.Move(fullScanMoved, fullScanPath);
-
         }
 
         [TestMethod]
@@ -1661,7 +1676,7 @@ namespace pwiz.SkylineTestData
             // Make a copy of the wiff file
             var rawPath2 = MsDataFileUri.Parse(testFilesDir.GetTestPath(rawPath.GetFileNameWithoutExtension() + "_copy.wiff"));
             File.Copy(rawPath.GetFilePath(), rawPath2.GetFilePath());
-            Assert.IsTrue(File.Exists(rawPath2.GetFilePath()));
+            AssertEx.FileExists(rawPath2.GetFilePath());
             
             var sampleNames = ImmutableList.ValueOf(new[] {"blank", "rfp9_after_h_1", "test", "rfp9_before_h_1"});
             var sampleFiles1 = DataSourceUtil.ListSubPaths(rawPath).ToArray();
@@ -1793,6 +1808,547 @@ namespace pwiz.SkylineTestData
                         .CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
                     "Rep1", "Rep12"), msg);
         }
+
+        [TestMethod]
+        public void ConsoleImportFileSameNameTest()
+        {
+            var useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
+
+            var testZipPath = @"TestData\ImportCommandLineSameName.zip";
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            // ImportCommandLineSameName.zip
+            // Contents:
+            //   -- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //   -- CE_Vantage_15mTorr_0001_REP1_01.raw
+            //   -- Subdir1
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //   -- Subdir2
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+
+            var docPath = testFilesDir.GetTestPath(@"test.sky");
+
+            var mzml1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var rawPath1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.raw"));
+            var mzxml_subdir1 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var defaultReplicateName = mzml1.GetFileNameWithoutExtension();
+
+
+            var outPath = testFilesDir.GetTestPath("ImportFile.sky");
+            FileEx.SafeDelete(outPath);
+
+            // -------------------------------------------------------------------------// 
+            // -------------------------- Import a single file ------------------------ //
+            // -------------------------------------------------------------------------// 
+            // 1. Import the file
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01 -> CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            var msg = RunCommand("--in=" + docPath,
+                "--import-file=" + mzml1.FilePath,
+                "--out=" + outPath);
+            AssertEx.FileExists(outPath, msg);
+            var doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
+
+
+            // ------------------------------------------------------------------------------------
+            // 2. Import the same file again. It should be ignored.
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01 -> CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            msg = RunCommand("--in=" + outPath,
+                "--import-file=" + mzml1.FilePath,
+                "--save");doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources
+                        .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                    defaultReplicateName, mzml1.FilePath)), msg);
+
+
+            // ------------------------------------------------------------------------------------
+            // 3. Import the same file again with --import-append. It should be ignored.
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01 -> CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            msg = RunCommand("--in=" + outPath,
+                "--import-file=" + mzml1.FilePath,
+                "--import-append",
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos.Count); // nothing got appended.
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources
+                        .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                    defaultReplicateName, mzml1.FilePath)), msg);
+
+
+            // ------------------------------------------------------------------------------------
+            // 4. Import the same file but from a different path. The file will get imported.
+            // Since the default replicate name exists in the document, the new replicate name
+            // will have a '2' suffix appended - CE_Vantage_15mTorr_0001_REP1_012
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01  -> CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // CE_Vantage_15mTorr_0001_REP1_012 -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            msg = RunCommand("--in=" + outPath,
+                "--import-file=" + mzxml_subdir1.FilePath,
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "2"));
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                    defaultReplicateName, defaultReplicateName + "2")), msg);
+
+
+            // ------------------------------------------------------------------------------------
+            // 5. Import the file again from the second location.  It should be ignored.
+            // ------------------------------------------------------------------------------------
+            msg = RunCommand("--in=" + outPath,
+                "--import-file=" + mzxml_subdir1.FilePath,
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources
+                        .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                    defaultReplicateName + "2", mzxml_subdir1.FilePath)), msg);
+
+
+            // ------------------------------------------------------------------------------------
+            // 6. Import the file from the second location with --import-append.  A replicate exists
+            // with the default replicate name but it has the file from the first path.
+            // The file from the second path will get added to the replicate.
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01  -> CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //                                  -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // CE_Vantage_15mTorr_0001_REP1_012 -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            msg = RunCommand("--in=" + outPath,
+                "--import-file=" + mzxml_subdir1,
+                "--import-append",
+                "--save");  
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
+            doc.Settings.MeasuredResults.TryGetChromatogramSet(defaultReplicateName, out ChromatogramSet chromatogram, out int indexChrom);
+            Assert.IsNotNull(chromatogram);
+            Assert.IsTrue(chromatogram.MSDataFilePaths.Contains(mzml1));
+            Assert.IsTrue(chromatogram.MSDataFilePaths.Contains(mzxml_subdir1));
+
+
+            // ------------------------------------------------------------------------------------
+            // 7. Import the file with --import-replicate-name.  Even though this file has already 
+            // been imported into the document it will be imported again since we are given a replicate name.
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01  -> CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //                                  -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // CE_Vantage_15mTorr_0001_REP1_012 -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // Replicate01                      -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            var replicateName = "Replicate01";
+            msg = RunCommand("--in=" + outPath,
+                "--import-file=" + mzml1.FilePath,
+                "--import-replicate-name=" + replicateName,
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "2"));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(replicateName));
+
+            // ------------------------------------------------------------------------------------
+            // 8. Import again with same replicate name. File will be ignored
+            // ------------------------------------------------------------------------------------
+            msg = RunCommand("--in=" + outPath,
+                "--import-file=" + mzml1.FilePath,
+                "--import-replicate-name=" + replicateName,
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources
+                        .CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_,
+                    replicateName)), msg);
+
+            // ------------------------------------------------------------------------------------
+            // 9. Import again with same replicate name and --import-append.  File will not be imported.
+            // ------------------------------------------------------------------------------------
+            msg = RunCommand("--in=" + outPath,
+                "--import-file=" + mzml1.FilePath,
+                "--import-replicate-name=" + replicateName,
+                "--import-append",
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources
+                        .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                    replicateName, mzml1.FilePath)), msg);
+
+
+            if (useRaw)
+            {
+                // 10. Import the .raw file (same file name as mzml1 but .raw extension. This should be imported into a new replicate.
+                // Expected replicates in document after this command:
+                // CE_Vantage_15mTorr_0001_REP1_01  -> CE_Vantage_15mTorr_0001_REP1_01.mzML
+                //                                  -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // CE_Vantage_15mTorr_0001_REP1_012 -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // Replicate01                      -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // CE_Vantage_15mTorr_0001_REP1_013  -> CE_Vantage_15mTorr_0001_REP1_01.raw
+                msg = RunCommand("--in=" + outPath,
+                    "--import-file=" + rawPath1,
+                    "--save");
+                doc = ResultsUtil.DeserializeDocument(outPath);
+                Assert.AreEqual(4, doc.Settings.MeasuredResults.Chromatograms.Count);
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "2"));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(replicateName));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "3"));
+                Assert.IsTrue(
+                    msg.Contains(string.Format(
+                        Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                        defaultReplicateName, defaultReplicateName + "3")), msg);
+            }
+        }
+
+        [TestMethod]
+        public void ConsoleImportAllFilesSameNameTest()
+        {
+            var useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
+
+            var testZipPath = @"TestData\ImportCommandLineSameName.zip";
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            // ImportCommandLineSameName.zip
+            // Contents:
+            //   -- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //   -- CE_Vantage_15mTorr_0001_REP1_01.raw
+            //   -- Subdir1
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //   -- Subdir2
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+
+            var docPath = testFilesDir.GetTestPath(@"test.sky");
+
+            var mzml1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var defaultReplicateName = mzml1.GetFileNameWithoutExtension();
+            var replicateName = "Replicate01";
+            var subDir1 = testFilesDir.GetTestPath("Subdir1");
+            var mzxml_subdir1 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var subDir2 = testFilesDir.GetTestPath("Subdir2");
+            var mzxml_subdir2 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+
+            // -------------------------------------------------------------------------// 
+            // -------------------------- Import all files in a directory ------------- //
+            // -------------------------- --import-all-files -------------------------- //
+            // -------------------------------------------------------------------------// 
+            var outPath = testFilesDir.GetTestPath("ImportFilesInDir.sky");
+            FileEx.SafeDelete(outPath);
+            // ------------------------------------------------------------------------------------
+            // 1. Import Subdir1 that has a single file CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01  -> CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            RunCommand("--in=" + docPath,
+                "--import-all-files=" + subDir1,
+                "--out=" + outPath);
+            var doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
+
+            // ------------------------------------------------------------------------------------
+            // 2. Import files in the directory again.  The file should be ignored.
+            // ------------------------------------------------------------------------------------
+            var msg = RunCommand("--in=" + outPath,
+                "--import-all-files=" + subDir1,
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources
+                        .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                    defaultReplicateName, mzxml_subdir1.FilePath)), msg);
+
+
+            // ------------------------------------------------------------------------------------
+            // 2. Import the second subdirectory "Subdir2"
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01  -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // CE_Vantage_15mTorr_0001_REP1_012 -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            msg = RunCommand("--in=" + outPath,
+                "--import-all-files=" + subDir2,
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "2"));
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                    defaultReplicateName, defaultReplicateName + "2")), msg);
+
+            // ------------------------------------------------------------------------------------
+            // 3. Import with --import-replicate-name
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01  -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // CE_Vantage_15mTorr_0001_REP1_012 -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // Replicate01                      -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            msg = RunCommand("--in=" + outPath,
+                "--import-all-files=" + subDir2,
+                "--import-replicate-name=" + replicateName,
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "2"));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(replicateName));
+
+
+            // ------------------------------------------------------------------------------------
+            // 4. Import again with --import-replicate-name. Nothing should be added
+            // ------------------------------------------------------------------------------------
+            msg = RunCommand("--in=" + outPath,
+                "--import-all-files=" + subDir2,
+                "--import-replicate-name=" + replicateName,
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources
+                        .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                    replicateName, mzxml_subdir2.FilePath)), msg);
+
+            if (useRaw)
+            {
+                // 5. Import the root test directory containing both a .mzML and a .raw file with the same name.
+                // Both files will get imported since the path is different.Two new replicates should get created for
+                // CE_Vantage_15mTorr_0001_REP1_01.mzML AND
+                // CE_Vantage_15mTorr_0001_REP1_01.raw
+                // Expected replicates in document after this command:
+                // CE_Vantage_15mTorr_0001_REP1_01  -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // CE_Vantage_15mTorr_0001_REP1_012 -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // Replicate01                      -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // CE_Vantage_15mTorr_0001_REP1_013  -> CE_Vantage_15mTorr_0001_REP1_01.mzML|.raw
+                // CE_Vantage_15mTorr_0001_REP1_014  -> CE_Vantage_15mTorr_0001_REP1_01.mzML|.raw
+                msg = RunCommand("--in=" + outPath,
+                    "--import-all-files=" + testFilesDir.FullPath,
+                    "--save");
+                doc = ResultsUtil.DeserializeDocument(outPath);
+                Assert.AreEqual(5, doc.Settings.MeasuredResults.Chromatograms.Count);
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "2"));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(replicateName));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "3"));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "4"));
+                Assert.IsTrue(
+                    msg.Contains(string.Format(
+                        Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                        defaultReplicateName, defaultReplicateName + "3")), msg);
+                Assert.IsTrue(
+                    msg.Contains(string.Format(
+                        Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                        defaultReplicateName, defaultReplicateName + "4")), msg);
+            }
+        }
+
+        [TestMethod]
+        public void ConsoleImportAllSameNameTest()
+        {
+            var useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
+
+            var testZipPath = @"TestData\ImportCommandLineSameName.zip";
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            // ImportCommandLineSameName.zip
+            // Contents:
+            //   -- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //   -- CE_Vantage_15mTorr_0001_REP1_01.raw
+            //   -- Subdir1
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //   -- Subdir2
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+
+            var docPath = testFilesDir.GetTestPath(@"test.sky");
+
+            var mzml1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var defaultReplicateName = mzml1.GetFileNameWithoutExtension();
+            var replicateName = "Replicate01";
+            var subDir1 = testFilesDir.GetTestPath("Subdir1");
+            var subDir2 = testFilesDir.GetTestPath("Subdir2");
+            var mzxml_subdir1 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzxml_subdir1a = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\A\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzxml_subdir2 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzxml_subdir2a = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+
+            // -------------------------------------------------------------------------// 
+            // -------------------------- Import all files and sub-directories -------- //
+            // -------------------------- --import-all -------------------------------- //
+            // -------------------------------------------------------------------------// 
+            var outPath = testFilesDir.GetTestPath("ImportFilesAndSubdirsInDir.sky");
+            FileEx.SafeDelete(outPath);
+            
+            // ------------------------------------------------------------------------------------
+            // 1. Import Subdir1. Expect two new replicates.  Files are the same but path is different.
+            //    Subdir1
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01  -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // A                                -> Subdir1\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            RunCommand("--in=" + docPath,
+                "--import-all=" + subDir1,
+                "--out=" + outPath);
+            var doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("A"));
+
+            // ------------------------------------------------------------------------------------
+            // 2. Import again.  Nothing should get imported.
+            // ------------------------------------------------------------------------------------
+            var msg = RunCommand("--in=" + outPath,
+                "--import-all=" + subDir1,
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources
+                        .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                    defaultReplicateName, mzxml_subdir1.FilePath)), msg);
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources
+                        .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                    "A", mzxml_subdir1a.FilePath)), msg);
+
+            // ------------------------------------------------------------------------------------
+            // 3. Import Subdir2.  Expect two new replicates.  Files are the same but path is different.
+            //    Subdir2
+            //        |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //        |-- A
+            //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01   -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // A                                 -> Subdir1\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // CE_Vantage_15mTorr_0001_REP1_012  -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // A2                                -> Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            msg = RunCommand("--in=" + outPath,
+                "--import-all=" + subDir2,
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(4, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "2"));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("A2"));
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                    defaultReplicateName, defaultReplicateName + "2")), msg);
+            Assert.IsTrue(
+                msg.Contains(string.Format(
+                    Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                    "A", "A2")), msg);
+
+            // ------------------------------------------------------------------------------------
+            // 4. Import Subdir2 with a replicate name.  All files in this folder and subfolders
+            //    should get appended to the "Replicate01" replicate.
+            // Expected replicates in document after this command:
+            // CE_Vantage_15mTorr_0001_REP1_01   -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // A                                 -> Subdir1\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // CE_Vantage_15mTorr_0001_REP1_012  -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // A2                                -> Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // Replicate01                       -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            //                                   -> Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+            // ------------------------------------------------------------------------------------
+            RunCommand("--in=" + outPath,
+                "--import-all=" + subDir2,
+                "--import-replicate-name=" + replicateName,
+                "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(5, doc.Settings.MeasuredResults.Chromatograms.Count);
+            doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out var chromatogram, out _);
+            Assert.IsNotNull(chromatogram);
+            Assert.IsTrue(chromatogram.MSDataFilePaths.Contains(mzxml_subdir2));
+            Assert.IsTrue(chromatogram.MSDataFilePaths.Contains(mzxml_subdir2a));
+
+            if (useRaw)
+            {
+                // ------------------------------------------------------------------------------------
+                // 5. Import the root test directory containing both a .mzML and a .raw file with the same name
+                // Both files will get imported since the path is different. Two new replicates should get created for
+                // CE_Vantage_15mTorr_0001_REP1_01.mzML AND
+                // CE_Vantage_15mTorr_0001_REP1_01.raw
+                // The .mzML files in Subdir1 and Subdir2 are
+                // already imported and should be ignored. 
+                // Expected replicates in document after this command:
+                // CE_Vantage_15mTorr_0001_REP1_01   -> Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // A                                 -> Subdir1\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // CE_Vantage_15mTorr_0001_REP1_012  -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // A2                                -> Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // Replicate01                       -> Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                //                                   -> Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML
+                // CE_Vantage_15mTorr_0001_REP1_013  -> CE_Vantage_15mTorr_0001_REP1_01.mzML|.raw
+                // CE_Vantage_15mTorr_0001_REP1_014  -> CE_Vantage_15mTorr_0001_REP1_01.mzML|.raw
+                // ------------------------------------------------------------------------------------
+                msg = RunCommand("--in=" + outPath,
+                    "--import-all=" + testFilesDir.FullPath,
+                    "--save");
+                doc = ResultsUtil.DeserializeDocument(outPath);
+                Assert.AreEqual(7, doc.Settings.MeasuredResults.Chromatograms.Count);
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "3"));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram(defaultReplicateName + "4"));
+                Assert.IsTrue(
+                    msg.Contains(string.Format(
+                        Resources
+                            .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                        defaultReplicateName, mzxml_subdir1.FilePath)), msg);
+                Assert.IsTrue(
+                    msg.Contains(string.Format(
+                        Resources
+                            .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
+                        defaultReplicateName + "2", mzxml_subdir2.FilePath)), msg);
+                Assert.IsTrue(
+                    msg.Contains(string.Format(
+                        Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                        defaultReplicateName, defaultReplicateName + "3")), msg);
+                Assert.IsTrue(
+                    msg.Contains(string.Format(
+                        Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
+                        defaultReplicateName, defaultReplicateName + "4")), msg);
+            }
+        }
+
 
         //[TestMethod]
         // TODO: Uncomment this test when it can clean up before/after itself
@@ -2004,21 +2560,21 @@ namespace pwiz.SkylineTestData
                 {
                     // Test bad input
                     const string badFileName = "BadFilePath";
-                    Assert.IsFalse(File.Exists(badFileName));
+                    AssertEx.FileNotExists(badFileName);
                     const string command = "--tool-add-zip=" + badFileName;
                     string output = RunCommand(command);
                     Assert.IsTrue(output.Contains(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_does_not_exist__Please_verify_the_file_location_and_try_again_));
                 }
                 {
                     string notZip = testFilesDir.GetTestPath("Broken_file.sky");
-                    Assert.IsTrue(File.Exists(notZip));
+                    AssertEx.FileExists(notZip);
                     string command = "--tool-add-zip=" + notZip;
                     string output = RunCommand(command);
                     Assert.IsTrue(output.Contains(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_));
                 }
                 {
                     var uniqueReportZip = testFilesDir.GetTestPath("UniqueReport.zip");
-                    Assert.IsTrue(File.Exists(uniqueReportZip));
+                    AssertEx.FileExists(uniqueReportZip);
                     string command = "--tool-add-zip=" + uniqueReportZip;
                     string output = RunCommand(command);
 
@@ -2028,7 +2584,7 @@ namespace pwiz.SkylineTestData
                     Assert.IsTrue(newTool.OutputToImmediateWindow);
                     Assert.AreEqual("UniqueReport", newTool.ReportTitle);
                     string path = newTool.ToolDirPath;
-                    Assert.IsTrue(File.Exists(Path.Combine(path, "HelloWorld.exe")));
+                    AssertEx.FileExists(Path.Combine(path, "HelloWorld.exe"));
                     Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ImportToolsFromZip_Installed_tool__0_,"HelloWorld")));
                     //Try to add the same tool again. Get conflicting report and tool with no overwrite specified.
                     string output1 = RunCommand(command);
@@ -2047,7 +2603,7 @@ namespace pwiz.SkylineTestData
                     Assert.IsTrue(newTool1.OutputToImmediateWindow);
                     Assert.AreEqual("UniqueReport", newTool1.ReportTitle);
                     string path1 = newTool1.ToolDirPath;
-                    Assert.IsTrue(File.Exists(Path.Combine(path1, "HelloWorld.exe")));
+                    AssertEx.FileExists(Path.Combine(path1, "HelloWorld.exe"));
                     //Cleanup.
                     Settings.Default.ToolList.Clear();
                     DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
@@ -2057,7 +2613,7 @@ namespace pwiz.SkylineTestData
                 {
                     //Test working with packages and ProgramPath Macro.
                     var testCommandLine = testFilesDir.GetTestPath("TestCommandLine.zip");
-                    Assert.IsTrue(File.Exists(testCommandLine));
+                    AssertEx.FileExists(testCommandLine);
                     string command = "--tool-add-zip=" + testCommandLine;
                     string output = RunCommand(command);
                     StringAssert.Contains(output, Resources.AddZipToolHelper_InstallProgram_Error__Package_installation_not_handled_in_SkylineRunner___If_you_have_already_handled_package_installation_use_the___tool_ignore_required_packages_flag);
@@ -2087,7 +2643,7 @@ namespace pwiz.SkylineTestData
                 {
                     //Test working with annotations.
                     var testCommandLine = testFilesDir.GetTestPath("TestAnnotations.zip");
-                    Assert.IsTrue(File.Exists(testCommandLine));
+                    AssertEx.FileExists(testCommandLine);
                     string command = "--tool-add-zip=" + testCommandLine;
                     string output = RunCommand(command);
                     Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ImportToolsFromZip_Installed_tool__0_, "AnnotationTest\\Tool1")));
@@ -2097,7 +2653,7 @@ namespace pwiz.SkylineTestData
                 }
                 {
                     var conflictingAnnotations = testFilesDir.GetTestPath("ConflictAnnotations.zip");
-                    Assert.IsTrue(File.Exists(conflictingAnnotations));
+                    AssertEx.FileExists(conflictingAnnotations);
                     string command = "--tool-add-zip=" + conflictingAnnotations;
                     string output = RunCommand(command);
                     Assert.IsTrue(
@@ -2557,6 +3113,16 @@ namespace pwiz.SkylineTestData
             public FolderState IsValidFolder(string folderPath, string username, string password)
             {
                 return MyFolderState;
+            }
+
+            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
+            {
+                return FolderOperationStatus.OK;
+            }
+
+            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+            {
+                return FolderOperationStatus.OK;
             }
         }
 

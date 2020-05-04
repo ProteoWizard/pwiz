@@ -2,7 +2,7 @@ Undo Redo : 离子对设置 已更改
 Summary   : 设置 > 离子对设置 已更改
 All Info  :
 离子对设置 已更改
-设置 > 离子对设置 -- 预测 > 碰撞能量 从 "None" 更改到 "Thermo TSQ Vantage"
+设置 > 离子对设置 -- 预测 > 碰撞能量 从 "无" 更改到 "Thermo TSQ Vantage"
 设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "2", 斜率 = "0.03", 截距 = "2.905" }
 设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "3", 斜率 = "0.038", 截距 = "2.281" }
 设置 > 离子对设置 -- 过滤器 > 子离子选择开始 从 "质荷比 > 母离子" 更改到 "离子 3"
@@ -68,6 +68,12 @@ Extra Info: 文件名称 =
 ],
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个"
+
+Undo Redo : 离子对设置 -- Integration > Integrate All 已更改为 真
+Summary   : 设置 > 离子对设置 -- Integration > Integrate All 已更改为 真
+All Info  :
+离子对设置 -- Integration > Integrate All 已更改为 真
+设置 > 离子对设置 -- Integration > Integrate All 从 假 更改到 真
 
 Undo Redo : 肽段设置 -- 定量 已更改
 Summary   : 设置 > 肽段设置 -- 定量 已更改

@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -25,22 +26,26 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Prosit;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
     /// Interface for any window that contains a graph, to allow non-blocking
-    /// updates with a <see cref="Timer"/>.
+    /// updates with a <see cref="System.Windows.Forms.Timer"/>.
     /// </summary>
     public interface IGraphContainer : IUpdatable
     {
@@ -53,6 +58,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public partial class GraphSpectrum : DockableFormEx, IGraphContainer
     {
+
+        private static readonly double YMAX_SCALE = 1.25;
+
         public interface IStateProvider
         {
             TreeNodeMS SelectedNode { get; }
@@ -92,6 +100,10 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly IStateProvider _stateProvider;
         private TransitionGroupDocNode _nodeGroup;
         private IList<SpectrumDisplayInfo> _spectra;
+
+        private SpectrumDisplayInfo _mirrorSpectrum;
+        private SpectrumDisplayInfo _spectrum;
+
         private bool _inToolbarUpdate;
         // TODO
         // private object _spectrumKeySave;
@@ -124,7 +136,62 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SpectrumGraphItem GraphItem { get; set; }
 
+        public Exception GraphException
+        {
+            get
+            {
+                if (GraphItem != null)
+                    return null;
+
+                if (GraphPane.CurveList.Count != 1)
+                    return null;
+
+                var curveItem = GraphPane.CurveList[0];
+                var item = curveItem.Tag as ExceptionMSGraphItem;
+                return item?.Exception;
+            }
+        }
+
         public bool HasSpectrum { get { return GraphItem != null; }}
+
+        public TransitionGroupDocNode Precursor
+        {
+            get { return GraphItem.TransitionGroupNode; }
+        }
+
+        /// <summary>
+        /// Normalized collisition energy for Prosit
+        /// </summary>
+        public int PrositNCE
+        {
+            get { return (int) comboCE.SelectedItem; }
+            set { comboCE.SelectedItem = value; }
+        }
+
+        public bool IsToolbarVisible
+        {
+            get { return toolBar.Visible; }
+        }
+
+        public bool NCEVisible
+        {
+            get { return comboCE.Visible; }
+        }
+
+        public bool MirrorComboVisible
+        {
+            get { return comboMirrorSpectrum.Visible; }
+        }
+
+        public string GraphTitle
+        {
+            get
+            {
+                if (HasSpectrum)
+                    return GraphItem.Title;
+                return GraphPane.CurveList[0].Label.Text;
+            }
+        }
 
         public string LibraryName
         {
@@ -196,9 +263,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public void ZoomSpectrumToSettings()
+        private void ZoomXAxis(Axis axis)
         {
-            var axis = GraphPane.XAxis;
             var instrument = DocumentUI.Settings.TransitionSettings.Instrument;
             if (!instrument.IsDynamicMin || _nodeGroup == null)
                 axis.Scale.Min = instrument.MinMz;
@@ -207,6 +273,35 @@ namespace pwiz.Skyline.Controls.Graphs
             axis.Scale.MinAuto = false;
             axis.Scale.Max = instrument.MaxMz;
             axis.Scale.MaxAuto = false;
+        }
+
+        public void ZoomSpectrumToSettings()
+        {
+            ZoomXAxis(GraphPane.XAxis);
+            ZoomXAxis(GraphPane.X2Axis);
+
+            var showingMain = DisplayedSpectrum != null;
+            var showingMirror = DisplayedMirrorSpectrum != null;
+            GraphPane.YAxis.MajorGrid.IsZeroLine = showingMirror && showingMain; // This is set in the MSGraphPane ctor, but we want it here
+            GraphPane.LockYAxisMinAtZero = !showingMirror;
+            GraphPane.X2Axis.IsVisible = GraphPane.LockYAxisMaxAtZero = showingMirror && !showingMain;
+
+            if (showingMain || showingMirror)
+            {
+                var maxIntensity = 0.0;
+
+                if (DisplayedSpectrum != null)
+                    maxIntensity = DisplayedSpectrum.Intensities.Max();
+
+                if (DisplayedMirrorSpectrum != null)
+                    maxIntensity = Math.Max(maxIntensity, DisplayedMirrorSpectrum.Intensities.Max());
+
+                maxIntensity *= YMAX_SCALE;
+
+                GraphPane.YAxis.Scale.Max = DisplayedSpectrum == null ? 0.0 : maxIntensity;
+                GraphPane.YAxis.Scale.Min = DisplayedMirrorSpectrum == null ? 0.0 : -maxIntensity;
+            }
+
             graphControl.Refresh();
         }
 
@@ -221,53 +316,130 @@ namespace pwiz.Skyline.Controls.Graphs
                    (!ReferenceEquals(_nodeGroup.Id, nodeGroup.Id));
         }
 
+        private class ToolbarUpdate : IDisposable
+        {
+            private GraphSpectrum _spectrum;
+
+            public ToolbarUpdate(GraphSpectrum spectrum)
+            {
+                _spectrum = spectrum;
+                _spectrum._inToolbarUpdate = true;
+            }
+
+            public void Dispose()
+            {
+                _spectrum._inToolbarUpdate = false;
+            }
+        }
+
         private void UpdateToolbar()
         {
-            if (_spectra == null || _spectra.Count < 2)
+            if ((_spectra == null || _spectra.Count < 2) && !Settings.Default.Prosit)
             {
                 toolBar.Visible = false;
             }
             else
             {
-                // Check to see if the list of files has changed.
-                var listNames = _spectra.Select(spectrum => spectrum.Identity).ToArray();
-                var listExisting = new List<string>();
-                foreach (var item in comboSpectrum.Items)
-                    listExisting.Add(item.ToString());
-
-                if (!ArrayUtil.EqualsDeep(listNames, listExisting))
+                var showMirror = !Settings.Default.Prosit && Settings.Default.LibMatchMirror;
+                var showSpectraSelect = (_spectra != null && _spectra.Count >= 2) &&
+                                        (!Settings.Default.Prosit || Settings.Default.LibMatchMirror);
+                if (showSpectraSelect)
                 {
-                    // If it has, update the list, trying to maintain selection, if possible.
-                    object selected = comboSpectrum.SelectedItem;
-                    // Unless the current selected index is the one matching the one currently
-                    // in use by the precursor (zero), then try to stay viewing the in-use spectrum (zero)
-                    int selectedIndex = comboSpectrum.SelectedIndex;
-
-                    _inToolbarUpdate = true;
-                    comboSpectrum.Items.Clear();
-                    foreach (string name in listNames)
-                    {
-                        comboSpectrum.Items.Add(name);
-                    }
-
-                    if (selectedIndex == 0 || selected == null ||
-                        comboSpectrum.Items.IndexOf(selected) == -1)
-                    {
-                        comboSpectrum.SelectedIndex = 0;
-                    }
-                    else
-                    {
-                        comboSpectrum.SelectedItem = selected;
-                    }
-                    _inToolbarUpdate = false;
-                    ComboHelper.AutoSizeDropDown(comboSpectrum);
+                    comboMirrorSpectrum.Visible = showMirror;
+                    mirrorLabel.Visible = showMirror;
+                    comboSpectrum.Visible = true;
+                    labelSpectrum.Visible = true;
+                }
+                else
+                {
+                    comboSpectrum.Visible = false;
+                    labelSpectrum.Visible = false;
+                    comboMirrorSpectrum.Visible = false;
+                    mirrorLabel.Visible = false;
                 }
 
-                // Show the toolbar after updating the spectra
-                if (!toolBar.Visible)
+                // We still need to do this, even if we hide those items,
+                // since other code relies on the combo box selection being right
+
+                if (_spectra != null)
                 {
-                    toolBar.Visible = true;
+                    // Check to see if the list of files has changed.
+                    var listNames = _spectra.Select(spectrum => spectrum.Identity).ToArray();
+                    var listExisting = new List<string>();
+                    foreach (var item in comboSpectrum.Items)
+                        listExisting.Add(item.ToString());
+
+                    if (!ArrayUtil.EqualsDeep(listNames, listExisting)) {
+                        // If it has, update the list, trying to maintain selection, if possible.
+                        object selected = comboSpectrum.SelectedItem;
+                        // Unless the current selected index is the one matching the one currently
+                        // in use by the precursor (zero), then try to stay viewing the in-use spectrum (zero)
+                        int selectedIndex = comboSpectrum.SelectedIndex;
+                        object selectedMirror = comboMirrorSpectrum.SelectedItem;
+
+                        using (new ToolbarUpdate(this))
+                        {
+                            comboSpectrum.Items.Clear();
+                            comboMirrorSpectrum.Items.Clear();
+                            comboMirrorSpectrum.Items.Add(string.Empty); // No mirror
+                            foreach (string name in listNames)
+                            {
+                                comboSpectrum.Items.Add(name);
+                                comboMirrorSpectrum.Items.Add(name);
+                            }
+
+                            if (selectedIndex == 0 || selected == null ||
+                                comboSpectrum.Items.IndexOf(selected) == -1)
+                            {
+                                comboSpectrum.SelectedIndex = 0;
+                            }
+                            else
+                            {
+                                comboSpectrum.SelectedItem = selected;
+                            }
+
+                            if (selectedMirror != null && comboMirrorSpectrum.Items.IndexOf(selectedMirror) != -1)
+                            {
+                                comboMirrorSpectrum.SelectedItem = selectedMirror;
+                            }
+                        }
+
+                        ComboHelper.AutoSizeDropDown(comboSpectrum);
+                        ComboHelper.AutoSizeDropDown(comboMirrorSpectrum);
+                    }
                 }
+
+                var enableCE = false;
+                // Update CE toolbar
+                if (Settings.Default.Prosit)
+                {
+                    var ces = Enumerable.Range(PrositConstants.MIN_NCE, PrositConstants.MAX_NCE - PrositConstants.MIN_NCE + 1).ToArray();
+
+                    using (var _ = new ToolbarUpdate(this))
+                    {
+                        // TODO: figure out better way with _inToolBarUpdate
+                        // Not a great way of doing this, but we need to ensure that we don't get into
+                        // an infinite recursion
+                        if (!comboCE.Items.Cast<int>().SequenceEqual(ces) || (int)comboCE.SelectedItem !=
+                            Settings.Default.PrositNCE)
+                        {
+                            comboCE.Items.Clear();
+                            comboCE.Items.AddRange(ces.Select(c => (object)c).ToArray());
+
+                            comboCE.SelectedItem = Settings.Default.PrositNCE;
+                        }
+                    }
+
+                    enableCE = true;
+
+                    ComboHelper.AutoSizeDropDown(comboCE);
+                }
+
+                comboCE.Visible = enableCE;
+                ceLabel.Visible = enableCE;
+
+                // Show only if we made any of the things visible
+                toolBar.Visible = showSpectraSelect || enableCE;
             }
             FireSelectedSpectrumChanged(false);
         }
@@ -298,6 +470,9 @@ namespace pwiz.Skyline.Controls.Graphs
             return Equals((float) spectrumDisplayInfo.RetentionTime, (float) spectrumIdentifier.RetentionTime);
         }
 
+        // For unit test
+        public SpectrumDisplayInfo PrositSpectrum { get; private set; }
+
         public SpectrumDisplayInfo SelectedSpectrum
         {
             get
@@ -316,9 +491,373 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public SpectrumDisplayInfo SelectedMirrorSpectrum
+        {
+            get
+            {
+                if (_spectra == null)
+                    return null;
+
+                if (toolBar.Visible) {
+                    return comboMirrorSpectrum.SelectedIndex > 0
+                        ? _spectra[comboMirrorSpectrum.SelectedIndex - 1]
+                        : null;
+                }
+
+                return null;
+            }
+        }
+
+        public bool SelectionHasLibInfo
+        {
+            get
+            {
+                var selectedNodes = SpectrumNodeSelection.GetCurrent(_stateProvider);
+                return selectedNodes.Precursor != null &&
+                       selectedNodes.Precursor.HasLibInfo;
+            }
+        }
+
+        public LibraryRankedSpectrumInfo DisplayedSpectrum
+        {
+            get
+            {
+                if (GraphPane.CurveList.Count == 0)
+                    return null;
+
+                var spectrumGraphItem = GraphPane.CurveList.Select(ci => ci.Tag).OfType<SpectrumGraphItem>()
+                    .FirstOrDefault(gi => !gi.Invert);
+                return spectrumGraphItem?.SpectrumInfo;
+            }
+        }
+
+        public LibraryRankedSpectrumInfo DisplayedMirrorSpectrum
+        {
+            get
+            {
+                if (GraphPane.CurveList.Count == 0)
+                    return null;
+
+                var spectrumGraphItem = GraphPane.CurveList.Select(ci => ci.Tag).OfType<SpectrumGraphItem>()
+                    .FirstOrDefault(gi => gi.Invert);
+                return spectrumGraphItem?.SpectrumInfo;
+            }
+        }
+
+        public bool ShouldShowMirrorPlot
+        {
+            get { return Settings.Default.LibMatchMirror && SelectionHasLibInfo; }
+        }
+
         public IEnumerable<SpectrumDisplayInfo> AvailableSpectra
         {
             get { return _spectra; }
+        }
+
+        public class SpectrumNodeSelection
+        {
+            public SpectrumNodeSelection(PeptideDocNode peptide,
+                TransitionGroupDocNode precursor, TransitionDocNode transition)
+            {
+                Peptide = peptide;
+                Precursor = precursor;
+                Transition = transition;
+            }
+
+            public static SpectrumNodeSelection GetCurrent(IStateProvider stateProvider)
+            {
+                switch (stateProvider.SelectedNode)
+                {
+                    case PeptideTreeNode p:
+                    {
+                        var listInfoGroups = GetChargeGroups(p, !Settings.Default.Prosit);
+                        return new SpectrumNodeSelection(p.DocNode,
+                            listInfoGroups.Length == 1 ? listInfoGroups[0] : null, null);
+                    }
+                    case TransitionGroupTreeNode pr:
+                    {
+                        return new SpectrumNodeSelection(pr.PepNode, pr.DocNode, null);
+                    }
+                    case TransitionTreeNode t:
+                    {
+                        return new SpectrumNodeSelection(t.PepNode, t.TransitionGroupNode, t.DocNode);
+                    }
+                }
+
+                return new SpectrumNodeSelection(null, null, null);
+            }
+
+            public static explicit operator PeptidePrecursorPair(SpectrumNodeSelection sel)
+            {
+                return new PeptidePrecursorPair(sel.Peptide, sel.Precursor);
+            }
+
+            public static explicit operator PrositIntensityModel.PeptidePrecursorNCE(SpectrumNodeSelection sel)
+            {
+                return new PrositIntensityModel.PeptidePrecursorNCE(sel.Peptide, sel.Precursor);
+            }
+
+            public PeptideDocNode Peptide { get; private set; }
+            public TransitionGroupDocNode Precursor { get; private set; }
+            public TransitionDocNode Transition { get; private set; }
+        }
+
+        private PrositHelpers.PrositRequest _prositRequest;
+
+        private SpectrumDisplayInfo UpdatePrositPrediction(SpectrumNodeSelection selection, IsotopeLabelType labelType, out Exception ex)
+        {
+            try
+            {
+                var prositRequest = new PrositHelpers.PrositRequest(
+                    DocumentUI.Settings, selection.Peptide, selection.Precursor, labelType,
+                    () => CommonActionUtil.SafeBeginInvoke(this, () => UpdateUI()));
+
+                if (_prositRequest == null || !_prositRequest.Equals(prositRequest))
+                {
+                    // Cancel old request
+                    _prositRequest?.Cancel();
+                    _prositRequest = prositRequest.Predict();
+
+                    throw new PrositPredictingException();
+                }
+                else if (_prositRequest.Spectrum == null)
+                {
+                    // Rethrow the exception caused by Prosit, otherwise
+                    // we are still predicting
+                    throw _prositRequest.Exception ?? new PrositPredictingException();
+                }
+
+                ex = null;
+                return _prositRequest.Spectrum;
+
+            }
+            catch (Exception x)
+            {
+                ex = x;
+                return null;
+            }
+        }
+
+        private SpectrumGraphItem MakeGraphItem(SpectrumDisplayInfo spectrum, SpectrumNodeSelection selection, SrmSettings settings, SpectrumPeaksInfo spectrumPeaksOverride = null)
+        {
+            var group = selection.Precursor.TransitionGroup;
+            var types = _stateProvider.ShowIonTypes(group.IsProteomic);
+            var adducts =
+                (group.IsProteomic
+                    ? Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES
+                    : selection.Precursor.InUseAdducts).ToArray();
+            var charges = _stateProvider.ShowIonCharges(adducts);
+            var rankTypes = group.IsProteomic
+                ? settings.TransitionSettings.Filter.PeptideIonTypes
+                : settings.TransitionSettings.Filter.SmallMoleculeIonTypes;
+            var rankAdducts = group.IsProteomic
+                ? settings.TransitionSettings.Filter.PeptideProductCharges
+                : settings.TransitionSettings.Filter.SmallMoleculeFragmentAdducts;
+            var rankCharges = Adduct.OrderedAbsoluteChargeValues(rankAdducts);
+
+            // Make sure the types and charges in the settings are at the head
+            // of these lists to give them top priority, and get rankings correct.
+            int i = 0;
+            foreach (IonType type in rankTypes)
+            {
+                if (types.Remove(type))
+                    types.Insert(i++, type);
+            }
+
+            i = 0;
+            var showAdducts = new List<Adduct>();
+            foreach (var charge in rankCharges)
+            {
+                if (charges.Remove(charge))
+                    charges.Insert(i++, charge);
+                // NB for all adducts we just look at abs value of charge
+                // CONSIDER(bspratt): we may want finer per-adduct control for small molecule use
+                showAdducts.AddRange(adducts.Where(a => charge == Math.Abs(a.AdductCharge)));
+            }
+
+            showAdducts.AddRange(adducts.Where(a =>
+                charges.Contains(Math.Abs(a.AdductCharge)) && !showAdducts.Contains(a)));
+
+
+            var lookupData = new LookupData(selection);
+            var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumPeaksOverride ?? spectrum.SpectrumPeaksInfo,
+                spectrum.LabelType,
+                selection.Precursor,
+                settings,
+                lookupData.LookupSequence,
+                lookupData.LookupMods,
+                showAdducts,
+                types,
+                rankAdducts,
+                rankTypes,
+                null);
+            return new SpectrumGraphItem(selection.Precursor, selection.Transition, spectrumInfoR,
+                spectrum.Name)
+            {
+                ShowTypes = types,
+                ShowCharges = charges,
+                ShowRanks = Settings.Default.ShowRanks,
+                ShowScores = Settings.Default.ShowLibraryScores,
+                ShowMz = Settings.Default.ShowIonMz,
+                ShowObservedMz = Settings.Default.ShowObservedMz,
+                ShowDuplicates = Settings.Default.ShowDuplicateIons,
+                FontSize = Settings.Default.SpectrumFontSize,
+                LineWidth = Settings.Default.SpectrumLineWidth
+            };
+        }
+
+        private class LookupData
+        {
+            public LookupData(SpectrumNodeSelection selection)
+            {
+                var group = selection.Precursor.TransitionGroup;
+                LookupSequence = group.Peptide.Target; // Sequence or custom ion id
+
+                if (selection.Peptide != null)
+                {
+                    LookupSequence = selection.Peptide.SourceUnmodifiedTarget;
+                    LookupMods = selection.Peptide.SourceExplicitMods;
+                }
+            }
+
+            public Target LookupSequence { get; }
+            public ExplicitMods LookupMods { get; }
+        }
+
+        private SpectrumPeaksInfo RescaleMirrorSpectrum(SpectrumDisplayInfo mirrorSpectrum, SpectrumDisplayInfo mainSpectrum)
+        {
+            // Rescale so that mirror max is same as main max
+            var spectrumPeaksInfo = mirrorSpectrum.SpectrumPeaksInfo;
+            var maxIntensity = spectrumPeaksInfo.Intensities.Max();
+            var mainMax = mainSpectrum.SpectrumPeaksInfo.Intensities.Max();
+            return new SpectrumPeaksInfo(spectrumPeaksInfo.Peaks.Select(mi =>
+                    new SpectrumPeaksInfo.MI
+                    {
+                        Mz = mi.Mz,
+                        Intensity = (float) (mi.Intensity / maxIntensity * mainMax)
+                    })
+                .ToArray());
+        }
+
+        private void UpdateChromatogram(MSGraphPane graphPane, LibraryChromGroup chromatogramData, SpectrumNodeSelection selection)
+        {
+            _graphHelper.ResetForChromatograms(new[] { selection.Precursor.TransitionGroup });
+
+            var displayType = GraphChromatogram.GetDisplayType(DocumentUI, selection.Precursor);
+            IList<TransitionDocNode> displayTransitions =
+                GraphChromatogram.GetDisplayTransitions(selection.Precursor, displayType).ToArray();
+            int numTrans = displayTransitions.Count;
+            var allChromDatas =
+                chromatogramData.ChromDatas.Where(
+                    chromData => DisplayTypeMatches(chromData, displayType)).ToList();
+            var chromDatas = new List<LibraryChromGroup.ChromData>();
+            for (int iTran = 0; iTran < numTrans; iTran++)
+            {
+                var displayTransition = displayTransitions[iTran];
+                var indexMatch =
+                    allChromDatas.IndexOf(chromData =>
+                        IonMatches(displayTransition.Transition, chromData));
+                if (indexMatch >= 0)
+                {
+                    chromDatas.Add(allChromDatas[indexMatch]);
+                    allChromDatas.RemoveAt(indexMatch);
+                }
+                else
+                {
+                    chromDatas.Add(null);
+                }
+            }
+
+            allChromDatas.Sort((chromData1, chromData2) => chromData1.Mz.CompareTo(chromData2.Mz));
+            chromDatas.AddRange(allChromDatas);
+            double maxHeight = chromDatas.Max(chromData =>
+                null == chromData ? double.MinValue : chromData.Height);
+            int iChromDataPrimary = chromDatas.IndexOf(chromData =>
+                null != chromData && maxHeight == chromData.Height);
+            int colorOffset = displayType == DisplayTypeChrom.products
+                ? GraphChromatogram.GetDisplayTransitions(selection.Precursor,
+                    DisplayTypeChrom.precursors).Count()
+                : 0;
+            for (int iChromData = 0; iChromData < chromDatas.Count; iChromData++)
+            {
+                var chromData = chromDatas[iChromData];
+                if (chromData == null)
+                {
+                    continue;
+                }
+
+                string label;
+                var pointAnnotation = GraphItem.AnnotatePoint(new PointPair(chromData.Mz, 1.0));
+                if (null != pointAnnotation)
+                {
+                    label = pointAnnotation.Label;
+                }
+                else
+                {
+                    label = chromData.Mz.ToString(@"0.####");
+                }
+
+                TransitionDocNode matchingTransition;
+                Color color;
+                if (iChromData < numTrans)
+                {
+                    matchingTransition = displayTransitions[iChromData];
+                    color =
+                        GraphChromatogram.COLORS_LIBRARY[
+                            (iChromData + colorOffset) % GraphChromatogram.COLORS_LIBRARY.Count];
+                }
+                else
+                {
+                    matchingTransition = null;
+                    color =
+                        GraphChromatogram.COLORS_GROUPS[
+                            iChromData % GraphChromatogram.COLORS_GROUPS.Count];
+                }
+
+                TransitionChromInfo tranPeakInfo;
+                ChromatogramInfo chromatogramInfo;
+                MakeChromatogramInfo(selection.Precursor.PrecursorMz, chromatogramData, chromData,
+                    out chromatogramInfo, out tranPeakInfo);
+                var graphItem = new ChromGraphItem(selection.Precursor, matchingTransition,
+                    chromatogramInfo,
+                    iChromData == iChromDataPrimary ? tranPeakInfo : null, null,
+                    new[] { iChromData == iChromDataPrimary }, null, 0, false, false, null, 0,
+                    color, Settings.Default.ChromatogramFontSize, 1);
+                LineItem curve =
+                    (LineItem)_graphHelper.AddChromatogram(PaneKey.DEFAULT, graphItem);
+                if (matchingTransition == null)
+                {
+                    curve.Label.Text = label;
+                }
+
+                curve.Line.Width = Settings.Default.ChromatogramLineWidth;
+                if (selection.Transition != null)
+                {
+                    if (IonMatches(selection.Transition.Transition, chromData))
+                    {
+                        color = ChromGraphItem.ColorSelected;
+                    }
+                }
+
+                curve.Color = color;
+            }
+
+            graphPane.Title.IsVisible = false;
+            graphPane.Legend.IsVisible = true;
+            _graphHelper.FinishedAddingChromatograms(chromatogramData.StartTime,
+                chromatogramData.EndTime, false);
+        }
+
+        private void ClearGraphPane()
+        {
+            // Clear existing data from the graph pane
+            var graphPane = (MSGraphPane)graphControl.MasterPane[0];
+            graphPane.CurveList.Clear();
+            graphPane.GraphObjList.Clear();
+            GraphItem = null;
+
+            GraphHelper.FormatGraphPane(graphControl.GraphPane);
+            GraphHelper.FormatFontSize(graphControl.GraphPane, Settings.Default.SpectrumFontSize);
         }
 
         public void UpdateUI(bool selectionChanged = true)
@@ -328,269 +867,228 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!Visible || IsDisposed)
                 return;
 
-            // Clear existing data from the graph pane
-            var graphPane = (MSGraphPane) graphControl.MasterPane[0];
-            graphPane.CurveList.Clear();
-            graphPane.GraphObjList.Clear();
-            GraphItem = null;
-
-            GraphHelper.FormatGraphPane(graphControl.GraphPane);
-            GraphHelper.FormatFontSize(graphControl.GraphPane,Settings.Default.SpectrumFontSize);
             // Try to find a tree node with spectral library info associated
             // with the current selection.
-            var nodeTree = _stateProvider.SelectedNode as SrmTreeNode;
-            var nodeGroupTree = nodeTree as TransitionGroupTreeNode;
-            var nodeTranTree = nodeTree as TransitionTreeNode;
-            if (nodeTranTree != null)
-                nodeGroupTree = nodeTranTree.Parent as TransitionGroupTreeNode;
-
-            var nodeGroup = (nodeGroupTree != null ? nodeGroupTree.DocNode : null);
-            PeptideTreeNode nodePepTree;
-            if (nodeGroup == null)
-            {
-                nodePepTree = nodeTree as PeptideTreeNode;
-                if (nodePepTree != null)
-                {
-                    var listInfoGroups = GetLibraryInfoChargeGroups(nodePepTree);
-                    if (listInfoGroups.Length == 1)
-                        nodeGroup = listInfoGroups[0];
-                    else if (listInfoGroups.Length > 1)
-                    {
-                        _nodeGroup = null;
-                        toolBar.Visible = false;
-                        _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(
-                                         Resources.GraphSpectrum_UpdateUI_Multiple_charge_states_with_library_spectra));
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                nodePepTree = nodeGroupTree.Parent as PeptideTreeNode;
-            }
+            var selection = SpectrumNodeSelection.GetCurrent(_stateProvider);
 
             // Check for appropriate spectrum to load
-            SrmSettings settings = DocumentUI.Settings;
-            PeptideLibraries libraries = settings.PeptideSettings.Libraries;
-            bool available = false;
-            if (nodeGroup == null || (!nodeGroup.HasLibInfo && !libraries.HasMidasLibrary))
+            var settings = DocumentUI.Settings;
+            var libraries = settings.PeptideSettings.Libraries;
+            var available = false;
+
+            try
             {
-                _spectra = null;
-            }
-            else
-            {
-                TransitionGroup group = nodeGroup.TransitionGroup;
-                TransitionDocNode transition = (nodeTranTree == null ? null : nodeTranTree.DocNode);
-                var lookupSequence = group.Peptide.Target; // Sequence or custom ion id
-                ExplicitMods lookupMods = null;
-                if (nodePepTree != null)
+                Exception prositEx = null;
+
+                if (Settings.Default.Prosit && !PrositHelpers.PrositSettingsValid)
                 {
-                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTarget;
-                    lookupMods = nodePepTree.DocNode.SourceExplicitMods;
+                    prositEx = new PrositNotConfiguredException();
+
+                    if (!Settings.Default.LibMatchMirror)
+                        throw prositEx;
                 }
-                try
+                    
+                if (selection.Precursor == null || (!selection.Precursor.HasLibInfo && !libraries.HasMidasLibrary &&
+                                                    !Settings.Default.Prosit))
+                {
+                    _spectra = null;
+                    PrositSpectrum = null;
+                }
+                else
                 {
                     // Try to load a list of spectra matching the criteria for
                     // the current node group.
-                    if (libraries.HasLibraries && libraries.IsLoaded)
+                    if (libraries.HasLibraries && libraries.IsLoaded || Settings.Default.Prosit)
                     {
-                        if (NodeGroupChanged(nodeGroup))
-                        {
-                            try
-                            {
-                                UpdateSpectra(nodeGroup, lookupSequence, lookupMods);
-                                UpdateToolbar();
-                            }
-                            catch (Exception)
-                            {
-                                _spectra = null;
-                                UpdateToolbar();
-                                throw;
-                            }
+                        // Need this to make sure we still update the toolbar if the prosit prediction throws
+                        
+                        SpectrumDisplayInfo spectrum = null;
+                        PrositSpectrum = null;
 
-                            _nodeGroup = nodeGroup;
-                            if (settings.TransitionSettings.Instrument.IsDynamicMin)
-                                ZoomSpectrumToSettings();
+                        if (Settings.Default.Prosit && !Settings.Default.LibMatchMirror && prositEx == null)
+                        {
+                            spectrum = PrositSpectrum = UpdatePrositPrediction(selection, null, out prositEx);
+                            if (prositEx == null)
+                                _spectra = new[] { spectrum };
                         }
 
-                        var spectrum = SelectedSpectrum;
-                        if (spectrum != null)
+                        var loadFromLib = libraries.HasLibraries && libraries.IsLoaded &&
+                                          (!Settings.Default.Prosit || Settings.Default.LibMatchMirror);
+
+                        try
                         {
-                            IsotopeLabelType typeInfo = spectrum.LabelType;
-                            var types = _stateProvider.ShowIonTypes(group.IsProteomic);
-                            var adducts = (group.IsProteomic ?
-                                Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES :
-                                nodeGroup.InUseAdducts).ToArray();
-                            var charges = _stateProvider.ShowIonCharges(adducts);
-                            var rankTypes = group.IsProteomic ? settings.TransitionSettings.Filter.PeptideIonTypes : settings.TransitionSettings.Filter.SmallMoleculeIonTypes;
-                            var rankAdducts = group.IsProteomic ? settings.TransitionSettings.Filter.PeptideProductCharges : settings.TransitionSettings.Filter.SmallMoleculeFragmentAdducts;
-                            var rankCharges = Adduct.OrderedAbsoluteChargeValues(rankAdducts);
-                            // Make sure the types and charges in the settings are at the head
-                            // of these lists to give them top priority, and get rankings correct.
-                            int i = 0;
-                            foreach (IonType type in rankTypes)
+                            if (loadFromLib)
                             {
-                                if (types.Remove(type))
-                                    types.Insert(i++, type);
-                            }
-                            i = 0;
-                            var showAdducts = new List<Adduct>();
-                            foreach (var charge in rankCharges)
-                            {
-                                if (charges.Remove(charge))
-                                    charges.Insert(i++, charge);
-                                // NB for all adducts we just look at abs value of charge
-                                // CONSIDER(bspratt): we may want finer per-adduct control for small molecule use
-                                showAdducts.AddRange(adducts.Where(a => charge == Math.Abs(a.AdductCharge)));
-                            }
-                            showAdducts.AddRange(adducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !showAdducts.Contains(a)));
-                            SpectrumPeaksInfo spectrumInfo = spectrum.SpectrumPeaksInfo;
-                            var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumInfo,
-                                                                              typeInfo,
-                                                                              nodeGroup,
-                                                                              settings,
-                                                                              lookupSequence,
-                                                                              lookupMods,
-                                                                              showAdducts,
-                                                                              types,
-                                                                              rankAdducts,
-                                                                              rankTypes,
-                                                                              null);
-                            GraphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR, spectrum.LibName)
+                                UpdateSpectra(selection.Precursor, new LookupData(selection));
+
+                                // For a mirrored spectrum, make sure the isotope label types between library and Prosit match
+                                if (Settings.Default.Prosit && Settings.Default.LibMatchMirror && prositEx == null)
                                 {
-                                    ShowTypes = types,
-                                    ShowCharges = charges,
-                                    ShowRanks = Settings.Default.ShowRanks,
-                                    ShowScores = Settings.Default.ShowLibraryScores,
-                                    ShowMz = Settings.Default.ShowIonMz,
-                                    ShowObservedMz = Settings.Default.ShowObservedMz,
-                                    ShowDuplicates = Settings.Default.ShowDuplicateIons,
-                                    FontSize = Settings.Default.SpectrumFontSize,
-                                    LineWidth = Settings.Default.SpectrumLineWidth
-                                };
-                            LibraryChromGroup chromatogramData = null;
-                            if (Settings.Default.ShowLibraryChromatograms)
-                            {
-                                chromatogramData = spectrum.LoadChromatogramData();
+                                    var labelType = _spectra != null ? _spectra[0].LabelType : null;
+                                    PrositSpectrum = UpdatePrositPrediction(selection, labelType, out prositEx);
+                                }
                             }
-                            if (null == chromatogramData)
+                            UpdateToolbar();
+                        }
+                        catch (Exception)
+                        {
+                            _spectra = null;
+                            UpdateToolbar();
+                            throw;
+                        }
+
+                        if (prositEx != null && !Settings.Default.LibMatchMirror)
+                            throw prositEx;
+
+                        if (!Settings.Default.Prosit || ShouldShowMirrorPlot)
+                            spectrum = SelectedSpectrum;
+                        
+                        if (prositEx is PrositPredictingException && DisplayedMirrorSpectrum != null)
+                        {
+                            var libraryStr = _spectrum == null
+                                ? _mirrorSpectrum.Name
+                                : string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
+                                    _spectrum.Name, _mirrorSpectrum.Name);
+                            GraphPane.Title.Text = TextUtil.LineSeparate(
+                                libraryStr,
+                                SpectrumGraphItem.GetTitle(_mirrorSpectrum.Precursor, _mirrorSpectrum.LabelType),
+                                prositEx.Message);
+                            graphControl.Refresh();
+                            return;
+                        }
+
+                        var spectrumChanged = !Equals(_spectrum, spectrum);
+                        _spectrum = spectrum;
+
+                        ClearGraphPane();
+
+                        LibraryChromGroup chromatogramData = null;
+                        if (Settings.Default.ShowLibraryChromatograms)
+                            chromatogramData = spectrum?.LoadChromatogramData();
+
+                        if (spectrum != null)
+                            GraphItem = MakeGraphItem(spectrum, selection, settings);
+
+                        if (null == chromatogramData)
+                        {
+                            if (spectrum != null)
                             {
-                                _graphHelper.ResetForSpectrum(new[] {nodeGroup.TransitionGroup});
-                                _graphHelper.AddSpectrum(GraphItem);
-                                _graphHelper.ZoomSpectrumToSettings(DocumentUI, nodeGroup);
+                                _graphHelper.ResetForSpectrum(new[] { selection.Precursor.TransitionGroup });
+                                // Don't refresh here, it will be refreshed on zoom
+                                _graphHelper.AddSpectrum(GraphItem, false);
+                            }
+
+                            var mirrorSpectrum = SelectedMirrorSpectrum;
+                            if (Settings.Default.LibMatchMirror)
+                            {
+                                if (Settings.Default.Prosit)
+                                    mirrorSpectrum = PrositSpectrum;
                             }
                             else
                             {
-                                _graphHelper.ResetForChromatograms(new[] {nodeGroup.TransitionGroup});
-
-                                var displayType = GraphChromatogram.GetDisplayType(DocumentUI, nodeGroup);
-                                IList<TransitionDocNode>  displayTransitions =
-                                        GraphChromatogram.GetDisplayTransitions(nodeGroup, displayType).ToArray();
-                                int numTrans = displayTransitions.Count;
-                                var allChromDatas =
-                                    chromatogramData.ChromDatas.Where(
-                                        chromData => DisplayTypeMatches(chromData, displayType)).ToList();
-                                var chromDatas = new List<LibraryChromGroup.ChromData>();
-                                for (int iTran = 0; iTran < numTrans; iTran++)
-                                {
-                                    var displayTransition = displayTransitions[iTran];
-                                    var indexMatch =
-                                        allChromDatas.IndexOf(chromData => IonMatches(displayTransition.Transition, chromData));
-                                    if (indexMatch >= 0)
-                                    {
-                                        chromDatas.Add(allChromDatas[indexMatch]);
-                                        allChromDatas.RemoveAt(indexMatch);
-                                    }
-                                    else
-                                    {
-                                        chromDatas.Add(null);
-                                    }
-                                }
-                                allChromDatas.Sort((chromData1, chromData2)=>chromData1.Mz.CompareTo(chromData2.Mz));
-                                chromDatas.AddRange(allChromDatas);
-                                double maxHeight = chromDatas.Max(chromData => null == chromData ? double.MinValue : chromData.Height);
-                                int iChromDataPrimary = chromDatas.IndexOf(chromData => null != chromData && maxHeight == chromData.Height);
-                                int colorOffset = displayType == DisplayTypeChrom.products
-                                                      ? GraphChromatogram.GetDisplayTransitions(nodeGroup,
-                                                                                                DisplayTypeChrom.
-                                                                                                    precursors).Count()
-                                                      : 0;
-                                for (int iChromData = 0; iChromData < chromDatas.Count; iChromData++)
-                                {
-                                    var chromData = chromDatas[iChromData];
-                                    if (chromData == null)
-                                    {
-                                        continue;
-                                    }
-                                    string label;
-                                    var pointAnnotation = GraphItem.AnnotatePoint(new PointPair(chromData.Mz, 1.0));
-                                    if (null != pointAnnotation)
-                                    {
-                                        label = pointAnnotation.Label;
-                                    }
-                                    else
-                                    {
-                                        label = chromData.Mz.ToString(@"0.####");
-                                    }
-                                    TransitionDocNode matchingTransition;
-                                    Color color;
-                                    if (iChromData < numTrans)
-                                    {
-                                        matchingTransition = displayTransitions[iChromData];
-                                        color =
-                                            GraphChromatogram.COLORS_LIBRARY[
-                                                (iChromData + colorOffset)%GraphChromatogram.COLORS_LIBRARY.Count];
-                                    }
-                                    else
-                                    {
-                                        matchingTransition = null;
-                                        color =
-                                            GraphChromatogram.COLORS_GROUPS[
-                                                iChromData%GraphChromatogram.COLORS_GROUPS.Count];
-                                    }
-
-                                    TransitionChromInfo tranPeakInfo;
-                                    ChromatogramInfo chromatogramInfo;
-                                    MakeChromatogramInfo(nodeGroup.PrecursorMz, chromatogramData, chromData, out chromatogramInfo, out tranPeakInfo);
-                                    var graphItem = new ChromGraphItem(nodeGroup, matchingTransition, chromatogramInfo, iChromData == iChromDataPrimary ? tranPeakInfo : null, null,
-                                                                       new[] {iChromData == iChromDataPrimary}, null, 0, false, false, null,0,
-                                                                       color, Settings.Default.ChromatogramFontSize, 1);
-                                    LineItem curve = (LineItem) _graphHelper.AddChromatogram(PaneKey.DEFAULT, graphItem);
-                                    if (matchingTransition == null)
-                                    {
-                                        curve.Label.Text = label;
-                                    }
-                                    curve.Line.Width = Settings.Default.ChromatogramLineWidth;
-                                    if (null != transition)
-                                    {
-                                        if (IonMatches(transition.Transition, chromData))
-                                        {
-                                            color = ChromGraphItem.ColorSelected;
-                                        }
-                                    }
-                                    curve.Color = color;
-                                }
-                                graphPane.Title.IsVisible = false;
-                                graphPane.Legend.IsVisible = true;
-                                _graphHelper.FinishedAddingChromatograms(chromatogramData.StartTime, chromatogramData.EndTime, false);
-                                graphControl.Refresh();
+                                mirrorSpectrum = null;
                             }
+
+                            spectrumChanged |= !Equals(_mirrorSpectrum, mirrorSpectrum);
+                            _mirrorSpectrum = mirrorSpectrum;
+
+                            double? dotp = null;
+                            SpectrumGraphItem mirrorGraphItem = null;
+                            if (mirrorSpectrum != null)
+                            {
+                                var peaksInfo = spectrum != null
+                                    ? RescaleMirrorSpectrum(mirrorSpectrum, spectrum)
+                                    : mirrorSpectrum.SpectrumPeaksInfo;
+                                mirrorGraphItem = MakeGraphItem(mirrorSpectrum, selection, settings, peaksInfo);
+                                mirrorGraphItem.Invert = true;
+
+                                _graphHelper.AddSpectrum(mirrorGraphItem, false);
+                                
+                                if (spectrum != null)
+                                    dotp = PrositHelpers.CalculateSpectrumDotpMzMatch(GraphItem.SpectrumInfo, mirrorGraphItem.SpectrumInfo,
+                                        settings.TransitionSettings.Libraries.IonMatchTolerance);
+                            }
+
+                            if (mirrorSpectrum != null && mirrorGraphItem != null) // one implies the other, but resharper..
+                            {
+                                if (dotp != null)
+                                {
+                                    GraphPane.Title.Text = TextUtil.LineSeparate(
+                                        string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
+                                            GraphItem.LibraryName, mirrorSpectrum.Name),
+                                        GraphItem.Title,
+                                        string.Format(@"dotp: {0:0.0000}", dotp));
+                                }
+                                else
+                                {
+                                    GraphPane.Title.Text = TextUtil.LineSeparate(
+                                        mirrorSpectrum.Name,
+                                        mirrorGraphItem.Title,
+                                        PrositResources.GraphSpectrum_UpdateUI_No_spectral_library_match);
+                                }
+
+                            }
+                            else if (prositEx != null)
+                            {
+                                if (DisplayedSpectrum != null)
+                                {
+                                    GraphPane.Title.Text = TextUtil.LineSeparate(
+                                        string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
+                                            GraphItem.LibraryName, SpectrumInfoProsit.NAME),
+                                        GraphItem.Title,
+                                        prositEx.Message);
+                                }
+                                else
+                                {
+                                    throw prositEx;
+                                }
+                            }
+                            
+                            _graphHelper.ZoomSpectrumToSettings(DocumentUI, selection.Precursor);
+                        }
+                        else
+                        {
+                            UpdateChromatogram(GraphPane, chromatogramData, selection);
+                        }
+
+                        if (spectrum != null || _mirrorSpectrum != null)
+                        {
                             graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
-                                                        !Settings.Default.LockYAxis;
+                                !Settings.Default.LockYAxis;
                             available = true;
+                        }
+                        
+                        if (spectrumChanged && chromatogramData == null)
+                        {
+                            _nodeGroup = selection.Precursor;
+                            ZoomSpectrumToSettings();
+                        }
+                        else
+                        {
+                            graphControl.Refresh();
                         }
                     }
                 }
-                catch (Exception)
-                {
-                    _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(
-                                     Resources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
-                    return;
-                }
             }
+            catch (PrositException ex)
+            {
+                ClearGraphPane();
+                _graphHelper.SetErrorGraphItem(new ExceptionMSGraphItem(ex));
+                return;
+            }
+            catch (Exception)
+            {
+                ClearGraphPane();
+                //_graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(ex.Message));
+                _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(
+                    Resources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
+                return;
+            }
+
             // Show unavailable message, if no spectrum loaded
             if (!available)
             {
+                ClearGraphPane();
                 UpdateToolbar();
                 _nodeGroup = null;
                 _graphHelper.SetErrorGraphItem(new UnavailableMSGraphItem());
@@ -645,18 +1143,18 @@ namespace pwiz.Skyline.Controls.Graphs
             return index;
         }
 
-        private void UpdateSpectra(TransitionGroupDocNode nodeGroup, Target lookupSequence, ExplicitMods lookupMods)
+        private void UpdateSpectra(TransitionGroupDocNode nodeGroup, LookupData lookup)
         {
-            _spectra = GetSpectra(nodeGroup, lookupSequence, lookupMods);
+            _spectra = GetSpectra(nodeGroup, lookup);
             if (!_spectra.Any())
                 _spectra = null;
         }
 
-        private IList<SpectrumDisplayInfo> GetSpectra(TransitionGroupDocNode nodeGroup, Target lookupSequence, ExplicitMods lookupMods)
+        private IList<SpectrumDisplayInfo> GetSpectra(TransitionGroupDocNode nodeGroup, LookupData lookup)
         {
             var settings = DocumentUI.Settings;
             var charge = nodeGroup.PrecursorAdduct;
-            var spectra = settings.GetBestSpectra(lookupSequence, charge, lookupMods).Select(s => new SpectrumDisplayInfo(s)).ToList();
+            var spectra = settings.GetBestSpectra(lookup.LookupSequence, charge, lookup.LookupMods).Select(s => new SpectrumDisplayInfo(s, nodeGroup)).ToList();
             // Showing redundant spectra is only supported for full-scan filtering when
             // the document has results files imported.
             if ((!settings.TransitionSettings.FullScan.IsEnabled && !settings.PeptideSettings.Libraries.HasMidasLibrary) || !settings.HasResults)
@@ -666,7 +1164,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var spectraRedundant = new List<SpectrumDisplayInfo>();
                 var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
-                foreach (var spectrumInfo in settings.GetRedundantSpectra(nodeGroup.Peptide, lookupSequence, charge, nodeGroup.TransitionGroup.LabelType, lookupMods))
+                foreach (var spectrumInfo in settings.GetRedundantSpectra(nodeGroup.Peptide, lookup.LookupSequence, charge, nodeGroup.TransitionGroup.LabelType, lookup.LookupMods))
                 {
                     var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
                     if (matchingFile == null)
@@ -674,28 +1172,30 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     string replicateName = matchingFile.Chromatograms.Name;
                     spectraRedundant.Add(new SpectrumDisplayInfo(spectrumInfo,
-                                                                 replicateName,
-                                                                 matchingFile.FilePath,
-                                                                 matchingFile.FileOrder,
-                                                                 spectrumInfo.RetentionTime,
-                                                                 false));
+                        nodeGroup,
+                        replicateName,
+                        matchingFile.FilePath,
+                        matchingFile.FileOrder,
+                        spectrumInfo.RetentionTime,
+                        false));
 
                     // Include the best spectrum twice, once displayed in the normal
                     // way and once displayed with its replicate and retetion time.
                     if (spectrumInfo.IsBest)
                     {
-                        string libName = spectrumInfo.LibName;
+                        string libName = spectrumInfo.Name;
                         var labelType = spectrumInfo.LabelType;
-                        int iBest = spectra.IndexOf(s => Equals(s.LibName, libName) &&
+                        int iBest = spectra.IndexOf(s => Equals(s.Name, libName) &&
                                                          Equals(s.LabelType, labelType));
                         if (iBest != -1)
                         {
                             spectra[iBest] = new SpectrumDisplayInfo(spectra[iBest].SpectrumInfo,
-                                                                     replicateName,
-                                                                     matchingFile.FilePath,
-                                                                     0,
-                                                                     spectrumInfo.RetentionTime,
-                                                                     true);
+                                nodeGroup,
+                                replicateName,
+                                matchingFile.FilePath,
+                                0,
+                                spectrumInfo.RetentionTime,
+                                true);
                         }
                     }
 
@@ -734,14 +1234,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
 
 // ReSharper disable SuggestBaseTypeForParameter
-        private static TransitionGroupDocNode[] GetLibraryInfoChargeGroups(PeptideTreeNode nodeTree)
+        private static TransitionGroupDocNode[] GetChargeGroups(PeptideTreeNode nodeTree, bool requireLibInfo)
 // ReSharper restore SuggestBaseTypeForParameter
         {
             // Return the first group of each charge stat that has library info.
             var listGroups = new List<TransitionGroupDocNode>();
             foreach (TransitionGroupDocNode nodeGroup in nodeTree.ChildDocNodes)
             {
-                if (!nodeGroup.HasLibInfo)
+                if (requireLibInfo && !nodeGroup.HasLibInfo)
                     continue;
 
                 var precursorCharge = nodeGroup.TransitionGroup.PrecursorAdduct;
@@ -781,6 +1281,17 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 FireSelectedSpectrumChanged(true);
             }
+        }
+
+        private void comboMirrorSpectrum_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateUI();
+        }
+
+        private void comboCE_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Settings.Default.PrositNCE = (int) comboCE.SelectedItem;
+            UpdateUI();
         }
 
         public static void MakeChromatogramInfo(SignedMz precursorMz, LibraryChromGroup chromGroup, LibraryChromGroup.ChromData chromData, out ChromatogramInfo chromatogramInfo, out TransitionChromInfo transitionChromInfo)
@@ -916,6 +1427,18 @@ namespace pwiz.Skyline.Controls.Graphs
             set { ActAndUpdate(() => Set.ShowCharge4 = value); }
         }
 
+        public bool Prosit
+        {
+            get { return Set.Prosit; }
+            set { ActAndUpdate(() => Set.Prosit = value);}
+        }
+
+        public bool Mirror
+        {
+            get { return Set.LibMatchMirror; }
+            set { ActAndUpdate(() => Set.LibMatchMirror = value); }
+        }
+
         public IList<IonType> ShowIonTypes(bool isProteomic)
         {
             var types = new List<IonType>();
@@ -973,19 +1496,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public sealed class SpectrumDisplayInfo : IComparable<SpectrumDisplayInfo>
     {
-        private readonly SpectrumInfo _spectrumInfo;
-
-        public SpectrumDisplayInfo(SpectrumInfo spectrumInfo)
+        public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, TransitionGroupDocNode precursor, double? retentionTime = null)
         {
-            _spectrumInfo = spectrumInfo;
+            SpectrumInfo = spectrumInfo;
+            Precursor = precursor;
             IsBest = true;
+            RetentionTime = retentionTime;
         }
 
-        public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, string replicateName,
+        public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, TransitionGroupDocNode precursor, string replicateName,
             MsDataFileUri filePath, int fileOrder, double? retentionTime, bool isBest)
         {
-            _spectrumInfo = spectrumInfo;
-
+            SpectrumInfo = spectrumInfo;
+            Precursor = precursor;
             ReplicateName = replicateName;
             FilePath = filePath;
             FileOrder = fileOrder;
@@ -993,9 +1516,10 @@ namespace pwiz.Skyline.Controls.Graphs
             IsBest = isBest;
         }
 
-        public SpectrumInfo SpectrumInfo { get { return _spectrumInfo; } }
-        public string LibName { get { return _spectrumInfo.LibName; } }
-        public IsotopeLabelType LabelType { get { return _spectrumInfo.LabelType; } }
+        public SpectrumInfo SpectrumInfo { get; }
+        public TransitionGroupDocNode Precursor { get; private set; }
+        public string Name { get { return SpectrumInfo.Name; } }
+        public IsotopeLabelType LabelType { get { return SpectrumInfo.LabelType; } }
         public string ReplicateName { get; private set; }
         public bool IsReplicateUnique { get; set; }
         public MsDataFileUri FilePath { get; private set; }
@@ -1006,8 +1530,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string Identity { get { return ToString(); } }
 
-        public SpectrumPeaksInfo SpectrumPeaksInfo { get { return _spectrumInfo.SpectrumPeaksInfo; } }
-        public LibraryChromGroup LoadChromatogramData() { return _spectrumInfo.LoadChromatogramData(); }
+        public SpectrumPeaksInfo SpectrumPeaksInfo { get { return SpectrumInfo.SpectrumPeaksInfo; } }
+        public LibraryChromGroup LoadChromatogramData() { return SpectrumInfo.ChromatogramData; }
 
         public int CompareTo(SpectrumDisplayInfo other)
         {
@@ -1031,7 +1555,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public override string ToString()
         {
             if (IsBest)
-                return ReferenceEquals(LabelType, IsotopeLabelType.light) ? LibName : String.Format(@"{0} ({1})", LibName, LabelType);
+                return ReferenceEquals(LabelType, IsotopeLabelType.light) ? Name : String.Format(@"{0} ({1})", Name, LabelType);
             if (IsReplicateUnique)
                 return string.Format(@"{0} ({1:F02} min)", ReplicateName, RetentionTime);
             return string.Format(@"{0} - {1} ({2:F02} min)", ReplicateName, FileName, RetentionTime);

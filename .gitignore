@@ -113,7 +113,6 @@ StyleCopReport.xml
 *.tlh
 *.tmp
 *.tmp_proj
-*.log
 *.vspscc
 *.vssscc
 .builds
@@ -362,6 +361,7 @@ ASALocalRun/
 *.nvuser
 
 /build-nt-x86
+/*.log
 /libraries/boost_1_*
 /libraries/expat*
 /libraries/hdf5*
@@ -396,14 +396,17 @@ Reader*Test.data
 /pwiz_aux/msrc/utility/vendor_api/thermo/ThermoFisher.CommonCore.BackgroundSubtraction.xml
 
 # Skyline generated files
-/pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/ChromatogramGroupData.cs
-/pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/SkylineDocument.cs
-/pwiz_tools/Skyline/ProtocolBuffers/tmp/ChromatogramGroupData.cs
-/pwiz_tools/Skyline/ProtocolBuffers/tmp/SkylineDocument.cs
+/pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/*.cs
+/pwiz_tools/Skyline/ProtocolBuffers/tmp/*.cs
 /pwiz_tools/Skyline/SkylineTester test list.txt
+/pwiz_tools/Skyline/SkylineTester.log
 SkylineTester Results
 /b64.bat
 /b32.bat
+/bs64.bat
+/bs32.bat
+/bso64.bat
+/bso32.bat
 /BrowseOnly/pwiz.tlog/unsuccessfulbuild
 /BrowseOnly/pwiz.tlog/pwiz.lastbuildstate
 /BrowseOnly/pwiz.tlog/metagen.write.1.tlog
@@ -435,3 +438,9 @@ SkylineTester Results
 /REP01_CE_Vantage_15mTorr_0001_REP1_01_raw.skyl
 /REP01_CE_Vantage_15mTorr_0001_REP1_01_raw.skyd
 /REP01_CE_Vantage_15mTorr_0001_REP1_01_raw
+/pwiz_tools/Skyline/Properties/AssemblyInfo.cs
+/pwiz_tools/Skyline/SkylineCmd/Properties/AssemblyInfo.cs
+/pwiz_tools/Skyline/SkylineNightly/Properties/AssemblyInfo.cs
+/pwiz_tools/Skyline/SkylineNightlyShim/Properties/AssemblyInfo.cs
+/pwiz_tools/Skyline/SkylineTester/Properties/AssemblyInfo.cs
+/pwiz_tools/Skyline/TestRunner/Properties/AssemblyInfo.cs

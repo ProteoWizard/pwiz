@@ -107,7 +107,7 @@
     <value>複数のペプチドまたはタンパク質にわたるこのグループ比較内での複数の比較に対して調整されているP値。Benjamini-Hochberg法を用いて調整が行われています。</value>
   </data>
   <data name="Accuracy">
-    <value>算出される濃度に対するアナライトの濃度比（繰り返し測定で指定）</value>
+    <value>アナライトの濃度と算出される濃度の比率（繰り返し測定で指定）</value>
   </data>
   <data name="AcquiredTime">
     <value>質量分析計が前回この繰り返し測定データの取得を開始した日時です。1.1より古いバージョンでファイルがインポートされた場合には#N/Aとなります。</value>
@@ -123,6 +123,12 @@
   </data>
   <data name="AreaRatio">
     <value>最初の内標準標識のタイプでの該当するトランジションに対するこのトランジションの Area比です。バージョン0.7より前では、これは常にLight/Heavyであり、 Heavyトランジション上に表示されていました。</value>
+  </data>
+  <data name="AttributeAreaProportion">
+    <value>同じ属性面積率を持つドキュメント内における、正規化された面積と他のすべてのペプチドまたは分子の正規化面積の和に対する比率です。</value>
+  </data>
+  <data name="AttributeGroupId">
+    <value>属性面積率の算出においてペプチドまたは分子のグループ化に影響します。</value>
   </data>
   <data name="AutoSelectMolecules">
     <value>真の場合、Skylineは現在の設定に基づき分子リストから自動的に分子を追加または削除します。</value>
@@ -171,7 +177,7 @@
   </data>
   <data name="CalculatedConcentration">
     <value>アナライト濃度は、以下のいずれかによって計算されます：  
-1. 校正曲線を使用する（[ペプチド設定] &gt; [定量] に[回帰式に合わせる]が指定されている場合）  
+1. 校正曲線を使用する（[ペプチド設定] &gt; [定量]に[回帰式に合わせる]が指定されている場合）  
 2. 内標準（またはサロゲート）に対する比率を使用し、内標準物質の濃度を乗じる</value>
   </data>
   <data name="CalibrationCurve">
@@ -436,6 +442,9 @@
   <data name="LibraryName">
     <value>MS/MSスペクトルライブラリのスペクトルがプリカーサーイオンに関連付けられている場合には、MS/MSスペクトルライブラリの名前となります。</value>
   </data>
+  <data name="LibraryProbabilityScore">
+    <value>スペクトラルライブラリの構築に使用される入力ファイルの中で、この一致に割り当てられている確率スコアです。</value>
+  </data>
   <data name="LibraryRank">
     <value>トランジションフィルタ設定で許可されるすべてのトランジションでの、このトランジションのLibraryIntensityに基づく順位です。ユーザーインターフェイスでは[(rank #)]と表示されます。</value>
   </data>
@@ -554,7 +563,7 @@
     <value>ペプチドシークエンスにおけるmissed cleavage siteの数</value>
   </data>
   <data name="ModifiedAreaProportion">
-    <value>同じ無修飾シーケンスを持つこのタンパク質と繰り返し測定にある、すべてのペプチド結果の和を除算したこのペプチド結果を正規化した面積です。</value>
+    <value>このペプチドの結果の正規化された面積を、同じタンパク質および繰り返し測定された同じ非修飾シークエンスを持つすべてのペプチドの結果の合計で割ったものです。</value>
   </data>
   <data name="ModifiedSequence">
     <value>システインアルキル化など、アミノ酸のすべての修飾を含んだペプチドのシークエンス。 （例：AGLC[+57]QTFVYGGC[+57]R）</value>
@@ -732,15 +741,20 @@
   <data name="Precursor">
     <value>プリカーサー</value>
   </data>
+  <data name="PrecursorAccuracy">
+    <value>プリカーサーで指定されたプリカーサー濃度に対するプリカーサー計算濃度の比率です。</value>
+  </data>
   <data name="PrecursorAdduct">
     <value>プリカーサーを作成するよう分子に適用される付加物です。</value>
+  </data>
+  <data name="PrecursorCalculatedConcentration">
+    <value>アイソトポログ反応曲線を使用して計算されたプリカーサー結果の濃度です。</value>
   </data>
   <data name="PrecursorCharge">
     <value>  プリカーサーイオンと関連付けられた電荷。</value>
   </data>
   <data name="PrecursorConcentration">
-    <value>
-      このプリカーサーが試料にスパイクされた濃度です。</value>
+    <value>このプリカーサーが試料にスパイクされた濃度です。これを使用してアイソトポログ反応曲線を作成します。</value>
   </data>
   <data name="PrecursorIonFormula">
     <value>プリカーサーイオン式です。</value>
@@ -755,6 +769,11 @@
   <data name="PrecursorNeutralFormula">
     <value>プリカーサーイオン式です。この用語は非推奨で、代わりに「PrecursorIonFomula」を使用してください。</value>
   </data>
+  <data name="PrecursorNormalizedArea">
+    <value>プリカーサー結果の正規化面積。
+これはペプチドの正規化メソッドに従い正規化されたプリカーサー結果の合計面積と同じです。
+ペプチド正規化メソッドが「なし」または標識に対する比率である場合、プリカーサー正規化面積はプリカーサー合計面積と同じです。</value>
+  </data>
   <data name="PrecursorMz">
     <value>プリカーサーイオンの質量電荷比（m/z）。</value>
   </data>
@@ -766,6 +785,9 @@
   </data>
   <data name="PrecursorPeakFoundRatio">
     <value>ペプチドのトランジション総数に対する、ピークが測定されたトランジションの比です。ペプチドツリー表示でのピークインジケーターは、 緑＝1.0（すべてのトランジションを積分）、オレンジ＞＝0.5、赤＜0.5に該当します。</value>
+  </data>
+  <data name="PrecursorQuantification">
+    <value>プリカーサー結果を定量化するためのアイソトポログ反応曲線の使用に関する値です。</value>
   </data>
   <data name="PrecursorReplicateNote">
     <value>結果グリッドを使用すると表示される、プリカーサーの結果セットに関連付けられているフリーテキストのメモ。</value>
@@ -899,7 +921,8 @@
     <value>繰り返し測定</value>
   </data>
   <data name="ReplicateCalibrationCurve">
-    <value>プリカーサー濃度と単一繰り返し測定を用いて作成した校正曲線です。</value>
+    <value>この繰り返し測定と同じバッチ名を持つ繰り返し測定を用いて作成した検量線です。
+プリカーサー濃度がこのペプチドのプリカーサーで指定されている場合、検量線はアイソトポログ反応曲線となります。</value>
   </data>
   <data name="ReplicateCount">
     <value>有効な強度を持ち、結果に寄与する繰り返し測定の回数</value>
@@ -1153,6 +1176,9 @@ Double Blank（ダブルブランク）</value>
   <data name="InChiKey" xml:space="preserve">
     <value>標準分子ID</value>
   </data>
+  <data name="KEGG" xml:space="preserve">
+    <value>標準分子ID</value>
+  </data>
   <data name="SMILES" xml:space="preserve">
     <value>標準分子ID</value>
   </data>
@@ -1197,5 +1223,11 @@ Double Blank（ダブルブランク）</value>
   </data>
   <data name="AuditLogDetailRowId">
     <value>詳しいメッセージのID</value>
+  </data>
+  <data name="SampleId" xml:space="preserve">
+    <value>試料を参照するフリーテキスト識別子（複数のファイルで共有可能）。インポートされた結果ファイルの「試料ID」属性から読み込まれます。</value>
+  </data>
+  <data name="InstrumentSerialNumber" xml:space="preserve">
+    <value>インポートされた結果ファイルから読み込まれた装置のシリアル番号</value>
   </data>
 </root>

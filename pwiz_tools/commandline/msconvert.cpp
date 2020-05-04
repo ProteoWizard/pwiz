@@ -948,6 +948,8 @@ int go(const Config& config)
         failedFileCount = mergeFiles(config.filenames, config, readers);
     else
     {
+        if (config.filenames.size() > 1 && running_on_wine())
+            *os_ << "Warning: when running on Wine it is recommended to only process one file at a time" << endl;
 
         for (vector<string>::const_iterator it=config.filenames.begin(); 
              it!=config.filenames.end(); ++it)

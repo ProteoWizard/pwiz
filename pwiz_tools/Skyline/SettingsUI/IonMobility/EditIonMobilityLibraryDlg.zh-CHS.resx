@@ -469,7 +469,7 @@
     <value>6</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>经测量的肽(&amp;M)：</value>
+    <value>经测量的肽段(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>

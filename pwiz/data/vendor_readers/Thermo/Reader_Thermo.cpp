@@ -97,7 +97,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
     commonInstrumentParams->id = "CommonInstrumentParams";
     msd.paramGroupPtrs.push_back(commonInstrumentParams);
 
-    if (cvidModel == MS_Thermo_Electron_instrument_model)
+    if (cvidModel == MS_Thermo_Electron_instrument_model && !instData.Model.empty())
         commonInstrumentParams->userParams.push_back(UserParam("instrument model", instData.Model));
     commonInstrumentParams->set(cvidModel);
 
@@ -138,7 +138,8 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
     msd.id = bfs::basename(p);
 
     // reset controller which may have been changed by Spectrum/ChromatogramList index enumeration
-    rawfile.setCurrentController(Controller_MS, 1);
+    if (rawfile.getNumberOfControllersOfType(Controller_MS) > 0)
+        rawfile.setCurrentController(Controller_MS, 1);
 
     auto instData = rawfile.getInstrumentData();
 
@@ -234,7 +235,8 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
     initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur, instData);
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
-    else
+
+    if (!instData.Model.empty() && !instData.Name.empty() && rawfile.getInstrumentModel() == InstrumentModelType_Unknown)
     {
         if (config.unknownInstrumentIsError)
             throw runtime_error("[Reader_Thermo::fillInMetadata] unable to parse instrument model; please report this error to the ProteoWizard developers with this information: model(" + instData.Model + ") name(" + instData.Name + "); if want to convert the file anyway, use the ignoreUnknownInstrumentError flag");

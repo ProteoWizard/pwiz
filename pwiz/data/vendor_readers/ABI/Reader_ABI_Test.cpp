@@ -54,12 +54,13 @@ int main(int argc, char* argv[])
 
     try
     {
+        using namespace pwiz::msdata;
+        using namespace pwiz::util;
+
         #ifdef PWIZ_READER_ABI
 
-        using namespace pwiz::msdata;
         using namespace pwiz::msdata::detail;
         using namespace pwiz::msdata::detail::ABI;
-        using namespace pwiz::util;
 
         // test that all instrument types are handled by translation functions (skipping the 'Unknown' type)
         bool allInstrumentTestsPassed = true;
@@ -88,7 +89,34 @@ int main(int argc, char* argv[])
         #endif
 
         bool requireUnicodeSupport = true;
-        pwiz::util::testReader(pwiz::msdata::Reader_ABI(), testArgs, testAcceptOnly, requireUnicodeSupport, IsWiffFile());
+        pwiz::msdata::Reader_ABI reader;
+        pwiz::util::ReaderTestConfig config;
+        pwiz::util::TestResult result;
+
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsWiffFile(), config);
+
+        {
+            auto simAsSpectraConfig = config;
+            simAsSpectraConfig.simAsSpectra = true;
+            simAsSpectraConfig.indexRange = make_pair(0, 100);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("50uMpyrone-8uL-01.wiff"), simAsSpectraConfig);
+        }
+
+        {
+            auto srmAsSpectraConfig = config;
+            srmAsSpectraConfig.srmAsSpectra = true;
+            srmAsSpectraConfig.runIndex = 3;
+            srmAsSpectraConfig.indexRange = make_pair(0, 100);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("Enolase_repeats_AQv1.4.2.wiff"), srmAsSpectraConfig);
+        }
+
+        // test globalChromatogramsAreMs1Only, but don't need to test spectra here
+        auto newConfig = config;
+        newConfig.globalChromatogramsAreMs1Only = true;
+        newConfig.indexRange = make_pair(0, 0);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile("PressureTrace1.wiff"), newConfig);
+
+        result.check();
     }
     catch (exception& e)
     {

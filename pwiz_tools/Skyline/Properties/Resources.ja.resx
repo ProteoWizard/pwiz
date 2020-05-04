@@ -144,8 +144,8 @@
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_Reference_shape" xml:space="preserve">
     <value>参照形</value>
   </data>
-  <data name="EditChorusAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
-    <value>サーバー{1}上のユーザー{0}に対しアカウントが既に定義されています</value>
+  <data name="EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
+    <value>サーバー{1}にユーザー{0}向けに定義されたアカウントが既に存在します</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="FragmentLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -289,8 +289,8 @@
   <data name="ViewLibraryDlg_AddAllPeptides_All_library_peptides_already_exist_in_the_current_document" xml:space="preserve">
     <value>現在のドキュメントには既にすべてのライブラリペプチドが存在しています。</value>
   </data>
-  <data name="EditChorusAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___" xml:space="preserve">
-    <value>サーバーURLはhttps://またはhttp://から始まる必要があります</value>
+  <data name="EditRemoteAccountDlg_ValidateValues_Server_URL_must_start_with_https____or_http___" xml:space="preserve">
+    <value>サーバーのURLはhttps://またはhttp://で開始しなくてはなりません</value>
   </data>
   <data name="PythonInstaller_InstallPip_Unknown_error_installing_pip_" xml:space="preserve">
     <value>Pipのインストール中の不明なエラー。</value>
@@ -721,8 +721,8 @@
   <data name="LibraryExplorer_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\LibraryExplorer_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="EditChorusAccountDlg_ValidateValues_Username_cannot_be_blank" xml:space="preserve">
-    <value>ユーザー名は空にできません</value>
+  <data name="EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank" xml:space="preserve">
+    <value>ユーザー名は空白にできません</value>
   </data>
   <data name="XHunterLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
     <value>無効なプリカーサー電荷が見つかりました。ファイルが破損している可能性があります。</value>
@@ -1136,9 +1136,6 @@
   <data name="MeasuredRetentionTime_Validate_Measured_retention_times_must_be_positive_values" xml:space="preserve">
     <value>測定された保持時間は正の値でなければなりません。</value>
   </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Shared_Projects" xml:space="preserve">
-    <value>共有プロジェクト</value>
-  </data>
   <data name="DisplayGraphsTypeExtension_LOCALIZED_VALUES_Row" xml:space="preserve">
     <value>行</value>
   </data>
@@ -1410,9 +1407,6 @@
   <data name="WizardPeptideSearchPRM" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardPeptideSearchPRM.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="SkylineWindow_ImportMassList_Creating_Spectral_Library" xml:space="preserve">
-    <value>スペクトルライブラリの作成中</value>
-  </data>
   <data name="AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__" xml:space="preserve">
     <value>値「{1}」でアミノ酸「{0}」が繰り返されています。</value>
   </data>
@@ -1621,9 +1615,6 @@
   </data>
   <data name="XmlElementHelper_Deserialize_Deserialize" xml:space="preserve">
     <value>直列化解除</value>
-  </data>
-  <data name="CalibrateIrtDlg_OkDialog_All_of_these_peptides_are_known_CiRT_peptides__Would_you_like_to_use_the_predefined_iRT_values_" xml:space="preserve">
-    <value>これらのペプチドすべては、既知のCiRTペプチドです。 事前に定義されたiRT値を使用しますか？</value>
   </data>
   <data name="ConfigureToolsDlg_unpackZipTool_Failed_to_process_file_0_The_tool_described_failed_to_import" xml:space="preserve">
     <value>ファイル{0}の処理に失敗しました。記載のツールのインポートに失敗しました。</value>
@@ -1836,9 +1827,6 @@
   <data name="SkylineStartup_SaveFileDlg_Please_save_a_new_file_to_work_with_" xml:space="preserve">
     <value>作業を行う新しいファイルを保存してください。</value>
   </data>
-  <data name="ChorusAccountList_Label_Chorus_Accounts" xml:space="preserve">
-    <value>Chorusアカウント</value>
-  </data>
   <data name="TransitionFilter_ValidateCharges__0__cannot_be_empty" xml:space="preserve">
     <value>{0}は空にできません。</value>
   </data>
@@ -2023,7 +2011,7 @@
     <value>既存を保持</value>
   </data>
   <data name="StatementCompletionTextBox_CreateListViewItems_Descriptions" xml:space="preserve">
-    <value>説明：</value>
+    <value>表記：</value>
   </data>
   <data name="Icojam-Blueberry-Basic-Arrow-right" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icojam-Blueberry-Basic-Arrow-right.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -2054,9 +2042,6 @@
   </data>
   <data name="ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_" xml:space="preserve">
     <value>ペプチド{1}の荷電{0}状態での不良クロマトグラムデータ</value>
-  </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Shared_Files" xml:space="preserve">
-    <value>共有ファイル</value>
   </data>
   <data name="UndoRedoList_GetLabelText_Redo__0__Actions" xml:space="preserve">
     <value>{0}動作をやり直し</value>
@@ -2576,8 +2561,8 @@
   <data name="ConfigureToolsDlg_AddFromWeb_Contacting_the_server" xml:space="preserve">
     <value>サーバーに連絡中</value>
   </data>
-  <data name="EditFragmentLossDlg_EditFragmentLossDlg_Neutral_loss__chemical_formula_" xml:space="preserve">
-    <value>ニュートラルロスの化学式(&amp;C)：</value>
+  <data name="EditFragmentLossDlg_EditFragmentLossDlg_Loss__chemical_formula_" xml:space="preserve">
+    <value>ロス化学式(&amp;C)：</value>
   </data>
   <data name="EditDPDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression" xml:space="preserve">
     <value>新しい回帰を計算するのに十分なデータが見つかりませんでした。</value>
@@ -2630,8 +2615,8 @@
   <data name="IonMobilityLibraryList_Label_Ion_Mobility_Libraries_" xml:space="preserve">
     <value>イオン移動度ライブラリ：</value>
   </data>
-  <data name="EditChorusAccountDlg_TestSettings_Error_connecting_to_server__" xml:space="preserve">
-    <value>サーバー接続エラー： </value>
+  <data name="EditRemoteAccountDlg_TestSettings_Error_connecting_to_server__" xml:space="preserve">
+    <value>サーバーの接続エラー：</value>
   </data>
   <data name="AddOptimizationDlg_OkDialog_The_file__0__does_not_exist_" xml:space="preserve">
     <value>ファイル{0}は存在しません。</value>
@@ -2768,9 +2753,6 @@
   </data>
   <data name="TransitionFullScan_ValidateRes_Unexpected_resolving_power_mz_value_for__0__" xml:space="preserve">
     <value>{0}に対する予期しない分解能m/z値</value>
-  </data>
-  <data name="OpenDataSourceDialog_EnsureChorusAccount_Press_Add_to_use_specify_an_existing_Chorus_account" xml:space="preserve">
-    <value>既存のChorusアカウントを指定して使用するには追加を押します</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library" xml:space="preserve">
     <value>ライブラリの読み込み中</value>
@@ -3292,9 +3274,6 @@
   <data name="MoleculeIrtLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\moleculeirtlib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Public_Projects" xml:space="preserve">
-    <value>公開プロジェクト</value>
-  </data>
   <data name="TransitionFilter_IonTypes_At_least_one_ion_type_is_required" xml:space="preserve">
     <value>最低1つのイオンタイプが必要です。</value>
   </data>
@@ -3355,9 +3334,6 @@
   <data name="ComparePeakBoundaries_ComputeMatches_Documents_have_different_number_of_transition_groups___0__vs__1__" xml:space="preserve">
     <value>ドキュメントにはトランジショングループである{0}対{1}の異なる番号があります。</value>
   </data>
-  <data name="OpenDataSourceDialog_EnsureChorusAccount_No_Chorus_acounts_have_been_specified" xml:space="preserve">
-    <value>Chorusアカウントが指定されていません</value>
-  </data>
   <data name="CommandLineTest_ConsolePathCoverage_successfully_" xml:space="preserve">
     <value>正常。</value>
     <comment>Context: something finished "successfully".</comment>
@@ -3404,8 +3380,8 @@
   <data name="SkylineWindow_ShowProgressErrorUI_Retry" xml:space="preserve">
     <value>再試行</value>
   </data>
-  <data name="EditChorusAccountDlg_TestSettings_Settings_are_correct" xml:space="preserve">
-    <value>設定は正常です</value>
+  <data name="EditRemoteAccountDlg_TestSettings_Settings_are_correct" xml:space="preserve">
+    <value>設定は問題ありません</value>
   </data>
   <data name="PersistedViews_MainGroup_Main" xml:space="preserve">
     <value>メイン</value>
@@ -3642,8 +3618,8 @@
   <data name="MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet" xml:space="preserve">
     <value>キャッシュファイルが読み込まれていません。</value>
   </data>
-  <data name="EditChorusAccountDlg_ValidateValues_Invalid_server_URL_" xml:space="preserve">
-    <value>無効なサーバーURL。</value>
+  <data name="EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_" xml:space="preserve">
+    <value>無効なサーバーURLです。</value>
   </data>
   <data name="LegacyScoringModel_DoValidate_Legacy_scoring_model_is_not_trained_" xml:space="preserve">
     <value>レガシースコアモデルはトレーニングされていません。</value>
@@ -3822,9 +3798,6 @@
   <data name="PasteDlg_AddFasta__0__is_not_a_capital_letter_that_corresponds_to_an_amino_acid" xml:space="preserve">
     <value>「{0}」はアミノ酸に対応する大文字ではありません。</value>
   </data>
-  <data name="ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_returned_the_HTTP_error_response_code__0__but_the_error_message_could_not_be_parsed_" xml:space="preserve">
-    <value>Chorusサーバーとの通信中にエラーが発生しました。 サーバーがHTTPエラー応答コード{0}を返しましたが、エラーメッセージを解析できませんでした。</value>
-  </data>
   <data name="TransitionGroupChromInfoListCalculator_AddChromInfoList_Attempt_to_add_integration_information_for_missing_file" xml:space="preserve">
     <value>欠損しているファイルの統合情報を追加しようとしています。</value>
   </data>
@@ -3921,9 +3894,6 @@
   <data name="Replicate" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Replicate.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Public_Files" xml:space="preserve">
-    <value>公開ファイル</value>
-  </data>
   <data name="MeasuredIonList_Label_Special_ion" xml:space="preserve">
     <value>特殊イオン(&amp;S)：</value>
   </data>
@@ -3947,9 +3917,6 @@
   </data>
   <data name="Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
     <value>ライブラリヘッダーでのデータ切り捨て。ファイルが破損している可能性があります。</value>
-  </data>
-  <data name="ChorusAccountList_Title_Edit_Chorus_Accounts" xml:space="preserve">
-    <value>Chorusアカウントを編集</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
     <value>エラー： 現在のドキュメントには、トリガーされた取得のトランジションをランクするのに十分な情報のないペプチドが含まれています。</value>
@@ -3983,7 +3950,7 @@
     <value>アライン時間</value>
   </data>
   <data name="WizardBlankDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\WizardBlankDocument.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Resources\StartPage\WizardBlankDocument-ja.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_" xml:space="preserve">
     <value>{0}という名前のイオン移動度ライブラリが既に存在しています。上書きしますか？</value>
@@ -4440,9 +4407,6 @@
   </data>
   <data name="ScanProvider_GetScans_The_scan_ID__0__was_not_found_in_the_file__1__" xml:space="preserve">
     <value>ファイル{1}内にスキャンID{0}が見つかりませんでした。</value>
-  </data>
-  <data name="OpenDataSourceDialog_EnsureChorusAccount_Add" xml:space="preserve">
-    <value>追加</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Importing_transiton_list__0____" xml:space="preserve">
     <value>トランジションリスト{0}をインポート中...</value>
@@ -5422,9 +5386,6 @@
   <data name="ImportResultsDlg_GetDataSourcePathsDir_Results_Directory" xml:space="preserve">
     <value>結果ディレクトリ</value>
   </data>
-  <data name="ChorusSession_WrapWebException_An_error_occurred_communicating_with_the_server___The_server_return_HTTP_error_response_code__0__" xml:space="preserve">
-    <value>Chorusサーバーとの通信中にエラーが発生しました。 サーバーがHTTPエラー応答コード{0}を返しました。</value>
-  </data>
   <data name="EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_" xml:space="preserve">
     <value>平均質量(&amp;V)：</value>
   </data>
@@ -5584,9 +5545,6 @@
   </data>
   <data name="AbstractMSGraphItem_CustomizeXAxis_MZ" xml:space="preserve">
     <value>m/z</value>
-  </data>
-  <data name="OpenDataSourceDialog_OpenDataSourceDialog_Chorus_Project" xml:space="preserve">
-    <value>Chorusプロジェクト</value>
   </data>
   <data name="ToolDescription_RunTool_Support_for_the_GenePattern_version_of_QuaSAR_has_been_discontinued_" xml:space="preserve">
     <value>QuaSARのGenePatternバージョンのサポートは終了しています。</value>
@@ -5922,9 +5880,6 @@
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference" xml:space="preserve">
     <value>mProphetの加重基準</value>
   </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_My_Files" xml:space="preserve">
-    <value>マイファイル</value>
-  </data>
   <data name="CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__" xml:space="preserve">
     <value>警告： インジェクション毎の最大トランジションは、エクスポート方法「タンパク質」と「バケット」、またスケジュールメソッドに対し、{0}と{1}の間の値に設定されなければなりません。{3}が指定されました。{2}にデフォルト中。</value>
   </data>
@@ -6005,9 +5960,6 @@
   </data>
   <data name="ImportDocResultsDlg_OkDialog_The_document_must_be_saved_before_results_may_be_imported" xml:space="preserve">
     <value>結果をインポートする前にドキュメントを保存する必要があります。</value>
-  </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_My_Experiments" xml:space="preserve">
-    <value>マイ実験</value>
   </data>
   <data name="SkylineWindow_IntegrateAll_Clear_integrate_all" xml:space="preserve">
     <value>すべて統合をクリア</value>
@@ -6438,9 +6390,6 @@
   <data name="SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins" xml:space="preserve">
     <value>空欄のタンパク質を削除</value>
   </data>
-  <data name="ChorusSession_Login_Unable_to_log_in___Username_or_password_is_incorrect_" xml:space="preserve">
-    <value>ログインすることができません。 ユーザー名かパスワードが間違っています。</value>
-  </data>
   <data name="MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_full_scan_settings_" xml:space="preserve">
     <value>トランジション設定のフルスキャンタブで単離スキームを確認します。</value>
   </data>
@@ -6571,9 +6520,6 @@
   <data name="MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__" xml:space="preserve">
     <value>{0}は、{1}～{2}の絶対値で荷電状態を表記する付加イオンまたは整数値のカンマ区切りのリストを含む必要があります。</value>
   </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Shared_Experiments" xml:space="preserve">
-    <value>共有実験</value>
-  </data>
   <data name="SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_" xml:space="preserve">
     <value>操作中の予期しないドキュメントの変更。</value>
   </data>
@@ -6627,9 +6573,6 @@
   </data>
   <data name="TransitionFullScan_DoValidate_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported" xml:space="preserve">
     <value>QIT質量アナライザーによるMS1フィルタリングでサポートされるのは、同位体ピーク1つのみです。</value>
-  </data>
-  <data name="OpenDataSourceDialog_EnsureChorusAccount_Press_Register_to_register_for_an_account_on_the_Chorus_Project" xml:space="preserve">
-    <value>Chorusプロジェクトのアカウントを登録するには、登録を押します</value>
   </data>
   <data name="RInstaller_InstallPackages_Unknown_error_installing_packages__Tool_Installation_Failed_" xml:space="preserve">
     <value>パッケージのインストール中の不明なエラー。ツールのインストールに失敗しました。</value>
@@ -6854,8 +6797,8 @@
   <data name="RefineListDlg_OkDialog_The_sequence__0__is_not_a_valid_peptide" xml:space="preserve">
     <value>シークエンス「{0}」は有効なペプチドではありません。</value>
   </data>
-  <data name="ChorusSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
-    <value>サーバーとのコミュニケーションエラーがあります： </value>
+  <data name="RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__" xml:space="preserve">
+    <value>サーバーとの通信にエラーが発生しました：</value>
   </data>
   <data name="SkylineWindow_AddMolecule_Custom_molecules_cannot_be_added_to_a_peptide_list_" xml:space="preserve">
     <value>カスタム分子はペプチドリストに追加できません。</value>
@@ -7174,9 +7117,6 @@
   <data name="XHunterLibrary_Load_Failed_loading_library__0__" xml:space="preserve">
     <value>ライブラリ「{0}」の読み込みに失敗しました。</value>
   </data>
-  <data name="ChromatogramGeneratorTask_GetChromatogram_Unexpected_zero_length_chromatogram_returned_from_Chorus_" xml:space="preserve">
-    <value>予期しないゼロ長クロマトグラムがChorusから返されました。</value>
-  </data>
   <data name="TransitionFullScan_ValidateRes_Resolution_must_be_between__0__and__1__for_QIT_" xml:space="preserve">
     <value>QITの分解能は{0}と{1}の間でなければなりません。</value>
   </data>
@@ -7216,8 +7156,8 @@
   <data name="SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_does_not_contain_any_Skyline_documents" xml:space="preserve">
     <value>zipファイルは共有ファイルではありません。ファイルにはSkylineドキュメントが含まれていません。</value>
   </data>
-  <data name="CalibrateIrtDlg_OkDialog_The_standard_must_have_two_fixed_points" xml:space="preserve">
-    <value>標準には2つの固定点が必要です。</value>
+  <data name="CalibrateIrtDlg_TryGetLine_The_standard_must_have_two_fixed_points" xml:space="preserve">
+    <value>標準は2つの固定点を持つ必要があります。</value>
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Error_deleting_the_directory_of_the_existing_tool__Please_close_anything_using_that_directory_and_try_the_overwriting_import_again_later" xml:space="preserve">
     <value>既存ツールのディレクトリの削除エラー。このディレクトリを使用しているプログラムをすべて閉じ、後でもう一度上書きインポートしてください</value>
@@ -7227,9 +7167,6 @@
   </data>
   <data name="SettingsList_ELEMENT_NONE_None" xml:space="preserve">
     <value>なし</value>
-  </data>
-  <data name="OpenDataSourceDialog_EnsureChorusAccount_Register" xml:space="preserve">
-    <value>登録</value>
   </data>
   <data name="SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
     <value>ファイル{1}にはプリカーサー{0}の結果がありません。</value>
@@ -7414,9 +7351,6 @@
   </data>
   <data name="MessageBoxHelper_ValidateSignedNumberTextBox_Value__0__must_be_between__1__and__2__or__3__and__4__" xml:space="preserve">
     <value>値{0}は、{1}と{2}または{3}と{4}の間でなければなりません。</value>
-  </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_My_Projects" xml:space="preserve">
-    <value>マイプロジェクト</value>
   </data>
   <data name="CommandLine_ExportChromatograms_Error__At_least_one_chromatogram_type_must_be_selected" xml:space="preserve">
     <value>エラー： 1つ以上のクロマトグラムタイプを選択しなければなりません</value>
@@ -7610,8 +7544,8 @@
   <data name="RInstaller_GetR_R_installation_complete_" xml:space="preserve">
     <value>Rのインストールが完了しました。</value>
   </data>
-  <data name="EditChorusAccountDlg_ValidateValues_Server_cannot_be_blank" xml:space="preserve">
-    <value>サーバーは空にできません</value>
+  <data name="EditRemoteAccountDlg_ValidateValues_Server_cannot_be_blank" xml:space="preserve">
+    <value>サーバーは空白にできません</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_Error_applying_imported_peak_boundaries___0_" xml:space="preserve">
     <value>インポートされたピーク境界の適用エラー：{0}</value>
@@ -8220,7 +8154,7 @@
     <value>プロ手オームファイル{0}を作成しようとした際にエラーが発生しました。</value>
   </data>
   <data name="StartPage_SmallMolecule_Description" xml:space="preserve">
-    <value>Skylineを利用して非プロテオミクスイオンをターゲットする方法を学びます。代謝実験で使用される分子トランジションリストをインポートし、Waters Xevo TQSからの14回の実行をインポートします。非プロテオミクス実験に、Skylineインターフェイスのパワーを利用する方法を学び始めましょう。</value>
+    <value>Skylineを利用して非プロテオミクスイオンをターゲットする方法を学びます。メタボロミクス実験で使用される分子トランジションリストをインポートし、Waters Xevo TQSからの14回の実行をインポートします。非プロテオミクス実験に、Skylineインターフェイスのパワーを利用する方法を学び始めましょう。</value>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_" xml:space="preserve">
     <value>エラー：--tool-add-zipコマンドで指定されたファイルは.zipファイルではありません。有効な.zipファイルを指定してください。</value>
@@ -8378,9 +8312,6 @@
   </data>
   <data name="EditIrtCalcDlg_UpdateNumPeptides__0__Peptides" xml:space="preserve">
     <value>{0}個のペプチド</value>
-  </data>
-  <data name="ChorusSession_TOP_LEVEL_ITEMS_Public_Experiments" xml:space="preserve">
-    <value>公開実験</value>
   </data>
   <data name="TransitionTreeNode_RenderTip_Losses" xml:space="preserve">
     <value>ロス</value>
@@ -9045,31 +8976,25 @@
  
 Skylineでの列の順序は、列のヘッダーを左右にドラッグすることで調整できます。
  
-ほとんどのペプチドトランジションリストは、「ファイル|インポート|トランジションリスト...」メニューアイテムでインポートできるか、[ターゲット]ウィンドウに直接貼り付けることさえできます。</value>
+ほとんどのペプチドトランジションリストは、「ファイル|インポート|トランジションリスト...」メニューアイテムでインポートでき、[ターゲット]ウィンドウに直接貼り付けることもできます。</value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_SmallMol_" xml:space="preserve">
     <value>このウィンドウの一番簡単な使用方法は、Excel（またはデータがCSV形式の場合テキストエディタ）からコピーしグリッドに貼り付けることです。
- 
-Skylineでの列の順序は、列のヘッダーを左右にドラッグすることで調整できます。
- 
-ほとんどのペプチドトランジションリストは、「ファイル|インポート|トランジションリスト...」メニューアイテムでインポートできるか、[ターゲット]ウィンドウに直接貼り付けることさえできます。</value>
+
+Skylineでの列の順序は、列のヘッダーを左右にドラッグすることで調整できます。分子の場合、[列...]ボタンで有効にする列を選択することもできます。
+
+ほとんどのペプチドトランジションリストは、「ファイル|インポート|トランジションリスト...」メニューアイテムでインポートでき、[ターゲット]ウィンドウに直接貼り付けることもできます。また列ヘッダーにこれらの名前が使われている場合、分子トランジションリストでもこれが実施できます： </value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_2_" xml:space="preserve">
     <value>分子のイオン式に関するメモ：
 
-お使いのトランジションリストの形式で分子式と付加イオンの表記を単一の列にまとめている場合（例：「C8H10N4O2[M+Na]」）、[イオン式]の列を使用し、[付加イオン]の列は無視してください。お使いのトランジションリストが分子式と付加イオンの表記を別々の列に記載している場合、[イオン式]の列に分子式を、付加イオンの説明に[付加イオン]の列を使用してください。</value>
+お使いのトランジションリストの形式で分子式と付加イオンの表記を単一の列にまとめている場合（例：「C8H10N4O2[M+Na]」）、[イオン式]の列を使用し、[付加イオン]の列は無視してください。お使いのトランジションリストで分子式と付加イオンの表記を別々の列に記載している場合、[イオン式]の列に分子式を、付加イオンの説明に[付加イオン]の列を使用してください。</value>
   </data>
   <data name="DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_" xml:space="preserve">
     <value>ピーク幅は負の値にはできません。</value>
   </data>
   <data name="FastaImporter_Import_Error_at_or_around_line__0____1_" xml:space="preserve">
     <value>行{0}上またはその周辺のエラー：{1}</value>
-  </data>
-  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
-    <value>iRTをライブラリに追加しようとしてエラーが発生しました。</value>
-  </data>
-  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library" xml:space="preserve">
-    <value>iRTをライブラリに追加しています</value>
   </data>
   <data name="Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator" xml:space="preserve">
     <value>iRT標準の変更は、iRTカルキュレータを変更することでのみ可能です</value>
@@ -9213,7 +9138,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>測定済み</value>
   </data>
   <data name="AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT" xml:space="preserve">
-    <value>iRT(&amp;R)</value>
+    <value>iRT</value>
   </data>
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success" xml:space="preserve">
     <value>成功</value>
@@ -9227,11 +9152,8 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted" xml:space="preserve">
     <value>回帰の試行</value>
   </data>
-  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library" xml:space="preserve">
-    <value>iRTをライブラリに追加しています</value>
-  </data>
-  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
-    <value>iRTをライブラリに追加しようとしてエラーが発生しました。</value>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Processing_retention_times" xml:space="preserve">
+    <value>保持時間のプロセス中</value>
   </data>
   <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
     <value>{0}（最低{1}点）</value>
@@ -9280,6 +9202,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="GraphFullScan_CreateGraph_Scan_Number_" xml:space="preserve">
     <value>スキャン番号：</value>
+  </data>
+  <data name="GraphFullScan_CreateGraph_IM_Scan_Range_" xml:space="preserve">
+    <value>IMスキャン範囲：</value>
   </data>
   <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_" xml:space="preserve">
     <value>フィルタされたライブラリの名前を入力してください。</value>
@@ -9339,10 +9264,10 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>スコアモデルのトレーニング（反復{0}/{1}）</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_" xml:space="preserve">
-    <value>スコアモデルをトレーニング（反復{0}/{1} - {2:#,#} ピーク位置：{3:0.#%} FDR）</value>
+    <value>スコアモデルをトレーニング（反復{0}/{1} - {2:#,#} ピーク位置：{3:0.##%} FDR）</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_" xml:space="preserve">
-    <value>スコアモデルの収束（反復{0} - {1:#,#} ピーク位置：{2:0.#%} FDR）</value>
+    <value>スコアモデルの収束（反復{0} - {1:#,#} ピーク位置：{2:0.##%} FDR）</value>
   </data>
   <data name="CompactFormatOption_ALWAYS_Always" xml:space="preserve">
     <value>常に行う</value>
@@ -9465,7 +9390,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>観測されたFPR：</value>
   </data>
   <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_" xml:space="preserve">
-    <value>Q値カットオフ：</value>
+    <value>Q値のカットオフ：</value>
   </data>
   <data name="Replicate_Name_There_is_already_a_replicate_named___0___" xml:space="preserve">
     <value>「{0}」という名前の繰り返し測定が既にあります。</value>
@@ -10016,8 +9941,8 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
     <value>ユーザー名が{0}でサーバーが{1}というアカウントが見つかりません。</value>
   </data>
-  <data name="OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_information_now_" xml:space="preserve">
-    <value>リモートアカウントが指定されていません。UnifiかChorusの既存アカウントをお持ちの場合、ログイン情報を入力することができます。</value>
+  <data name="OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_account_you_can_enter_your_login_information_now_" xml:space="preserve">
+    <value>リモートアカウントが指定されていません。既存のUnifiアカウントをお持ちの場合、今すぐログイン情報を入力できます。</value>
   </data>
   <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
     <value>リモートアカウントを編集</value>
@@ -10027,9 +9952,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts" xml:space="preserve">
     <value>リモートアカウント</value>
-  </data>
-  <data name="Chorus_Label_Chorus" xml:space="preserve">
-    <value>Chorus</value>
   </data>
   <data name="Unifi_Label_Unifi" xml:space="preserve">
     <value>Unifi</value>
@@ -10134,7 +10056,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>該当プロパティはありません</value>
   </data>
   <data name="ListDesigner_OkDialog_There_was_an_error_trying_to_apply_this_list_definition_to_the_original_data_" xml:space="preserve">
-    <value>このリスト定義を元のデータに適用しようとする際にエラーがありました：</value>
+    <value>このリスト定義を元のデータに適用しようとする際にエラーが発生しました：</value>
   </data>
   <data name="ListGridForm_BindingListSourceOnListChanged_List__" xml:space="preserve">
     <value>リスト： </value>
@@ -10242,13 +10164,13 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>詳細なトピック</value>
   </data>
   <data name="StartPage_SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
-    <value>プリカーサーm/z、プロダクトイオンm/zおよび衝突エネルギーの値のみが指定されている文献引用から、安定同位体標識付分子をターゲットとするSkylineドキュメントを作成する方法を学びます。Sciex製Triple QuadによるCE初期値を用いたWaters製Xevo TQ-Sの複数の繰り返し測定データセットをインポートすることで、分子の保持時間スケジュール設定と衝突エネルギーの最適化を実施します。ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
+    <value>プリカーサーm/z、プロダクトイオンm/zおよび衝突エネルギーの値のみが指定されている文献引用から、安定同位体標識付分子をターゲットとするSkylineドキュメントを作成する方法を学びます。Sciex製Triple QuadによるCE初期値を用いたWaters製Xevo TQ-Sの複数の繰り返し測定データセットをインポートすることで、分子の保持時間スケジュール設定と衝突エネルギーの最適化を実施します。ターゲットプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
   </data>
   <data name="StartPage_SmallMoleculeQuantification_Description" xml:space="preserve">
-    <value>プリカーサーイオン化学式と付加イオン、およびプロダクトイオンm/zの値として指定された分子をターゲットとするSkylineドキュメントを作成する方法を学びます。三連四重極質量分析計でLC-MS/MSを用いて収集した複数の繰り返し測定データセットをインポートし、ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
+    <value>プリカーサーイオン化学式と付加イオン、およびプロダクトイオンm/zの値として指定された分子をターゲットとするSkylineドキュメントを作成する方法を学びます。三連四重極質量分析計でLC-MS/MSを用いて収集した複数の繰り返し測定データセットをインポートし、ターゲットプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
   </data>
   <data name="StartPage_HiResMetabolomics_Description" xml:space="preserve">
-    <value>プリカーサーイオン化学式と付加イオンとして指定された分子をターゲットとするSkylineドキュメントを作成する方法を学びます。一連の血漿試料をQ Exactive Orbitrap質量分析計でデータ収集した複数の繰り返し測定データセットをインポートし、ターゲットとするプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
+    <value>プリカーサーイオン化学式と付加イオンとして指定された分子をターゲットとするSkylineドキュメントを作成する方法を学びます。一連の血漿試料をQ Exactive Orbitrap質量分析計でデータ収集した複数の繰り返し測定データセットをインポートし、ターゲットプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
   </data>
   <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
     <value>対数空間の線形</value>
@@ -10343,7 +10265,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_Could_not_find_an_external_spectrum_file_matching__0__in_the_same_directory_as_the_MaxQuant_input_file__1__" xml:space="preserve">
     <value>「{0}」に一致する外部スペクトルファイルが、MaxQuant入力ファイル「{1}」と同じディレクトリ内か、親かそのまた親のディレクトリ内に見つかりませんでした。
 
-元のファイルがない場合、その入力ファイルからの組み込みスペクトルでライブラリを構築することができます。ただし、MaxQuantの組み込みスペクトルにあるフラグメントイオンは、荷電状態でデコンボリューションされており、1価のフラグメントイオンのみが含まれています。そのイオンの強度は質量分析計で測定された典型的なものではない可能性があります。</value>
+元のファイルがない場合、その入力ファイルからの組み込みスペクトルでライブラリを構築することができます。ただし、MaxQuantの組み込みスペクトルにあるフラグメントイオンは、荷電状態でデコンボリューションされており、1価のフラグメントイオンのみが含まれています。質量分析計で測定された強度を表していない可能性があります。</value>
   </data>
   <data name="VendorIssueHelper_ShowLibraryMissingExternalSpectraError_ButtonDescriptionsSupportsExtensions__0__" xml:space="preserve">
     <value>組み込みスペクトルを使用するには、[組み込み]をクリックします。
@@ -10422,7 +10344,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>分子リストを削除...</value>
   </data>
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0___" xml:space="preserve">
-    <value>「{0}」から分子を分解できません。</value>
+    <value>「{0}」から分子を解釈できません。</value>
   </data>
   <data name="UIModeProteomic" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\UIModeProteomic.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -10476,7 +10398,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>エラー：引数{0}と{1}のオプションは併用できません。</value>
   </data>
   <data name="TargetResolver_TryResolveTarget_Unable_to_resolve_molecule_from___0____could_be_any_of__1_" xml:space="preserve">
-    <value>「{0}」から分子を分解できません。{1}のいずれかの可能性があります。</value>
+    <value>「{0}」から分子を解釈できません。{1}のいずれかの可能性があります。</value>
     <comment>{0} is search text, {1} is a list of molecule names that the search text could refer to</comment>
   </data>
   <data name="CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_" xml:space="preserve">
@@ -10492,7 +10414,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>ドキュメントの最適化中...</value>
   </data>
   <data name="CommandLine_LogNewEntries_Document_unchanged" xml:space="preserve">
-    <value>ドキュメントは未変更</value>
+    <value>ドキュメントは変更されていません</value>
   </data>
   <data name="CommandLine_LogDocumentDelta_Removed___0_" xml:space="preserve">
     <value>削除されました：{0}</value>
@@ -10531,7 +10453,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>これら{0}個の分子を本当に削除してもよろしいですか？</value>
   </data>
   <data name="TransitionSettingsControl_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_integers_describing_charge_states_between__1__and__2__" xml:space="preserve">
-    <value>{0}には、{1}から{2}までの荷電状態を説明する整数のカンマ区切りのリストが含まれている必要があります。</value>
+    <value>{0}には、{1}から{2}までの荷電状態を記述する整数のカンマ区切りのリストが含まれている必要があります。</value>
   </data>
   <data name="SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_" xml:space="preserve">
     <value>開けようとしているファイル（「{0}」）は、Skylineドキュメントではないようです。通常Skylineドキュメントには「{1}」か「{2}」のファイル名拡張子があり、XML形式です。</value>
@@ -10547,7 +10469,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>注釈： </value>
   </data>
   <data name="ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_" xml:space="preserve">
-    <value>有効なThermo装置が設置されているのが見つかりませんでした。</value>
+    <value>有効なThermo装置のソフトウェアがインストールされていません。</value>
   </data>
   <data name="ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_" xml:space="preserve">
     <value>Thermoメソッド作成ソフトウェアが正しくインストールされていない可能性があります。</value>
@@ -10575,5 +10497,344 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_" xml:space="preserve">
     <value>値「{0}」は、フルファイルパスへの変換試行に失敗した引数{1}に対して有効ではありません。</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_QC_chromatogram_found" xml:space="preserve">
+    <value>一致するQCクロマトグラムが見つかりません</value>
+  </data>
+  <data name="SkylineVersion_V19_1_Skyline_19_1" xml:space="preserve">
+    <value>Skyline 19.1</value>
+  </data>
+  <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
+    <value>エラー：ユーザー設定ファイルへの保存に失敗しました。</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_a_type_for_this_annotation_to_apply_to_" xml:space="preserve">
+    <value>この注釈に適用するタイプを選択します。</value>
+  </data>
+  <data name="DefineAnnotationDlg_OkDialog_Choose_a_value_for_this_annotation_" xml:space="preserve">
+    <value>この注釈の値を選択します。</value>
+  </data>
+  <data name="DocumentAnnotationUpdater_UpdateAnnotations_Updating_calculated_annotations" xml:space="preserve">
+    <value>計算された注釈を更新中</value>
+  </data>
+  <data name="CommandLine_ImportResults_No_replicates_left_to_import_" xml:space="preserve">
+    <value>インポートする繰り返し測定が残されていません。</value>
+  </data>
+  <data name="CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_" xml:space="preserve">
+    <value>エラー：{1}の正規表現「{0}」が解析できません。</value>
+  </data>
+  <data name="CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_" xml:space="preserve">
+    <value>ファイル「{0}」にサンプルが含まれていません。サンプル名のパターンを適用できません。無視します。</value>
+  </data>
+  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___" xml:space="preserve">
+    <value>ファイル名のパターン「{0}」に一致するファイルがありません。</value>
+  </data>
+  <data name="CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___" xml:space="preserve">
+    <value>サンプル名のパターン「{0}」に一致するファイルがありません。</value>
+  </data>
+  <data name="CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_" xml:space="preserve">
+    <value>繰り返し測定「{0}」は既にドキュメントに存在します。代わりに「{1}」を使用します。</value>
+  </data>
+  <data name="CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
+    <value>ファイル名「{0}」がパターン「{1}」と一致しません。 {2}を無視します</value>
+  </data>
+  <data name="CommandLine_ApplySampleNameRegex_Sample_name___0___does_not_match_the_pattern___1____Ignoring__2_" xml:space="preserve">
+    <value>サンプル名「{0}」がパターン「{1}」と一致しません。{2}を無視します</value>
+  </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_quantitative" xml:space="preserve">
+    <value>トランジションを定量にマーク</value>
+  </data>
+  <data name="SkylineWindow_MarkQuantitative_Mark_transitions_non_quantitative" xml:space="preserve">
+    <value>トランジションを非定量にマーク</value>
+  </data>
+  <data name="RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_" xml:space="preserve">
+    <value>一貫性に基づいて最適化するには、ドキュメントに少なくとも2つの繰り返し測定を含める必要があります。</value>
+  </data>
+  <data name="RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_" xml:space="preserve">
+    <value>正規化するためのグローバル標準がドキュメントに含まれていません。</value>
+  </data>
+  <data name="RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_" xml:space="preserve">
+    <value>ドキュメントに所定のリファレンスタイプが含まれていません。</value>
+  </data>
+  <data name="RefineDlg_NormalizationMethod_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="RefineDlg_NormalizationMethod_Medians" xml:space="preserve">
+    <value>中央値</value>
+  </data>
+  <data name="RefineDlg_NormalizationMethod_Global_standards" xml:space="preserve">
+    <value>グローバル標準</value>
+  </data>
+  <data name="ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_" xml:space="preserve">
+    <value>{0}を最適化すると、トランジション毎に{1}個のトランジションが追加作成されます。</value>
+  </data>
+  <data name="ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Export_a_method_with_extra_transitions_for_finding_an_optimal_value_" xml:space="preserve">
+    <value>最適値を見つけるために、追加のトランジションを含むメソッドをエクスポートします。</value>
+  </data>
+  <data name="prosit_logo_dark_blue" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\prosit_logo_dark_blue.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SkylineWindow_ImportMassListIntensities_Creating_Spectral_Library" xml:space="preserve">
+    <value>スペクトルライブラリの作成中</value>
+  </data>
+  <data name="ExceptionDialog_Caused_by_____" xml:space="preserve">
+    <value>原因 ---&gt;</value>
+  </data>
+  <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_" xml:space="preserve">
+    <value>エラー：トランジション予測設定の変更に失敗しました。</value>
+  </data>
+  <data name="CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_" xml:space="preserve">
+    <value>エラー：トランジションフィルタ設定の変更に失敗しました。</value>
+  </data>
+  <data name="AbstractSpectrumGraphItem_AddAnnotations_" xml:space="preserve">
+    <value>スコア = {0:F06}</value>
+  </data>
+  <data name="ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_" xml:space="preserve">
+    <value>サーバーが無効な応答を返しました。メンテナンスのためにサーバーが休止している可能性があります。 skyline.msウェブサイトでツールストアを確認してください。</value>
+  </data>
+  <data name="IrtStandardList_Title_Edit_iRT_Standards" xml:space="preserve">
+    <value>iRT標準を編集</value>
+  </data>
+  <data name="IrtStandardList_Label_iRT_Standards" xml:space="preserve">
+    <value>iRT標準</value>
+  </data>
+  <data name="CalibrateIrtDlg_OkDialog_The_iRT_standard__0__already_exists_" xml:space="preserve">
+    <value>iRT標準{0}は既に存在します。</value>
+  </data>
+  <data name="CalibrateIrtDlg_TryGetLine_Maximum_fixed_point_peptide_must_have_a_greater_measured_retention_time_than_the_minimum_fixed_point_peptide_" xml:space="preserve">
+    <value>最大固定点ペプチドは最小固定点ペプチドよりも大きな測定保持時間を持つ必要があります。</value>
+  </data>
+  <data name="CalibrateIrtDlg_TryGetLine_Standard_calibration_peptides_are_required_" xml:space="preserve">
+    <value>標準校正ペプチドが必要です。</value>
+  </data>
+  <data name="CalibrateIrtDlg_TryGetLine_Invalid_fixed_point_peptides_" xml:space="preserve">
+    <value>無効な固定点ペプチドです。</value>
+  </data>
+  <data name="CalibrateIrtDlg_ShowGraph_Measured" xml:space="preserve">
+    <value>測定済み</value>
+  </data>
+  <data name="CalibrateIrtDlg_ShowGraph_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="CalibrateIrtDlg_btnGraphIrts_Click_Calibrated_iRT_values" xml:space="preserve">
+    <value>校正済みiRT値</value>
+  </data>
+  <data name="CalibrateIrtDlg_btnGraph_Click_Linear_equation_calculation" xml:space="preserve">
+    <value>線形方程式の計算</value>
+  </data>
+  <data name="CalibrateIrtDlg_StandardsChanged__0__peptides" xml:space="preserve">
+    <value>{0}個のペプチド</value>
+  </data>
+  <data name="CalibrateIrtDlg_StandardsChanged__1_peptide" xml:space="preserve">
+    <value>1個のペプチド</value>
+  </data>
+  <data name="RegressionOption_All_Fixed_points" xml:space="preserve">
+    <value>固定点</value>
+  </data>
+  <data name="CalibrateIrtDlg_SetCalibrationPeptides_The_document_contains_results_for__0__peptide_s__not_in_this_standard__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_" xml:space="preserve">
+    <value>ドキュメントに、この標準以外の{0}個のペプチドの結果が含まれていますが、標準を校正するために必要な最小値{1}未満です。</value>
+  </data>
+  <data name="AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded" xml:space="preserve">
+    <value>現在のドキュメントには、この標準以外の{0}個のペプチドが測定保持時間とともに含まれています。 iRT標準向けに1回の注入で簡単に測定できる少数のペプチドを使用することをお勧めします。 以下のペプチドをいくつか選択して、Skylineが現在のドキュメントから自動的に選択できるようにしてください。</value>
+  </data>
+  <data name="CalibrateIrtDlg_UpdateControls_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="CalibrateIrtDlg_UpdateControls_RT" xml:space="preserve">
+    <value>RT</value>
+  </data>
+  <data name="CalibrateIrtDlg_ShowGraph_Old_iRT" xml:space="preserve">
+    <value>旧iRT</value>
+  </data>
+  <data name="CalibrateIrtDlg_ShowGraph_New_iRT" xml:space="preserve">
+    <value>新iRT</value>
+  </data>
+  <data name="IrtDb_MakeDocumentXml_iRT_standards" xml:space="preserve">
+    <value>iRT標準</value>
+  </data>
+  <data name="DisplayModificationOption_NOT_SHOWN_Not_Shown" xml:space="preserve">
+    <value>非表示</value>
+  </data>
+  <data name="DisplayModificationOption_MASS_DELTA_Mass_Difference" xml:space="preserve">
+    <value>質量の差</value>
+  </data>
+  <data name="DisplayModificationOption_THREE_LETTER_CODE_Three_Letter_Code" xml:space="preserve">
+    <value>3文字のコード</value>
+  </data>
+  <data name="DisplayModificationOption_FULL_NAME_Full_Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="DisplayModificationOption_UNIMOD_ID_Unimod_ID" xml:space="preserve">
+    <value>Unimod ID</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_all" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_best" xml:space="preserve">
+    <value>最良</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_Precursors" xml:space="preserve">
+    <value>プリカーサー</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_Products" xml:space="preserve">
+    <value>プロダクト</value>
+  </data>
+  <data name="CommandLine_CreateUntrainedScoringModel_Error__Excluding_feature_scores_is_not_permitted_with_the_default_Skyline_model_" xml:space="preserve">
+    <value>エラー：デフォルトのSkylineモデルではフィーチャースコアを除外できません。</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs_cannot_be_applied_in_calibrating_the_Skyline_default_model_" xml:space="preserve">
+    <value>エラー：モデルカットオフはSkylineデフォルトモデルの校正に適用できません。</value>
+  </data>
+  <data name="CommandArgs_ValidateReintegrateArgs_Error__Model_cutoffs___0___must_be_in_decreasing_order_greater_than_zero_and_less_than__1__" xml:space="preserve">
+    <value>エラー：モデルカットオフ({0})は、ゼロより大きく{1}未満で、降順でなければなりません。</value>
+  </data>
+  <data name="ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_" xml:space="preserve">
+    <value>値{0}は、十進数のリストを必要とする引数{1}に対して無効です。</value>
+  </data>
+  <data name="FileStreamManager_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_" xml:space="preserve">
+    <value>フォルダ{0}に一時ファイルを作成しようとしましたが、以下のエラーで失敗しました：</value>
+  </data>
+  <data name="EditIrtCalcDlg_ChangeStandardPeptides_Removed_peptides_on_iRT_standard_protein" xml:space="preserve">
+    <value>iRT標準タンパク質で削除されたペプチド</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_The_following_peptides_were_removed_" xml:space="preserve">
+    <value>以下のペプチドが削除されました：</value>
+  </data>
+  <data name="ChangeIrtPeptidesDlg_OkDialog_Would_you_like_to_remove_them_from_the_document_" xml:space="preserve">
+    <value>これらをドキュメントから削除しますか？</value>
+  </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculating_scores" xml:space="preserve">
+    <value>スコアを計算中</value>
+  </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_" xml:space="preserve">
+    <value>このドキュメントには{0}個のCiRTペプチドが含まれています。このうち{1}個をiRT標準として使用しますか？</value>
+  </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_" xml:space="preserve">
+    <value>事前定義済みのiRT値を使用しますか、または回帰に基づいて新しいiRT値を計算しますか？</value>
+  </data>
+  <data name="CalibrationGridViewDriver_CiRT_option_name" xml:space="preserve">
+    <value>CiRT（検出）</value>
+  </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Predefined_values" xml:space="preserve">
+    <value>事前定義済みの値</value>
+  </data>
+  <data name="CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculate_from_regression" xml:space="preserve">
+    <value>回帰から計算</value>
+  </data>
+  <data name="CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__which_is_less_than_the_minimum_requirement_of__1__to_calibrate_a_standard_" xml:space="preserve">
+    <value>ドキュメントには{0}個のペプチドの結果が含まれていますが、標準を校正するために必要な最小値{1}未満です。</value>
+  </data>
+  <data name="CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_" xml:space="preserve">
+    <value>ドキュメントには{0}個のペプチドの結果が含まれていますが、{1}個未満の標準ペプチドを使用することは勧められません。続行してよろしいですか？</value>
+  </data>
+  <data name="CalibrateIrtDlg_UseResults_The_document_contains_results_for__0__peptides_not_in_this_standard__but_using_fewer_than__1__standard_peptides_is_not_recommended__Are_you_sure_you_want_to_continue_" xml:space="preserve">
+    <value>ドキュメントにはこの標準以外の{0}個のペプチドの結果が含まれていますが、{1}個未満の標準ペプチドを使用することは勧められません。続行してよろしいですか？</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_" xml:space="preserve">
+    <value>{0}個の異なるCiRTペプチドが見つかりました。何個をiRT標準として使用しますか？</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Loading_library" xml:space="preserve">
+    <value>ライブラリを読み込み中</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library" xml:space="preserve">
+    <value>iRTをライブラリに追加しています</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>iRTをライブラリに追加する際にエラーが発生しました。</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers" xml:space="preserve">
+    <value>保持時間のプロバイダーを読み込み中</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_" xml:space="preserve">
+    <value>スペクトルライブラリにおけるイオン移動度の値に基づいて抽出を有効にします。</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__" xml:space="preserve">
+    <value>イオン移動度スペクトルライブラリの分解能を{0}に変更しています。</value>
+  </data>
+  <data name="CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_" xml:space="preserve">
+    <value>エラー：イオン移動度の設定を変更できませんでした。</value>
+  </data>
+  <data name="SkypFile_FILTER_SKYP_Skyline_Document_Pointer" xml:space="preserve">
+    <value>Skylineドキュメントポインタ</value>
+  </data>
+  <data name="SkypSupport_Open_Downloading_Skyline_Document_Archive" xml:space="preserve">
+    <value>Skylineドキュメントアーカイブのダウンロード</value>
+  </data>
+  <data name="SkypSupport_Open_Failure_opening_skyp_file_" xml:space="preserve">
+    <value>skypファイルを開けません。</value>
+  </data>
+  <data name="SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__" xml:space="preserve">
+    <value>以下のskypファイルで指定されたSkylineドキュメントをダウンロードする際にエラーが発生しました：{0}。</value>
+  </data>
+  <data name="SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_" xml:space="preserve">
+    <value>Skylineで[ツール] &gt; [オプション]メニューを選択し、Panoramaサーバーとして{0}を追加する必要があります。</value>
+  </data>
+  <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
+    <value>{0}からこのファイルをダウンロードする権限がありません。</value>
+  </data>
+  <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_" xml:space="preserve">
+    <value>skypファイル内にSkyline共有ドキュメントアーカイブ({0})のURLがあると考えられます。代わりに{1}が見つかりました。</value>
+  </data>
+  <data name="SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_" xml:space="preserve">
+    <value>Skyline共有アーカイブの名前はNullや空白にできません。</value>
+  </data>
+  <data name="SkypSupport_Download_Downloading__0_" xml:space="preserve">
+    <value>{0}のダウンロード中</value>
+  </data>
+  <data name="SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_" xml:space="preserve">
+    <value>PanoramaサーバーにあるSkyline共有アーカイブファイル({0})のURLがファイルに含まれていません。</value>
+  </data>
+  <data name="SkypFile_GetSkyFileUrl__0__is_not_a_valid_URL_on_a_Panorama_server_" xml:space="preserve">
+    <value>{0}はPanoramaサーバーの有効なURLではありません。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the_targets_" xml:space="preserve">
+    <value>ドキュメントに以下のターゲットと一致しないデコイが含まれています：</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_" xml:space="preserve">
+    <value>ドキュメントにターゲットと一致しないデコイが含まれています。{0}個のデコイのうち：</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Continue" xml:space="preserve">
+    <value>続行</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Generate" xml:space="preserve">
+    <value>生成</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target" xml:space="preserve">
+    <value>1個のデコイが一致するターゲットを含んでいません</value>
+  </data>
+  <data name="SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target" xml:space="preserve">
+    <value>{0}個のデコイが一致するターゲットを含んでいません</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_as_its_matching_target" xml:space="preserve">
+    <value>1個のデコイが、一致するターゲットと同じ数のトランジションを含んでいません</value>
+  </data>
+  <data name="SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions_as_their_matching_targets" xml:space="preserve">
+    <value>{0}個のデコイが、一致するターゲットと同じ数のトランジションを含んでいません</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_" xml:space="preserve">
+    <value>新しいデコイを生成しますか、それとも現在のデコイで続行しますか？</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_matching_targets_and_decoys_may_produce_incorrect_results_" xml:space="preserve">
+    <value>よろしいですか？一致しないターゲットとデコイでトレーニングされたピークスコアモデルは間違った結果を生成する可能性があります。</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__" xml:space="preserve">
+    <value>ファイル{0}を先に解凍し、次に解凍済みのファイル{1}を開きます。</value>
+  </data>
+  <data name="SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_" xml:space="preserve">
+    <value>ZIPファイル内のドキュメントを開くことはサポートされていません。</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Document_import_was_cancelled_on_the_Panorama_server__0__" xml:space="preserve">
+    <value>Panoramaサーバー{0}でドキュメントのインポートがキャンセルされました。</value>
+  </data>
+  <data name="PanoramaPublishHelper_PublishDocToPanorama_Job_details_can_be_found_at__0__" xml:space="preserve">
+    <value>ジョブの詳細は{0}で見ることができます。</value>
+  </data>
+  <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_" xml:space="preserve">
+    <value>サーバーでドキュメントのインポートがキャンセルされました。Panoramaに進みますか？</value>
+  </data>
+  <data name="WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_" xml:space="preserve">
+    <value>データをインポート中。{0}%完了。</value>
+  </data>
+  <data name="WebPanoramaPublishClient_SendZipFile_Status_on_server_is___0_" xml:space="preserve">
+    <value>サーバーのステータス：{0}</value>
   </data>
 </root>

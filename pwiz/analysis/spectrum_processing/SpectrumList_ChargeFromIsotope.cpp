@@ -713,10 +713,11 @@ void SpectrumList_ChargeFromIsotope::simulateKL(const double finalRetentionTime,
                         elementsForDeletion.push_back( w ); // remove if element equal to min or 
                 }
     
-                for (int w=0, wend = elementsForDeletion.size(); w < wend; ++w )
+                sort(elementsForDeletion.rbegin(), elementsForDeletion.rend());
+                for (int elementToDelete : elementsForDeletion)
                 {
-                    windowIntensity.erase( windowIntensity.begin() + elementsForDeletion[w] - w );
-                    windowMZ.erase( windowMZ.begin() + elementsForDeletion[w] - w );
+                    windowIntensity.erase( windowIntensity.begin() + elementToDelete );
+                    windowMZ.erase( windowMZ.begin() + elementToDelete );
                 }
 
                 peaksInWindow = windowIntensity.size();
@@ -882,32 +883,34 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
                     elementsForDeletion.push_back( j );
             }
     
-            for (int j=0, jend = elementsForDeletion.size(); j < jend; ++j )
+            sort(elementsForDeletion.rbegin(), elementsForDeletion.rend());
+            for (int elementToDelete : elementsForDeletion)
             {
-                peakIntensities.erase( peakIntensities.begin() + elementsForDeletion[j] - j );
-                peakMZs.erase( peakMZs.begin() + elementsForDeletion[j] - j );
+                peakIntensities.erase( peakIntensities.begin() + elementToDelete );
+                peakMZs.erase( peakMZs.begin() + elementToDelete );
             }
 
             /**
             Reduce number of peaks in window to maxNumberPeaks if needed 
             **/
             int peaksInWindow = peakIntensities.size();
-            elementsForDeletion.clear();
             while ( peaksInWindow > maxNumberPeaks ) 
             {
 
                 BinaryData<double>::iterator minIt = min_element( peakIntensities.begin(), peakIntensities.end() );
 
+                elementsForDeletion.clear();
                 for (int w=0, wend = peakIntensities.size(); w < wend; ++w)
                 {
                     if ( peakIntensities[w] == *minIt )
                         elementsForDeletion.push_back( w ); 
                 }
     
-                for (int w=0, wend = elementsForDeletion.size(); w < wend; ++w )
+                sort(elementsForDeletion.rbegin(), elementsForDeletion.rend());
+                for (int elementToDelete : elementsForDeletion)
                 {
-                    peakIntensities.erase( peakIntensities.begin() + elementsForDeletion[w] - w );
-                    peakMZs.erase( peakMZs.begin() + elementsForDeletion[w] - w );
+                    peakIntensities.erase( peakIntensities.begin() + elementToDelete );
+                    peakMZs.erase( peakMZs.begin() + elementToDelete );
                 }
 
                 peaksInWindow = peakIntensities.size();
@@ -938,33 +941,35 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
                 else if ( peakIntensities[j] == *minIt )
                     elementsForDeletion.push_back( j ); // remove if element equal to min or 
             }
-    
-            for (int j=0, jend = elementsForDeletion.size(); j < jend; ++j )
+
+            sort(elementsForDeletion.rbegin(), elementsForDeletion.rend());
+            for (int elementToDelete : elementsForDeletion)
             {
-                peakIntensities.erase( peakIntensities.begin() + elementsForDeletion[j] - j );
-                peakMZs.erase( peakMZs.begin() + elementsForDeletion[j] - j );
+                peakIntensities.erase( peakIntensities.begin() + elementToDelete);
+                peakMZs.erase( peakMZs.begin() + elementToDelete);
             }
 
             /**
             Reduce number of peaks in window to maxNumberPeaks if needed 
             **/
             int peaksInWindow = peakIntensities.size();
-            elementsForDeletion.clear();
             while ( peaksInWindow > maxNumberPeaks ) 
             {
 
                 BinaryData<double>::iterator minIt = min_element( peakIntensities.begin(), peakIntensities.end() );
 
+                elementsForDeletion.clear();
                 for (int w=0, wend = peakIntensities.size(); w < wend; ++w)
                 {
                     if ( peakIntensities[w] == *minIt )
                         elementsForDeletion.push_back( w ); 
                 }
     
-                for (int w=0, wend = elementsForDeletion.size(); w < wend; ++w )
+                sort(elementsForDeletion.rbegin(), elementsForDeletion.rend());
+                for (int elementToDelete : elementsForDeletion)
                 {
-                    peakIntensities.erase( peakIntensities.begin() + elementsForDeletion[w] - w );
-                    peakMZs.erase( peakMZs.begin() + elementsForDeletion[w] - w );
+                    peakIntensities.erase( peakIntensities.begin() + elementToDelete );
+                    peakMZs.erase( peakMZs.begin() + elementToDelete);
                 }
 
                 peaksInWindow = peakIntensities.size();

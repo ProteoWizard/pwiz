@@ -32,13 +32,16 @@ namespace pwiz.Skyline.Controls
     {
         private readonly string _cancelMessage = string.Format(@" ({0})", Resources.LongWaitDlg_PerformWork_canceled);
 
+        private const int MAX_HEIGHT = 500;
+        private readonly int _originalFormHeight;
+        private readonly int _originalMessageHeight;
         private Control _parentForm;
         private Exception _exception;
         private int _progressValue = -1;
         private string _message;
         private DateTime _startTime;
         private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly ManualResetEvent _completionEvent;
+        private ManualResetEvent _completionEvent;
 
         // these members should only be accessed in a block which locks on _lock
         #region synchronized members
@@ -65,8 +68,9 @@ namespace pwiz.Skyline.Controls
 
             if (!IsCancellable)
                 Height -= Height - btnCancel.Bottom;
+            _originalFormHeight = Height;
+            _originalMessageHeight = labelMessage.Height;
             _cancellationTokenSource = new CancellationTokenSource();
-            _completionEvent = new ManualResetEvent(false);
         }
 
         public string Message
@@ -78,7 +82,11 @@ namespace pwiz.Skyline.Controls
         public int ProgressValue
         {
             get { return _progressValue; }
-            set { _progressValue = value; }
+            set
+            {
+                Assume.IsTrue(value <= 100);
+                _progressValue = value;
+            }
         }
 
         public override string DetailedMessage
@@ -130,6 +138,8 @@ namespace pwiz.Skyline.Controls
         {
             var progressWaitBroker = new ProgressWaitBroker(performWork);
             PerformWork(parent, delayMillis, progressWaitBroker.PerformWork);
+            if (progressWaitBroker.IsCanceled)
+                return progressWaitBroker.Status.Cancel();
             return progressWaitBroker.Status;
         }
 
@@ -137,8 +147,14 @@ namespace pwiz.Skyline.Controls
         {
             _startTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             _parentForm = parent;
+            ManualResetEvent completionEvent = null;
             try
             {
+                lock (this)
+                {
+                    Assume.IsNull(_completionEvent);
+                    _completionEvent = completionEvent = new ManualResetEvent(false);
+                }
 //                Action<Action<ILongWaitBroker>> runner = RunWork;
 //                _result = runner.BeginInvoke(performWork, runner.EndInvoke, null);
                 ActionUtil.RunAsync(() => RunWork(performWork));
@@ -150,12 +166,11 @@ namespace pwiz.Skyline.Controls
                 // Return without notifying the user, if the operation completed
                 // before the wait expired.
 //                if (_result.IsCompleted)
-                if (_completionEvent.WaitOne(delayMillis))
+                if (completionEvent.WaitOne(delayMillis))
                     return;
 
                 progressBar.Value = Math.Max(0, _progressValue);
-                if (_message != null)
-                    labelMessage.Text = _message;
+                UpdateLabelMessage();
 
                 ShowDialog(parent);
             }
@@ -165,7 +180,14 @@ namespace pwiz.Skyline.Controls
 
                 // Get rid of this window before leaving this function
                 Dispose();
-                _completionEvent.Dispose();
+                lock (this)
+                {
+                    if (completionEvent != null)
+                    {
+                        _completionEvent = null;
+                    }
+                }
+                completionEvent?.Dispose();
 
                 if (IsCanceled && null != x)
                 {
@@ -246,7 +268,10 @@ namespace pwiz.Skyline.Controls
                     }
                 }
 
-                _completionEvent.Set();
+                lock (this)
+                {
+                    _completionEvent?.Set();
+                }
             }
         }
 
@@ -257,7 +282,7 @@ namespace pwiz.Skyline.Controls
                 var runningTime = DateTime.UtcNow.Subtract(_startTime);
                 // Show complete status before returning.
                 progressBar.Value = _progressValue = 100;
-                labelMessage.Text = _message;
+                UpdateLabelMessage();
                 // Display the final complete status for one second, or 10% of the time the job ran for,
                 // whichever is shorter
                 int finalDelayTime = Math.Min(1000, (int) (runningTime.TotalMilliseconds/10));
@@ -305,9 +330,30 @@ namespace pwiz.Skyline.Controls
                 UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, progressBar.Value);
             }
 
+            UpdateLabelMessage();
+        }
 
-            if (_message != null && !Equals(_message, labelMessage.Text))
-                labelMessage.Text = _message + (_cancellationTokenSource.IsCancellationRequested ? _cancelMessage : string.Empty);
+        private void UpdateLabelMessage()
+        {
+            if (_message == null)
+            {
+                return;
+            }
+
+            string newMessage = _message +
+                                (_cancellationTokenSource.IsCancellationRequested ? _cancelMessage : string.Empty);
+            if (Equals(newMessage, labelMessage.Text))
+            {
+                return;
+            }
+
+            labelMessage.Text = newMessage;
+            int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight, 0);
+            int newHeight = _originalFormHeight + Math.Min(formGrowth, MAX_HEIGHT);
+            if (newHeight > Height)
+            {
+                Height = _originalFormHeight + formGrowth;
+            }
         }
 
         protected virtual void UpdateTaskbarProgress(TaskbarProgress.TaskbarStates state, int? percentComplete)

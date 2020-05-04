@@ -20,6 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
+using System.Security;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -46,9 +50,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private int _nextRetry;
         private ImportResultsRetryCountdownDlg _retryDlg;
 
+        private Dictionary<MsDataFileUri, FileProgressControl> _fileProgressControls =
+            new Dictionary<MsDataFileUri, FileProgressControl>();
+
         private const int RETRY_INTERVAL = 10;
         private const int RETRY_COUNTDOWN = 30;
-
         //private static readonly Log LOG = new Log<AllChromatogramsGraph>();
 
         public AllChromatogramsGraph()
@@ -99,6 +105,63 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             graphChromatograms.Finish();
         }
+
+        private bool _inCreateHandle;
+        /// <summary>
+        /// Override CreateHandle in order to try to track down intermittent test failures.
+        /// "HandleProcessCorruptedStateExceptions" just in case a type of exception is getting thrown
+        /// that cannot be caught by ordinary C# code.
+        /// TODO(nicksh): Remove this override once the intermittent failure is figured out
+        /// </summary>
+        [HandleProcessCorruptedStateExceptions]
+        [SecurityCritical]
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        protected override void CreateHandle()
+        {
+            Assume.IsFalse(_inCreateHandle);
+            if (Program.FunctionalTest && Program.MainWindow != null && Program.MainWindow.InvokeRequired)
+            {
+                throw new ApplicationException(@"AllChromatogramsGraph.CreateHandle called on wrong thread");
+            }
+
+            try
+            {
+                _inCreateHandle = true;
+                base.CreateHandle();
+            }
+            catch (Exception e)
+            {
+                Console.Out.WriteLine(@"Exception in AllChromatogramsGraph CreateHandle {0}", e);
+                throw new Exception(@"Exception in AllChromatogramsGraph", e);
+            }
+            finally
+            {
+                _inCreateHandle = false;
+            }
+        }
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// Also, check "_inCreateHandle" in the hopes of tracking down intermittent test failures.
+        /// TODO(nicksh): Move this function back to AllChromatogramsGraph.Designer.cs once the
+        /// test failures are figured out.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        protected override void Dispose(bool disposing)
+        {
+            if (_inCreateHandle)
+            {
+                Console.Out.WriteLine(@"AllChromatogramsGraph _inCreateHandle is {0}", _inCreateHandle);
+            }
+
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
 
         private void ElapsedTimer_Tick(object sender, EventArgs e)
         {
@@ -434,8 +497,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void AddProgressControls(MultiProgressStatus status)
         {
+            // Nothing to do if everything is already covered
+            if (status.ProgressList.All(s => FindProgressControl(s.FilePath) != null))
+                return;
+
             // Match each file status with a progress control.
             bool first = true;
+            var width = flowFileStatus.Width - 2 -
+                        (flowFileStatus.VerticalScroll.Visible
+                            ? SystemInformation.VerticalScrollBarWidth
+                            : 0);
+            List<FileProgressControl> controlsToAdd = new List<FileProgressControl>();
             foreach (var loadingStatus in status.ProgressList)
             {
                 var filePath = loadingStatus.FilePath;
@@ -446,7 +518,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Create a progress control for new file.
                 progressControl = new FileProgressControl
                 {
-                    Number = flowFileStatus.Controls.Count + 1,
+                    Number = flowFileStatus.Controls.Count + controlsToAdd.Count + 1,
+                    Width = width,
+                    Selected = first,
+                    BackColor = SystemColors.Control,
                     FilePath = filePath
                 };
                 progressControl.SetToolTip(toolTip1, filePath.GetFilePath());
@@ -457,41 +532,27 @@ namespace pwiz.Skyline.Controls.Graphs
                 progressControl.Cancel += (sender, args) => Cancel(thisLoadingStatus);
                 progressControl.ShowGraph += (sender, args) => ShowGraph();
                 progressControl.ShowLog += (sender, args) => ShowLog();
-                flowFileStatus.Controls.Add(progressControl);
-                progressControl.BackColor = SystemColors.Control;
-                
-                if (first)
-                {
-                    first = false;
-                    progressControl.Selected = true;
-                }
+                controlsToAdd.Add(progressControl);
+                _fileProgressControls.Add(filePath.GetLocation(), progressControl);
+                first = false;
             }
 
-            foreach (FileProgressControl progressControl in flowFileStatus.Controls)
-            {
-                progressControl.Width = flowFileStatus.Width - 2 -
-                                        (flowFileStatus.VerticalScroll.Visible
-                                            ? SystemInformation.VerticalScrollBarWidth
-                                            : 0);
-            }
+            flowFileStatus.Controls.AddRange(controlsToAdd.ToArray());
         }
 
         private void CancelMissingFiles(MultiProgressStatus status)
         {
+            HashSet<MsDataFileUri> filesWithStatus = null;
             foreach (FileProgressControl progressControl in flowFileStatus.Controls)
             {
                 if (!progressControl.IsComplete && !progressControl.IsCanceled)
                 {
-                    bool found = false;
-                    foreach (var loadingStatus in status.ProgressList)
+                    if (filesWithStatus == null)
                     {
-                        if (progressControl.FilePath.Equals(loadingStatus.FilePath))
-                        {
-                            found = true;
-                            break;
-                        }
+                        filesWithStatus = new HashSet<MsDataFileUri>(status.ProgressList
+                            .Select(loadingStatus => loadingStatus.FilePath));
                     }
-                    if (!found)
+                    if (!filesWithStatus.Contains(progressControl.FilePath))
                         progressControl.IsCanceled = true;
                 }
             }
@@ -499,12 +560,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private FileProgressControl FindProgressControl(MsDataFileUri filePath)
         {
-            foreach (FileProgressControl fileProgressControl in flowFileStatus.Controls)
-            {
-                if (fileProgressControl.FilePath.Equals(filePath))
-                    return fileProgressControl;
-            }
-            return null;
+            FileProgressControl fileProgressControl;
+            _fileProgressControls.TryGetValue(filePath.GetLocation(), out fileProgressControl);
+            return fileProgressControl;
         }
 
         private void Retry(ChromatogramLoadingStatus status)

@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="_add_library_name" xml:space="preserve">
-    <value>–add-library-path操作でスペクトルライブラリに付与する名前です。</value>
+    <value>-–add-library-path操作でスペクトルライブラリに付与する名前です。</value>
   </data>
   <data name="_add_library_path" xml:space="preserve">
     <value>開いているドキュメントに追加するようスペクトルライブラリを指定します。</value>
@@ -139,7 +139,7 @@
     <value>プロダクトイオンクロマトグラムをエクスポートします。--chromatogram-file引数が必要です。</value>
   </data>
   <data name="_chromatogram_tics" xml:space="preserve">
-    <value>総イオン電流クロマトグラムをエクスポートします。--chromatogram-file引数が必要です。</value>
+    <value>全イオン電流クロマトグラムをエクスポートします。--chromatogram-file引数が必要です。</value>
   </data>
   <data name="_decoys_add" xml:space="preserve">
     <value>mProphetを用いたモデル生成を再統合するテンプレートドキュメントにデコイを追加します。（デコイ生成法はオプションで、デフォルトは「反転」です。）</value>
@@ -157,13 +157,13 @@
     <value>メソッド作成時にタンパク質の境界を無視します。</value>
   </data>
   <data name="_exp_isolationlist_instrument" xml:space="preserve">
-    <value>単離リストをエクスポートします。このオプションは単離リストのエクスポートに必要で、デフォルトはありません。単離リストとトランジションリストまたはメソッドを同時にエクスポートできないので、このオプションは–exp-translist-instrumentまたは–exp-method-instrumentとは併用できません。</value>
+    <value>単離リストをエクスポートします。このオプションは単離リストのエクスポートに必要で、デフォルトはありません。単離リストとトランジションリストまたはメソッドを同時にエクスポートできないので、このオプションは-–exp-translist-instrumentまたは-–exp-method-instrumentとは併用できません。</value>
   </data>
   <data name="_exp_max_trans" xml:space="preserve">
-    <value>エクスポート方法「タンパク質」と「バケット」のインジェクション毎の最大トランジション数、またはスケジュールメソッドに対する最大同時トランジションの数です。</value>
+    <value>エクスポート方法「タンパク質」と「バケット」のインジェクション毎の最大トランジション数、またはスケジュールメソッドに対する最大同時トランジションの数です。デフォルトは100です。</value>
   </data>
   <data name="_exp_method_instrument" xml:space="preserve">
-    <value>メソッドをエクスポートします。このオプションはメソッドのエクスポートに必要で、デフォルトはありません。メソッドと単離リスト/トランジションリストを同時にエクスポートできないので、このオプションは–exp-isolationlist-instrumentまたは--exp-translist-instrumentとは併用できません。</value>
+    <value>メソッドをエクスポートします。このオプションはメソッドのエクスポートに必要で、デフォルトはありません。メソッドと単離リスト/トランジションリストを同時にエクスポートできないので、このオプションは-–exp-isolationlist-instrumentまたは--exp-translist-instrumentとは併用できません。</value>
   </data>
   <data name="_exp_method_type" xml:space="preserve">
     <value>標準メソッド、スケジュールメソッドかトリガーメソッドを設定します。デフォルトは「標準」です。</value>
@@ -172,22 +172,22 @@
     <value>最適な衝突エネルギーまたはデクラスタリングポテンシャルを見つけるために、追加のトランジションを含むメソッドをエクスポートします。</value>
   </data>
   <data name="_exp_polarity" xml:space="preserve">
-    <value>陽と陰イオンモードのトランジション両方のドキュメントのエクスポート動作を制御します。陽または陰イオンモードのみのトランジションの出力を許可するか、各極性に対して別々の出力を作成します。デフォルトはすべてで、単極性ドキュメントでは無視されます。</value>
+    <value>正と負イオンモードのトランジション両方のドキュメントのエクスポート動作を制御します。正または負イオンモードのみのトランジションの出力を許可するか、各極性に対して別々の出力を作成します。デフォルトはすべてで、単極性ドキュメントでは無視されます。</value>
   </data>
   <data name="_exp_primary_count" xml:space="preserve">
-    <value>--Exp-method-type=triggeredでは、プライマリを作成するトランジション数を指定します。</value>
+    <value>--exp-method-type=triggeredでは、プライマリを作成するトランジション数を指定します。</value>
   </data>
   <data name="_exp_scheduling_replicate" xml:space="preserve">
     <value>スケジュールメソッドか、トリガーメソッドを作成する場合のみ、これを使用してください。デフォルトでは、すべての繰り返し測定の平均に基づいてスケジュールしますが、1つの測定を指定する場合、メソッドはその繰り返し測定に基づきスケジュールされます。</value>
   </data>
   <data name="_exp_strategy" xml:space="preserve">
-    <value>メソッドをインジェクションに分ける方法です。デフォルトは「シングル」です。</value>
+    <value>メソッドをインジェクション回数に分ける方法です。デフォルトは「単一」です。</value>
   </data>
   <data name="_exp_template" xml:space="preserve">
     <value>メソッドテンプレートのパスです。お使いの装置によって、これはファイルである場合もあれば、ディレクトリである場合もあります。このオプションはメソッドのエクスポートに必要です。</value>
   </data>
   <data name="_exp_translist_instrument" xml:space="preserve">
-    <value>トランジションリストをエクスポートします。このオプションはトランジションリストのエクスポートに必要で、デフォルトはありません。トランジションリストと単離リストまたはメソッドを同時にエクスポートできないので、このオプションは–exp-isolation-listまたは--exp-method-instrumentとは併用できません。</value>
+    <value>トランジションリストをエクスポートします。このオプションはトランジションリストのエクスポートに必要で、デフォルトはありません。トランジションリストと単離リストまたはメソッドを同時にエクスポートできないので、このオプションは-–exp-isolation-listまたは--exp-method-instrumentとは併用できません。</value>
   </data>
   <data name="_help" xml:space="preserve">
     <value>このテキストを表示します。</value>
@@ -196,13 +196,13 @@
     <value>認識されたトランジションがあれば、そのすべてをトランジションリストかアッセイライブラリからインポートします。その際、エラー行は警告として報告されます。</value>
   </data>
   <data name="_import_all" xml:space="preserve">
-    <value>ドキュメント内にまだ存在しないフォルダ、すべてのファイルまたはサブフォルダからインポートし、--import-naming-patternパラメータも提供されていない場合は、ファイルまたはサブフォルダのベース名でそれぞれを命名します。--import-replicate-nameが提供されている場合、すべてのファイルは1つのマルチインジェクション繰り返し測定に追加されます。</value>
+    <value>ドキュメント内にまだ存在しないすべてのファイルまたはサブフォルダをフォルダからインポートし、--import-naming-patternパラメータが提供されていなければそれぞれをファイルまたはサブフォルダのベース名で命名します。--import-replicate-nameが提供されている場合は、すべてのファイルを1つのマルチインジェクション繰り返し測定に追加します。</value>
   </data>
   <data name="_import_all_files" xml:space="preserve">
-    <value>ドキュメント内にまだ存在しないフォルダ、すべてのファイル（サブフォルダ以外）からインポートし、--import-naming-patternパラメータも提供されていない場合は、ファイルのベース名でそれぞれを命名します。--import-replicate-nameが提供されている場合、すべてのファイルは1つのマルチインジェクション繰り返し測定に追加されます。</value>
+    <value>ドキュメント内にまだ存在しないサブフォルダ以外のすべてのファイルをフォルダからインポートし、--import-naming-patternパラメータが提供されていなければそれぞれをファイルまたはサブフォルダのベース名で命名します。--import-replicate-nameが提供されている場合は、すべてのファイルを1つのマルチインジェクション繰り返し測定に追加します。</value>
   </data>
   <data name="_import_append" xml:space="preserve">
-    <value>指定された繰り返し測定にimport-fileを追加します。該当ドキュメントに指定された名前を持つ繰り返し測定が既にある場合に、意図を確認します。デフォルトではFalseに設定されています。このオプションは–import-fileオプションでのみ機能します。</value>
+    <value>指定された繰り返し測定にimport-fileを追加します。該当ドキュメントに指定された名前を持つ繰り返し測定が既にある場合に、意向を確認します。デフォルトではFalseに設定されています。このオプションは-–import-fileオプションでのみ機能します。</value>
   </data>
   <data name="_import_assay_library" xml:space="preserve">
     <value>iRTと相対プロダクトイオン存在量の列を持つアッセイライブラリのトランジションリストをインポートし、iRTカルキュレータとスペクトルライブラリを作成しピーク選択を高めます。</value>
@@ -226,10 +226,10 @@
     <value>開いているドキュメントに繰り返し測定を添付します。</value>
   </data>
   <data name="_import_lockmass_negative" xml:space="preserve">
-    <value>陰イオンスキャンのWatersのロックマスによる補正m/zです。</value>
+    <value>負イオンスキャンのWatersのロックマスによる補正m/zです。</value>
   </data>
   <data name="_import_lockmass_positive" xml:space="preserve">
-    <value>陽イオンスキャンのWatersのロックマスによる補正m/zです。</value>
+    <value>正イオンスキャンのWatersのロックマスによる補正m/zです。</value>
   </data>
   <data name="_import_lockmass_tolerance" xml:space="preserve">
     <value>Watersのロックマスによる許容誤差m/zです。</value>
@@ -298,7 +298,7 @@
     <value>記録されたすべての出力をファイルに送信します。</value>
   </data>
   <data name="_memstamp" xml:space="preserve">
-    <value>記録中のすべての出力は、管理されている2つのメモリ使用量値と、MBに四捨五入されたプロセスプライベートバイトの後に続きます。</value>
+    <value>記録中のすべての出力は、管理されている2つのメモリ使用量の値と、プロセスプライベートバイト数（四捨五入されたMB単位）の後に続きます。</value>
   </data>
   <data name="_out" xml:space="preserve">
     <value>指定されたファイルに書き込まれること以外は、保存と同じです。</value>
@@ -337,7 +337,7 @@
     <value>保存済みのレポートテンプレートファイルからレポートを実行中のプログラムに追加します。</value>
   </data>
   <data name="_report_conflict_resolution" xml:space="preserve">
-    <value>--report-addを使用する際、レポート名の不一致を解決する方法を、上書きするか不一致をスキップするかのいずれかで指定します。（デフォルトは、不一致のエラーメッセージを出力することです。）</value>
+    <value>--report-addを使用する際、レポート名の重複を解決する方法を、上書きするか重複をスキップするかのいずれかで指定します。（デフォルトは、重複のエラーメッセージを出力することです。）</value>
   </data>
   <data name="_report_file" xml:space="preserve">
     <value>レポートのエクスポート先のパスです。--report-nameが指定されている場合、必要です。</value>
@@ -355,7 +355,7 @@
     <value>どんな変更もファイルに保存します。</value>
   </data>
   <data name="_share_type" xml:space="preserve">
-    <value>--share-zipが指定されている場合、共有するのが「最小限」または「完全」であるアーカイブタイプを特定します。「最小限」がデフォルトで、アーカイブのサイズを、ドキュメント内ターゲットを表すのに必要最小限に減らすようにしており、一方「完全」はすべてのプロジェクトファイルの完全な忠実度を維持します。</value>
+    <value>--share-zipが指定されている場合、共有するのが「最小限」または「完全」であるアーカイブタイプを特定します。「最小限」がデフォルトで、アーカイブのサイズを、ドキュメント内ターゲットを表すのに必要最小限に減らすようにしており、一方「完全」はすべてのプロジェクトファイルの完全な正確さを維持します。</value>
   </data>
   <data name="_share_zip" xml:space="preserve">
     <value>プロジェクト全体（ドキュメント、結果、ライブラリなど）をZIPアーカイブに保存します。デフォルトは最小限のアーカイブです。</value>
@@ -391,7 +391,7 @@
     <value>スペクトルライブラリを追加中</value>
   </data>
   <data name="CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models" xml:space="preserve">
-    <value>詳細ピーク選択モデルと統合</value>
+    <value>高度なピーク選択モデルと再統合</value>
   </data>
   <data name="CommandArgs_GROUP_REPORT_Exporting_reports" xml:space="preserve">
     <value>レポートをエクスポート中</value>
@@ -475,10 +475,10 @@ http://localhost:8080</value>
     <value>ツールを追加するためのオプションのコマンドライン引数で、ツール実行時に使用されます。（ウェブのURLコマンドには適用されません。）</value>
   </data>
   <data name="_tool_command" xml:space="preserve">
-    <value>インストール用ZIPファイルではなく、設定によって追加されるコマンドを実行するウェブページURLのコマンドです。</value>
+    <value>インストール用ZIPファイルではなく、設定によって追加されるコマンドを実行するコマンドまたはウェブページのURLのコマンドです。</value>
   </data>
   <data name="_tool_conflict_resolution" xml:space="preserve">
-    <value>既存のインストールを上書きするか、新しいツールのインストールをスキップするかいずれかにより、ツール名の不一致を解決する方法を指示します。</value>
+    <value>既存のインストールを上書きするか、新しいツールのインストールをスキップするかいずれかにより、ツール名の重複を解決する方法を指示します。</value>
   </data>
   <data name="_tool_ignore_required_packages" xml:space="preserve">
     <value>ZIPファイルからツールをインストールする際に、必要なパッケージを無視します。</value>
@@ -490,23 +490,23 @@ http://localhost:8080</value>
     <value>--batch-commandsの引数の改行区切りリストとしてテキストファイルに、[ツール]メニューにあるすべてのツールをエクスポートします。</value>
   </data>
   <data name="_tool_output_to_immediate_window" xml:space="preserve">
-    <value>ツール出力があれば、ランタイム時に[イミディエイトウィンドウ]にパイプ処理されます。</value>
+    <value>ツール出力があれば、出力はランタイム時に[イミディエイトウィンドウ]に送信されます。</value>
   </data>
   <data name="_tool_program_macro" xml:space="preserve">
     <value>-–tool-program-pathコマンドと使用するプログラムのタイトルとバージョンを指定します。これらのコマンドを併せるのは、$(ProgramPath())マクロをコマンドとして使用するZIPファイルからツールをインポートするためです。詳細は、外部ツール、--tool-program-macro=R,2.15.2
 などのドキュメンテーションを参照してください。</value>
   </data>
   <data name="_tool_program_path" xml:space="preserve">
-    <value>-–toolプログラムマクロのフラグによって指定されたプログラムのタイトルとバージョン用のローカルマシン上で、実行可能ファイルへのパスを指定します。</value>
+    <value>--tool-program-macroのフラグによって指定されたプログラムのタイトルとバージョン用のローカルマシン上で、実行可能ファイルへのパスを指定します。</value>
   </data>
   <data name="_tool_report" xml:space="preserve">
     <value>ツール用の入力レポートとして使用する設定にあるレポートの名前です。</value>
   </data>
   <data name="_tool_zip_conflict_resolution" xml:space="preserve">
-    <value>提供されたZIPファイルが原因するツールの不一致を解決するのに、上書きすべきか並行インストールすべきかを指定します。これは、ツールのバージョン管理とレポート名に関連する不一致向けです。</value>
+    <value>提供されたZIPファイルに起因するツールの重複を解決するのに、上書きすべきか並行インストールすべきかを指定します。これは、ツールのバージョン管理とレポート名に関連する重複向けです。</value>
   </data>
   <data name="_tool_zip_overwrite_annotations" xml:space="preserve">
-    <value>提供されたZIPファイルが原因で不一致となったカスタム注釈が、既存の注釈を上書きすべき（True）かスキップすべき(False)かを指定します。</value>
+    <value>提供されたZIPファイルが原因で重複となったカスタム注釈が、既存の注釈を上書きすべき（True）かスキップすべき(False)かを指定します。</value>
   </data>
   <data name="CommandArgs_GROUP_SETTINGS_Document_Settings" xml:space="preserve">
     <value>ドキュメント設定</value>
@@ -598,7 +598,7 @@ Waters</value>
     <value>トランジション毎のドウェル時間です。このオプションはスケジュールされていないトランジションリストに必要です。</value>
   </data>
   <data name="_exp_run_length" xml:space="preserve">
-    <value>分単位で表したグラジエント全体の実行時間です。このオプションはスケジュールされていない実験に必要です。</value>
+    <value>分単位で表したグラジエント全体の実行時間です。このオプションはスケジュール化されていない実験に必要です。</value>
   </data>
   <data name="_exp_use_s_lens" xml:space="preserve">
     <value>トランジションリストにSレンズの列（デフォルトは50）をさらに追加します。  オプションです。デフォルトはFalseです。</value>
@@ -613,7 +613,7 @@ Waters</value>
     <value>--decoys-addを使用時に、既存のデコイを強制的に破棄します。</value>
   </data>
   <data name="CommandArgs_GROUP_INTERNAL" xml:space="preserve">
-    <value>部外秘</value>
+    <value>内部での使用に限る</value>
   </data>
   <data name="CommandArgs_GROUP_REFINEMENT" xml:space="preserve">
     <value>ターゲットリストを最適化中</value>
@@ -649,8 +649,8 @@ Waters</value>
 </value>
   </data>
   <data name="_refine_remove_repeats" xml:space="preserve">
-    <value>すべての反復ペプチドは削除され、
-最初に記載されたペプチドだけが残ります。
+    <value>すべての重複ペプチドは削除され、
+最初に記載された各ペプチドだけが残ります。
 </value>
   </data>
   <data name="CommandArgs_LABEL_VALUE" xml:space="preserve">
@@ -710,10 +710,9 @@ Waters</value>
 </value>
   </data>
   <data name="_refine_prefer_larger_products" xml:space="preserve">
-    <value>小さく選択性が低いプロダクトイオンと大きいプロダクト
-イオンでピーク面積が同等の場合、
-大きいプロダクトイオンを優先するように修正します。
-</value>
+    <value>小さく選択性が低いイオンが部分的により大きな
+ピーク面積になる場合のみ、
+大きいプロダクトイオンを選択するように修正します。</value>
   </data>
   <data name="_refine_use_best_result" xml:space="preserve">
     <value>最適化値の計算では各ペプチドに対して、最良の繰り返し測定のみ使用します。（分割に使用する）</value>
@@ -729,5 +728,68 @@ Waters</value>
   </data>
   <data name="_tran_product_ion_types" xml:space="preserve">
     <value>プロダクトイオンのトランジションを生成するペプチド断片で予想される、プロダクトイオンタイプのカンマ区切りのリストです。開いているドキュメント用にトランジションフィルタ設定を変更します。</value>
+  </data>
+  <data name="_refine_max_precursor_only" xml:space="preserve">
+    <value>最大ピーク面積を持つプリカーサーの荷電状態のみが保持されます。</value>
+  </data>
+  <data name="_refine_cv_remove_above_cutoff" xml:space="preserve">
+    <value>カットオフを超えるピーク面積CVを持つすべてのターゲットプリカーサーが削除されます。</value>
+  </data>
+  <data name="_refine_cv_global_normalize" xml:space="preserve">
+    <value>CVの計算に使用される面積が指定通りに正規化されます（デフォルトは正規化しない）。</value>
+  </data>
+  <data name="_refine_cv_reference_normalize" xml:space="preserve">
+    <value>CVの計算で使用される面積が「heavy」などのリファレンスタイプに正規化されます。</value>
+  </data>
+  <data name="_refine_qvalue_cutoff" xml:space="preserve">
+    <value>カットオフを超える最大検出q値を持つすべてのターゲットプリカーサーが削除されます。 --refine-minimum-detectionsを用いた場合、少なくとも指定された数の繰り返し測定がカットオフより下の検出q値を持つはずです。</value>
+  </data>
+  <data name="_refine_minimum_detections" xml:space="preserve">
+    <value>検出q値が--refine-qvalue-cutoff より下で、指定した数の繰り返し測定に満たないすべてのターゲットプリカーサーが削除されます。</value>
+  </data>
+  <data name="_import_filename_pattern" xml:space="preserve">
+    <value>インポート対象を選択するためファイル名に適用される正規表現です。</value>
+  </data>
+  <data name="_import_samplename_pattern" xml:space="preserve">
+    <value>インポート対象を選択するために試料名（multi-injection .wiffファイルなど）に適用される正規表現です。</value>
+  </data>
+  <data name="_exp_order_by_mz" xml:space="preserve">
+    <value>最適化された四重極スイッチングのためにエクスポートされたメソッドをm/zで昇順に並べます（プリカーサーm/z、次に適用される場合はプロダクトm/z）。</value>
+  </data>
+  <data name="_tran_predict_ce" xml:space="preserve">
+    <value>トランジション設定衝突エネルギーの予測設定を以前設定したオプションの1つに変更します。</value>
+  </data>
+  <data name="_tran_predict_cov" xml:space="preserve">
+    <value>トランジション設定補償電圧の予測設定を以前に定義したオプションの1つに変更します。</value>
+  </data>
+  <data name="_tran_predict_dp" xml:space="preserve">
+    <value>トランジション設定デクラスタリングポテンシャルの予測設定を以前に定義したオプションの1つに変更します。</value>
+  </data>
+  <data name="_tran_predict_optdb" xml:space="preserve">
+    <value>装置パラメータの予測に使用するトランジション設定最適化ライブラリを以前に定義したオプションの1つに変更します。</value>
+  </data>
+  <data name="_version" xml:space="preserve">
+    <value>実行中のインストールのバージョン情報が表示されます</value>
+  </data>
+  <data name="_save_settings" xml:space="preserve">
+    <value>グローバル環境の設定変更が（追加されたレポート、ライブラリ、酵素など）がプログラム設定ファイルに保存されます。</value>
+  </data>
+  <data name="_refine_cv_transitions" xml:space="preserve">
+    <value>CV最適化のためにピーク面積を合計し、CVの計算に使用されるトランジションを指定します。（すべてまたは単一の最良トランジションのいずれか）</value>
+  </data>
+  <data name="_refine_cv_transitions_count" xml:space="preserve">
+    <value>CVの最適化のためにピーク面積を合計してCVの計算に使用するライブラリトランジションランク（プリカーサーでは同位体、フラグメントではライブラリ）によって選択されるトランジション数を指定します。</value>
+  </data>
+  <data name="_refine_cv_ms_level" xml:space="preserve">
+    <value>CVの計算で使用されるMSレベルです。デフォルトは、通常PRMおよびDIAのようなメソッドのプリカーサーより低いCVを持つ「プロダクト」です。</value>
+  </data>
+  <data name="_reintegrate_model_type" xml:space="preserve">
+    <value>zスコアおよびq値を生成するためにトレーニングするピークスコアモデルのタイプです。（デフォルトはmProphet）Skyline-デフォルトのSkylineモデルの係数を単純にスケーリングし、デコイからユニット正規分布を推定します。SkylineML-mProphet機械学習アルゴリズムを使用して、フィーチャースコアのデフォルトセットのみを使用してモデルをトレーニングします。</value>
+  </data>
+  <data name="CommandArgs_NUM_LIST_VALUE" xml:space="preserve">
+    <value>&lt;番号リスト&gt;</value>
+  </data>
+  <data name="_ims_library_res" xml:space="preserve">
+    <value>スペクトルライブラリからイオン移動度付近の値をフィルタリングするために使用するイオン移動度次元の分解能です。</value>
   </data>
 </root>

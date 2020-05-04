@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="_add_library_name" xml:space="preserve">
-    <value>在“-添加-库-路径”操作中提供给谱图库的名称。</value>
+    <value>在“-–add-library-path”操作中提供给谱图库的名称。</value>
   </data>
   <data name="_add_library_path" xml:space="preserve">
     <value>指定要添加到打开文档中的谱图库。</value>
@@ -127,19 +127,19 @@
     <value>按照“SkylineRunner/Cmd”输入的方式处理每一行，逐行运行文件。用于自动执行多个命令。 打开的 Skyline 文件在所有命令中保持活动状态。</value>
   </data>
   <data name="_chromatogram_base_peaks" xml:space="preserve">
-    <value>导出基峰色谱图。需要“--色谱图-文件”参数。</value>
+    <value>导出基峰色谱图。需要“--chromatogram-file”参数。</value>
   </data>
   <data name="_chromatogram_file" xml:space="preserve">
     <value>以制表符分隔的文件的路径，用于导出色谱图。默认为导出母离子和子离子。</value>
   </data>
   <data name="_chromatogram_precursors" xml:space="preserve">
-    <value>导出母离子色谱图。需要“--色谱图-文件”参数。</value>
+    <value>导出母离子色谱图。需要“--chromatogram-file”参数。</value>
   </data>
   <data name="_chromatogram_products" xml:space="preserve">
-    <value>导出子离子色谱图。需要“--色谱图-文件”参数。</value>
+    <value>导出子离子色谱图。需要“--chromatogram-file”参数。</value>
   </data>
   <data name="_chromatogram_tics" xml:space="preserve">
-    <value>输出总离子流色谱图。需要“--色谱图-文件”参数。</value>
+    <value>输出总离子流色谱图。需要“--chromatogram-file”参数。</value>
   </data>
   <data name="_decoys_add" xml:space="preserve">
     <value>将诱饵添加到模板文档中，以便使用 mProphet 重新整合模型。（诱饵生成方法是可选的，默认为“反向”）</value>
@@ -157,13 +157,13 @@
     <value>在创建方法时忽略蛋白质边界。</value>
   </data>
   <data name="_exp_isolationlist_instrument" xml:space="preserve">
-    <value>导出隔离列表。导出隔离列表时必须选择此选项，并且没有默认值。此选项不能与“-导出-离子对列表-仪器”或“-导出-方法-仪器”参数一起使用，因为您无法同时导出隔离列表和离子对列表或方法。</value>
+    <value>导出隔离列表。导出隔离列表时必须选择此选项，并且没有默认值。此选项不能与“-–exp-translist-instrument”或“-–exp-method-instrument”参数一起使用，因为您无法同时导出隔离列表和离子对列表或方法。</value>
   </data>
   <data name="_exp_max_trans" xml:space="preserve">
-    <value>导出策略“蛋白质”和“存储桶”的每次注射的最大离子对数目，或预定方法的最大同时离子对数目。默认为 100。</value>
+    <value>导出策略“蛋白质”和“存储桶”的每次进样的最大离子对数目，或预定方法的最大同时离子对数目。默认为 100。</value>
   </data>
   <data name="_exp_method_instrument" xml:space="preserve">
-    <value>导出方法。导出方法时必须选择此选项，并且没有默认值。此选项不能与“-导出-隔离列表-仪器”或“-导出-离子对列表-仪器”参数一起使用，因为您无法同时导出方法和隔离/离子对列表。</value>
+    <value>导出方法。导出方法时必须选择此选项，并且没有默认值。此选项不能与“--exp-isolationlist-instrument”或“--exp-translist-instrument”参数一起使用，因为您无法同时导出方法和隔离/离子对列表。</value>
   </data>
   <data name="_exp_method_type" xml:space="preserve">
     <value>设置标准、预定或触发方法。默认为“标准”。</value>
@@ -175,19 +175,19 @@
     <value>控制同时含有阳性和阴性离子对的文档的导出行为。允许输出仅阳性或仅阴性离子对，或为每个极性创建单独的输出。默认为全部，并且对于单极性文档，其将被忽略。</value>
   </data>
   <data name="_exp_primary_count" xml:space="preserve">
-    <value>对于“--导出-方法-类型 = 已触发”，指定要设为主要离子对的离子对数目。</value>
+    <value>对于“--exp-method-type=triggered”，指定要设为主要离子对的离子对数目。</value>
   </data>
   <data name="_exp_scheduling_replicate" xml:space="preserve">
     <value>仅在创建预定或触发方法时使用此选项。默认是根据所有重复测定的平均值预定时间，但如果指定了一个重复测定，则将根据该重复测定来预定该方法时间。</value>
   </data>
   <data name="_exp_strategy" xml:space="preserve">
-    <value>将方法划分为注射所用的策略。默认为“单个”。</value>
+    <value>将单个方法划分为多次进样所用的策略。默认为“单个”。默认为“单个”。</value>
   </data>
   <data name="_exp_template" xml:space="preserve">
     <value>方法模板的路径。可以是文件或目录，具体取决于您的仪器。导出方法时必须选择此选项。</value>
   </data>
   <data name="_exp_translist_instrument" xml:space="preserve">
-    <value>导出离子对列表。导出离子对列表时必须选择此选项，并且没有默认值。此选项不能与“-导出-隔离-列表”或“-导出-方法-仪器”参数一起使用，因为您无法同时导出离子对列表和隔离列表或方法。</value>
+    <value>导出离子对列表。导出离子对列表时必须选择此选项，并且没有默认值。此选项不能与“--exp-isolation-list”或“--exp-method-instrument”参数一起使用，因为您无法同时导出离子对列表和隔离列表或方法。</value>
   </data>
   <data name="_help" xml:space="preserve">
     <value>显示此文本。</value>
@@ -196,13 +196,13 @@
     <value>当存在时，从离子对列表或分析库导入所有已识别的离子对，并将错误行报告为警告。</value>
   </data>
   <data name="_import_all" xml:space="preserve">
-    <value>从文件夹中导入所有文件以及文档中尚未存在的子文件夹，并使用文件或子文件夹的基本名称进行命名，除非还提供了“--导入-命名-模式”参数。如果提供了“--导入-重复测定-名称”参数，则会将所有文件添加到一个多次注射重复测定中。</value>
+    <value>从文件夹中导入所有文件以及文档中尚未存在的子文件夹，并使用文件或子文件夹的基本名称进行命名，除非还提供了“--import-naming-pattern”参数。如果提供了“--import-replicate-name”参数，则会将所有文件添加到一个多次进样重复测定中。</value>
   </data>
   <data name="_import_all_files" xml:space="preserve">
-    <value>从文件夹中导入所有文件，但不包含文档中尚未存在的子文件夹，并使用文件的基本名称进行命名，除非还提供了“--导入-命名-模式”参数。如果提供了“--导入-重复测定-名称”参数，则会将所有文件添加到一个多次注射重复测定中。</value>
+    <value>从文件夹中导入所有文件，但不包含文档中尚未存在的子文件夹，并使用文件的基本名称进行命名，除非还提供了“--import-naming-pattern”参数。如果提供了“--import-replicate-name”参数，则会将所有文件添加到一个多次进样重复测定中。</value>
   </data>
   <data name="_import_append" xml:space="preserve">
-    <value>将导入文件附加到给定的重复测定。这是意图检查，以防文档已经具有给定名称的重复测定。默认情况下，此值设置为“false”。此选项仅适用于“-导入-文件”选项。</value>
+    <value>将导入文件附加到给定的重复测定。这是意图检查，以防文档已经具有给定名称的重复测定。默认情况下，此值设置为“false”。此选项仅适用于“-–import-file”选项。</value>
   </data>
   <data name="_import_assay_library" xml:space="preserve">
     <value>导入分析库离子对列表，列表中应包含 iRT 和相对子离子丰度列，以创建 iRT 计算器和谱图库，从而增强峰值拣选。</value>
@@ -214,16 +214,16 @@
     <value>将另一个 Skyline 文档文件导入至打开的文档。对于多个文件，可以多次指定。</value>
   </data>
   <data name="_import_document_merge_peptides" xml:space="preserve">
-    <value>如果使用匹配肽，则合并，否则不合并。</value>
+    <value>如果使用匹配肽段，匹配的肽段将合并，否则不合并。</value>
   </data>
   <data name="_import_document_results" xml:space="preserve">
     <value>确定如何处理导入文档中的任何结果。默认是删除它们。</value>
   </data>
   <data name="_import_fasta" xml:space="preserve">
-    <value>将 FASTA 文件导入至打开的文档中。</value>
+    <value>将 FASTA 文件导入到打开文档中。</value>
   </data>
   <data name="_import_file" xml:space="preserve">
-    <value>将重复测定附加到打开文档。</value>
+    <value>将重复测定附加到打开文档中。</value>
   </data>
   <data name="_import_lockmass_negative" xml:space="preserve">
     <value>用于负离子扫描的 Waters Lockmass 修正质荷比。</value>
@@ -235,7 +235,7 @@
     <value>Waters Lockmass 修正耐受性质荷比。</value>
   </data>
   <data name="_import_naming_pattern" xml:space="preserve">
-    <value>正则表达式，第一组将用于在“--导入-全部”操作中命名重复测定（例如，用“[^_]_(.*)”表示第一个下划线后的所有内容）。</value>
+    <value>常规表达式，其中第一组将用于在“--import-all”操作中命名重复测定（例如，用“[^_]_(.*)”表示第一个下划线后的所有内容）。</value>
   </data>
   <data name="_import_no_join" xml:space="preserve">
     <value>将结果文件导入至单个 .skyd 文件，而不将它们加入到主文档 .skyd 文件中。这对于分布式处理非常有用，例如在 HPC 群集上。</value>
@@ -250,19 +250,19 @@
     <value>将为单个文件导入运行的子进程数量，之后主进程将汇集各个文件的结果。在适当的条件下，这可以在 24 核 NUMA 服务器上带来 10 倍的性能提升，而在 i7 处理器上也可以带来 3-4 倍的性能提升。务必使用您的系统进行测试。</value>
   </data>
   <data name="_import_replicate_name" xml:space="preserve">
-    <value>在“-导入-文件”操作中提供给新重复测定的名称。</value>
+    <value>在“-–import-file”操作中提供给新重复测定的名称。</value>
   </data>
   <data name="_import_search_add_mods" xml:space="preserve">
-    <value>将肽搜索结果文件中的所有修改添加到打开文档中。</value>
+    <value>将肽段搜索结果文件中的所有修改添加到打开文档中。</value>
   </data>
   <data name="_import_search_cutoff_score" xml:space="preserve">
-    <value>定义要在从肽搜索结果文件构建谱图库时使用的阈值分数（介于 0 和 1 之间），其中 1 表示最高置信度匹配，0 表示所有结果。[默认 0.95]</value>
+    <value>定义要在从肽段搜索结果文件构建谱图库时使用的截止值分数（介于 0 和 1 之间），其中 1 表示最高置信度匹配，0 表示所有结果。[默认值为 0.95]</value>
   </data>
   <data name="_import_search_file" xml:space="preserve">
-    <value>将肽搜索结果文件导入至打开的文档中，以构建特定于文档的谱图库。对于多个文件，可以多次指定。使用“-导入-fasta”参数将匹配的肽添加为目标。</value>
+    <value>将肽段搜索结果文件导入至打开的文档中，以构建特定于文档的谱图库。对于多个文件，可以多次指定。使用“-–import-fasta”参数将匹配的肽段添加为目标。</value>
   </data>
   <data name="_import_search_include_ambiguous" xml:space="preserve">
-    <value>在构建谱图库时，防止具有多个模糊肽匹配的谱图被丢弃。</value>
+    <value>在构建谱图库时，防止具有多个模糊肽段匹配的谱图被丢弃。</value>
   </data>
   <data name="_import_search_prefer_embedded_spectra" xml:space="preserve">
     <value>对于 MaxQuant msms.txt 文件，应强制使用文件中的谱图而不是打开原始谱图的原始数据文件。MaxQuant msms.txt 文件包含电荷状态解卷积谱图，可能不适合目标选择。</value>
@@ -271,7 +271,7 @@
     <value>将使用主进程中的线程并行导入的文件数量（相当于用户界面中的“同时导入的文件”），之后各个文件的结果将被汇集。在适当的条件下，这可以带来 2-4 倍的性能提升。务必使用您的系统进行测试。</value>
   </data>
   <data name="_import_transition_list" xml:space="preserve">
-    <value>导入包含 Q1、Q3 和肽序列的简单离子对列表。 还支持 CSV 格式、并具有合适标题的分子离子对列表。</value>
+    <value>导入包含 Q1、Q3 和肽段序列的简单离子对列表。 还支持 CSV 格式并具有合适标题的分子离子对列表。</value>
   </data>
   <data name="_import_warn_on_failure" xml:space="preserve">
     <value>如果导入文件失败并显示错误，则消息将作为警告发出，重复测定将被删除，并且导入将继续完成。</value>
@@ -283,13 +283,13 @@
     <value>在分析库导入期间创建的 iRT 计算器的名称。 （可选）默认名称是文档基名。</value>
   </data>
   <data name="_irt_database_path" xml:space="preserve">
-    <value>现有 iRT 计算器（.irtdb 文件）的路径，用于导入的分析库。或者，如果使用“-irt-标准-组-名称”或“-irt-标准-文件”参数，则这是创建的 .irtdb 文件的输出路径。 （可选）默认的 iRT 计算器路径是“path/to/document.irtdb”</value>
+    <value>现有 iRT 计算器（.irtdb 文件）的路径，用于导入的分析库。或者，如果使用“-–irt-standards-group-name”或“-–irt-standards-file”参数，则这是创建的 .irtdb 文件的输出路径。（可选）默认的 iRT 计算器路径是“path/to/document.irtdb”</value>
   </data>
   <data name="_irt_standards_file" xml:space="preserve">
     <value>包含 iRT 标准的单独分析库的路径将被应用于导入的分析库。 （可选）</value>
   </data>
   <data name="_irt_standards_group_name" xml:space="preserve">
-    <value>包含了导入的分析库中的 iRT 标准的蛋白质或肽列表的名称。 （可选）</value>
+    <value>包含了导入的分析库中的 iRT 标准的蛋白质或肽段列表的名称。（可选）</value>
   </data>
   <data name="_keep_empty_proteins" xml:space="preserve">
     <value>在导入 FASTA 文件后，在打开的文档中保留任何空蛋白质。</value>
@@ -304,7 +304,7 @@
     <value>与“保存”相同，但会写入指定的文件</value>
   </data>
   <data name="_reintegrate_create_model" xml:space="preserve">
-    <value>此选项将导致使用可在文档中找到的结果的所有可用得分，通过 mProphet 算法来创建新模型。（需要“--重新整合-模型-名称”）</value>
+    <value>此选项将通过 mProphet 算法以及可在文档中找到的结果的所有可用得分来创建新模型。（需要“--reintegrate-model-name”）</value>
   </data>
   <data name="_reintegrate_exclude_feature" xml:space="preserve">
     <value>用于从模型中按名称排除特定特征得分。名称可以在用户界面中找到。可以多次使用此参数来排除多个特征。</value>
@@ -319,13 +319,13 @@
     <value>可用于控制在模型创建期间执行的迭代次数。默认情况下，允许最多 10 个，并且当新模型产生较少的检测时迭代停止。</value>
   </data>
   <data name="_reintegrate_model_name" xml:space="preserve">
-    <value>用于重新整合操作的评分模型的名称。模型可以是预定义的（例如，使用“编辑&gt;调整&gt;重新整合”表单），也可以在此操作期间使用“--重新整合-创建-模型”来自动创建。</value>
+    <value>用于重新整合操作的评分模型的名称。模型可以是预定义的（例如，使用“编辑&gt;细化&gt;重新整合”表单），也可以在此操作期间使用“--reintegrate-create-model”来自动创建。</value>
   </data>
   <data name="_reintegrate_model_second_best" xml:space="preserve">
     <value>在重新整合期间强制使用次佳峰值。默认是仅使用诱饵。</value>
   </data>
   <data name="_reintegrate_overwrite_peaks" xml:space="preserve">
-    <value>现有的手动整合的峰将被重新整合模型选择的峰覆盖。 （需要“--重新整合-模型-名称”）</value>
+    <value>现有的手动整合的峰将被重新整合模型选择的峰覆盖。（需要“--reintegrate-model-name”）</value>
   </data>
   <data name="_remove_all" xml:space="preserve">
     <value>从打开文档中删除所有结果。</value>
@@ -337,13 +337,13 @@
     <value>将保存的报告模板文件中的报告添加到正在运行的程序中。</value>
   </data>
   <data name="_report_conflict_resolution" xml:space="preserve">
-    <value>指定在使用“--报告-添加”参数时，如何通过覆盖或跳过报告名称冲突来解决报告名称冲突问题（默认情况下是为冲突输出错误消息）</value>
+    <value>指定在使用“--report-add”参数时，如何通过覆盖或跳过报告名称冲突来解决报告名称冲突问题（默认情况下是为冲突输出错误消息）</value>
   </data>
   <data name="_report_file" xml:space="preserve">
-    <value>导出报告的路径。如果指定了“--报告-名称”，则为必需。</value>
+    <value>导出报告的路径。如果指定了“--report-name”，则为必需。</value>
   </data>
   <data name="_report_format" xml:space="preserve">
-    <value>CSV 用于以逗号分隔的报告（或以分号分隔，取决于您的本地化方式） ，TSV 用于以制表符分隔的报告[默认为 CSV]</value>
+    <value>CSV 用于以逗号分隔的报告（或以分号分隔，取决于您的本地化方式）或者TSV 用于以制表符分隔的报告[默认为 CSV]</value>
   </data>
   <data name="_report_invariant" xml:space="preserve">
     <value>使用“不变量”语言设置导出报告，使用“英语（美国）”数字格式和不带空格的标题文本，适合与 R 统计编程环境一起使用。</value>
@@ -355,7 +355,7 @@
     <value>保存对文件的任何更改</value>
   </data>
   <data name="_share_type" xml:space="preserve">
-    <value>指定当指定了“--共享-zip”时要共享的档案类型：“最小”或“完整”。“最小”是默认尝试将档案的大小减小到代表文档中目标所需的最小值，而“完整”则会保留所有项目文件的完全保真度。</value>
+    <value>指定当指定了“--share-zip”时要共享的档案类型：“最小”或“完整”。“最小”是默认尝试将档案的大小减小到代表文档中目标所需的最小值，而“完整”则会保留所有项目文件的完全保真度。</value>
   </data>
   <data name="_share_zip" xml:space="preserve">
     <value>将整个项目（文档、结果、库等）保存到 ZIP 档案。默认为最小档案。</value>
@@ -376,7 +376,7 @@
     <value>正在导入结果重复测定</value>
   </data>
   <data name="CommandArgs_GROUP_REMOVE_Removing_results_replicates" xml:space="preserve">
-    <value>删除结果重复测定</value>
+    <value>正在删除结果重复测定</value>
   </data>
   <data name="CommandArgs_GROUP_IMPORT_DOC_Importing_other_Skyline_documents" xml:space="preserve">
     <value>正在导入其他 Skyline 文档</value>
@@ -388,7 +388,7 @@
     <value>正在导入离子对列表和分析库</value>
   </data>
   <data name="CommandArgs_GROUP_ADD_LIBRARY_Adding_spectral_libraries" xml:space="preserve">
-    <value>添加谱图库</value>
+    <value>正在添加谱图库</value>
   </data>
   <data name="CommandArgs_GROUP_REINTEGRATE_Reintegrate_with_advanced_peak_picking_models" xml:space="preserve">
     <value>与高级峰值拣选模型重新整合</value>
@@ -397,16 +397,16 @@
     <value>正在导出报告</value>
   </data>
   <data name="CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms" xml:space="preserve">
-    <value>导出色谱图</value>
+    <value>正在导出色谱图</value>
   </data>
   <data name="CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches" xml:space="preserve">
-    <value>正在导入肽搜索</value>
+    <value>正在导入肽段搜索</value>
   </data>
   <data name="CommandArgs_GROUP_LISTS_Exporting_isolation_transition_lists" xml:space="preserve">
-    <value>导出隔离/离子对列表</value>
+    <value>正在导出隔离/离子对列表</value>
   </data>
   <data name="CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods" xml:space="preserve">
-    <value>导出本机仪器方法</value>
+    <value>正在导出本机仪器方法</value>
   </data>
   <data name="CommandArgs_GROUP_EXP_GENERAL_Method_and_transition_list_options" xml:space="preserve">
     <value>方法和离子对列表选项</value>
@@ -424,16 +424,16 @@
     <value>SkylineCmd.exe 是一个更简单的可执行文件，始终安装在 Skyline.exe 旁边。它使用 Skyline.exe 模块作为DLL，提供比 SkylineRunner.exe 更清晰的命令行实现，但您必须知道 SkylineCmd.exe 在磁盘上的位置才能运行它，而在使用网页安装程序的情况下这个位置通常不可知。通常，如果要使用 SkylineCmd.exe，您将使用“Unplugged”安装程序或“Administrator”安装程序（或最近的 Linux 系统版 Wine Docker Container）。“Unplugged”安装程序以 ZIP 文件形式提供，您只需将其解压缩，找到 SkylineCmd.exe 并在原地运行即可。“Administrator”安装程序将 SkylineCmd.exe 放在 C:\Program Files\Skyline 目录下中。</value>
   </data>
   <data name="CommandArgs_Usage_para4" xml:space="preserve">
-    <value>Skyline 命令行界面用于在采集期间自动执行质量控制、时序安排和精细化等任务。 使用 Skyline 命令行界面，您可以打开 Skyline 文档，导入新获取的数据文件，以及导出报告或新方法。与使用完整的图形用户界面相比，您还可以更快地为全蛋白质组 DIA 和 DDA 实验运行大规模色谱图提取和峰值拣选，并且消耗的内存更少。（参见网络研讨会 14：https://skyline.ms/webinar14.url）</value>
+    <value>Skyline 命令行界面用于在采集期间自动执行质量控制、预定和细化等任务。 使用 Skyline 命令行界面，您可以打开 Skyline 文档，导入新获取的数据文件，以及导出报告或新方法。与使用完整的图形用户界面相比，您还可以更快地为全蛋白质组 DIA 和 DDA 实验运行大规模色谱图提取和峰值拣选，并且消耗的内存更少。（参见网络研讨会 14：https://skyline.ms/webinar14.url）</value>
   </data>
   <data name="CommandArgs_Usage_Until_the_section_titled_Settings_Customization_all_other_command_line_arguments_rely_on_the____in__argument_because_they_all_rely_on_having_a_Skyline_document_open_" xml:space="preserve">
-    <value>在出现标题为“设置自定义”的部分之前，所有其他命令行参数都依赖于“--在内”参数，因为它们都依赖于打开 Skyline 文档。</value>
+    <value>在出现标题为“设置自定义”的部分之前，所有其他命令行参数都依赖于“--in”参数，因为它们都依赖于有一个已打开的 Skyline 文档。</value>
   </data>
   <data name="CommandArgs_GROUP_PANORAMA_Publishing_to_Panorama" xml:space="preserve">
-    <value>发布到 Panorama</value>
+    <value>正在发布到 Panorama</value>
   </data>
   <data name="CommandArgs_GROUP_PANORAMA_postamble" xml:space="preserve">
-    <value>如果上述参数与将结果文件导入文档的参数（“--导入-文件或”--导入-全部）一起使用，则只有在将新结果添加到文档中时，才会将 Skyline 文档上传到给定的 Panorama 服务器。</value>
+    <value>如果上述参数与将结果文件导入文档的参数（“--import-file”或“--import-all”）一起使用，则只有在将新结果添加到文档中时，才会将 Skyline 文档上传到给定的 Panorama 服务器。</value>
   </data>
   <data name="_full_scan_precursor_res" xml:space="preserve">
     <value>母离子质量分析器的分辨能力。如果质量分析器是“Centroided”，则该值为 PPM。</value>
@@ -457,7 +457,7 @@
     <value>有权在 Panorama 服务器上发布文件的用户的密码。</value>
   </data>
   <data name="_panorama_server" xml:space="preserve">
-    <value>发布“--在内”文件的目标 Panorama 服务器 URL。如果需要，URL 应包含协议（http 或 https）、主机名和端口。例子：
+    <value>发布“--in”文件的目标 Panorama 服务器 URL。如果需要，URL 应包含协议（http 或 https）、主机名和端口。例子：
 https://panoramaweb.org
 或者
 http://localhost:8080</value>
@@ -487,17 +487,17 @@ http://localhost:8080</value>
     <value>要添加的工具的可选初始目录，在执行该工具时使用。 （不适用于网页 URL 命令）</value>
   </data>
   <data name="_tool_list_export" xml:space="preserve">
-    <value>将“工具”菜单中的所有工具导出为文本文件，作为“--批次-命令”的行分隔参数列表。</value>
+    <value>将“工具”菜单中的所有工具导出为文本文件，作为“--batch-commands”。</value>
   </data>
   <data name="_tool_output_to_immediate_window" xml:space="preserve">
-    <value>当存在时，工具输出在运行时通过管道传送到“即时窗口”。</value>
+    <value>当存在时，工具输出在运行时传送到“即时窗口”。</value>
   </data>
   <data name="_tool_program_macro" xml:space="preserve">
-    <value>指定要与“--工具-程序-路径”命令一起使用的程序标题和版本。这些命令一起用于从 ZIP 文件导入工具，这些文件使用 $(ProgramPath()) 宏作为命令。有关更多信息，请参阅外部工具文档。例如
---工具-程序-宏 = R,2.15.2</value>
+    <value>指定要与“-–tool-program-path”命令一起使用的程序标题和版本。这些命令一起用于从 ZIP 文件导入工具，这些文件使用 $(ProgramPath()) 宏作为命令。有关更多信息，请参阅外部工具文档。例如
+--tool-program-macro=R,2.15.2</value>
   </data>
   <data name="_tool_program_path" xml:space="preserve">
-    <value>为由“--工具-程序-宏”标志指定的程序标题和版本指定在本地计算机上的可执行文件路径。</value>
+    <value>为由“--tool-program-macro”标志指定的程序标题和版本指定在本地计算机上的可执行文件路径。</value>
   </data>
   <data name="_tool_report" xml:space="preserve">
     <value>设置中的报告名称，用作工具的输入报告。</value>
@@ -578,15 +578,15 @@ http://localhost:8080</value>
     <value>适用于</value>
   </data>
   <data name="CommandArgs_ARG_EXP_DWELL_TIME_AppliesTo" xml:space="preserve">
-    <value>安捷伦
+    <value>Agilent
 SCIEX</value>
   </data>
   <data name="CommandArgs_ARG_EXP_Thermo" xml:space="preserve">
-    <value>热</value>
+    <value>Thermo</value>
   </data>
   <data name="CommandArgs_ARG_EXP_RUN_LENGTH_AppliesTo" xml:space="preserve">
     <value>Thermo
-水域</value>
+Waters</value>
   </data>
   <data name="CommandArgs_GROUP_EXP_INSTRUMENT_Vendor_specific_method_and_transition_list_options" xml:space="preserve">
     <value>特定于供应商的方法和离子对列表选项</value>
@@ -595,43 +595,43 @@ SCIEX</value>
     <value>在离子对列表中添加额外的能量斜坡列。 可选。默认为“false”。</value>
   </data>
   <data name="_exp_dwell_time" xml:space="preserve">
-    <value>每个离子对的驻留时间。未预定的离子对列表需要选择此选项。</value>
+    <value>每个离子对的驻留时间。非预定的离子对列表需要选择此选项。</value>
   </data>
   <data name="_exp_run_length" xml:space="preserve">
-    <value>运行整个梯度的时间长度，以分钟表示。未预定的实验需要选择此选项。</value>
+    <value>运行整个梯度的时间长度，以分钟表示。非预定的实验需要选择此选项。</value>
   </data>
   <data name="_exp_use_s_lens" xml:space="preserve">
-    <value>在离子对列表中添加额外的 SLens 列（默认为 50）。 可选。默认为“false”。</value>
+    <value>在离子对列表中添加额外的 SLens 列（默认值为 50）。 可选。默认为“false”。</value>
   </data>
   <data name="_import_annotations" xml:space="preserve">
-    <value>将 CSV 文件中的注释导入至文档中。使用“文件&gt;导出&gt;注释”创建所需格式的示例文件，其中包含将注释与文档元素相关联的路径。</value>
+    <value>将 CSV 文件中的注释导入至文档中。使用“文件&gt;导出&gt;注释”创建所需格式的示例文件，并提供将注释与文档元素相关联的路径。</value>
   </data>
   <data name="CommandArgs_GROUP_DECOYS" xml:space="preserve">
-    <value>添加诱饵肽</value>
+    <value>正在添加诱饵肽段</value>
   </data>
   <data name="_decoys_discard" xml:space="preserve">
-    <value>当使用“--诱饵-添加”时，所有现有的诱饵都将被强制丢弃。</value>
+    <value>当使用“--decoys-add”时，所有现有的诱饵都将被强制丢弃。</value>
   </data>
   <data name="CommandArgs_GROUP_INTERNAL" xml:space="preserve">
     <value>限内部使用</value>
   </data>
   <data name="CommandArgs_GROUP_REFINEMENT" xml:space="preserve">
-    <value>细化目标列表</value>
+    <value>正在细化目标列表</value>
   </data>
   <data name="_refine_add_label_type" xml:space="preserve">
     <value>加回同位素标记类型的母离子。</value>
   </data>
   <data name="_refine_auto_select_peptides" xml:space="preserve">
-    <value>所有蛋白质都将重置，以自动选择它们包含的母离子。</value>
+    <value>所有蛋白质都将重置，以自动选择它们包含的肽段。</value>
   </data>
   <data name="_refine_auto_select_precursors" xml:space="preserve">
-    <value>所有肽都将重置，以自动选择它们包含的母离子。</value>
+    <value>所有肽段都将重置，以自动选择它们包含的母离子。</value>
   </data>
   <data name="_refine_auto_select_transitions" xml:space="preserve">
     <value>所有母离子都将重置，以自动选择它们包含的离子对。</value>
   </data>
   <data name="_refine_label_type" xml:space="preserve">
-    <value>如果还使用了“--调整-添加-标记-类型”，则将删除（默认）或添加指定同位素标记类型的母离子。</value>
+    <value>如果还使用了“--refine-add-label-type”，则将删除（默认）或添加指定同位素标记类型的母离子。</value>
   </data>
   <data name="_refine_min_peptides" xml:space="preserve">
     <value>含有少于此数目肽段的蛋白质将
@@ -645,21 +645,21 @@ SCIEX</value>
     <value>将删除与库匹配不对应的所有目标。</value>
   </data>
   <data name="_refine_remove_duplicates" xml:space="preserve">
-    <value>所有在文件中不是唯一的肽
+    <value>所有在文档中不是唯一的肽段
 将被删除。</value>
   </data>
   <data name="_refine_remove_repeats" xml:space="preserve">
-    <value>将除去所有重复的肽以仅留下
-首次出现任何肽。</value>
+    <value>将删除所有重复的肽段以仅留下
+首次出现的任何肽段。</value>
   </data>
   <data name="CommandArgs_LABEL_VALUE" xml:space="preserve">
-    <value>&lt;label type&gt;</value>
+    <value>&lt;标记类型&gt;</value>
   </data>
   <data name="_refine_max_peak_found_ratio" xml:space="preserve">
     <value>峰值发现率高于此数字的所有元素
 将从文件中删除：
 
-绿色= 1.0
+绿色 = 1.0
 橙色 &amp;gt;= 0.5
 红色 &amp;lt; 0.5</value>
   </data>
@@ -692,33 +692,96 @@ SCIEX</value>
 红色 &amp;lt; 0.5</value>
   </data>
   <data name="_refine_min_time_correlation" xml:space="preserve">
-    <value>前体将从文档中删除
+    <value>母离子将被从文档中删除
 直到具有最佳保留时间计算的线性
 回归相关系数的目标值
 超过此阈值。</value>
   </data>
   <data name="_refine_missing_results" xml:space="preserve">
-    <value>没有测量结果的所有元素都将是
+    <value>没有测量结果的所有元素都将
 被从文档中删除。</value>
   </data>
   <data name="_refine_prefer_larger_products" xml:space="preserve">
-    <value>精细化以选择更大的产物离子
-当较小的，较少选择性的离子仅产生分数
-更大的峰面积。</value>
+    <value>当较小的、选择性较低的离子仅产生少量
+更大的峰面积时，导致细化以选择更大的
+产物离子。</value>
   </data>
   <data name="_refine_use_best_result" xml:space="preserve">
-    <value>在细化值计算中仅使用每种肽的最佳重复测定。 （用于分别法）</value>
+    <value>在细化值计算中仅使用每种肽段的最佳重复测定。（用于分段洗脱）</value>
   </data>
   <data name="CommandArgs_GROUP_REFINEMENT_W_RESULTS" xml:space="preserve">
-    <value>根据导入的结果细化目标列表</value>
+    <value>正在根据导入的结果细化目标列表</value>
   </data>
   <data name="_tran_precursor_ion_charges" xml:space="preserve">
-    <value>以逗号分隔的母离子电荷状态列表，应用于肽分子以产生母离子目标。更改打开文档的离子对筛选器设置。</value>
+    <value>以逗号分隔的母离子电荷状态列表，应用于肽段分子以产生母离子目标。更改打开文档的离子对筛选器设置。</value>
   </data>
   <data name="_tran_product_ion_charges" xml:space="preserve">
     <value>以逗号分隔的子离子电荷状态列表，应用于肽片段以产生子离子离子对。更改打开文档的离子对筛选器设置。</value>
   </data>
   <data name="_tran_product_ion_types" xml:space="preserve">
     <value>以逗号分隔的在肽片段中预期存在的子离子类型列表，用于产生子离子离子对。更改打开文档的离子对筛选器设置。</value>
+  </data>
+  <data name="_refine_max_precursor_only" xml:space="preserve">
+    <value>仅保留具有最大峰面积的母离子电荷状态。</value>
+  </data>
+  <data name="_refine_cv_remove_above_cutoff" xml:space="preserve">
+    <value>将删除峰面积 CV 高于截止值的所有目标母离子。</value>
+  </data>
+  <data name="_refine_cv_global_normalize" xml:space="preserve">
+    <value>CV 计算中使用的面积按规定进行标准化。（默认没有标准化）</value>
+  </data>
+  <data name="_refine_cv_reference_normalize" xml:space="preserve">
+    <value>CV 计算中使用的面积被归一化为一种参考类型，如“重型”。</value>
+  </data>
+  <data name="_refine_qvalue_cutoff" xml:space="preserve">
+    <value>将删除最大检测 q 值高于截止值的所有目标母离子。若使用了调整最低检测，则至少指定数量的重复测定必须具有低于截止值的检测 q 值。</value>
+  </data>
+  <data name="_refine_minimum_detections" xml:space="preserve">
+    <value>重复测定少于指定次数且检测 q 值低于调整的 q 截止值的所有目标母离子被删除。</value>
+  </data>
+  <data name="_import_filename_pattern" xml:space="preserve">
+    <value>应用于文件名的正则表达式以便选择要导入的各项。</value>
+  </data>
+  <data name="_import_samplename_pattern" xml:space="preserve">
+    <value>应用于样本名称的正则表达式（以 multi-injection .wiff 文件）以便选择要导入的各项。</value>
+  </data>
+  <data name="_exp_order_by_mz" xml:space="preserve">
+    <value>以升序按照质荷比优化导出方法（母离子质荷比，之后子离子质荷比，若适用）以实现优化的四极转换。</value>
+  </data>
+  <data name="_tran_predict_ce" xml:space="preserve">
+    <value>将离子对设置碰撞能量预测设置更改为之前定义的选项之一。</value>
+  </data>
+  <data name="_tran_predict_cov" xml:space="preserve">
+    <value>将离子对设置补偿电压预测设置更改为之前定义的选项之一。</value>
+  </data>
+  <data name="_tran_predict_dp" xml:space="preserve">
+    <value>将离子对设置去簇电压预测设置更改为之前定义的选项之一。</value>
+  </data>
+  <data name="_tran_predict_optdb" xml:space="preserve">
+    <value>将预测仪器参数中使用的离子对设置最优化库更改为之前定义的选项之一。</value>
+  </data>
+  <data name="_version" xml:space="preserve">
+    <value>发出正在运行的安装的版本信息</value>
+  </data>
+  <data name="_save_settings" xml:space="preserve">
+    <value>让设置更改为全局环境，例如 添加的报告、库、酶等，以保存到程序配置文件中。</value>
+  </data>
+  <data name="_refine_cv_transitions" xml:space="preserve">
+    <value>指定求和峰面积且在 CV 计算中用于 CV 调整的离子对。 （全部或单个最佳离子对）</value>
+  </data>
+  <data name="_refine_cv_transitions_count" xml:space="preserve">
+    <value>指明通过库离子对排名选择的离子对计数（母离子同位素和片段库），其中求和峰面积并在 CV 计算中用于 CV 调整。</value>
+  </data>
+  <data name="_refine_cv_ms_level" xml:space="preserve">
+    <value>CV 计算中所使用的 MS 级别。默认值为“子离子”，在 PRM 和 DIA 等方法中其 CV 值通常低于母离子。</value>
+  </data>
+  <data name="_reintegrate_model_type" xml:space="preserve">
+    <value>峰得分模型类型进行培训以产生 z 得分和 q 值。（默认 mProphet） Skyline - 仅需缩放默认 Skyline 模型的系数，以便预估诱饵单位正态分布。SkylineML - 使用此 mProphet 机器学习算法培训一个仅凭借特征得分的默认设置的模型。</value>
+  </data>
+  <data name="CommandArgs_NUM_LIST_VALUE" xml:space="preserve">
+    <value>&lt;数字列表&gt;</value>
+  </data>
+  <data name="_ims_library_res" xml:space="preserve">
+    <value>离子迁移维度的分辨力用于过滤谱图库中的离子迁移值。</value>
   </data>
 </root>

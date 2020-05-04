@@ -181,7 +181,7 @@
     <value>3, 6</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>64, 13</value>
+    <value>73, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -202,7 +202,7 @@
     <value>2</value>
   </data>
   <data name="tbxViewName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>71, 3</value>
+    <value>82, 3</value>
   </data>
   <data name="tbxViewName.Size" type="System.Drawing.Size, System.Drawing">
     <value>214, 20</value>

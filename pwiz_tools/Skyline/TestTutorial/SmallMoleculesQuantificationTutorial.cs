@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -31,7 +32,6 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs.Calibration;
-using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -54,10 +54,6 @@ namespace pwiz.SkylineTestTutorial
         protected override bool UseRawFiles
         {
             get { return !ForceMzml && ExtensionTestContext.CanImportWatersRaw; }
-        }
-        protected override bool ShowStartPage
-        {
-            get { return true; }  // So we can point out the UI mode control
         }
 
         [TestMethod]
@@ -88,14 +84,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            // Setting the UI mode, p 2  
-            var startPage = WaitForOpenForm<StartPage>();
-            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
-            PauseForScreenShot<StartPage>("Start Window proteomic", 2);
-            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
-            PauseForScreenShot<StartPage>("Start Window small molecule", 3);
-            RunUI(() => startPage.DoAction(skylineWindow => true));
-            WaitForOpenForm<SkylineWindow>();
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
 
             // Inserting a Transition List, p. 2
             {
@@ -311,7 +300,20 @@ namespace pwiz.SkylineTestTutorial
                     {"QC_Mid_03", new Tuple<SampleType, double?>(SampleType.QC,346)}
                 };*/
 
-                SetExcelFileClipboardText(GetTestPath("Concentrations.xlsx"), "Sheet1", 3, false);
+                string concentrationsFileName;
+                if (CultureInfo.CurrentUICulture.Name.StartsWith("zh"))
+                {
+                    concentrationsFileName = "Concentrations_zh.xlsx";
+                }
+                else if (CultureInfo.CurrentUICulture.Name.StartsWith("ja"))
+                {
+                    concentrationsFileName = "Concentrations_ja.xlsx";
+                }
+                else
+                {
+                    concentrationsFileName = "Concentrations.xlsx";
+                }
+                SetExcelFileClipboardText(GetTestPath(concentrationsFileName), "Sheet1", 3, false);
                 RunUI(() =>
                 {
                     // Find and select Blank_01 cell
@@ -324,6 +326,29 @@ namespace pwiz.SkylineTestTutorial
                 });
                 //SetDocumentGridSampleTypesAndConcentrations(sampleTypes);
                 PauseForScreenShot<DocumentGridForm>("Document Grid - sample types - enlarge for screenshot so all rows can be seen ", 16);
+                foreach (var chromatogramSet in SkylineWindow.Document.MeasuredResults.Chromatograms)
+                {
+                    if (chromatogramSet.Name.StartsWith("DoubleBlank"))
+                    {
+                        Assert.AreEqual(SampleType.DOUBLE_BLANK, chromatogramSet.SampleType);
+                    }
+                    else if (chromatogramSet.Name.StartsWith("Blank"))
+                    {
+                        Assert.AreEqual(SampleType.BLANK, chromatogramSet.SampleType);
+                    }
+                    else if (chromatogramSet.Name.StartsWith("QC"))
+                    {
+                        Assert.AreEqual(SampleType.QC, chromatogramSet.SampleType);
+                    }
+                    else if (chromatogramSet.Name.StartsWith("Cal"))
+                    {
+                        Assert.AreEqual(SampleType.STANDARD, chromatogramSet.SampleType);
+                    }
+                    else
+                    {
+                        Assert.AreEqual(SampleType.UNKNOWN, chromatogramSet.SampleType);
+                    }
+                }
 
                 RunUI(() => SkylineWindow.ShowCalibrationForm());
                 PauseForScreenShot<CalibrationForm>("Calibration Curve ", 18);
@@ -351,7 +376,12 @@ namespace pwiz.SkylineTestTutorial
                 });
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results", 15);
+                Settings.Default.CalibrationCurveOptions.LogXAxis = true;
+                Settings.Default.CalibrationCurveOptions.LogYAxis = true;
 
+                var calibrationForm = FindOpenForm<CalibrationForm>();
+                RunUI(()=>calibrationForm.UpdateUI(false));
+                PauseForScreenShot<CalibrationForm>("Calibration Curve: Log");
             }
 
         }

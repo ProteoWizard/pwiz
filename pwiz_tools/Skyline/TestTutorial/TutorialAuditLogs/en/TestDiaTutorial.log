@@ -7,10 +7,6 @@ Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" t
 Settings > Transition Settings -- Filter > Use DIA precursor window for exlucison changed from False to True
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "DIA"
 Settings > Transition Settings -- Full-Scan > Isolation scheme changed from Missing to "500 to 900 by 20"
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Precursor filter m/z is Missing
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Isolation width is "Results"
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Deconvolution is "None"
-Settings > Transition Settings -- Full-Scan > Isolation scheme > Windows per scan is Missing
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "500.477375", End = "520.48647" }
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "520.48647", End = "540.495565" }
 Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows : contains { Start = "540.495565", End = "560.50466" }
@@ -53,4 +49,10 @@ All Info  :
 Transition Settings -- Library changed
 Settings > Transition Settings -- Library > Pick changed from "None" to "From filtered product ions"
 Settings > Transition Settings -- Library > If a library spectrum is available, pick its most intense ions changed from False to True
+
+Undo Redo : Transition Settings -- Integration > Integrate All changed to True
+Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
+All Info  :
+Transition Settings -- Integration > Integrate All changed to True
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
 

@@ -698,6 +698,9 @@
   <data name="FragmentLoss_MonoisotopicMass" xml:space="preserve">
     <value>モノアイソトピックロス</value>
   </data>
+  <data name="FragmentLoss_Charge" xml:space="preserve">
+    <value>電荷</value>
+  </data>
   <data name="MeasuredIon_Charge" xml:space="preserve">
     <value>電荷</value>
   </data>
@@ -774,7 +777,7 @@
     <value>アクセッション番号</value>
   </data>
   <data name="ProteinMetadata_Description" xml:space="preserve">
-    <value>説明</value>
+    <value>表記</value>
   </data>
   <data name="ProteinMetadata_Gene" xml:space="preserve">
     <value>遺伝子</value>
@@ -1008,7 +1011,7 @@
     <value>カットオフスコア</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_FilterForDocumentPeptides" xml:space="preserve">
-    <value>ドキュメント内のペプチドのフィルタ</value>
+    <value>ドキュメント内のペプチドをフィルタリング</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_IncludeAmbiguousMatches" xml:space="preserve">
     <value>曖昧な一致を含める</value>
@@ -1198,6 +1201,9 @@
   </data>
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
     <value>同位体標識タイプ</value>
+  </data>
+  <data name="TransitionGroupDocNode_PrecursorConcentration">
+    <value>プリカーサー濃度</value>
   </data>
   <data name="UniquePeptideSettings_ProteinPeptideSelections" xml:space="preserve">
     <value>ユニークペプチド</value>
@@ -1411,5 +1417,38 @@
   </data>
   <data name="ListData_Rows" xml:space="preserve">
     <value>行</value>
+  </data>
+  <data name="RefinementSettings_MaxPrecursorPeakOnly" xml:space="preserve">
+    <value>最大プリカーサーピークのみ</value>
+  </data>
+  <data name="PeptideFilter_PeptideUniqueness" xml:space="preserve">
+    <value>ペプチドの一意性</value>
+  </data>
+  <data name="RefinementSettings_CVCutoff" xml:space="preserve">
+    <value>cvカットオフより上を削除</value>
+  </data>
+  <data name="RefinementSettings_QValueCutoff" xml:space="preserve">
+    <value>q値カットオフより上を削除</value>
+  </data>
+  <data name="RefinementSettings_MinimumDetections" xml:space="preserve">
+    <value>最小検出数</value>
+  </data>
+  <data name="RefinementSettings_NormalizationLabelType" xml:space="preserve">
+    <value>標準タイプに正規化</value>
+  </data>
+  <data name="RefinementSettings_NormalizationMethod" xml:space="preserve">
+    <value>正規化メソッド</value>
+  </data>
+  <data name="RefinementSettings_CountTransitions" xml:space="preserve">
+    <value>トランジション数</value>
+  </data>
+  <data name="RefinementSettings_Transitions" xml:space="preserve">
+    <value>トランジション</value>
+  </data>
+  <data name="RefinementSettings_MSLevel" xml:space="preserve">
+    <value>MSレベル</value>
+  </data>
+  <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
+    <value>定量</value>
   </data>
 </root>

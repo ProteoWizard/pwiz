@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -777,14 +778,13 @@ namespace pwiz.Skyline.SettingsUI
             set { radioKeepAllTime.Checked = value; }
         }
 
-        public bool UseTimeAroundMs2Ids
-        {
-            get { return radioTimeAroundMs2Ids.Checked; }
-        }
-
         public double TimeAroundMs2Ids
         {
             get { return double.Parse(tbxTimeAroundMs2Ids.Text); }
+        }
+        public double TimeAroundPrediction
+        {
+            get { return double.Parse(tbxTimeAroundPrediction.Text); }
         }
 
         public static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
@@ -883,7 +883,7 @@ namespace pwiz.Skyline.SettingsUI
             useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer);
         }
 
-        public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow)
+        public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow, Library lib)
         {
             var settings = _documentContainer.Document.Settings;
 
@@ -960,11 +960,12 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Ask about ion mobility filtering if any IM values in library
-            if (settings.PeptideSettings.Libraries.HasAnyLibraryIonMobilities())
+            if (lib != null && PeptideLibraries.HasIonMobilities(lib, null))
             {
                 useSpectralLibraryIonMobilityValuesControl.Top = groupBoxRetentionTimeToKeep.Bottom + sepMS1FromMS2;
                 useSpectralLibraryIonMobilityValuesControl.InitializeSettings(_documentContainer, true);
                 useSpectralLibraryIonMobilityValuesControl.Width = groupBoxMS1.Width;
+                useSpectralLibraryIonMobilityValuesControl.HideControls();
                 var adjustedHeight = useSpectralLibraryIonMobilityValuesControl.Bottom + label1.Height; // Add control height plus a margin
                 MinimumSize = new Size(MinimumSize.Width, adjustedHeight);
                 Height = adjustedHeight;

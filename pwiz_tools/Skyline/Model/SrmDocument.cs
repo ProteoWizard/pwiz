@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 return TextUtil.FileDialogFilter(Resources.SrmDocument_FILTER_DOC_AND_SKY_ZIP_Skyline_Files, EXT,
-                                                 SrmDocumentSharing.EXT_SKY_ZIP);
+                                                 SrmDocumentSharing.EXT_SKY_ZIP, SkypFile.EXT);
             }    
         }
 
@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Model
             FormatVersion = doc.FormatVersion;
             RevisionIndex = doc.RevisionIndex;
             UserRevisionIndex = doc.UserRevisionIndex;
-            Settings = settings;
+            Settings = doc.UpdateHasHeavyModifications(settings);
             AuditLog = doc.AuditLog;
             DocumentHash = doc.DocumentHash;
             DeferSettingsChanges = doc.DeferSettingsChanges;
@@ -508,6 +508,15 @@ namespace pwiz.Skyline.Model
             {
                 return Peptides.SelectMany(
                     node => node.TransitionGroups.Select(nodeGroup => new PeptidePrecursorPair(node, nodeGroup)));
+            }
+        }
+
+        public IEnumerable<LibKey> MoleculeLibKeys
+        {
+            get
+            {
+                return Molecules.SelectMany(
+                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(Settings, node)));
             }
         }
 
@@ -933,7 +942,7 @@ namespace pwiz.Skyline.Model
         /// <returns>A new document revision</returns>
         public SrmDocument ChangeSettingsNoDiff(SrmSettings settingsNew)
         {
-            return new SrmDocument(this, UpdateHasHeavyModifications(settingsNew), doc =>
+            return new SrmDocument(this, settingsNew, doc =>
             {
                 doc.RevisionIndex++;
                 doc.IsProteinMetadataPending = doc.CalcIsProteinMetadataPending();
@@ -1838,7 +1847,7 @@ namespace pwiz.Skyline.Model
             }
 
             var pepModsNew = pepMods.DeclareExplicitMods(docResult, listGlobalStaticMods, listGlobalHeavyMods);
-            if (ReferenceEquals(pepModsNew, pepMods))
+            if (Equals(pepModsNew, pepMods))
                 return docResult;
 
             // Make sure any newly included modifications are added to the settings
@@ -2028,7 +2037,6 @@ namespace pwiz.Skyline.Model
             var fileName = Path.GetFileNameWithoutExtension(docPath) + AuditLogList.EXT;
             return Path.Combine(directory, fileName);
         }
-       
 
         public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
         {
@@ -2038,14 +2046,7 @@ namespace pwiz.Skyline.Model
                 Formatting = Formatting.Indented
             })
             {
-                writer.WriteStartDocument();
-                writer.WriteStartElement(@"srm_settings");
-                SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
-                writer.WriteEndElement();
-                writer.WriteEndDocument();
-                writer.Flush();
-                var hashingStream = (HashingStream) writer.BaseStream;
-                hash = hashingStream.Done();
+                hash = Serialize(writer, displayName, skylineVersion, progressMonitor);
             }
 
             var auditLogPath = GetAuditLogPath(displayName);
@@ -2054,6 +2055,17 @@ namespace pwiz.Skyline.Model
                 AuditLog?.WriteToFile(auditLogPath, hash);
             else if (File.Exists(auditLogPath))
                 Helpers.TryTwice(() => File.Delete(auditLogPath));
+        }
+
+        public string Serialize(XmlTextWriter writer, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
+        {
+            writer.WriteStartDocument();
+            writer.WriteStartElement(@"srm_settings");
+            SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
+            writer.WriteEndElement();
+            writer.WriteEndDocument();
+            writer.Flush();
+            return ((HashingStream) writer.BaseStream)?.Done();
         }
 
         public XmlSchema GetSchema()
@@ -2319,7 +2331,7 @@ namespace pwiz.Skyline.Model
 
             double? covRough = OptimizationStep<CompensationVoltageRegressionRough>.FindOptimizedValueFromResults(settings,
                 nodePep, nodeGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageRough);
-            return covRough.HasValue && covRough.Value > 0 ? covRough.Value + regression.StepSizeMedium*step : 0;
+            return covRough.HasValue ? covRough.Value + regression.StepSizeMedium*step : 0;
         }
 
         public static double GetCompensationVoltageFine(SrmSettings settings, PeptideDocNode nodePep,
@@ -2330,7 +2342,7 @@ namespace pwiz.Skyline.Model
 
             double? covMedium = OptimizationStep<CompensationVoltageRegressionMedium>.FindOptimizedValueFromResults(settings,
                 nodePep, nodeGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageMedium);
-            return covMedium.HasValue && covMedium.Value > 0 ? covMedium.Value + regression.StepSizeFine*step : 0;
+            return covMedium.HasValue ? covMedium.Value + regression.StepSizeFine*step : 0;
         }
 
         public double? GetOptimizedCompensationVoltage(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, CompensationVoltageParameters.Tuning tuneLevel)

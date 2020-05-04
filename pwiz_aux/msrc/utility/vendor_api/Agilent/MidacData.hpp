@@ -78,10 +78,10 @@ class MidacDataImpl : public MassHunterData
     virtual const std::set<Transition>& getTransitions() const;
     virtual ChromatogramPtr getChromatogram(const Transition& transition) const;
 
-    virtual const automation_vector<double>& getTicTimes() const;
-    virtual const automation_vector<double>& getBpcTimes() const;
-    virtual const automation_vector<float>& getTicIntensities() const;
-    virtual const automation_vector<float>& getBpcIntensities() const;
+    virtual const BinaryData<double>& getTicTimes(bool ms1Only) const;
+    virtual const BinaryData<double>& getBpcTimes(bool ms1Only) const;
+    virtual const BinaryData<float>& getTicIntensities(bool ms1Only) const;
+    virtual const BinaryData<float>& getBpcIntensities(bool ms1Only) const;
 
     virtual ScanRecordPtr getScanRecord(int row) const;
     virtual SpectrumPtr getProfileSpectrumByRow(int row) const;
@@ -94,8 +94,8 @@ class MidacDataImpl : public MassHunterData
     gcroot<MIDAC::IMidacImsReader^> imsReader_;
     gcroot<MIDAC::IImsCcsInfoReader^> imsCcsReader_;
     gcroot<MHDAC::IBDAMSScanFileInformation^> scanFileInfo_;
-    automation_vector<double> ticTimes_, bpcTimes_;
-    automation_vector<float> ticIntensities_, bpcIntensities_;
+    BinaryData<double> ticTimes_, ticTimesMs1_, bpcTimes_, bpcTimesMs1_;
+    BinaryData<float> ticIntensities_, ticIntensitiesMs1_, bpcIntensities_, bpcIntensitiesMs1_;
     set<Transition> transitions_;
     map<Transition, int> transitionToChromatogramIndexMap_;
 

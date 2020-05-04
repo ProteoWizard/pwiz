@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Library;
-                Assert.AreEqual(1, peptideSettings.LibraryDriver.Chosen.OfType<MidasLibSpec>().Count());
+                Assert.AreEqual(1, peptideSettings.PickedLibrarySpecs.OfType<MidasLibSpec>().Count());
                 Assert.IsTrue(peptideSettings.FilterLibraryEnabled);
             });
             var filterDlg = ShowDialog<FilterMidasLibraryDlg>(peptideSettings.ShowFilterMidasDlg);
@@ -195,7 +195,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 manageResults.IsRemoveCorrespondingLibraries = true;
-                manageResults.SelectedChromatograms = new[] { doc1.Settings.MeasuredResults.Chromatograms[0] };
+                manageResults.SelectedChromatograms = new[] { doc1.Settings.MeasuredResults.Chromatograms[2] }; // This list serves as an MRU with most recently used at tail
                 manageResults.RemoveReplicates();
             });
             OkDialog(manageResults, manageResults.OkDialog);
@@ -212,7 +212,7 @@ namespace pwiz.SkylineTestFunctional
             var graphChromatograms = SkylineWindow.GraphChromatograms.ToArray();
             if (graphChromatograms.Length < 1)
                 Assert.Fail("Missing GraphChromatogram");
-            var midasRts = (graphChromatograms.First().MidasRetentionMsMs ?? new double[0]).ToList();
+            var midasRts = (graphChromatograms.Last().MidasRetentionMsMs ?? new double[0]).ToList(); // List serves as an MRU with most recently used at tail
             foreach (var expectedRt in expectedRts)
             {
                 var foundRt = false;

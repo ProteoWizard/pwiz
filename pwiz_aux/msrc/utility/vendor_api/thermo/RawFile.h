@@ -71,6 +71,9 @@ enum PWIZ_API_DECL ControllerType
 };
 
 
+extern const char* ControllerTypeStrings[];
+
+
 struct PWIZ_API_DECL ControllerInfo
 {
     ControllerType type;
@@ -224,8 +227,12 @@ typedef shared_ptr<MassRange> MassRangePtr;
 
 struct PWIZ_API_DECL PrecursorInfo
 {
+    int msLevel;
     double monoisotopicMZ;
     double isolationMZ;
+    double isolationWidth;
+    double activationEnergy;
+    ActivationType activationType;
     int chargeState;
     int scanNumber;
 };
@@ -260,7 +267,7 @@ class PWIZ_API_DECL ScanInfo
     virtual AccurateMassType accurateMassType() const = 0;
 
 
-    virtual std::vector<PrecursorInfo> precursorInfo() const = 0;
+    virtual const std::vector<PrecursorInfo>& precursorInfo() const = 0;
     virtual long precursorCount() const = 0;
     virtual long precursorCharge() const = 0;
     virtual double precursorMZ(long index, bool preferMonoisotope = true) const = 0;

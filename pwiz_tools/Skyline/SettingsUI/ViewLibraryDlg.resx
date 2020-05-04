@@ -120,12 +120,6 @@
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="scoreContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="scoreContextMenuItem.Text" xml:space="preserve">
-    <value>Score</value>
-  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="splitPeptideList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -136,10 +130,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="splitPeptideList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 78</value>
-  </data>
-  <data name="splitPeptideList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>0, 63</value>
   </data>
   <data name="splitPeptideList.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
@@ -153,11 +144,8 @@
   <data name="listPeptide.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="listPeptide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
-  </data>
   <data name="listPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>344, 300</value>
+    <value>257, 230</value>
   </data>
   <data name="listPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -181,13 +169,10 @@
     <value>Bottom</value>
   </data>
   <data name="cbShowModMasses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 300</value>
-  </data>
-  <data name="cbShowModMasses.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>0, 230</value>
   </data>
   <data name="cbShowModMasses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>344, 21</value>
+    <value>257, 17</value>
   </data>
   <data name="cbShowModMasses.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -214,13 +199,10 @@
     <value>Fill</value>
   </data>
   <data name="PeptideListPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 4</value>
-  </data>
-  <data name="PeptideListPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>0, 3</value>
   </data>
   <data name="PeptideListPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>344, 321</value>
+    <value>257, 247</value>
   </data>
   <data name="PeptideListPanel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -238,7 +220,7 @@
     <value>0</value>
   </data>
   <data name="splitPeptideList.Panel1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 4, 0, 0</value>
+    <value>0, 3, 0, 0</value>
   </data>
   <data name="&gt;&gt;splitPeptideList.Panel1.Name" xml:space="preserve">
     <value>splitPeptideList.Panel1</value>
@@ -256,13 +238,13 @@
     <value>True</value>
   </data>
   <data name="PageCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 0</value>
+    <value>108, 0</value>
   </data>
   <data name="PageCount.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 0, 0</value>
+    <value>3, 0, 0, 0</value>
   </data>
   <data name="PageCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>40, 17</value>
+    <value>31, 13</value>
   </data>
   <data name="PageCount.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -286,13 +268,13 @@
     <value>True</value>
   </data>
   <data name="PeptideCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 28</value>
+    <value>0, 23</value>
   </data>
   <data name="PeptideCount.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
   </data>
   <data name="PeptideCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>62, 17</value>
+    <value>47, 13</value>
   </data>
   <data name="PeptideCount.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -319,13 +301,10 @@
     <value>Right</value>
   </data>
   <data name="NextLink.Location" type="System.Drawing.Point, System.Drawing">
-    <value>288, 0</value>
-  </data>
-  <data name="NextLink.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>213, 0</value>
   </data>
   <data name="NextLink.Size" type="System.Drawing.Size, System.Drawing">
-    <value>56, 17</value>
+    <value>44, 13</value>
   </data>
   <data name="NextLink.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -354,11 +333,8 @@
   <data name="PreviousLink.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="PreviousLink.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
   <data name="PreviousLink.Size" type="System.Drawing.Size, System.Drawing">
-    <value>83, 17</value>
+    <value>63, 13</value>
   </data>
   <data name="PreviousLink.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -394,13 +370,10 @@
     <value>50</value>
   </data>
   <data name="splitPeptideList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>344, 401</value>
+    <value>257, 326</value>
   </data>
   <data name="splitPeptideList.SplitterDistance" type="System.Int32, mscorlib">
-    <value>325</value>
-  </data>
-  <data name="splitPeptideList.SplitterWidth" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>250</value>
   </data>
   <data name="splitPeptideList.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -423,9 +396,6 @@
   <data name="splitMain.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="splitMain.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
-  </data>
   <data name="MoleculeLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -433,13 +403,10 @@
     <value>NoControl</value>
   </data>
   <data name="MoleculeLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 33</value>
-  </data>
-  <data name="MoleculeLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>108, 27</value>
   </data>
   <data name="MoleculeLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 17</value>
+    <value>53, 13</value>
   </data>
   <data name="MoleculeLabel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -475,7 +442,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="comboLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>310, 24</value>
+    <value>232, 21</value>
   </data>
   <data name="comboLibrary.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -493,13 +460,13 @@
     <value>0</value>
   </data>
   <data name="btnLibDetails.Location" type="System.Drawing.Point, System.Drawing">
-    <value>310, 0</value>
+    <value>232, 0</value>
   </data>
   <data name="btnLibDetails.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
   </data>
   <data name="btnLibDetails.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 26</value>
+    <value>24, 21</value>
   </data>
   <data name="btnLibDetails.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -532,7 +499,7 @@
     <value>1</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>344, 30</value>
+    <value>257, 24</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -556,13 +523,10 @@
     <value>True</value>
   </data>
   <data name="PeptideLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 33</value>
-  </data>
-  <data name="PeptideLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>0, 27</value>
   </data>
   <data name="PeptideLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>60, 17</value>
+    <value>46, 13</value>
   </data>
   <data name="PeptideLabel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -586,13 +550,10 @@
     <value>Bottom</value>
   </data>
   <data name="textPeptide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 56</value>
-  </data>
-  <data name="textPeptide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>0, 43</value>
   </data>
   <data name="textPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>344, 22</value>
+    <value>257, 20</value>
   </data>
   <data name="textPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -615,11 +576,8 @@
   <data name="PeptideEditPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="PeptideEditPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
-  </data>
   <data name="PeptideEditPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>344, 78</value>
+    <value>257, 63</value>
   </data>
   <data name="PeptideEditPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -655,10 +613,10 @@
     <value>0, 0</value>
   </data>
   <data name="graphControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>7, 6, 7, 6</value>
+    <value>5, 5, 5, 5</value>
   </data>
   <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>608, 406</value>
+    <value>450, 329</value>
   </data>
   <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -676,7 +634,7 @@
     <value>0</value>
   </data>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>193, 17</value>
+    <value>331, 17</value>
   </metadata>
   <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
@@ -685,7 +643,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnAIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnAIons.ToolTipText" xml:space="preserve">
     <value>A-ions</value>
@@ -694,7 +652,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnBIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnBIons.ToolTipText" xml:space="preserve">
     <value>B-ions</value>
@@ -703,7 +661,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnCIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnCIons.ToolTipText" xml:space="preserve">
     <value>C-ions</value>
@@ -712,7 +670,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnXIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnXIons.ToolTipText" xml:space="preserve">
     <value>X-ions</value>
@@ -721,7 +679,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnYIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnYIons.ToolTipText" xml:space="preserve">
     <value>Y-ions</value>
@@ -730,7 +688,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnZIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnZIons.ToolTipText" xml:space="preserve">
     <value>Z-ions</value>
@@ -739,19 +697,19 @@
     <value>Magenta</value>
   </data>
   <data name="btnFragmentIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnFragmentIons.ToolTipText" xml:space="preserve">
     <value>fragment ions</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 6</value>
+    <value>21, 6</value>
   </data>
   <data name="charge1Button.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="charge1Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="charge1Button.ToolTipText" xml:space="preserve">
     <value>Charge 1 ions</value>
@@ -760,19 +718,19 @@
     <value>Magenta</value>
   </data>
   <data name="charge2Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="charge2Button.ToolTipText" xml:space="preserve">
     <value>Charge 2 ions</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 6</value>
+    <value>21, 6</value>
   </data>
   <data name="copyMetafileButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="copyMetafileButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="copyMetafileButton.ToolTipText" xml:space="preserve">
     <value>Copy Metafile</value>
@@ -781,7 +739,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnCopy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnCopy.ToolTipText" xml:space="preserve">
     <value>Copy Bitmap</value>
@@ -790,7 +748,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnSave.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnSave.ToolTipText" xml:space="preserve">
     <value>Save</value>
@@ -799,16 +757,16 @@
     <value>Magenta</value>
   </data>
   <data name="btnPrint.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 24</value>
+    <value>21, 20</value>
   </data>
   <data name="btnPrint.ToolTipText" xml:space="preserve">
     <value>Print</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>608, 0</value>
+    <value>450, 0</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 406</value>
+    <value>24, 329</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -831,11 +789,8 @@
   <data name="GraphPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="GraphPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
-  </data>
   <data name="GraphPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>637, 410</value>
+    <value>478, 333</value>
   </data>
   <data name="GraphPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -856,13 +811,10 @@
     <value>True</value>
   </data>
   <data name="cbAssociateProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>217, 44</value>
-  </data>
-  <data name="cbAssociateProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>163, 36</value>
   </data>
   <data name="cbAssociateProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 21</value>
+    <value>112, 17</value>
   </data>
   <data name="cbAssociateProteins.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -886,13 +838,10 @@
     <value>True</value>
   </data>
   <data name="labelFilename.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 7</value>
-  </data>
-  <data name="labelFilename.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>3, 6</value>
   </data>
   <data name="labelFilename.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 17</value>
+    <value>23, 13</value>
   </data>
   <data name="labelFilename.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -916,13 +865,10 @@
     <value>Bottom, Left</value>
   </data>
   <data name="btnAdd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 41</value>
-  </data>
-  <data name="btnAdd.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>0, 33</value>
   </data>
   <data name="btnAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 28</value>
+    <value>75, 23</value>
   </data>
   <data name="btnAdd.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -946,13 +892,10 @@
     <value>Bottom, Left</value>
   </data>
   <data name="btnAddAll.Location" type="System.Drawing.Point, System.Drawing">
-    <value>108, 41</value>
-  </data>
-  <data name="btnAddAll.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>81, 33</value>
   </data>
   <data name="btnAddAll.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 28</value>
+    <value>75, 23</value>
   </data>
   <data name="btnAddAll.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -976,13 +919,10 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>537, 41</value>
-  </data>
-  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>403, 33</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 28</value>
+    <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1006,13 +946,10 @@
     <value>Top, Right</value>
   </data>
   <data name="labelRT.Location" type="System.Drawing.Point, System.Drawing">
-    <value>97, 4</value>
-  </data>
-  <data name="labelRT.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>73, 3</value>
   </data>
   <data name="labelRT.Size" type="System.Drawing.Size, System.Drawing">
-    <value>537, 20</value>
+    <value>403, 16</value>
   </data>
   <data name="labelRT.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1039,13 +976,10 @@
     <value>Bottom</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 410</value>
-  </data>
-  <data name="panel2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>0, 333</value>
   </data>
   <data name="panel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>637, 69</value>
+    <value>478, 56</value>
   </data>
   <data name="panel2.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1075,13 +1009,10 @@
     <value>1</value>
   </data>
   <data name="splitMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>986, 479</value>
+    <value>739, 389</value>
   </data>
   <data name="splitMain.SplitterDistance" type="System.Int32, mscorlib">
-    <value>344</value>
-  </data>
-  <data name="splitMain.SplitterWidth" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>257</value>
   </data>
   <data name="splitMain.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1102,13 +1033,10 @@
     <value>Fill</value>
   </data>
   <data name="ViewLibraryPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 31</value>
-  </data>
-  <data name="ViewLibraryPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>10, 25</value>
   </data>
   <data name="ViewLibraryPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>986, 479</value>
+    <value>739, 389</value>
   </data>
   <data name="ViewLibraryPanel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1129,13 +1057,10 @@
     <value>True</value>
   </data>
   <data name="LibraryLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 11</value>
-  </data>
-  <data name="LibraryLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>10, 9</value>
   </data>
   <data name="LibraryLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>56, 17</value>
+    <value>41, 13</value>
   </data>
   <data name="LibraryLabel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1156,154 +1081,160 @@
     <value>1</value>
   </data>
   <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+    <value>155, 17</value>
   </metadata>
   <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="aionsContextMenuItem.Text" xml:space="preserve">
     <value>A-ions</value>
   </data>
   <data name="bionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="bionsContextMenuItem.Text" xml:space="preserve">
     <value>B-ions</value>
   </data>
   <data name="cionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="cionsContextMenuItem.Text" xml:space="preserve">
     <value>C-ions</value>
   </data>
   <data name="xionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="xionsContextMenuItem.Text" xml:space="preserve">
     <value>X-ions</value>
   </data>
   <data name="yionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="yionsContextMenuItem.Text" xml:space="preserve">
     <value>Y-ions</value>
   </data>
   <data name="zionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="zionsContextMenuItem.Text" xml:space="preserve">
     <value>Z-ions</value>
   </data>
   <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="fragmentionsContextMenuItem.Text" xml:space="preserve">
     <value>Fragment Ions</value>
   </data>
   <data name="precursorIonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="precursorIonContextMenuItem.Text" xml:space="preserve">
     <value>Precursor</value>
   </data>
   <data name="toolStripSeparator11.Size" type="System.Drawing.Size, System.Drawing">
-    <value>228, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="charge1ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 26</value>
+    <value>80, 22</value>
   </data>
   <data name="charge1ContextMenuItem.Text" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="charge2ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 26</value>
+    <value>80, 22</value>
   </data>
   <data name="charge2ContextMenuItem.Text" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="charge3ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 26</value>
+    <value>80, 22</value>
   </data>
   <data name="charge3ContextMenuItem.Text" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="charge4ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 26</value>
+    <value>80, 22</value>
   </data>
   <data name="charge4ContextMenuItem.Text" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="chargesContextMenuItem.Text" xml:space="preserve">
     <value>Charges</value>
   </data>
   <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
-    <value>228, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="ranksContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="ranksContextMenuItem.Text" xml:space="preserve">
     <value>Ranks</value>
   </data>
+  <data name="scoreContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="scoreContextMenuItem.Text" xml:space="preserve">
+    <value>Score</value>
+  </data>
   <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="ionMzValuesContextMenuItem.Text" xml:space="preserve">
     <value>Ion m/z Values</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Text" xml:space="preserve">
     <value>Observed m/z Values</value>
   </data>
   <data name="duplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="duplicatesContextMenuItem.Text" xml:space="preserve">
     <value>Duplicate Ions</value>
   </data>
   <data name="toolStripSeparator13.Size" type="System.Drawing.Size, System.Drawing">
-    <value>228, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="lockYaxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="lockYaxisContextMenuItem.Text" xml:space="preserve">
     <value>Auto-scale Y-axis</value>
   </data>
   <data name="toolStripSeparator14.Size" type="System.Drawing.Size, System.Drawing">
-    <value>228, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
     <value>Properties...</value>
   </data>
   <data name="showChromatogramsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="showChromatogramsContextMenuItem.Text" xml:space="preserve">
     <value>Show Chromatograms</value>
   </data>
   <data name="toolStripSeparator15.Size" type="System.Drawing.Size, System.Drawing">
-    <value>228, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="zoomSpectrumContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>231, 26</value>
+    <value>193, 22</value>
   </data>
   <data name="zoomSpectrumContextMenuItem.Text" xml:space="preserve">
     <value>Zoom Out</value>
   </data>
   <data name="toolStripSeparator27.Size" type="System.Drawing.Size, System.Drawing">
-    <value>228, 6</value>
+    <value>190, 6</value>
   </data>
   <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>232, 456</value>
+    <value>194, 436</value>
   </data>
   <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
     <value>contextMenuSpectrum</value>
@@ -1315,16 +1246,13 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>8, 16</value>
+    <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>1012, 522</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 4, 4, 4</value>
+    <value>759, 424</value>
   </data>
   <data name="$this.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>13, 31, 13, 12</value>
+    <value>10, 25, 10, 10</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Spectral Library Explorer</value>
@@ -1333,7 +1261,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.99, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAIons.Name" xml:space="preserve">
     <value>btnAIons</value>
@@ -1597,6 +1525,6 @@
     <value>ViewLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.99, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

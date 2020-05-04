@@ -493,7 +493,7 @@
     <value>4</value>
   </data>
   <data name="cbShowMultiplePeptides.Text" xml:space="preserve">
-    <value>显示多个肽</value>
+    <value>显示多个肽段</value>
   </data>
   <data name="&gt;&gt;cbShowMultiplePeptides.Name" xml:space="preserve">
     <value>cbShowMultiplePeptides</value>

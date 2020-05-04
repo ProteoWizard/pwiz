@@ -149,6 +149,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             // Launch import peptide search wizard
+            WaitForDocumentLoaded();
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
             var basename = _testCase==1 ? "40minG_WBP_wide_z2-3_mid_BSA_5pmol_01" : "09_BSAtrypticdigest_5uL_IMQTOF_AltFramesdtramp_dAJS009";
             var nextFile = _testCase == 1 ? null : "10_BSAtrypticdigest_5uL_IMQTOF_AltFramesdtramp_dAJS010.d";
@@ -222,6 +223,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("SwissProt.bsa-mature"));
             });
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
             WaitForClosedForm(importPeptideSearchDlg);
@@ -310,7 +312,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
 
             LibraryIonMobilityInfo libraryIonMobilityInfo;
-            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(0, out libraryIonMobilityInfo);
+            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(doc1.MoleculeLibKeys.ToArray(), 0, out libraryIonMobilityInfo);
             if (driftInfoExplicitDT == null)
             {
                 driftInfoExplicitDT = libraryIonMobilityInfo;
@@ -443,7 +445,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             CheckFieldByName(documentGrid, "IonMobilityMS1", row, _testCase == 1 ? 18.43 : 23.50, msg);
             CheckFieldByName(documentGrid, "IonMobilityFragment", row, (double?)null, msg); // Document is all precursor
-            CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityValue.GetUnitsString(eIonMobilityUnits.drift_time_msec), msg);
+            CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.drift_time_msec), msg);
             CheckFieldByName(documentGrid, "IonMobilityWindow", row, expectedDtWindow, msg);
             CheckFieldByName(documentGrid, "CollisionalCrossSection", row, _testCase == 1 ? 292.4 : 333.34, msg);
             // And clean up after ourselves

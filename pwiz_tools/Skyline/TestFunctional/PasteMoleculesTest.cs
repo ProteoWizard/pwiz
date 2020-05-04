@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
                     WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == Settings.Default.CustomMoleculeTransitionInsertColumnsList.Count);                    
                 }
             });
-            SetClipboardTextUI(clipText);
+            SetClipboardTextUI(clipText.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator));
             RunUI(pasteDlg.PasteTransitions);
             RunUI(pasteDlg.ValidateCells);
             WaitForConditionUI(() => pasteDlg.ErrorText != null);
@@ -110,6 +110,8 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestProductNeutralLoss();
+            TestUnsortedMzPrecursors();
             TestNameCollisions();
             TestAmbiguousPrecursorFragment();
             TestPerTransitionValues();
@@ -156,6 +158,7 @@ namespace pwiz.SkylineTestFunctional
                     SmallMoleculeTransitionListColumnHeaders.imPrecursor,
                     SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset,
                     SmallMoleculeTransitionListColumnHeaders.imUnits,
+                    SmallMoleculeTransitionListColumnHeaders.neutralLossProduct,
                 };
 
             // Default col order is listname, preName, PreFormula, preAdduct, preMz, preCharge, prodName, ProdFormula, prodAdduct, prodMz, prodCharge
@@ -207,11 +210,11 @@ namespace pwiz.SkylineTestFunctional
                 string[] fields =
                 {
                     "MyMol", "MyPrecursor", "MyProduct", "C12H9O4", "C6H4O2", "217.049535420091", "108.020580420091", "1", "1", "heavy", "123", "5", "25", "this is a note", "[M+]", "[M+]", "7", "9", "123", "88.5", "99.6", "77.3", "66.2",
-                                caffeineInChiKey, caffeineHMDB, caffeineInChi, caffeineCAS, caffeineSMILES, caffeineKEGG, "123.4", "-0.234", "Vsec/cm2"  };
+                                caffeineInChiKey, caffeineHMDB, caffeineInChi, caffeineCAS, caffeineSMILES, caffeineKEGG, "123.4", "-0.234", "Vsec/cm2", "C6H5O2"  };
                 string[] badfields =
                 {
                     "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosballDT", "greasyDTHEO", "mumbleCCS", "gumdropSLEN", "dingleConeV", "dangleCompV", "gorseDP", "AHHHHHRGHinchik", "bananananahndb",
-                    "shamble-raft4-inchi", "bags34cas","flansmile", "boozlekegg", "12-fooim", "bumbleimheo", "dingoimunit"};
+                    "shamble-raft4-inchi", "bags34cas","flansmile", "boozlekegg", "12-fooim", "bumbleimheo", "dingoimunit", "C6H15O5"};
                 Assert.AreEqual(fields.Length, badfields.Length);
 
                 var expectedErrors = new List<string>()
@@ -266,6 +269,8 @@ namespace pwiz.SkylineTestFunctional
                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_high_energy_offset_value__0_, badfields[s++]));
                     expectedErrors.Add(
                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__, badfields[s++], SmallMoleculeTransitionListReader.GetAcceptedIonMobilityUnitsString()));
+                    expectedErrors.Add(
+                        string.Format(Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_, fields[3], badfields[s++]));
                 }
                 expectedErrors.Add(Resources.PasteDlg_ShowNoErrors_No_errors); // N+1'th pass is unadulterated
                 for (var bad = 0; bad < expectedErrors.Count; bad++)
@@ -841,8 +846,8 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnOrder.ToList().Count);
             const string implied =
-                "Oly\tlager\tbubbles\t452\t\t\t\t1\t\tmacrobrew" + "\n" +
-                "Oly\tlager\tfoam\t234\t\t\t\t1\t\tmacrobrew";
+                "Oly\tlager\tlager\t452\t\t\t\t1\t\tmacrobrew" + "\n" +
+                "Oly\tlager\tlager\t234\t\t\t\t1\t\tmacrobrew";
             SetClipboardText(implied);
             RunUI(pasteDlg.PasteTransitions);
             OkDialog(pasteDlg, pasteDlg.OkDialog);
@@ -865,8 +870,8 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => pasteDlg3.GetUsableColumnCount() == columnOrder.ToList().Count);
             const string matching =
-                "Schmidt\tlager\tbubbles\t150\t150\t\t\t2\t2\tnotated!" + "\n" +
-                "Schmidt\tlager\tfoam\t159\t159\t\t\t3\t3\tnote!";
+                "Schmidt\tlager\t\t150\t150\t\t\t2\t2\tnotated!" + "\n" +
+                "Schmidt\tlager\t\t159\t159\t\t\t3\t3\tnote!";
             SetClipboardText(matching);
             RunUI(pasteDlg3.PasteTransitions);
             OkDialog(pasteDlg3, pasteDlg3.OkDialog);
@@ -887,8 +892,8 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => pasteDlg4.GetUsableColumnCount() == columnOrder.ToList().Count);
             const string impliedLabeled =
-                "Oly\tlager\tbubbles\t452.1\t\t\t\t1\t\tmacrobrew\theavy" + "\n" +
-                "Oly\tlager\tfoam\t234.5\t\t\t\t1\t\tmacrobrew\tlight";
+                "Oly\tlager\t\t452.1\t\t\t\t1\t\tmacrobrew\theavy" + "\n" +
+                "Oly\tlager\t\t234.5\t\t\t\t1\t\tmacrobrew\tlight";
             SetClipboardText(impliedLabeled.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator));
             RunUI(pasteDlg4.PasteTransitions);
             OkDialog(pasteDlg4, pasteDlg4.OkDialog);
@@ -1159,6 +1164,50 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
 
+        private void TestProductNeutralLoss()
+        {
+            // Test our handling of fragment product loss formulas
+
+            var columns = new[]
+            {
+                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                SmallMoleculeTransitionListColumnHeaders.neutralLossProduct,
+                SmallMoleculeTransitionListColumnHeaders.adductProduct,
+                SmallMoleculeTransitionListColumnHeaders.note,
+                SmallMoleculeTransitionListColumnHeaders.cePrecursor
+            };
+            TestError("12-HETE\t12-HETE\t\t[M-H]1-\t319.227868554909\t-1\tfrag1\tC20H32O3\t[M-H]1-\tblah\t21", Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula, columns);
+            TestError("12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag1\tgreebles\t[M-H]1-\tblah\t21", string.Format(Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, "greebles"), columns);
+            TestError("12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag1\t77\t[M-H]1-\tblah\t21", string.Format(Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, "77"), columns);
+
+            var docOrig = NewDocument();
+            var precursorsTransitionList =
+                "MoleculeGroup\tPrecursorName\tPrecursorFormula\tPrecursorAdduct\tPrecursorMz\tPrecursorCharge\tProductName\tProductFormula\tProductNeutralLoss\tProductAdduct\tNote\tPrecursorCE\n" +
+                "12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tprecursor\tC20H32O3\t\t[M-H]1-\t\t21\n" +
+                "12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag1\tC20H30O\t\t[M-H]1-\t\t21\n" +
+                "12-HETE\t12-HETE\tC20H32O3\t[M-H]1-\t319.227868554909\t-1\tfrag2\t\tH2O\t[M-H]1-\t\t21\n";
+            SetClipboardText(precursorsTransitionList.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator));
+
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            Assume.AreEqual(1, pastedDoc.MoleculeGroupCount);
+            Assume.AreEqual(1, pastedDoc.MoleculeCount);
+            var transitions = pastedDoc.MoleculeTransitions.ToArray();
+            Assume.AreEqual(2, transitions.Count(t => !t.IsMs1));
+            Assume.AreEqual("C20H30O", transitions[1].CustomIon.NeutralFormula); // As given literally
+            Assume.AreEqual("C20H30O2", transitions[2].CustomIon.NeutralFormula); // As given by neutral loss
+            NewDocument();
+
+        }
+
         private void TestFullyDescribedPrecursors()
         {
             // Test our handling of fully described precursors
@@ -1187,6 +1236,61 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(2, transitions.Count(t => t.IsMs1));
             NewDocument();
         }
+
+        // We want to preserve order while dealing with lists that show heavy versions before light
+        private void TestUnsortedMzPrecursors()
+        {
+            // Version with light mz presented first
+            const string precursorsTransitionListSorted =
+                "Molecule List Name\tPrecursor Name\tPrecursor Formula\tPrecursor Adduct\tPrecursor m/z\tPrecursor Charge\tProduct Formula\tProduct Adduct\tProduct m/z\tProduct Charge\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t230.1\t1\t\tM+\t73.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t234.1\t1\t\tM+\t73.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t263.1\t1\t\tM+\t147.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t258.1\t1\t\tM+\t147.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t130.1\t1\t\tM+\t73.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t134.1\t1\t\tM+\t73.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t163.1\t1\t\tM+\t147.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t158.1\t1\t\tM+\t147.1\t1\n";
+
+            // Version with heavy mz presented first - this used to screw us up
+            const string precursorsTransitionListUnsorted =
+                "Molecule List Name\tPrecursor Name\tPrecursor Formula\tPrecursor Adduct\tPrecursor m/z\tPrecursor Charge\tProduct Formula\tProduct Adduct\tProduct m/z\tProduct Charge\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t234.1\t1\t\tM+\t73.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t263.1\t1\t\tM+\t147.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t230.1\t1\t\tM+\t73.1\t1\n" +
+                "Pyr-Glu\tPyr-Glu\t\tM+\t258.1\t1\t\tM+\t147.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t134.1\t1\t\tM+\t73.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t163.1\t1\t\tM+\t147.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t130.1\t1\t\tM+\t73.1\t1\n" +
+                "aPyr-GluB\taPyr-GluB\t\tM+\t158.1\t1\t\tM+\t147.1\t1\n";
+
+            var docOrig = NewDocument();
+            SetClipboardText(precursorsTransitionListSorted);
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+            var pastedDocSorted = WaitForDocumentChange(docOrig);
+
+            docOrig = NewDocument();
+            SetClipboardText(precursorsTransitionListUnsorted);
+            // Paste directly into targets area
+            RunUI(() => SkylineWindow.Paste());
+            var pastedDocUnsorted = WaitForDocumentChange(docOrig);
+
+            Assume.AreEqual(2, pastedDocUnsorted.MoleculeGroupCount);
+            Assume.AreEqual(2, pastedDocUnsorted.MoleculeCount);
+            Assume.AreEqual(pastedDocSorted, pastedDocUnsorted);
+            var precursors = pastedDocUnsorted.MoleculeTransitionGroups.ToArray();
+            Assume.IsTrue(!precursors[0].PrecursorAdduct.HasIsotopeLabels);
+            Assume.AreEqual(precursors[0].PrecursorMz.Value, 230.1);
+            Assume.IsTrue(precursors[1].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(!precursors[4].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(precursors[5].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(precursors[6].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(precursors[7].PrecursorAdduct.HasIsotopeLabels);
+            NewDocument();
+
+        }
+
 
         private void TestPerTransitionValues()
         {

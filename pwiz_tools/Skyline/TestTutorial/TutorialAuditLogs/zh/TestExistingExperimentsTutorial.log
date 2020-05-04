@@ -334,10 +334,14 @@ Extra Info: 文件名称 =
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个"
 
-Undo Redo : 从复制“silac_1_to_4”中删除了YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3)的峰值
-Summary   : 从复制“silac_1_to_4”中删除了YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3)的峰值
+Undo Redo : Changed quantitative on 4 transitions
+Summary   : 目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] 已更改
 All Info  :
-从复制“silac_1_to_4”中删除了YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3)的峰值
+Changed quantitative on 4 transitions
+目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) > 定量 从 真 更改到 假
+目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > E [y3] - 405.1980+ (排名 2) > 定量 从 真 更改到 假
+目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] > 606.8337++ (heavy) > V [y4] - 512.2806+ (排名 3) > 定量 从 真 更改到 假
+目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] > 606.8337++ (heavy) > E [y3] - 413.2122+ (排名 2) > 定量 从 真 更改到 假
 
 Undo Redo : 已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
 Summary   : 已更改 YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ 的峰界限
@@ -513,31 +517,49 @@ All Info  :
 离子对设置 -- 仪器 > 方法匹配耐受性质荷比 已更改为 "0.065"
 设置 > 离子对设置 -- 仪器 > 方法匹配耐受性质荷比 从 "0.055" 更改到 "0.065"
 
-Undo Redo : 注释 : "Concentration" 已添加
-Summary   : 设置 > 文档设置 -- 注释 : "Concentration" 已添加
+Undo Redo : 离子对设置 -- Integration > Integrate All 已更改为 真
+Summary   : 设置 > 离子对设置 -- Integration > Integrate All 已更改为 真
 All Info  :
-注释 : "Concentration" 已添加
-设置 > 文档设置 -- 注释 : "Concentration" 已添加
-设置 > 文档设置 -- 注释 > "Concentration" > 应用于 是 "replicate"
-设置 > 文档设置 -- 注释 > "Concentration" > 类型 是 "编号"
+离子对设置 -- Integration > Integrate All 已更改为 真
+设置 > 离子对设置 -- Integration > Integrate All 从 假 更改到 真
 
-Undo Redo : 将 A_01 的 Concentration 设定为 "0"
-Summary   : 将 A_01 的 Concentration 设定为 "0"
+Undo Redo : 将 A_01 的 分析物浓度 设定为 "0"
+Summary   : 将 A_01 的 分析物浓度 设定为 "0"
 All Info  :
-将 A_01 的 Concentration 设定为 "0"
+将 A_01 的 分析物浓度 设定为 "0"
 
-Undo Redo : 将 A_02 的 Concentration 设定为 "0"
-Summary   : 将 A_02 的 Concentration 设定为 "0"
+Undo Redo : 将 A_01 的 样品类型 设定为 "空白"
+Summary   : 将 A_01 的 样品类型 设定为 "空白"
 All Info  :
-将 A_02 的 Concentration 设定为 "0"
+将 A_01 的 样品类型 设定为 "空白"
 
-Undo Redo : 将 C_03 的 Concentration 设定为 "175"
-Summary   : 将 C_03 的 Concentration 设定为 "175"
+Undo Redo : 将 A_02 的 分析物浓度 设定为 "0"
+Summary   : 将 A_02 的 分析物浓度 设定为 "0"
 All Info  :
-将 C_03 的 Concentration 设定为 "175"
+将 A_02 的 分析物浓度 设定为 "0"
 
-Undo Redo : 将 C_04 的 Concentration 设定为 "175"
-Summary   : 将 C_04 的 Concentration 设定为 "175"
+Undo Redo : 将 A_02 的 样品类型 设定为 "空白"
+Summary   : 将 A_02 的 样品类型 设定为 "空白"
 All Info  :
-将 C_04 的 Concentration 设定为 "175"
+将 A_02 的 样品类型 设定为 "空白"
+
+Undo Redo : 将 C_03 的 分析物浓度 设定为 "175"
+Summary   : 将 C_03 的 分析物浓度 设定为 "175"
+All Info  :
+将 C_03 的 分析物浓度 设定为 "175"
+
+Undo Redo : 将 C_03 的 样品类型 设定为 "标准"
+Summary   : 将 C_03 的 样品类型 设定为 "标准"
+All Info  :
+将 C_03 的 样品类型 设定为 "标准"
+
+Undo Redo : 将 C_04 的 分析物浓度 设定为 "175"
+Summary   : 将 C_04 的 分析物浓度 设定为 "175"
+All Info  :
+将 C_04 的 分析物浓度 设定为 "175"
+
+Undo Redo : 将 C_04 的 样品类型 设定为 "标准"
+Summary   : 将 C_04 的 样品类型 设定为 "标准"
+All Info  :
+将 C_04 的 样品类型 设定为 "标准"
 

@@ -25,9 +25,11 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.ServiceModel;
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
 using ZedGraph;
+using Timer = System.Windows.Forms.Timer;
 
 namespace SkylineTester
 {
@@ -37,6 +39,7 @@ namespace SkylineTester
 
         private const int MINUTES_PER_INCREMENT = 60; // 1 hour
 
+        private NightlyListener _nightlyListener;
         private Timer _updateTimer;
         private Timer _stopTimer;
         private string _revision;
@@ -247,6 +250,12 @@ namespace SkylineTester
 
         public override void Cancel()
         {
+            if (_nightlyListener != null)
+            {
+                _nightlyListener.Stop();
+                _nightlyListener = null;
+            }
+
             bool runAgain = MainWindow.NightlyRunIndefinitely.Checked;
             if (Math.Abs(MainWindow.RunElapsedTime.TotalMinutes - (int) MainWindow.NightlyDuration.Value * MINUTES_PER_INCREMENT) > 5)
                 runAgain = false;
@@ -363,6 +372,7 @@ namespace SkylineTester
                                          (stressTestLoopCount > 1 || MainWindow.NightlyRunPerfTests.Checked ? "pass0=off pass1=off " : "pass0=on pass1=on ") + // Skip the special passes if we're here to do stresstests or perftests
                                          (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : string.Empty) +
                                          " runsmallmoleculeversions=on" + // Run any provided tests that convert the document to small molecules
+                                         " retrydatadownloads=on" + // In case of test failure, re-download test data in case staleness was the issue
                                          (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
                                          (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty)
                                          + " dmpdir=" + MainWindow.GetMinidumpDir());
@@ -376,6 +386,8 @@ namespace SkylineTester
                 _updateTimer.Start();
             if (_stopTimer != null)
                 _stopTimer.Start();
+
+            _nightlyListener = new NightlyListener(_stopTimer);
         }
 
         private int _architecture;
@@ -457,6 +469,7 @@ namespace SkylineTester
                 lastRun.TestsRun = MainWindow.TestsRun;
                 lastRun.Failures = runFromLine.Failures;
                 lastRun.ManagedMemory = runFromLine.ManagedMemory;
+                lastRun.CommittedMemory = runFromLine.CommittedMemory;
                 lastRun.TotalMemory = runFromLine.TotalMemory;
                 lastRun.UserHandles = runFromLine.UserHandles;
                 lastRun.GdiHandles = runFromLine.GdiHandles;
@@ -721,5 +734,53 @@ namespace SkylineTester
         }
 
         BackgroundWorker SkylineTesterWindow.IMemoryGraphContainer.UpdateWorker { get; set; }
+
+        // Facilitates IPC so that we can receive signals from SkylineNightly
+        [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
+        public class NightlyListener: IEndTimeSetter
+        {
+            private readonly ServiceHost _host;
+            private readonly Timer _stopTimer;
+
+            public NightlyListener(Timer stopTimer)
+            {
+                _host = new ServiceHost(this, new Uri("net.pipe://localhost/Nightly"));
+                _host.AddServiceEndpoint(typeof(IEndTimeSetter), new NetNamedPipeBinding(), "SetEndTime");
+                _host.Open();
+
+                _stopTimer = stopTimer;
+            }
+
+            public void Stop()
+            {
+                _host.Close();
+            }
+
+            public void SetEndTime(DateTime endTime)
+            {
+                if (_stopTimer == null)
+                    return;
+
+                _stopTimer.Stop();
+
+                var now = DateTime.Now;
+                if (endTime <= now)
+                {
+                    MainWindow.StopByTimer();
+                    return;
+                }
+
+                _stopTimer.Interval = (int) endTime.Subtract(now).TotalMilliseconds;
+                _stopTimer.Start();
+            }
+        }
+
+        // Allows SkylineNightly to change the stop time of a nightly run via IPC
+        [ServiceContract]
+        public interface IEndTimeSetter
+        {
+            [OperationContract]
+            void SetEndTime(DateTime endTime);
+        }
     }
 }

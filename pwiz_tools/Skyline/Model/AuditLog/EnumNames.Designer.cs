@@ -97,6 +97,87 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursors.
+        /// </summary>
+        public static string AreaCVMsLevel_precursors {
+            get {
+                return ResourceManager.GetString("AreaCVMsLevel_precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Products.
+        /// </summary>
+        public static string AreaCVMsLevel_products {
+            get {
+                return ResourceManager.GetString("AreaCVMsLevel_products", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Global Standards.
+        /// </summary>
+        public static string AreaCVNormalizationMethod_global_standards {
+            get {
+                return ResourceManager.GetString("AreaCVNormalizationMethod_global_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Medians.
+        /// </summary>
+        public static string AreaCVNormalizationMethod_medians {
+            get {
+                return ResourceManager.GetString("AreaCVNormalizationMethod_medians", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string AreaCVNormalizationMethod_none {
+            get {
+                return ResourceManager.GetString("AreaCVNormalizationMethod_none", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio.
+        /// </summary>
+        public static string AreaCVNormalizationMethod_ratio {
+            get {
+                return ResourceManager.GetString("AreaCVNormalizationMethod_ratio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string AreaCVTransitions_all {
+            get {
+                return ResourceManager.GetString("AreaCVTransitions_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Best.
+        /// </summary>
+        public static string AreaCVTransitions_best {
+            get {
+                return ResourceManager.GetString("AreaCVTransitions_best", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count.
+        /// </summary>
+        public static string AreaCVTransitions_count {
+            get {
+                return ResourceManager.GetString("AreaCVTransitions_count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bilinear.
         /// </summary>
         public static string BilinearFit_bilinear {
@@ -390,6 +471,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportResultsSimultaneousFileOptions_several {
             get {
                 return ResourceManager.GetString("ImportResultsSimultaneousFileOptions_several", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear.
+        /// </summary>
+        public static string IrtRegressionType_linear {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_linear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Logarithmic.
+        /// </summary>
+        public static string IrtRegressionType_logarithmic {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_logarithmic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lowess.
+        /// </summary>
+        public static string IrtRegressionType_lowess {
+            get {
+                return ResourceManager.GetString("IrtRegressionType_lowess", resourceCulture);
             }
         }
         

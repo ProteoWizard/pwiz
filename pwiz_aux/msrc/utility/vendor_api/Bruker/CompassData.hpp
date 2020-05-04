@@ -27,8 +27,8 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/BinaryData.hpp"
-#include "pwiz/utility/misc/automation_vector.h"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/chemistry/MzMobilityWindow.hpp"
 #include <string>
 #include <vector>
 #include <boost/smart_ptr.hpp>
@@ -130,6 +130,13 @@ PWIZ_API_DECL enum DetailLevel
     DetailLevel_FullData
 };
 
+struct PWIZ_API_DECL IsolationInfo
+{
+    double isolationMz;
+    IsolationMode isolationMode;
+    double collisionEnergy;
+};
+
 struct PWIZ_API_DECL MSSpectrumParameter
 {
     std::string group;
@@ -187,16 +194,15 @@ struct PWIZ_API_DECL MSSpectrum
     virtual bool hasProfileData() const = 0;
     virtual size_t getLineDataSize() const = 0;
     virtual size_t getProfileDataSize() const = 0;
-    virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const = 0;
-    virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const = 0;
+    virtual void getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const = 0;
+    virtual void getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const = 0;
 
     virtual double getTIC() const = 0;
     virtual double getBPI() const = 0;
 
     virtual int getMSMSStage() const = 0;
     virtual double getRetentionTime() const = 0;
-    virtual void getIsolationData(std::vector<double>& isolatedMZs,
-                                  std::vector<IsolationMode>& isolationModes) const = 0;
+    virtual void getIsolationData(std::vector<IsolationInfo>& isolationInfo) const = 0;
     virtual void getFragmentationData(std::vector<double>& fragmentedMZs,
                                       std::vector<FragmentationMode>& fragmentationModes) const = 0;
     virtual IonPolarity getPolarity() const = 0;
@@ -207,8 +213,9 @@ struct PWIZ_API_DECL MSSpectrum
 
     virtual bool isIonMobilitySpectrum() const { return false; }
     virtual double oneOverK0() const { return 0.0; }
+	virtual int getWindowGroup() const { return 0; } // for diaPASEF data
 
-    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities) const { }
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const { }
     virtual size_t getCombinedSpectrumDataSize() const { return 0; }
     virtual pwiz::util::IntegerSet getMergedScanNumbers() const { return pwiz::util::IntegerSet(); }
 
@@ -253,13 +260,22 @@ struct PWIZ_API_DECL Chromatogram
 typedef boost::shared_ptr<Chromatogram> ChromatogramPtr;
 
 
+struct FrameScanRange
+{
+    int frame;
+    int scanStart;
+    int scanEnd;
+};
+
+
 struct PWIZ_API_DECL CompassData
 {
     typedef boost::shared_ptr<CompassData> Ptr;
     static Ptr create(const std::string& rawpath, bool combineIonMobilitySpectra = false,
                       msdata::detail::Bruker::Reader_Bruker_Format format = msdata::detail::Bruker::Reader_Bruker_Format_Unknown, 
                       int preferOnlyMsLevel = 0, // when nonzero, caller only wants spectra at this ms level
-                      bool allowMsMsWithoutPrecursor = true); // when false, PASEF MS2 specta without precursor info will be excluded
+                      bool allowMsMsWithoutPrecursor = true, // when false, PASEF MS2 specta without precursor info will be excluded
+                      const std::vector<chemistry::MzMobilityWindow>& isolationMzFilter = std::vector<chemistry::MzMobilityWindow>()); // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
 
     virtual ~CompassData() {}
 
@@ -275,8 +291,9 @@ struct PWIZ_API_DECL CompassData
     /// returns the number of spectra available from the MS source
     virtual size_t getMSSpectrumCount() const = 0;
 
-    /// converts a one-dimensional, one-based scan number to a one-based frame number and one-based scan number within the frame (only for TDF data)
-    virtual std::pair<size_t, size_t> getFrameScanPair(int scan) const;
+    /// converts a one-dimensional, one-based scan number to a one-based frame number and one-based scan number range within the frame (only for TDF data);
+    /// for non-combined IMS data, scanStart and scanEnd will be the same
+    virtual FrameScanRange getFrameScanPair(int scan) const;
 
     /// converts a one-based frame number and one-based scan number to a one-dimensional, one-based scan index (only for TDF data)
     virtual size_t getSpectrumIndex(int frame, int scan) const;
@@ -297,10 +314,10 @@ struct PWIZ_API_DECL CompassData
     virtual LCSpectrumPtr getLCSpectrum(int source, int scan) const = 0;
 
     /// returns a chromatogram with times and total ion currents of all spectra, or a null pointer if the format doesn't support fast access to TIC
-    virtual ChromatogramPtr getTIC() const = 0;
+    virtual ChromatogramPtr getTIC(bool ms1Only = false) const = 0;
 
     /// returns a chromatogram with times and base peak intensities of all spectra, or a null pointer if the format doesn't support fast access to BPC
-    virtual ChromatogramPtr getBPC() const = 0;
+    virtual ChromatogramPtr getBPC(bool ms1Only = false) const = 0;
 
     virtual std::string getOperatorName() const = 0;
     virtual std::string getAnalysisName() const = 0;

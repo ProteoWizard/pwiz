@@ -60,11 +60,38 @@ int main(int argc, char* argv[])
         bool requireUnicodeSupport = false;
 
         pwiz::util::ReaderTestConfig config;
+        pwiz::util::TestResult result;
         pwiz::msdata::Reader_Waters reader;
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawData(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawData(), config);
+
+        // test globalChromatogramsAreMs1Only, but don't need to test spectra here
+        {
+            auto newConfig = config;
+            newConfig.globalChromatogramsAreMs1Only = true;
+            newConfig.indexRange = make_pair(0, 0);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "MSe_Short.raw", "HDMRM_Short_noLM.raw", "HDDDA_Short_noLM.raw" }), newConfig);
+        }
+
+        // test vendor centroiding
+        {
+            auto newConfig = config;
+
+            // with both ion mobility and non-IMS data
+            newConfig.peakPicking = true;
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "ATEHLSTLSEK_profile.raw", "HDDDA_Short_noLM.raw" }), newConfig);
+
+            // with combineIonMobility on IMS data
+            newConfig.combineIonMobilitySpectra = true;
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "HDDDA_Short_noLM.raw" }), newConfig);
+        }
 
         config.combineIonMobilitySpectra = true;
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIMSData(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIMSData(), config);
+
+        config.isolationMzAndMobilityFilter.emplace_back(4, 0.2);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIMSData(), config);
+        
+        result.check();
     }
     catch (exception& e)
     {

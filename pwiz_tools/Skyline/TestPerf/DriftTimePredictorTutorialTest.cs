@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
@@ -60,12 +61,13 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             TestFilesZipPaths = new[]
             {
                 @"http://skyline.ms/tutorials/DriftTimePrediction.zip",
+                @"TestPerf\DriftTimePredictorExtra.zip",
                 @"TestPerf\DriftTimePredictorViews.zip",
                 dataRoot + BSA_Frag + EXT_ZIP,
                 dataRoot + Yeast_BSA + EXT_ZIP,
             };
 
-            TestFilesZipExtractHere = new[] {false, false, true, true};
+            TestFilesZipExtractHere = new[] {false, false, false, true, true};
 
             TestFilesPersistent = new[] { BSA_Frag, Yeast_BSA };
 
@@ -76,6 +78,18 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
         protected override void DoTest()
         {
+            // Check backward compatibility with 19.1.9.338 and 350 when combined IMS got written to MsDataFilePath
+            string legacyFile_19_1_9 = TestFilesDirs[1].GetTestPath(@"BSA-Training.sky");
+            RunUI(() => SkylineWindow.OpenFile(legacyFile_19_1_9));
+            VerifyCombinedIonMobility(WaitForDocumentLoaded());
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument();
+                SkylineWindow.NewDocument();
+                SkylineWindow.OpenFile(legacyFile_19_1_9);
+            });
+            VerifyCombinedIonMobility(WaitForDocumentLoaded());
+
             string skyFile = TestFilesDirs[0].GetTestPath(@"DriftTimePrediction\BSA-Training.sky");
             RunUI(() => SkylineWindow.OpenFile(skyFile));
 
@@ -224,6 +238,9 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 });
                 PauseForScreenShot("Edit predictor form", 18);
 
+                // Check that a new value was calculated for all precursors
+                RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, driftPredictor.Predictor.IonMobilityRows.Count));
+
                 OkDialog(driftPredictor, () => driftPredictor.OkDialog());
 
                 PauseForScreenShot("Peptide Settings - Prediction", 19);
@@ -299,6 +316,22 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             WaitForDocumentChangeLoaded(docFiltered, 1000 * 60 * 60 * 5); // 5 minutes
 
             // TODO: Check peak ranks before and after
+        }
+
+        private void VerifyCombinedIonMobility(SrmDocument doc)
+        {
+            // Check ChromCachedFile
+            var cachedFile = doc.MeasuredResults.CachedFileInfos.First();
+            VerifyCombinedIonMobilityMoved(cachedFile.FilePath, cachedFile.HasCombinedIonMobility);
+            // Check ChromFileInfo.FilePath
+            var chromFileInfo = doc.MeasuredResults.Chromatograms[0].MSDataFileInfos[0];
+            VerifyCombinedIonMobilityMoved(chromFileInfo.FilePath, true);
+        }
+
+        private void VerifyCombinedIonMobilityMoved(MsDataFileUri fileUri, bool hasCombinedIonMobility)
+        {
+            Assert.IsFalse(((MsDataFilePath)fileUri).LegacyCombineIonMobilitySpectra);
+            Assert.IsTrue(hasCombinedIonMobility);
         }
 
         private static void ValidateClickTime(GraphFullScan fullScanGraph, double clickTime)

@@ -537,7 +537,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ImportResultsSimultaneousFiles" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)">2</Value>
     </Setting>
     <Setting Name="ImportResultsDoAutoRetry" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
@@ -689,6 +689,24 @@
     <Setting Name="MixedMoleculeSettingsTab" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="Prosit" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="PrositIntensityModel" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="PrositRetentionTimeModel" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="PrositServer" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="LibMatchMirror" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="PrositNCE" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">27</Value>
+    </Setting>
     <Setting Name="ShowQcTraceName" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
@@ -697,6 +715,18 @@
     </Setting>
     <Setting Name="ShowLibraryScores" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DisplayModification" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SettingsUpgradeRequired" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="TutorialMode" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="GroupApplyToBy" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

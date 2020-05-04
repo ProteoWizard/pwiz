@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="_add_library_name" xml:space="preserve">
-    <value>Name to give the spectral library in an –add-library-path operation.</value>
+    <value>Name to give the spectral library in an –-add-library-path operation.</value>
   </data>
   <data name="_add_library_path" xml:space="preserve">
     <value>Specify a spectral library to be added to the open document.</value>
@@ -157,13 +157,13 @@
     <value>Ignore protein boundaries in creating methods.</value>
   </data>
   <data name="_exp_isolationlist_instrument" xml:space="preserve">
-    <value>Export an isolation list. This option is required for exporting an isolation list and has no default. This option cannot be used with –exp-translist-instrument or –exp-method-instrument, because you cannot export an isolation list and a transition list or method simultaneously.</value>
+    <value>Export an isolation list. This option is required for exporting an isolation list and has no default. This option cannot be used with -–exp-translist-instrument or –exp-method-instrument, because you cannot export an isolation list and a transition list or method simultaneously.</value>
   </data>
   <data name="_exp_max_trans" xml:space="preserve">
     <value>Maximum number of transitions per injection for export strategies “protein” and “buckets” OR maximum number of simultaneous transitions for scheduled methods. The default is 100.</value>
   </data>
   <data name="_exp_method_instrument" xml:space="preserve">
-    <value>Export a method. This option is required for exporting a method and has no default. This option cannot be used with –exp-isolationlist-instrument or --exp-translist-instrument, because you cannot export a method and an isolation/transition list simultaneously.</value>
+    <value>Export a method. This option is required for exporting a method and has no default. This option cannot be used with --exp-isolationlist-instrument or --exp-translist-instrument, because you cannot export a method and an isolation/transition list simultaneously.</value>
   </data>
   <data name="_exp_method_type" xml:space="preserve">
     <value>Sets a standard, scheduled or triggered method. The default is “standard”.</value>
@@ -187,7 +187,7 @@
     <value>Path of the method template. This can be a file or a directory depending on your instrument. This option is required for method export.</value>
   </data>
   <data name="_exp_translist_instrument" xml:space="preserve">
-    <value>Export a transition list. This option is required for exporting a transition list and has no default. This option cannot be used with –exp-isolation-list or --exp-method-instrument, because you cannot export a transition list and an isolation list or method simultaneously.</value>
+    <value>Export a transition list. This option is required for exporting a transition list and has no default. This option cannot be used with --exp-isolation-list or --exp-method-instrument, because you cannot export a transition list and an isolation list or method simultaneously.</value>
   </data>
   <data name="_help" xml:space="preserve">
     <value>Shows this text.</value>
@@ -497,7 +497,7 @@ http://localhost:8080</value>
 --tool-program-macro=R,2.15.2</value>
   </data>
   <data name="_tool_program_path" xml:space="preserve">
-    <value>Specifies the path to an executable on the local machine for the program title and version specified by the -–tool-program-macro flag.</value>
+    <value>Specifies the path to an executable on the local machine for the program title and version specified by the --tool-program-macro flag.</value>
   </data>
   <data name="_tool_report" xml:space="preserve">
     <value>The name of a report in the settings to use as the input report for the tool.</value>
@@ -724,6 +724,21 @@ greater peak area.</value>
   <data name="_refine_max_precursor_only" xml:space="preserve">
     <value>Only the precursor charge state with the maximum peak area will be retained.</value>
   </data>
+  <data name="_refine_cv_remove_above_cutoff" xml:space="preserve">
+    <value>All target precursors with peak area CV above the cutoff will be removed.</value>
+  </data>
+  <data name="_refine_cv_global_normalize" xml:space="preserve">
+    <value>Areas used in CV calculations are normalized as specified. (default no normalization)</value>
+  </data>
+  <data name="_refine_cv_reference_normalize" xml:space="preserve">
+    <value>Areas used in CV calculations are normalized to a reference type, e.g. "heavy".</value>
+  </data>
+  <data name="_refine_qvalue_cutoff" xml:space="preserve">
+    <value>All target precursors with a maximum detection q value above the cutoff will be removed. If --refine-minimum-detections is used then at least the specified number of replicates must have a detection q value below the cutoff.</value>
+  </data>
+  <data name="_refine_minimum_detections" xml:space="preserve">
+    <value>All target precursors with less than the specified number of replicates with detection q value below the --refine-qvalue-cutoff are removed.</value>
+  </data>
   <data name="_import_filename_pattern" xml:space="preserve">
     <value>A regular expression that is applied to file names to select the ones that will be imported.</value>
   </data>
@@ -750,5 +765,35 @@ greater peak area.</value>
   </data>
   <data name="_save_settings" xml:space="preserve">
     <value>Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file.</value>
+  </data>
+  <data name="_refine_cv_transitions" xml:space="preserve">
+    <value>Specifies the transitions for which peak areas are summed and used in CV calculations for CV refinement. (either all or a single best transition)</value>
+  </data>
+  <data name="_refine_cv_transitions_count" xml:space="preserve">
+    <value>Specifies the count of transitions selected by library transition rank (isotopes for precursors and library for fragments) for which peak areas are summed and used in CV calculations for CV refinement.</value>
+  </data>
+  <data name="_refine_cv_ms_level" xml:space="preserve">
+    <value>The MS level used in the CV calculations. Defaults to "products" which will usually have lower CVs than precursors in methods like PRM and DIA.</value>
+  </data>
+  <data name="_reintegrate_model_type" xml:space="preserve">
+    <value>The type of peak scoring model to train to produce z scores and q values. (dafault mProphet) Skyline - simply scales coefficients of the default Skyline model to estimate a unit normal distribution from the decoys. SkylineML - uses the mProphet machine learning algorithm to train a model using only the default set of feature scores.</value>
+  </data>
+  <data name="CommandArgs_NUM_LIST_VALUE" xml:space="preserve">
+    <value>&lt;number list&gt;</value>
+  </data>
+  <data name="_ims_library_res" xml:space="preserve">
+    <value>Resolving power of ion mobility dimension used to filter around ion mobility values from the spectral libraries.</value>
+  </data>
+  <data name="_refine_gc_fold_change_cutoff" xml:space="preserve">
+    <value>Keep only targets with a group comparision fold change above this cutoff. (optional for group comparison refinement)</value>
+  </data>
+  <data name="_refine_gc_ms_level" xml:space="preserve">
+    <value>The MS level (1 or 2) to use in calculating peak areas for a group comparison refinement. Defaults to level 2 if both levels are present, and otherwise uses whichever level is present.</value>
+  </data>
+  <data name="_refine_gc_name" xml:space="preserve">
+    <value>The name of a previously defined group comparison to use in refining for significantly changing targets. Specify the argument multiple times with multiple names to keep the union of multiple comparisons.</value>
+  </data>
+  <data name="_refine_gc_p_value_cutoff" xml:space="preserve">
+    <value>Keep only targets with a group comparison adjusted p value below the specified cut-off. (required for group comparison refinement)</value>
   </data>
 </root>

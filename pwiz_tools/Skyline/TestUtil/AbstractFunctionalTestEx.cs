@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -33,6 +34,7 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
@@ -212,19 +214,21 @@ namespace pwiz.SkylineTestUtil
         /// number of spectra.
         /// </summary>
         /// <param name="expectedSpectra">Number of spectra expected in the library</param>
-        public static void WaitForLibrary(int expectedSpectra)
+        /// <param name="libIndex">Index of library to wait for</param>
+        public static void WaitForLibrary(int expectedSpectra, int libIndex = 0)
         {
             TryWaitForCondition(() =>
             {
                 var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
                 return librarySettings.IsLoaded &&
-                       librarySettings.Libraries.Count > 0 &&
-                       librarySettings.Libraries[0].Keys.Count() == expectedSpectra;
+                       librarySettings.Libraries.Count > libIndex &&
+                       librarySettings.Libraries[libIndex].Keys.Count() == expectedSpectra;
             });
             var librarySettingsFinal = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
-            Assert.IsTrue(librarySettingsFinal.IsLoaded);
-            Assert.IsTrue(librarySettingsFinal.Libraries.Count > 0);
-            Assert.AreEqual(expectedSpectra, librarySettingsFinal.Libraries[0].Keys.Count());
+            var libraries = librarySettingsFinal.Libraries;
+            Assert.IsTrue(librarySettingsFinal.IsLoaded, string.Format("Libraries not loaded: {0}", librarySettingsFinal.IsNotLoadedExplained));
+            Assert.IsTrue(libraries.Count > libIndex, string.Format("Library count {0} does not support the index {1}.", libraries.Count, libIndex));
+            Assert.AreEqual(expectedSpectra, libraries[libIndex].Keys.Count());
         }
 
         public static void AddLibrary(LibrarySpec libSpec, Library lib)
@@ -275,6 +279,17 @@ namespace pwiz.SkylineTestUtil
                         viewEditor.ViewName = newViewName ?? viewName;
                         viewEditor.OkDialog();
                     });
+            }
+        }
+
+        public void SetCellValue(DataGridView dataGridView, int rowIndex, int columnIndex, object value)
+        {
+            using (new WaitDocumentChange())
+            {
+                dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[columnIndex];
+                dataGridView.BeginEdit(true);
+                dataGridView.CurrentCell.Value = value;
+                dataGridView.EndEdit();
             }
         }
 
@@ -362,6 +377,32 @@ namespace pwiz.SkylineTestUtil
             return FindGroupComparison(name);
         }
 
+        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation,
+            string controlGroupValue, string compareValue, string identityAnnotation)
+        {
+            var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
+
+            RunUI(() =>
+            {
+                dialog.TextBoxName.Text = name;
+                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
+            });
+
+            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
+
+            RunUI(() =>
+            {
+                dialog.ComboControlValue.SelectedItem = controlGroupValue;
+                dialog.ComboCaseValue.SelectedItem = compareValue;
+                dialog.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
+                dialog.RadioScopePerProtein.Checked = false;
+            });
+
+            OkDialog(dialog, dialog.OkDialog);
+
+            return FindGroupComparison(name);
+        }
+
         public void ChangeGroupComparison(Control owner, string name, Action<EditGroupComparisonDlg> action)
         {
             GroupComparisonDef def = null;
@@ -391,6 +432,7 @@ namespace pwiz.SkylineTestUtil
         public class Tool : IDisposable
         {
             private readonly MovedDirectory _movedDirectory;
+            private readonly string _toolPath;
 
             public Tool(
                 string zipInstallerPath,
@@ -404,6 +446,7 @@ namespace pwiz.SkylineTestUtil
                 Settings.Default.ToolList.Clear();
 
                 _movedDirectory = new MovedDirectory(ToolDescriptionHelpers.GetToolsDirectory(), Skyline.Program.StressTest);
+                _toolPath = toolPath;
                 RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
                 {
                     configureToolsDlg.RemoveAllTools();
@@ -422,7 +465,12 @@ namespace pwiz.SkylineTestUtil
 
             public void Dispose()
             {
-                _movedDirectory.Dispose();
+                var processName = Path.GetFileNameWithoutExtension(_toolPath);
+                using (new ProcessKiller(processName)) // Make sure tool process is closed and file handles released
+                {
+                    // Get rid of our temp files
+                    _movedDirectory.Dispose();
+                }
             }
 
             public void Run()
@@ -485,6 +533,57 @@ namespace pwiz.SkylineTestUtil
                     messageDlg.OkDialog();
                 });
             
+        }
+
+        public void AddReplicateAnnotation(DocumentSettingsDlg documentSettingsDlg,
+                                            string annotationName,
+                                            AnnotationDef.AnnotationType annotationType = AnnotationDef.AnnotationType.text,
+                                            IList<string> annotationValues = null,
+                                            int? pausePage = null)
+        {
+            AddAnnotation(documentSettingsDlg, annotationName, annotationType, annotationValues,
+                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate),
+                    pausePage);
+        }
+
+        public void AddAnnotation(DocumentSettingsDlg documentSettingsDlg,
+                                            string annotationName,
+                                            AnnotationDef.AnnotationType annotationType,
+                                            IList<string> annotationValues,
+                                            AnnotationDef.AnnotationTargetSet annotationTargets,
+                                            int? pausePage = null)
+        {
+            var annotationsListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>
+                (documentSettingsDlg.EditAnnotationList);
+            RunUI(annotationsListDlg.SelectLastItem);
+            var annotationDefDlg = ShowDialog<DefineAnnotationDlg>(annotationsListDlg.AddItem);
+
+            RunUI(() =>
+            {
+                annotationDefDlg.AnnotationName = annotationName;
+                annotationDefDlg.AnnotationType = annotationType;
+                if (annotationValues != null)
+                    annotationDefDlg.Items = annotationValues;
+                annotationDefDlg.AnnotationTargets = annotationTargets;
+            });
+
+            if (pausePage.HasValue)
+                PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName, pausePage.Value);
+
+            OkDialog(annotationDefDlg, annotationDefDlg.OkDialog);
+            OkDialog(annotationsListDlg, annotationsListDlg.OkDialog);
+        }
+
+        protected IEnumerable<string> GetCoefficientStrings(EditPeakScoringModelDlg editDlg)
+        {
+            for (int i = 0; i < editDlg.PeakCalculatorsGrid.Items.Count; i++)
+            {
+                double? weight = editDlg.PeakCalculatorsGrid.Items[i].Weight;
+                if (weight.HasValue)
+                    yield return string.Format(CultureInfo.InvariantCulture, "{0:F04}", weight.Value);
+                else
+                    yield return " null ";  // To help values line up
+            }
         }
     }
 }

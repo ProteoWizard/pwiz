@@ -68,6 +68,9 @@
             this.columnLibrarySequence = new pwiz.Skyline.Controls.TargetColumn();
             this.columnLibraryIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.comboStandards = new System.Windows.Forms.ComboBox();
+            this.comboRegressionType = new System.Windows.Forms.ComboBox();
+            this.label5 = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             this.contextMenuAdd.SuspendLayout();
@@ -158,6 +161,7 @@
             // 
             // contextMenuAdd
             // 
+            this.contextMenuAdd.ImageScalingSize = new System.Drawing.Size(40, 40);
             this.contextMenuAdd.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addResultsContextMenuItem,
             this.addSpectralLibraryContextMenuItem,
@@ -323,12 +327,27 @@
             this.comboStandards.Name = "comboStandards";
             this.comboStandards.SelectedIndexChanged += new System.EventHandler(this.comboStandards_SelectedIndexChanged);
             // 
+            // comboRegressionType
+            // 
+            this.comboRegressionType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRegressionType.FormattingEnabled = true;
+            resources.ApplyResources(this.comboRegressionType, "comboRegressionType");
+            this.comboRegressionType.Name = "comboRegressionType";
+            this.comboRegressionType.SelectedIndexChanged += new System.EventHandler(this.comboRegressionType_SelectedIndexChanged);
+            // 
+            // label5
+            // 
+            resources.ApplyResources(this.label5, "label5");
+            this.label5.Name = "label5";
+            // 
             // EditIrtCalcDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.comboRegressionType);
             this.Controls.Add(this.comboStandards);
             this.Controls.Add(this.btnCreateDb);
             this.Controls.Add(this.labelNumPeptides);
@@ -347,6 +366,7 @@
             this.Name = "EditIrtCalcDlg";
             this.ShowInTaskbar = false;
             this.Load += new System.EventHandler(this.OnLoad);
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).EndInit();
             this.contextMenuAdd.ResumeLayout(false);
@@ -393,5 +413,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnStandardIrt;
         private Controls.TargetColumn columnLibrarySequence;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnLibraryIrt;
+        private System.Windows.Forms.ComboBox comboRegressionType;
+        private System.Windows.Forms.Label label5;
     }
 }

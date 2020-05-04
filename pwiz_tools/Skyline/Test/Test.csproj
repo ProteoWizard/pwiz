@@ -140,11 +140,13 @@
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
+    <Compile Include="ChromPeakTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
     <Compile Include="CommandLineAssayImportTest.cs" />
     <Compile Include="CommandLineImportAnnotationsTest.cs" />
     <Compile Include="CommandLineImportDocTest.cs" />
     <Compile Include="CommandLineMProphetTest.cs" />
+    <Compile Include="CreateTextSequencesTest.cs" />
     <Compile Include="CustomMoleculeTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />
@@ -161,7 +163,6 @@
     <Compile Include="InternetAccessTest.cs" />
     <Compile Include="IonMobilityUnitTest.cs" />
     <Compile Include="IpiToUniprotTest.cs" />
-    <Compile Include="IrtPeptidePickerTest.cs" />
     <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
     <Compile Include="LibrarySettingsTest.cs" />
@@ -212,6 +213,7 @@
     <Compile Include="StringHelpersTest.cs" />
     <Compile Include="TestSerializeIsolationScheme.cs" />
     <Compile Include="TextUtilTest.cs" />
+    <Compile Include="TimeIntervalsTest.cs" />
     <Compile Include="ToolDescriptionTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
     <Compile Include="TypeSafeEnumTest.cs" />

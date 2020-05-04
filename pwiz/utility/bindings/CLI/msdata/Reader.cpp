@@ -81,6 +81,27 @@ static void copyReaderConfig(pwiz::msdata::Reader::Config& config, ReaderConfig^
     config.adjustUnknownTimeZonesToHostTimeZone = readerConfig->adjustUnknownTimeZonesToHostTimeZone;
     config.preferOnlyMsLevel = readerConfig->preferOnlyMsLevel;
     config.allowMsMsWithoutPrecursor = readerConfig->allowMsMsWithoutPrecursor;
+    config.sortAndJitter = readerConfig->sortAndJitter;
+    config.globalChromatogramsAreMs1Only = readerConfig->globalChromatogramsAreMs1Only;
+
+    if (readerConfig->isolationMzAndMobilityFilter != nullptr)
+        for each (MzMobilityWindow^ filter in readerConfig->isolationMzAndMobilityFilter)
+        {
+            if (filter->mobilityBounds != nullptr && filter->mz != nullptr)
+            {
+                double lb = filter->mobilityBounds->Item1, ub = filter->mobilityBounds->Item2;
+                config.isolationMzAndMobilityFilter.emplace_back(filter->mz->Value, std::make_pair(lb, ub));
+            }
+            else if (filter->mobilityBounds != nullptr)
+            {
+                double lb = filter->mobilityBounds->Item1, ub = filter->mobilityBounds->Item2;
+                config.isolationMzAndMobilityFilter.emplace_back(std::make_pair(lb, ub));
+            }
+            else if (filter->mz != nullptr)
+                config.isolationMzAndMobilityFilter.emplace_back(filter->mz->Value);
+            else
+                throw std::invalid_argument("MzMobilityWindows must have either m/z or mobility bounds set");
+        }
 }
 
 void Reader::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex, ReaderConfig^ readerConfig)

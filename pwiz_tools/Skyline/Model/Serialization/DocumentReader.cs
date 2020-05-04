@@ -76,8 +76,10 @@ namespace pwiz.Skyline.Model.Serialization
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
             float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
             bool excludeFromCalibration = reader.GetBoolAttribute(ATTR.exclude_from_calibration);
+            double? analyteConcentration = reader.GetNullableDoubleAttribute(ATTR.analyte_concentration);
             return new PeptideChromInfo(fileInfo.FileId, peakCountRatio, retentionTime, ImmutableList<PeptideLabelRatio>.EMPTY)
-                .ChangeExcludeFromCalibration(excludeFromCalibration);
+                .ChangeExcludeFromCalibration(excludeFromCalibration)
+                .ChangeAnalyteConcentration(analyteConcentration);
         }
 
         private SpectrumHeaderInfo ReadTransitionGroupLibInfo(XmlReader reader)
@@ -1361,7 +1363,7 @@ namespace pwiz.Skyline.Model.Serialization
             else if (isPrecursor)
             {
                 transition = new Transition(group, info.IonType, group.Peptide.Length - 1, info.MassIndex,
-                    group.PrecursorAdduct, info.DecoyMassShift);
+                    adduct.IsEmpty ? group.PrecursorAdduct : adduct, info.DecoyMassShift);
             }
             else
             {

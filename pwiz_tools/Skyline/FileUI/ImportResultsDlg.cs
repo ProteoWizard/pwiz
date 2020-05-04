@@ -378,7 +378,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     var paths = GetWiffSubPaths(msDataFilePath.FilePath);
                     if (paths == null)
-                        return null;    // An error or user cancelation occurred
+                        return null;    // An error or user cancellation occurred
                     listPaths.AddRange(paths);
                 }
                 else
@@ -409,7 +409,7 @@ namespace pwiz.Skyline.FileUI
                         foreach (var path in paths)
                         {
                             listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(
-                                                   path.SampleName, new MsDataFileUri[]{ path }));                            
+                                                   path.SampleName, new[]{ path }));
                         }
                         continue;
                     }

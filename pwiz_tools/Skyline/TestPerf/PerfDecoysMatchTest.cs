@@ -20,8 +20,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -62,7 +64,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.OpenSharedFile(filePathDda));
             var doc = WaitForDocumentLoaded();
             int expectedDecoys = RefinementSettings.SuggestDecoyCount(doc);
-            RunDlg<GenerateDecoysDlg>(SkylineWindow.ShowGenerateDecoysDlg, decoysDlg =>
+            RunDlg<GenerateDecoysDlg>(() => SkylineWindow.ShowGenerateDecoysDlg(), decoysDlg =>
             {
                 decoysDlg.DecoysMethod = DecoyGeneration.SHUFFLE_SEQUENCE;
                 decoysDlg.OkDialog();
@@ -119,7 +121,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.OpenSharedFile(filePathDia));
             doc = WaitForDocumentLoaded();
             expectedDecoys = RefinementSettings.SuggestDecoyCount(doc);
-            RunDlg<GenerateDecoysDlg>(SkylineWindow.ShowGenerateDecoysDlg, decoysDlg =>
+            RunDlg<GenerateDecoysDlg>(() => SkylineWindow.ShowGenerateDecoysDlg(), decoysDlg =>
             {
                 decoysDlg.DecoysMethod = DecoyGeneration.REVERSE_SEQUENCE;
                 decoysDlg.OkDialog();
@@ -132,7 +134,7 @@ namespace TestPerf
                 SkylineWindow.SaveDocument();
                 SkylineWindow.ArrangeGraphsTiled();
                 SkylineWindow.ShowOtherRunPeptideIDTimes(true);
-                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.SelectedNode.FirstNode;
+                SkylineWindow.SequenceTree.SelectedNode = SkipInvalidNodes(SkylineWindow.SequenceTree.SelectedNode.FirstNode);
             });
             for (int i = 0; i < 6; i++)
             {
@@ -147,7 +149,8 @@ namespace TestPerf
                         Assert.AreNotEqual(0, graphChromatogram.UnalignedRetentionMsMs.Length);
                         ValidateTimeRange(graphChromatogram, graphChromatogram.UnalignedRetentionMsMs, 8, 120);
                     }
-                    SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.SelectedNode.NextNode;
+
+                    SkylineWindow.SequenceTree.SelectedNode = SkipInvalidNodes(SkylineWindow.SequenceTree.SelectedNode.NextNode);
                 });
             }
 
@@ -156,7 +159,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.OpenSharedFile(filePathDiaIrt));
             doc = WaitForDocumentLoaded();
             expectedDecoys = RefinementSettings.SuggestDecoyCount(doc);
-            RunDlg<GenerateDecoysDlg>(SkylineWindow.ShowGenerateDecoysDlg, decoysDlg =>
+            RunDlg<GenerateDecoysDlg>(() => SkylineWindow.ShowGenerateDecoysDlg(), decoysDlg =>
             {
                 decoysDlg.DecoysMethod = DecoyGeneration.SHUFFLE_SEQUENCE;
                 decoysDlg.OkDialog();
@@ -167,7 +170,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 SkylineWindow.SaveDocument();
-                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.SelectedNode.FirstNode;
+                SkylineWindow.SequenceTree.SelectedNode = SkipInvalidNodes(SkylineWindow.SequenceTree.SelectedNode.FirstNode);
             });
 
             for (int i = 0; i < 6; i++)
@@ -183,8 +186,29 @@ namespace TestPerf
                         Assert.IsTrue(graphChromatogram.PredictedRT.HasValue);
                         ValidateTimeRange(graphChromatogram, new []{graphChromatogram.PredictedRT.Value}, 8, 135);
                     }
-                    SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.SelectedNode.NextNode;
+                    SkylineWindow.SequenceTree.SelectedNode = SkipInvalidNodes(SkylineWindow.SequenceTree.SelectedNode.NextNode);
                 });
+            }
+        }
+        /// <summary>
+        /// If the PeptideDocNode has a precursor m/z that is greater than 900 then return its first
+        /// sibling that matches the criteria.
+        /// The spectra only had a scan range up to 900, so larger peptides will be missing chromatograms.
+        /// </summary>
+        private PeptideTreeNode SkipInvalidNodes(TreeNode treeNode)
+        {
+            Assert.IsInstanceOfType(treeNode, typeof(PeptideTreeNode));
+            var peptideTreeNode = treeNode as PeptideTreeNode;
+            Assert.IsNotNull(peptideTreeNode);
+            while (true)
+            {
+                if (peptideTreeNode.DocNode.TransitionGroups.All(tg => tg.PrecursorMz < 900))
+                {
+                    return peptideTreeNode;
+                }
+
+                peptideTreeNode = (PeptideTreeNode)peptideTreeNode.NextNode;
+                Assert.IsNotNull(peptideTreeNode);
             }
         }
 

@@ -62,6 +62,13 @@ namespace Thermo = ThermoFisher::CommonCore::Data::Business;
 #endif // WIN64
 
 
+#ifdef _WIN64
+const char* pwiz::vendor_api::Thermo::ControllerTypeStrings[] = { "MS", "Analog", "A/D Card", "UV", "PDA", "Other" };
+#else
+const char* pwiz::vendor_api::Thermo::ControllerTypeStrings[] = { "MS", "Analog", "A/D Card", "PDA", "UV", "Other" };
+#endif
+
+
 class RawFileImpl : public RawFile
 {
     public:
@@ -293,6 +300,9 @@ RawFileImpl::RawFileImpl(const string& filename)
         if (raw_->Open(bfs::path(filename_).native().c_str()))
             throw RawEgg("[RawFile::ctor] Unable to open file " + filename);
 
+        if (getNumberOfControllersOfType(Controller_MS) == 0)
+            return; // none of the following metadata stuff works for non-MS controllers as far as I can tell
+
         setCurrentController(Controller_MS, 1);
 
 #else // is WIN64
@@ -304,6 +314,9 @@ RawFileImpl::RawFileImpl(const string& filename)
         // CONSIDER: throwing C++ exceptions in managed code may cause Wine to crash?
         if (raw_->IsError || raw_->InAcquisition)
             throw gcnew System::Exception("Corrupt RAW file " + managedFilename);
+
+        if (getNumberOfControllersOfType(Controller_MS) == 0)
+            return; // none of the following metadata stuff works for non-MS controllers as far as I can tell
 
         setCurrentController(Controller_MS, 1);
 
@@ -939,12 +952,22 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
         if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
         {
             auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
-            ToBinaryData(centroidStream->Masses, result->mzArray);
-            ToBinaryData(centroidStream->Intensities, result->intensityArray);
+            if (centroidStream != nullptr && centroidStream->Length > 0)
+            {
+                ToBinaryData(centroidStream->Masses, result->mzArray);
+                ToBinaryData(centroidStream->Intensities, result->intensityArray);
+                return result;
+            }
         }
-        else if (centroidResult)
+
+        if (centroidResult)
         {
-            auto centroidScan = Thermo::Scan::ToCentroid(Thermo::Scan::FromFile(raw_.get(), scanNumber));
+            auto scan = Thermo::Scan::FromFile(raw_.get(), scanNumber);
+            if (scan->SegmentedScanAccess->Positions->Length == 0 || scan->ScanStatistics->BasePeakIntensity == 0)
+                return result;
+            auto centroidScan = Thermo::Scan::ToCentroid(scan);
+            if (centroidScan == nullptr || centroidScan->SegmentedScanAccess->Positions->Length == 0)
+                throw gcnew System::Exception("failed to centroid scan");
             ToBinaryData(centroidScan->SegmentedScanAccess->Positions, result->mzArray);
             ToBinaryData(centroidScan->SegmentedScanAccess->Intensities, result->intensityArray);
         }
@@ -1077,7 +1100,7 @@ class ScanInfoImpl : public ScanInfo
     virtual bool isSourceCID() const { return isSourceCID_; }
     virtual AccurateMassType accurateMassType() const { return accurateMassType_; }
 
-    virtual std::vector<PrecursorInfo> precursorInfo() const;
+    virtual const std::vector<PrecursorInfo>& precursorInfo() const;
     virtual long precursorCount() const {return precursorMZs_.size();}
     virtual long precursorCharge() const;
     virtual double precursorMZ(long index, bool preferMonoisotope) const;
@@ -1160,6 +1183,7 @@ class ScanInfoImpl : public ScanInfo
     bool supplementalActivation_;
     vector<double> precursorMZs_;
     vector<double> precursorActivationEnergies_;
+    vector<PrecursorInfo> precursorInfo_;
     vector<pair<double, double> > scanRanges_;
     bool isProfileScan_;
     bool isCentroidScan_;
@@ -1284,6 +1308,7 @@ void ScanInfoImpl::initialize()
         scanRanges_.clear();
         precursorMZs_.clear();
         precursorActivationEnergies_.clear();
+        precursorInfo_.clear();
         trailerExtraMap_.clear();
         spsMasses_.clear();
 
@@ -1340,7 +1365,9 @@ void ScanInfoImpl::initialize()
                 vector<string> tokens;
                 bal::split(tokens, spsMassesStr, bal::is_any_of(","));
 
-                // skip first 
+                double isolationWidth = precursorInfo_.back().isolationWidth;
+
+                // skip first SPS mass which has already been added to precursorMZs_ in parseFilterString()
                 for (size_t i = 1; i < tokens.size(); ++i)
                 {
                     bal::trim(tokens[i]);
@@ -1349,6 +1376,7 @@ void ScanInfoImpl::initialize()
                     spsMasses_.push_back(lexical_cast<double>(tokens[i]));
                     precursorMZs_.push_back(spsMasses_.back());
                     precursorActivationEnergies_.push_back(precursorActivationEnergies_.back());
+                    precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, spsMasses_.back(), spsMasses_.back(), isolationWidth, precursorActivationEnergies_.back(), activationType_, 0, 0 });
                 }
                 hasMultiplePrecursors_ = true;
                 isSPS_ = true;
@@ -1629,12 +1657,24 @@ void ScanInfoImpl::parseFilterString()
     }
     CATCH_AND_FORWARD_EX(ToStdString(filter_->ToString()))
 #endif
+
+    if (precursorMZs_.empty() || msLevel_ < 1)
+        return;
+
+    auto isolationWidths = getIsolationWidths();
+    for (size_t i = 0; i < msLevel_ - 1; ++i)
+        precursorInfo_.push_back(PrecursorInfo{ int(i+1), precursorMZs_[i], precursorMZs_[i], isolationWidths[i], precursorActivationEnergies_[i], activationType_, 0, 0 });
+
+    if (hasMultiplePrecursors_ && spsMasses_.empty()) // MSX mode means there can be more than 1 filter line m/z for the current ms level
+    {
+        for (size_t i = msLevel_ - 1; i < precursorMZs_.size(); ++i)
+            precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, precursorMZs_[i], precursorMZs_[i], isolationWidths.back(), precursorActivationEnergies_[i], activationType_, 0, 0 });
+    }
 }
 
-vector<PrecursorInfo> ScanInfoImpl::precursorInfo() const
+const vector<PrecursorInfo>& ScanInfoImpl::precursorInfo() const
 {
-    vector<PrecursorInfo> precursorInfo;
-    return precursorInfo;
+    return precursorInfo_;
 }
 
 long ScanInfoImpl::precursorCharge() const
@@ -1835,6 +1875,7 @@ void RawFileImpl::parseInstrumentMethod()
     sregex scanEventIsoWRegex = sregex::compile("\\s*MS.*:.*\\s+IsoW\\s+(\\S+)\\s*");
     sregex repeatedEventRegex = sregex::compile("\\s*Scan Event (\\d+) repeated for top (\\d+)\\s*");
     sregex defaultIsolationWidthRegex = sregex::compile("\\s*MS(\\d+) Isolation Width:\\s*(\\S+)\\s*");
+    sregex defaultIsolationWindowRegex = sregex::compile("\\s*Isolation Window \\(m/z\\) =\\s*(\\S+)\\s*");
     sregex isolationMzOffsetRegex = sregex::compile("\\s*Isolation m/z Offset =\\s*(\\S+)\\s*");
     sregex scanDescriptionRegex = sregex::compile("\\s*Scan Description =\\s*(\\S+)\\s*");
 
@@ -1893,7 +1934,7 @@ void RawFileImpl::parseInstrumentMethod()
         }
 
         // Data Dependent Settings:
-        if (bal::icontains(line, "Data Dependent Settings"))
+        if (bal::icontains(line, "Data Dependent Settings") || bal::icontains(line, "Scan DIAScan"))
         {
             dataDependentSettings = true;
             continue;
@@ -1907,6 +1948,13 @@ void RawFileImpl::parseInstrumentMethod()
                 int msLevel = lexical_cast<int>(what[1]);
                 double isolationWidth = lexical_cast<double>(what[2]);
                 defaultIsolationWidthBySegmentAndMsLevel[scanSegment][msLevel] = isolationWidth;
+                continue;
+            }
+            
+            if (regex_match(line, what, defaultIsolationWindowRegex))
+            {
+                double isolationWidth = lexical_cast<double>(what[1]);
+                defaultIsolationWidthBySegmentAndMsLevel[scanSegment][2] = isolationWidth;
                 continue;
             }
 
@@ -1935,19 +1983,20 @@ void RawFileImpl::parseInstrumentMethod()
 
 vector<double> ScanInfoImpl::getIsolationWidths() const
 {
-    vector<double> isolationWidths;
+    vector<double> isolationWidths(max(0l, msLevel_ - 1), 0);
 
     if (scanNumber_ == 0)
         return isolationWidths;
 
     if (!spsMasses_.empty())
     {
+        isolationWidths.clear();
 #ifndef _WIN64
         double isolationWidth;
-        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, 0, &isolationWidth));
+        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, msLevel_ - 1, &isolationWidth));
         isolationWidths.resize(precursorMZs_.size(), isolationWidth);
 #else
-        isolationWidths.resize(precursorMZs_.size(), filter_->GetIsolationWidth(0));
+        isolationWidths.resize(precursorMZs_.size(), filter_->GetIsolationWidth(filter_->MassCount - 1));
 #endif
         return isolationWidths;
     }
@@ -1960,11 +2009,10 @@ vector<double> ScanInfoImpl::getIsolationWidths() const
 
     long numMSOrders;
     checkResult(rawfile_->raw_->GetNumberOfMSOrdersFromScanNum(scanNumber_, &numMSOrders));
-    for (long i = 0; i < numMSOrders; i++)
+    isolationWidths.resize(max(numMSOrders, msLevel_ - 1));
+    for (long i = 0; i < isolationWidths.size(); i++)
     {
-        double isolationWidth;
-        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, i, &isolationWidth));
-        isolationWidths.push_back(isolationWidth);
+        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, i, &isolationWidths[i]));
     }
 #else
     MSOrder msOrder = (MSOrder) filter_->MSOrder;
@@ -1972,9 +2020,10 @@ vector<double> ScanInfoImpl::getIsolationWidths() const
         return isolationWidths;
 
     long massCount = filter_->MassCount;
-    for (long i = 0; i < massCount; i++)
+    isolationWidths.resize(max(massCount, msLevel_ - 1));
+    for (long i = 0; i < isolationWidths.size(); i++)
     {
-        isolationWidths.push_back(filter_->GetIsolationWidth(i));
+        isolationWidths[i] = filter_->GetIsolationWidth(i);
     }
 #endif
     return isolationWidths;
@@ -2466,19 +2515,26 @@ std::string RawFileThreadImpl::getSampleID() const
 
 std::string RawFileThreadImpl::getTrailerExtraValue(long scanNumber, const string& name) const
 {
+    if (rawFile_->getCurrentController().type != Controller_MS)
+        return "";
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
         if (findItr == rawFile_->trailerExtraIndexByName.end())
             return "";
 
-        return ToStdString(raw_->GetTrailerExtraValue(scanNumber, findItr->second)->ToString());
+        auto result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
+        return result == nullptr ? "" : ToStdString(result->ToString());
     }
     CATCH_AND_FORWARD_EX(name)
 }
 
 double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const string& name) const
 {
+    if (rawFile_->getCurrentController().type != Controller_MS)
+        return 0.0;
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
@@ -2493,6 +2549,9 @@ double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const stri
 
 long RawFileThreadImpl::getTrailerExtraValueLong(long scanNumber, const string& name) const
 {
+    if (rawFile_->getCurrentController().type != Controller_MS)
+        return 0;
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
@@ -2530,7 +2589,7 @@ MassListPtr RawFileThreadImpl::getMassList(long scanNumber,
         if (centroidResult)
         {
             auto scan = Thermo::Scan::FromFile(raw_.get(), scanNumber);
-            if (scan->SegmentedScanAccess->Positions->Length == 0)
+            if (scan->SegmentedScanAccess->Positions->Length == 0 || scan->ScanStatistics->BasePeakIntensity == 0)
                 return result;
             auto centroidScan = Thermo::Scan::ToCentroid(scan);
             if (centroidScan == nullptr || centroidScan->SegmentedScanAccess->Positions->Length == 0)

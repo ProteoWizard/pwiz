@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -64,6 +65,12 @@ namespace pwiz.SkylineTestUtil
         {
             get { return GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
             set { TestContext.Properties["RunPerfTests"] = value ? "true" : "false"; }
+        }
+
+        protected bool RetryDataDownloads
+        {
+            get { return GetBoolValue("RetryDataDownloads", false); }  // When true, re-download data sets on test failure in case it's due to stale data
+            set { TestContext.Properties["RetryDataDownloads"] = value ? "true" : "false"; }
         }
 
         /// <summary>
@@ -127,6 +134,11 @@ namespace pwiz.SkylineTestUtil
         public string[] TestFilesPersistent { get; set; }
 
         /// <summary>
+        /// Tracks which zip files were downloaded this run, and which might possibly be stale
+        /// </summary>
+        public Dictionary<string, bool> DictZipFileIsKnownCurrent { get; private set; }
+
+        /// <summary>
         /// One bool per TestFilesZipPaths indicating whether to unzip in the root directory (true) or a sub-directory (false or null)
         /// </summary>
         public bool[] TestFilesZipExtractHere { get; set; }
@@ -143,6 +155,7 @@ namespace pwiz.SkylineTestUtil
             {
                 string[] zipPaths = value;
                 _testFilesZips = new string[zipPaths.Length];
+                DictZipFileIsKnownCurrent = new Dictionary<string, bool>();
                 for (int i = 0; i < zipPaths.Length; i++)
                 {
                     var zipPath = zipPaths[i];
@@ -150,42 +163,62 @@ namespace pwiz.SkylineTestUtil
                     // Downloads folder for future use
                     if (zipPath.Substring(0, 8).ToLower().Equals(@"https://") || zipPath.Substring(0, 7).ToLower().Equals(@"http://"))
                     {
-                        string downloadsFolder = PathEx.GetDownloadsPath();
-                        string urlFolder = zipPath.Split('/')[zipPath.Split('/').Length - 2]; // usually "tutorial" or "PerfTest"
-                        string targetFolder = Path.Combine(downloadsFolder, char.ToUpper(urlFolder[0]) + urlFolder.Substring(1)); // "tutorial"->"Tutorial"
-                        string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
-                        string zipFilePath = Path.Combine(targetFolder, fileName);
+                        var targetFolder = GetTargetZipFilePath(zipPath, out var zipFilePath);
                         if (!File.Exists(zipFilePath) &&
                            (!IsPerfTest || RunPerfTests)) // If this is a perf test, skip download unless perf tests are enabled
-
                         {
-                            if (!Directory.Exists(targetFolder))
-                                Directory.CreateDirectory(targetFolder);
-
-                            bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
-                            string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
-                            if (downloadFromS3)
-                                zipPath = zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname);
-
-                            WebClient webClient = new WebClient();
-                            using (var fs = new FileSaver(zipFilePath))
-                            {
-                                try
-                                {
-                                    webClient.DownloadFile(zipPath.Split('\\')[0], fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
-                                }
-                                catch (Exception x)
-                                {
-                                   Assert.Fail("Could not download {0}: {1}", zipPath, x.Message);
-                                }
-                                fs.Commit();
-                            }
+                            zipPath = DownloadZipFile(targetFolder, zipPath, zipFilePath);
+                            DictZipFileIsKnownCurrent.Add(zipPath, true);
+                        }
+                        else
+                        {
+                            DictZipFileIsKnownCurrent.Add(zipPath, false); // May wish to retry test with a fresh download if it fails
                         }
                         zipPath = zipFilePath;
                     }
                     _testFilesZips[i] = zipPath;
                 }
             }
+        }
+
+        private static string DownloadZipFile(string targetFolder, string zipPath, string zipFilePath)
+        {
+            if (!Directory.Exists(targetFolder))
+                Directory.CreateDirectory(targetFolder);
+
+            bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
+            string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
+            if (downloadFromS3)
+                zipPath = zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname);
+
+            WebClient webClient = new WebClient();
+            using (var fs = new FileSaver(zipFilePath))
+            {
+                try
+                {
+                    webClient.DownloadFile(zipPath.Split('\\')[0],
+                        fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
+                }
+                catch (Exception x)
+                {
+                    Assert.Fail("Could not download {0}: {1}", zipPath, x.Message);
+                }
+
+                fs.Commit();
+            }
+
+            return zipPath;
+        }
+
+        private static string GetTargetZipFilePath(string zipPath, out string zipFilePath)
+        {
+            var downloadsFolder = PathEx.GetDownloadsPath();
+            var urlFolder = zipPath.Split('/')[zipPath.Split('/').Length - 2]; // usually "tutorial" or "PerfTest"
+            var targetFolder =
+                Path.Combine(downloadsFolder, char.ToUpper(urlFolder[0]) + urlFolder.Substring(1)); // "tutorial"->"Tutorial"
+            var fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
+            zipFilePath = Path.Combine(targetFolder, fileName);
+            return targetFolder;
         }
 
         public string TestDirectoryName { get; set; }
@@ -202,6 +235,36 @@ namespace pwiz.SkylineTestUtil
         }
         public TestFilesDir[] TestFilesDirs { get; set; }
 
+        /// <summary>
+        /// If there are any stale downloads, freshen them
+        /// </summary>
+        /// <returns>true if any files are shown to be stale and thus worthy of a retry of the test that uses them</returns>
+        public bool FreshenTestDataDownloads() 
+        {
+            if (DictZipFileIsKnownCurrent == null || DictZipFileIsKnownCurrent.All(kvp => kvp.Value))
+                return false;
+            var knownStale = false;
+            foreach (var zipPath in DictZipFileIsKnownCurrent.Where(kvp => !kvp.Value).Select(kvp => kvp.Key).ToArray())
+            {
+                var targetFolder = GetTargetZipFilePath(zipPath, out var zipFilePath);
+                var zipFilePathTest = zipFilePath + @".new";
+                DownloadZipFile(targetFolder, zipPath, zipFilePathTest);
+                if (!FileEx.AreIdenticalFiles(zipFilePath, zipFilePathTest))
+                {
+                    knownStale = true;
+                    File.Delete(zipFilePath);
+                    File.Move(zipFilePathTest, zipFilePath);
+                }
+                else
+                {
+                    File.Delete(zipFilePathTest);
+                }
+                DictZipFileIsKnownCurrent[zipPath] = true;
+            }
+
+            return knownStale;
+        }
+        
         public static int CountInstances(string search, string searchSpace)
         {
             if (search.Length == 0)
@@ -240,7 +303,7 @@ namespace pwiz.SkylineTestUtil
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 
-            SecurityProtocolInitializer.Initialize(); // Enable maximum available HTTPS security level, esp. for Chorus
+            SecurityProtocolInitializer.Initialize(); // Enable maximum available HTTPS security level
 
 //            var log = new Log<AbstractUnitTest>();
 //            log.Info(TestContext.TestName + " started");
@@ -277,6 +340,7 @@ namespace pwiz.SkylineTestUtil
 
             // Save profile snapshot if we are profiling.
             DotTraceProfile.Save();
+            Settings.Init();
 
 //            var log = new Log<AbstractUnitTest>();
 //            log.Info(

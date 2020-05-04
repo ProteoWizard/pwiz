@@ -736,6 +736,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Explicit Analyte Concentration.
+        /// </summary>
+        public static string ExplicitAnalyteConcentration {
+            get {
+                return ResourceManager.GetString("ExplicitAnalyteConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit Collisional Cross Section.
         /// </summary>
         public static string ExplicitCollisionalCrossSection {

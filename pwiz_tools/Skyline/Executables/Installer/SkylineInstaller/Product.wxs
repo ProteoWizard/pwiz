@@ -372,6 +372,18 @@
       <Component Id="Google.Protobuf.dll">
         <File Source="$(var.Skyline.TargetDir)/Google.Protobuf.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Grpc.Core.Api.dll">
+        <File Source="$(var.Skyline.TargetDir)/Grpc.Core.Api.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Grpc.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/Grpc.Core.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="grpc_csharp_ext.x64.dll">
+        <File Source="$(var.Skyline.TargetDir)/grpc_csharp_ext.x64.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="grpc_csharp_ext.x86.dll">
+        <File Source="$(var.Skyline.TargetDir)/grpc_csharp_ext.x86.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="IdentityModel.dll">
         <File Source="$(var.Skyline.TargetDir)/IdentityModel.dll" KeyPath="yes"/>
       </Component>
@@ -582,16 +594,14 @@
             <Verb Id="open" Command="Open" TargetFile="Skyline.exe_file" Argument="--opendoc &quot;%1&quot;"/>
           </Extension>
         </ProgId>
+        <ProgId Id="Skyline.Pointer.0" Description="Skyline Document Pointer" Icon="SkylineDocPointer.ico">
+          <Extension Id="skyp" ContentType="application/skyp">
+            <Verb Id="open" Command="Open" TargetFile="Skyline.exe_file" Argument="--opendoc &quot;%1&quot;"/>
+          </Extension>
+        </ProgId>
       </Component>
       <Component Id="Skyline.exe.config">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe.config" KeyPath="yes" Id="Skyline_exe_config"/>
-        <util:XmlFile Id="SetInstalledVersion" 
-                      Action="setValue"
-                      ElementPath="//applicationSettings/pwiz.Skyline.Properties.Settings/setting[\[]@name='InstalledVersion'[\]]/value" 
-                      Value="$(var.ProductVersion)"
-                      File="[#Skyline_exe_config]"
-                      SelectionLanguage="XPath"
-                      />
       </Component>
       <Component Id="Skyline.exe.manifest">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe.manifest" KeyPath="yes"/>
@@ -602,6 +612,9 @@
       <Component Id="SkylineCmd.exe">
         <File Source="$(var.Skyline.TargetDir)/SkylineCmd.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="SkylineCmd.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/SkylineCmd.exe.config" KeyPath="yes"/>
+      </Component>
       <Component Id="SkylineCmd.pdb">
         <File Source="$(var.Skyline.TargetDir)/SkylineCmd.pdb" KeyPath="yes"/>
       </Component>
@@ -610,6 +623,9 @@
       </Component>
       <Component Id="SkylineDoc.ico">
         <File Source="$(var.Skyline.ProjectDir)/SkylineDoc.ico" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineDocPointer.ico">
+        <File Source="$(var.Skyline.ProjectDir)/SkylineDocPointer.ico" KeyPath="yes"/>
       </Component>
       <Component Id="SkylineProcessRunner.exe">
         <File Source="$(var.Skyline.TargetDir)/SkylineProcessRunner.exe" KeyPath="yes"/>
@@ -623,8 +639,17 @@
       <Component Id="System.Data.SQLite.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Data.SQLite.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="System.Interactive.Async.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Interactive.Async.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="System.Memory.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Memory.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="System.Runtime.Caching.Generic.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Runtime.Caching.Generic.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="System.Runtime.CompilerServices.Unsafe.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Runtime.CompilerServices.Unsafe.dll" KeyPath="yes"/>
       </Component>
       <?if $(sys.BUILDARCH) = x64?>
       <Component Id="ThermoFisher.CommonCore.Data.dll">

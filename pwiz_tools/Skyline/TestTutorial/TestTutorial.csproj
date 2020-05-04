@@ -98,11 +98,19 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
+    <Reference Include="JetBrains.Annotations, Version=2018.2.1.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -113,7 +121,8 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SmallMoleculesMethodDevAndCEOptimizationTutorial.cs" />
+    <Compile Include="AuditLogTutorialTest.cs" />
+    <Compile Include="SmallMolMethodDevCEOptTutorial.cs" />
     <Compile Include="SmallMoleculesQuantificationTutorial.cs" />
     <Compile Include="SmallMoleculesTutorial.cs" />
     <Compile Include="AbsoluteQuantTutorialTest.cs" />
@@ -196,6 +205,8 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <None Include="AbsoluteQuantViews.zip" />
+    <None Include="AuditLogViews.zip" />
     <None Include="CEOptimizationViews.zip" />
     <None Include="CustomReportsViews.zip" />
     <None Include="DiaViews.zip" />
@@ -207,7 +218,7 @@
     <None Include="MethodRefinementViews.zip" />
     <None Include="Ms1FullScanFilteringViews.zip" />
     <None Include="PeakPickingViews.zip" />
-    <None Include="SmallMoleculesMethodDevAndCEOptimizationViews.zip" />
+    <None Include="SmallMolMethodDevCEOptViews.zip" />
     <None Include="SmallMoleculesQuantificationViews.zip" />
     <None Include="SmallMoleculeViews.zip" />
     <None Include="SRMViews.zip" />

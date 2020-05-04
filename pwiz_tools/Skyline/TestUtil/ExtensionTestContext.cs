@@ -45,11 +45,11 @@ namespace pwiz.SkylineTestUtil
             return Path.Combine(testContext.TestDir, relativePath);
         }
 
-        public static String GetProjectDirectory(this TestContext testContext, string relativePath)
+        public static String GetProjectDirectory(string relativePath)
         {
             for (String directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                    directory != null && directory.Length > 10;
-                    directory = Path.GetDirectoryName(directory))
+                directory != null && directory.Length > 10;
+                directory = Path.GetDirectoryName(directory))
             {
                 var testZipFiles = Path.Combine(directory, "TestZipFiles");
                 if (Directory.Exists(testZipFiles))
@@ -57,7 +57,17 @@ namespace pwiz.SkylineTestUtil
                 if (File.Exists(Path.Combine(directory, "Skyline.sln")))
                     return Path.Combine(directory, relativePath);
             }
+
+            // as last resort, check if current directory is the pwiz repository root (e.g. when running TestRunner in Docker container)
+            if (File.Exists(Path.Combine("pwiz_tools", "Skyline", "Skyline.sln")))
+                return Path.Combine("pwiz_tools", "Skyline", relativePath);
+
             return null;
+        }
+
+        public static String GetProjectDirectory(this TestContext testContext, string relativePath)
+        {
+            return GetProjectDirectory(relativePath);
         }
 
         public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir, string[] persistentFiles, string persistentFilesDir)

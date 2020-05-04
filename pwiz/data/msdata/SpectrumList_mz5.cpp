@@ -251,7 +251,7 @@ SpectrumPtr SpectrumList_mz5Impl::spectrum(size_t index, bool getBinaryData) con
     initSpectra();
     if (index >= 0 && index < numberOfSpectra_)
     {
-        SpectrumPtr ptr(spectrumData_[index].getSpectrum(*rref_));
+        SpectrumPtr ptr(spectrumData_[index].getSpectrum(*rref_, *conn_));
         std::pair<hsize_t, hsize_t> bounds = spectrumRanges_.find(index)->second;
         hsize_t start = bounds.first;
         hsize_t end = bounds.second;

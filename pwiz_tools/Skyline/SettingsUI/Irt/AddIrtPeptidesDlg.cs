@@ -59,46 +59,61 @@ namespace pwiz.Skyline.SettingsUI.Irt
             var successStyle = new DataGridViewCellStyle { BackColor = Color.LightGreen };
             var failStyle = new DataGridViewCellStyle { BackColor = Color.LightCoral };
 
-            foreach (var kvp in processed.ProviderData)
+            foreach (var data in processed.ProviderData)
             {
-                var file = kvp.Key;
-                var data = kvp.Value;
+                var missingIndices = new HashSet<int>();
+                var outlierIndices = new HashSet<int>();
+                for (var i = 0; i < data.Peptides.Count; i++)
+                {
+                    if (data.Peptides[i].Missing)
+                        missingIndices.Add(i);
+                    else if (data.Peptides[i].Outlier)
+                        outlierIndices.Add(i);
+                }
 
+                string regressionName;
+                if (data.RegressionSuccess)
+                {
+                    regressionName = data.Regression == null
+                        ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression
+                        : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined;
+                }
+                else
+                {
+                    regressionName = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted;
+                }
                 var graphData = new RegressionGraphData
                 {
-                    Title = file,
+                    Title = data.RetentionTimeProvider.Name,
                     LabelX = Resources.AddIrtsResultsDlg_dataGridView_CellContentClick_Measured,
                     LabelY = Resources.AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT,
-                    XValues = data.Times,
-                    YValues = data.Irts,
-                    Tooltips = Enumerable.Range(0, data.Peptides.Length).ToDictionary(i => i, i => data.Peptides[i].ToString()),
-                    MissingIndices = data.MissingIndices,
-                    OutlierIndices = data.OutlierIndices,
+                    XValues = data.Peptides.Select(peptide => peptide.RetentionTime.GetValueOrDefault()).ToArray(),
+                    YValues = data.Peptides.Select(peptide => peptide.Irt).ToArray(),
+                    Tooltips = Enumerable.Range(0, data.Peptides.Count).ToDictionary(i => i, i => data.Peptides[i].Target.ToString()),
+                    MissingIndices = missingIndices,
+                    OutlierIndices = outlierIndices,
                     RegressionLine = data.RegressionRefined,
                     RegressionLineCurrent = data.Regression,
-                    RegressionName = data.RegressionSuccess
-                        ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined
-                        : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted,
-                    ShowCurrentR = true,
-                    MinR = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
+                    RegressionName = regressionName,
+                    ShowCurrentCorrelation = true,
+                    MinCorrelation = RCalcIrt.MIN_IRT_TO_TIME_CORRELATION,
                     MinPoints = data.MinPoints
                 };
 
                 string filename;
                 try
                 {
-                    filename = Path.GetFileName(file);
+                    filename = Path.GetFileName(data.RetentionTimeProvider.Name);
                 }
                 catch (Exception)
                 {
-                    filename = file;
+                    filename = data.RetentionTimeProvider.Name;
                 }
                 dataGridView.Rows.Add(
                     filename,
                     graphData.RegularPoints.Count,
-                    data.RegressionRefined != null ? data.RegressionRefined.Slope.ToString(@"F04") : string.Empty,
-                    data.RegressionRefined != null ? data.RegressionRefined.Intercept.ToString(@"F04") : string.Empty,
-                    graphData.R.ToString(@"F03"),
+                    data.RegressionRefined != null ? data.RegressionRefined.DisplayEquation : string.Empty,
+                    data.RegressionRefined != null ? IrtRegression.R(data.RegressionRefined).ToString(@"F03") : IrtRegression.R(data.Regression).ToString(@"F03"),
                     data.RegressionSuccess ? Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed);
                 var lastRow = dataGridView.Rows[dataGridView.RowCount - 1];
                 lastRow.DefaultCellStyle = data.RegressionSuccess ? successStyle : failStyle;
@@ -108,7 +123,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
 
             PeptidesCount = processed.DbIrtPeptides.Count() - existingPeptides.Count - overwritePeptides.Count - keepPeptides.Count;
-            RunsConvertedCount = processed.ProviderData.Count(data => data.Value.RegressionSuccess);
+            RunsConvertedCount = processed.ProviderData.Count(data => data.RegressionSuccess);
             RunsFailedCount = processed.ProviderData.Count - RunsConvertedCount;
 
             string locationStr;
@@ -265,7 +280,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             return data != null && data.RegressionSuccess;
         }
 
-        private DataGridViewRow GetRow(int rowIndex)
+        public DataGridViewRow GetRow(int rowIndex)
         {
             return 0 <= rowIndex && rowIndex < dataGridView.RowCount ? dataGridView.Rows[rowIndex] : null;
         }

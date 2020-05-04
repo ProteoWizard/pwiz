@@ -489,19 +489,25 @@ namespace pwiz.Skyline.Model.Lib.Midas
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             ionMobilities = null;
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities)
         {
             ionMobilities = null;
             return false;
         }
 
-        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
+        {
+            ionMobilities = null;
+            return false;
+        }
+
+        public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             if (redundancy == LibraryRedundancy.best)
                 yield break;
@@ -509,14 +515,14 @@ namespace pwiz.Skyline.Model.Lib.Midas
             if (!key.IsPrecursorKey)
             {
                 foreach (var spectrum in GetSpectraByPeptide(null, key))
-                    yield return new SpectrumInfo(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, false, spectrum);
+                    yield return new SpectrumInfoLibrary(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, false, spectrum);
                 yield break;
             }
 
             var keyRt = key.RetentionTime;
             foreach (var spectrum in GetSpectraByPrecursor(null, key.PrecursorMz.GetValueOrDefault()))
                 if (!keyRt.HasValue || Equals(keyRt.Value, spectrum.RetentionTime))
-                    yield return new SpectrumInfo(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, false, spectrum);
+                    yield return new SpectrumInfoLibrary(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, false, spectrum);
         }
 
         public override int? FileCount { get { return IsLoaded ? _spectra.Keys.Count : 0; } }

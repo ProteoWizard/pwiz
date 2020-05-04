@@ -75,12 +75,12 @@ namespace pwiz.Skyline.Model.Find
         private class TransitionMatchInfo
         {
             private readonly HashSet<IsotopeLabelType> _labelTypeSet;
-            private readonly Dictionary<TransitionLossEquivalentKey, int> _dictTransitionCount;
+            private readonly Dictionary<PeptideDocNode.TransitionKey, int> _dictTransitionCount;
 
             public TransitionMatchInfo()
             {
                 _labelTypeSet = new HashSet<IsotopeLabelType>();
-                _dictTransitionCount = new Dictionary<TransitionLossEquivalentKey, int>();
+                _dictTransitionCount = new Dictionary<PeptideDocNode.TransitionKey, int>();
             }
 
             public void AddTransitionGroup(TransitionGroupDocNode nodeGroup)
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Find
             /// </summary>
             public void AddTransition(TransitionDocNode nodeTran, TransitionGroupDocNode parent)
             {
-                var tranKey = nodeTran.EquivalentKey(parent);
+                var tranKey = GetTransitionKey(nodeTran, parent);
                 if (!_dictTransitionCount.ContainsKey(tranKey))
                     _dictTransitionCount.Add(tranKey, 0);
                 _dictTransitionCount[tranKey]++;
@@ -103,9 +103,15 @@ namespace pwiz.Skyline.Model.Find
             public bool IsFullyMatched(TransitionDocNode nodeTran, TransitionGroupDocNode parent)
             {
                 int count;
-                if (!_dictTransitionCount.TryGetValue(nodeTran.EquivalentKey(parent), out count))
+                if (!_dictTransitionCount.TryGetValue(GetTransitionKey(nodeTran, parent), out count))
                     return true;
                 return count == _labelTypeSet.Count;
+            }
+
+            private PeptideDocNode.TransitionKey GetTransitionKey(TransitionDocNode nodeTran,
+                TransitionGroupDocNode parent)
+            {
+                return new PeptideDocNode.TransitionKey(parent, nodeTran.Key(parent), IsotopeLabelType.light);
             }
         }
     }

@@ -19,16 +19,19 @@
 
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.SettingsUI.IonMobility
 {
     public partial class UseSpectralLibraryIonMobilityValuesControl : UserControl
     {
+        private IDocumentContainer _documentContainer;
 
         public UseSpectralLibraryIonMobilityValuesControl()
         {
@@ -37,7 +40,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public void InitializeSettings(IModifyDocumentContainer documentContainer, bool? defaultState = null)
         {
-            Prediction = documentContainer.Document.Settings.PeptideSettings.Prediction;
+            _documentContainer = documentContainer;
 
             var imsWindowCalc = Prediction.LibraryIonMobilityWindowWidthCalculator;
             var resolvingPower = imsWindowCalc?.ResolvingPower ?? 0;
@@ -68,7 +71,26 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             UpdateLibraryDriftPeakWidthControls();
 
         }
-        public PeptidePrediction Prediction { get; set;} 
+
+        public void HideControls()
+        {
+            foreach (var control in groupBoxUseSpectralLibraryIonMolbilityInfo.Controls.Cast<Control>())
+            {
+                if (control != cbUseSpectralLibraryIonMobilityValues &&
+                    control != labelResolvingPower &&
+                    control != textSpectralLibraryIonMobilityValuesResolvingPower)
+                {
+                    groupBoxUseSpectralLibraryIonMolbilityInfo.Controls.Remove(control);
+                }
+            }
+            Height -= cbLinear.Height;
+            groupBoxUseSpectralLibraryIonMolbilityInfo.Height -= cbLinear.Height;
+        }
+
+        public PeptidePrediction Prediction
+        {
+            get { return _documentContainer.Document.Settings.PeptideSettings.Prediction; }
+        } 
 
         public PeptidePrediction ValidateNewSettings(bool showMessages)
         {

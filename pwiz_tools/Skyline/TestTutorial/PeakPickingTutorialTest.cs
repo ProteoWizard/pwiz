@@ -94,8 +94,8 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
-            "-0.0171|-1.1499|0.2410|2.4345|1.1974|0.0452|0.1725|0.1607| null |0.4456|6.3767|-0.0651|0.5293|0.6186| null | null | null | null | null ", // Not L10N
-            "0.2903| null | null | null |5.9906|-0.0621|0.6717|0.7982| null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
+            "-0.0786|-0.7490|2.2393|1.2082|0.0330|0.1517|0.1764| null |0.4993|6.3960|-0.0482|0.5479|0.6292| null | null | null | null | null ", // Not L10N
+            "0.2903| null | null |5.9906|-0.0621|0.6717|0.7982| null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
         };
 
         protected override void DoTest()
@@ -192,7 +192,7 @@ namespace pwiz.SkylineTestTutorial
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
             RunUI(() => editDlg.TrainModel());
             PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form trained model", 6);
-            RunUI(() => Assert.AreEqual(0.5926, editDlg.PeakCalculatorsGrid.Items[4].PercentContribution ?? 0, 0.005));
+            RunUI(() => Assert.AreEqual(0.5926, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005));
 
             RunUI(() => editDlg.SelectedGraphTab = 2);
             PauseForScreenShot<EditPeakScoringModelDlg.PvalueTab>("Edit Peak Scoring Model form p value graph metafile", 7);
@@ -206,14 +206,14 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                Assert.AreEqual(19, editDlg.PeakCalculatorsGrid.RowCount);
+                Assert.AreEqual(18, editDlg.PeakCalculatorsGrid.RowCount);
                 // The rows which the tutorial says are missing scores are in fact missing scores
-                foreach (int i in new[] { 3, 8, 9, 10, 11, 12, 14, 16 }) // MS1 scores are now missing, 19, 20, 21, 22
+                foreach (int i in new[] { 2, 7, 8, 9, 10, 11, 13, 15 }) // MS1 scores are now missing, 19, 20, 21, 22
                 {
                     Assert.IsFalse(editDlg.IsActiveCell(i, 0));
                 }
                 editDlg.IsFindButtonVisible = true;
-                editDlg.FindMissingValues(3);
+                editDlg.FindMissingValues(2);   // Retention time
                 editDlg.PeakScoringModelName = "test1";
             });
             PauseForScreenShot<EditPeakScoringModelDlg.FeaturesTab>("Edit Peak Scoring Model form find missing scores", 11);
@@ -259,7 +259,7 @@ namespace pwiz.SkylineTestTutorial
             var editDlgLibrary = ShowDialog<EditPeakScoringModelDlg>(editListLibrary.EditItem);
             RunUI(() =>
                 {
-                    foreach (int i in new[] { 3, 9, 10, 11, 12 })
+                    foreach (int i in new[] { 2, 8, 9, 10, 11 })
                     {
                         Assert.IsTrue(editDlgLibrary.IsActiveCell(i, 0));
                         Assert.IsFalse(editDlgLibrary.PeakCalculatorsGrid.Items[i].IsEnabled);
@@ -281,16 +281,16 @@ namespace pwiz.SkylineTestTutorial
                 {
                     Assert.IsFalse(editDlgNew.UsesSecondBest);
                     Assert.IsTrue(editDlgNew.UsesDecoys);
-                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[5].IsEnabled);
-                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[5].PercentContribution < 0);
+                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[4].IsEnabled);
+                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[4].PercentContribution < 0);
                     Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[2].IsEnabled);
-                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[2].PercentContribution < 0);
+                    Assert.IsTrue(editDlgNew.PeakCalculatorsGrid.Items[2].PercentContribution > 0);
                     editDlgNew.UsesSecondBest = true;
-                    editDlgNew.PeakCalculatorsGrid.Items[5].IsEnabled = false;
+                    editDlgNew.PeakCalculatorsGrid.Items[4].IsEnabled = false;
                     editDlgNew.PeakCalculatorsGrid.Items[2].IsEnabled = false;
                     editDlgNew.TrainModel(true);
                     // Check that these cells are still active even though they've been unchecked
-                    Assert.IsTrue(editDlgNew.IsActiveCell(7, 0));
+                    Assert.IsTrue(editDlgNew.IsActiveCell(6, 0));
                 });
             PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form with second best", 15);
 
@@ -422,7 +422,7 @@ namespace pwiz.SkylineTestTutorial
                     int i = 0;
                     Assert.IsTrue(editDlgFromSrm.IsActiveCell(i++, 0));
                     Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
-                    Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
+//                    Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
                     Assert.IsFalse(editDlgFromSrm.IsActiveCell(i++, 0));
                     Assert.IsTrue(editDlgFromSrm.IsActiveCell(i++, 0));
                     Assert.IsTrue(editDlgFromSrm.IsActiveCell(i++, 0));
@@ -453,9 +453,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 {
                     editDlgDia.SelectedGraphTab = 1;
-                    editDlgDia.PeakCalculatorsGrid.SelectRow(3);
+                    editDlgDia.PeakCalculatorsGrid.SelectRow(2);
                     editDlgDia.IsFindButtonVisible = true;
-                    editDlgDia.FindMissingValues(3);
+                    editDlgDia.FindMissingValues(2);    // Retention times
                     editDlgDia.PeakScoringModelName = "testDIA";
                 });
             OkDialog(editDlgDia, editDlgDia.OkDialog);
@@ -478,18 +478,6 @@ namespace pwiz.SkylineTestTutorial
                 Console.WriteLine(@"""{0}"", // Not L10N", coefficients);  // Not L10N
             else
                 AssertEx.AreEqualLines(EXPECTED_COEFFICIENTS[coeffIndex], coefficients);
-        }
-
-        private IEnumerable<string> GetCoefficientStrings(EditPeakScoringModelDlg editDlg)
-        {
-            for (int i = 0; i < editDlg.PeakCalculatorsGrid.Items.Count; i++)
-            {
-                double? weight = editDlg.PeakCalculatorsGrid.Items[i].Weight;
-                if (weight.HasValue)
-                    yield return string.Format(CultureInfo.InvariantCulture, "{0:F04}", weight.Value);
-                else
-                    yield return " null ";  // To help values line up
-            }
         }
 
         private void CheckPointsTypeRT(PointsTypeRT pointsType, int expectedPoints)

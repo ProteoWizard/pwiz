@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private readonly AreaCVGraphData.AreaCVGraphDataCache _cache;
         private AreaCVGraphData _areaCVGraphData = AreaCVGraphData.INVALID;
-        private AreaCVGraphData.CVData _selectedData;
+        private CVData _selectedData;
         private SrmDocument _document;
         private bool _percentage;
         private int _decimals;
@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 int index;
                 if (FindNearestObject(e.Location, g, out nearestObject, out index) && nearestObject is BarItem)
                 {
-                    _selectedData = (AreaCVGraphData.CVData)((BarItem)nearestObject).Points[index].Tag;
+                    _selectedData = (CVData)((BarItem)nearestObject).Points[index].Tag;
                     sender.Cursor = Cursors.Hand;
                     return true;
                 }
@@ -130,8 +130,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-             var settings = new AreaCVGraphData.AreaCVGraphSettings(GraphSummary.Type);
             _document = GraphSummary.DocumentUIContainer.DocumentUI;
+            var settings = new AreaCVGraphData.AreaCVGraphSettings(_document.Settings, GraphSummary.Type);
 
             var factor = AreaGraphController.GetAreaCVFactorToDecimal();
 

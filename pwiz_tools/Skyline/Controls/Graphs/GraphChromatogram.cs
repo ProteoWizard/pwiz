@@ -33,7 +33,6 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
@@ -221,6 +220,19 @@ namespace pwiz.Skyline.Controls.Graphs
             set { TabText = _nameChromatogramSet = value; }
         }
 
+
+        /// <summary>
+        /// We have to limit the number of chromatogram windows to conserve window handles - so when
+        /// a new one is desired, we simply update the contents of the oldest one. This preserves
+        /// layout, and while it may result in an out of order display it's at least easy to understand.
+        /// </summary>
+        public void ChangeChromatogram(string name)
+        {
+            NameSet = name;
+            _arrayChromInfo = null;
+            UpdateUI();
+        }
+
         public int CurveCount { get { return GraphPanes.Sum(pane=>GetCurves(pane).Count()); } }
 
         private SrmDocument DocumentUI { get { return _documentContainer.DocumentUI; } }
@@ -306,7 +318,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var chromatogramGroupInfo = clickedItem.Chromatogram;
 
             double displayTime = graphPane.CurveList[FULLSCAN_TRACKING_INDEX][0].X;
-            var retentionTime = clickedItem.GetNearestDisplayTime(displayTime);
+            var retentionTime = clickedItem.GetValidPeakBoundaryTime(displayTime);
             if (retentionTime.IsZero)
                 return;
             int scanIndex = MsDataFileScanHelper.FindScanIndex(chromatogramGroupInfo, retentionTime.MeasuredTime);
@@ -331,21 +343,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     Id = graphItem.TransitionNode.Id
                 });
             }
-            IScanProvider scanProvider;
-            var chorusUrl = FilePath as ChorusUrl;
-            if (null == chorusUrl)
-            {
-                var measuredResults = DocumentUI.Settings.MeasuredResults;
-                scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath,
-                    chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray(),
-                    measuredResults,
-                    () => measuredResults.LoadMSDataFileScanIds(FilePath));
-            }
-            else
-            {
-                scanProvider = new ChorusScanProvider(_documentContainer.DocumentFilePath, chorusUrl, 
-                    chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray());
-            }
+            var measuredResults = DocumentUI.Settings.MeasuredResults;
+            IScanProvider scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath, 
+                chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray(), measuredResults);
             var e = new ClickedChromatogramEventArgs(
                 scanProvider,
                 transitionIndex, 
@@ -641,14 +641,20 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Returns the file path for the selected file of the groups.
         /// </summary>
-        private MsDataFileUri FilePath
+        public MsDataFileUri FilePath
         {
             get
             {
-                var chromGroupInfos = ChromGroupInfos;
-                int i = chromGroupInfos.IndexOf(info => info != null);
+                return ChromGroupInfo?.FilePath;
+            }
+        }
 
-                return (i != -1 ? chromGroupInfos[i].FilePath : null);
+        private ChromatogramGroupInfo ChromGroupInfo
+        {
+            get
+            {
+                // CONSIDER: Is this really the selected file?
+                return ChromGroupInfos.FirstOrDefault(info => info != null);
             }
         }
 
@@ -722,7 +728,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
 
             string xAxisTitle = GraphValues.ToLocalizedString(RTPeptideValue.Retention);
-            IRegressionFunction timeRegressionFunction = null;
+            RegressionLine timeRegressionFunction = null;
             var retentionTimeTransformOp = _stateProvider.GetRetentionTimeTransformOperation();
             if (null != retentionTimeTransformOp && null != _arrayChromInfo)
             {
@@ -1131,7 +1137,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void DisplayAllIonsSummary(IRegressionFunction timeRegressionFunction,
+        private void DisplayAllIonsSummary(RegressionLine timeRegressionFunction,
                                            TransitionDocNode nodeTranSelected,
                                            ChromatogramSet chromatograms,
                                            ChromExtractor extractor,
@@ -1212,7 +1218,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _graphHelper.SetErrorGraphItem(graphItem);
         }
 
-        private void DisplayTransitions(IRegressionFunction timeRegressionFunction,
+        private void DisplayTransitions(RegressionLine timeRegressionFunction,
                                         TransitionDocNode nodeTranSelected,
                                         ChromatogramSet chromatograms,
                                         float mzMatchTolerance,
@@ -1526,8 +1532,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void ShadeGraph(TransitionChromInfo tranPeakInfo, ChromatogramInfo info,
-            IRegressionFunction timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
+        private void ShadeGraph(TransitionChromInfo tranPeakInfo, ChromatogramInfo chromatogramInfo,
+            RegressionLine timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
             if (tranPeakInfo == null)
@@ -1536,7 +1542,7 @@ namespace pwiz.Skyline.Controls.Graphs
             float start = tranPeakInfo.StartRetentionTime;
             double[] allTimes;
             double[] allIntensities;
-            info.AsArrays(out allTimes, out allIntensities);
+            chromatogramInfo.AsArrays(out allTimes, out allIntensities);
 
             var peakTimes = new List<float>();
             var peakIntensities = new List<float>();
@@ -1554,13 +1560,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Add peak area shading
             float[] peakTimesArray = peakTimes.ToArray();
-            info = new ChromatogramInfo(peakTimesArray, peakIntensities.ToArray());
+            var infoPeakShade = new ChromatogramInfo(peakTimesArray, peakIntensities.ToArray());
+            Assume.AreEqual(0, infoPeakShade.NumPeaks);
             var peakShadeItem = new ChromGraphItem(null,
                 null,
-                info,
+                infoPeakShade,
                 null,
                 timeRegressionFunction,
-                new bool[info.NumPeaks],
+                new bool[0],
                 dotProducts,
                 bestProduct,
                 isFullScanMs,
@@ -1583,33 +1590,36 @@ namespace pwiz.Skyline.Controls.Graphs
                 lineItem.Line.Fill = new Fill(Color.FromArgb(fillAlpha, lineItem.Color));
             }
 
-            // Add peak background shading
-            float min = Math.Min(peakIntensities.First(), peakIntensities.Last());
-            info = new ChromatogramInfo(peakTimesArray,
-                peakIntensities.Select(intensity => Math.Min(intensity, min)).ToArray());
-            var backgroundShadeItem = new ChromGraphItem(null,
-                null,
-                info,
-                null,
-                timeRegressionFunction,
-                new bool[info.NumPeaks],
-                dotProducts,
-                bestProduct,
-                isFullScanMs,
-                false,
-                null,
-                step,
-                Color.DarkGray,
-                fontSize,
-                2,
-                fullScanInfo);
-            var backgroundShadeCurveItem = _graphHelper.AddChromatogram(graphPaneKey, backgroundShadeItem);
-            backgroundShadeCurveItem.Label.IsVisible = false;
-            var lineItem2 = backgroundShadeCurveItem as LineItem;
-            if (lineItem2 != null)
+            if (null == chromatogramInfo.TimeIntervals)
             {
-                const int fillAlpha = 70;
-                lineItem2.Line.Fill = new Fill(Color.FromArgb(fillAlpha, Color.Black));
+                // Add peak background shading
+                float min = Math.Min(peakIntensities.First(), peakIntensities.Last());
+                var infoBackgroundShade = new ChromatogramInfo(peakTimesArray,
+                    peakIntensities.Select(intensity => Math.Min(intensity, min)).ToArray());
+                var backgroundShadeItem = new ChromGraphItem(null,
+                    null,
+                    infoBackgroundShade,
+                    null,
+                    timeRegressionFunction,
+                    new bool[0],
+                    dotProducts,
+                    bestProduct,
+                    isFullScanMs,
+                    false,
+                    null,
+                    step,
+                    Color.DarkGray,
+                    fontSize,
+                    2,
+                    fullScanInfo);
+                var backgroundShadeCurveItem = _graphHelper.AddChromatogram(graphPaneKey, backgroundShadeItem);
+                backgroundShadeCurveItem.Label.IsVisible = false;
+                var lineItem2 = backgroundShadeCurveItem as LineItem;
+                if (lineItem2 != null)
+                {
+                    const int fillAlpha = 70;
+                    lineItem2.Line.Fill = new Fill(Color.FromArgb(fillAlpha, Color.Black));
+                }
             }
         }
 
@@ -1629,7 +1639,7 @@ namespace pwiz.Skyline.Controls.Graphs
             };
         }
 
-        private void DisplayOptimizationTotals(IRegressionFunction timeRegressionFunction,
+        private void DisplayOptimizationTotals(RegressionLine timeRegressionFunction,
                                                ChromatogramSet chromatograms,
                                                float mzMatchTolerance,
                                                ref double bestStartTime,
@@ -1654,7 +1664,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private List<ChromGraphItem> GetOptimizationTotalGraphItems(
-            IRegressionFunction timeRegressionFunction,
+            RegressionLine timeRegressionFunction,
             ChromatogramSet chromatograms,
             float mzMatchTolerance,
             TransitionGroupDocNode nodeGroup,
@@ -1899,7 +1909,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void DisplayTotals(IRegressionFunction timeRegressionFunction,
+        private void DisplayTotals(RegressionLine timeRegressionFunction,
                                    ChromatogramSet chromatograms,
                                    float mzMatchTolerance,
                                    int countLabelTypes,
@@ -2026,7 +2036,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Display summed transitions for multiple selected peptides.
         /// </summary>
-        private void DisplayPeptides(IRegressionFunction timeRegressionFunction,
+        private void DisplayPeptides(RegressionLine timeRegressionFunction,
                                    ChromatogramSet chromatograms,
                                    float mzMatchTolerance,
                                    int countLabelTypes,
@@ -2827,7 +2837,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 double displayTime, yTemp;
                 graphPane.ReverseTransform(pt, out displayTime, out yTemp);
-                return graphItem.GetNearestDisplayTime(displayTime);
+                return graphItem.GetValidPeakBoundaryTime(displayTime);
             }
 
             return ScaledRetentionTime.ZERO;
@@ -3314,6 +3324,27 @@ namespace pwiz.Skyline.Controls.Graphs
             return (graphItem.DragInfo = peakBoundDragInfo);
         }
 
+        public float GetPeakBoundaryTime(ChromGraphItem chromGraphItem, double displayTime)
+        {
+            double measuredTime = chromGraphItem.TimeRegressionFunction == null
+                ? displayTime
+                : chromGraphItem.TimeRegressionFunction.GetX(displayTime);
+            var chromatogramInfo = chromGraphItem.Chromatogram;
+            if (chromatogramInfo.TimeIntervals != null)
+            {
+                return (float) measuredTime;
+            }
+
+            var interpolatedTimeIntensities = chromatogramInfo.GetInterpolatedTimeIntensities();
+            int index = interpolatedTimeIntensities.IndexOfNearestTime((float) displayTime);
+            if (index < 0 || index >= interpolatedTimeIntensities.Times.Count)
+            {
+                return 0;
+            }
+
+            return interpolatedTimeIntensities.Times[index];
+        }
+
         public bool DoDrag(GraphPane graphPane, PointF pt)
         {
             // Calculate new location of boundary from mouse position
@@ -3600,7 +3631,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             Moved = true;
 
-            var rtNew = GraphItem.GetNearestDisplayTime(time);
+            var rtNew = GraphItem.GetValidPeakBoundaryTime(time);
             if (!rtNew.Equals(CaretTime))
             {
                 CaretTime = rtNew;
