@@ -117,11 +117,6 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public override string ToString()
         {
-            return ToString(CultureInfo.CurrentCulture, false);
-        }
-
-        private string ToString(CultureInfo culture, bool quoteNames)
-        {
             if (IsOrphan && Children.Count == 0)
             {
                 return @"-";
@@ -130,9 +125,13 @@ namespace pwiz.Skyline.Model.Crosslinking
             StringBuilder stringBuilder = new StringBuilder();
             if (!IsOrphan)
             {
-                stringBuilder.Append(IonType);
-                if (IonType != IonType.precursor)
+                if (IonType == IonType.precursor)
                 {
+                    stringBuilder.Append(@"p");
+                }
+                else
+                {
+                    stringBuilder.Append(IonType);
                     stringBuilder.Append(Ordinal);
                 }
             }

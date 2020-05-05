@@ -177,12 +177,31 @@ namespace pwiz.Skyline.Controls.SeqNode
             const string labelPrefixSpacer = " - ";
             if (nodeTran.ComplexFragmentIon.Children.Count != 0)
             {
-                var complexFragmentIonName = nodeTran.ComplexFragmentIon.GetName();
+                var complexFragmentIon = nodeTran.ComplexFragmentIon;
+                var complexFragmentIonName = complexFragmentIon.GetName();
                 if (!fullyQualifyCrosslinks)
                 {
                     complexFragmentIonName = complexFragmentIonName.DisqualifyChildren();
                 }
-                labelPrefix = @"[" + complexFragmentIonName + Transition.GetMassIndexText(tran.MassIndex) + @"] - ";
+                labelPrefix = @"[" + complexFragmentIonName + Transition.GetMassIndexText(tran.MassIndex) + @"]";
+                // If this is a simple crosslink with only two peptides, put the amino acids on either side of the ion name.
+                if (complexFragmentIon.Children.Count == 1)
+                {
+                    var child = complexFragmentIon.Children.Values[0];
+                    if (child.Children.Count == 0)
+                    {
+                        if (complexFragmentIon.Transition.IonType != IonType.precursor)
+                        {
+                            labelPrefix = nodeTran.Transition.AA + @" " + labelPrefix;
+                        }
+                        if (child.Transition.IonType != IonType.precursor)
+                        {
+                            labelPrefix = labelPrefix + @" " + nodeTran.Transition.AA;
+                        }
+                    }
+                }
+
+                labelPrefix += labelPrefixSpacer;
             }
             else if (tran.IsPrecursor())
             {

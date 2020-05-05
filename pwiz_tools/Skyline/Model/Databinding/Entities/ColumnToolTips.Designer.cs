@@ -509,6 +509,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The modified sequence where crosslinked peptides are specified using the mass of the crosslinker..
+        /// </summary>
+        public static string CrosslinkMasses {
+            get {
+                return ResourceManager.GetString("CrosslinkMasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cv.
         /// </summary>
         public static string Cv {
@@ -1728,6 +1737,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The modified sequence of the precursor where links to crosslinked peptides include the mass of the crosslinker and the linked peptide sequence..
+        /// </summary>
+        public static string ModifiedSequenceCrosslinkMasses {
+            get {
+                return ResourceManager.GetString("ModifiedSequenceCrosslinkMasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The modified sequence of the precursor where modifications are referred to by their full names, e.g. &quot;C[Carbamidomethyl (C)]&quot;..
         /// </summary>
         public static string ModifiedSequenceFullNames {
@@ -2074,6 +2092,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeptideModifiedSequenceAverageMasses {
             get {
                 return ResourceManager.GetString("PeptideModifiedSequenceAverageMasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The modified sequence of the peptide where links to crosslinked peptides include the mass of the crosslinker and the linked peptide sequence..
+        /// </summary>
+        public static string PeptideModifiedSequenceCrosslinkMasses {
+            get {
+                return ResourceManager.GetString("PeptideModifiedSequenceCrosslinkMasses", resourceCulture);
             }
         }
         

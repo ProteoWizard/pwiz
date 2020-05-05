@@ -242,6 +242,9 @@ specific default collision energy equation within Skyline</value>
 boundary at either end of the acquisition time range, where intensity at the end is
 greater than 1% of the entire peak height higher than the other extent.</value>
   </data>
+  <data name="CrosslinkMasses">
+    <value>The modified sequence where crosslinked peptides are specified using the mass of the crosslinker.</value>
+  </data>
   <data name="Cv">
     <value>Cv</value>
   </data>
@@ -630,6 +633,9 @@ cysteine alkylation. (example: AGLC[+57]QTFVYGGC[+57]R)</value>
   <data name="ModifiedSequenceAverageMasses">
     <value>The modified sequence of the precursor where modifications are referred to by their average masses, e.g. "C[+57.05162]".</value>
   </data>
+  <data name="ModifiedSequenceCrosslinkMasses">
+    <value>The modified sequence of the precursor where links to crosslinked peptides include the mass of the crosslinker and the linked peptide sequence.</value>
+  </data>
   <data name="ModifiedSequenceFullNames">
     <value>The modified sequence of the precursor where modifications are referred to by their full names, e.g. "C[Carbamidomethyl (C)]".</value>
   </data>
@@ -755,6 +761,9 @@ modification delta masses (e.g. AC[+57]GR).</value>
   </data>
   <data name="PeptideModifiedSequenceAverageMasses">
     <value>The modified sequence of the peptide where modifications are referred to by their average masses, e.g. "C[+57.05162]".</value>
+  </data>
+  <data name="PeptideModifiedSequenceCrosslinkMasses">
+    <value>The modified sequence of the peptide where links to crosslinked peptides include the mass of the crosslinker and the linked peptide sequence.</value>
   </data>
   <data name="PeptideModifiedSequenceFullNames">
     <value>The modified sequence of the peptide where modifications are referred to by their full names, e.g. "C[Carbamidomethyl (C)]".</value>

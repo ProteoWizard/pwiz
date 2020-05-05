@@ -261,6 +261,9 @@
   <data name="CountTruncated">
     <value>Count Truncated</value>
   </data>
+  <data name="CrosslinkMasses">
+    <value>Crosslink Masses</value>
+  </data>
   <data name="Cv">
     <value>Cv</value>
   </data>
@@ -647,6 +650,9 @@
     <value>Modified Sequence</value>
   </data>
   <data name="ModifiedSequenceAverageMasses"><value>Modified Sequence Average Masses</value></data>
+  <data name="ModifiedSequenceCrosslinkMasses">
+    <value>Modified Sequence Crosslink Masses</value>
+  </data>
   <data name="ModifiedSequenceFullNames"><value>Modified Sequence Full Names</value></data>
   <data name="ModifiedSequenceMonoisotopicMasses"><value>Modified Sequence Monoisotopic Masses</value></data>
   <data name="ModifiedSequenceThreeLetterCodes"><value>Modified Sequence Three Letter Codes</value></data>
@@ -749,6 +755,9 @@
     <value>Peptide Modified Sequence</value>
   </data>
   <data name="PeptideModifiedSequenceAverageMasses"><value>Peptide Modified Sequence Average Masses</value></data>
+  <data name="PeptideModifiedSequenceCrosslinkMasses">
+    <value>Peptide Modified Sequence Crosslink Masses</value>
+  </data>
   <data name="PeptideModifiedSequenceFullNames"><value>Peptide Modified Sequence Full Names</value></data>
   <data name="PeptideModifiedSequenceMonoisotopicMasses"><value>Peptide Modified Sequence Monoisotopic Masses</value></data>
   <data name="PeptideModifiedSequenceThreeLetterCodes"><value>Peptide Modified Sequence Three Letter Codes</value></data>

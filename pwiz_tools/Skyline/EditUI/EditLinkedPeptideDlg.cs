@@ -65,7 +65,7 @@ namespace pwiz.Skyline.EditUI
                 char aa = peptideSequence[aaOrdinal - 1];
                 if (!validAminoAcids.Contains(aa))
                 {
-                    string message = string.Format("The crosslinker '{0}' cannot attach to the amino acid '{1}'.",
+                    string message = string.Format(Resources.EditLinkedPeptideDlg_TryMakeLinkedPeptide_The_crosslinker___0___cannot_attach_to_the_amino_acid___1___,
                         _crosslinkMod.Name, aa);
                     messageBoxHelper.ShowTextBoxError(tbxAttachmentOrdinal, message);
                     return false;

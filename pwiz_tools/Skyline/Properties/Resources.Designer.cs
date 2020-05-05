@@ -9888,6 +9888,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The crosslinker &apos;{0}&apos; cannot attach to the amino acid &apos;{1}&apos;..
+        /// </summary>
+        public static string EditLinkedPeptideDlg_TryMakeLinkedPeptide_The_crosslinker___0___cannot_attach_to_the_amino_acid___1___ {
+            get {
+                return ResourceManager.GetString("EditLinkedPeptideDlg_TryMakeLinkedPeptide_The_crosslinker___0___cannot_attach_to_" +
+                        "the_amino_acid___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This will reset the list to its default values. Continue?.
         /// </summary>
         public static string EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue {

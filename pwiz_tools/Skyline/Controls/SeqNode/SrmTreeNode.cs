@@ -1350,5 +1350,11 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             get { return NodePep?.ExplicitMods?.Crosslinks?.Count > 1; }
         }
+
+        public bool HasCrosslinks
+        {
+            get { return NodePep?.ExplicitMods?.Crosslinks?.Count > 0; }
+        }
+
     }
 }
