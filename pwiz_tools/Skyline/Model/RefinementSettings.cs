@@ -349,6 +349,7 @@ namespace pwiz.Skyline.Model
                 listPepGroups = listPepGroupsFiltered;                
             }
             var refined = (SrmDocument)document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
+            var refinedBasic = refined;
             if (CVCutoff.HasValue || QValueCutoff.HasValue)
             {
                 if (!document.Settings.HasResults || document.MeasuredResults.Chromatograms.Count < 2)
@@ -383,6 +384,12 @@ namespace pwiz.Skyline.Model
                 refined = groupComparisonData.RemoveBelowCutoffs(refined);
             }
 
+            if (minPeptides > 0 && !ReferenceEquals(refined, refinedBasic))
+            {
+                // One last pass to remove proteins without enough peptides
+                refined = (SrmDocument)document.ChangeChildrenChecked(
+                    refined.MoleculeGroups.Where(n => n.Children.Count >= minPeptides).ToArray(), true);
+            }
             return refined;
         }
 
@@ -1268,7 +1275,7 @@ namespace pwiz.Skyline.Model
             return document;
         }
 
-        public SrmDocument RemoveDecoys(SrmDocument document)
+        public static SrmDocument RemoveDecoys(SrmDocument document)
         {
             // Remove the existing decoys
             return (SrmDocument) document.RemoveAll(document.MoleculeGroups.Where(nodePeptideGroup => nodePeptideGroup.IsDecoy)
@@ -1372,6 +1379,11 @@ namespace pwiz.Skyline.Model
 
                         var nodePepNew = new PeptideDocNode(decoyPeptide, settings, seqMods.Mods,
                             null, nodePep.ExplicitRetentionTime, decoyNodeTranGroupList.ToArray(), false);
+                        
+                        // Avoid adding empty peptide nodes
+                        nodePepNew = nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                        if (nodePepNew.Children.Count == 0)
+                            continue;
 
                         if (!Equals(nodePep.ModifiedSequence, nodePepNew.ModifiedSequence))
                         {

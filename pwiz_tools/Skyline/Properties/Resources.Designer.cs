@@ -385,6 +385,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred while trying to display the document &apos;{0}&apos;. 
+        ///There might be something wrong with default web browser on this computer..
+        /// </summary>
+        public static string ActionTutorial_ExtractTutorial_An_error_occurred_while_trying_to_display_the_document___0____ {
+            get {
+                return ResourceManager.GetString("ActionTutorial_ExtractTutorial_An_error_occurred_while_trying_to_display_the_docu" +
+                        "ment___0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Downloading to: {0}{1}Tutorial will open in browser when download is complete..
         /// </summary>
         public static string ActionTutorial_LongWaitDlgAction_Downloading_to___0__1_Tutorial_will_open_in_browser_when_download_is_complete_ {
@@ -4664,6 +4675,15 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method {
             get {
                 return ResourceManager.GetString("CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Decoys discarded.
+        /// </summary>
+        public static string CommandLine_AddDecoys_Decoys_discarded {
+            get {
+                return ResourceManager.GetString("CommandLine_AddDecoys_Decoys_discarded", resourceCulture);
             }
         }
         

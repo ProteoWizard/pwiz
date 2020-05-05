@@ -10973,6 +10973,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="IIrtRegression_DisplayEquation_Measured_RT" xml:space="preserve">
     <value>Measured RT</value>
   </data>
+  <data name="ActionTutorial_ExtractTutorial_An_error_occurred_while_trying_to_display_the_document___0____" xml:space="preserve">
+    <value>An error occurred while trying to display the document '{0}'. 
+There might be something wrong with default web browser on this computer.</value>
+  </data>
   <data name="FastaImporter_Import__0__proteins_and__1__peptides_added" xml:space="preserve">
     <value>{0} proteins and {1} peptides added</value>
   </data>
@@ -10981,5 +10985,8 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="EditLinkedPeptideDlg_TryMakeLinkedPeptide_The_crosslinker___0___cannot_attach_to_the_amino_acid___1___" xml:space="preserve">
     <value>The crosslinker '{0}' cannot attach to the amino acid '{1}'.</value>
+  </data>
+  <data name="CommandLine_AddDecoys_Decoys_discarded" xml:space="preserve">
+    <value>Decoys discarded</value>
   </data>
 </root>
