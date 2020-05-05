@@ -4679,6 +4679,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Decoys discarded.
+        /// </summary>
+        public static string CommandLine_AddDecoys_Decoys_discarded {
+            get {
+                return ResourceManager.GetString("CommandLine_AddDecoys_Decoys_discarded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Attempting to add decoys to document with decoys..
         /// </summary>
         public static string CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_ {
