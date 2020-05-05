@@ -93,6 +93,8 @@ namespace pwiz.ProteowizardWrapper
 
         private DetailLevel _detailLevelPrecursors = DetailLevel.InstantMetadata;
 
+        private DetailLevel _detailScanDescription = DetailLevel.FastMetadata;
+
         private CVID? _cvidIonMobility;
 
         private static double[] ToArray(BinaryDataArray binaryDataArray)
@@ -884,7 +886,8 @@ namespace pwiz.ProteowizardWrapper
                 RetentionTime = GetStartTime(spectrum),
                 PrecursorsByMsLevel = GetPrecursorsByMsLevel(spectrum),
                 Centroided = IsCentroided(spectrum),
-                NegativeCharge = NegativePolarity(spectrum)
+                NegativeCharge = NegativePolarity(spectrum),
+                ScanDescription = GetScanDescription(spectrum)
             };
             if (IonMobilityUnits == eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
             {
@@ -1111,14 +1114,14 @@ namespace pwiz.ProteowizardWrapper
         }
 
         public TVal GetMetaDataValue<TVal>(int scanIndex, Func<Spectrum, TVal> getValue, Func<TVal, bool> isUsableValue,
-            Func<TVal, TVal> returnValue, ref DetailLevel detailLevel)
+            Func<TVal, TVal> returnValue, ref DetailLevel detailLevel, DetailLevel maxDetailLevel = DetailLevel.FullMetadata)
         {
             var spectrum = GetCachedSpectrum(scanIndex, detailLevel);
             TVal val = getValue(spectrum);
-            if (isUsableValue(val) || detailLevel >= DetailLevel.FullMetadata)
+            if (isUsableValue(val) || detailLevel >= maxDetailLevel)
                 return returnValue(val);
             // If level is not found with faster metadata methods, try the slower ones.
-            if (detailLevel < DetailLevel.FullMetadata)
+            if (detailLevel < maxDetailLevel)
                 detailLevel++;
             return GetMetaDataValue(scanIndex, getValue, isUsableValue, returnValue, ref detailLevel);
         }
@@ -1134,6 +1137,20 @@ namespace pwiz.ProteowizardWrapper
             if (param.empty())
                 return null;
             return (int) param.value;
+        }
+
+        public string GetScanDescription(int scanIndex)
+        {
+            return GetMetaDataValue(scanIndex, GetScanDescription, v => v.IsNullOrEmpty(), v => v, ref _detailScanDescription, DetailLevel.FastMetadata);
+        }
+
+        private static string GetScanDescription(Spectrum spectrum)
+        {
+            const string USERPARAM_SCAN_DESCRIPTION = "scan description";
+            UserParam param = spectrum.userParam(USERPARAM_SCAN_DESCRIPTION);
+            if (param.empty())
+                return null;
+            return param.value.ToString().Trim();
         }
 
         public IonMobilityValue GetIonMobility(int scanIndex) // for non-combined-mode IMS
@@ -1527,6 +1544,8 @@ namespace pwiz.ProteowizardWrapper
         public double? MinIonMobility { get; set; }
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
+
+        public string ScanDescription { get; set; }
 
         public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
         {
