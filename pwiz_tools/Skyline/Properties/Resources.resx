@@ -10980,4 +10980,7 @@ There might be something wrong with default web browser on this computer.</value
   <data name="FastaImporter_Import__0__proteins_and__1__peptides_added" xml:space="preserve">
     <value>{0} proteins and {1} peptides added</value>
   </data>
+  <data name="CommandLine_AddDecoys_Decoys_discarded" xml:space="preserve">
+    <value>Decoys discarded</value>
+  </data>
 </root>
