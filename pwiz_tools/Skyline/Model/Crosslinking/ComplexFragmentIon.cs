@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -13,19 +14,20 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class ComplexFragmentIon : Immutable, IComparable<ComplexFragmentIon>
     {
-        public ComplexFragmentIon(Transition transition, TransitionLosses transitionLosses, bool isOrphan = false)
+        public ComplexFragmentIon(Transition transition, TransitionLosses transitionLosses, ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinkStructure, bool isOrphan = false)
         {
             Transition = transition;
             Children = ImmutableSortedList<ModificationSite, ComplexFragmentIon>.EMPTY;
             TransitionLosses = transitionLosses;
             IsOrphan = isOrphan;
+            CrosslinkStructure = crosslinkStructure ?? LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE;
         }
 
         public static ComplexFragmentIon NewOrphanFragmentIon(TransitionGroup transitionGroup, ExplicitMods explicitMods, Adduct adduct)
         {
             var transition = new Transition(transitionGroup, IonType.precursor,
                 transitionGroup.Peptide.Sequence.Length - 1, 0, adduct);
-            return new ComplexFragmentIon(transition, null, true);
+            return new ComplexFragmentIon(transition, null, explicitMods?.Crosslinks, true);
         }
 
         public Transition Transition { get; private set; }
@@ -40,6 +42,8 @@ namespace pwiz.Skyline.Model.Crosslinking
         [CanBeNull]
         public TransitionLosses TransitionLosses { get; private set; }
         public ImmutableSortedList<ModificationSite, ComplexFragmentIon> Children { get; private set; }
+
+        public ImmutableSortedList<ModificationSite, LinkedPeptide> CrosslinkStructure { get; private set; }
 
         public IsotopeLabelType LabelType
         {
@@ -255,7 +259,6 @@ namespace pwiz.Skyline.Model.Crosslinking
         public override string ToString()
         {
             return GetName() + Transition.GetChargeIndicator(Transition.Adduct);
-
         }
 
         public bool IsMs1
@@ -314,6 +317,61 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return Children.Count.CompareTo(other.Children.Count);
+        }
+
+        public string GetTargetsTreeLabel()
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            // Simple case of two peptides linked together
+            if (CrosslinkStructure.Count == 1 && CrosslinkStructure.Values[0].CrosslinkStructure.Count == 0)
+            {
+                var child = Children.Values.FirstOrDefault();
+                if (!IsOrphan && Transition.IonType != IonType.precursor)
+                {
+                    stringBuilder.Append(Transition.AA);
+                    stringBuilder.Append(@" ");
+                }
+
+                stringBuilder.Append(@"[");
+                if (!IsOrphan)
+                {
+                    if (Transition.IonType == IonType.precursor)
+                    {
+                        stringBuilder.Append(@"p");
+                    }
+                    else
+                    {
+                        stringBuilder.Append(Transition.IonType);
+                        stringBuilder.Append(Transition.Ordinal);
+                    }
+                }
+
+                stringBuilder.Append(@"-");
+                if (child != null)
+                {
+                    if (child.Transition.IonType == IonType.precursor)
+                    {
+                        stringBuilder.Append(@"p");
+                    }
+                    else
+                    {
+                        stringBuilder.Append(child.Transition.IonType);
+                        stringBuilder.Append(child.Transition.Ordinal);
+                    }
+                }
+
+                stringBuilder.Append(Transition.GetMassIndexText(Transition.MassIndex));
+                stringBuilder.Append(@"]");
+                if (child != null && child.Transition.IonType != IonType.precursor)
+                {
+                    stringBuilder.Append(@" ");
+                    stringBuilder.Append(child.Transition.AA);
+                }
+
+                return stringBuilder.ToString();
+            }
+
+            return @"[" + GetName() + Transition.GetMassIndexText(Transition.MassIndex) + @"]";
         }
     }
 }

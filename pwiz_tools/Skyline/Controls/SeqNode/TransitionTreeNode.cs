@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public static string DisplayText(TransitionDocNode nodeTran, DisplaySettings settings)
         {
-            return GetLabel(nodeTran, GetResultsText(nodeTran, settings.Index, settings.RatioIndex), settings.FullyQualifyCrosslinks);
+            return GetLabel(nodeTran, GetResultsText(nodeTran, settings.Index, settings.RatioIndex));
         }
 
         private static string GetResultsText(TransitionDocNode nodeTran, int index, int indexRatio)
@@ -170,38 +170,14 @@ namespace pwiz.Skyline.Controls.SeqNode
             return string.Format(Resources.TransitionTreeNode_GetResultsText__0__ratio__1__, label, MathEx.RoundAboveZero(ratio.Value, 2, 4));
         }
 
-        public static string GetLabel(TransitionDocNode nodeTran, string resultsText, bool fullyQualifyCrosslinks)
+        public static string GetLabel(TransitionDocNode nodeTran, string resultsText)
         {
             Transition tran = nodeTran.Transition;
             string labelPrefix;
             const string labelPrefixSpacer = " - ";
-            if (nodeTran.ComplexFragmentIon.Children.Count != 0)
+            if (nodeTran.ComplexFragmentIon.CrosslinkStructure.Count != 0)
             {
-                var complexFragmentIon = nodeTran.ComplexFragmentIon;
-                var complexFragmentIonName = complexFragmentIon.GetName();
-                if (!fullyQualifyCrosslinks)
-                {
-                    complexFragmentIonName = complexFragmentIonName.DisqualifyChildren();
-                }
-                labelPrefix = @"[" + complexFragmentIonName + Transition.GetMassIndexText(tran.MassIndex) + @"]";
-                // If this is a simple crosslink with only two peptides, put the amino acids on either side of the ion name.
-                if (complexFragmentIon.Children.Count == 1)
-                {
-                    var child = complexFragmentIon.Children.Values[0];
-                    if (child.Children.Count == 0)
-                    {
-                        if (complexFragmentIon.Transition.IonType != IonType.precursor)
-                        {
-                            labelPrefix = nodeTran.Transition.AA + @" " + labelPrefix;
-                        }
-                        if (child.Transition.IonType != IonType.precursor)
-                        {
-                            labelPrefix = labelPrefix + @" " + nodeTran.Transition.AA;
-                        }
-                    }
-                }
-
-                labelPrefix += labelPrefixSpacer;
+                labelPrefix = nodeTran.ComplexFragmentIon.GetTargetsTreeLabel() + labelPrefixSpacer;
             }
             else if (tran.IsPrecursor())
             {

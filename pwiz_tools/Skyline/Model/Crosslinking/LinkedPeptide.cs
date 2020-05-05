@@ -12,6 +12,8 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public class LinkedPeptide : Immutable
     {
+        public static readonly ImmutableSortedList<ModificationSite, LinkedPeptide> EMPTY_CROSSLINK_STRUCTURE = ImmutableSortedList<ModificationSite, LinkedPeptide>.EMPTY;
+
         public LinkedPeptide(Peptide peptide, int indexAa, ExplicitMods explicitMods)
         {
             Peptide = peptide;
@@ -24,6 +26,11 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         [CanBeNull]
         public ExplicitMods ExplicitMods { get; private set; }
+
+        public ImmutableSortedList<ModificationSite, LinkedPeptide> CrosslinkStructure
+        {
+            get { return ExplicitMods?.Crosslinks ?? EMPTY_CROSSLINK_STRUCTURE; }
+        }
 
         public LinkedPeptide ChangeExplicitMods(ExplicitMods explicitMods)
         {
@@ -114,7 +121,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     continue;
                 }
-                yield return new ComplexFragmentIon(transitionDocNode.Transition, transitionDocNode.Losses);
+                yield return new ComplexFragmentIon(transitionDocNode.Transition, transitionDocNode.Losses, CrosslinkStructure);
             }
         }
 
@@ -175,7 +182,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                     0, Adduct.SINGLY_PROTONATED);
             }
             // TODO: losses
-            var result = new ComplexFragmentIon(transition, null, complexFragmentIonName.IsOrphan);
+            var result = new ComplexFragmentIon(transition, null, CrosslinkStructure, complexFragmentIonName.IsOrphan);
             if (ExplicitMods != null)
             {
                 foreach (var child in complexFragmentIonName.Children)

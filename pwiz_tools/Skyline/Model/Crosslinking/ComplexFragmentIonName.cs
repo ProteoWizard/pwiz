@@ -235,7 +235,8 @@ namespace pwiz.Skyline.Model.Crosslinking
                 }
 
                 child = child.AddLinkedIonProtos(linkedIon.Children);
-                result = result.AddChild(new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName), child);
+                result = result.AddChild(new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName),
+                    child);
             }
 
             return result;

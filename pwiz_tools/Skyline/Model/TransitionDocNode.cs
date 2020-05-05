@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model
                                  TransitionQuantInfo transitionQuantInfo,
                                  ExplicitTransitionValues explicitTransitionValues,
                                  Results<TransitionChromInfo> results)
-            : this(new ComplexFragmentIon(id, losses), annotations, losses == null ? mass : mass - losses.Mass, transitionQuantInfo, explicitTransitionValues, results)
+            : this(new ComplexFragmentIon(id, losses, null), annotations, losses == null ? mass : mass - losses.Mass, transitionQuantInfo, explicitTransitionValues, results)
         {
         }
 
@@ -658,7 +658,7 @@ namespace pwiz.Skyline.Model
                 new TransitionQuantInfo(isotopeDistInfo, libInfo, !transitionProto.NotQuantitative);
             if (transitionProto.LinkedIons.Any())
             {
-                ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, losses, transitionProto.OrphanedCrosslinkIon);
+                ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, losses, mods.Crosslinks, transitionProto.OrphanedCrosslinkIon);
                 foreach (var linkedIon in transitionProto.LinkedIons)
                 {
                     var modificationSite = new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName);
@@ -1022,7 +1022,7 @@ namespace pwiz.Skyline.Model
 
         public override string AuditLogText
         {
-            get { return TransitionTreeNode.GetLabel(this, string.Empty, true); }
+            get { return TransitionTreeNode.GetLabel(this, string.Empty); }
         }
 
     }

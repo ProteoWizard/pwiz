@@ -1223,8 +1223,8 @@ namespace pwiz.Skyline.Model
                     var precursorTransition = new Transition(TransitionGroup, IonType.precursor,
                         Peptide.Sequence.Length - 1, 0, productAdduct);
 
-                    simpleFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, true));
-                    simpleFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, false));
+                    simpleFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, explicitMods.Crosslinks, true));
+                    simpleFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, explicitMods.Crosslinks, false));
                 }
             }
 
