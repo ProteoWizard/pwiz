@@ -1103,6 +1103,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public void PauseForCoverShot()
+        {
+            // TODO: Use the ScreenshotManager in master branch to put the screenshot on the clipboard
+            PauseTest("Cover shot at 1200 x 800");
+        }
+
         public void PauseForAuditLog()
         {
             if (IsPauseForAuditLog)

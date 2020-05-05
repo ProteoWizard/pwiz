@@ -28,6 +28,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
@@ -301,6 +302,7 @@ namespace TestPerf
         {
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
+//            IsPauseForCoverShot = true;
 
             RunFunctionalTest();
 
@@ -863,6 +865,19 @@ namespace TestPerf
                 var fcGridControlFinal = fcGrid.DataboundGridControl;
                 SortByFoldChange(fcGridControlFinal, fcResultProperty);  // Re-apply the sort, in case it was lost in restoring views
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Graph - proteins", 31);
+
+                if (IsPauseForCoverShot)
+                {
+                    RunUI(() =>
+                    {
+                        Settings.Default.ChromatogramFontSize = 14;
+                        Settings.Default.AreaFontSize = 14;
+                        SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    });
+
+                    RestoreCoverViewOnScreen(false);
+                    PauseForCoverShot();
+                }
             }
         }
 

@@ -339,7 +339,7 @@ namespace pwiz.SkylineTestTutorial
                     calibrationFloatingWindow.Left = SkylineWindow.Left + 15;
 
                 });
-                PauseTest("Cover shot at 1200 x 800");
+                PauseForCoverShot();
                 return;
             }
 
