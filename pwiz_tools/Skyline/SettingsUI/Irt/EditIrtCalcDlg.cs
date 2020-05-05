@@ -1361,5 +1361,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
         }
+
+        public DataGridViewEx GridViewStandard
+        {
+            get { return gridViewStandard; }
+        }
     }
 }
