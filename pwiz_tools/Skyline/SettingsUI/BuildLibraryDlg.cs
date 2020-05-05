@@ -67,6 +67,13 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_SPECLIB,
        };
 
+         public static readonly string[] SEARCH_FILE_EXTS =
+        {
+            //TODO check if there are known raw file extensions
+            ".mgf",
+            ".mzml",
+            ".raw"
+        };
         private string[] _inputFileNames = new string[0];
         private string _dirInputRoot = string.Empty;
 
@@ -542,13 +549,13 @@ namespace pwiz.Skyline.SettingsUI
             InputFileNames = AddInputFiles(this, InputFileNames, fileNames);
         }
 
-        public static string[] AddInputFiles(Form parent, IEnumerable<string> inputFileNames, IEnumerable<string> fileNames)
+        public static string[] AddInputFiles(Form parent, IEnumerable<string> inputFileNames, IEnumerable<string> fileNames, bool performDDASearch = false)
         {
             var filesNew = new List<string>(inputFileNames);
             var filesError = new List<string>();
             foreach (var fileName in fileNames)
             {
-                if (IsValidInputFile(fileName))
+                if (IsValidInputFile(fileName, performDDASearch))
                 {
                     if (!filesNew.Contains(fileName))
                         filesNew.Add(fileName);
@@ -575,12 +582,21 @@ namespace pwiz.Skyline.SettingsUI
             return filesNew.ToArray();
         }
 
-        private static bool IsValidInputFile(string fileName)
+        private static bool IsValidInputFile(string fileName, bool performDDASearch = false)
         {
             foreach (string extResult in RESULTS_EXTS)
             {
                 if (PathEx.HasExtension(fileName, extResult))
                     return true;
+            }
+
+            if (performDDASearch)
+            {
+                foreach (string extSearchFile in SEARCH_FILE_EXTS)
+                {
+                    if (PathEx.HasExtension(fileName, extSearchFile))
+                        return true;
+                }
             }
             return fileName.EndsWith(BiblioSpecLiteSpec.EXT);
         }

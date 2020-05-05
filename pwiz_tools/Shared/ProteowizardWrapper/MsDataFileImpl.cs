@@ -85,6 +85,8 @@ namespace pwiz.ProteowizardWrapper
         private readonly bool _requireVendorCentroidedMS1;
         private readonly bool _requireVendorCentroidedMS2;
 
+        private readonly bool _trimNativeID;
+
         private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
 
         private DetailLevel _detailStartTime = DetailLevel.InstantMetadata;
@@ -150,7 +152,8 @@ namespace pwiz.ProteowizardWrapper
             bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false,
             bool ignoreZeroIntensityPoints = false, 
             int preferOnlyMsLevel = 0,
-            bool combineIonMobilitySpectra = true) // Ask for IMS data in 3-array format by default (not guaranteed)
+            bool combineIonMobilitySpectra = true, // Ask for IMS data in 3-array format by default (not guaranteed)
+            bool trimNativeId = true)
         {
 
             // see note above on enabling performance measurement
@@ -179,6 +182,7 @@ namespace pwiz.ProteowizardWrapper
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
                 _requireVendorCentroidedMS1 = requireVendorCentroidedMS1;
                 _requireVendorCentroidedMS2 = requireVendorCentroidedMS2;
+                _trimNativeID = trimNativeId;
             }
         }
 
@@ -917,7 +921,7 @@ namespace pwiz.ProteowizardWrapper
             bool expectIonMobilityValue = IonMobilityUnits != eIonMobilityUnits.none;
             var msDataSpectrum = new MsDataSpectrum
             {
-                Id = id.abbreviate(idText),
+                Id = _trimNativeID ? id.abbreviate(idText) : idText,
                 Level = GetMsLevel(spectrum) ?? 0,
                 Index = spectrum.index,
                 RetentionTime = GetStartTime(spectrum),
@@ -1334,6 +1338,16 @@ namespace pwiz.ProteowizardWrapper
 
         }
 
+        private static int? GetChargeStateValue(Precursor precursor)
+        {
+            if (precursor.selectedIons == null || precursor.selectedIons.Count == 0)
+                return null;
+            var param = precursor.selectedIons[0].cvParam(CVID.MS_charge_state);
+            if (param.empty())
+                return null;
+            return (int)param.value;
+        }
+
         private static IEnumerable<MsPrecursor> GetMs1Precursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
@@ -1509,6 +1523,7 @@ namespace pwiz.ProteowizardWrapper
     public struct MsPrecursor
     {
         public SignedMz? PrecursorMz { get; set; }
+        public int? ChargeState { get; set; }
         public double? PrecursorCollisionEnergy  { get; set; }
         public SignedMz? IsolationWindowTargetMz { get; set; }
         public double? IsolationWindowUpper { get; set; } // Add this to IsolationWindowTargetMz to get window upper bound

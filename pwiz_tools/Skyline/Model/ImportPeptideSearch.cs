@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.MSAmanda;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -52,9 +53,11 @@ namespace pwiz.Skyline.Model
         public double CutoffScore { get; set; }
         public Library DocLib { get; private set; }
         public Dictionary<string, FoundResultsFilePossibilities> SpectrumSourceFiles { get; set; }
+        public AbstractDdaSearchEngine SearchEngine { get; set; } = new MSAmandaSearchWrapper();
 
         public bool HasDocLib { get { return DocLib != null; } }
         public IrtStandard IrtStandard { get; set; }
+        public bool IsDDASearch { get; set; }
         private readonly LibKeyModificationMatcher _matcher;
         private IsotopeLabelType DefaultHeavyLabelType { get; set; }
         public HashSet<StaticMod> UserDefinedTypedMods { get; private set; }
@@ -187,6 +190,7 @@ namespace pwiz.Skyline.Model
 
         public void InitializeSpectrumSourceFiles(SrmDocument document)
         {
+           if (!IsDDASearch){
             if (DocLib == null)
                 return;
 
@@ -210,6 +214,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             DocLib.ReadStream.CloseStream();
+        }
         }
 
         public IEnumerable<string> GetDirsToSearch(string documentDirectory)
@@ -330,11 +335,12 @@ namespace pwiz.Skyline.Model
 
         public bool InitializeModifications(SrmDocument document)
         {
-            if (DocLib == null)
+            if (DocLib == null && !IsDDASearch)
                 return false;
 
             InitializeUserDefinedTypedMods(document);
-            UpdateModificationMatches(document);
+            if (!IsDDASearch)
+              UpdateModificationMatches(document);
             return true;
         }
 
@@ -377,8 +383,19 @@ namespace pwiz.Skyline.Model
 
         public SrmSettings AddModifications(SrmDocument document, PeptideModifications modifications)
         {
+          if (!IsDDASearch)
+            {
             _matcher.MatcherPepMods = modifications;
             return document.Settings.ChangePeptideModifications(mods => _matcher.SafeMergeImplicitMods(document));
+          }
+          else
+            {
+                return document.Settings.ChangePeptideSettings(document.Settings.PeptideSettings.ChangeModifications(modifications));
+
+                //todo add heavy modifications
+                //document.Settings.PeptideSettings.Modifications.ChangeModifications(IsotopeLabelType.heavy, modifications.HeavyModifications.)
+                return document.Settings;
+            }
         }
 
         public static SrmDocument PrepareImportFasta(SrmDocument document)

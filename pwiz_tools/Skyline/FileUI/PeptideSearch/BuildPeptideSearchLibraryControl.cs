@@ -250,16 +250,41 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void btnAddFile_Click(object sender, EventArgs e)
         {
+          if (PerformDDASearch)
+            {
+                
+                using (OpenFileDialog dlg = new OpenFileDialog
+                {
+                    //todo add resources here
+                    Title = "Add spectra files to analyze",
+                    InitialDirectory = Path.GetDirectoryName(DocumentContainer.DocumentFilePath),
+                    CheckPathExists = true,
+                    Multiselect = true,
+                    Filter = "spectrum files(*.mgf;*.MGF;*.mzML;*.mzml;*.MZML; *.raw)|*.mgf;*.MGF;*.mzML;*.mzml;*.MZML;*.raw"
+                    // FASTA files often have no extension as well as .fasta and others
+                })
+                {
+                    if (dlg.ShowDialog(WizardForm) == DialogResult.OK)
+                    {
+                        //AddSpectraFilesToSearchEngine(dlg.FileNames);
+                        AddSearchFiles(dlg.FileNames);
+                    }
+                }
+            }
+            else
+            {
+
             string[] addFiles = BuildLibraryDlg.ShowAddFile(WizardForm, Path.GetDirectoryName(DocumentContainer.DocumentFilePath));
             if (addFiles != null)
             {
                 AddSearchFiles(addFiles);
             }
         }
+      }
 
         public void AddSearchFiles(IEnumerable<string> fileNames)
         {
-            SearchFilenames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames);
+            SearchFilenames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames, PerformDDASearch);
         }
 
         public double CutOffScore
@@ -280,10 +305,30 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 return AddExistingLibrary(e);
             }
-            else
+            else if (PerformDDASearch)
+            {
+                return PresetNecessarySettingsWithoutLibrary(e);
+            } else 
             {
                 return BuildPeptideSearchLibrary(e);
             }
+        }
+
+        private bool PresetNecessarySettingsWithoutLibrary(CancelEventArgs cancelEventArgs)
+        {
+            //ImportPeptideSearch.DocLib = new EmptyLibraryForDDASearch();
+            foreach (string rawFile in ImportPeptideSearch.SearchFilenames)
+            {
+                if (!Path.GetExtension(rawFile).ToUpper().Equals(".MGF"))
+                    ImportPeptideSearch.SpectrumSourceFiles.Add(rawFile, new ImportPeptideSearch.FoundResultsFilePossibilities(rawFile){ExactMatch = rawFile});
+                else
+                    ImportPeptideSearch.SpectrumSourceFiles.Add(rawFile, new ImportPeptideSearch.FoundResultsFilePossibilities(rawFile));
+                //ImportPeptideSearch.Document = new SrmDocument();
+                //ImportPeptideSearch.DocLib.
+            }
+
+            return true;
+
         }
 
         public string LastBuildCommandArgs { get; private set; }
@@ -516,6 +561,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 radioExistingLibrary.Checked = value;
                 radioButtonNewLibrary.Checked = !value;
+                radioDDASearch.Checked = !value;
             }
         }
 
@@ -562,6 +608,34 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             FireInputFilesChanged();
         }
+
+        private void radioDDASearch_CheckedChanged(object sender, EventArgs e)
+        {
+
+            UpdatePerformDDASearch();
+        }
+
+        private const string DDA_SEARCH_CAPTION_TEXT = "Files to search:";
+        private const string BUILD_LIBRARY_CAPTION_TEXT = "Result files:";
+        public void UpdatePerformDDASearch()
+        {
+            panelChooseFile.Visible = !PerformDDASearch;
+            lblFileCaption.Text = PerformDDASearch ? DDA_SEARCH_CAPTION_TEXT : BUILD_LIBRARY_CAPTION_TEXT;
+            peptideSearchSplitContainer.Visible = PerformDDASearch;
+            FireInputFilesChanged();
+        }
+
+        public bool PerformDDASearch
+        {
+            get { return radioDDASearch.Checked; }
+            set
+            {
+                radioExistingLibrary.Checked = !value;
+                radioButtonNewLibrary.Checked = !value;
+                radioDDASearch.Checked = value;
+            }
+        }
+    
 
         private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
         {
