@@ -1105,7 +1105,8 @@ namespace pwiz.SkylineTestUtil
 
         public void PauseForCoverShot()
         {
-            // TODO: Use the ScreenshotManager in master branch to put the screenshot on the clipboard
+            Thread.Sleep(1000); // Give windows time to repaint
+            ScreenshotManager.TakeNextShot(SkylineWindow);
             PauseTest("Cover shot at 1200 x 800");
         }
 
