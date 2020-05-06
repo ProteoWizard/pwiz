@@ -71,10 +71,6 @@ extern "C" {
     /// measured in different modes. Not supported yet by the acquisition software
     /// This is just accumulation time for now, but other parameters might come
     typedef struct {
-        //< External Id typically specified by the software which is used to
-        //< design the PRM experiment(Skyline, SpectroDive).This id is
-        //< thought as a key to data structures within these tools
-        const char* external_id;
         //< accumulation time for the TIMS cell if this parameter has to be
         //< changed between different frames. Unit is milliseconds
         double accumulation_time;
@@ -132,12 +128,6 @@ extern "C" {
 
         // //////// - Block of additional target characteristics :
 
-        //< External Id typically specified by the software which is used to
-        //< design the PRM experiment(Skyline, SpectroDive).This id is
-        //< thought as a key to data structures within these tools.The ExternalId
-        //< is also part of the PrmTargets table of the tdf data file
-        const char* external_id;
-
         //< Inverse reduced mobility(1 / K0), value for the apex of the target compound
         double one_over_k0;
 
@@ -149,10 +139,6 @@ extern "C" {
 
         //< The charge state
         int32_t charge;
-
-        //< Optionally, a free - text description for display purposes(might contain,
-        //< e.g., peptide sequence, sum formula, substance name, SMILES string)
-        const char* description;
     } PrmInputTarget;
 
 
@@ -182,7 +168,7 @@ extern "C" {
         uint32_t measurement_mode_id;
     } PrmPasefSchedulingEntry;
 
-    /// Open the prm_scheduling.sql file, read the PrmMethodInfo data and 
+    /// Open the prmsqlite file, read the PrmMethodInfo data and 
     /// erase eventually exisiting scheduling results which will later on
     /// be written to this file.
     ///
@@ -192,11 +178,12 @@ extern "C" {
     /// On failure, returns 0, and you can use tims_get_last_error_string() to obtain a
     /// string describing the problem.
     ///
-    /// \param scheduling_file_directory_name is the directory of the file in the 
-    /// file system that contains the prmScheduling.sqlite file, in UTF-8 encoding.
+    /// \param scheduling_file_path is the path to the *.prmsqlite file in the 
+    /// filesystem, in UTF-8 encoding. If any file extension but .prmsqlite or no file extension
+    /// is given appends .prmsqlite
     ///
     BdalPRMSchedulerDllSpec uint64_t prm_scheduling_file_open(
-        const char *scheduling_file_directory_name
+        const char *scheduling_file_name
     );
 
     /// Close data set and free allocated memory associated with this handle
@@ -262,15 +249,51 @@ extern "C" {
         PrmCollisionEnergyRamp *parameters //< parameters for collision energy ramp
     );
 
+    /// Add a single input target for scheduling
+    ///
+    /// \param prm_input_target target definition
+    /// \param external_id string with an external identifier, can be nullptr or empty
+    /// \param description string with a software specific description for the target, e.g. a sequence
+    ///
+    /// There is no clear() function yet, use prm_scheduling_close() and open() if different
+    /// inputs are required.
+    ///
+    /// \returns error code
+    /// On success, returns 1 
+    /// On failure, returns 0, and you can use scheduling_get_last_error_string() to obtain a
+    /// string describing the problem.
+    BdalPRMSchedulerDllSpec uint32_t prm_add_input_target(
+        uint64_t handle,
+        const PrmInputTarget* prm_input_target,
+        const char* external_id,
+        const char* description
+    );
+
+    /// Add a single measurement mode
+    ///
+    /// Optional measurement modes allow the measurement of frames with different
+    /// sets of parameters, especially the accumulation time
+    ///
+    /// \param prm_measurement_mode specification of a measurement mode, must not be nullptr
+    /// \param external_id string with an external identifier, can be nullptr or empty empty
+    ///        External Id typically specified by the software which is used to
+    ///        design the PRM experiment(Skyline, SpectroDive).This id is
+    ///        thought as a key to data structures within these tools
+    ///
+    /// There is no clear() function, use prm_scheduling_close() and open() if different
+    /// inputs are required.
+    ///
+    /// \returns error code
+    /// On success, returns 1 
+    /// On failure, returns 0, and you can use scheduling_get_last_error_string() to obtain a
+    /// string describing the problem.
+    BdalPRMSchedulerDllSpec uint32_t prm_add_measurement_mode(
+        uint64_t handle,
+        const PrmMeasurementMode* prm_measurement_mode,
+        const char* external_id
+    );
 
     /// Determine a prm-PASEF target scheduling for the given targets
-    ///
-    /// \param num_input_targets gives the number of targets to be scheduled
-    /// \param prm_input_target_list pointer to the array of target definitions
-    /// \param num_prm_measurement_modes number of measurement modes
-    /// \param prm_measurement_modes is either a null pointer or is specifying a
-    ///        number of measurement modes which each frame has to be measured
-    ///        with
     ///
     /// \returns error code
     /// On success, returns 1 and you can request the results as a data structure using
@@ -281,11 +304,7 @@ extern "C" {
     /// string describing the problem.
     ///
     BdalPRMSchedulerDllSpec uint32_t prm_scheduling_prm_targets(
-        uint64_t handle,
-        uint32_t num_input_targets,
-        const PrmInputTarget* prm_input_target_list,
-        uint32_t num_prm_measurement_modes,
-        const PrmMeasurementMode* prm_measurement_modes
+        uint64_t handle
     );
 
     /// function type that takes over the PrmPasefSchedulingEntrys
@@ -311,28 +330,6 @@ extern "C" {
     BdalPRMSchedulerDllSpec uint32_t prm_get_num_time_segments(
         uint64_t handle
     );
-
-    /// function type that takes over the PrmInputTargets, esp. those
-    /// which have been amplified and modified for direct injection CE ramps
-    typedef void(prm_input_targets_function)(
-        uint32_t num_entries, //< number of input targets
-        const PrmInputTarget *prm_input_targets, //< array of input targets
-        void *user_data //< capture emulation for the user space for the data
-        );
-
-    /// get the number of input targets which have been amplified and modified
-    /// for direct injection CE ramps
-    BdalPRMSchedulerDllSpec uint32_t prm_get_num_ce_ramp_input_targets(
-        uint64_t handle
-    );
-
-    /// get the input targets which have been amplified and modified
-    /// for direct injection CE ramps
-    BdalPRMSchedulerDllSpec uint32_t prm_get_ce_ramp_input_targets(
-        uint64_t handle,
-        prm_input_targets_function *callback_input_targets,
-        void *user_data_scheduling_entry
-    );
     
     /// get the prm scheduling results for further evaluation and visualization
     ///
@@ -345,7 +342,7 @@ extern "C" {
         void *user_data_time_segments_entry //< will be passed to callback, emulating a capture
     );
 
-    /// write the prm scheduling results to the given sqlite file
+    /// write the prm scheduling results to the given prmsqlite file
     ///
     /// On success, returns 1
     /// On failure, returns 0 and you can use scheduling_get_last_error_string() to
