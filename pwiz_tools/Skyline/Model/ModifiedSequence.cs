@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Replace all of the crosslinked peptide with the mass of the crosslinker plus the mass of the linked peptide.
         /// </summary>
-        public ModifiedSequence FlattenCrosslinks(SrmSettings settings, IsotopeLabelType labelType)
+        public ModifiedSequence ReplaceCrosslinksWithMasses(SrmSettings settings, IsotopeLabelType labelType)
         {
             if (ExplicitMods.All(mod => null == mod.LinkedPeptideSequence))
             {
@@ -269,6 +269,11 @@ namespace pwiz.Skyline.Model
                 newModifications.Add(new Modification(modification.ExplicitMod, moleculeMassOffset.MonoMassOffset, moleculeMassOffset.AverageMassOffset));
             }
             return new ModifiedSequence(_unmodifiedSequence, newModifications, _defaultMassType);
+        }
+
+        public ModifiedSequence SeverCrosslinks()
+        {
+            return new ModifiedSequence(_unmodifiedSequence, _explicitMods.Select(mod=>mod.ChangeLinkedPeptideSequence(null)), _defaultMassType);
         }
 
         public static string FormatThreeLetterCode(Modification modification)

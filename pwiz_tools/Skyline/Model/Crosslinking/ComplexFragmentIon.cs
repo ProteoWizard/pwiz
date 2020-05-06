@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +30,9 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
+    /// <summary>
+    /// Represents a set of Transitions from different peptides linked together by crosslinked modifications.
+    /// </summary>
     public class ComplexFragmentIon : Immutable, IComparable<ComplexFragmentIon>
     {
         public ComplexFragmentIon(Transition transition, TransitionLosses transitionLosses, ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinkStructure, bool isOrphan = false)
@@ -23,6 +44,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             CrosslinkStructure = crosslinkStructure ?? LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE;
         }
 
+        /// <summary>
+        /// Creates a ComplexFragmentIon representing something which has no amino acids from the parent peptide.
+        /// </summary>
         public static ComplexFragmentIon NewOrphanFragmentIon(TransitionGroup transitionGroup, ExplicitMods explicitMods, Adduct adduct)
         {
             var transition = new Transition(transitionGroup, IonType.precursor,
@@ -32,8 +56,14 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public Transition Transition { get; private set; }
 
+        /// <summary>
+        /// If true, this ion includes no amino acids from the parent peptide.
+        /// </summary>
         public bool IsOrphan { get; private set; }
 
+        /// <summary>
+        /// Whether this ion has no amino acids from the parent peptide, or any of the children either.
+        /// </summary>
         public bool IsEmptyOrphan
         {
             get { return IsOrphan && Children.Count == 0; }
@@ -48,11 +78,6 @@ namespace pwiz.Skyline.Model.Crosslinking
         public IsotopeLabelType LabelType
         {
             get { return Transition.Group.LabelType; }
-        }
-
-        public ComplexFragmentIon ChangeChildren(IEnumerable<KeyValuePair<ModificationSite, ComplexFragmentIon>> children)
-        {
-            return ChangeProp(ImClone(this), im => im.Children = ImmutableSortedList.FromValues(children));
         }
 
         public ComplexFragmentIon AddChild(ModificationSite modificationSite, ComplexFragmentIon child)
@@ -126,14 +151,17 @@ namespace pwiz.Skyline.Model.Crosslinking
             return result;
         }
 
-        public MoleculeMassOffset GetSimpleFragmentFormula(SrmSettings settings, ExplicitMods mods)
+        /// <summary>
+        /// Returns the chemical formula for this fragment and none of its children.
+        /// </summary>
+        private MoleculeMassOffset GetSimpleFragmentFormula(SrmSettings settings, ExplicitMods mods)
         {
             if (IsOrphan)
             {
                 return MoleculeMassOffset.EMPTY;
             }
-            var modifiedSequence =
-                ModifiedSequence.GetModifiedSequence(settings, Transition.Group.Peptide.Sequence, mods, LabelType);
+            var modifiedSequence = ModifiedSequence.GetModifiedSequence(settings, Transition.Group.Peptide.Sequence, mods, LabelType)
+                .SeverCrosslinks();
             var fragmentedMolecule = FragmentedMolecule.EMPTY.ChangeModifiedSequence(modifiedSequence);
             fragmentedMolecule = fragmentedMolecule.ChangeFragmentIon(Transition.IonType, Transition.Ordinal);
             if (null != TransitionLosses)
@@ -143,39 +171,22 @@ namespace pwiz.Skyline.Model.Crosslinking
             return new MoleculeMassOffset(fragmentedMolecule.FragmentFormula, 0, 0);
         }
 
-
-
-        public MoleculeMassOffset GetCrosslinkFormula(SrmSettings settings, ExplicitMod explicitMod)
+        /// <summary>
+        /// Returns the chemical formula of a the fragment ion linked to a particular crosslink modifacation.
+        /// </summary>
+        private MoleculeMassOffset GetCrosslinkFormula(SrmSettings settings, ExplicitMod explicitMod)
         {
-            var children = GetChildrenAtSite(explicitMod.ModificationSite).ToList();
-            if (children.Count == 0)
+            ComplexFragmentIon childFragmentIon;
+            if (!Children.TryGetValue(explicitMod.ModificationSite, out childFragmentIon))
             {
                 return MoleculeMassOffset.EMPTY;
             }
-
-            if (children.Count != 1)
-            {
-                throw new ArgumentException();
-            }
             var result = MoleculeMassOffset.EMPTY;
-            // ;
-            //     explicitMod.CrosslinkerDef.IntactFormula.GetMoleculeMassOffset(GetMassType(settings));
             var linkedPeptide = explicitMod.LinkedPeptide;
-            var childFragmentIon = children[0];
             var childFormula =
                 childFragmentIon.GetNeutralFormula(settings, linkedPeptide.ExplicitMods);
             result = result.Plus(childFormula);
             return result;
-        }
-
-        private MassType GetMassType(SrmSettings settings)
-        {
-            return settings.TransitionSettings.Prediction.FragmentMassType;
-        }
-
-        private IEnumerable<ComplexFragmentIon> GetChildrenAtSite(ModificationSite site)
-        {
-            return Children.Where(child => child.Key.Equals(site)).Select(child => child.Value);
         }
 
         public TransitionDocNode MakeTransitionDocNode(SrmSettings settings, ExplicitMods explicitMods)
@@ -215,19 +226,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public static MassDistribution GetMassDistribution(SrmSettings settings, Molecule molecule)
-        {
-            var fragmentedMoleculeSettings = FragmentedMolecule.Settings.DEFAULT;
-            if (null != settings.TransitionSettings.FullScan.IsotopeAbundances)
-            {
-                fragmentedMoleculeSettings =
-                    fragmentedMoleculeSettings.ChangeIsotopeAbundances(settings.TransitionSettings.FullScan
-                        .IsotopeAbundances);
-            }
-
-            return fragmentedMoleculeSettings.GetMassDistribution(molecule, 0, 0);
-        }
-
+        /// <summary>
+        /// Returns a ComplexFragmentIonName object representing this ComplexFragmentIon
+        /// </summary>
         public ComplexFragmentIonName GetName()
         {
             ComplexFragmentIonName name;
@@ -319,6 +320,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             return Children.Count.CompareTo(other.Children.Count);
         }
 
+        /// <summary>
+        /// Returns the text that should be displayed for this in the Targets tree.
+        /// </summary>
         public string GetTargetsTreeLabel()
         {
             StringBuilder stringBuilder = new StringBuilder();

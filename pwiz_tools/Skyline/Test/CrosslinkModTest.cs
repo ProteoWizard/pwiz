@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -132,13 +150,6 @@ namespace pwiz.SkylineTest
             CollectionAssert.AreEquivalent(expectedFragmentIons, oneNeutralLossChoices);
         }
 
-        private SrmSettings SetMaxNeutralLossCount(SrmSettings settings, int count)
-        {
-            return settings.ChangePeptideSettings(
-                settings.PeptideSettings.ChangeModifications(
-                    settings.PeptideSettings.Modifications.ChangeMaxNeutralLosses(count)));
-        }
-
         [TestMethod]
         public void TestComplexIonGetNeutralFormula()
         {
@@ -241,27 +252,6 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(b1.IncludesAaIndex(0));
             Assert.IsFalse(b1.IncludesAaIndex(1));
         }
-
-        // [TestMethod]
-        // public void TestComplexIonMz()
-        // {
-        //     //DDSPDLPKLK[SLGKVGTR+C8H10O2]PDPNTLC[Carbamidomethyl (C)]DEFK
-        //     var srmSettings = SrmSettingsList.GetDefault();
-        //     var peptide = new Peptide("DDSPDLPKLKPDPNTLCDEFK");
-        //     var transitionGroup = new TransitionGroup(peptide, Adduct.QUADRUPLY_PROTONATED, IsotopeLabelType.light);
-        //     var y15 = new Transition(transitionGroup, IonType.y,
-        //         Transition.OrdinalToOffset(IonType.y, 15, peptide.Sequence.Length), 0, Adduct.TRIPLY_PROTONATED);
-        //     var complexFragmentIon = new ComplexFragmentIon(y15, null);
-        //     var crosslinkMod = new StaticMod("mymod", "K", null, "C8H10O2");
-        //     var linkedPeptide = new LinkedPeptide(new Peptide("SLGKVGTR"), 3, null);
-        //     var explicitMod = new ExplicitMod(9, crosslinkMod).ChangeLinkedPeptide(linkedPeptide);
-        //     var explicitMods = new ExplicitMods(peptide, new[]{explicitMod}, new TypedExplicitModifications[0]);
-        //     var linkedTransition = new Transition(linkedPeptide.GetTransitionGroup(IsotopeLabelType.light,Adduct.SINGLY_PROTONATED), IonType.precursor, linkedPeptide.Peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED);
-        //     complexFragmentIon = complexFragmentIon.AddChild(explicitMod.ModificationSite,
-        //         new ComplexFragmentIon(linkedTransition, null));
-        //     var complexTransition = complexFragmentIon.MakeTransitionDocNode(srmSettings, explicitMods);
-        //     Assert.AreEqual(919.4932, complexTransition.Mz, 0.0001);
-        // }
 
         [TestMethod]
         public void TestComplexIonMz()
