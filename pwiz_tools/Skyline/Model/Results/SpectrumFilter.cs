@@ -21,6 +21,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
@@ -279,6 +280,11 @@ namespace pwiz.Skyline.Model.Results
                         {
                             filter = new SpectrumFilterPair(key, nodePep.Color, dictPrecursorMzToFilter.Count, minTime, maxTime,
                                 _isHighAccMsFilter, _isHighAccProductFilter);
+                            if (_instrument.TriggeredAcquisition)
+                            {
+                                filter.ScanDescriptionFilter =
+                                    GetSureQuantScanDescription(document.Settings, nodePep, nodeGroup);
+                            }
                             dictPrecursorMzToFilter.Add(key, filter);
                         }
 
@@ -821,7 +827,6 @@ namespace pwiz.Skyline.Model.Results
 
             var pasefAwareFilter = new DiaPasefAwareFilter(spectra, _acquisitionMethod);
             var firstSpectrum = spectra.First();
-            bool orderedByMz = firstSpectrum.IonMobilities == null; // 3D spectra may come ordered by ion mobility
             foreach (var isoWin in GetIsolationWindows(firstSpectrum.GetPrecursorsByMsLevel(1)))
             {
                 foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
@@ -830,6 +835,17 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     if (pasefAwareFilter.PreFilter(filterPair, isoWin, firstSpectrum))
                         continue;
+                    if (filterPair.ScanDescriptionFilter != null)
+                    {
+                        if (firstSpectrum.ScanDescription != null &&
+                            firstSpectrum.ScanDescription.StartsWith(SUREQUANT_SCAN_DESCRIPTION_PREFIX))
+                        {
+                            if (firstSpectrum.ScanDescription != filterPair.ScanDescriptionFilter)
+                            {
+                                continue;
+                            }
+                        }
+                    }
 
                     // This line does the bulk of the work of pulling chromatogram points from spectra
                     var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, UseDriftTimeHighEnergyOffset());
@@ -1283,5 +1299,64 @@ namespace pwiz.Skyline.Model.Results
             return mz1.CompareTolerant(mz2, 0.5 * window);
         }
 
+        public const string SUREQUANT_SCAN_DESCRIPTION_PREFIX = @"SQ_";
+        /// <summary>
+        /// Thermo SureQuant acquisition methods use the "Scan Description" field to disambiguate which analytes particular MS2 scans
+        /// are intended for. These scan description values always start with "SQ_". Then they are followed by either "ENDO_" or "IS_" depending
+        /// on whether the precursor was light (endogenous) or heavy (internal standard).
+        /// Then, they are followed by the labeled amino acid, and a plus sign, and labeled amino acid mass delta.
+        /// Then, "_" and the charge state.
+        /// Here are some example scan description values:
+        /// SQ_IS_R+10_2
+        /// SQ_IS_K+8_2
+        /// SQ_ENDO_K+8_2
+        /// SQ_ENDO_R+10_2
+        /// </summary>
+        public static string GetSureQuantScanDescription(SrmSettings settings, PeptideDocNode peptideDocNode,
+            TransitionGroupDocNode transitionGroupDocNode)
+        {
+            char? labeledAminoAcid = null;
+            int labelMassDelta = 0;
+
+            var lightSequence = ModifiedSequence.GetModifiedSequence(settings, peptideDocNode, IsotopeLabelType.light);
+            var lightModificationNames = lightSequence.GetModifications().Select(mod => mod.Name).ToHashSet();
+            foreach (var labelType in settings.PeptideSettings.Modifications.GetHeavyModificationTypes())
+            {
+                var modifiedSequence = ModifiedSequence.GetModifiedSequence(settings, peptideDocNode, labelType);
+                var isotopeModification = modifiedSequence.GetModifications()
+                    .FirstOrDefault(mod => !lightModificationNames.Contains(mod.Name));
+                if (isotopeModification != null)
+                {
+                    labeledAminoAcid = modifiedSequence.GetUnmodifiedSequence()[isotopeModification.IndexAA];
+                    labelMassDelta = (int) Math.Round(isotopeModification.MonoisotopicMass);
+                }
+            }
+
+            if (!labeledAminoAcid.HasValue)
+            {
+                return null;
+            }
+
+            StringBuilder stringBuilder = new StringBuilder(SUREQUANT_SCAN_DESCRIPTION_PREFIX);
+            if (transitionGroupDocNode.IsLight)
+            {
+                stringBuilder.Append(@"ENDO_");
+            }
+            else
+            {
+                stringBuilder.Append(@"IS_");
+            }
+
+            stringBuilder.Append(labeledAminoAcid);
+            if (labelMassDelta >= 0)
+            {
+                stringBuilder.Append(@"+");
+            }
+
+            stringBuilder.Append(labelMassDelta);
+            stringBuilder.Append(@"_");
+            stringBuilder.Append(transitionGroupDocNode.PrecursorCharge);
+            return stringBuilder.ToString();
+        }
     }
 }
