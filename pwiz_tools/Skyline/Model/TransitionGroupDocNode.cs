@@ -1200,14 +1200,7 @@ namespace pwiz.Skyline.Model
             {
                 var startingFragmentIon = simpleTransition.ComplexFragmentIon
                     .ChangeCrosslinkStructure(explicitMods.Crosslinks);
-                if (!simpleTransition.Transition.HasAnyCrosslinks(explicitMods.Crosslinks))
-                {
-                    yield return simpleTransition.ChangeComplexFragmentIon(startingFragmentIon);
-                }
-                else
-                {
-                    startingFragmentIons.Add(startingFragmentIon);
-                }
+                startingFragmentIons.Add(startingFragmentIon);
             }
 
             IEnumerable<Adduct> allProductAdducts;

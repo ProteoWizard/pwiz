@@ -662,7 +662,7 @@ namespace pwiz.Skyline.Model
             TransitionDocNode transitionDocNode;
             var transitionQuantInfo =
                 new TransitionQuantInfo(isotopeDistInfo, libInfo, !transitionProto.NotQuantitative);
-            if (transitionProto.LinkedIons.Any())
+            if (mods != null && mods.HasCrosslinks)
             {
                 ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, losses, mods.Crosslinks, transitionProto.OrphanedCrosslinkIon);
                 foreach (var linkedIon in transitionProto.LinkedIons)
