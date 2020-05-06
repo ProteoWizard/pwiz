@@ -340,6 +340,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         string filterString = scanInfo->filter();
         scan.set(MS_filter_string, filterString);
 
+        string scanDescriptionStr = scanInfo->trailerExtraValue("Scan Description:");
+        bal::trim(scanDescriptionStr);
+        if (!scanDescriptionStr.empty())
+            result->userParams.emplace_back("scan description", scanDescriptionStr, "xsd:string");
+
         int scanSegment = 1, scanEvent = 1;
 
         string scanSegmentStr = scanInfo->trailerExtraValue("Scan Segment:");
@@ -528,7 +533,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 {
                     // isolationWindow
 
-                    double isolationWidth = 0;
+                    double isolationWidth = precursorInfo.isolationWidth / 2;
 
                     try
                     {

@@ -160,13 +160,16 @@ namespace pwiz.Skyline.Model.Results
                         chromDataSet.Chromatograms.Where(chrom => null != chrom.DocNode)
                             .Select(chrom => chrom.RawTimes));
                     chromDataSet.TimeIntervals = timeIntervals;
-                    if (intersectedTimeIntervals == null)
+                    if (timeIntervals != null)
                     {
-                        intersectedTimeIntervals = timeIntervals;
-                    }
-                    else
-                    {
-                        intersectedTimeIntervals = intersectedTimeIntervals.Intersect(timeIntervals);
+                        if (intersectedTimeIntervals == null)
+                        {
+                            intersectedTimeIntervals = timeIntervals;
+                        }
+                        else
+                        {
+                            intersectedTimeIntervals = intersectedTimeIntervals.Intersect(timeIntervals);
+                        }
                     }
                 }
             }

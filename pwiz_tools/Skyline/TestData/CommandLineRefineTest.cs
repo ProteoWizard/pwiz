@@ -247,6 +247,7 @@ namespace pwiz.SkylineTestData
         public void ConsoleRefineConsistencyTest()
         {
             string cvCutoff = 20.ToString();
+            string cvCutoffDecimalPercent = 0.2.ToString(CultureInfo.CurrentCulture);
             var args = new List<string>
             {
                 CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff)
@@ -257,25 +258,37 @@ namespace pwiz.SkylineTestData
             };
             // Remove all elements above the cv cutoff
             TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional\AreaCVHistogramTest.zip");
-            DocumentPath = InitRefineDocument("Rat_plasma.sky", 48, 0, 125, 125, 721);
+            DocumentPath = InitRefineDocument("Rat_plasma.sky", 19, 29, 125, 125, 721);
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
             var output = Run(args.ToArray());
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 3, 0, 3, 18, output);
+            IsDocumentState(OutPath, 19, 29, 3, 0, 3, 18, output);
+
+            // Remove empty proteins
+            args.Add(CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(1.ToString()));
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 2, 1, 3, 0, 3, 18, output);
+            args.RemoveAt(args.Count - 1);
+
+            // Try the same using a decimal percentage
+            output = Run(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoffDecimalPercent));
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 19, 29, 3, 0, 3, 18, output);
 
             // Normalize to medians and remove all elements above the cv cutoff
             args.Add(CommandArgs.ARG_REFINE_CV_GLOBAL_NORMALIZE.GetArgumentTextWithValue(NormalizationMethod.EQUALIZE_MEDIANS.Name));
             output = Run(args.ToArray());
             parts.Add(PropertyNames.RefinementSettings_NormalizationMethod);
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 10, 0, 10, 58, output);
+            IsDocumentState(OutPath, 19, 29, 10, 0, 10, 58, output);
 
             // Test best transitions
             args[1] = CommandArgs.ARG_REFINE_CV_TRANSITIONS.GetArgumentTextWithValue("best");
             output = Run(args.ToArray());
             parts[1] = PropertyNames.RefinementSettings_Transitions;
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 3, 0, 3, 18, output);
+            IsDocumentState(OutPath, 19, 29, 3, 0, 3, 18, output);
 
             // Test count transitions
             args[1] = CommandArgs.ARG_REFINE_CV_TRANSITIONS_COUNT.GetArgumentTextWithValue(4.ToString());
@@ -283,7 +296,7 @@ namespace pwiz.SkylineTestData
             output = Run(args.ToArray());
             parts[1] = PropertyNames.RefinementSettings_CountTransitions;
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 3, 0, 3, 18, output);
+            IsDocumentState(OutPath, 19, 29, 3, 0, 3, 18, output);
 
             // Make sure error is recorded when peptide have only 1 replicate
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");

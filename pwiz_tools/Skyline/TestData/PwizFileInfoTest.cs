@@ -99,6 +99,20 @@ namespace pwiz.SkylineTestData
         }
 
         [TestMethod]
+        public void TestScanDescription()
+        {
+            if (Skyline.Program.NoVendorReaders)
+                return;
+
+            string path = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "IT-HCD-SPS.raw");
+
+            using (var msDataFile = new MsDataFileImpl(path))
+            {
+                Assert.AreEqual("sps", msDataFile.GetScanDescription(0));
+            }
+        }
+
+        [TestMethod]
         public void TestQcTraces()
         {
             const string testZipPath = @"TestData\PressureTracesTest.zip";
