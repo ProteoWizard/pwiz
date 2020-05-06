@@ -493,15 +493,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Crosslink Masses.
-        /// </summary>
-        public static string CrosslinkMasses {
-            get {
-                return ResourceManager.GetString("CrosslinkMasses", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Cv.
         /// </summary>
         public static string Cv {
@@ -1681,15 +1672,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Modified Sequence Crosslink Masses.
-        /// </summary>
-        public static string ModifiedSequenceCrosslinkMasses {
-            get {
-                return ResourceManager.GetString("ModifiedSequenceCrosslinkMasses", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Modified Sequence Full Names.
         /// </summary>
         public static string ModifiedSequenceFullNames {
@@ -2028,15 +2010,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeptideModifiedSequenceAverageMasses {
             get {
                 return ResourceManager.GetString("PeptideModifiedSequenceAverageMasses", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Peptide Modified Sequence Crosslink Masses.
-        /// </summary>
-        public static string PeptideModifiedSequenceCrosslinkMasses {
-            get {
-                return ResourceManager.GetString("PeptideModifiedSequenceCrosslinkMasses", resourceCulture);
             }
         }
         

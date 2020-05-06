@@ -181,40 +181,6 @@ namespace pwiz.Skyline.Model
             get { return Format(FormatUnimodIds); }
         }
 
-        public string CrosslinkMasses
-        {
-            get
-            {
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.Append(Format(mods =>
-                    FormatMassModification(mods.Where(mod => null == mod.LinkedPeptideSequence), _defaultMassType,
-                        true)));
-                foreach (var modification in _explicitMods)
-                {
-                    if (null == modification.LinkedPeptideSequence)
-                    {
-                        continue;
-                    }
-
-                    double mass =
-                        (_defaultMassType.IsMonoisotopic()
-                            ? modification.ExplicitMod.Modification.MonoisotopicMass
-                            : modification.ExplicitMod.Modification.AverageMass).GetValueOrDefault();
-                    stringBuilder.Append(@"-[");
-                    stringBuilder.Append(FormatMassDelta(mass, true));
-                    stringBuilder.Append(@"@");
-                    stringBuilder.Append((modification.IndexAA + 1).ToString(CultureInfo.InvariantCulture));
-                    stringBuilder.Append(@",");
-                    stringBuilder.Append(
-                        (modification.ExplicitMod.LinkedPeptide.IndexAa + 1).ToString(CultureInfo.InvariantCulture));
-                    stringBuilder.Append(@"]-");
-                    stringBuilder.Append(modification.LinkedPeptideSequence.CrosslinkMasses);
-                }
-
-                return stringBuilder.ToString();
-            }
-        }
-
         public override string ToString()
         {
             return Format(mods=>FormatMassModification(mods, _defaultMassType, false));
@@ -229,7 +195,7 @@ namespace pwiz.Skyline.Model
         {
             StringBuilder result = new StringBuilder();
             int seqCharsReturned = 0;
-            foreach (var modGroup in _explicitMods.GroupBy(mod => mod.IndexAA))
+            foreach (var modGroup in _explicitMods.Where(mod=>null == mod.LinkedPeptideSequence).GroupBy(mod => mod.IndexAA))
             {
                 result.Append(_unmodifiedSequence.Substring(seqCharsReturned,
                     modGroup.Key + 1 - seqCharsReturned));
@@ -237,6 +203,24 @@ namespace pwiz.Skyline.Model
                 result.Append(modFormatter(modGroup.ToArray()));
             }
             result.Append(_unmodifiedSequence.Substring(seqCharsReturned));
+            foreach (var crosslinkMod in _explicitMods.Where(mod => null != mod.LinkedPeptideSequence))
+            {
+                result.Append(@"-");
+                string strMod = modFormatter(new[] {crosslinkMod});
+                if (strMod.Length == 0)
+                {
+                    strMod = @"[]";
+                }
+                result.Append(strMod.Substring(0, strMod.Length - 1));
+
+                result.Append(@"@");
+                result.Append(crosslinkMod.IndexAA + 1);
+                result.Append(@",");
+                result.Append(crosslinkMod.ExplicitMod.LinkedPeptide.IndexAa + 1);
+                result.Append(strMod.Substring(strMod.Length - 1));
+                result.Append(@"-");
+                result.Append(crosslinkMod.LinkedPeptideSequence.Format(modFormatter));
+            }
             return result.ToString();
         }
 
@@ -248,6 +232,43 @@ namespace pwiz.Skyline.Model
         public string GetUnmodifiedSequence()
         {
             return _unmodifiedSequence;
+        }
+
+        /// <summary>
+        /// Replace all of the crosslinked peptide with the mass of the crosslinker plus the mass of the linked peptide.
+        /// </summary>
+        public ModifiedSequence FlattenCrosslinks(SrmSettings settings, IsotopeLabelType labelType)
+        {
+            if (ExplicitMods.All(mod => null == mod.LinkedPeptideSequence))
+            {
+                return this;
+            }
+
+            var newModifications = new List<Modification>(ExplicitMods.Count);
+            foreach (var modification in ExplicitMods)
+            {
+                if (null == modification.LinkedPeptideSequence)
+                {
+                    newModifications.Add(modification);
+                    continue;
+                }
+                var formula = modification.StaticMod.Formula;
+                MoleculeMassOffset moleculeMassOffset;
+                if (string.IsNullOrEmpty(formula))
+                {
+                    moleculeMassOffset = new MoleculeMassOffset(Molecule.Empty, modification.StaticMod.MonoisotopicMass ?? 0, modification.StaticMod.AverageMass ?? 0);
+                }
+                else
+                {
+                    moleculeMassOffset = new MoleculeMassOffset(Molecule.ParseExpression(formula), 0, 0);
+                }
+                moleculeMassOffset = moleculeMassOffset.Plus(modification.ExplicitMod.LinkedPeptide.GetNeutralFormula(settings, labelType));
+                var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(settings);
+                moleculeMassOffset = fragmentedMoleculeSettings.ReplaceMoleculeWithMassOffset(moleculeMassOffset);
+                Assume.IsTrue(0 == moleculeMassOffset.Molecule.Count);
+                newModifications.Add(new Modification(modification.ExplicitMod, moleculeMassOffset.MonoMassOffset, moleculeMassOffset.AverageMassOffset));
+            }
+            return new ModifiedSequence(_unmodifiedSequence, newModifications, _defaultMassType);
         }
 
         public static string FormatThreeLetterCode(Modification modification)
@@ -473,31 +494,14 @@ namespace pwiz.Skyline.Model
         public static Modification ResolveModification(SrmSettings settings, IsotopeLabelType labelType, string unmodifiedSequence,
             ExplicitMod explicitMod)
         {
-            if (explicitMod.LinkedPeptide == null || explicitMod.Modification.CrosslinkerSettings == null)
+            var modification = MakeModification(unmodifiedSequence, explicitMod);
+            if (explicitMod.LinkedPeptide == null)
             {
-                return MakeModification(unmodifiedSequence, explicitMod);
+                return modification;
             }
 
-            
-            var formula = explicitMod.Modification.Formula;
-            MoleculeMassOffset moleculeMassOffset;
-            if (string.IsNullOrEmpty(formula))
-            {
-                moleculeMassOffset = new MoleculeMassOffset(Molecule.Empty, explicitMod.Modification.MonoisotopicMass ?? 0, explicitMod.Modification.AverageMass ?? 0);
-            }
-            else
-            {
-                moleculeMassOffset = new MoleculeMassOffset(Molecule.ParseExpression(formula), 0, 0);
-            }
-            moleculeMassOffset = moleculeMassOffset.Plus(explicitMod.LinkedPeptide.GetNeutralFormula(settings, labelType));
-            var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(settings);
-            moleculeMassOffset = fragmentedMoleculeSettings.ReplaceMoleculeWithMassOffset(moleculeMassOffset);
-            Assume.IsTrue(0 == moleculeMassOffset.Molecule.Count);
-            var linkedSequence = GetModifiedSequence(settings,
-                explicitMod.LinkedPeptide.Peptide.Sequence, explicitMod.LinkedPeptide.ExplicitMods, labelType);
-            return new Modification(explicitMod, moleculeMassOffset.MonoMassOffset,
-                    moleculeMassOffset.AverageMassOffset)
-                .ChangeLinkedPeptideSequence(linkedSequence);
+            return modification.ChangeLinkedPeptideSequence(GetModifiedSequence(settings,
+                explicitMod.LinkedPeptide.Peptide.Sequence, explicitMod.LinkedPeptide.ExplicitMods, labelType));
         }
     }
 }

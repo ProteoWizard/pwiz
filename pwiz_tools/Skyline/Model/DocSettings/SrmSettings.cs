@@ -368,7 +368,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (mods != null && mods.HasCrosslinks)
             {
-                var modifiedSequence = ModifiedSequence.GetModifiedSequence(this, seq.Sequence, mods, labelType);
+                var modifiedSequence = ModifiedSequence.GetModifiedSequence(this, seq.Sequence, mods, labelType).FlattenCrosslinks(this, labelType);
                 string strModifiedSequence = TransitionSettings.Prediction.PrecursorMassType.IsMonoisotopic()
                     ? modifiedSequence.MonoisotopicMasses
                     : modifiedSequence.AverageMasses;
