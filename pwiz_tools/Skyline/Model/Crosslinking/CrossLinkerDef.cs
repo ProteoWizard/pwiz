@@ -37,16 +37,13 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((CrosslinkerSettings) obj);
         }
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return 0;
-            }
+            return 0;
         }
     }
 }

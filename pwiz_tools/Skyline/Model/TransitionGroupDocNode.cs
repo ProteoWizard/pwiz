@@ -1225,7 +1225,7 @@ namespace pwiz.Skyline.Model
                         Peptide.Sequence.Length - 1, 0, productAdduct);
 
                     startingFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, explicitMods.Crosslinks, true));
-                    startingFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, explicitMods.Crosslinks, false));
+                    startingFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, explicitMods.Crosslinks));
                 }
             }
 
