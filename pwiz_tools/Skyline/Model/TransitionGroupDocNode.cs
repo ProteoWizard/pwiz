@@ -823,13 +823,13 @@ namespace pwiz.Skyline.Model
             MassType massType = settings.TransitionSettings.Prediction.PrecursorMassType;
             MoleculeMassOffset moleculeMassOffset = GetNeutralFormula(settings, mods);
             var monoAndAverageMass= fragmentedMoleculeSettings.ReplaceMoleculeWithMassOffset(moleculeMassOffset);
-            MassDistribution massDistribution =
-                fragmentedMoleculeSettings.GetMassDistribution(moleculeMassOffset.Molecule, 0, PrecursorCharge);
             TypedMass monoMassH = new TypedMass(monoAndAverageMass.MonoMassOffset + BioMassCalc.MassProton,
                 MassType.MonoisotopicMassH);
             TypedMass averageMassH = new TypedMass(monoAndAverageMass.AverageMassOffset + BioMassCalc.MassProton,
                 MassType.AverageMassH);
             mass = massType.IsMonoisotopic() ? monoMassH : averageMassH;
+            MassDistribution massDistribution =
+                fragmentedMoleculeSettings.GetMassDistribution(moleculeMassOffset.Molecule, 0, 0);
             var mzDistribution = massDistribution.OffsetAndDivide(PrecursorCharge * BioMassCalc.MassProton, PrecursorCharge);
             if (TransitionGroup.DecoyMassShift.HasValue)
                 mzDistribution = ShiftMzDistribution(mzDistribution, TransitionGroup.DecoyMassShift.Value);
@@ -856,15 +856,7 @@ namespace pwiz.Skyline.Model
 
         private IsotopeDistInfo GetIsotopeDistInfo(SrmSettings settings, MassDistribution massDist, TypedMass monoMassH)
         {
-            var adduct = PrecursorAdduct;
-            return new IsotopeDistInfo(massDist, monoMassH, PrecursorAdduct,
-                settings.TransitionSettings.FullScan.GetPrecursorFilterWindow,
-                // Centering resolution must be inversely proportional to charge state
-                // High charge states can bring major peaks close enough toghether to
-                // cause them to be combined and centered in isotope distribution valleys
-                TransitionFullScan.ISOTOPE_PEAK_CENTERING_RES / (1 + Math.Abs(adduct.AdductCharge / 15.0)),
-                TransitionFullScan.MIN_ISOTOPE_PEAK_ABUNDANCE);
-
+            return IsotopeDistInfo.MakeIsotopeDistInfo(massDist, monoMassH, PrecursorAdduct, settings.TransitionSettings.FullScan);
         }
 
         public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, ExplicitMods mods)
@@ -984,7 +976,7 @@ namespace pwiz.Skyline.Model
                             if (!ReferenceEquals(quantInfo.LibInfo, nodeTranResult.LibInfo))
                                 dotProductChange = true;
                             var results = nodeTranResult.Results;
-                            if (nodeTranResult.ComplexFragmentIon.Children.Any())
+                            if (mods != null && mods.HasCrosslinks)
                             {
                                 nodeTranResult = nodeTranResult.ComplexFragmentIon.MakeTransitionDocNode(settingsNew,
                                     mods, annotations, quantInfo, explicitValues, results);
@@ -1142,8 +1134,23 @@ namespace pwiz.Skyline.Model
                 return simpleTransitions;
             }
 
-            return RemoveUnmeasurable(settings, RemoveDuplicates(GetComplexTransitions(settings, mods, simpleTransitions, useFilter)))
-                .OrderBy(docNode=>docNode.ComplexFragmentIon);
+            var transitions = GetComplexTransitions(settings, mods, simpleTransitions, useFilter);
+            if (settings.TransitionSettings.FullScan.IsEnabledMs &&
+                settings.TransitionSettings.FullScan.IsHighResPrecursor)
+            {
+                transitions = transitions.SelectMany(docNode =>
+                {
+                    if (docNode.ComplexFragmentIon.IsMs1)
+                    {
+                        return GetPrecursorIsotopeTransitions(settings, mods, isotopeDist, docNode, useFilter);
+                    }
+
+                    return new[] {docNode};
+                });
+            }
+            transitions = RemoveDuplicates(transitions);
+            transitions = RemoveUnmeasurable(settings, transitions);
+            return transitions.OrderBy(docNode => docNode.ComplexFragmentIon);
         }
 
         public IEnumerable<TransitionDocNode> RemoveDuplicates(IEnumerable<TransitionDocNode> transitions)
@@ -1186,19 +1193,20 @@ namespace pwiz.Skyline.Model
         public IEnumerable<TransitionDocNode> GetComplexTransitions(SrmSettings settings, ExplicitMods explicitMods,
             IEnumerable<TransitionDocNode> simpleTransitions, bool useFilter)
         {
-            var simpleFragmentIons = new List<ComplexFragmentIon>();
+            var startingFragmentIons = new List<ComplexFragmentIon>();
             var productAdducts = settings.TransitionSettings.Filter.PeptideProductCharges.ToHashSet();
 
             foreach (var simpleTransition in simpleTransitions)
             {
-                var simpleFragmentIon = simpleTransition.ComplexFragmentIon;
+                var startingFragmentIon = simpleTransition.ComplexFragmentIon
+                    .ChangeCrosslinkStructure(explicitMods.Crosslinks);
                 if (!simpleTransition.Transition.HasAnyCrosslinks(explicitMods.Crosslinks))
                 {
-                    yield return simpleTransition;
+                    yield return simpleTransition.ChangeComplexFragmentIon(startingFragmentIon);
                 }
                 else
                 {
-                    simpleFragmentIons.Add(simpleFragmentIon);
+                    startingFragmentIons.Add(startingFragmentIon);
                 }
             }
 
@@ -1223,13 +1231,13 @@ namespace pwiz.Skyline.Model
                     var precursorTransition = new Transition(TransitionGroup, IonType.precursor,
                         Peptide.Sequence.Length - 1, 0, productAdduct);
 
-                    simpleFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, explicitMods.Crosslinks, true));
-                    simpleFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, explicitMods.Crosslinks, false));
+                    startingFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, explicitMods.Crosslinks, true));
+                    startingFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, explicitMods.Crosslinks, false));
                 }
             }
 
             foreach (var complexFragmentIon in LinkedPeptide.PermuteComplexFragmentIons(explicitMods, settings,
-                settings.PeptideSettings.Modifications.MaxNeutralLosses, useFilter, simpleFragmentIons.Distinct()))
+                settings.PeptideSettings.Modifications.MaxNeutralLosses, useFilter, startingFragmentIons.Distinct()))
             {
                 bool isMs1 = complexFragmentIon.IsMs1;
                 if (isMs1)
@@ -1256,6 +1264,17 @@ namespace pwiz.Skyline.Model
 
                 var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(settings, explicitMods);
                 yield return complexTransitionDocNode;
+            }
+        }
+
+        private IEnumerable<TransitionDocNode> GetPrecursorIsotopeTransitions(SrmSettings settings, ExplicitMods explicitMods, IsotopeDistInfo isotopeDist,
+            TransitionDocNode precursorTransitionNode, bool useFilter)
+        {
+            var fullScan = settings.TransitionSettings.FullScan;
+            foreach (int massIndex in fullScan.SelectMassIndices(isotopeDist, useFilter))
+            {
+                var complexFragmentIon = precursorTransitionNode.ComplexFragmentIon.ChangeMassIndex(massIndex);
+                yield return complexFragmentIon.MakeTransitionDocNode(settings, explicitMods);
             }
         }
 

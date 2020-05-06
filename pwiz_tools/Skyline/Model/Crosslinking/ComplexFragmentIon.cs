@@ -75,6 +75,12 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public ImmutableSortedList<ModificationSite, LinkedPeptide> CrosslinkStructure { get; private set; }
 
+        public ComplexFragmentIon ChangeCrosslinkStructure(
+            ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinkStructure)
+        {
+            return ChangeProp(ImClone(this), im => im.CrosslinkStructure = crosslinkStructure);
+        }
+
         public IsotopeLabelType LabelType
         {
             get { return Transition.Group.LabelType; }
@@ -96,7 +102,13 @@ namespace pwiz.Skyline.Model.Crosslinking
                 ImmutableSortedList.FromValues(Children.Append(
                     new KeyValuePair<ModificationSite, ComplexFragmentIon>(
                         modificationSite, child))));
+        }
 
+        public ComplexFragmentIon ChangeMassIndex(int massIndex)
+        {
+            var transition = new Transition(Transition.Group, Transition.IonType, Transition.CleavageOffset, massIndex,
+                Transition.Adduct, Transition.DecoyMassShift);
+            return ChangeProp(ImClone(this), im => im.Transition = transition);
         }
 
         public int GetFragmentationEventCount()
@@ -208,14 +220,25 @@ namespace pwiz.Skyline.Model.Crosslinking
                 complexFragmentIon = ChangeProp(ImClone(complexFragmentIon),
                     im => im.Transition = (Transition) im.Transition.Copy());
             }
+
+            if (IsMs1 && settings.TransitionSettings.FullScan.IsHighResPrecursor)
+            {
+                var massDistribution = FragmentedMolecule.Settings.FromSrmSettings(settings).GetMassDistribution(neutralFormula.Molecule, neutralFormula.MonoMassOffset, 0);
+                var mzDistribution = massDistribution.OffsetAndDivide(
+                    Transition.Adduct.AdductCharge * BioMassCalc.MassProton, Transition.Adduct.AdductCharge);
+                var isotopeDist = IsotopeDistInfo.MakeIsotopeDistInfo(mzDistribution, productMass, Transition.Adduct, settings.TransitionSettings.FullScan);
+                productMass = isotopeDist.GetMassI(Transition.MassIndex, Transition.DecoyMassShift);
+                transitionQuantInfo = transitionQuantInfo.ChangeIsotopeDistInfo(new TransitionIsotopeDistInfo(
+                    isotopeDist.GetRankI(Transition.MassIndex), isotopeDist.GetProportionI(Transition.MassIndex)));
+            }
             // TODO: TransitionQuantInfo is probably wrong since it did not know the correct mass.
             return new TransitionDocNode(complexFragmentIon, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
         }
 
         public static TypedMass GetFragmentMass(SrmSettings settings, MoleculeMassOffset formula)
         {
-            MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
             var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(settings);
+            MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
             if (massType.IsMonoisotopic())
             {
                 return new TypedMass(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule, formula.MonoMassOffset + BioMassCalc.MassProton, 0), MassType.MonoisotopicMassH);

@@ -1472,7 +1472,7 @@ namespace pwiz.Skyline.Model.Serialization
                 throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
             var quantInfo = new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, info.LibInfo, info.Quantitative);
             TransitionDocNode node;
-            if (info.LinkedFragmentIons.Any())
+            if (mods != null && mods.HasCrosslinks)
             {
                 ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, info.Losses, mods.Crosslinks, info.OrphanedCrosslinkIon);
                 foreach (var linkedIon in info.LinkedFragmentIons)

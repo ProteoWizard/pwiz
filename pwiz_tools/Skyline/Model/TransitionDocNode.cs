@@ -84,6 +84,12 @@ namespace pwiz.Skyline.Model
 
         public ComplexFragmentIon ComplexFragmentIon { get; private set; }
 
+        public TransitionDocNode ChangeComplexFragmentIon(ComplexFragmentIon complexFragmentIon)
+        {
+            Assume.IsTrue(ReferenceEquals(Transition, complexFragmentIon.Transition));
+            return ChangeProp(ImClone(this), im => im.ComplexFragmentIon = complexFragmentIon);
+        }
+
         [TrackChildren]
         public ExplicitTransitionValues ExplicitValues { get; private set; }
 
@@ -193,7 +199,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public bool IsMs1
         {
-            get { return Transition.IsPrecursor() && Losses == null; }
+            get { return ComplexFragmentIon.IsMs1; }
         }
 
         public TransitionIsotopeDistInfo IsotopeDistInfo { get; private set; }

@@ -81,10 +81,10 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
 
         public IEnumerable<ComplexFragmentIon> PermuteFragmentIons(SrmSettings settings, int maxFragmentationCount, bool useFilter,
-            ModificationSite modificationSite, IEnumerable<ComplexFragmentIon> fragmentIons)
+            ModificationSite modificationSite, IEnumerable<ComplexFragmentIon> startingFragmentIons)
         {
             var linkedFragmentIonList = ImmutableList.ValueOf(ListComplexFragmentIons(settings, maxFragmentationCount, useFilter));
-            return fragmentIons.SelectMany(cfi =>
+            return startingFragmentIons.SelectMany(cfi =>
                 PermuteFragmentIon(settings, maxFragmentationCount, cfi, modificationSite, linkedFragmentIonList));
 
         }
@@ -171,9 +171,9 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public static IEnumerable<ComplexFragmentIon> PermuteComplexFragmentIons(
             [CanBeNull] ExplicitMods mods, 
-            SrmSettings settings, int maxFragmentationCount, bool useFilter, IEnumerable<ComplexFragmentIon> complexFragmentIons)
+            SrmSettings settings, int maxFragmentationCount, bool useFilter, IEnumerable<ComplexFragmentIon> startingFragmentIons)
         {
-            var result = complexFragmentIons;
+            var result = startingFragmentIons;
             if (mods != null)
             {
                 foreach (var crosslinkMod in mods.Crosslinks)

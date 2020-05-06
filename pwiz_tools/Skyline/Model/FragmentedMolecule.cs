@@ -225,8 +225,7 @@ namespace pwiz.Skyline.Model
             for (int i = 0; i < unmodifiedSequence.Length; i++)
             {
                 char aminoAcid = unmodifiedSequence[i];
-                var aminoAcidFormula = Molecule.Parse(AminoAcidFormulas.Default.Formulas[aminoAcid]);
-                Add(molecule, aminoAcidFormula);
+                AddAminoAcidFormula(massType, aminoAcid, molecule, ref unexplainedMassShift);
                 foreach (var mod in modifications[i])
                 {
                     string formula = mod.Formula;
@@ -251,6 +250,22 @@ namespace pwiz.Skyline.Model
                 }
             }
             return Molecule.FromDict(molecule);
+        }
+
+        private static void AddAminoAcidFormula(MassType massType, char aminoAcid, Dictionary<string, int> molecule, ref double unexplainedMass)
+        {
+            string formula;
+            if (AminoAcidFormulas.Default.Formulas.TryGetValue(aminoAcid, out formula))
+            {
+                Add(molecule, Molecule.Parse(formula));
+                return;
+            }
+
+            // Must be a nonstandard amino acid such as 'B' or 'J'.
+            var sequenceMassCalc = massType == MassType.Monoisotopic
+                ? SrmSettings.MonoisotopicMassCalc
+                : SrmSettings.AverageMassCalc;
+            unexplainedMass += sequenceMassCalc.GetAAMass(aminoAcid);
         }
 
         private static void Add(Dictionary<string, int> dict, Molecule molecule)
@@ -454,7 +469,7 @@ namespace pwiz.Skyline.Model
 
         public class Settings : Immutable
         {
-            public static readonly Settings DEFAULT = new Settings().ChangeMassResolution(.01).ChangeMinAbundance(.00001)
+            public static readonly Settings DEFAULT = new Settings().ChangeMassResolution(.001).ChangeMinAbundance(.00001)
                 .ChangeIsotopeAbundances(IsotopeEnrichmentsList.DEFAULT.IsotopeAbundances);
 
             public static Settings FromSrmSettings(SrmSettings srmSettings)
