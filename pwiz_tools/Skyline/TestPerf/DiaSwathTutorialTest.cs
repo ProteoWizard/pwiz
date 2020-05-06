@@ -113,22 +113,22 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
+                ChromatogramClickPoint = new PointF(34.18F, 108.0F),
                 TargetCounts = new[] { 13, 272, 292, 1751 },
                 FinalTargetCounts = new[] { 12, 272, 292, 1751 },
                 ScoringModelCoefficients = "0.9138|-0.7889|3.5694|-1.2988|-0.6596|0.8953|-0.3182|-0.0554",
-                ChromatogramClickPoint = new PointF(34.18F, 108.0F),
                 MassErrorStats = new[]
                 {
-                    new []{2.9, 4.5},
-                    new []{2.7, 4.3},
-                    new []{3.8, 4.5},
-                    new []{5.7, 3.7},
-                    new []{4.6, 4.3},
-                    new []{-0.4, 3.7},
-                    new []{1.1, 3.9},
+                    new[] {2.9, 4.5},
+                    new[] {2.7, 4.3},
+                    new[] {3.8, 4.5},
+                    new[] {5.7, 3.7},
+                    new[] {4.6, 4.3},
+                    new[] {-0.4, 3.7},
+                    new[] {1.1, 3.9},
                 },
                 DiffPeptideCounts = new[] { 143, 44, 31, 57 },
-                UnpolishedProteins = 9
+                UnpolishedProteins = 9,
             };
 
             TestTtofData();
@@ -146,9 +146,9 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
-                TargetCounts = new[] { 4908, 38022, 39353, 235938 },
-                FinalTargetCounts = new[] { 2471, 27054, 27987, 167767 },
-                ScoringModelCoefficients = "0.4698|-0.8032|3.8888|-0.1753|-0.4008|0.6675|0.0205|-0.0714",
+                TargetCounts = new[] { 4908, 38022, 39358, 235968 },
+                FinalTargetCounts = new[] { 2471, 27054, 27992, 167797 },
+                ScoringModelCoefficients = "0.4699|-0.8033|3.8888|-0.1751|-0.4008|0.6676|0.0206|-0.0714",
                 MassErrorStats = new[]
                 {
                     new[] {2.7, 4.6},
@@ -160,7 +160,7 @@ namespace TestPerf
                     new[] {1, 4.1},
                 },
                 DiffPeptideCounts = new[] { 13129, 8174, 2781, 2163 },
-                UnpolishedProteins = 2187,
+                UnpolishedProteins = 2188,
                 PolishedProteins = 2465,
             };
 
@@ -201,10 +201,10 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
+                ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
                 TargetCounts = new[] { 13, 274, 334, 2002 },
                 FinalTargetCounts = new[] { 12, 274, 334, 2002 },
                 ScoringModelCoefficients = "0.3987|-0.8643|2.9375|0.5705|-0.0418|1.0304|0.0522|-0.0849",
-                ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
                 MassErrorStats = new[]
                 {
                     new[] {2.1, 3},
@@ -216,7 +216,7 @@ namespace TestPerf
                     new[] {2.1, 3.1},
                 },
                 DiffPeptideCounts = new[] { 145, 50, 31, 53 },
-                UnpolishedProteins = 7
+                UnpolishedProteins = 7,
             };
 
             TestQeData();
@@ -234,9 +234,9 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
-                TargetCounts = new[] { 4065, 32056, 34970, 209527 },
-                FinalTargetCounts = new[] { 2081, 22732, 24775, 148419 },
-                ScoringModelCoefficients = "0.3042|-0.9019|3.3988|0.8467|-0.0433|0.8814|-0.0152|-0.0720",
+                TargetCounts = new[] { 4065, 32056, 34987, 209629 },
+                FinalTargetCounts = new[] { 2081, 22732, 24788, 148493 },
+                ScoringModelCoefficients = "0.3045|-0.9020|3.3961|0.8504|-0.0433|0.8812|-0.0150|-0.0721",
                 MassErrorStats = new[]
                 {
                     new[] {2.3, 3.5},
@@ -247,9 +247,9 @@ namespace TestPerf
                     new[] {2.5, 3.5},
                     new[] {2.3, 3.5},
                 },
-                DiffPeptideCounts = new[] { 10148, 6287, 2175, 1675 },
-                UnpolishedProteins = 1264,
-                PolishedProteins = 2036
+                DiffPeptideCounts = new[] { 10150, 6287, 2175, 1677 },
+                UnpolishedProteins = 1266,
+                PolishedProteins = 2036,
             };
 
             TestQeData();
