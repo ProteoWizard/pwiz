@@ -81,14 +81,14 @@ lib PrmPasefScheduler
         <link>shared
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>static/<using-clr>false
         <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No"
-        <assembly-dependency>prmScheduling.sqlite
+        <assembly-dependency>timstof_prm_scheduler.prmsqlite
         <cxxflags>/permissive
         $(clr-requirement)
     : # default-build
     : # usage-requirements
         <library>prmscheduler
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>static/<using-clr>false
-        <assembly-dependency>prmScheduling.sqlite
+        <assembly-dependency>timstof_prm_scheduler.prmsqlite
     ;
     
 

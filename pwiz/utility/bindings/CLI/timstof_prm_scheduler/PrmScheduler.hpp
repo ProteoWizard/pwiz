@@ -38,23 +38,12 @@ INTERNAL: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_
 
 //virtual ~CLIType() { LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), (owner_ == nullptr)) if (owner_ == nullptr) { SAFEDELETE(base_); } } \
 
-
 bool operator== (::PrmMethodInfo const& lhs, ::PrmMethodInfo const& rhs)
 {
     return lhs.frame_rate == rhs.frame_rate &&
         lhs.mobility_gap == rhs.mobility_gap &&
         lhs.one_over_k0_lower_limit == rhs.one_over_k0_lower_limit &&
         lhs.one_over_k0_upper_limit == rhs.one_over_k0_upper_limit;
-}
-
-bool operator== (::PrmInputTarget const& lhs, ::PrmInputTarget const& rhs)
-{
-    return lhs.external_id == rhs.external_id;
-}
-
-bool operator== (::PrmMeasurementMode const& lhs, ::PrmMeasurementMode const& rhs)
-{
-    return lhs.external_id == rhs.external_id;
 }
 
 bool operator== (::PrmTimeSegments const& lhs, ::PrmTimeSegments const& rhs)
@@ -117,7 +106,6 @@ public ref class MeasurementMode
     virtual ~MeasurementMode()
     {
         LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), (owner_ == nullptr));
-        SAFEDELETE(base_->external_id);
         if (owner_ == nullptr) { SAFEDELETE(base_); }
     }
 
@@ -125,14 +113,13 @@ public ref class MeasurementMode
 
     MeasurementMode() : base_(new ::PrmMeasurementMode)
     {
-        external_id = nullptr;
     }
 
     ///<summary> External Id typically specified by the software which is used to
     /// design the PRM experiment(Skyline, SpectroDive).This id is
     /// thought as a key to data structures within these tools
     ///</summary>
-    DEFINE_C_STRING_PROPERTY(external_id);
+    //DEFINE_C_STRING_PROPERTY(external_id);
 
     ///<summary> accumulation time for the TIMS cell if this parameter has to be
     /// changed between different frames. Unit is milliseconds
@@ -159,8 +146,6 @@ public ref class InputTarget
     virtual ~InputTarget()
     {
         LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), (owner_ == nullptr));
-        SAFEDELETE(base_->external_id);
-        SAFEDELETE(base_->description);
         if (owner_ == nullptr) { SAFEDELETE(base_); }
     }
 
@@ -168,8 +153,6 @@ public ref class InputTarget
 
     InputTarget() : base_(new ::PrmInputTarget)
     {
-        external_id = nullptr;
-        description = nullptr;
     }
 
     ///<summary> The isolation m / z(in the m / z calibration state that is used during
@@ -210,12 +193,6 @@ public ref class InputTarget
 
     // //////// - Block of additional target characteristics :
 
-    ///<summary> External Id typically specified by the software which is used to
-    /// design the PRM experiment(Skyline, SpectroDive).This id is
-    /// thought as a key to data structures within these tools.The ExternalId
-    /// is also part of the PrmTargets table of the tdf data file</summary>
-    DEFINE_C_STRING_PROPERTY(external_id);
-
     ///<summary> Inverse reduced mobility(1 / K0), value for the apex of the target compound</summary>
     DEFINE_PRIMITIVE_PROPERTY(double, double, one_over_k0);
 
@@ -227,10 +204,6 @@ public ref class InputTarget
 
     ///<summary> The charge state</summary>
     DEFINE_PRIMITIVE_PROPERTY(int32_t, System::Int32, charge);
-
-    ///<summary> Optionally, a free - text description for display purposes(might contain,
-    /// e.g., peptide sequence, sum formula, substance name, SMILES string)</summary>
-    DEFINE_C_STRING_PROPERTY(description);
 };
 
 public ref class PasefSchedulingEntry
@@ -280,8 +253,6 @@ extern "C" {
 }
 
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MethodInfoList, ::PrmMethodInfo, MethodInfo, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
-public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TargetList, ::PrmInputTarget, InputTarget, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
-public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MeasurementModeList, ::PrmMeasurementMode, MeasurementMode, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SchedulingEntryList, ::PrmPasefSchedulingEntry, PasefSchedulingEntry, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TimeSegmentList, ::PrmTimeSegments, TimeSegments, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
@@ -346,20 +317,22 @@ public ref class Scheduler
     ///        number of measurement modes which each frame has to be measured
     ///        with
     /// </summary>
-    void SchedulePrmTargets(TargetList^ prmTargetList, MeasurementModeList^ prmMeasurementModeList)
+    void AddInputTarget(InputTarget^ inputTarget, System::String^ external_id, System::String^ description)
     {
-        if (prmMeasurementModeList != nullptr && prmMeasurementModeList->Count > 0)
-            prm_scheduling_prm_targets(handle_, prmTargetList->Count, &(prmTargetList->base()[0]), prmMeasurementModeList->Count, &(prmMeasurementModeList->base()[0]));
-        else
-            prm_scheduling_prm_targets(handle_, prmTargetList->Count, &(prmTargetList->base()[0]), 0, NULL);
+        if (!prm_add_input_target(handle_, inputTarget->base_, ToStdString(external_id).c_str(), ToStdString(description).c_str()))
+            throw gcnew System::Exception(GetLastErrorString());
     }
 
     ///<summary>get the prm scheduling results for further evaluation and visualization</summary>
     void GetScheduling(TimeSegmentList^ timeSegmentList, SchedulingEntryList^ schedulingEntryList)
     {
+        if (!prm_scheduling_prm_targets(handle_))
+            throw gcnew System::Exception(GetLastErrorString());
+
         schedulingEntryList->base().resize(prm_get_num_scheduling_entries(handle_));
         timeSegmentList->base().resize(prm_get_num_time_segments(handle_));
-        prm_get_scheduling(handle_, getSchedulingEntries, getTimeSegments, (void*) schedulingEntryList->base_, (void*) timeSegmentList->base_);
+        if (!prm_get_scheduling(handle_, getSchedulingEntries, getTimeSegments, (void*) schedulingEntryList->base_, (void*) timeSegmentList->base_))
+            throw gcnew System::Exception(GetLastErrorString());
     }
 
     /// <summary>

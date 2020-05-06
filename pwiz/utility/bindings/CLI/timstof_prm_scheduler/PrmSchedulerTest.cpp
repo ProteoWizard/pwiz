@@ -493,11 +493,23 @@ const std::vector<PrmPasefSchedulingEntry> testSchedulingEntries =
 void test()
 {
     using namespace pwiz::CLI::Bruker::PrmScheduling;
-    auto targetList = gcnew TargetList();
+
+    /*auto measurementMode = gcnew MeasurementMode();
+    measurementMode->external_id = "1";
+    measurementMode->accumulation_time = 100;
+    auto measurementModes = gcnew MeasurementModeList();
+    measurementModes->Add(measurementMode);*/
+
+    auto parameters = gcnew AdditionalMeasurementParameters();
+    parameters->ms1_repetition_time = 10;
+
+    //bfs::create_directory("test_scheduling_dir");
+    auto s = gcnew Scheduler("C:\\pwiz.git\\pwiz\\pwiz\\utility\\bindings\\CLI\\timstof_prm_scheduler\\timstof_prm_scheduler");
+    s->SetAdditionalMeasurementParameters(parameters);
+
     for (const auto& testTarget : testTargets)
     {
         auto target = gcnew InputTarget();
-        target->external_id = testTarget.id.ToString();
         target->time_in_seconds_begin = testTarget.minRT;
         target->time_in_seconds_end = testTarget.maxRT;
         target->isolation_mz = testTarget.isolationMz;
@@ -509,22 +521,8 @@ void test()
         target->isolation_width = 3;
         target->one_over_k0 = (testTarget.maxInverseK0 + testTarget.minInverseK0) / 2;
         target->time_in_seconds = (testTarget.maxRT + testTarget.minRT) / 2;
-        targetList->Add(target);
+        s->AddInputTarget(target, testTarget.id.ToString(), String::Empty);
     }
-
-    auto measurementMode = gcnew MeasurementMode();
-    measurementMode->external_id = "1";
-    measurementMode->accumulation_time = 100;
-    auto measurementModes = gcnew MeasurementModeList();
-    measurementModes->Add(measurementMode);
-
-    auto parameters = gcnew AdditionalMeasurementParameters();
-    parameters->ms1_repetition_time = 10;
-
-    //bfs::create_directory("test_scheduling_dir");
-    auto s = gcnew Scheduler("C:\\pwiz.git\\pwiz\\pwiz\\utility\\bindings\\CLI\\timstof_prm_scheduler");
-    s->SetAdditionalMeasurementParameters(parameters);
-    s->SchedulePrmTargets(targetList, nullptr);
 
     auto methodInfoList = s->GetPrmMethodInfo();
     for each (auto methodInfo in methodInfoList)
@@ -536,6 +534,8 @@ void test()
     auto timeSegments = gcnew TimeSegmentList();
     auto schedulingEntries = gcnew SchedulingEntryList();
     s->GetScheduling(timeSegments, schedulingEntries);
+    //unit_assert_operator_equal(testSchedulingEntries.size(), schedulingEntries->Count);
+    unit_assert(testSchedulingEntries.size() <= schedulingEntries->Count);
     for (size_t i=0; i < testSchedulingEntries.size(); ++i)
     {
         auto testEntry = testSchedulingEntries[i];
