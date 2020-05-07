@@ -2976,7 +2976,7 @@ namespace pwiz.Skyline.Model
                     }
                     if (libraries.TryLoadSpectrum(key, out spectrumInfo))
                     {
-                        var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumInfo, labelType,
+                        var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo, labelType,
                             this, settings, mods, useFilter, TransitionGroup.MAX_MATCHED_MSMS_PEAKS);
                         foreach (var rmi in spectrumInfoR.PeaksRanked)
                         {

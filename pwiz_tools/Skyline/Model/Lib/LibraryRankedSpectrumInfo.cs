@@ -30,39 +30,42 @@ namespace pwiz.Skyline.Model.Lib
 {
     public sealed class LibraryRankedSpectrumInfo : Immutable
     {
-        private readonly ImmutableList<RankedMI> _spectrum;
-
-        public LibraryRankedSpectrumInfo(SpectrumPeaksInfo info,
+        private ImmutableList<RankedMI> _spectrum;
+        public static LibraryRankedSpectrumInfo NewLibraryRankedSpectrumInfo(SpectrumPeaksInfo info,
                                          IsotopeLabelType labelType, TransitionGroupDocNode group,
                                          SrmSettings settings, Target lookupSequence, ExplicitMods lookupMods,
                                          IEnumerable<Adduct> charges, IEnumerable<IonType> types,
                                          IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes, double? score)
-            : this(info, labelType, group, settings, lookupSequence, lookupMods,
-                   charges, types, rankCharges, rankTypes, score, false, true, -1)
         {
+            return MakeLibraryRankedSpectrumInfo(info, labelType, group, settings, lookupSequence, lookupMods,
+                charges, types, rankCharges, rankTypes, score, false, true, -1);
         }
 
-        public LibraryRankedSpectrumInfo(SpectrumPeaksInfo info, IsotopeLabelType labelType,
+        public static LibraryRankedSpectrumInfo NewLibraryRankedSpectrumInfo(SpectrumPeaksInfo info, IsotopeLabelType labelType,
                                          TransitionGroupDocNode group, SrmSettings settings, ExplicitMods lookupMods,
                                          bool useFilter, int minPeaks)
-            : this(info, labelType, group, settings, group.Peptide.Target, lookupMods,
-                   null, // charges
-                   null, // types
-                   // ReadOnlyCollection enumerators are too slow, and show under a profiler
-                   group.IsCustomIon ? settings.TransitionSettings.Filter.SmallMoleculeFragmentAdducts.ToArray() : settings.TransitionSettings.Filter.PeptideProductCharges.ToArray(),
-                   group.IsCustomIon ? settings.TransitionSettings.Filter.SmallMoleculeIonTypes.ToArray() : settings.TransitionSettings.Filter.PeptideIonTypes.ToArray(),
-                   null, useFilter, false, minPeaks)
         {
+            return MakeLibraryRankedSpectrumInfo(info, labelType, group, settings, group.Peptide.Target, lookupMods,
+                null, // charges
+                null, // types
+                // ReadOnlyCollection enumerators are too slow, and show under a profiler
+                group.IsCustomIon
+                    ? settings.TransitionSettings.Filter.SmallMoleculeFragmentAdducts.ToArray()
+                    : settings.TransitionSettings.Filter.PeptideProductCharges.ToArray(),
+                group.IsCustomIon
+                    ? settings.TransitionSettings.Filter.SmallMoleculeIonTypes.ToArray()
+                    : settings.TransitionSettings.Filter.PeptideIonTypes.ToArray(),
+                null, useFilter, false, minPeaks);
         }
 
-        private LibraryRankedSpectrumInfo(SpectrumPeaksInfo info, IsotopeLabelType labelType,
-                                          TransitionGroupDocNode groupDocNode, SrmSettings settings,
-                                          Target lookupSequence, ExplicitMods lookupMods,
-                                          IEnumerable<Adduct> charges, IEnumerable<IonType> types,
-                                          IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes,
-                                          double? score, bool useFilter, bool matchAll, int minPeaks)
+        private static LibraryRankedSpectrumInfo MakeLibraryRankedSpectrumInfo(SpectrumPeaksInfo info,
+            IsotopeLabelType labelType,
+            TransitionGroupDocNode groupDocNode, SrmSettings settings,
+            Target lookupSequence, ExplicitMods lookupMods,
+            IEnumerable<Adduct> charges, IEnumerable<IonType> types,
+            IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes,
+            double? score, bool useFilter, bool matchAll, int minPeaks)
         {
-            LabelType = labelType;
 
             // Avoid ReSharper multiple enumeration warning
             var rankChargesArray = rankCharges.ToArray();
@@ -70,15 +73,6 @@ namespace pwiz.Skyline.Model.Lib
 
             TransitionGroup group = groupDocNode.TransitionGroup;
             bool isProteomic = group.IsProteomic;
-
-            if (score == null && groupDocNode.HasLibInfo && groupDocNode.LibInfo is BiblioSpecSpectrumHeaderInfo libInfo)
-            {
-                Score = libInfo.Score;
-            }
-            else
-            {
-                Score = score;
-            }
 
             if (!useFilter)
             {
@@ -180,8 +174,7 @@ namespace pwiz.Skyline.Model.Lib
             rp.endFinder = filter.FragmentRangeLast;
 
             // Get library settings
-            Tolerance = libraries.IonMatchTolerance;
-            rp.tolerance = Tolerance;
+            rp.tolerance = libraries.IonMatchTolerance;
             rp.pick = tranSettings.Libraries.Pick;
             int ionMatchCount = libraries.IonCount;
             // If no library filtering will happen, return all rankings for view in the UI
@@ -293,14 +286,32 @@ namespace pwiz.Skyline.Model.Lib
                 Array.Sort(arrayResult, OrderMz);
             }
 
-            _spectrum = MakeReadOnly(arrayResult);
+            double? spectrumScore;
+            if (score == null && groupDocNode.HasLibInfo && groupDocNode.LibInfo is BiblioSpecSpectrumHeaderInfo libInfo)
+            {
+                spectrumScore = libInfo.Score;
+            }
+            else
+            {
+                spectrumScore = score;
+            }
+
+            return new LibraryRankedSpectrumInfo(labelType, libraries.IonMatchTolerance, arrayResult, spectrumScore);
+        }
+
+        public LibraryRankedSpectrumInfo(IsotopeLabelType labelType, double tolerance, IEnumerable<RankedMI> spectrum, double? score)
+        {
+            LabelType = labelType;
+            _spectrum = ImmutableList.ValueOf(spectrum);
+            Tolerance = tolerance;
+            Score = score;
         }
 
         /// <summary>
         /// Make sure array ordering starts with ranked items to avoid changing ranked items between
         /// filtered and unfiltered queries
         /// </summary>
-        private IEnumerable<TItem> GetRanked<TItem>(IEnumerable<TItem> rankItems, IEnumerable<TItem> allItems)
+        private static IEnumerable<TItem> GetRanked<TItem>(IEnumerable<TItem> rankItems, IEnumerable<TItem> allItems)
         {
             var setSeen = new HashSet<TItem>();
             foreach (var item in rankItems)
