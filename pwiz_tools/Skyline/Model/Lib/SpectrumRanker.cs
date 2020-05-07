@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using RankedMI = pwiz.Skyline.Model.Lib.LibraryRankedSpectrumInfo.RankedMI;
 using pwiz.Skyline.Util;
@@ -20,49 +21,72 @@ namespace pwiz.Skyline.Model.Lib
             IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes,
             double? score, bool useFilter, bool matchAll, int minPeaks)
         {
-            var spectrumRanker = new SpectrumRanker(labelType, groupDocNode, settings, lookupSequence, lookupMods, charges,types, rankCharges, rankTypes, useFilter, matchAll);
+            var targetInfo = new TargetInfo(labelType, groupDocNode, lookupSequence, lookupMods);
+            var fragmentFilter = new FragmentFilter(settings.TransitionSettings, rankCharges, rankTypes).ChangeMatchAll(matchAll);
+            if (!useFilter)
+            {
+                bool isProteomic = groupDocNode.TransitionGroup.IsProteomic;
+                fragmentFilter = fragmentFilter.ChangeUseFilter(false);
+                fragmentFilter = fragmentFilter
+                    .ChangeAdductsToDisplay(charges ?? GetRanked(fragmentFilter.RankedAdducts,
+                                                isProteomic
+                                                    ? Transition.DEFAULT_PEPTIDE_CHARGES
+                                                    : Transition.DEFAULT_MOLECULE_CHARGES));
+                fragmentFilter = fragmentFilter.ChangeIonTypesToDisplay(
+                    types ?? GetRanked(fragmentFilter.RankedIonTypes,
+                        isProteomic ? Transition.PEPTIDE_ION_TYPES : Transition.MOLECULE_ION_TYPES));
+                fragmentFilter = fragmentFilter.ChangeMatchAll(true);
+            }
+            else
+            {
+                if (null != charges)
+                {
+                    fragmentFilter = fragmentFilter.ChangeAdductsToDisplay(charges);
+                }
+
+                if (null != types)
+                {
+                    fragmentFilter = fragmentFilter.ChangeIonTypesToDisplay(types);
+                }
+            }
+            bool limitRanks =
+                groupDocNode.IsCustomIon && // For small molecules, cap the number of ranked ions displayed if we don't have any peak metadata
+                groupDocNode.Transitions.Any(t => string.IsNullOrEmpty(t.FragmentIonName));
+            if (limitRanks)
+            {
+                fragmentFilter = fragmentFilter.ChangeRankLimit(settings.TransitionSettings.Libraries.IonCount);
+            }
+            // If no library filtering will happen, return all rankings for view in the UI
+            if (!useFilter || fragmentFilter.LibraryPick == TransitionLibraryPick.none)
+            {
+                if (fragmentFilter.LibraryPick == TransitionLibraryPick.none)
+                    fragmentFilter = fragmentFilter.ChangeLibraryPick(TransitionLibraryPick.all);
+                fragmentFilter = fragmentFilter.ChangeFragmentMatchCount(null);
+            }
+
+            var spectrumRanker = new SpectrumRanker(targetInfo, settings, fragmentFilter);
             return spectrumRanker.RankSpectrum(info, minPeaks, score);
         }
 
 
-        public SpectrumRanker(IsotopeLabelType labelType,
-            TransitionGroupDocNode groupDocNode, SrmSettings settings,
-            Target lookupSequence, ExplicitMods lookupMods,
-            IEnumerable<Adduct> charges, IEnumerable<IonType> types,
-            IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes,
-            bool useFilter, bool matchAll)
+        public SpectrumRanker(TargetInfo targetInfo, SrmSettings settings,
+            FragmentFilter fragmentFilter)
         {
-            MatchAll = matchAll;
-            GroupDocNode = groupDocNode;
-            UseFilter = useFilter;
-            // Avoid ReSharper multiple enumeration warning
-            var rankChargesArray = rankCharges.ToArray();
-            var rankTypesArray = rankTypes.ToArray();
-
+            TargetInfoObj = targetInfo;
+            FragmentFilterObj = fragmentFilter;
+            var groupDocNode = TargetInfoObj.TransitionGroupDocNode;
             TransitionGroup group = groupDocNode.TransitionGroup;
             bool isProteomic = group.IsProteomic;
-
-            if (!useFilter)
-            {
-                if (charges == null)
-                    charges = GetRanked(rankChargesArray, isProteomic ? Transition.DEFAULT_PEPTIDE_CHARGES : Transition.DEFAULT_MOLECULE_CHARGES);
-                if (types == null)
-                    types = GetRanked(rankTypesArray, isProteomic ? Transition.PEPTIDE_ION_TYPES : Transition.MOLECULE_ION_TYPES);
-                MatchAll = true;
-            }
 
             bool limitRanks =
                 groupDocNode.IsCustomIon && // For small molecules, cap the number of ranked ions displayed if we don't have any peak metadata
                 groupDocNode.Transitions.Any(t => string.IsNullOrEmpty(t.FragmentIonName));
             rankLimit = limitRanks ? settings.TransitionSettings.Libraries.IonCount : (int?) null;
-            Sequence = lookupSequence;
-            Adducts = ImmutableList.ValueOf(charges ?? rankChargesArray);
-            Types = ImmutableList.ValueOf(types ?? rankTypesArray);
-            RankCharges = ImmutableList.ValueOf(rankChargesArray.Select(a=>Math.Abs(a.AdductCharge)));
-            RankTypes = ImmutableList.ValueOf(rankTypesArray);
 
             rp = new RankParams();
             // Get necessary mass calculators and masses
+            var labelType = targetInfo.SpectrumLabelType;
+            var lookupMods = targetInfo.LookupMods;
             var calcMatchPre = settings.GetPrecursorCalc(labelType, lookupMods);
             var calcMatch = isProteomic ? settings.GetFragmentCalc(labelType, lookupMods) : settings.GetDefaultFragmentCalc();
             var calcPredict = isProteomic ? settings.GetFragmentCalc(group.LabelType, lookupMods) : calcMatch;
@@ -114,25 +138,16 @@ namespace pwiz.Skyline.Model.Lib
             PotentialLosses = TransitionGroup.CalcPotentialLosses(Sequence,
                                                                      settings.PeptideSettings.Modifications, lookupMods,
                                                                      MassType);
-
-            // Create arrays because ReadOnlyCollection enumerators are too slow
-            // In some cases these collections must be enumerated for every ion
-            // allowed in the library specturm.
-            Pick = Libraries.Pick;
-            IonMatchCount = Libraries.IonCount;
-            // If no library filtering will happen, return all rankings for view in the UI
-            if (!UseFilter || Pick == TransitionLibraryPick.none)
-            {
-                if (Pick == TransitionLibraryPick.none)
-                    Pick = TransitionLibraryPick.all;
-                IonMatchCount = -1;
-            }
         }
 
+        public TargetInfo TargetInfoObj { get; private set; }
 
 
-        public int IonMatchCount { get; private set; }
-        public TransitionLibraryPick Pick { get; private set; }
+
+        public TransitionLibraryPick Pick
+        {
+            get { return FragmentFilterObj.LibraryPick; }
+        }
 
         public double MinMz
         {
@@ -160,7 +175,10 @@ namespace pwiz.Skyline.Model.Lib
 
         private RankParams rp { get; set; }
 
-        public TransitionGroupDocNode GroupDocNode { get; private set; }
+        public TransitionGroupDocNode GroupDocNode
+        {
+            get { return TargetInfoObj.TransitionGroupDocNode; }
+        }
         public Adduct PrecursorAdduct
         {
             get { return GroupDocNode.PrecursorAdduct; }
@@ -170,13 +188,18 @@ namespace pwiz.Skyline.Model.Lib
             get { return GroupDocNode.LabelType; }
         }
 
-        public bool UseFilter { get; private set; }
+        public FragmentFilter FragmentFilterObj { get; private set; }
+
+        public bool UseFilter
+        {
+            get { return FragmentFilterObj.UseFilter; }
+        }
 
         public IList<IList<ExplicitLoss>> PotentialLosses { get; }
 
         public LibraryRankedSpectrumInfo RankSpectrum(SpectrumPeaksInfo info, int minPeaks, double? score)
         {
-
+            var ionsToReturn = FragmentFilterObj.FragmentMatchCount;
             RankingState rankingState = new RankingState()
             {
                 matchAll = MatchAll,
@@ -216,7 +239,7 @@ namespace pwiz.Skyline.Model.Lib
                     arrayRMI[j] = new RankedMI(mi, j);
                     j++;
                 }
-                if (IonMatchCount == -1)
+                if (!ionsToReturn.HasValue)
                 {
                     if (mi.Mz < lastMz)
                         sortMz = true;
@@ -229,14 +252,14 @@ namespace pwiz.Skyline.Model.Lib
             Array.Sort(arrayRMI, OrderIntensityDesc);
 
 
-            RankedMI[] arrayResult = new RankedMI[IonMatchCount != -1 ? IonMatchCount : arrayRMI.Length];
+            RankedMI[] arrayResult = new RankedMI[ionsToReturn.HasValue ? ionsToReturn.Value : arrayRMI.Length];
 
             foreach (RankedMI rmi in arrayRMI)
             {
                 var rankedRmi = CalculateRank(rankingState, rmi);
 
                 // If not filtering for only the highest ionMatchCount ranks
-                if (IonMatchCount == -1)
+                if (!ionsToReturn.HasValue)
                 {
                     // Put the ranked record back where it started in the
                     // m/z ordering to avoid a second sort.
@@ -248,7 +271,7 @@ namespace pwiz.Skyline.Model.Lib
                     int countRanks = rankedRmi.Rank;
                     arrayResult[countRanks - 1] = rankedRmi;
                     // And stop when the array is full
-                    if (countRanks == IonMatchCount)
+                    if (countRanks == ionsToReturn.Value)
                         break;
                 }
             }
@@ -258,18 +281,18 @@ namespace pwiz.Skyline.Model.Lib
             if (rankingState.Ranked == 0 && arrayRMI.All(rmi => rmi.Intensity == arrayRMI[0].Intensity))
             {
                 // Only do this if we have been asked to limit the ions matched, and there are any annotations
-                if (IonMatchCount != -1 && arrayRMI.Any(rmi => rmi.HasAnnotations))
+                if (ionsToReturn.HasValue && arrayRMI.Any(rmi => rmi.HasAnnotations))
                 {
                     // Pass through anything with an annotation as being of probable interest
                     arrayResult = arrayRMI.Where(rmi => rmi.HasAnnotations).ToArray();
-                    IonMatchCount = -1;
+                    ionsToReturn = null;
                 }
             }
 
             // If not enough ranked ions were found, fill the rest of the results array
-            if (IonMatchCount != -1)
+            if (ionsToReturn.HasValue)
             {
-                for (int i = rankingState.Ranked; i < IonMatchCount; i++)
+                for (int i = rankingState.Ranked; i < ionsToReturn.Value; i++)
                     arrayResult[i] = RankedMI.EMPTY;
             }
             // If all ions are to be included, and some were found out of order, then
@@ -356,7 +379,10 @@ namespace pwiz.Skyline.Model.Lib
             return (mi1.ObservedMz.CompareTo(mi2.ObservedMz));
         }
 
-        public Target Sequence { get; }
+        public Target Sequence
+        {
+            get { return TargetInfoObj.LookupSequence; }
+        }
         public const int MAX_MATCH = 6;
 
         public class RankParams
@@ -379,6 +405,22 @@ namespace pwiz.Skyline.Model.Lib
             public IonTable<TypedMass> FragmentMasses { get; private set; }
         }
 
+        public class TargetInfo : Immutable
+        {
+            public TargetInfo(IsotopeLabelType spectrumLabelType, TransitionGroupDocNode transitionGroupDocNode,
+                Target lookupSequence, ExplicitMods lookupMods)
+            {
+                SpectrumLabelType = spectrumLabelType;
+                TransitionGroupDocNode = transitionGroupDocNode;
+                LookupSequence = lookupSequence;
+                LookupMods = lookupMods;
+            }
+            public IsotopeLabelType SpectrumLabelType { get; private set; }
+            public TransitionGroupDocNode TransitionGroupDocNode { get; private set; }
+            public Target LookupSequence { get; private set; }
+            public ExplicitMods LookupMods { get; private set; }
+        }
+
         public int? rankLimit { get; private set; }
 
         public IStartFragmentFinder startFinder
@@ -391,10 +433,22 @@ namespace pwiz.Skyline.Model.Lib
         }
 
 
-        public ImmutableList<Adduct> Adducts { get; }
-        public ImmutableList<IonType> Types { get; }
-        public ImmutableList<int> RankCharges { get; }
-        public ImmutableList<IonType> RankTypes { get; }
+        public ImmutableList<Adduct> Adducts
+        {
+            get { return FragmentFilterObj.AdductsToDisplay; }
+        }
+        public ImmutableList<IonType> Types
+        {
+            get { return FragmentFilterObj.IonTypesToDisplay; }
+        }
+        public ImmutableList<int> RankCharges
+        {
+            get { return FragmentFilterObj.RankedCharges; }
+        }
+        public ImmutableList<IonType> RankTypes
+        {
+            get { return FragmentFilterObj.RankedIonTypes; }
+        }
 
         public bool HasLosses
         {
@@ -661,5 +715,70 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
+
+        public class FragmentFilter : Immutable
+        {
+            public FragmentFilter(TransitionSettings transitionSettings, IEnumerable<Adduct> rankedAdducts, IEnumerable<IonType> rankedIonTypes)
+            {
+                TransitionSettings = transitionSettings;
+                FragmentMatchCount = TransitionSettings.Libraries.IonCount;
+                LibraryPick = TransitionSettings.Libraries.Pick;
+                AdductsToDisplay = RankedAdducts = ImmutableList.ValueOf(rankedAdducts);
+                IonTypesToDisplay = RankedIonTypes = ImmutableList.ValueOf(rankedIonTypes);
+                RankedCharges = ImmutableList.ValueOf(RankedAdducts.Select(adduct=>Math.Abs(adduct.AdductCharge)).Distinct());
+                UseFilter = true;
+            }
+
+            public TransitionSettings TransitionSettings { get; private set; }
+            public ImmutableList<Adduct> RankedAdducts { get; private set; }
+            public ImmutableList<int> RankedCharges { get; private set; }
+            public ImmutableList<IonType> RankedIonTypes { get; private set; }
+            public ImmutableList<Adduct> AdductsToDisplay { get; private set; }
+            public int? FragmentMatchCount { get; private set; }
+
+            public FragmentFilter ChangeFragmentMatchCount(int? fragmentMatchCount)
+            {
+                return ChangeProp(ImClone(this), im => im.FragmentMatchCount = fragmentMatchCount);
+            }
+
+            public TransitionLibraryPick LibraryPick { get; private set; }
+
+            public FragmentFilter ChangeLibraryPick(TransitionLibraryPick libraryPick)
+            {
+                return ChangeProp(ImClone(this), im => im.LibraryPick = libraryPick);
+            }
+
+            public int? RankLimit { get; private set; }
+
+            public FragmentFilter ChangeRankLimit(int? rankLimit)
+            {
+                return ChangeProp(ImClone(this), im => im.RankLimit = rankLimit);
+            }
+
+            public FragmentFilter ChangeAdductsToDisplay(IEnumerable<Adduct> adductsToDisplay)
+            {
+                return ChangeProp(ImClone(this), im=>im.AdductsToDisplay = ImmutableList.ValueOf(adductsToDisplay));
+            }
+            public ImmutableList<IonType> IonTypesToDisplay { get; private set; }
+
+            public FragmentFilter ChangeIonTypesToDisplay(IEnumerable<IonType> ionTypesToDisplay)
+            {
+                return ChangeProp(ImClone(this), im => im.IonTypesToDisplay = ImmutableList.ValueOf(ionTypesToDisplay));
+            }
+
+            public bool UseFilter { get; private set; }
+
+            public FragmentFilter ChangeUseFilter(bool useFilter)
+            {
+                return ChangeProp(ImClone(this), im => im.UseFilter = useFilter);
+            }
+
+            public bool MatchAll { get; private set; }
+
+            public FragmentFilter ChangeMatchAll(bool matchAll)
+            {
+                return ChangeProp(ImClone(this), im => im.MatchAll = matchAll);
+            }
+        }
     }
 }
