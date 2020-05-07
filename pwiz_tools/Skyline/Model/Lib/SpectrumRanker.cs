@@ -61,6 +61,7 @@ namespace pwiz.Skyline.Model.Lib
             RankCharges = ImmutableList.ValueOf(rankChargesArray.Select(a=>Math.Abs(a.AdductCharge)));
             RankTypes = ImmutableList.ValueOf(rankTypesArray);
 
+            rp = new RankParams();
             // Get necessary mass calculators and masses
             var calcMatchPre = settings.GetPrecursorCalc(labelType, lookupMods);
             var calcMatch = isProteomic ? settings.GetFragmentCalc(labelType, lookupMods) : settings.GetDefaultFragmentCalc();
@@ -68,23 +69,20 @@ namespace pwiz.Skyline.Model.Lib
             if (isProteomic && Sequence.IsProteomic)
             {
                 rp.precursorMz = SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(Sequence), PrecursorAdduct);
-                rp.massPreMatch = calcMatch.GetPrecursorFragmentMass(Sequence);
-                rp.massesMatch = calcMatch.GetFragmentIonMasses(Sequence);
+                rp.MatchIonMasses = new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence), calcMatch.GetFragmentIonMasses(Sequence));
                 rp.knownFragments = null;
             }
             else if (!isProteomic && !Sequence.IsProteomic)
             {
                 string isotopicForumla;
                 rp.precursorMz = SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(Sequence.Molecule, null, PrecursorAdduct, out isotopicForumla), PrecursorAdduct);
-                rp.massPreMatch = calcMatch.GetPrecursorFragmentMass(Sequence);
-                // rp.massesMatch = calcMatch.GetFragmentIonMasses(rp.molecule); CONSIDER, for some molecule types someday?
-                // For small molecules we can't predict fragmentation, so just use those we have
                 var existing = groupDocNode.Transitions.Where(tran => tran.Transition.IsNonPrecursorNonReporterCustomIon()).Select(t => t.Transition.CustomIon.GetMass(MassType.Monoisotopic)).ToArray();
-                rp.massesMatch = new IonTable<TypedMass>(IonType.custom, existing.Length);
+                var ionTable = new IonTable<TypedMass>(IonType.custom, existing.Length);
                 for (var i = 0; i < existing.Length; i++)
                 {
-                    rp.massesMatch[IonType.custom, i] = existing[i];
+                    ionTable[IonType.custom, i] = existing[i];
                 }
+                rp.MatchIonMasses = new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence), ionTable);
                 rp.knownFragments = groupDocNode.Transitions.Where(tran => tran.Transition.IsNonPrecursorNonReporterCustomIon()).Select(t =>
                     new KnownFragment
                     {
@@ -96,17 +94,17 @@ namespace pwiz.Skyline.Model.Lib
             else
             {
                 rp.precursorMz = 0.0;
-                rp.massPreMatch = TypedMass.ZERO_MONO_MASSH;
-                rp.massesMatch = IonTable<TypedMass>.EMPTY;
+                rp.MatchIonMasses = new IonMasses(TypedMass.ZERO_MONO_MASSH, IonTable<TypedMass>.EMPTY);
                 rp.knownFragments = null;
             }
-            rp.massPrePredict = rp.massPreMatch;
-            rp.massesPredict = rp.massesMatch;
+
+            rp.PredictIonMasses = rp.MatchIonMasses;
             if (!ReferenceEquals(calcPredict, calcMatch))
             {
-                rp.massPrePredict = calcPredict.GetPrecursorFragmentMass(Sequence);
+                var ionTable = rp.MatchIonMasses.FragmentMasses;
                 if (Sequence.IsProteomic) // CONSIDER - eventually we may be able to predict fragments for small molecules?
-                    rp.massesPredict = calcPredict.GetFragmentIonMasses(Sequence);
+                    ionTable = calcPredict.GetFragmentIonMasses(Sequence);
+                rp.PredictIonMasses = new IonMasses(calcPredict.GetPrecursorFragmentMass(Sequence), ionTable);
             }
 
             // Get values of interest from the settings.
@@ -364,12 +362,23 @@ namespace pwiz.Skyline.Model.Lib
         public class RankParams
         {
             public double precursorMz { get; set; }
-            public TypedMass massPreMatch { get; set; }
-            public TypedMass massPrePredict { get; set; }
-            public IonTable<TypedMass> massesMatch { get; set; }
-            public IonTable<TypedMass> massesPredict { get; set; }
+            public IonMasses MatchIonMasses { get; set; }
+            public IonMasses PredictIonMasses { get; set; }
             public List<KnownFragment> knownFragments { get; set; } // For small molecule use, where we can't predict fragments
         }
+
+        public class IonMasses
+        {
+            public IonMasses(TypedMass precursorMass, IonTable<TypedMass> fragmentMasses)
+            {
+                PrecursorMass = precursorMass;
+                FragmentMasses = fragmentMasses;
+            }
+
+            public TypedMass PrecursorMass { get; private set; }
+            public IonTable<TypedMass> FragmentMasses { get; private set; }
+        }
+
         public int? rankLimit { get; private set; }
 
         public IStartFragmentFinder startFinder
@@ -478,7 +487,7 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             // Look for a predicted match within the acceptable tolerance
-            int len = rp.massesMatch.GetLength(1);
+            int len = rp.MatchIonMasses.FragmentMasses.GetLength(1);
             foreach (IonType type in Types)
             {
                 if (Transition.IsPrecursor(type))
@@ -508,7 +517,7 @@ namespace pwiz.Skyline.Model.Lib
                     double startMz = 0;
                     if (filter)
                     {
-                        start = TransitionSettings.Filter.FragmentRangeFirst.FindStartFragment(rp.massesMatch, type, adduct,
+                        start = TransitionSettings.Filter.FragmentRangeFirst.FindStartFragment(rp.MatchIonMasses.FragmentMasses, type, adduct,
                                                                  rp.precursorMz, TransitionSettings.Filter.PrecursorMzWindow, out startMz);
                         end = TransitionSettings.Filter.FragmentRangeLast.FindEndFragment(type, start, len);
                         if (Transition.IsCTerminal(type))
@@ -565,7 +574,7 @@ namespace pwiz.Skyline.Model.Lib
         private bool MatchNext(RankingState rankingState, IonType type, int offset, TransitionLosses losses, Adduct adduct, string fragmentName, int len, bool filter, int end, int start, double startMz, ref RankedMI rankedMI)
         {
             bool isFragment = !Transition.IsPrecursor(type);
-            var ionMass = isFragment ? rp.massesMatch[type, offset] : rp.massPreMatch;
+            var ionMass = isFragment ? rp.MatchIonMasses.FragmentMasses[type, offset] : rp.MatchIonMasses.PrecursorMass;
             if (losses != null)
                 ionMass -= losses.Mass;
             double ionMz = SequenceMassCalc.GetMZ(ionMass, adduct);
@@ -583,7 +592,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 int ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
                 // If this m/z aready matched a different ion, just remember the second ion.
-                var predictedMass = isFragment ? rp.massesPredict[type, offset] : rp.massPrePredict;
+                var predictedMass = isFragment ? rp.PredictIonMasses.FragmentMasses[type, offset] : rp.PredictIonMasses.PrecursorMass;
                 if (losses != null)
                     predictedMass -= losses.Mass;
                 double predictedMz = SequenceMassCalc.GetMZ(predictedMass, adduct);
