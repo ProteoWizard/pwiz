@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using RankedMI = pwiz.Skyline.Model.Lib.LibraryRankedSpectrumInfo.RankedMI;
 using pwiz.Skyline.Util;
@@ -165,7 +164,7 @@ namespace pwiz.Skyline.Model.Lib
 
             // Create filtered peak array storing original index for m/z ordering
             // to avoid needing to sort to return to this order.
-            LibraryRankedSpectrumInfo.RankedMI[] arrayRMI = new LibraryRankedSpectrumInfo.RankedMI[len];
+            RankedMI[] arrayRMI = new RankedMI[len];
             // Detect when m/z values are out of order, and use the expensive sort
             // by m/z to correct this.
             double lastMz = double.MinValue;
@@ -175,7 +174,7 @@ namespace pwiz.Skyline.Model.Lib
                 SpectrumPeaksInfo.MI mi = listMI[i];
                 if (mi.Intensity >= intensityCutoff || intensityCutoff == 0)
                 {
-                    arrayRMI[j] = new LibraryRankedSpectrumInfo.RankedMI(mi, j);
+                    arrayRMI[j] = new RankedMI(mi, j);
                     j++;
                 }
                 if (ionMatchCount == -1)
@@ -190,24 +189,24 @@ namespace pwiz.Skyline.Model.Lib
             // by intensity, or m/z in case of a tie.
             Array.Sort(arrayRMI, OrderIntensityDesc);
 
-            LibraryRankedSpectrumInfo.RankedMI[] arrayResult = new LibraryRankedSpectrumInfo.RankedMI[ionMatchCount != -1 ? ionMatchCount : arrayRMI.Length];
+            RankedMI[] arrayResult = new RankedMI[ionMatchCount != -1 ? ionMatchCount : arrayRMI.Length];
 
-            foreach (LibraryRankedSpectrumInfo.RankedMI rmi in arrayRMI)
+            foreach (RankedMI rmi in arrayRMI)
             {
-                rmi.CalculateRank(rp);
+                var rankedRmi = CalculateRank(rp, rmi);
 
                 // If not filtering for only the highest ionMatchCount ranks
                 if (ionMatchCount == -1)
                 {
                     // Put the ranked record back where it started in the
                     // m/z ordering to avoid a second sort.
-                    arrayResult[rmi.IndexMz] = rmi;
+                    arrayResult[rmi.IndexMz] = rankedRmi;
                 }
                 // Otherwise, if this ion was ranked, add it to the result array
-                else if (rmi.Rank > 0)
+                else if (rankedRmi.Rank > 0)
                 {
-                    int countRanks = rmi.Rank;
-                    arrayResult[countRanks - 1] = rmi;
+                    int countRanks = rankedRmi.Rank;
+                    arrayResult[countRanks - 1] = rankedRmi;
                     // And stop when the array is full
                     if (countRanks == ionMatchCount)
                         break;
@@ -231,7 +230,7 @@ namespace pwiz.Skyline.Model.Lib
             if (ionMatchCount != -1)
             {
                 for (int i = rp.Ranked; i < ionMatchCount; i++)
-                    arrayResult[i] = LibraryRankedSpectrumInfo.RankedMI.EMPTY;
+                    arrayResult[i] = RankedMI.EMPTY;
             }
             // If all ions are to be included, and some were found out of order, then
             // the expensive full sort by m/z is necesary.
@@ -388,6 +387,217 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        private static RankedMI CalculateRank(RankParams rp, RankedMI rankedMI)
+        {
+            // Rank based on filtered range, if the settings use it in picking
+            bool filter = (rp.pick == TransitionLibraryPick.filter);
+
+            if (rp.knownFragments != null)
+            {
+                // Small molecule work - we only know about the fragments we're given, we can't predict others
+                foreach (IonType type in rp.types)
+                {
+                    if (Transition.IsPrecursor(type))
+                    {
+                        if (!MatchNext(rp, type, 0, null, rp.precursorAdduct, null, 0, filter, 0, 0, 0, ref rankedMI))
+                        {
+                            // If matched return.  Otherwise look for other ion types.
+                            if (rp.matched)
+                            {
+                                rp.Clean();
+                                return rankedMI;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (var i = 0; i < rp.knownFragments.Count; i++)
+                        {
+                            var fragment = rp.knownFragments[i];
+                            if (!MatchNext(rp, IonType.custom, i, null, fragment.Adduct, fragment.Name, 0, filter, 0, 0, fragment.Mz, ref rankedMI))
+                            {
+                                // If matched return.  Otherwise look for other ion types.
+                                if (rp.matched)
+                                {
+                                    rp.Clean();
+                                    return rankedMI;
+                                }
+                            }
+                        }
+                    }
+                }
+                return rankedMI;
+            }
+
+            // Look for a predicted match within the acceptable tolerance
+            int len = rp.massesMatch.GetLength(1);
+            foreach (IonType type in rp.types)
+            {
+                if (Transition.IsPrecursor(type))
+                {
+                    foreach (var losses in TransitionGroup.CalcTransitionLosses(type, 0, rp.massType, rp.potentialLosses))
+                    {
+                        if (!MatchNext(rp, type, len, losses, rp.precursorAdduct, null, len + 1, filter, len, len, 0, ref rankedMI))
+                        {
+                            // If matched return.  Otherwise look for other ion types.
+                            if (rp.matched)
+                            {
+                                rp.Clean();
+                                return rankedMI;
+                            }
+                        }
+                    }
+                    continue;
+                }
+
+                foreach (var adduct in rp.adducts)
+                {
+                    // Precursor charge can never be lower than product ion charge.
+                    if (Math.Abs(rp.precursorAdduct.AdductCharge) < Math.Abs(adduct.AdductCharge))
+                        continue;
+
+                    int start = 0, end = 0;
+                    double startMz = 0;
+                    if (filter)
+                    {
+                        start = rp.startFinder.FindStartFragment(rp.massesMatch, type, adduct,
+                                                                 rp.precursorMz, rp.filter.PrecursorMzWindow, out startMz);
+                        end = rp.endFinder.FindEndFragment(type, start, len);
+                        if (Transition.IsCTerminal(type))
+                            Helpers.Swap(ref start, ref end);
+                    }
+
+                    // These inner loops are performance bottlenecks, and the following
+                    // code duplication proved the fastest implementation under a
+                    // profiler.  Apparently .NET failed to inline an attempt to put
+                    // the loop contents in a function.
+                    if (Transition.IsCTerminal(type))
+                    {
+                        for (int i = len - 1; i >= 0; i--)
+                        {
+                            foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, rp.massType, rp.potentialLosses))
+                            {
+                                if (!MatchNext(rp, type, i, losses, adduct, null, len, filter, end, start, startMz, ref rankedMI))
+                                {
+                                    if (rp.matched)
+                                    {
+                                        rp.Clean();
+                                        return rankedMI;
+                                    }
+                                    i = -1; // Terminate loop on i
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < len; i++)
+                        {
+                            foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, rp.massType, rp.potentialLosses))
+                            {
+                                if (!MatchNext(rp, type, i, losses, adduct, null, len, filter, end, start, startMz, ref rankedMI))
+                                {
+                                    if (rp.matched)
+                                    {
+                                        rp.Clean();
+                                        return rankedMI;
+                                    }
+                                    i = len; // Terminate loop on i
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return rankedMI;
+        }
+        private static bool MatchNext(RankParams rp, IonType type, int offset, TransitionLosses losses, Adduct adduct, string fragmentName, int len, bool filter, int end, int start, double startMz, ref RankedMI rankedMI)
+        {
+            bool isFragment = !Transition.IsPrecursor(type);
+            var ionMass = isFragment ? rp.massesMatch[type, offset] : rp.massPreMatch;
+            if (losses != null)
+                ionMass -= losses.Mass;
+            double ionMz = SequenceMassCalc.GetMZ(ionMass, adduct);
+            // Unless trying to match everything, stop looking outside the instrument range
+            if (!rp.matchAll && !rp.HasLosses && ionMz > rp.maxMz)
+                return false;
+            // Check filter properties, if apropriate
+            if ((rp.matchAll || ionMz >= rp.minMz) && Math.Abs(ionMz - rankedMI.ObservedMz) < rp.tolerance)
+            {
+                // Make sure each m/z value is only used for the most intense peak
+                // that is within the tolerance range.
+                if (rp.IsSeen(ionMz))
+                    return true; // Keep looking
+                rp.Seen(ionMz);
+
+                int ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
+                // If this m/z aready matched a different ion, just remember the second ion.
+                var predictedMass = isFragment ? rp.massesPredict[type, offset] : rp.massPrePredict;
+                if (losses != null)
+                    predictedMass -= losses.Mass;
+                double predictedMz = SequenceMassCalc.GetMZ(predictedMass, adduct);
+                if (rankedMI.MatchedIons != null)
+                {
+                    // If first type was excluded from causing a ranking, but second does, then make it the first
+                    // Otherwise, this can cause very mysterious failures to rank transitions that appear in the
+                    // document.
+                    var match = new MatchedFragmentIon(type, ordinal, adduct, fragmentName, losses, predictedMz);
+                    if (rankedMI.Rank == 0 && ApplyRanking(rp, type, offset, losses, adduct, filter, start, end, startMz, ionMz, ref rankedMI))
+                    {
+                        rankedMI = rankedMI.ChangeMatchedIons(rankedMI.MatchedIons.Prepend(match));
+                    }
+                    else
+                    {
+                        rankedMI = rankedMI.ChangeMatchedIons(rankedMI.MatchedIons.Append(match));
+                    }
+                    if (rankedMI.MatchedIons.Count < RankParams.MAX_MATCH)
+                        return true;
+
+                    rp.matched = true;
+                    return false;
+                }
+
+                // Avoid using the same predicted m/z on two different peaks
+                if (predictedMz == ionMz || !rp.IsSeen(predictedMz))
+                {
+                    rp.Seen(predictedMz);
+
+                    ApplyRanking(rp, type, offset, losses, adduct, filter, start, end, startMz, ionMz, ref rankedMI);
+                    rankedMI = rankedMI.ChangeMatchedIons(ImmutableList.Singleton(
+                        new MatchedFragmentIon(type, ordinal, adduct, fragmentName, losses, predictedMz)));
+                    rp.matched = !rp.matchAll;
+                    return rp.matchAll;
+                }
+            }
+            // Stop looking once the mass has been passed, unless there are losses to consider
+            if (rp.HasLosses)
+                return true;
+            return (ionMz <= rankedMI.ObservedMz);
+        }
+        private static bool ApplyRanking(RankParams rp, IonType type, int offset, TransitionLosses losses, Adduct adduct, bool filter,
+            int start, int end, double startMz, double ionMz, ref RankedMI rankedMI)
+        {
+            // Avoid ranking precursor ions without losses, if the precursor isotopes will
+            // not be taken from product ions
+            if (!rp.excludePrecursorIsotopes || type != IonType.precursor || losses != null)
+            {
+                if (!filter || rp.tranSettings.Accept(rp.sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
+                {
+                    if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
+                                         rp.rankTypes.Contains(type) &&
+                                         (!rp.rankLimit.HasValue || rp.Ranked < rp.rankLimit) &&
+                                         (rp.rankCharges.Contains(Math.Abs(adduct.AdductCharge)) || type == IonType.precursor))) // CONSIDER(bspratt) we may eventually want adduct-level control for small molecules, not just abs charge
+                    {
+                        rankedMI = rankedMI.ChangeRank(rp.RankNext());
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
 
     }
 }
