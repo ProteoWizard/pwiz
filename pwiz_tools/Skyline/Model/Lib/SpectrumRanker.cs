@@ -83,53 +83,49 @@ namespace pwiz.Skyline.Model.Lib
                 groupDocNode.Transitions.Any(t => string.IsNullOrEmpty(t.FragmentIonName));
             rankLimit = limitRanks ? settings.TransitionSettings.Libraries.IonCount : (int?) null;
 
-            rp = new RankParams();
             // Get necessary mass calculators and masses
             var labelType = targetInfo.SpectrumLabelType;
             var lookupMods = targetInfo.LookupMods;
             var calcMatchPre = settings.GetPrecursorCalc(labelType, lookupMods);
             var calcMatch = isProteomic ? settings.GetFragmentCalc(labelType, lookupMods) : settings.GetDefaultFragmentCalc();
             var calcPredict = isProteomic ? settings.GetFragmentCalc(group.LabelType, lookupMods) : calcMatch;
+            MoleculeMasses moleculeMasses;
             if (isProteomic && Sequence.IsProteomic)
             {
-                rp.precursorMz = SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(Sequence), PrecursorAdduct);
-                rp.MatchIonMasses = new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence), calcMatch.GetFragmentIonMasses(Sequence));
-                rp.knownFragments = null;
+                moleculeMasses = new MoleculeMasses(SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(Sequence), PrecursorAdduct),
+                    new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence), calcMatch.GetFragmentIonMasses(Sequence)));
             }
             else if (!isProteomic && !Sequence.IsProteomic)
             {
                 string isotopicForumla;
-                rp.precursorMz = SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(Sequence.Molecule, null, PrecursorAdduct, out isotopicForumla), PrecursorAdduct);
-                var existing = groupDocNode.Transitions.Where(tran => tran.Transition.IsNonPrecursorNonReporterCustomIon()).Select(t => t.Transition.CustomIon.GetMass(MassType.Monoisotopic)).ToArray();
-                var ionTable = new IonTable<TypedMass>(IonType.custom, existing.Length);
-                for (var i = 0; i < existing.Length; i++)
-                {
-                    ionTable[IonType.custom, i] = existing[i];
-                }
-                rp.MatchIonMasses = new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence), ionTable);
-                rp.knownFragments = groupDocNode.Transitions.Where(tran => tran.Transition.IsNonPrecursorNonReporterCustomIon()).Select(t =>
-                    new KnownFragment
-                    {
-                        Adduct = t.Transition.Adduct,
-                        Name = t.GetFragmentIonName(CultureInfo.CurrentCulture, settings.TransitionSettings.Libraries.IonMatchTolerance),
-                        Mz = t.Mz
-                    }).ToList();
+                var knownFragments = groupDocNode.Transitions
+                    .Where(tran => tran.Transition.IsNonPrecursorNonReporterCustomIon()).Select(t =>
+                        new KnownFragment(t.GetFragmentIonName(CultureInfo.CurrentCulture,
+                            settings.TransitionSettings.Libraries.IonMatchTolerance),
+                            t.Transition.Adduct,
+                            t.Transition.CustomIon.GetMass(MassType.Monoisotopic),
+                            t.Mz));
+                var ionMasses =
+                    new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence), IonTable<TypedMass>.EMPTY)
+                        .ChangeKnownFragments(knownFragments);
+                moleculeMasses = new MoleculeMasses(SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(Sequence.Molecule, null, PrecursorAdduct, out isotopicForumla), PrecursorAdduct), ionMasses);
             }
             else
             {
-                rp.precursorMz = 0.0;
-                rp.MatchIonMasses = new IonMasses(TypedMass.ZERO_MONO_MASSH, IonTable<TypedMass>.EMPTY);
-                rp.knownFragments = null;
+                moleculeMasses = new MoleculeMasses(0.0, new IonMasses(TypedMass.ZERO_MONO_MASSH, IonTable<TypedMass>.EMPTY));
             }
 
-            rp.PredictIonMasses = rp.MatchIonMasses;
             if (!ReferenceEquals(calcPredict, calcMatch))
             {
-                var ionTable = rp.MatchIonMasses.FragmentMasses;
+                var ionTable = moleculeMasses.MatchIonMasses.FragmentMasses;
                 if (Sequence.IsProteomic) // CONSIDER - eventually we may be able to predict fragments for small molecules?
                     ionTable = calcPredict.GetFragmentIonMasses(Sequence);
-                rp.PredictIonMasses = new IonMasses(calcPredict.GetPrecursorFragmentMass(Sequence), ionTable);
+                moleculeMasses =
+                    moleculeMasses.ChangePredictIonMasses(new IonMasses(calcPredict.GetPrecursorFragmentMass(Sequence),
+                        ionTable));
             }
+
+            MoleculeMassesObj = moleculeMasses;
 
             // Get values of interest from the settings.
             TransitionSettings = settings.TransitionSettings;
@@ -176,7 +172,7 @@ namespace pwiz.Skyline.Model.Lib
             get { return FragmentFilterObj.MatchAll; }
         }
 
-        private RankParams rp { get; set; }
+        private MoleculeMasses MoleculeMassesObj { get; set; }
 
         public TransitionGroupDocNode GroupDocNode
         {
@@ -388,15 +384,24 @@ namespace pwiz.Skyline.Model.Lib
         }
         public const int MAX_MATCH = 6;
 
-        public class RankParams
+        public class MoleculeMasses : Immutable
         {
-            public double precursorMz { get; set; }
-            public IonMasses MatchIonMasses { get; set; }
-            public IonMasses PredictIonMasses { get; set; }
-            public List<KnownFragment> knownFragments { get; set; } // For small molecule use, where we can't predict fragments
+            public MoleculeMasses(double precursorMz, IonMasses ionMasses)
+            {
+                this.precursorMz = precursorMz;
+                PredictIonMasses = MatchIonMasses = ionMasses;
+            }
+            public double precursorMz { get; private set; }
+            public IonMasses MatchIonMasses { get; private set; }
+            public IonMasses PredictIonMasses { get; private set; }
+
+            public MoleculeMasses ChangePredictIonMasses(IonMasses predictIonMasses)
+            {
+                return ChangeProp(ImClone(this), im => im.PredictIonMasses = predictIonMasses);
+            }
         }
 
-        public class IonMasses
+        public class IonMasses : Immutable
         {
             public IonMasses(TypedMass precursorMass, IonTable<TypedMass> fragmentMasses)
             {
@@ -405,7 +410,41 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             public TypedMass PrecursorMass { get; private set; }
+
+            public IonMasses ChangePrecursorMass(TypedMass precursorMass)
+            {
+                return ChangeProp(ImClone(this), im => im.PrecursorMass = precursorMass);
+            }
             public IonTable<TypedMass> FragmentMasses { get; private set; }
+
+            public IonMasses ChangeFragmentMasses(IonTable<TypedMass> fragmentMasses)
+            {
+                return ChangeProp(ImClone(this), im => im.FragmentMasses = fragmentMasses);
+            }
+            public ImmutableList<KnownFragment> KnownFragments { get; private set; }
+
+            public IonMasses ChangeKnownFragments(IEnumerable<KnownFragment> knownFragments)
+            {
+                return ChangeProp(ImClone(this), im => im.KnownFragments = ImmutableList.ValueOf(knownFragments));
+            }
+
+            public TypedMass GetIonMass(IonType ionType, int ionIndex)
+            {
+                switch (ionType)
+                {
+                    case IonType.precursor:
+                        return PrecursorMass;
+                    case IonType.custom:
+                        if (KnownFragments != null)
+                        {
+                            return KnownFragments[ionIndex].Mass;
+                        }
+
+                        break;
+                }
+
+                return FragmentMasses[ionType, ionIndex];
+            }
         }
 
         public class TargetInfo : Immutable
@@ -491,9 +530,17 @@ namespace pwiz.Skyline.Model.Lib
         }
         public class KnownFragment
         {
-            public string Name { get; set; }
-            public Adduct Adduct { get; set; }
-            public SignedMz Mz { get; set; }
+            public KnownFragment(string name, Adduct adduct, TypedMass mass, SignedMz mz)
+            {
+                Name = name;
+                Adduct = adduct;
+                Mass = mass;
+                Mz = mz;
+            }
+            public string Name { get; private set; }
+            public Adduct Adduct { get; private set; }
+            public TypedMass Mass { get; private set; }
+            public SignedMz Mz { get; private set; }
 
             public override string ToString()
             {
@@ -506,7 +553,8 @@ namespace pwiz.Skyline.Model.Lib
             // Rank based on filtered range, if the settings use it in picking
             bool filter = (Pick == TransitionLibraryPick.filter);
 
-            if (rp.knownFragments != null)
+            var knownFragments = MoleculeMassesObj.MatchIonMasses.KnownFragments;
+            if (knownFragments != null)
             {
                 // Small molecule work - we only know about the fragments we're given, we can't predict others
                 foreach (IonType type in Types)
@@ -525,9 +573,9 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     else
                     {
-                        for (var i = 0; i < rp.knownFragments.Count; i++)
+                        for (var i = 0; i < knownFragments.Count; i++)
                         {
-                            var fragment = rp.knownFragments[i];
+                            var fragment = knownFragments[i];
                             if (!MatchNext(rankingState, IonType.custom, i, null, fragment.Adduct, fragment.Name, 0, filter, 0, 0, fragment.Mz, ref rankedMI))
                             {
                                 // If matched return.  Otherwise look for other ion types.
@@ -544,7 +592,7 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             // Look for a predicted match within the acceptable tolerance
-            int len = rp.MatchIonMasses.FragmentMasses.GetLength(1);
+            int len = MoleculeMassesObj.MatchIonMasses.FragmentMasses.GetLength(1);
             foreach (IonType type in Types)
             {
                 if (Transition.IsPrecursor(type))
@@ -574,8 +622,8 @@ namespace pwiz.Skyline.Model.Lib
                     double startMz = 0;
                     if (filter)
                     {
-                        start = TransitionSettings.Filter.FragmentRangeFirst.FindStartFragment(rp.MatchIonMasses.FragmentMasses, type, adduct,
-                                                                 rp.precursorMz, TransitionSettings.Filter.PrecursorMzWindow, out startMz);
+                        start = TransitionSettings.Filter.FragmentRangeFirst.FindStartFragment(MoleculeMassesObj.MatchIonMasses.FragmentMasses, type, adduct,
+                                                                 MoleculeMassesObj.precursorMz, TransitionSettings.Filter.PrecursorMzWindow, out startMz);
                         end = TransitionSettings.Filter.FragmentRangeLast.FindEndFragment(type, start, len);
                         if (Transition.IsCTerminal(type))
                             Helpers.Swap(ref start, ref end);
@@ -631,7 +679,7 @@ namespace pwiz.Skyline.Model.Lib
         private bool MatchNext(RankingState rankingState, IonType type, int offset, TransitionLosses losses, Adduct adduct, string fragmentName, int len, bool filter, int end, int start, double startMz, ref RankedMI rankedMI)
         {
             bool isFragment = !Transition.IsPrecursor(type);
-            var ionMass = isFragment ? rp.MatchIonMasses.FragmentMasses[type, offset] : rp.MatchIonMasses.PrecursorMass;
+            var ionMass = MoleculeMassesObj.MatchIonMasses.GetIonMass(type, offset);
             if (losses != null)
                 ionMass -= losses.Mass;
             double ionMz = SequenceMassCalc.GetMZ(ionMass, adduct);
@@ -649,7 +697,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 int ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
                 // If this m/z aready matched a different ion, just remember the second ion.
-                var predictedMass = isFragment ? rp.PredictIonMasses.FragmentMasses[type, offset] : rp.PredictIonMasses.PrecursorMass;
+                var predictedMass = MoleculeMassesObj.PredictIonMasses.GetIonMass(type, offset);
                 if (losses != null)
                     predictedMass -= losses.Mass;
                 double predictedMz = SequenceMassCalc.GetMZ(predictedMass, adduct);
@@ -703,7 +751,7 @@ namespace pwiz.Skyline.Model.Lib
             // not be taken from product ions
             if (!ExcludePrecursorIsotopes || type != IonType.precursor || losses != null)
             {
-                if (!filter || TransitionSettings.Accept(Sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
+                if (!filter || TransitionSettings.Accept(Sequence, MoleculeMassesObj.precursorMz, type, offset, ionMz, start, end, startMz))
                 {
                     if (!rankingState.matchAll || (MinMz <= ionMz && ionMz <= MaxMz &&
                                          RankTypes.Contains(type) &&
