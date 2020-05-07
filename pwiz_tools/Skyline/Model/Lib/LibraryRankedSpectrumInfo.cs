@@ -16,13 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using RankParams = pwiz.Skyline.Model.Lib.SpectrumRanker.RankParams;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lib
@@ -184,6 +182,27 @@ namespace pwiz.Skyline.Model.Lib
                 return ChangeProp(ImClone(this), im => im.MatchedIons = ImmutableList.ValueOf(matchedIons));
             }
 
+            private bool Equals(RankedMI other)
+            {
+                return _mi.Equals(other._mi) && Rank == other.Rank && IndexMz == other.IndexMz && Equals(MatchedIons, other.MatchedIons);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return ReferenceEquals(this, obj) || obj is RankedMI other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = _mi.GetHashCode();
+                    hashCode = (hashCode * 397) ^ Rank;
+                    hashCode = (hashCode * 397) ^ IndexMz;
+                    hashCode = (hashCode * 397) ^ (MatchedIons != null ? MatchedIons.GetHashCode() : 0);
+                    return hashCode;
+                }
+            }
         }
     }
 
