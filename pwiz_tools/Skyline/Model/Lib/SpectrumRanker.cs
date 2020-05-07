@@ -20,6 +20,21 @@ namespace pwiz.Skyline.Model.Lib
             IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes,
             double? score, bool useFilter, bool matchAll, int minPeaks)
         {
+            var spectrumRanker = new SpectrumRanker(labelType, groupDocNode, settings, lookupSequence, lookupMods, charges,types, rankCharges, rankTypes, useFilter, matchAll);
+            return spectrumRanker.RankSpectrum(info, minPeaks, score);
+        }
+
+
+        public SpectrumRanker(IsotopeLabelType labelType,
+            TransitionGroupDocNode groupDocNode, SrmSettings settings,
+            Target lookupSequence, ExplicitMods lookupMods,
+            IEnumerable<Adduct> charges, IEnumerable<IonType> types,
+            IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes,
+             bool useFilter, bool matchAll)
+        {
+            MatchAll = matchAll;
+            GroupDocNode = groupDocNode;
+            UseFilter = useFilter;
             // Avoid ReSharper multiple enumeration warning
             var rankChargesArray = rankCharges.ToArray();
             var rankTypesArray = rankTypes.ToArray();
@@ -33,20 +48,19 @@ namespace pwiz.Skyline.Model.Lib
                     charges = GetRanked(rankChargesArray, isProteomic ? Transition.DEFAULT_PEPTIDE_CHARGES : Transition.DEFAULT_MOLECULE_CHARGES);
                 if (types == null)
                     types = GetRanked(rankTypesArray, isProteomic ? Transition.PEPTIDE_ION_TYPES : Transition.MOLECULE_ION_TYPES);
-                matchAll = true;
+                MatchAll = true;
             }
 
             bool limitRanks =
                 groupDocNode.IsCustomIon && // For small molecules, cap the number of ranked ions displayed if we don't have any peak metadata
                 groupDocNode.Transitions.Any(t => string.IsNullOrEmpty(t.FragmentIonName));
 
-            RankParams rp = new RankParams
+            rp = new RankParams
             {
                 sequence = lookupSequence,
                 precursorAdduct = group.PrecursorAdduct,
                 adducts = charges ?? rankCharges,
                 types = types ?? rankTypes,
-                matchAll = matchAll,
                 rankCharges = rankChargesArray.Select(a => Math.Abs(a.AdductCharge)).ToArray(),
                 rankTypes = rankTypesArray,
                 // Precursor isotopes will not be included in MS/MS, if they will be filtered
@@ -111,7 +125,7 @@ namespace pwiz.Skyline.Model.Lib
             var tranSettings = settings.TransitionSettings;
             var predict = tranSettings.Prediction;
             var filter = tranSettings.Filter;
-            var libraries = tranSettings.Libraries;
+            Libraries = tranSettings.Libraries;
             var instrument = tranSettings.Instrument;
 
             // Get potential losses to all fragments in this peptide
@@ -127,21 +141,44 @@ namespace pwiz.Skyline.Model.Lib
             rp.endFinder = filter.FragmentRangeLast;
 
             // Get library settings
-            rp.tolerance = libraries.IonMatchTolerance;
+            rp.tolerance = Libraries.IonMatchTolerance;
             rp.pick = tranSettings.Libraries.Pick;
-            int ionMatchCount = libraries.IonCount;
+
+            // Get instrument settings
+            rp.minMz = instrument.MinMz;
+            rp.maxMz = instrument.MaxMz;
+        }
+
+        public TransitionLibraries Libraries { get; private set; }
+
+        public bool MatchAll { get; private set; }
+
+        private RankParams rp { get; set; }
+
+        public TransitionGroupDocNode GroupDocNode { get; private set; }
+        public IsotopeLabelType LabelType
+        {
+            get { return GroupDocNode.LabelType; }
+        }
+
+        public bool UseFilter { get; private set; }
+
+        public LibraryRankedSpectrumInfo RankSpectrum(SpectrumPeaksInfo info, int minPeaks, double? score)
+        {
+            int ionMatchCount = Libraries.IonCount;
             // If no library filtering will happen, return all rankings for view in the UI
-            if (!useFilter || rp.pick == TransitionLibraryPick.none)
+            if (!UseFilter || rp.pick == TransitionLibraryPick.none)
             {
                 if (rp.pick == TransitionLibraryPick.none)
                     rp.pick = TransitionLibraryPick.all;
                 ionMatchCount = -1;
             }
 
-            // Get instrument settings
-            rp.minMz = instrument.MinMz;
-            rp.maxMz = instrument.MaxMz;
+            RankingState rankingState = new RankingState()
+            {
+                matchAll = MatchAll,
 
+            };
             // Get the library spectrum mass-intensity pairs
             IList<SpectrumPeaksInfo.MI> listMI = info.Peaks;
 
@@ -161,7 +198,6 @@ namespace pwiz.Skyline.Model.Lib
 
                 FindIntensityCutoff(listMI, 0, (float)(totalIntensity / len) * 2, minPeaks, 1, ref intensityCutoff, ref len);
             }
-
             // Create filtered peak array storing original index for m/z ordering
             // to avoid needing to sort to return to this order.
             RankedMI[] arrayRMI = new RankedMI[len];
@@ -189,11 +225,12 @@ namespace pwiz.Skyline.Model.Lib
             // by intensity, or m/z in case of a tie.
             Array.Sort(arrayRMI, OrderIntensityDesc);
 
+
             RankedMI[] arrayResult = new RankedMI[ionMatchCount != -1 ? ionMatchCount : arrayRMI.Length];
 
             foreach (RankedMI rmi in arrayRMI)
             {
-                var rankedRmi = CalculateRank(rp, rmi);
+                var rankedRmi = CalculateRank(rp, rankingState, rmi);
 
                 // If not filtering for only the highest ionMatchCount ranks
                 if (ionMatchCount == -1)
@@ -215,7 +252,7 @@ namespace pwiz.Skyline.Model.Lib
 
             // Is this a theoretical library with no intensity variation? If so it can't be ranked.
             // If it has any interesting peak annotations, pass those through
-            if (rp.Ranked == 0 && arrayRMI.All(rmi => rmi.Intensity == arrayRMI[0].Intensity))
+            if (rankingState.Ranked == 0 && arrayRMI.All(rmi => rmi.Intensity == arrayRMI[0].Intensity))
             {
                 // Only do this if we have been asked to limit the ions matched, and there are any annotations
                 if (ionMatchCount != -1 && arrayRMI.Any(rmi => rmi.HasAnnotations))
@@ -229,18 +266,18 @@ namespace pwiz.Skyline.Model.Lib
             // If not enough ranked ions were found, fill the rest of the results array
             if (ionMatchCount != -1)
             {
-                for (int i = rp.Ranked; i < ionMatchCount; i++)
+                for (int i = rankingState.Ranked; i < ionMatchCount; i++)
                     arrayResult[i] = RankedMI.EMPTY;
             }
             // If all ions are to be included, and some were found out of order, then
-            // the expensive full sort by m/z is necesary.
+            // the expensive full sort by m/z is necessary.
             else if (sortMz)
             {
                 Array.Sort(arrayResult, OrderMz);
             }
 
             double? spectrumScore;
-            if (score == null && groupDocNode.HasLibInfo && groupDocNode.LibInfo is BiblioSpecSpectrumHeaderInfo libInfo)
+            if (score == null && GroupDocNode.HasLibInfo && GroupDocNode.LibInfo is BiblioSpecSpectrumHeaderInfo libInfo)
             {
                 spectrumScore = libInfo.Score;
             }
@@ -248,8 +285,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 spectrumScore = score;
             }
-
-            return new LibraryRankedSpectrumInfo(labelType, libraries.IonMatchTolerance, arrayResult, spectrumScore);
+            return new LibraryRankedSpectrumInfo(LabelType, Libraries.IonMatchTolerance, arrayResult, spectrumScore);
         }
 
         /// <summary>
@@ -343,19 +379,22 @@ namespace pwiz.Skyline.Model.Lib
             public double tolerance { get; set; }
             public double minMz { get; set; }
             public double maxMz { get; set; }
-            public bool matchAll { get; set; }
-            public bool matched { get; set; }
             public const int MAX_MATCH = 6;
-            private readonly HashSet<double> _seenMz = new HashSet<double>();
-            private double _seenFirst;
-            public bool IsSeen(double mz)
-            {
-                return _seenMz.Contains(mz);
-            }
-            public bool HasSeenOnce { get { return _seenFirst != 0; } }
             public bool HasLosses { get { return potentialLosses != null && potentialLosses.Count > 0; } }
             public bool IsProteomic { get { return precursorAdduct.IsProteomic; } }
+        }
 
+        private class RankingState
+        {
+            public bool matchAll { get; set; }
+            public bool matched { get; set; }
+
+            private readonly HashSet<double> _seenMz = new HashSet<double>();
+            private double _seenFirst;
+
+            private int _rank = 1;
+            public int Ranked { get { return _rank - 1; } }
+            public int RankNext() { return _rank++; }
             public void Seen(double mz)
             {
                 if (matchAll && _seenFirst == 0)
@@ -363,6 +402,11 @@ namespace pwiz.Skyline.Model.Lib
                 else
                     _seenMz.Add(mz);
             }
+            public bool IsSeen(double mz)
+            {
+                return _seenMz.Contains(mz);
+            }
+
 
             public void Clean()
             {
@@ -370,10 +414,7 @@ namespace pwiz.Skyline.Model.Lib
                     _seenMz.Add(_seenFirst);
                 matched = false;
             }
-
-            private int _rank = 1;
-            public int Ranked { get { return _rank - 1; } }
-            public int RankNext() { return _rank++; }
+            public bool HasSeenOnce { get { return _seenFirst != 0; } }
         }
         public class KnownFragment
         {
@@ -387,7 +428,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        private static RankedMI CalculateRank(RankParams rp, RankedMI rankedMI)
+        private static RankedMI CalculateRank(RankParams rp, RankingState rankingState, RankedMI rankedMI)
         {
             // Rank based on filtered range, if the settings use it in picking
             bool filter = (rp.pick == TransitionLibraryPick.filter);
@@ -399,12 +440,12 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     if (Transition.IsPrecursor(type))
                     {
-                        if (!MatchNext(rp, type, 0, null, rp.precursorAdduct, null, 0, filter, 0, 0, 0, ref rankedMI))
+                        if (!MatchNext(rp, rankingState, type, 0, null, rp.precursorAdduct, null, 0, filter, 0, 0, 0, ref rankedMI))
                         {
                             // If matched return.  Otherwise look for other ion types.
-                            if (rp.matched)
+                            if (rankingState.matched)
                             {
-                                rp.Clean();
+                                rankingState.Clean();
                                 return rankedMI;
                             }
                         }
@@ -414,12 +455,12 @@ namespace pwiz.Skyline.Model.Lib
                         for (var i = 0; i < rp.knownFragments.Count; i++)
                         {
                             var fragment = rp.knownFragments[i];
-                            if (!MatchNext(rp, IonType.custom, i, null, fragment.Adduct, fragment.Name, 0, filter, 0, 0, fragment.Mz, ref rankedMI))
+                            if (!MatchNext(rp, rankingState, IonType.custom, i, null, fragment.Adduct, fragment.Name, 0, filter, 0, 0, fragment.Mz, ref rankedMI))
                             {
                                 // If matched return.  Otherwise look for other ion types.
-                                if (rp.matched)
+                                if (rankingState.matched)
                                 {
-                                    rp.Clean();
+                                    rankingState.Clean();
                                     return rankedMI;
                                 }
                             }
@@ -437,12 +478,12 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     foreach (var losses in TransitionGroup.CalcTransitionLosses(type, 0, rp.massType, rp.potentialLosses))
                     {
-                        if (!MatchNext(rp, type, len, losses, rp.precursorAdduct, null, len + 1, filter, len, len, 0, ref rankedMI))
+                        if (!MatchNext(rp, rankingState, type, len, losses, rp.precursorAdduct, null, len + 1, filter, len, len, 0, ref rankedMI))
                         {
                             // If matched return.  Otherwise look for other ion types.
-                            if (rp.matched)
+                            if (rankingState.matched)
                             {
-                                rp.Clean();
+                                rankingState.Clean();
                                 return rankedMI;
                             }
                         }
@@ -477,11 +518,11 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, rp.massType, rp.potentialLosses))
                             {
-                                if (!MatchNext(rp, type, i, losses, adduct, null, len, filter, end, start, startMz, ref rankedMI))
+                                if (!MatchNext(rp, rankingState, type, i, losses, adduct, null, len, filter, end, start, startMz, ref rankedMI))
                                 {
-                                    if (rp.matched)
+                                    if (rankingState.matched)
                                     {
-                                        rp.Clean();
+                                        rankingState.Clean();
                                         return rankedMI;
                                     }
                                     i = -1; // Terminate loop on i
@@ -496,11 +537,11 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, rp.massType, rp.potentialLosses))
                             {
-                                if (!MatchNext(rp, type, i, losses, adduct, null, len, filter, end, start, startMz, ref rankedMI))
+                                if (!MatchNext(rp, rankingState, type, i, losses, adduct, null, len, filter, end, start, startMz, ref rankedMI))
                                 {
-                                    if (rp.matched)
+                                    if (rankingState.matched)
                                     {
-                                        rp.Clean();
+                                        rankingState.Clean();
                                         return rankedMI;
                                     }
                                     i = len; // Terminate loop on i
@@ -514,7 +555,7 @@ namespace pwiz.Skyline.Model.Lib
 
             return rankedMI;
         }
-        private static bool MatchNext(RankParams rp, IonType type, int offset, TransitionLosses losses, Adduct adduct, string fragmentName, int len, bool filter, int end, int start, double startMz, ref RankedMI rankedMI)
+        private static bool MatchNext(RankParams rp, RankingState rankingState, IonType type, int offset, TransitionLosses losses, Adduct adduct, string fragmentName, int len, bool filter, int end, int start, double startMz, ref RankedMI rankedMI)
         {
             bool isFragment = !Transition.IsPrecursor(type);
             var ionMass = isFragment ? rp.massesMatch[type, offset] : rp.massPreMatch;
@@ -522,16 +563,16 @@ namespace pwiz.Skyline.Model.Lib
                 ionMass -= losses.Mass;
             double ionMz = SequenceMassCalc.GetMZ(ionMass, adduct);
             // Unless trying to match everything, stop looking outside the instrument range
-            if (!rp.matchAll && !rp.HasLosses && ionMz > rp.maxMz)
+            if (!rankingState.matchAll && !rp.HasLosses && ionMz > rp.maxMz)
                 return false;
-            // Check filter properties, if apropriate
-            if ((rp.matchAll || ionMz >= rp.minMz) && Math.Abs(ionMz - rankedMI.ObservedMz) < rp.tolerance)
+            // Check filter properties, if appropriate
+            if ((rankingState.matchAll || ionMz >= rp.minMz) && Math.Abs(ionMz - rankedMI.ObservedMz) < rp.tolerance)
             {
                 // Make sure each m/z value is only used for the most intense peak
                 // that is within the tolerance range.
-                if (rp.IsSeen(ionMz))
+                if (rankingState.IsSeen(ionMz))
                     return true; // Keep looking
-                rp.Seen(ionMz);
+                rankingState.Seen(ionMz);
 
                 int ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
                 // If this m/z aready matched a different ion, just remember the second ion.
@@ -545,7 +586,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Otherwise, this can cause very mysterious failures to rank transitions that appear in the
                     // document.
                     var match = new MatchedFragmentIon(type, ordinal, adduct, fragmentName, losses, predictedMz);
-                    if (rankedMI.Rank == 0 && ApplyRanking(rp, type, offset, losses, adduct, filter, start, end, startMz, ionMz, ref rankedMI))
+                    if (rankedMI.Rank == 0 && ApplyRanking(rp, rankingState, type, offset, losses, adduct, filter, start, end, startMz, ionMz, ref rankedMI))
                     {
                         rankedMI = rankedMI.ChangeMatchedIons(rankedMI.MatchedIons.Prepend(match));
                     }
@@ -556,20 +597,20 @@ namespace pwiz.Skyline.Model.Lib
                     if (rankedMI.MatchedIons.Count < RankParams.MAX_MATCH)
                         return true;
 
-                    rp.matched = true;
+                    rankingState.matched = true;
                     return false;
                 }
 
                 // Avoid using the same predicted m/z on two different peaks
-                if (predictedMz == ionMz || !rp.IsSeen(predictedMz))
+                if (predictedMz == ionMz || !rankingState.IsSeen(predictedMz))
                 {
-                    rp.Seen(predictedMz);
+                    rankingState.Seen(predictedMz);
 
-                    ApplyRanking(rp, type, offset, losses, adduct, filter, start, end, startMz, ionMz, ref rankedMI);
+                    ApplyRanking(rp, rankingState, type, offset, losses, adduct, filter, start, end, startMz, ionMz, ref rankedMI);
                     rankedMI = rankedMI.ChangeMatchedIons(ImmutableList.Singleton(
                         new MatchedFragmentIon(type, ordinal, adduct, fragmentName, losses, predictedMz)));
-                    rp.matched = !rp.matchAll;
-                    return rp.matchAll;
+                    rankingState.matched = !rankingState.matchAll;
+                    return rankingState.matchAll;
                 }
             }
             // Stop looking once the mass has been passed, unless there are losses to consider
@@ -577,7 +618,7 @@ namespace pwiz.Skyline.Model.Lib
                 return true;
             return (ionMz <= rankedMI.ObservedMz);
         }
-        private static bool ApplyRanking(RankParams rp, IonType type, int offset, TransitionLosses losses, Adduct adduct, bool filter,
+        private static bool ApplyRanking(RankParams rp, RankingState rankingState, IonType type, int offset, TransitionLosses losses, Adduct adduct, bool filter,
             int start, int end, double startMz, double ionMz, ref RankedMI rankedMI)
         {
             // Avoid ranking precursor ions without losses, if the precursor isotopes will
@@ -586,12 +627,12 @@ namespace pwiz.Skyline.Model.Lib
             {
                 if (!filter || rp.tranSettings.Accept(rp.sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
                 {
-                    if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
+                    if (!rankingState.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
                                          rp.rankTypes.Contains(type) &&
-                                         (!rp.rankLimit.HasValue || rp.Ranked < rp.rankLimit) &&
+                                         (!rp.rankLimit.HasValue || rankingState.Ranked < rp.rankLimit) &&
                                          (rp.rankCharges.Contains(Math.Abs(adduct.AdductCharge)) || type == IonType.precursor))) // CONSIDER(bspratt) we may eventually want adduct-level control for small molecules, not just abs charge
                     {
-                        rankedMI = rankedMI.ChangeRank(rp.RankNext());
+                        rankedMI = rankedMI.ChangeRank(rankingState.RankNext());
                         return true;
                     }
                 }
