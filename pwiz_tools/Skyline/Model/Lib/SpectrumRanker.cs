@@ -171,7 +171,10 @@ namespace pwiz.Skyline.Model.Lib
             get { return TransitionSettings.Prediction.FragmentMassType; }
         }
 
-        public bool MatchAll { get; private set; }
+        public bool MatchAll
+        {
+            get { return FragmentFilterObj.MatchAll; }
+        }
 
         private RankParams rp { get; set; }
 
