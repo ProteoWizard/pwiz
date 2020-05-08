@@ -422,7 +422,7 @@ namespace pwiz.Skyline.Model.Lib
         }
         public const int MAX_MATCH = 6;
 
-        public class MoleculeMasses : Immutable
+        private class MoleculeMasses : Immutable
         {
             public MoleculeMasses(double precursorMz, IonMasses ionMasses)
             {
@@ -439,7 +439,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        public class IonMasses : Immutable
+        private class IonMasses : Immutable
         {
             public IonMasses(TypedMass precursorMass, IonTable<TypedMass> fragmentMasses)
             {
@@ -556,7 +556,7 @@ namespace pwiz.Skyline.Model.Lib
                 matched = false;
             }
         }
-        public class KnownFragment
+        private class KnownFragment
         {
             public KnownFragment(string name, Adduct adduct, TypedMass mass, SignedMz mz)
             {
