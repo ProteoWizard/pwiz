@@ -165,6 +165,16 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Document.Settings.PeptideSettings.Modifications.AllHeavyModifications.Any()));
             PauseForScreenShot("Peptide list clipped from Library Explorer", 11);
 
+            if (IsPauseForCoverShot)
+            {
+                RestoreCoverViewOnScreen(false);
+                RunUI(() =>
+                {
+                    viewLibraryDlg.SetBounds(SkylineWindow.Left, SkylineWindow.Top, SkylineWindow.Width, SkylineWindow.Height);
+                });
+                PauseForCoverShot();
+                return;
+            }
             // Adding Library Peptides to the Document p. 11
 
             // Adding AEVNGLAAQGKYEGSGEDGGAAAQSLYIANHAY
