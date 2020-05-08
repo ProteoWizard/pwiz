@@ -251,5 +251,11 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             return result;
         }
+
+
+        public IEnumerable<IonType> EnumerateIonTypes()
+        {
+            return Children.SelectMany(child => child.Item2.EnumerateIonTypes()).Prepend(IonType);
+        }
     }
 }

@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using RankedMI = pwiz.Skyline.Model.Lib.LibraryRankedSpectrumInfo.RankedMI;
 using pwiz.Skyline.Util;
@@ -437,6 +438,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return ChangeProp(ImClone(this), im => im.PredictIonMasses = predictIonMasses);
             }
+
+            public KnownFragment MakeKnownFragment()
         }
 
         private class IonMasses : Immutable
@@ -556,8 +559,9 @@ namespace pwiz.Skyline.Model.Lib
                 matched = false;
             }
         }
-        private class KnownFragment
+        private class KnownFragment : Immutable
         {
+
             public KnownFragment(string name, Adduct adduct, TypedMass mass, SignedMz mz)
             {
                 Name = name;
@@ -565,10 +569,19 @@ namespace pwiz.Skyline.Model.Lib
                 Mass = mass;
                 Mz = mz;
             }
+
             public string Name { get; private set; }
             public Adduct Adduct { get; private set; }
             public TypedMass Mass { get; private set; }
             public SignedMz Mz { get; private set; }
+
+            public ComplexFragmentIonName ComplexFragmentIonName { get; private set; }
+
+            public KnownFragment ChangeComplexFragmentIonName(ComplexFragmentIonName complexFragmentIonName)
+            {
+                return ChangeProp(ImClone(this), im => im.ComplexFragmentIonName = complexFragmentIonName);
+            }
+            public ImmutableList<IonType> IonTypes { get; private set; }
 
             public override string ToString()
             {
@@ -871,6 +884,44 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return ChangeProp(ImClone(this), im => im.MatchAll = matchAll);
             }
+        }
+        private MoleculeMasses GetCrosslinkMasses(SrmSettings settings, Target peptideSequence,
+            ExplicitMods explicitMods, IsotopeLabelType labelType, Adduct adduct)
+        {
+            var peptide = new Peptide(peptideSequence);
+            var transitionGroup = new TransitionGroup(peptide, adduct, labelType);
+            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings, explicitMods, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+            var knownFragments = new List<KnownFragment>();
+            rp.precursorMz = transitionGroupDocNode.PrecursorMz;
+            rp.massPreMatch = new TypedMass(SequenceMassCalc.GetMH(transitionGroupDocNode.PrecursorMz, transitionGroupDocNode.PrecursorCharge), transitionGroupDocNode.PrecursorMzMassType | MassType.bMassH);
+            rp.knownFragments = new List<KnownFragment>();
+            var transitionDocNodes = transitionGroupDocNode.GetTransitions(settings, explicitMods, transitionGroupDocNode.PrecursorMz, null, null, null, true).ToList();
+            rp.massesMatch = new IonTable<TypedMass>(IonType.z, transitionDocNodes.Count);
+            for (int i = 0; i<transitionDocNodes.Count; i++)
+            {
+                var transitionDocNode = transitionDocNodes[i];
+                if (transitionDocNode.IsMs1)
+                {
+                    continue;
+                }
+                var ionTypes = GetAllIonTypes(transitionDocNode.ComplexFragmentIon).Except(new[] { IonType.precursor }).Distinct().ToList();
+                var ionType = ionTypes.Count > 0 ? ionTypes[0] : IonType.custom;
+                rp.massesMatch[ionType, i] = rp.massesMatch[IonType.custom, i] = transitionDocNode.GetMoleculeMass();
+                rp.knownFragments.Add(new KnownFragment
+                {
+                    Adduct = transitionDocNode.Transition.Adduct,
+                    Mz = transitionDocNode.Mz,
+                    Name = transitionDocNode.ComplexFragmentIon.ToString(),
+                    IonType = ionType
+                });
+            }
+            return new MoleculeMasses();
+        }
+
+        public IEnumerable<IonType> GetAllIonTypes(ComplexFragmentIon complexFragmentIon)
+        {
+            return new[] {complexFragmentIon.Transition.IonType}.Concat(
+                complexFragmentIon.Children.Values.SelectMany(child => GetAllIonTypes(child)));
         }
     }
 }
