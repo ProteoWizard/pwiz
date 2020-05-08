@@ -442,6 +442,75 @@ namespace pwiz.Skyline.Model.Lib
             public KnownFragment MakeKnownFragment()
         }
 
+        private MatchedFragmentIon MakeMatchedFragmentIon(IonType ionType, int ionIndex, Adduct adduct, TransitionLosses transitionLosses, out double matchMz)
+        {
+            var moleculeMasses = MoleculeMassesObj;
+            int ordinal;
+            string fragmentName = null;
+            double predictedMz;
+            if (ionType == IonType.custom)
+            {
+                var knownFragment = moleculeMasses.PredictIonMasses.KnownFragments[ionIndex];
+                fragmentName = knownFragment.Name;
+                ordinal = ionIndex + 1;
+                predictedMz = knownFragment.Mz;
+                matchMz = moleculeMasses.MatchIonMasses.KnownFragments[ionIndex].Mz;
+            }
+            else
+            {
+                int peptideLength = TargetInfoObj.LookupSequence.Sequence.Length;
+                TypedMass matchMass, predictedMass;
+                if (ionType == IonType.precursor)
+                {
+                    matchMass = moleculeMasses.MatchIonMasses.PrecursorMass;
+                    predictedMass = moleculeMasses.PredictIonMasses.PrecursorMass;
+                    ordinal = peptideLength;
+                }
+                else
+                {
+                    matchMass = moleculeMasses.MatchIonMasses.GetIonMass(ionType, ionIndex);
+                    predictedMass = moleculeMasses.PredictIonMasses.GetIonMass(ionType, ionIndex);
+                    ordinal = Transition.OffsetToOrdinal(ionType, ionIndex, peptideLength);
+                }
+
+                if (transitionLosses != null)
+                {
+                    matchMass -= transitionLosses.Mass;
+                    predictedMass -= transitionLosses.Mass;
+                }
+
+                predictedMz = SequenceMassCalc.GetMZ(predictedMass, adduct);
+                matchMz = SequenceMassCalc.GetMZ(matchMass, adduct);
+            }
+            return new MatchedFragmentIon(ionType, ordinal, adduct, fragmentName, transitionLosses, predictedMz);
+        }
+
+        private int OffsetToOrdinal(IonType ionType, int ionIndex)
+        {
+            switch (ionType)
+            {
+                case IonType.custom:
+                    return ionIndex + 1;
+                case IonType.precursor:
+                    return TargetInfoObj.LookupSequence.Sequence.Length;
+                default:
+                    return Transition.OffsetToOrdinal(ionType, ionIndex, TargetInfoObj.LookupSequence.Sequence.Length);
+            }
+        }
+
+        private int OrdinalToOffset(IonType ionType, int ordinal)
+        {
+            switch (ionType)
+            {
+                case IonType.custom:
+                    return ordinal - 1;
+                case IonType.precursor:
+                    return ordinal - 1;
+                default:
+                    return Transition.OrdinalToOffset(ionType, ordinal, TargetInfoObj.LookupSequence.Sequence.Length);
+            }
+        }
+
         private class IonMasses : Immutable
         {
             public IonMasses(TypedMass precursorMass, IonTable<TypedMass> fragmentMasses)
@@ -602,7 +671,9 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     if (Transition.IsPrecursor(type))
                     {
-                        if (!MatchNext(rankingState, type, 0, null, PrecursorAdduct, null, 0, filter, 0, 0, 0, ref rankedMI))
+                        var matchedFragmentIon = MakeMatchedFragmentIon(type, 0, PrecursorAdduct, null, out double matchMz);
+
+                        if (!MatchNext(rankingState, matchMz, matchedFragmentIon, filter, 0, 0, 0, ref rankedMI))
                         {
                             // If matched return.  Otherwise look for other ion types.
                             if (rankingState.matched)
@@ -617,7 +688,9 @@ namespace pwiz.Skyline.Model.Lib
                         for (var i = 0; i < knownFragments.Count; i++)
                         {
                             var fragment = knownFragments[i];
-                            if (!MatchNext(rankingState, IonType.custom, i, null, fragment.Adduct, fragment.Name, 0, filter, 0, 0, fragment.Mz, ref rankedMI))
+                            var matchedFragmentIon =
+                                MakeMatchedFragmentIon(type, i, fragment.Adduct, null, out double matchMz);
+                            if (!MatchNext(rankingState, matchMz, matchedFragmentIon, filter, 0, 0, fragment.Mz, ref rankedMI))
                             {
                                 // If matched return.  Otherwise look for other ion types.
                                 if (rankingState.matched)
@@ -640,7 +713,9 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     foreach (var losses in TransitionGroup.CalcTransitionLosses(type, 0, MassType, PotentialLosses))
                     {
-                        if (!MatchNext(rankingState, type, len, losses, PrecursorAdduct, null, len + 1, filter, len, len, 0, ref rankedMI))
+                        var matchedFragmentIon =
+                            MakeMatchedFragmentIon(type, 0, PrecursorAdduct, losses, out double matchMz);
+                        if (!MatchNext(rankingState, matchMz, matchedFragmentIon, filter, len, len, 0, ref rankedMI))
                         {
                             // If matched return.  Otherwise look for other ion types.
                             if (rankingState.matched)
@@ -681,7 +756,9 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, MassType, PotentialLosses))
                             {
-                                if (!MatchNext(rankingState, type, i, losses, adduct, null, len, filter, end, start, startMz, ref rankedMI))
+                                var matchedFragmentIon =
+                                    MakeMatchedFragmentIon(type, i, adduct, losses, out double matchMz);
+                                if (!MatchNext(rankingState, matchMz, matchedFragmentIon, filter, end, start, startMz, ref rankedMI))
                                 {
                                     if (rankingState.matched)
                                     {
@@ -700,7 +777,9 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, MassType, PotentialLosses))
                             {
-                                if (!MatchNext(rankingState, type, i, losses, adduct, null, len, filter, end, start, startMz, ref rankedMI))
+                                var matchedFragmentIon =
+                                    MakeMatchedFragmentIon(type, i, adduct, losses, out double matchMz);
+                                if (!MatchNext(rankingState, matchMz, matchedFragmentIon, filter, end, start, startMz, ref rankedMI))
                                 {
                                     if (rankingState.matched)
                                     {
@@ -718,12 +797,8 @@ namespace pwiz.Skyline.Model.Lib
 
             return rankedMI;
         }
-        private bool MatchNext(RankingState rankingState, IonType type, int offset, TransitionLosses losses, Adduct adduct, string fragmentName, int len, bool filter, int end, int start, double startMz, ref RankedMI rankedMI)
+        private bool MatchNext(RankingState rankingState, double ionMz, MatchedFragmentIon match, bool filter, int end, int start, double startMz, ref RankedMI rankedMI)
         {
-            var ionMass = MoleculeMassesObj.MatchIonMasses.GetIonMass(type, offset);
-            if (losses != null)
-                ionMass -= losses.Mass;
-            double ionMz = SequenceMassCalc.GetMZ(ionMass, adduct);
             // Unless trying to match everything, stop looking outside the instrument range
             if (!rankingState.matchAll && !HasLosses && ionMz > MaxMz)
                 return false;
@@ -736,19 +811,13 @@ namespace pwiz.Skyline.Model.Lib
                     return true; // Keep looking
                 rankingState.Seen(ionMz);
 
-                int ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
                 // If this m/z already matched a different ion, just remember the second ion.
-                var predictedMass = MoleculeMassesObj.PredictIonMasses.GetIonMass(type, offset);
-                if (losses != null)
-                    predictedMass -= losses.Mass;
-                double predictedMz = SequenceMassCalc.GetMZ(predictedMass, adduct);
                 if (rankedMI.MatchedIons != null)
                 {
                     // If first type was excluded from causing a ranking, but second does, then make it the first
                     // Otherwise, this can cause very mysterious failures to rank transitions that appear in the
                     // document.
-                    var match = new MatchedFragmentIon(type, ordinal, adduct, fragmentName, losses, predictedMz);
-                    if (rankedMI.Rank == 0 && ApplyRanking(rankingState, type, offset, losses, adduct, filter, start, end, startMz, ionMz, ref rankedMI))
+                    if (rankedMI.Rank == 0 && ApplyRanking(rankingState, ionMz, match, filter, start, end, startMz, ref rankedMI))
                     {
                         rankedMI = rankedMI.ChangeMatchedIons(rankedMI.MatchedIons.Prepend(match));
                     }
@@ -763,14 +832,14 @@ namespace pwiz.Skyline.Model.Lib
                     return false;
                 }
 
+                double predictedMz = match.PredictedMz;
                 // Avoid using the same predicted m/z on two different peaks
                 if (predictedMz == ionMz || !rankingState.IsSeen(predictedMz))
                 {
                     rankingState.Seen(predictedMz);
 
-                    ApplyRanking(rankingState, type, offset, losses, adduct, filter, start, end, startMz, ionMz, ref rankedMI);
-                    rankedMI = rankedMI.ChangeMatchedIons(ImmutableList.Singleton(
-                        new MatchedFragmentIon(type, ordinal, adduct, fragmentName, losses, predictedMz)));
+                    ApplyRanking(rankingState, ionMz, match, filter, start, end, startMz, ref rankedMI);
+                    rankedMI = rankedMI.ChangeMatchedIons(ImmutableList.Singleton(match));
                     rankingState.matched = !rankingState.matchAll;
                     return rankingState.matchAll;
                 }
@@ -785,13 +854,14 @@ namespace pwiz.Skyline.Model.Lib
         {
             get { return TransitionSettings.FullScan.IsEnabledMs; }
         }
-        private bool ApplyRanking(RankingState rankingState, IonType type, int offset, TransitionLosses losses, Adduct adduct, bool filter,
-            int start, int end, double startMz, double ionMz, ref RankedMI rankedMI)
+        private bool ApplyRanking(RankingState rankingState, double ionMz, MatchedFragmentIon match, bool filter, int start, int end, double startMz, ref RankedMI rankedMI)
         {
             // Avoid ranking precursor ions without losses, if the precursor isotopes will
             // not be taken from product ions
-            if (!ExcludePrecursorIsotopes || type != IonType.precursor || losses != null)
+            if (!ExcludePrecursorIsotopes || match.IonType != IonType.precursor || match.Losses != null)
             {
+                int offset = OrdinalToOffset(match.IonType, match.Ordinal);
+                var type = match.IonType;
                 if (!filter || TransitionSettings.Accept(Sequence, MoleculeMassesObj.precursorMz, type, offset, ionMz, start, end, startMz))
                 {
                     if (rankingState.matchAll)
@@ -808,7 +878,7 @@ namespace pwiz.Skyline.Model.Lib
                         if (type != IonType.precursor)
                         {
                             // CONSIDER(bspratt) we may eventually want adduct-level control for small molecules, not just abs charge
-                            if (!RankCharges.Contains(Math.Abs(adduct.AdductCharge)))
+                            if (!RankCharges.Contains(Math.Abs(match.Charge.AdductCharge)))
                                 return false;
                         }
                     }
