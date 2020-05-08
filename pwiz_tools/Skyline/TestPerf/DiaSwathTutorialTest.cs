@@ -311,6 +311,9 @@ namespace TestPerf
 
         private string DataPath { get { return TestFilesDirs.Last().PersistentFilesDir; } }
 
+        private PropertyPath _resultProperty = PropertyPath.Root.Property("FoldChangeResult");
+        private PropertyPath _proteinProperty = PropertyPath.Root.Property("Protein");
+
         private string GetTestPath(string path)
         {
             return TestFilesDirs[0].GetTestPath(Path.Combine(RootName, path));
@@ -729,18 +732,16 @@ namespace TestPerf
             PauseForScreenShot("Group comparison", 26);
 
             OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.OkDialog);
-            var fcResultProperty = PropertyPath.Root.Property("FoldChangeResult");
-            var proteinProperty = PropertyPath.Root.Property("Protein");
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(groupComparisonName));
             {
                 var fcGrid = WaitForOpenForm<FoldChangeGrid>();
                 var fcGridControl = fcGrid.DataboundGridControl;
-                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(fcResultProperty) != null && fcGridControl.RowCount > 11);
+                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(_resultProperty) != null && fcGridControl.RowCount > 11);
                 RunUI(() =>
                 {
-                    var foldChangeResultColumn = fcGridControl.FindColumn(fcResultProperty);
+                    var foldChangeResultColumn = fcGridControl.FindColumn(_resultProperty);
                     fcGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
-                    var proteinNameColumn = fcGridControl.FindColumn(proteinProperty);
+                    var proteinNameColumn = fcGridControl.FindColumn(_proteinProperty);
                     fcGridControl.DataGridView.AutoResizeColumn(proteinNameColumn.Index);
                     fcGridControl.DataGridView.FirstDisplayedScrollingRowIndex = 11;  // Scroll past iRT peptides
                 });
@@ -807,18 +808,7 @@ namespace TestPerf
             {
                 var fcGrid = WaitForOpenForm<FoldChangeGrid>(); // May have changed with RestoreViewsOnScreen
                 var fcGridControl = fcGrid.DataboundGridControl;
-                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(proteinProperty) != null);
-                var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
-                {
-                    var proteinNameColumn = fcGridControl.FindColumn(proteinProperty);
-                    fcGridControl.QuickFilter(proteinNameColumn);
-                });
-                RunUI(() =>
-                {
-                    quickFilterForm.SetFilterOperation(0, FilterOperations.OP_NOT_CONTAINS);
-                    quickFilterForm.SetFilterOperand(0, _analysisValues.IrtFilterText);
-                });
-                OkDialog(quickFilterForm, quickFilterForm.OkDialog);
+                FilterIrtProtein(fcGridControl);
 
                 var volcanoPlot = WaitForOpenForm<FoldChangeVolcanoPlot>();    // May have changed with RestoreViewsOnScreen
                 WaitForConditionUI(() => volcanoPlot.CurveList.Count == 8 && 
@@ -833,7 +823,7 @@ namespace TestPerf
                 if (!IsRecordMode)
                     WaitForBarGraphPoints(barGraph, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta);
 
-                SortByFoldChange(fcGridControl, fcResultProperty);
+                SortByFoldChange(fcGridControl, _resultProperty);
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Bar Graph - peptides", 30);
 
                 var changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
@@ -863,7 +853,7 @@ namespace TestPerf
                 }
                 fcGrid = WaitForOpenForm<FoldChangeGrid>();
                 var fcGridControlFinal = fcGrid.DataboundGridControl;
-                SortByFoldChange(fcGridControlFinal, fcResultProperty);  // Re-apply the sort, in case it was lost in restoring views
+                SortByFoldChange(fcGridControlFinal, _resultProperty);  // Re-apply the sort, in case it was lost in restoring views
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Graph - proteins", 31);
 
                 if (IsPauseForCoverShot)
@@ -875,10 +865,39 @@ namespace TestPerf
                         SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
                     });
 
-                    RestoreCoverViewOnScreen(false);
+                    RestoreCoverViewOnScreen();
+                    fcGrid = WaitForOpenForm<FoldChangeGrid>();
+                    fcGridControlFinal = fcGrid.DataboundGridControl;
+                    FilterIrtProtein(fcGridControlFinal);
+                    changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
+                    RunUI(() => changeGroupComparisonSettings.RadioScopePerPeptide.Checked = true);
+                    OkDialog(changeGroupComparisonSettings, changeGroupComparisonSettings.Close);
+
+                    RunUI(() =>
+                    {
+                        var fcFloatingWindow = fcGrid.Parent.Parent;
+                        fcFloatingWindow.Left = SkylineWindow.Left + 8;
+                        fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
+                    });
                     PauseForCoverShot();
                 }
             }
+        }
+
+        private void FilterIrtProtein(DataboundGridControl fcGridControl)
+        {
+            WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(_proteinProperty) != null);
+            var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
+            {
+                var proteinNameColumn = fcGridControl.FindColumn(_proteinProperty);
+                fcGridControl.QuickFilter(proteinNameColumn);
+            });
+            RunUI(() =>
+            {
+                quickFilterForm.SetFilterOperation(0, FilterOperations.OP_NOT_CONTAINS);
+                quickFilterForm.SetFilterOperand(0, _analysisValues.IrtFilterText);
+            });
+            OkDialog(quickFilterForm, quickFilterForm.OkDialog);
         }
 
         private void RestoreViewOnScreenNoSelChange(int pageName)
