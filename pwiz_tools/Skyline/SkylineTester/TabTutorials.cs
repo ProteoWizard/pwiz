@@ -48,8 +48,10 @@ namespace SkylineTester
             else
             {
                 int pauseSeconds = -1;
-                if (!MainWindow.PauseTutorialsScreenShots.Checked && 
-                    !Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
+                if (MainWindow.PauseTutorialsCoverShots.Checked)
+                    pauseSeconds = -2;
+                else if (!MainWindow.PauseTutorialsScreenShots.Checked &&
+                         !Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
                     pauseSeconds = 0;
                 args.Append(" pause=");
                 args.Append(pauseSeconds);

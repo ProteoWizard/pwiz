@@ -64,23 +64,22 @@ namespace pwiz.SkylineTest
             Tuple<string, string, int, double[]>[] testPeptides = new[]
             {
                 // ReSharper disable StringLiteralTypo
-                Tuple.Create("MEIVK", "Short Peptide", 7, new[] {147.1, 246.1, 359.3, 488.4}),
-                Tuple.Create("EIYYTPDPSELAAKEEPAKEEAPAPTPAASAPAPAAAAPAPVAAAAPAAAAAEIADEPVK", "Long Peptide", 9,
-                    new[] {1352.3, 1423.8, 1475}),
-                Tuple.Create("LVGFT[+80]FR", "Short Peptide with 1 Neutral Loss", 4,
-                    new[] {322.0948, 609.278, 707.1737, 708.1829}),
+                Tuple.Create("MEIVK", "Short Peptide",
+                    20, new[] {131.1, 147.1, 187.1}),
+                Tuple.Create("EIYYTPDPSELAAKEEPAKEEAPAPTPAASAPAPAAAAPAPVAAAAPAAAAAEIADEPVK", "Long Peptide",
+                    55, new[] {587.4, 771.4, 900.5}),
+                Tuple.Create("LVGFT[+80]FR", "Short Peptide with 1 Neutral Loss",
+                    24, new[] {305.1334, 322.0948, 325.2004}),
                 Tuple.Create("DLKEILSGFHNAGPVAGAGAASGAAAAGGDAAAEEEKEEEAAEES[+80]DDDMGFGLFD",
-                    "Long peptide with 1 Neutral Loss", 7,
-                    new[] {1203.3427, 1250.8986, 1274.571, 1298.2545, 1329.6705, 1341.2415}),
-                Tuple.Create("MLPTS[+80]VS[+80]R", "Short peptide with 2 neutral losses", 8,
-                    new[] {343.2071, 403.681, 443.1311, 610.0934, 709.152}),
-                Tuple.Create("RNPDFEDDDFLGGDFDEDEIDEESS[+80]EEEEEEKT[+80]QKK", "Long peptide with 2 neutral losses", 12,
-                    new[]
-                    {
-                        682.7864, 1031.3154, 1069.0573, 1090.3293, 1251.3538, 1358.1454, 1431.825, 1489.1063, 1497.3608
-                    })
+                    "Long peptide with 1 Neutral Loss",
+                    43, new[] {790.1161, 825.5901, 889.6103}),
+                Tuple.Create("MLPTS[+80]VS[+80]R", "Short peptide with 2 neutral losses",
+                    36, new[] {305.6439, 340.5001, 343.2071}),
+                Tuple.Create("RNPDFEDDDFLGGDFDEDEIDEESS[+80]EEEEEEKT[+80]QKK", "Long peptide with 2 neutral losses",
+                    65, new[] {483.2214, 552.9168, 626.2743})
                 // ReSharper restore StringLiteralTypo
             };
+
             Console.Out.WriteLine();
             foreach (var tuple in testPeptides)
             {
@@ -95,20 +94,22 @@ namespace pwiz.SkylineTest
                 
                 var startTime = DateTime.UtcNow;
                 LibraryRankedSpectrumInfo libraryRankedSpectrum = null;
-                int repeatCount = 300;
+                int repeatCount = 50;
                 for (int i = 0; i < repeatCount; i++)
                 {
                     libraryRankedSpectrum = new LibraryRankedSpectrumInfo(spectrum.SpectrumPeaksInfo,
                         transitionGroup.LabelType, transitionGroup, settingsWithLibraries, peptideDocNode.ExplicitMods,
-                        false, 3);
+                        false, TransitionGroup.MAX_MATCHED_MSMS_PEAKS);
                     Assert.IsNotNull(libraryRankedSpectrum);
                 }
                 var endTime = DateTime.UtcNow;
 
                 Console.Out.WriteLine("Time to get LibraryRankedSpectrumInfo for {0} {1} times: {2}", tuple.Item2, repeatCount, endTime.Subtract(startTime));
                 Assert.IsNotNull(libraryRankedSpectrum);
-                var rankedMzs = libraryRankedSpectrum.PeaksRanked.Select(peak=>Math.Round(peak.ObservedMz, 4)).ToArray();
-                Console.Out.WriteLine("{0} matched peaks. Ranked peaks: {{ {1} }}", libraryRankedSpectrum.PeaksMatched.Count(), string.Join(",", rankedMzs));
+                var rankedMzs = libraryRankedSpectrum.PeaksRanked.Select(peak=>Math.Round(peak.ObservedMz, 4)).Take(3).ToArray();
+                Console.Out.WriteLine("{0} matched peaks. First {1}/{2} ranked peaks: {{ {3} }}",
+                    libraryRankedSpectrum.PeaksMatched.Count(), rankedMzs.Length,
+                    libraryRankedSpectrum.PeaksRanked.Count(), string.Join(",", rankedMzs));
                 if (!IsRecording)
                 {
                     CollectionAssert.AreEqual(tuple.Item4, rankedMzs);
