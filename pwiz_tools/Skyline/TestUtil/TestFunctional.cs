@@ -993,7 +993,7 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsPauseForScreenShots
         {
-            get { return _isPauseForScreenShots || Program.PauseSeconds != 0; }
+            get { return _isPauseForScreenShots || Program.PauseSeconds == -1; }
             set
             {
                 _isPauseForScreenShots = value;
@@ -1004,7 +1004,20 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public bool IsPauseForCoverShot { get; set; }
+        private static bool _isPauseForCoverShot;
+
+        public bool IsPauseForCoverShot
+        {
+            get { return _isPauseForCoverShot || Program.PauseSeconds == -2; }
+            set
+            {
+                _isPauseForCoverShot = value;
+                if (_isPauseForCoverShot)
+                {
+                    Program.PauseSeconds = -2;
+                }
+            }
+        }
 
         public int PauseStartPage { get; set; }
 
