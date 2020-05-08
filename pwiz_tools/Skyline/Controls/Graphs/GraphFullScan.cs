@@ -83,6 +83,11 @@ namespace pwiz.Skyline.Controls.Graphs
             lblScanId.Visible = false;  // you might want to show the scan index for debugging
         }
 
+        public ZedGraphControl ZedGraphControl
+        {
+            get { return graphControl; }
+        }
+
         private void SetSpectra(MsDataSpectrum[] spectra)
         {
             Invoke(new Action(() => SetSpectraUI(spectra)));

@@ -437,6 +437,14 @@ PWIZ_API_DECL bool BinaryDataArray::empty() const
 }
 
 
+PWIZ_API_DECL bool IntegerDataArray::empty() const
+{
+    return (!dataProcessingPtr.get() || dataProcessingPtr->empty()) && 
+           data.empty() && 
+           ParamContainer::empty();
+}
+
+
 //
 // MZIntensityPair 
 //

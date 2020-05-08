@@ -211,7 +211,7 @@ namespace pwiz.SkylineTestUtil
                 return;
 
             Fail(TextUtil.LineSeparate(exceptions.Count == 1 ? "Unexpected exception:" : "Unexpected exceptions:",
-                TextUtil.LineSeparate(exceptions.Select(x => TextUtil.LineSeparate(x.Message, ExceptionUtil.GetStackTraceText(x, null, false), string.Empty)))));
+                TextUtil.LineSeparate(exceptions.Select(x => x.ToString()))));
         }
 
         public static void Contains(string value, params string[] parts)
