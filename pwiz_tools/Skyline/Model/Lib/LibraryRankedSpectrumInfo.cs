@@ -242,5 +242,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             return ChangeProp(ImClone(this), im => im.ComplexFragmentIonName = complexFragmentIonName);
         }
+
+        public MatchedFragmentIon ChangePredictedMz(double predictedMz)
+        {
+            return ChangeProp(ImClone(this), im => im.PredictedMz = predictedMz);
+        }
     }
 }

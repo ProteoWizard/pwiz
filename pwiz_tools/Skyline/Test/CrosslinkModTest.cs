@@ -100,7 +100,7 @@ namespace pwiz.SkylineTest
                     IonType.precursor, linkedPeptide.Peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED), null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE);
             var complexFragmentIon =
                 mainComplexFragmentIon.AddChild(new ModificationSite(0, staticMod.Name), linkedComplexFragmentIon);
-            var transition = complexFragmentIon.MakeTransitionDocNode(srmSettings, modsWithLinkedPeptide);
+            var transition = complexFragmentIon.MakeTransitionDocNode(srmSettings, modsWithLinkedPeptide, null);
             var sequenceMassCalc = new SequenceMassCalc(MassType.Monoisotopic);
             var expectedMz = sequenceMassCalc.GetPrecursorMass("A") + sequenceMassCalc.GetPrecursorMass("D") - 24 - BioMassCalc.MassProton;
             Assert.AreEqual(expectedMz, transition.Mz, .00001);
@@ -281,7 +281,7 @@ namespace pwiz.SkylineTest
                     complexFragmentIon = complexFragmentIon.AddChild(explicitMod.ModificationSite,
                         new ComplexFragmentIon(linkedTransition, null, LinkedPeptide.EMPTY_CROSSLINK_STRUCTURE));
                 }
-                var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(srmSettings, explicitMods);
+                var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(srmSettings, explicitMods, null);
                 Assert.AreEqual(tuple.Item4, complexTransitionDocNode.Mz, .0001, "{0}{1}{2}", tuple.Item1, tuple.Item2,
                     Transition.GetChargeIndicator(Adduct.FromChargeProtonated(tuple.Item3)));
             }

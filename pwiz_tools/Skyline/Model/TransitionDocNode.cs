@@ -190,6 +190,10 @@ namespace pwiz.Skyline.Model
 
         public string GetFragmentIonName(CultureInfo cultureInfo, double? tolerance = null)
         {
+            if (ComplexFragmentIon.CrosslinkStructure.Count != 0)
+            {
+                return ComplexFragmentIon.GetFragmentIonName();
+            }
             string ionName = Transition.GetFragmentIonName(cultureInfo, tolerance);
             return (HasLoss ? string.Format(@"{0} -{1}", ionName, Math.Round(Losses.Mass, 1)) : ionName);
         }
@@ -673,7 +677,7 @@ namespace pwiz.Skyline.Model
                     complexFragmentIon = complexFragmentIon.AddChild(modificationSite,
                         linkedPeptide.MakeComplexFragmentIon(group.LabelType, childName));
                 }
-                transitionDocNode = complexFragmentIon.MakeTransitionDocNode(settings, mods, annotations, transitionQuantInfo, explicitTransitionValues, results);
+                transitionDocNode = complexFragmentIon.MakeTransitionDocNode(settings, mods, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
             }
             else
             {

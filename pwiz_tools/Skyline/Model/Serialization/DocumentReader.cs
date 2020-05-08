@@ -1482,7 +1482,7 @@ namespace pwiz.Skyline.Model.Serialization
                         linkedPeptide.MakeComplexFragmentIon(group.LabelType, linkedIon.Value));
                 }
 
-                node = complexFragmentIon.MakeTransitionDocNode(Settings, mods, info.Annotations, quantInfo,
+                node = complexFragmentIon.MakeTransitionDocNode(Settings, mods, isotopeDist, info.Annotations, quantInfo,
                     info.ExplicitValues, info.Results);
             }
             else

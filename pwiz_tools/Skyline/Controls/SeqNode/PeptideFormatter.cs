@@ -208,6 +208,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             };
         }
 
+        private const string STR_WIDE_DASH = "\u2014";
+
         public IEnumerable<TextSequence> GetTextSequencesForLinkedPeptides(DisplayModificationOption displayModificationOption)
         {
             var result = new List<TextSequence>();
@@ -220,7 +222,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 Color = Color.Black,
                 Font = ModFontHolder.Plain,
-                Text = @"-"
+                Text = STR_WIDE_DASH
             });
             if (LinkedPeptides.Count > 1)
             {

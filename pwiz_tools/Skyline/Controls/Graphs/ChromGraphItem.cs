@@ -236,6 +236,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return GetTitle(transitionGroup);
             }
+
             return string.Format(@"{0}{1} - {2:F04}{3}{4}", transition.FragmentIonName,
                                  Transition.GetMassIndexText(transition.Transition.MassIndex),
                                  transition.Mz,

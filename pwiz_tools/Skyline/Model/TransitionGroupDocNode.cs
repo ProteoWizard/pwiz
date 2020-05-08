@@ -979,7 +979,7 @@ namespace pwiz.Skyline.Model
                             if (mods != null && mods.HasCrosslinks)
                             {
                                 nodeTranResult = nodeTranResult.ComplexFragmentIon.MakeTransitionDocNode(settingsNew,
-                                    mods, annotations, quantInfo, explicitValues, results);
+                                    mods, isotopeDist, annotations, quantInfo, explicitValues, results);
                             }
                             else
                             {
@@ -1080,7 +1080,7 @@ namespace pwiz.Skyline.Model
                         TransitionDocNode nodeNew;
                         if (nodeTransition.ComplexFragmentIon.Children.Count > 0)
                         {
-                            nodeNew = nodeTransition.ComplexFragmentIon.MakeTransitionDocNode(settingsNew, mods,
+                            nodeNew = nodeTransition.ComplexFragmentIon.MakeTransitionDocNode(settingsNew, mods, isotopeDist,
                                 nodeTransition.Annotations, quantInfo, explicitValues, results);
                         }
                         else
@@ -1134,7 +1134,7 @@ namespace pwiz.Skyline.Model
                 return simpleTransitions;
             }
 
-            var transitions = GetComplexTransitions(settings, mods, simpleTransitions, useFilter);
+            var transitions = GetComplexTransitions(settings, mods, isotopeDist, simpleTransitions, useFilter);
             if (settings.TransitionSettings.FullScan.IsEnabledMs &&
                 settings.TransitionSettings.FullScan.IsHighResPrecursor)
             {
@@ -1191,6 +1191,7 @@ namespace pwiz.Skyline.Model
         }
 
         public IEnumerable<TransitionDocNode> GetComplexTransitions(SrmSettings settings, ExplicitMods explicitMods,
+            IsotopeDistInfo isotopeDist,
             IEnumerable<TransitionDocNode> simpleTransitions, bool useFilter)
         {
             var startingFragmentIons = new List<ComplexFragmentIon>();
@@ -1255,7 +1256,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(settings, explicitMods);
+                var complexTransitionDocNode = complexFragmentIon.MakeTransitionDocNode(settings, explicitMods, isotopeDist);
                 yield return complexTransitionDocNode;
             }
         }
@@ -1267,7 +1268,7 @@ namespace pwiz.Skyline.Model
             foreach (int massIndex in fullScan.SelectMassIndices(isotopeDist, useFilter))
             {
                 var complexFragmentIon = precursorTransitionNode.ComplexFragmentIon.ChangeMassIndex(massIndex);
-                yield return complexFragmentIon.MakeTransitionDocNode(settings, explicitMods);
+                yield return complexFragmentIon.MakeTransitionDocNode(settings, explicitMods, isotopeDist);
             }
         }
 
