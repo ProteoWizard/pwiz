@@ -241,11 +241,11 @@ namespace pwiz.Skyline.Model.Crosslinking
             MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
             if (massType.IsMonoisotopic())
             {
-                return new TypedMass(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule, formula.MonoMassOffset + BioMassCalc.MassProton, 0), MassType.MonoisotopicMassH);
+                return new TypedMass(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule) + formula.MonoMassOffset + BioMassCalc.MassProton, MassType.MonoisotopicMassH);
             }
             else
             {
-                return new TypedMass(fragmentedMoleculeSettings.GetMassDistribution(formula.Molecule, formula.AverageMassOffset + BioMassCalc.MassProton, 0).AverageMass, MassType.AverageMassH);
+                return new TypedMass(fragmentedMoleculeSettings.GetAverageMass(formula.Molecule) + formula.AverageMassOffset + BioMassCalc.MassProton, MassType.AverageMassH);
             }
         }
 

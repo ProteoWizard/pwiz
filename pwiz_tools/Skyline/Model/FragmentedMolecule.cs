@@ -510,17 +510,31 @@ namespace pwiz.Skyline.Model
                 return massDistribution;
             }
 
-            public double GetMonoMass(Molecule molecule, double massShift, int charge)
+            public double GetMonoMass(Molecule molecule)
             {
-                var massDistribution = ChangeIsotopeAbundances(GetMonoisotopicAbundances(IsotopeAbundances))
-                    .GetMassDistribution(molecule, massShift, charge);
-                return massDistribution.MostAbundanceMass;
+                double totalMass = 0;
+                foreach (var entry in molecule)
+                {
+                    totalMass += IsotopeAbundances[entry.Key].MostAbundanceMass * entry.Value;
+                }
+                return totalMass;
+            }
+
+            public double GetAverageMass(Molecule molecule)
+            {
+                double totalMass = 0;
+                foreach (var entry in molecule)
+                {
+                    totalMass += IsotopeAbundances[entry.Key].AverageMass * entry.Value;
+                }
+
+                return totalMass;
             }
 
             public MoleculeMassOffset ReplaceMoleculeWithMassOffset(MoleculeMassOffset moleculeMassOffset)
             {
-                double monoMass = GetMonoMass(moleculeMassOffset.Molecule, moleculeMassOffset.MonoMassOffset, 0);
-                double averageMass = GetMassDistribution(moleculeMassOffset.Molecule, moleculeMassOffset.AverageMassOffset, 0).AverageMass;
+                double monoMass = GetMonoMass(moleculeMassOffset.Molecule) + moleculeMassOffset.MonoMassOffset;
+                double averageMass = GetAverageMass(moleculeMassOffset.Molecule) + moleculeMassOffset.AverageMassOffset;
                 return new MoleculeMassOffset(Molecule.Empty, monoMass, averageMass);
             }
 
@@ -548,17 +562,6 @@ namespace pwiz.Skyline.Model
                     return hashCode;
                 }
             }
-        }
-
-        private static IsotopeAbundances GetMonoisotopicAbundances(IsotopeAbundances isotopeAbundances)
-        {
-            var newAbundances = new Dictionary<string, MassDistribution>();
-            foreach (var entry in isotopeAbundances)
-            {
-                newAbundances.Add(entry.Key, new MassDistribution(entry.Value.MassResolution, entry.Value.MinimumAbundance)
-                    .SetAbundance(entry.Value.MostAbundanceMass, 1));
-            }
-            return isotopeAbundances.SetAbundances(newAbundances);
         }
     }
 }
