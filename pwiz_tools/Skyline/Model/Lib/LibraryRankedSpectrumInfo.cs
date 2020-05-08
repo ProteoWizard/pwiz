@@ -29,18 +29,18 @@ namespace pwiz.Skyline.Model.Lib
     {
         private ImmutableList<RankedMI> _spectrum;
         public static LibraryRankedSpectrumInfo NewLibraryRankedSpectrumInfo(SpectrumPeaksInfo info,
-                                         IsotopeLabelType labelType, TransitionGroupDocNode group,
-                                         SrmSettings settings, Target lookupSequence, ExplicitMods lookupMods,
-                                         IEnumerable<Adduct> charges, IEnumerable<IonType> types,
-                                         IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes, double? score)
+            IsotopeLabelType labelType, TransitionGroupDocNode group,
+            SrmSettings settings, Target lookupSequence, ExplicitMods lookupMods,
+            IEnumerable<Adduct> charges, IEnumerable<IonType> types,
+            IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes, double? score)
         {
             return MakeLibraryRankedSpectrumInfo(info, labelType, group, settings, lookupSequence, lookupMods,
                 charges, types, rankCharges, rankTypes, score, false, true, -1);
         }
 
         public static LibraryRankedSpectrumInfo NewLibraryRankedSpectrumInfo(SpectrumPeaksInfo info, IsotopeLabelType labelType,
-                                         TransitionGroupDocNode group, SrmSettings settings, ExplicitMods lookupMods,
-                                         bool useFilter, int minPeaks)
+            TransitionGroupDocNode group, SrmSettings settings, ExplicitMods lookupMods,
+            bool useFilter, int minPeaks)
         {
             return MakeLibraryRankedSpectrumInfo(info, labelType, group, settings, group.Peptide.Target, lookupMods,
                 null, // charges
@@ -76,6 +76,11 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public double? Score { get; private set; }
+
+        public LibraryRankedSpectrumInfo ChangeScore(double? score)
+        {
+            return ChangeProp(ImClone(this), im=>im.Score = score);
+        }
         public IsotopeLabelType LabelType { get; private set; }
         public double Tolerance { get; private set; }
 
