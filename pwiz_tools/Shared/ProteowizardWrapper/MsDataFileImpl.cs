@@ -612,15 +612,52 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        private static readonly string[] msLevelOrFunctionArrayNames = { "ms level", "function" };
+
         public void GetChromatogram(int chromIndex, out string id,
-            out float[] timeArray, out float[] intensityArray)
+            out float[] timeArray, out float[] intensityArray, bool onlyMs1OrFunction1 = false)
         {
             using (Chromatogram chrom = ChromatogramList.chromatogram(chromIndex, true))
             {
                 id = chrom.id;
-                timeArray = ToFloatArray(chrom.binaryDataArrays[0].data);
-                intensityArray = ToFloatArray(chrom.binaryDataArrays[1].data);
-            }            
+                if (!onlyMs1OrFunction1)
+                {
+                    timeArray = ToFloatArray(chrom.binaryDataArrays[0].data);
+                    intensityArray = ToFloatArray(chrom.binaryDataArrays[1].data);
+                }
+                else
+                {
+                    // get array of ms level or function for each chromatogram point
+                    var msLevelOrFunctionArray = chrom.integerDataArrays.FirstOrDefault(o =>
+                        msLevelOrFunctionArrayNames.Contains(o.cvParam(CVID.MS_non_standard_data_array).value.ToString()));
+
+                    // if array is missing or empty, return no chromatogram data points (because they could be from any ms level or function)
+                    if (msLevelOrFunctionArray == null || msLevelOrFunctionArray.data.Count != chrom.binaryDataArrays[0].data.Count)
+                    {
+                        timeArray = intensityArray = null;
+                        return;
+                    }
+
+
+                    var timeList = new List<float>();
+                    var intensityList = new List<float>();
+                    var timeArrayData = chrom.binaryDataArrays[0].data;
+                    var intensityArrayData = chrom.binaryDataArrays[1].data;
+                    var msLevelOrFunctionArrayData = msLevelOrFunctionArray.data;
+
+                    for (int i = 0; i < msLevelOrFunctionArrayData.Count; ++i)
+                    {
+                        if (msLevelOrFunctionArrayData[i] != 1)
+                            continue;
+
+                        timeList.Add((float) timeArrayData[i]);
+                        intensityList.Add((float) intensityArrayData[i]);
+                    }
+
+                    timeArray = timeList.ToArray();
+                    intensityArray = intensityList.ToArray();
+                }
+            }
         }
 
         /// <summary>
@@ -815,7 +852,7 @@ namespace pwiz.ProteowizardWrapper
 
         private double[] GetIonMobilityArray(Spectrum s)
         {
-            BinaryData data = null;
+            BinaryDataDouble data = null;
             // Remember where the ion mobility value came from and continue getting it from the
             // same place throughout the file. Trying to get an ion mobility value from a CVID
             // where there is none can be slow.
@@ -849,7 +886,7 @@ namespace pwiz.ProteowizardWrapper
             return data?.Storage();
         }
 
-        private BinaryData TryGetIonMobilityData(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
+        private BinaryDataDouble TryGetIonMobilityData(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
         {
             var data = s.getArrayByCVID(cvid)?.data;
             if (data != null)

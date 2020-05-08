@@ -680,7 +680,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
 
             var lookupData = new LookupData(selection);
-            var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumPeaksOverride ?? spectrum.SpectrumPeaksInfo,
+            var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumPeaksOverride ?? spectrum.SpectrumPeaksInfo,
                 spectrum.LabelType,
                 selection.Precursor,
                 settings,
