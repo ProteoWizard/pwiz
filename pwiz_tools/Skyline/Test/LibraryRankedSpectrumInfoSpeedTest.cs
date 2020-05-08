@@ -97,7 +97,7 @@ namespace pwiz.SkylineTest
                 int repeatCount = 50;
                 for (int i = 0; i < repeatCount; i++)
                 {
-                    libraryRankedSpectrum = new LibraryRankedSpectrumInfo(spectrum.SpectrumPeaksInfo,
+                    libraryRankedSpectrum = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrum.SpectrumPeaksInfo,
                         transitionGroup.LabelType, transitionGroup, settingsWithLibraries, peptideDocNode.ExplicitMods,
                         false, TransitionGroup.MAX_MATCHED_MSMS_PEAKS);
                     Assert.IsNotNull(libraryRankedSpectrum);
