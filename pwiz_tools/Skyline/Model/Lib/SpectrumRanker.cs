@@ -835,30 +835,38 @@ namespace pwiz.Skyline.Model.Lib
             {
                 int offset = OrdinalToOffset(match.IonType, match.Ordinal);
                 var type = match.IonType;
-                if (!filter || TransitionSettings.Accept(Sequence, MoleculeMassesObj.precursorMz, type, offset, ionMz, start, end, startMz))
+                if (filter)
                 {
-                    if (rankingState.matchAll)
+                    if (TargetInfoObj.LookupMods == null || !TargetInfoObj.LookupMods.HasCrosslinks)
                     {
-                        if (MinMz > ionMz || ionMz > MaxMz)
-                            return false;
-
-                        if (!RankTypes.Contains(type))
-                            return false;
-
-                        if (RankLimit.HasValue && rankingState.Ranked >= RankLimit)
-                            return false;
-
-                        if (type != IonType.precursor)
+                        if (!TransitionSettings.Accept(Sequence, MoleculeMassesObj.precursorMz, type, offset, ionMz, start,
+                            end, startMz))
                         {
-                            // CONSIDER(bspratt) we may eventually want adduct-level control for small molecules, not just abs charge
-                            if (!RankCharges.Contains(Math.Abs(match.Charge.AdductCharge)))
-                                return false;
+                            return false;
                         }
                     }
-
-                    rankedMI = rankedMI.ChangeRank(rankingState.RankNext());
-                    return true;
                 }
+                if (rankingState.matchAll)
+                {
+                    if (MinMz > ionMz || ionMz > MaxMz)
+                        return false;
+
+                    if (!RankTypes.Contains(type))
+                        return false;
+
+                    if (RankLimit.HasValue && rankingState.Ranked >= RankLimit)
+                        return false;
+
+                    if (type != IonType.precursor)
+                    {
+                        // CONSIDER(bspratt) we may eventually want adduct-level control for small molecules, not just abs charge
+                        if (!RankCharges.Contains(Math.Abs(match.Charge.AdductCharge)))
+                            return false;
+                    }
+                }
+
+                rankedMI = rankedMI.ChangeRank(rankingState.RankNext());
+                return true;
             }
 
             return false;
@@ -930,9 +938,17 @@ namespace pwiz.Skyline.Model.Lib
         }
         private MoleculeMasses GetCrosslinkMasses(SrmSettings settings)
         {
-            var peptide = new Peptide(TargetInfoObj.LookupSequence);
             var predictDocNode = MakeTransitionGroupWithAllPossibleChildren(settings, TargetInfoObj.TransitionGroupDocNode.LabelType);
-            var matchDocNode = MakeTransitionGroupWithAllPossibleChildren(settings, TargetInfoObj.SpectrumLabelType);
+            TransitionGroupDocNode matchDocNode;
+            if (Equals(TargetInfoObj.TransitionGroupDocNode.LabelType, TargetInfoObj.SpectrumLabelType))
+            {
+                matchDocNode = predictDocNode;
+            }
+            else
+            {
+                matchDocNode = MakeTransitionGroupWithAllPossibleChildren(settings, TargetInfoObj.SpectrumLabelType);
+            }
+               
             var matchTransitions = matchDocNode.Transitions.ToDictionary(child => child.Key(matchDocNode));
 
 
@@ -990,7 +1006,7 @@ namespace pwiz.Skyline.Model.Lib
             var transitionGroup = new TransitionGroup(peptide, TargetInfoObj.TransitionGroupDocNode.PrecursorAdduct, labelType);
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings, TargetInfoObj.LookupMods, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
             var children = transitionGroupDocNode.GetTransitions(settings, TargetInfoObj.LookupMods,
-                transitionGroupDocNode.PrecursorMz, null, null, null, false).Cast<DocNode>().ToList();
+                transitionGroupDocNode.PrecursorMz, null, null, null, FragmentFilterObj.UseFilter).Cast<DocNode>().ToList();
             return (TransitionGroupDocNode) transitionGroupDocNode.ChangeChildren(children);
         }
 

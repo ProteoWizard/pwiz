@@ -254,10 +254,10 @@ namespace pwiz.Skyline.Model
 
         private static void AddAminoAcidFormula(MassType massType, char aminoAcid, Dictionary<string, int> molecule, ref double unexplainedMass)
         {
-            string formula;
-            if (AminoAcidFormulas.Default.Formulas.TryGetValue(aminoAcid, out formula))
+            Molecule formula = AminoAcidFormulas.Default.GetAminoAcidFormula(aminoAcid);
+            if (null != formula)
             {
-                Add(molecule, Molecule.Parse(formula));
+                Add(molecule, formula);
                 return;
             }
 

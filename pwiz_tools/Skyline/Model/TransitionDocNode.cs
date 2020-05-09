@@ -642,7 +642,6 @@ namespace pwiz.Skyline.Model
                 transition = new Transition(group, ionType, offset, transitionProto.MassIndex, adduct, DataValues.FromOptional(transitionProto.DecoyMassShift));
             }
             var losses = TransitionLosses.FromLossProtos(settings, transitionProto.Losses);
-            var mass = settings.GetFragmentMass(group, mods, transition, isotopeDist);
             var isotopeDistInfo = GetIsotopeDistInfo(transition, losses, isotopeDist);
             if (group.DecoyMassShift.HasValue && transitionProto.DecoyMassShift == null)
             {
@@ -681,6 +680,7 @@ namespace pwiz.Skyline.Model
             }
             else
             {
+                var mass = settings.GetFragmentMass(group, mods, transition, isotopeDist);
                 transitionDocNode = new TransitionDocNode(transition, annotations, losses, mass, transitionQuantInfo, explicitTransitionValues, results);
             }
 

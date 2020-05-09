@@ -1464,13 +1464,12 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             var losses = info.Losses;
-            var mass = Settings.GetFragmentMass(group, mods, transition, isotopeDist);
-
+            
             var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(transition, losses, isotopeDist);
-
             if (group.DecoyMassShift.HasValue && !info.DecoyMassShift.HasValue)
                 throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
             var quantInfo = new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, info.LibInfo, info.Quantitative);
+
             TransitionDocNode node;
             if (mods != null && mods.HasCrosslinks)
             {
@@ -1482,11 +1481,13 @@ namespace pwiz.Skyline.Model.Serialization
                         linkedPeptide.MakeComplexFragmentIon(group.LabelType, linkedIon.Value));
                 }
 
-                node = complexFragmentIon.MakeTransitionDocNode(Settings, mods, isotopeDist, info.Annotations, quantInfo,
-                    info.ExplicitValues, info.Results);
+                var crosslinkBuilder = new CrosslinkBuilder(Settings, group.Peptide, mods, group.LabelType);
+                node = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, info.Annotations,
+                    quantInfo, info.ExplicitValues, info.Results);
             }
             else
             {
+                var mass = Settings.GetFragmentMass(group, mods, transition, isotopeDist);
                 node = new TransitionDocNode(transition, info.Annotations, losses,
                     mass, quantInfo, info.ExplicitValues, info.Results);
             }

@@ -56,6 +56,11 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public Transition Transition { get; private set; }
 
+        public ComplexFragmentIon CloneTransition()
+        {
+            return ChangeProp(ImClone(this), im => im.Transition = (Transition) Transition.Copy());
+        }
+
         /// <summary>
         /// If true, this ion includes no amino acids from the parent peptide.
         /// </summary>
@@ -237,6 +242,12 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
             // TODO: TransitionQuantInfo is probably wrong since it did not know the correct mass.
             return new TransitionDocNode(complexFragmentIon, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
+        }
+
+        public TypedMass GetFragmentMass(SrmSettings settings, ExplicitMods explicitMods)
+        {
+            var neutralFormula = GetNeutralFormula(settings, explicitMods);
+            return GetFragmentMass(settings, neutralFormula);
         }
 
         public static TypedMass GetFragmentMass(SrmSettings settings, MoleculeMassOffset formula)
