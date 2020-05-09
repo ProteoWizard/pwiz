@@ -164,7 +164,8 @@ namespace TestPerf
                 PolishedProteins = 2465,
             };
 
-            TestTtofData();
+            if (!IsPauseForCoverShot)
+                TestTtofData();
         }
 
         private void TestTtofData()
@@ -219,7 +220,8 @@ namespace TestPerf
                 UnpolishedProteins = 7,
             };
 
-            TestQeData();
+            if (!IsPauseForCoverShot)
+                TestQeData();
         }
 
         [TestMethod]
@@ -252,7 +254,8 @@ namespace TestPerf
                 PolishedProteins = 2036,
             };
 
-            TestQeData();
+            if (!IsPauseForCoverShot)
+                TestQeData();
         }
        
         private void TestQeData()
@@ -303,6 +306,7 @@ namespace TestPerf
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsPauseForCoverShot = true;
+            CoverShotName = "DIA-SWATH";
 
             RunFunctionalTest();
 

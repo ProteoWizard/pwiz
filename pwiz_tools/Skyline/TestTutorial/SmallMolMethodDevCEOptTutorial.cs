@@ -55,6 +55,8 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsPauseForCoverShot = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "SmallMoleculeMethodDevCEOpt";
 
             ForceMzml = true; // Prefer mzML as being the more efficient download
             LinkPdf = "https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Small%20Molecule%20Method%20Dev%20and%20CE%20Opt.pdf";
