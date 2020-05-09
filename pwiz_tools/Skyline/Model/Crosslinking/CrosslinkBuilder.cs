@@ -53,9 +53,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 transitionQuantInfo = transitionQuantInfo.ChangeIsotopeDistInfo(new TransitionIsotopeDistInfo(
                     isotopeDist.GetRankI(complexFragmentIon.Transition.MassIndex), isotopeDist.GetProportionI(complexFragmentIon.Transition.MassIndex)));
             }
-            // TODO: TransitionQuantInfo is probably wrong since it did not know the correct mass.
             return new TransitionDocNode(complexFragmentIon, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
-
         }
 
         public MoleculeMassOffset GetNeutralFormula(ComplexFragmentIon complexFragmentIon)
@@ -256,7 +254,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public IEnumerable<TransitionDocNode> FilterTransitions(Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, IEnumerable<TransitionDocNode> transitions)
         {
-            if (transitionRanks == null)
+            if (transitionRanks == null || transitionRanks.Count == 0)
             {
                 return transitions;
             }

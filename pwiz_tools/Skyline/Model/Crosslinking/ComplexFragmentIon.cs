@@ -151,59 +151,14 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
+        public CrosslinkBuilder GetCrosslinkBuilder(SrmSettings settings, ExplicitMods explicitMods)
+        {
+            return new CrosslinkBuilder(settings, Transition.Group.Peptide, explicitMods, Transition.Group.LabelType);
+        }
+
         public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, ExplicitMods explicitMods)
         {
-            var result = GetSimpleFragmentFormula(settings, explicitMods);
-            if (explicitMods != null)
-            {
-                foreach (var explicitMod in explicitMods.StaticModifications)
-                {
-                    if (explicitMod.LinkedPeptide != null)
-                    {
-                        result = result.Plus(GetCrosslinkFormula(settings, explicitMod));
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Returns the chemical formula for this fragment and none of its children.
-        /// </summary>
-        private MoleculeMassOffset GetSimpleFragmentFormula(SrmSettings settings, ExplicitMods mods)
-        {
-            if (IsOrphan)
-            {
-                return MoleculeMassOffset.EMPTY;
-            }
-            var modifiedSequence = ModifiedSequence.GetModifiedSequence(settings, Transition.Group.Peptide.Sequence, mods, LabelType)
-                .SeverCrosslinks();
-            var fragmentedMolecule = FragmentedMolecule.EMPTY.ChangeModifiedSequence(modifiedSequence);
-            fragmentedMolecule = fragmentedMolecule.ChangeFragmentIon(Transition.IonType, Transition.Ordinal);
-            if (null != TransitionLosses)
-            {
-                fragmentedMolecule = fragmentedMolecule.ChangeFragmentLosses(TransitionLosses.Losses.Select(loss => loss.Loss));
-            }
-            return new MoleculeMassOffset(fragmentedMolecule.FragmentFormula, 0, 0);
-        }
-
-        /// <summary>
-        /// Returns the chemical formula of a the fragment ion linked to a particular crosslink modifacation.
-        /// </summary>
-        private MoleculeMassOffset GetCrosslinkFormula(SrmSettings settings, ExplicitMod explicitMod)
-        {
-            ComplexFragmentIon childFragmentIon;
-            if (!Children.TryGetValue(explicitMod.ModificationSite, out childFragmentIon))
-            {
-                return MoleculeMassOffset.EMPTY;
-            }
-            var result = MoleculeMassOffset.EMPTY;
-            var linkedPeptide = explicitMod.LinkedPeptide;
-            var childFormula =
-                childFragmentIon.GetNeutralFormula(settings, linkedPeptide.ExplicitMods);
-            result = result.Plus(childFormula);
-            return result;
+            return GetCrosslinkBuilder(settings, explicitMods).GetNeutralFormula(this);
         }
 
         public TransitionDocNode MakeTransitionDocNode(SrmSettings settings, ExplicitMods explicitMods, IsotopeDistInfo isotopeDist)
@@ -218,50 +173,12 @@ namespace pwiz.Skyline.Model.Crosslinking
             ExplicitTransitionValues explicitTransitionValues,
             Results<TransitionChromInfo> results)
         {
-            var neutralFormula = GetNeutralFormula(settings, explicitMods);
-            var productMass = GetFragmentMass(settings, neutralFormula);
-            var complexFragmentIon = this;
-            if (Children.Count > 0)
-            {
-                complexFragmentIon = ChangeProp(ImClone(complexFragmentIon),
-                    im => im.Transition = (Transition) im.Transition.Copy());
-            }
-
-            if (IsMs1 && settings.TransitionSettings.FullScan.IsHighResPrecursor)
-            {
-                if (isotopeDist == null)
-                {
-                    var massDistribution = FragmentedMolecule.Settings.FromSrmSettings(settings).GetMassDistribution(neutralFormula.Molecule, neutralFormula.MonoMassOffset, 0);
-                    var mzDistribution = massDistribution.OffsetAndDivide(
-                        Transition.Adduct.AdductCharge * BioMassCalc.MassProton, Transition.Adduct.AdductCharge);
-                    isotopeDist = IsotopeDistInfo.MakeIsotopeDistInfo(mzDistribution, productMass, Transition.Adduct, settings.TransitionSettings.FullScan);
-                }
-                productMass = isotopeDist.GetMassI(Transition.MassIndex, Transition.DecoyMassShift);
-                transitionQuantInfo = transitionQuantInfo.ChangeIsotopeDistInfo(new TransitionIsotopeDistInfo(
-                    isotopeDist.GetRankI(Transition.MassIndex), isotopeDist.GetProportionI(Transition.MassIndex)));
-            }
-            // TODO: TransitionQuantInfo is probably wrong since it did not know the correct mass.
-            return new TransitionDocNode(complexFragmentIon, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
+            return GetCrosslinkBuilder(settings, explicitMods).MakeTransitionDocNode(this, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
         }
 
         public TypedMass GetFragmentMass(SrmSettings settings, ExplicitMods explicitMods)
         {
-            var neutralFormula = GetNeutralFormula(settings, explicitMods);
-            return GetFragmentMass(settings, neutralFormula);
-        }
-
-        public static TypedMass GetFragmentMass(SrmSettings settings, MoleculeMassOffset formula)
-        {
-            var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(settings);
-            MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
-            if (massType.IsMonoisotopic())
-            {
-                return new TypedMass(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule) + formula.MonoMassOffset + BioMassCalc.MassProton, MassType.MonoisotopicMassH);
-            }
-            else
-            {
-                return new TypedMass(fragmentedMoleculeSettings.GetAverageMass(formula.Molecule) + formula.AverageMassOffset + BioMassCalc.MassProton, MassType.AverageMassH);
-            }
+            return GetCrosslinkBuilder(settings, explicitMods).GetFragmentMass(this);
         }
 
         /// <summary>
