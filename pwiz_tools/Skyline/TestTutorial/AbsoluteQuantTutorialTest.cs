@@ -51,6 +51,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsPauseForCoverShot = true;
+            CoverShotName = "AbsoluteQuant";
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
                                                     

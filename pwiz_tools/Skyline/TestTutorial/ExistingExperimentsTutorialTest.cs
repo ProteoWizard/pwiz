@@ -57,6 +57,7 @@ namespace pwiz.SkylineTestTutorial
 //            IsPauseForScreenShots = true;
 //            IsPauseForCoverShot = true;
 //            IsPauseForAuditLog = true;
+            CoverShotName = "ExistingQuant";
 
             ForceMzml = false;
 
@@ -70,6 +71,13 @@ namespace pwiz.SkylineTestTutorial
                     @"TestTutorial\ExistingExperimentsViews.zip"
                 };
             RunFunctionalTest();
+        }
+
+        protected override void ProcessCoverShot(Bitmap bmp)
+        {
+            var excelBmp = new Bitmap(TestContext.GetProjectDirectory(@"TestTutorial\ExistingQuant_excel.png"));
+            var graph = Graphics.FromImage(bmp);
+            graph.DrawImageUnscaled(excelBmp, bmp.Width - excelBmp.Width, bmp.Height - excelBmp.Height);
         }
 
         // Not L10N
@@ -599,6 +607,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Parent);
                 WaitForGraphs();
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
+                RunUI(SkylineWindow.FocusDocument);
                 PauseForCoverShot();
                 return;
             }

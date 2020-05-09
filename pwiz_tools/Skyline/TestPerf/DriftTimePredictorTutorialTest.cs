@@ -56,6 +56,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsPauseForCoverShot = true;
+            CoverShotName = "IMSFiltering";
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DriftTraining-3_1_1.pdf";
 //            LinkPdf = "file:///C:/Users/brend/Downloads/DriftTraining-3_1_1.pdf";

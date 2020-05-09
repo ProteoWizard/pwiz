@@ -75,6 +75,7 @@ namespace pwiz.SkylineTestTutorial
 //            IsPauseForScreenShots = true;
 //            PauseStartPage = 16;
 //            IsPauseForCoverShot = true;
+            CoverShotName = "AuditLog";
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
                                                     

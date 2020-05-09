@@ -1002,6 +1002,7 @@ namespace SkylineTester
 
                 // Tutorials
                 pauseTutorialsScreenShots,
+                pauseTutorialsCoverShots,
                 pauseTutorialsDelay,
                 pauseTutorialsSeconds,
                 tutorialsDemoMode,
