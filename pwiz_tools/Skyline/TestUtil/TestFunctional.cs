@@ -1153,7 +1153,7 @@ namespace pwiz.SkylineTestUtil
             {
                 // Screenshot for the StartPage
                 coverSavePath = GetCoverShotPath(TestContext.GetProjectDirectory(@"Resources\StartPage"), "_start");
-                ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath, ProcessCoverShot, 0.133333);
+                ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath, ProcessCoverShot, 0.20);
             }
             if (coverSavePath == null)
                 PauseTest("Cover shot at 1200 x 800");
