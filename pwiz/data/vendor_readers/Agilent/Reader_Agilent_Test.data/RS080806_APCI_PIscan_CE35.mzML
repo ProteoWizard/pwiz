@@ -74,7 +74,7 @@
     <software id="MassHunter" version="8.0">
       <cvParam cvRef="MS" accession="MS:1000678" name="MassHunter Data Acquisition" value=""/>
     </software>
-    <software id="pwiz" version="3.0.19304">
+    <software id="pwiz" version="3.0.20071">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -9295,7 +9295,7 @@
     <chromatogramList count="1" defaultDataProcessingRef="pwiz_Reader_Agilent_conversion">
       <chromatogram index="0" id="TIC" defaultArrayLength="170">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="884">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -9307,6 +9307,12 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJwtkk1LVVEYhRcENgoaOGh4pH8QREaTOzj7nJk0q+EWAkEnF6ScRGxo4lgJByIcQ6OQyI+rEIjuQsxIK+vqDTXd4UdW9A8a9Gy3g8X7tdb7nr3u1fM5I99tFOrgkVG2nct/yBW+5Kp9zlXFfI18lXwt1Rnw1P4daDLfox+IJ+AI/IB/kMsR7U/4f4h/6f0CcBw9+xvNMfpD5lEXeWjdaS7FHd+p4x7mtXtGd1Xo5HGhrlahvYuldjtK3b9WqvdGqUu3StWvl1q+WurOhVJtC4U6HxYabC9kJ4xuD4CbRvUOo8tXjGr/uLHBrU/caHGLaHlH1Uzv8Zv0vuZnXoQdeHyLeGO2ywy+xZcamooYPpKzS+vU+GHxxtGzsX6PJgIvXdz1DT07xG5tgWa64VqprlrnvuGl52aI99Bk8FzcG/e/pV4in2P+DM0kILoX7ADuJf0ZdAtgkRl8/wadZ/4aNMhfJb6fID5l3xh3R8mHwBM0IIzAG6YmhvF0y09TN1LMYj4LZ54Ze10Et9xq8tbiQYi+4GVG9PiglfQ9kXPmE75UvNvuw91PUf1G0w+M1MN/sY/fjf+lmzL/Aar89iU=</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="170" encodedLength="24">
+            <cvParam cvRef="MS" accession="MS:1000519" name="32-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjYmBgYBrFo3iQYwDI7wFV</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

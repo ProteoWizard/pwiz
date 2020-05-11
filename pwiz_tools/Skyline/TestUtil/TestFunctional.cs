@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -114,7 +115,7 @@ namespace pwiz.SkylineTestUtil
         protected bool ForceMzml
         {
             get { return _forcMzml; }
-            set { _forcMzml = value && !IsPauseForScreenShots; }    // Don't force mzML during screenshots
+            set { _forcMzml = value && !IsPauseForScreenShots && !IsPauseForCoverShot; }    // Don't force mzML during screenshots
         }
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
@@ -992,7 +993,7 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsPauseForScreenShots
         {
-            get { return _isPauseForScreenShots || Program.PauseSeconds != 0; }
+            get { return _isPauseForScreenShots || Program.PauseSeconds == -1; }
             set
             {
                 _isPauseForScreenShots = value;
@@ -1001,6 +1002,44 @@ namespace pwiz.SkylineTestUtil
                     Program.PauseSeconds = -1;
                 }
             }
+        }
+
+        private static bool _isPauseForCoverShot;
+
+        public bool IsPauseForCoverShot
+        {
+            get { return _isPauseForCoverShot || Program.PauseSeconds == -2; }
+            set
+            {
+                _isPauseForCoverShot = value;
+                if (_isPauseForCoverShot)
+                {
+                    Program.PauseSeconds = -2;
+                }
+            }
+        }
+
+        public bool IsSavingCoverShots
+        {
+            get { return /* CoverShotName != null*/ false; }
+        }
+        public string CoverShotName { get; set; }
+
+        private string GetCoverShotPath(string folderPath = null, string suffix = null)
+        {
+            if (!IsSavingCoverShots)
+                return null;
+
+            if (folderPath == null)
+                folderPath = Path.Combine(PathEx.GetDownloadsPath(), "covershots");
+            if (suffix == null)
+                suffix = string.Format("-{0}_{1}", Install.MajorVersion, Install.MinorVersion);
+            string cultureSuffix = CultureInfo.CurrentCulture.Name;
+            if (Equals(cultureSuffix, "en"))
+                cultureSuffix = string.Empty;
+            else
+                cultureSuffix = "-" + cultureSuffix;
+            return Path.Combine(folderPath, CoverShotName + suffix + cultureSuffix + ".png");
         }
 
         public int PauseStartPage { get; set; }
@@ -1033,7 +1072,7 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsPass0 { get { return Program.IsPassZero; } }
 
-        public bool IsFullData { get { return IsPauseForScreenShots || IsDemoMode || IsPass0; } }
+        public bool IsFullData { get { return IsPauseForScreenShots || IsPauseForCoverShot || IsDemoMode || IsPass0; } }
 
         public static bool IsCheckLiveReportsCompatibility { get; set; }
 
@@ -1098,6 +1137,26 @@ namespace pwiz.SkylineTestUtil
             {
                 PauseForForm(formType);
             }
+        }
+
+        protected virtual void ProcessCoverShot(Bitmap bmp)
+        {
+            // Override to modify the cover shot before it is saved or put on the clipboard
+        }
+
+        public void PauseForCoverShot()
+        {
+            Thread.Sleep(1000); // Give windows time to repaint
+            var coverSavePath = GetCoverShotPath();
+            ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath, ProcessCoverShot);
+            if (coverSavePath != null)
+            {
+                // Screenshot for the StartPage
+                coverSavePath = GetCoverShotPath(TestContext.GetProjectDirectory(@"Resources\StartPage"), "_start");
+                ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath, ProcessCoverShot, 0.20);
+            }
+            if (coverSavePath == null)
+                PauseTest("Cover shot at 1200 x 800");
         }
 
         public void PauseForAuditLog()
@@ -1535,7 +1594,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     SkylineWindow.UseKeysOverride = true;
                     SkylineWindow.AssumeNonNullModificationAuditLogging = true;
-                    if (IsPauseForScreenShots)
+                    if (IsPauseForScreenShots || IsPauseForCoverShot)
                     {
                         // Screenshots should be taken with release icon and "Skyline" in the window title
                         SkylineWindow.Icon = Resources.Skyline_Release1;
@@ -1713,8 +1772,29 @@ namespace pwiz.SkylineTestUtil
 
         public void RestoreViewOnScreen(int pageNum)
         {
+            RestoreViewNameOnScreen(string.Format(@"p{0:0#}", pageNum));
+        }
+
+        public void RestoreCoverViewOnScreen(bool hasSavedView = true)
+        {
+            if (hasSavedView)
+                RestoreViewNameOnScreen("cover");
+            // Make sure Skyline is the standard size for a cover shot - Window size and screen shot size differ
+            // And center it in the screen to have the best chance of not needing to move it before Alt-PtrSc
+            RunUI(() =>
+            {
+                var skylineSize = new Size(1200 + 14, 800 + 7);
+                var screenRect = Screen.FromControl(SkylineWindow).Bounds;
+                var skylineLocation = new Point(screenRect.Left + screenRect.Width / 2 - skylineSize.Width / 2,
+                    screenRect.Top + screenRect.Height / 2 - skylineSize.Height / 2);
+                SkylineWindow.Bounds = new Rectangle(skylineLocation, skylineSize);
+            });
+        }
+
+        private void RestoreViewNameOnScreen(string name)
+        {
             var viewsDir = TestFilesDirs.First(dir => dir.FullPath.EndsWith("Views"));
-            RestoreViewOnScreen(viewsDir.GetTestPath(string.Format(@"p{0:0#}.view", pageNum)));
+            RestoreViewOnScreen(viewsDir.GetTestPath(name + ".view"));
         }
 
         public void RestoreViewOnScreen(string viewFilePath)
