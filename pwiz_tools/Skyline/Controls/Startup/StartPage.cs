@@ -440,7 +440,7 @@ namespace pwiz.Skyline.Controls.Startup
             {
                 new Label
                 {
-                    Text = TutorialTextResources.StartPage_PopulateTutorialPanel_Advanced_Topics,
+                    Text = TutorialTextResources.Section_Advanced_Topics,
                     Font = labelFont,
                     Anchor = labelAnchor,
                     Width = labelWidth
