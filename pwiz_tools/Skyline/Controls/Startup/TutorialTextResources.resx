@@ -218,7 +218,7 @@
   <data name="HiResMetabolomics_Caption" xml:space="preserve">
     <value>Hi-Res Metabolomics</value>
   </data>
-  <data name="StartPage_PopulateTutorialPanel_Advanced_Topics" xml:space="preserve">
+  <data name="Section_Advanced_Topics" xml:space="preserve">
     <value>Advanced Topics</value>
   </data>
   <data name="SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">

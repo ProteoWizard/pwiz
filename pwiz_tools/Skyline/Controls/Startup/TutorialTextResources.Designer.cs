@@ -349,6 +349,15 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Advanced Topics.
+        /// </summary>
+        internal static string Section_Advanced_Topics {
+            get {
+                return ResourceManager.GetString("Section_Advanced_Topics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Full-Scan Acquisition Data.
         /// </summary>
         internal static string Section_Full_Scan_Acquisition_Data {
@@ -426,15 +435,6 @@ namespace pwiz.Skyline.Controls.Startup {
         internal static string SmallMoleculeQuantification_Description {
             get {
                 return ResourceManager.GetString("SmallMoleculeQuantification_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Advanced Topics.
-        /// </summary>
-        internal static string StartPage_PopulateTutorialPanel_Advanced_Topics {
-            get {
-                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Advanced_Topics", resourceCulture);
             }
         }
         
