@@ -80,7 +80,9 @@ namespace pwiz.SkylineTestTutorial
         public void DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "TargetedMSMS";
 
             if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
             {
@@ -116,7 +118,8 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             LowResTest();
-            TofTest();
+            if (!IsPauseForCoverShot)
+                TofTest();
         }
 
         private void LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode asSmallMoleculesTestMode, string documentFile)
@@ -440,8 +443,8 @@ namespace pwiz.SkylineTestTutorial
 
             const int expectedMoleculeCount = 9;
             const int expectedTransitionGroupCount = 10; // Expect this many with results
-            var expected20TransitionCount = AsSmallMolecules ? 87 : 88; // Expect this many with results
-            var expected80TransitionCount = AsSmallMolecules ? 88 : 87;
+            var expected20TransitionCount = AsSmallMolecules || UseRawFiles ? 87 : 88; // Expect this many with results
+            var expected80TransitionCount = AsSmallMolecules ? 88 : UseRawFiles ? 86 : 87;
 
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expected20TransitionCount, 0);
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes80FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expected80TransitionCount, 0);
@@ -518,7 +521,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 {
                     SkylineWindow.ShowAllTransitions();
-                    SkylineWindow.ShowSplitChromatogramGraph(true);                    
+                    if (!IsPauseForCoverShot)
+                        SkylineWindow.ShowSplitChromatogramGraph(true);                    
                 });
 
             // p. 16 screenshot of full 5-point dilution curve
@@ -530,6 +534,28 @@ namespace pwiz.SkylineTestTutorial
                 FindNode(Resources.CustomMolecule_DisplayName_Molecule + " [1045");
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Replicate Comparison graph metafile with split graphs", 24);
+
+            if (IsPauseForCoverShot)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    SkylineWindow.ShowChromatogramLegends(false);
+                });
+
+                RestoreCoverViewOnScreen();
+                TreeNode selectedNode = null;
+                RunUI(() => selectedNode = SkylineWindow.SequenceTree.SelectedNode);
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
+                RunUI(() => selectedNode.Nodes[0].Expand());
+                PauseForCoverShot();
+                return;
+            }
+
             RunUI(() =>
             {
                 SkylineWindow.Size = new Size(990, 620);
