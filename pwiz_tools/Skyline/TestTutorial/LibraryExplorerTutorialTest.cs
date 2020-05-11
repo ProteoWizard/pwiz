@@ -43,7 +43,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestLibraryExplorerTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "LibraryExplorer";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/LibraryExplorer-1_4.pdf";
 
@@ -173,6 +175,8 @@ namespace pwiz.SkylineTestTutorial
                     viewLibraryDlg.SetBounds(SkylineWindow.Left, SkylineWindow.Top, SkylineWindow.Width, SkylineWindow.Height);
                 });
                 PauseForCoverShot();
+
+                OkDialog(viewLibraryDlg, viewLibraryDlg.CancelDialog);
                 return;
             }
             // Adding Library Peptides to the Document p. 11

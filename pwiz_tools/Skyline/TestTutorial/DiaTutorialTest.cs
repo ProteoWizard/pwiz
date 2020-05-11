@@ -65,6 +65,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsPauseForCoverShot = true;
+            CoverShotName = "DIA";
 
             LinkPdf = "https://skyline.gs.washington.edu/tutorials/DIA-2_6.pdf";
 

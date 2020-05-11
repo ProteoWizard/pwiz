@@ -57,8 +57,9 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
 //            IsPauseForAuditLog = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "MethodEdit";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-3_7.pdf";
             

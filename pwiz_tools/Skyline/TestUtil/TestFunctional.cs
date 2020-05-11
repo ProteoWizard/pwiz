@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestUtil
         protected bool ForceMzml
         {
             get { return _forcMzml; }
-            set { _forcMzml = value && !IsPauseForScreenShots; }    // Don't force mzML during screenshots
+            set { _forcMzml = value && !IsPauseForScreenShots && !IsPauseForCoverShot; }    // Don't force mzML during screenshots
         }
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
@@ -1019,6 +1019,29 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public bool IsSavingCoverShots
+        {
+            get { return /* CoverShotName != null*/ false; }
+        }
+        public string CoverShotName { get; set; }
+
+        private string GetCoverShotPath(string folderPath = null, string suffix = null)
+        {
+            if (!IsSavingCoverShots)
+                return null;
+
+            if (folderPath == null)
+                folderPath = Path.Combine(PathEx.GetDownloadsPath(), "covershots");
+            if (suffix == null)
+                suffix = string.Format("-{0}_{1}", Install.MajorVersion, Install.MinorVersion);
+            string cultureSuffix = CultureInfo.CurrentCulture.Name;
+            if (Equals(cultureSuffix, "en"))
+                cultureSuffix = string.Empty;
+            else
+                cultureSuffix = "-" + cultureSuffix;
+            return Path.Combine(folderPath, CoverShotName + suffix + cultureSuffix + ".png");
+        }
+
         public int PauseStartPage { get; set; }
 
         public static bool IsPauseForAuditLog { get; set; }
@@ -1116,11 +1139,24 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        protected virtual void ProcessCoverShot(Bitmap bmp)
+        {
+            // Override to modify the cover shot before it is saved or put on the clipboard
+        }
+
         public void PauseForCoverShot()
         {
             Thread.Sleep(1000); // Give windows time to repaint
-            ScreenshotManager.TakeNextShot(SkylineWindow);
-            PauseTest("Cover shot at 1200 x 800");
+            var coverSavePath = GetCoverShotPath();
+            ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath, ProcessCoverShot);
+            if (coverSavePath != null)
+            {
+                // Screenshot for the StartPage
+                coverSavePath = GetCoverShotPath(TestContext.GetProjectDirectory(@"Resources\StartPage"), "_start");
+                ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath, ProcessCoverShot, 0.20);
+            }
+            if (coverSavePath == null)
+                PauseTest("Cover shot at 1200 x 800");
         }
 
         public void PauseForAuditLog()
