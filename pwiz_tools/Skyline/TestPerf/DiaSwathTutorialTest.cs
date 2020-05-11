@@ -938,7 +938,7 @@ namespace TestPerf
                         fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
                     });
                     PauseForCoverShot();
-                }-
+                }
             }
         }
 
