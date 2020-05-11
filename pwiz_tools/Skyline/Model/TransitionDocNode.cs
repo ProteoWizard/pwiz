@@ -964,10 +964,10 @@ namespace pwiz.Skyline.Model
         {
             public static readonly TransitionQuantInfo DEFAULT = new TransitionQuantInfo(null, null, true);
             private bool _notQuantitative;
-            public static TransitionQuantInfo GetTransitionQuantInfo(Transition transition, TransitionLosses losses, IsotopeDistInfo isotopeDist, TypedMass massH, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> ranks)
+            public static TransitionQuantInfo GetTransitionQuantInfo(ComplexFragmentIon complexFragmentIon, IsotopeDistInfo isotopeDist, TypedMass massH, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> ranks)
             {
-                var transitionIsotopeDistInfo = GetIsotopeDistInfo(transition, losses, isotopeDist);
-                return GetLibTransitionQuantInfo(transition, losses, massH, ranks).ChangeIsotopeDistInfo(transitionIsotopeDistInfo);
+                var transitionIsotopeDistInfo = complexFragmentIon.IsMs1 ? GetIsotopeDistInfo(complexFragmentIon.Transition, complexFragmentIon.TransitionLosses, isotopeDist) : null;
+                return GetLibTransitionQuantInfo(complexFragmentIon.Transition, complexFragmentIon.TransitionLosses, massH, ranks).ChangeIsotopeDistInfo(transitionIsotopeDistInfo);
             }
 
             public static TransitionQuantInfo GetLibTransitionQuantInfo(Transition transition, TransitionLosses losses, TypedMass massH,

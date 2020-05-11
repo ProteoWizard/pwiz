@@ -957,7 +957,7 @@ namespace pwiz.Skyline.Model
                             var losses = nodeTranResult.Losses;
                             TypedMass massH = settingsNew.RecalculateTransitionMass(mods, nodeTran, isotopeDist);
                             var quantInfo = TransitionDocNode.TransitionQuantInfo
-                                .GetTransitionQuantInfo(tran, losses, isotopeDist, Transition.CalcMass(massH, losses), transitionRanks)
+                                .GetTransitionQuantInfo(nodeTranResult.ComplexFragmentIon, isotopeDist, Transition.CalcMass(massH, losses), transitionRanks)
                                 .UseValuesFrom(nodeTranResult.QuantInfo);
                             if (!ReferenceEquals(quantInfo.LibInfo, nodeTranResult.LibInfo))
                                 dotProductChange = true;
@@ -1060,7 +1060,7 @@ namespace pwiz.Skyline.Model
                         if (!TransitionDocNode.IsValidIsotopeTransition(tran, isotopeDist))
                             continue;
                         var massH = settingsNew.RecalculateTransitionMass(mods, nodeTransition, isotopeDist);
-                        var quantInfo = TransitionDocNode.TransitionQuantInfo.GetTransitionQuantInfo(tran, losses, isotopeDist,
+                        var quantInfo = TransitionDocNode.TransitionQuantInfo.GetTransitionQuantInfo(nodeTransition.ComplexFragmentIon, isotopeDist,
                             Transition.CalcMass(massH, losses), transitionRanks).UseValuesFrom(nodeTransition.QuantInfo);
                         if (!ReferenceEquals(quantInfo.LibInfo, nodeTransition.LibInfo))
                             dotProductChange = true;
@@ -1129,74 +1129,8 @@ namespace pwiz.Skyline.Model
                 return simpleTransitions;
             }
             var crosslinkBuilder = new CrosslinkBuilder(settings, TransitionGroup.Peptide, mods, LabelType);
-            var transitions = RemoveUnmeasurable(settings, RemoveDuplicates(
-                crosslinkBuilder.GetComplexTransitions(TransitionGroup, isotopeDist, simpleTransitions, useFilter))).ToList();
-            IList<TransitionDocNode> ms2transitions;
-            IList<TransitionDocNode> ms1transitions;
-            if (settings.TransitionSettings.FullScan.IsEnabledMs)
-            {
-                ms2transitions = transitions.Where(tran => !tran.IsMs1).ToList();
-                ms1transitions = transitions.Where(tran => tran.IsMs1).ToList();
-                if (settings.TransitionSettings.FullScan.IsHighResPrecursor)
-                {
-                    ms1transitions = ms1transitions.SelectMany(tran =>
-                        crosslinkBuilder.ExpandPrecursorIsotopes(tran, isotopeDist, useFilter)).ToList();
-                }
-            }
-            else
-            {
-                ms2transitions = transitions;
-                ms1transitions = new TransitionDocNode[0];
-            }
-
-            if (useFilter)
-            {
-                if (!settings.TransitionSettings.Filter.PeptideIonTypes.Contains(IonType.precursor))
-                {
-                    ms1transitions = new TransitionDocNode[0];
-                }
-
-                ms2transitions = crosslinkBuilder.FilterTransitions(transitionRanks, ms2transitions).ToList();
-            }
-
-            return ms1transitions.Concat(ms2transitions);
-        }
-
-        public IEnumerable<TransitionDocNode> RemoveDuplicates(IEnumerable<TransitionDocNode> transitions)
-        {
-            var keys = new HashSet<TransitionLossKey>();
-            foreach (var transition in transitions)
-            {
-                var key = transition.Key(this);
-                if (keys.Add(key))
-                {
-                    yield return transition;
-                }
-            }
-        }
-
-        public IEnumerable<TransitionDocNode> RemoveUnmeasurable(SrmSettings settings, IEnumerable<TransitionDocNode> transitions)
-        {
-            var instrumentSettings = settings.TransitionSettings.Instrument;
-            foreach (var transition in transitions)
-            {
-                if (transition.ComplexFragmentIon.IsMs1)
-                {
-                    if (!instrumentSettings.IsMeasurable(transition.Mz))
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (!instrumentSettings.IsMeasurable(transition.Mz, PrecursorMz))
-                    {
-                        continue;
-                    }
-                }
-
-                yield return transition;
-            }
+            return crosslinkBuilder.GetComplexTransitions(TransitionGroup, precursorMz, isotopeDist, transitionRanks,
+                simpleTransitions, useFilter);
         }
 
         public DocNode EnsureChildren(PeptideDocNode parent, ExplicitMods mods, SrmSettings settings)
