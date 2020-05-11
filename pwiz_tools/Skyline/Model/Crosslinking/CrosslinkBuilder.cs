@@ -5,7 +5,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
@@ -91,7 +90,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 return moleculeMassOffset;
             }
 
-            var fragmentedMolecule = GetPrecursorMolecule().ChangeFragmentIon(complexFragmentIon.Transition.IonType, complexFragmentIon.Transition.Ordinal);
+            var fragmentedMolecule = GetSimplePrecursorMolecule().ChangeFragmentIon(complexFragmentIon.Transition.IonType, complexFragmentIon.Transition.Ordinal);
             if (null != complexFragmentIon.TransitionLosses)
             {
                 fragmentedMolecule = fragmentedMolecule.ChangeFragmentLosses(complexFragmentIon.TransitionLosses.Losses.Select(loss => loss.Loss));
@@ -102,7 +101,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
 
         private FragmentedMolecule _precursorMolecule;
-        public FragmentedMolecule GetPrecursorMolecule()
+        public FragmentedMolecule GetSimplePrecursorMolecule()
         {
             if (_precursorMolecule == null)
             {
@@ -145,7 +144,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public TypedMass GetPrecursorMass(MassType massType)
         {
-            var formula = GetPrecursorMolecule().PrecursorFormula;
+            var formula = GetPrecursorFormula();
             var fragmentedMoleculeSettings = GetFragmentedMoleculeSettings();
             double mass = massType.IsMonoisotopic()
                 ? fragmentedMoleculeSettings.GetMonoMass(formula)
@@ -160,10 +159,24 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(Settings);
                 _precursorMassDistribution = fragmentedMoleculeSettings
-                    .GetMassDistribution(GetPrecursorMolecule().PrecursorFormula, 0, 0);
+                    .GetMassDistribution(GetPrecursorFormula().Molecule, 0, 0);
             }
 
             return _precursorMassDistribution;
+        }
+
+        public MoleculeMassOffset GetPrecursorFormula()
+        {
+            var moleculeMassOffset = new MoleculeMassOffset(GetSimplePrecursorMolecule().PrecursorFormula);
+            if (ExplicitMods != null)
+            {
+                foreach (var child in ExplicitMods.Crosslinks.Keys)
+                {
+                    moleculeMassOffset = moleculeMassOffset.Plus(GetChildBuilder(child).GetPrecursorFormula());
+                }
+            }
+
+            return moleculeMassOffset;
         }
 
         public FragmentedMolecule.Settings GetFragmentedMoleculeSettings()

@@ -56,6 +56,10 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public Transition Transition { get; private set; }
 
+        /// <summary>
+        /// Returns a new ComplexFragmentIon where the Transition has been cloned (i.e. the Transition has a different GlobalIndex value).
+        /// </summary>
+        /// <returns></returns>
         public ComplexFragmentIon CloneTransition()
         {
             return ChangeProp(ImClone(this), im => im.Transition = (Transition) Transition.Copy());
@@ -116,6 +120,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             return ChangeProp(ImClone(this), im => im.Transition = transition);
         }
 
+        /// <summary>
+        /// Returns the number of peptides that need to have fragmented in order to produce this crosslinked ion.
+        /// </summary>
         public int GetFragmentationEventCount()
         {
             int count = 0;
@@ -154,11 +161,6 @@ namespace pwiz.Skyline.Model.Crosslinking
         public CrosslinkBuilder GetCrosslinkBuilder(SrmSettings settings, ExplicitMods explicitMods)
         {
             return new CrosslinkBuilder(settings, Transition.Group.Peptide, explicitMods, Transition.Group.LabelType);
-        }
-
-        public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, ExplicitMods explicitMods)
-        {
-            return GetCrosslinkBuilder(settings, explicitMods).GetNeutralFormula(this);
         }
 
         public TransitionDocNode MakeTransitionDocNode(SrmSettings settings, ExplicitMods explicitMods, IsotopeDistInfo isotopeDist)

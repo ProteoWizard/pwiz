@@ -520,6 +520,11 @@ namespace pwiz.Skyline.Model
                 return totalMass;
             }
 
+            public double GetMonoMass(MoleculeMassOffset moleculeMassOffset)
+            {
+                return GetMonoMass(moleculeMassOffset.Molecule) + moleculeMassOffset.MonoMassOffset;
+            }
+
             public double GetAverageMass(Molecule molecule)
             {
                 double totalMass = 0;
@@ -529,6 +534,11 @@ namespace pwiz.Skyline.Model
                 }
 
                 return totalMass;
+            }
+
+            public double GetAverageMass(MoleculeMassOffset moleculeMassOffset)
+            {
+                return GetAverageMass(moleculeMassOffset.Molecule) + moleculeMassOffset.AverageMassOffset;
             }
 
             public MoleculeMassOffset ReplaceMoleculeWithMassOffset(MoleculeMassOffset moleculeMassOffset)

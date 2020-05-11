@@ -580,6 +580,7 @@ namespace pwiz.Skyline.Model
 
         public static TransitionDocNode FromTransitionProto(AnnotationScrubber scrubber, SrmSettings settings,
             TransitionGroup group, ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues,
+            CrosslinkBuilder crosslinkBuilder,
             SkylineDocumentProto.Types.Transition transitionProto)
         {
             var stringPool = scrubber.StringPool;
@@ -668,6 +669,7 @@ namespace pwiz.Skyline.Model
             if (mods != null && mods.HasCrosslinks)
             {
                 ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, losses, mods.Crosslinks, transitionProto.OrphanedCrosslinkIon);
+                crosslinkBuilder = crosslinkBuilder ?? complexFragmentIon.GetCrosslinkBuilder(settings, mods);
                 foreach (var linkedIon in transitionProto.LinkedIons)
                 {
                     var modificationSite = new ModificationSite(linkedIon.ModificationIndex, linkedIon.ModificationName);
@@ -676,7 +678,7 @@ namespace pwiz.Skyline.Model
                     complexFragmentIon = complexFragmentIon.AddChild(modificationSite,
                         linkedPeptide.MakeComplexFragmentIon(group.LabelType, childName));
                 }
-                transitionDocNode = complexFragmentIon.MakeTransitionDocNode(settings, mods, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
+                transitionDocNode = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
             }
             else
             {

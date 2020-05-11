@@ -1347,6 +1347,7 @@ namespace pwiz.Skyline.Model.Serialization
             var group = nodeGroup.TransitionGroup;
             var isotopeDist = nodeGroup.IsotopeDist;
             var list = new List<TransitionDocNode>();
+            CrosslinkBuilder crosslinkBuilder = new CrosslinkBuilder(Settings, nodeGroup.Peptide, mods, nodeGroup.LabelType);
             if (reader.IsStartElement(EL.transition_data))
             {
                 string strContent = reader.ReadElementString();
@@ -1355,13 +1356,13 @@ namespace pwiz.Skyline.Model.Serialization
                 transitionData.MergeFrom(data);
                 foreach (var transitionProto in transitionData.Transitions)
                 {
-                    list.Add(TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, transitionProto));
+                    list.Add(TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto));
                 }
             }
             else
             {
                 while (reader.IsStartElement(EL.transition))
-                    list.Add(ReadTransitionXml(reader, group, mods, isotopeDist, pre422ExplicitTransitionValues));
+                    list.Add(ReadTransitionXml(reader, group, mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder));
             }
             return list.ToArray();
         }
@@ -1377,7 +1378,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// <param name="pre422ExplicitTransitionValues">Items that may have been saved at precursor level in older formats</param>
         /// <returns>A new <see cref="TransitionDocNode"/></returns>
         private TransitionDocNode ReadTransitionXml(XmlReader reader, TransitionGroup group,
-            ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues)
+            ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues, CrosslinkBuilder crosslinkBuilder)
         {
             TransitionInfo info = new TransitionInfo(this);
 
@@ -1481,7 +1482,6 @@ namespace pwiz.Skyline.Model.Serialization
                         linkedPeptide.MakeComplexFragmentIon(group.LabelType, linkedIon.Value));
                 }
 
-                var crosslinkBuilder = new CrosslinkBuilder(Settings, group.Peptide, mods, group.LabelType);
                 node = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, info.Annotations,
                     quantInfo, info.ExplicitValues, info.Results);
             }
