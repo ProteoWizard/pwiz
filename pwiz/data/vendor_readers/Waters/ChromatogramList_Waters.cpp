@@ -122,7 +122,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             if (detailLevel < DetailLevel_FullMetadata)
                 return result;
 
-            map<double, double> fullFileTIC;
+            multimap<double, pair<int, double>> fullFileTIC;
 
             for(int function : rawdata_->FunctionIndexList())
             {
@@ -162,7 +162,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
                 const vector<float>& times = rawdata_->TimesByFunctionIndex()[function];
                 const vector<float>& intensities = rawdata_->TicByFunctionIndex()[function];
                 for (int i = 0, end = intensities.size(); i < end; ++i)
-                    fullFileTIC[times[i]] += intensities[i];
+                    fullFileTIC.insert(make_pair(times[i], make_pair(function+1, intensities[i])));
             }
 
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
@@ -172,14 +172,18 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
                 BinaryDataArrayPtr timeArray = result->getTimeArray();
                 BinaryDataArrayPtr intensityArray = result->getIntensityArray();
 
+                auto functionArray = boost::make_shared<IntegerDataArray>();
+                result->integerDataArrayPtrs.emplace_back(functionArray);
+                functionArray->set(MS_non_standard_data_array, "function", UO_dimensionless_unit);
+                functionArray->data.reserve(fullFileTIC.size());
+
                 timeArray->data.reserve(fullFileTIC.size());
                 intensityArray->data.reserve(fullFileTIC.size());
-                for (map<double, double>::iterator itr = fullFileTIC.begin();
-                     itr != fullFileTIC.end();
-                     ++itr)
+                for (auto itr = fullFileTIC.begin(); itr != fullFileTIC.end(); ++itr)
                 {
                     timeArray->data.push_back(itr->first);
-                    intensityArray->data.push_back(itr->second);
+                    intensityArray->data.push_back(itr->second.second);
+                    functionArray->data.push_back(itr->second.first);
                 }
             }
 

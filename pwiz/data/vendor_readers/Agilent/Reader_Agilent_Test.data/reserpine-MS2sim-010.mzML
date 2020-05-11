@@ -73,7 +73,7 @@
     <software id="MassHunter" version="8.0">
       <cvParam cvRef="MS" accession="MS:1000678" name="MassHunter Data Acquisition" value=""/>
     </software>
-    <software id="pwiz" version="3.0.19304">
+    <software id="pwiz" version="3.0.20071">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -112,7 +112,7 @@
     <chromatogramList count="2" defaultDataProcessingRef="pwiz_Reader_Agilent_conversion">
       <chromatogram index="0" id="TIC" defaultArrayLength="869">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="4136">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -124,6 +124,12 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJxNV8uKZEUQTRHd6KJdCAoKiSCCIOpCRBBMta5rPyE/YT4hP8FPyE/wgW/ExBlnuru6nl1VXd3O6PWxEHExggsFF54TcXKqF0Fm3spHPE6ciAptOgntr0kYzyYhLDBCMuen+I6xcH4b329NQrqJb5CMdb2DbxjDCb5h3k79XJrh28zHyPuWWM8xhxS8lbAnnvnejDMjJOpsw568wjdIWGP/2s8/uIe6zX2kbhFvjFgnrAP3QRrmhePSz1Ss65mf4xnOK87lmXTRef6epHfRXupJ/eiLSjtP3F7qW2F7oQ8gBfPG9TG+Q8qJn6Pv0lS2wZZwju+UDeY7jJC8x/wHyF3sucD5Lc7B/sR9a5/TFuoZp/L1seZ4J0/dr/R/kT8azmbes/G5rZfu28Rx4fbXqWzUuvs6CwcR79eV68x48I5xpthRh++x/hbvfI3fP8M7H+N+SPkIv2Nsn2CEhM8hX+E3ypc48wVGSMX38ikEY8IYcUeFjFhX7Gu4d/wG8+8ce/WWS77j8TDbZy6MF22vS/mOtq4cC8RFlC+JnTT3M4w/7SaODPtTxy7jT1ur4sDYVYxxI79C6s5jyN8j1hnzAmkb30vsMm7EVlIOUF/qnoCVxPHU48YYWM5w/1r6S6g3banCdJX+1K8shPOFzy0+c48h3+M8rBR77p15/Pgb8yBpHzmAeCUeuId7mSPmD+VO0v1RuthZ+Ydv17nrlmVvVN6RV1rHpfKOeWF3z4U18UOW/bS3CHu8s/MB/crfg+IQmT/Mmb3HJGz9HHFPPmidK+bCPf2J/fFH7PkV45+4+2+c/28Sjh4ZwgePDeH+0RA+fAry7BBeeR7rF4dQXx7C+Bq+vTGEG28O4ehtzCdDyO8NYfkO5F3MsT6C3MD6/ltYY9/7r+Mbzi1fxfol3PEC3ngO62cgT+OOJ/HGE5g/PoSIt5ePYs/DQ0gP4XvAt3+h4z/QFToWcHSBvuUP2EP5Hbb9Bv1/gW2wp93DHBwSMdYrjHvHaCImMR8vnW/azvEaJOZH4nntWCPGkziDfo6M77n73vafH7jMOAz+zJf+Rsa7iXNIBKdFfQ98ey+u2/n+hL1h75zHb7w7ia/IgXy3Cgdt67lVL/xOnqc9iW9c+bvEgemyczyQU80nV+6fIh/VEfOfcQ6+CheOJ/ICOYBcHZgLx17fyPNJPFGF1Swc9XzsuVWVh/QjeSf239buP2KS+tEP9EnB+5U6/YRvGMd7LoxduXQ/0hZ7S3FknBibpJiZrzbuG8Yjas28KJ2Dzp3Xm3iccayql2a7OCWrzvS8r+JI5v64OvAp7QrigSAusLxcqVZthJut51oQPqh/Uny4p6k+jeKRIO7iu6zhSf1BVs9AfrQap5pLicceM/IWOTGoFtDeUfaaDzeOragx9zzY+Nuj8EwfRdVIq3+ys8hW5kdWHnRMNknSO5YjG38/qmZY/Tw/1Ias++j7or4mCFtteThb5MdR9Yz6VdVh89fZAbfk7zQ/cDz9QF/SNtMLmEt77z2yeosHebUTZ+ru0vNOXEvMZfGyzWWT4W/t/iqql01+jp2XxQXtrvc4BRgvV57/41b66XxTjrE+sCZl9Se0qak/a71+KT4Wa8WFOlbVXYvrzPdwL2u61cTFwb+9ljTFqck3RTXtQc2cH8agHjPLR0lvxt6fqudLyqO0vFYnhY8qrrOatnTcsi7SZvYE+US940yxvoYD6wc6hsWVWe8X9QZmn3Ko96DUv6jX6G/VvlfcT3usHmzEI1v1Peonk3xk+dL57Zp/7U7ZzXesdqu/ivJ/r8tFPUXvzWvvw85cT+uHrvX71kf1+C8OviZGRuHDegrdX+cH3NRr/0l67jTxjuVjt3HjeVxkq/UXO8d1EP6NS/XfwGwUTquwVbSHMSFPN/UovCttD1xZxbfWL90UV922vPgfc6kXzA==</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="869" encodedLength="40">
+            <cvParam cvRef="MS" accession="MS:1000519" name="32-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJztw0ENAAAMA6Grf9OTsQ8krJqqqqovDyFpA2Y=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
