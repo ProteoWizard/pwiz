@@ -346,9 +346,9 @@ namespace pwiz.Skyline.SettingsUI
                             MessageDlg.ShowException(this, status.ErrorException);
                             return;
                         }
-                        else if (status.WarningException != null)
+                        else if (!string.IsNullOrEmpty(status.WarningMessage))
                         {
-                            MessageDlg.ShowException(this, status.WarningException);
+                            MessageDlg.Show(this, status.WarningMessage);
                         }
                     }
                     catch (Exception x)

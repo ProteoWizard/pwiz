@@ -3834,11 +3834,10 @@ namespace pwiz.Skyline
                 _out.WriteLine(status.Message);
             }
 
-            var warning = status.WarningException;
-            if (warning != null && !string.IsNullOrEmpty(warning.Message) && warning.Message != _lastWarning)
+            if (!string.IsNullOrEmpty(status.WarningMessage) && !Equals(_lastWarning, status.WarningMessage))
             {
-                _out.WriteLine(warning.Message);
-                _lastWarning = warning.Message;
+                _out.WriteLine(status.WarningMessage);
+                _lastWarning = status.WarningMessage;
             }
 
             if (writeMessage)

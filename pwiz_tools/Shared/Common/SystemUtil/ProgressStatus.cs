@@ -32,7 +32,7 @@ namespace pwiz.Common.SystemUtil
         int PercentComplete { get; }
         bool ProgressEqual(IProgressStatus status);
         Exception ErrorException { get; }
-        Exception WarningException { get; }
+        string WarningMessage { get; }
         IProgressStatus ChangePercentComplete(int percent);
         IProgressStatus ChangeMessage(string prop);
         IProgressStatus ChangeWarningMessage(string prop);
@@ -99,7 +99,7 @@ namespace pwiz.Common.SystemUtil
 
         public ProgressState State { get; private set; }
         public string Message { get; private set; }
-        public string WarningMessage { get { return WarningException == null ? null : string.IsNullOrEmpty(WarningException.Message) ? null : WarningException.Message; } }
+        public string WarningMessage { get; private set; }
         public int PercentComplete { get; private set; }
         public int ZoomedPercentComplete { get; private set; }
         public int PercentZoomStart { get; private set; }
@@ -107,7 +107,6 @@ namespace pwiz.Common.SystemUtil
         public int SegmentCount { get; private set; }
         public int Segment { get; private set; }
         public Exception ErrorException { get; private set; }
-        public Exception WarningException { get; private set; }
         public object Id { get; private set; }
         public bool ProgressEqual(IProgressStatus status)
         {
@@ -234,10 +233,7 @@ namespace pwiz.Common.SystemUtil
 
         public IProgressStatus ChangeWarningMessage(string prop)
         {
-            return ChangeProp(ImClone(this), s =>
-            {
-                s.WarningException = string.IsNullOrEmpty(prop) ? null : new Exception(prop);
-            });
+            return ChangeProp(ImClone(this), s => s.WarningMessage = prop);
         }
 
         public IProgressStatus Cancel()
