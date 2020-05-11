@@ -1376,6 +1376,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// <param name="mods">Explicit mods for the peptide</param>
         /// <param name="isotopeDist">Isotope peak distribution to use for assigning M+N m/z values</param>
         /// <param name="pre422ExplicitTransitionValues">Items that may have been saved at precursor level in older formats</param>
+        /// <param name="crosslinkBuilder">CrosslinkBuilder object that can be shared across all transitions</param>
         /// <returns>A new <see cref="TransitionDocNode"/></returns>
         private TransitionDocNode ReadTransitionXml(XmlReader reader, TransitionGroup group,
             ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues, CrosslinkBuilder crosslinkBuilder)
