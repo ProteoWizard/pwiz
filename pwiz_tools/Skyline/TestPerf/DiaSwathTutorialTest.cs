@@ -316,7 +316,7 @@ namespace TestPerf
         }
 
         /// <summary>
-        /// Change to true to write coefficient arrays
+        /// Change to true to write coefficient arrays.
         /// </summary>
         private bool IsRecordMode { get { return false; } }
 
