@@ -3075,7 +3075,7 @@ namespace pwiz.Skyline
 
         private void editGroupComparisonListMenuItem_Click(object sender, EventArgs e)
         {
-            DisplayDocumentSettingsDialogPage(1);
+            DisplayDocumentSettingsDialogPage(DocumentSettingsDlg.TABS.group_comparisons);
         }
 
         private void groupComparisonsMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -3794,14 +3794,17 @@ namespace pwiz.Skyline
 
         public void ShowDocumentSettingsDialog()
         {
-            DisplayDocumentSettingsDialogPage(0);
+            DisplayDocumentSettingsDialogPage(null);
         }
 
-        public void DisplayDocumentSettingsDialogPage(int tabPageIndex)
+        public void DisplayDocumentSettingsDialogPage(DocumentSettingsDlg.TABS? tab)
         {
             using (var dlg = new DocumentSettingsDlg(this))
             {
-                dlg.GetTabControl().SelectedIndex = tabPageIndex;
+                if (tab.HasValue)
+                {
+                    dlg.SelectTab(tab.Value);
+                }
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings,
@@ -5268,7 +5271,7 @@ namespace pwiz.Skyline
                 Assume.IsFalse(multiStatus.IsEmpty);    // Should never be starting results window with empty status
                 ImportingResultsWindow = new AllChromatogramsGraph { Owner = this, ChromatogramManager = _chromatogramManager };
                 if (Settings.Default.AutoShowAllChromatogramsGraph)
-                    ImportingResultsWindow.ShowSafe(this);
+                    ImportingResultsWindow.Show(this);
             }
             if (ImportingResultsWindow != null)
                 ImportingResultsWindow.UpdateStatus(multiStatus);
@@ -5281,7 +5284,7 @@ namespace pwiz.Skyline
                 if (ImportingResultsWindow.Visible)
                     ImportingResultsWindow.Activate();
                 else
-                    ImportingResultsWindow.ShowSafe(this);
+                    ImportingResultsWindow.Show(this);
                 UpdateProgressUI(); // Sets selected control
             }
         }
