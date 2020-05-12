@@ -19,6 +19,7 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class DocumentSettingsDlg : FormEx
     {
+        public enum TABS { annotations, lists, group_comparisons, reports }
         private readonly SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
         private readonly SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
         private readonly SettingsListBoxDriver<ListData> _listsListBoxDriver;
@@ -176,6 +177,11 @@ namespace pwiz.Skyline.SettingsUI
             return tabControl;
         }
 
+        public void SelectTab(TABS tab)
+        {
+            tabControl.SelectedIndex = (int) tab;
+        }
+
         public ChooseViewsControl ChooseViewsControl { get { return chooseViewsControl; } }
 
         private void btnAddList_Click(object sender, System.EventArgs e)
@@ -207,6 +213,39 @@ namespace pwiz.Skyline.SettingsUI
         public void ManageListDefs()
         {
             _listsListBoxDriver.EditList();
+        }
+
+        private void btnEditReportList_Click(object sender, System.EventArgs e)
+        {
+            EditReportList();
+        }
+
+        public void EditReportList()
+        {
+            var dataSchema = new SkylineDataSchema(DocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var viewContext = new DocumentGridViewContext(dataSchema) {EnablePreview = true};
+            using (var manageViewsForm = new ManageViewsForm(viewContext))
+            {
+                manageViewsForm.ShowDialog(this);
+            }
+        }
+
+        private void btnAddReport_Click(object sender, System.EventArgs e)
+        {
+            NewReport();
+        }
+
+        public void NewReport()
+        {
+            var dataSchema = new SkylineDataSchema(DocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var viewContext = new DocumentGridViewContext(dataSchema) { EnablePreview = true };
+            var newView = viewContext.NewView(this, PersistedViews.MainGroup);
+            if (newView != null)
+            {
+                chooseViewsControl.SelectView(newView.Name);
+                chooseViewsControl.CheckedViews = chooseViewsControl.CheckedViews
+                    .Append(PersistedViews.MainGroup.Id.ViewName(newView.Name));
+            }
         }
     }
 }

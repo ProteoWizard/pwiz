@@ -571,6 +571,9 @@
   <data name="MaxBestRetentionTime">
     <value>Max Best Retention Time</value>
   </data>
+  <data name="MaxDetectionQValue" xml:space="preserve">
+    <value>Max Detection Q Value</value>
+  </data>
   <data name="MaxEndTime">
     <value>Max End Time</value>
   </data>
@@ -585,6 +588,12 @@
   </data>
   <data name="MaxRetentionTime">
     <value>Max Retention Time</value>
+  </data>
+  <data name="Median">
+    <value>Median</value>
+  </data>
+  <data name="MedianDetectionQValue" xml:space="preserve">
+    <value>Median Detection Q Value</value>
   </data>
   <data name="Mean">
     <value>Mean</value>
@@ -627,6 +636,9 @@
   </data>
   <data name="MinBestRetentionTime">
     <value>Min Best Retention Time</value>
+  </data>
+  <data name="MinDetectionQValue" xml:space="preserve">
+    <value>Min Detection Q Value</value>
   </data>
   <data name="MinFoldChange">
     <value>Min Fold Change</value>

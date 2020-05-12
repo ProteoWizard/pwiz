@@ -28,7 +28,7 @@
     <software id="Xcalibur" version="2.6.0">
       <cvParam cvRef="MS" accession="MS:1000532" name="Xcalibur" value=""/>
     </software>
-    <software id="pwiz" version="3.0.19326">
+    <software id="pwiz" version="3.0.20071">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -107,7 +107,7 @@
     <chromatogramList count="4" defaultDataProcessingRef="pwiz_Reader_Thermo_conversion">
       <chromatogram index="0" id="TIC" defaultArrayLength="30">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="176">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -119,6 +119,12 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJwBeACH/99baEs/LCJLVnRDS4t6TEs+wnBLazh3S/0Fwkuh27BLeKczSxYCOEuHswhLAYk6S9avMEteTp1LEeySS8a6RUutf3RLtsRCS8ZkfEvJa4dLZlM7S26kX0sEQYhLD6OYS1Hpy0tAfFRLe1ODS/u1+0szXMBL1TN8S5xxMuk=</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="30" encodedLength="20">
+            <cvParam cvRef="MS" accession="MS:1000519" name="32-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjZGBgYBwADAAHvAAf</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

@@ -23,6 +23,13 @@ using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls.Startup
 {
+    public class TutorialActionBoxControl : ActionBoxControl
+    {
+        public TutorialActionBoxControl() : base(240, 160)
+        {
+        }
+    }
+
     public partial class ActionBoxControl : UserControl
     {
         private static readonly Color LIGHT_HOVER_COLOR = Color.FromArgb(217, 228, 243); // Hover color for action box items
@@ -32,9 +39,23 @@ namespace pwiz.Skyline.Controls.Startup
         public Action EventAction { get; set; }
         public bool IsProteomicOnly { get; set; } // If true, don't show in small molecule mode
 
-        public ActionBoxControl()
+        public ActionBoxControl(int? imageWidth = null, int? imageHeight = null)
         {
             InitializeComponent();
+
+            if (imageWidth.HasValue)
+            {
+                int deltaWidth = imageWidth.Value - iconPictureBox.Width;
+                Width += deltaWidth;
+                iconPictureBox.Width = labelDescription.Width = imageWidth.Value;
+            }
+            if (imageHeight.HasValue)
+            {
+                int deltaHeight = imageHeight.Value - iconPictureBox.Height;
+                Height += deltaHeight;
+                labelCaption.Top += deltaHeight;
+                iconPictureBox.Height = labelDescription.Height = imageHeight.Value;
+            }
         }
 
         private void labelCaption_MouseEnter(object sender, EventArgs e)

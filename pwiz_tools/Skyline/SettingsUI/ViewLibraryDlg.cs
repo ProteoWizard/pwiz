@@ -690,7 +690,7 @@ namespace pwiz.Skyline.SettingsUI
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
                         var spectrumInfo = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
-                        var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrum,
+                        var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrum,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
                                                                           transitionGroupDocNode,
                                                                           settings,

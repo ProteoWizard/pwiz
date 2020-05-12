@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestTutorial
         private const int WM_KEYUP = 0x101;
 
         [TestMethod, NoLocalization]
-        public void TestQuasarTutorial()
+        public void TestQuasarTutorialLegacy()
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;

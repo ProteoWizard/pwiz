@@ -548,6 +548,10 @@ The options for determining this value can be specified on the Quantification ta
   <data name="MaxBestRetentionTime">
     <value>Maximum of the precursor BestRetentionTime values</value>
   </data>
+  <data name="MaxDetectionQValue" xml:space="preserve">
+    <value>A  maximum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mPro
+phet model.</value>
+  </data>
   <data name="MaxEndTime">
     <value>Maximum EndTime of all transitions for a precursor. Unless manually
 edited all transitions for a precursor use the same integration boundaries.</value>
@@ -564,6 +568,9 @@ precursor.</value>
   </data>
   <data name="MaxRetentionTime">
     <value>Maximum of the transition RetentionTime values.</value>
+  </data>
+  <data name="Median">
+    <value>Median</value>
   </data>
   <data name="Mean">
     <value>Mean</value>
@@ -601,6 +608,9 @@ precursor.</value>
   <data name="MeanTotalAreaRatio">
     <value> Mean of the precursor TotalAreaRatio values.</value>
   </data>
+  <data name="MedianDetectionQValue" xml:space="preserve">
+    <value>A  median of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
+  </data>
   <data name="Min">
     <value>Min</value>
   </data>
@@ -612,6 +622,9 @@ precursor.</value>
   </data>
   <data name="MinRetentionTime">
     <value>Minimum of the transition RetentionTime values.</value>
+  </data>
+  <data name="MinDetectionQValue" xml:space="preserve">
+    <value>A  minimum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
   </data>
   <data name="MinStartTime">
     <value>Minimum StartTime of all transitions for a precursor. Unless manually

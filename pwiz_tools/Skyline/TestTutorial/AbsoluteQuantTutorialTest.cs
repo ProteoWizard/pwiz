@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
@@ -48,7 +49,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestAbsoluteQuantificationTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "AbsoluteQuant";
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
                                                     
@@ -78,7 +81,7 @@ namespace pwiz.SkylineTestTutorial
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
                 RunUI(() =>
                           {
-                              // Predicition Settings
+                              // Prediction Settings
                               transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Prediction;
                               transitionSettingsUI.PrecursorMassType = MassType.Monoisotopic;
                               transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
@@ -301,28 +304,58 @@ namespace pwiz.SkylineTestTutorial
                 // ReSharper restore AccessToModifiedClosure
                 WaitForConditionUI(() => documentGridForm.IsComplete);
             }
-            RunUI(() =>
+
+            if (IsPauseForScreenShots)
             {
-                SkylineWindow.Width = 500;
-                var gridFloatingWindow = documentGridForm.Parent.Parent;
-                gridFloatingWindow.Size = new Size(370, 315);
-                gridFloatingWindow.Top = SkylineWindow.Top;
-                gridFloatingWindow.Left = SkylineWindow.Right + 20;
-            });
-            PauseForScreenShot("Document grid with concentrations filled in", 17);
+                RunUI(() =>
+                {
+                    SkylineWindow.Width = 500;
+                    var gridFloatingWindow = documentGridForm.Parent.Parent;
+                    gridFloatingWindow.Size = new Size(370, 315);
+                    gridFloatingWindow.Top = SkylineWindow.Top;
+                    gridFloatingWindow.Left = SkylineWindow.Right + 20;
+                });
+                PauseForScreenShot("Document grid with concentrations filled in", 17);
+            }
 
             // View the calibration curve p. 18
             RunUI(() => SkylineWindow.ShowDocumentGrid(false));
 
-            var calibrationForm = ShowDialog<CalibrationForm>(() => SkylineWindow.ShowCalibrationForm());
-            RunUI(() =>
+            if (IsPauseForCoverShot)
             {
-                var calibrationFloatingWindow = calibrationForm.Parent.Parent;
-                calibrationFloatingWindow.Width = 565;
-                calibrationFloatingWindow.Top = SkylineWindow.Top;
-                calibrationFloatingWindow.Left = SkylineWindow.Right + 20;
-            });
-            PauseForScreenShot("View calibration curve", 18);
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    SkylineWindow.ShowPeakAreaLegend(false);
+                    SkylineWindow.ShowRTLegend(false);
+                });
+                RestoreCoverViewOnScreen();
+                RunUI(() =>
+                {
+                    var calibrationOpenForm = WaitForOpenForm<CalibrationForm>();
+                    var calibrationFloatingWindow = calibrationOpenForm.Parent.Parent;
+                    calibrationFloatingWindow.Top = SkylineWindow.Bottom - calibrationFloatingWindow.Height - 35;
+                    calibrationFloatingWindow.Left = SkylineWindow.Left + 15;
+
+                });
+                PauseForCoverShot();
+                return;
+            }
+
+            var calibrationForm = ShowDialog<CalibrationForm>(() => SkylineWindow.ShowCalibrationForm());
+            if (IsPauseForScreenShots)
+            {
+                RunUI(() =>
+                {
+                    var calibrationFloatingWindow = calibrationForm.Parent.Parent;
+                    calibrationFloatingWindow.Width = 565;
+                    calibrationFloatingWindow.Top = SkylineWindow.Top;
+                    calibrationFloatingWindow.Left = SkylineWindow.Right + 20;
+                });
+                PauseForScreenShot("View calibration curve", 18);
+            }
 
             Assert.AreEqual(CalibrationCurveFitter.AppendUnits(QuantificationStrings.Analyte_Concentration, quantUnits), calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);
             Assert.AreEqual(string.Format(QuantificationStrings.CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio, IsotopeLabelType.light.Title, IsotopeLabelType.heavy.Title),

@@ -165,6 +165,7 @@
     <Compile Include="IpiToUniprotTest.cs" />
     <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
+    <Compile Include="LibraryRankedSpectrumInfoSpeedTest.cs" />
     <Compile Include="LibrarySettingsTest.cs" />
     <Compile Include="LinearInLogSpaceTest.cs" />
     <Compile Include="ListDataTest.cs" />
@@ -261,6 +262,7 @@
     <EmbeddedResource Include="explicit-losses.sky" />
     <EmbeddedResource Include="DocumentSerializerTest.sky" />
     <None Include="FullScanPrecursor.zip" />
+    <None Include="LibraryRankedSpectrumInfoSpeedTest.zip" />
     <None Include="modmatch.sky" />
     <None Include="ModMatch.zip" />
     <EmbeddedResource Include="MultiLabel.sky" />

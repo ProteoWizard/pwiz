@@ -615,6 +615,11 @@ namespace pwiz.Skyline.SettingsUI
             _driverIsolationScheme.AddItem();
         }
 
+        public void EditCurrentIsolationScheme()
+        {
+            _driverIsolationScheme.EditCurrent();
+        }
+
         public void EditIsolationScheme()
         {
             _driverIsolationScheme.EditList();
