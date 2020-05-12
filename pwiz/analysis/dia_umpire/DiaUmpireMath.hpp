@@ -99,7 +99,7 @@ class BSpline
         int m = data.Data.size() + p;
         bspline_T_.resize(m + p);
 
-        if (data.Data.size() <= p) {
+        if (data.Data.size() <= (size_t) p) {
             return data;
         }
 
@@ -208,7 +208,7 @@ class LinearInterpolation
         int index = 0;
         for (const XYData& point : data.Data)
         {
-            XYData closet = Smoothdata[index];
+            //XYData closet = Smoothdata[index];
             bool found = false;
             for (int i = index; i < PtNum - 1; i++) {
                 if (Smoothdata[i].getX() <= point.getX() && Smoothdata[i + 1].getX() > point.getX()) {
@@ -328,7 +328,7 @@ class WaveletMassDetector
             bool decreasing = false;
             XYData localmaxint { 0, 0 };
 
-            for (int cwtidx = 1; cwtidx < wavelet.size(); cwtidx++)
+            for (size_t cwtidx = 1; cwtidx < wavelet.size(); cwtidx++)
             {
                 XYData& CurrentPoint = wavelet.at(cwtidx);
                 if (CurrentPoint.getY() > lastpt.getY()) {//the peak is increasing
@@ -802,7 +802,7 @@ class ChiSquareGOF
     {
         float gof = 0;
         int nopeaks = 0;
-        for (int i = 0; i < std::min(observed.size(), expected.size()); i++)
+        for (size_t i = 0; i < std::min(observed.size(), expected.size()); i++)
         {
             if (observed[i] > 0)
             {

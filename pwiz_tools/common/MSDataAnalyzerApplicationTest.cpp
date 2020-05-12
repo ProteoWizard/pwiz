@@ -69,11 +69,11 @@ void test()
         "file2",
         "file3",
         "file4",
-        "--filter", "coffee",
+        "--filter", "peakPicking true 1-",
         "-x", "command1",
         "-x", "command2",
         tempFilename_,
-        "--filter", "news media"
+        "--filter", "index 0-"
     };
 
     int argc = sizeof(argv)/sizeof(const char*);

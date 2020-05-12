@@ -430,7 +430,7 @@ class ScanData : public XYPointCollection
         float lowmz = InstrumentParameter::GetMzByPPM(targetmz, 1, PPM);
         int startidx = GetLowerIndexOfX(lowmz);
         XYData* closetPeak = nullptr;
-        for (int idx = startidx; idx < Data.size(); idx++) {
+        for (size_t idx = (size_t) startidx; idx < Data.size(); idx++) {
             XYData& peak = Data.at(idx);
             if (InstrumentParameter::CalcPPM(targetmz, peak.getX()) <= PPM) {
                 if (closetPeak == nullptr || peak.getY() > closetPeak->getY()) {
@@ -449,7 +449,7 @@ class ScanData : public XYPointCollection
         std::sort(Data.begin(), Data.end(), [](const XYData& a, const XYData& b) -> bool { return a.y > b.y; });
 
         TopPeakScan.reset(new ScanData);
-        for (int i = 0; TopPeakScan->PointCount() < toppeaks && i < Data.size(); ++i)
+        for (size_t i = 0; TopPeakScan->PointCount() < toppeaks && i < Data.size(); ++i)
         {
             XYData peak = Data.at(i);
             TopPeakScan->AddPoint(peak.getY(), peak.getX());
@@ -534,7 +534,7 @@ class ScanData : public XYPointCollection
         const float Ratio = 2;
 
         vector<float> IntList(Data.size());
-        for (int i = 0; i < Data.size(); i++) {
+        for (size_t i = 0; i < Data.size(); i++) {
             IntList[i] = (float) Data[i].getY();
         }        
         sort(IntList.begin(), IntList.end());
@@ -562,7 +562,7 @@ class ScanData : public XYPointCollection
             count4 = 0;
             noise = 0;
             int preidx = -1;
-            for (int i = 1; i < Data.size(); i++) {
+            for (size_t i = 1; i < Data.size(); i++) {
                 if (Data.at(i).getY() > bk) {
                     if (preidx != -1) {
                         float dist = Data.at(i).getX() - Data.at(preidx).getX();
@@ -843,4 +843,4 @@ typedef std::unique_ptr<ScanCollection> ScanCollectionPtr;
 
 } // namespace DiaUmpire
 
-#endif _DIAUMPIRE_SCANDATA_
+#endif // _DIAUMPIRE_SCANDATA_

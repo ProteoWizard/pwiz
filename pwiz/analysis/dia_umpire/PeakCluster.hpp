@@ -234,7 +234,7 @@ class PeakCluster
     }
 
     void AssignConfilictCorr() {
-        for (int i = 1; i < IsoPeaksCurves.size(); i++) {
+        for (size_t i = 1; i < IsoPeaksCurves.size(); i++) {
             if (IsoPeaksCurves[i] != nullptr) {
                 if (Corrs[i - 1] > 0.6f) {
                     IsoPeaksCurves[i]->AddConflictScore(Corrs[i - 1]);
@@ -296,7 +296,7 @@ class PeakCluster
         }
         PeakDis.resize(PeakHeight.size());
         float firstPeak = PeakHeight[0];
-        for (int i = 0; i < PeakDis.size(); i++) {
+        for (size_t i = 0; i < PeakDis.size(); i++) {
             if (PeakHeight[i] > 0) {
                 PeakDis[i] = PeakHeight[i] / firstPeak;
             }
@@ -307,7 +307,7 @@ class PeakCluster
     vector<XYData> GetPatternRange(const IsotopePatternMap& isotopePatternMap) const
     {
         vector<XYData> PatternRange(isotopePatternMap.size());
-        for (int i = 0; i < isotopePatternMap.size(); i++)
+        for (size_t i = 0; i < isotopePatternMap.size(); i++)
         {
             auto findItr = isotopePatternMap[i].upper_bound(NeutralMass());
             if (findItr == isotopePatternMap[i].end()) {
@@ -323,7 +323,7 @@ class PeakCluster
     {
         GeneratePeakDis();
         vector<XYData> PatternRange(isotopePatternMap.size());
-        for (int i = 0; i < isotopePatternMap.size(); i++)
+        for (size_t i = 0; i < isotopePatternMap.size(); i++)
         {
             auto findItr = isotopePatternMap[i].upper_bound(NeutralMass());
             if (findItr == isotopePatternMap[i].end()) {
@@ -335,7 +335,7 @@ class PeakCluster
 
         TheoIso[0] = 1;
 
-        for (int i = 1; i < isotopePatternMap.size(); i++) {
+        for (size_t i = 1; i < isotopePatternMap.size(); i++) {
             if (PeakDis[i] >= PatternRange[i - 1].getY() && PeakDis[i] <= PatternRange[i - 1].getX()) {
                 TheoIso[i] = PeakDis[i];
             } else {
@@ -364,7 +364,7 @@ class PeakCluster
 
     float GetMaxMz() const
     {
-        for (int i = mz.size() - 1; i > 0; i--) {
+        for (int i = (int) mz.size() - 1; i > 0; i--) {
             if (mz[i] > 0.0f) {
                 return mz[i];
             }
@@ -575,7 +575,7 @@ class PeakCurveClusteringCorrKDtree
                     ResultClusters.push_back(peakClusterPtr);
                     if (!parameter.TargetIDOnly || (parameter.RemoveGroupedPeaks && peakCluster.Corrs[0] > parameter.RemoveGroupedPeaksCorr && peakCluster.OverlapP > parameter.RemoveGroupedPeaksRTOverlap))
                     {
-                        for (int i = 1; i < peakCluster.IsoPeaksCurves.size(); i++)
+                        for (size_t i = 1; i < peakCluster.IsoPeaksCurves.size(); i++)
                         {
                             PeakCurvePtr& peak = peakCluster.IsoPeaksCurves[i];
                             if (peak && peakCluster.Corrs[i - 1] > parameter.RemoveGroupedPeaksCorr && peakCluster.OverlapRT[i - 1] > parameter.RemoveGroupedPeaksRTOverlap) {

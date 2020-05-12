@@ -31,6 +31,7 @@
 #include <boost/thread.hpp>
 #include <boost/container/flat_set.hpp>
 #include <atomic>
+#include <memory>
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"

@@ -2,6 +2,7 @@
 #define _INSTRUMENTPARAMETER_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
+#include <cmath>
 
 namespace DiaUmpire {
 
@@ -72,7 +73,7 @@ struct InstrumentParameter
 
     static float CalcPPM(float valueA, float valueB)
     {
-        return std::abs(valueA - valueB) * 1000000 / valueB;
+        return std::fabs(valueA - valueB) * 1000000 / valueB;
     }
 
     static float GetMzByPPM(float valueA, int charge, float ppm)

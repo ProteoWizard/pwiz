@@ -188,8 +188,8 @@ class PeakCurve
             //RT distance matrix between the groupped peak riges and peak ridges extracted from current CWT scale
             std::vector<std::vector<float>> DisMatrixF(PeakRidgeList.size(), std::vector<float>(PeakRidgeArray.size()));
 
-            for (int k = 0; k < PeakRidgeList.size(); k++) {///For each existing peak ridge line
-                for (int l = 0; l < PeakRidgeArray.size(); l++) {
+            for (size_t k = 0; k < PeakRidgeList.size(); k++) {///For each existing peak ridge line
+                for (size_t l = 0; l < PeakRidgeArray.size(); l++) {
                     DisMatrixF[k][l] = abs(PeakRidgeList.at(k).RT - PeakRidgeArray.at(l).getX());
                 }
             }
@@ -201,8 +201,8 @@ class PeakCurve
                 float closest = noValuePlaceholder;
                 int ExistingRideIdx = -1;
                 int PeakRidgeInx = -1;
-                for (int k = 0; k < PeakRidgeList.size(); k++) {
-                    for (int l = 0; l < PeakRidgeArray.size(); l++) {
+                for (size_t k = 0; k < PeakRidgeList.size(); k++) {
+                    for (size_t l = 0; l < PeakRidgeArray.size(); l++) {
                         {
                             if (DisMatrixF[k][l] < closest) {
                                 closest = DisMatrixF[k][l];
@@ -223,10 +223,10 @@ class PeakCurve
                     PeakRidgeList.emplace_back(ridge);
                     sort(PeakRidgeList.begin(), PeakRidgeList.end());
                     RemovedRidgeList.emplace_back(PeakRidgeInx);
-                    for (int k = 0; k < PeakRidgeList.size(); k++) {
+                    for (size_t k = 0; k < PeakRidgeList.size(); k++) {
                         DisMatrixF[k][PeakRidgeInx] = noValuePlaceholder;
                     }
-                    for (int l = 0; l < PeakRidgeArray.size(); l++) {
+                    for (size_t l = 0; l < PeakRidgeArray.size(); l++) {
                         DisMatrixF[ExistingRideIdx][l] = noValuePlaceholder;
                     }
                 }
@@ -241,14 +241,14 @@ class PeakCurve
             }
 
             std::vector<int> removelist;
-            for (int k = 0; k < PeakRidgeList.size(); k++) {
+            for (size_t k = 0; k < PeakRidgeList.size(); k++) {
                 const PeakRidge& existridge = PeakRidgeList.at(k);
                 if (existridge.lowScale - i > 2 && existridge.ContinuousLevel < maxScale / 2) {
                     removelist.emplace_back(k);
                 }
             }
             sort(removelist.rbegin(), removelist.rend());
-            for (int k = 0; k < removelist.size(); k++)
+            for (size_t k = 0; k < removelist.size(); k++)
                 PeakRidgeList.erase(PeakRidgeList.begin() + removelist.at(k));
 
             if (i > maxScale / 2) {
@@ -278,10 +278,10 @@ class PeakCurve
             XYData localmin{ -1, noValuePlaceholder };
             int startidx = SmoothData.GetLowerIndexOfX(currentridge->RT);
 
-            for (int j = 1; j < PeakRidgeList.size(); j++)
+            for (size_t j = 1; j < PeakRidgeList.size(); j++)
             {
                 const PeakRidge* nextridge = &PeakRidgeList.at(j);
-                for (int i = startidx; i < SmoothData.Data.size(); i++)
+                for (size_t i = startidx; i < SmoothData.Data.size(); i++)
                 {
                     const XYData& point = SmoothData.Data.at(i);
                     if (point.getX() > currentridge->RT && point.getX() < nextridge->RT) {
@@ -302,10 +302,10 @@ class PeakCurve
 
             //Correct ridge rt and intensity
             startidx = 0;
-            for (int i = 0; i < PeakRidgeList.size(); i++)
+            for (size_t i = 0; i < PeakRidgeList.size(); i++)
             {
                 PeakRidge& ridge = PeakRidgeList.at(i);
-                for (int j = startidx; j < SmoothData.Data.size(); j++)
+                for (size_t j = startidx; j < SmoothData.Data.size(); j++)
                 {
                     XYData& point = SmoothData.Data.at(j);
                     if (point.getX() < ValleyPoints[i + 1].getX()) {
@@ -355,7 +355,7 @@ class PeakCurve
             startidx = 0;
             const PeakRidge* maxridge = &PeakRidgeList.at(0);
 
-            for (int i = 0; i < PeakRidgeList.size() - 1; i++)
+            for (size_t i = 0; i < PeakRidgeList.size() - 1; i++)
             {
                 RidgeRTs.emplace_back(PeakRidgeList.at(i).RT);
                 if (PeakRidgeList.at(i).intensity > maxridge->intensity) {
@@ -387,7 +387,7 @@ class PeakCurve
         vector<PeakCurvePtr> returnArrayList;
 
         //Generate a peak curve for each detected region
-        for (int i = 0; i < GetPeakRegionList().size(); i++) {
+        for (size_t i = 0; i < GetPeakRegionList().size(); i++) {
             tempArrayList.emplace_back(new PeakCurve(parameter));
             PeakCurvePtr& peakCurve = tempArrayList.back();
             peakCurve->Index = this->Index;
@@ -445,14 +445,14 @@ class PeakCurve
 #endif
 
         //Add corresponding raw peaks
-        for (int i = 0; i < GetPeakList().size(); i++)
+        for (size_t i = 0; i < GetPeakList().size(); i++)
         {
             XYZData& peak = GetPeakList().at(i);
 #ifdef DIAUMPIRE_DEBUG
             if (MsLevel == 1)
                 peakLog << (float6Format % peak.x).str();
 #endif
-            for (int j = 0; j < GetPeakRegionList().size(); j++)
+            for (size_t j = 0; j < GetPeakRegionList().size(); j++)
             {
 
                 XYZData& region = GetPeakRegionList().at(j);
@@ -484,10 +484,10 @@ class PeakCurve
 #endif
 
         //Add corresponding smoothed peaks
-        for (int i = 0; i < GetSmoothedList().Data.size(); i++)
+        for (size_t i = 0; i < GetSmoothedList().Data.size(); i++)
         {
             XYData& peak = GetSmoothedList().Data.at(i);
-            for (int j = 0; j < GetPeakRegionList().size(); j++)
+            for (size_t j = 0; j < GetPeakRegionList().size(); j++)
             {
                 XYZData& region = GetPeakRegionList().at(j);
                 if (isDefinitelyGreaterThan(peak.getX(), region.getX(), 1e-8f, true) && isDefinitelyLessThan(peak.getX(), region.getZ(), 1e-8f, true)) {
@@ -582,7 +582,7 @@ class PeakCurve
     {
         XYPointCollection PtCollection;
 
-        for (int i = 0; i < SmoothData.Data.size(); i++) {
+        for (size_t i = 0; i < SmoothData.Data.size(); i++) {
             PtCollection.AddPoint(SmoothData.Data.at(i).getX(), SmoothData.Data.at(i).getY());
         }
         return PtCollection;
@@ -683,7 +683,7 @@ class PeakCurve
 
     void CalculateMzVar() {
         MzVar = 0;
-        for (int j = 0; j < PeakList.size(); j++) {
+        for (size_t j = 0; j < PeakList.size(); j++) {
             MzVar += (PeakList.at(j).getX() - TargetMz) * (PeakList.at(j).getX() - TargetMz);
         }
         MzVar /= PeakList.size();
@@ -700,7 +700,7 @@ class PeakCurve
         }
 
         if (IntensityQueue.size() > 10) {
-            for (int i = 0; i < IntensityQueue.size() / 10; i++)
+            for (size_t i = 0; i < IntensityQueue.size() / 10; i++)
             {
                 _baseLine += IntensityQueue.front();
                 IntensityQueue.pop();
@@ -726,7 +726,7 @@ class PeakCurve
         }
     }
 
-    __declspec(noinline) bool ValidSplitPoint(vector<PeakRidge>& peakRidgeList, int left, int right, int cut, vector<XYData>& ValleyPoints)
+    bool ValidSplitPoint(vector<PeakRidge>& peakRidgeList, int left, int right, int cut, vector<XYData>& ValleyPoints)
     {
         PeakRidge* leftridge = &peakRidgeList.at(left);
         PeakRidge* rightridge = &peakRidgeList.at(cut + 1);

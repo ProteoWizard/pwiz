@@ -316,8 +316,8 @@ project pwiz
         # warning: '__cur' might be used uninitialized in this function 
         <toolset>gcc:<cxxflags>-Wno-uninitialized
 
-        # set standard to C++11
-        <toolset>gcc:<cxxflags>-std=c++11
+        # set standard to C++14
+        <toolset>gcc:<cxxflags>-std=c++14
 
         # avoid warnings like concept_check.hpp ... warning: unused typedef 'boost_concept_check'
         <toolset>clang:<cxxflags>-Wno-unused-local-typedef
