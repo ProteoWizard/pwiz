@@ -20,7 +20,6 @@
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.CLI.Bruker.PrmScheduling;
 
 namespace pwiz.Skyline.Alerts
 {
