@@ -50,7 +50,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestIrtTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "iRT";
 
             ForceMzml = true;   // 2-3x faster than raw files for this test.
 

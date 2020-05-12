@@ -53,6 +53,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsPauseForCoverShot = true;
+            CoverShotName = "HiResMetabolomics";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download

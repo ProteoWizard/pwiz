@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestTutorial
     {
         [TestMethod, NoLocalization]
         [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
-        public void TestMSstatsTutorial()
+        public void TestMSstatsTutorialLegacy()
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;

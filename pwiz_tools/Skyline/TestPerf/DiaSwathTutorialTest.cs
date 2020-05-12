@@ -26,6 +26,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -164,7 +165,8 @@ namespace TestPerf
                 PolishedProteins = 2465,
             };
 
-            TestTtofData();
+            if (!IsPauseForCoverShot)
+                TestTtofData();
         }
 
         private void TestTtofData()
@@ -219,7 +221,8 @@ namespace TestPerf
                 UnpolishedProteins = 7,
             };
 
-            TestQeData();
+            if (!IsPauseForCoverShot)
+                TestQeData();
         }
 
         [TestMethod]
@@ -252,7 +255,8 @@ namespace TestPerf
                 PolishedProteins = 2036,
             };
 
-            TestQeData();
+            if (!IsPauseForCoverShot)
+                TestQeData();
         }
        
         private void TestQeData()
@@ -303,6 +307,7 @@ namespace TestPerf
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsPauseForCoverShot = true;
+            CoverShotName = "DIA-SWATH";
 
             RunFunctionalTest();
 
@@ -320,7 +325,7 @@ namespace TestPerf
         }
 
         /// <summary>
-        /// Change to true to write coefficient arrays
+        /// Change to true to write coefficient arrays.
         /// </summary>
         private bool IsRecordMode { get { return false; } }
 
@@ -856,6 +861,59 @@ namespace TestPerf
                 SortByFoldChange(fcGridControlFinal, _resultProperty);  // Re-apply the sort, in case it was lost in restoring views
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Graph - proteins", 31);
 
+                if (_instrumentValues.InstrumentTypeName == "TTOF" && !_analysisValues.IsWholeProteome)
+                {
+                    var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+                    var editReportListDlg = ShowDialog<ManageViewsForm>(exportReportDlg.EditList);
+                    var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddView);
+                    string qValuesReportName = "Q-ValuesTest";
+                    string reportFileName = TestFilesDirs[0].GetTestPath(qValuesReportName + ".csv");
+                    RunUI(() =>
+                    {
+                        viewEditor.ViewName = qValuesReportName;
+                        var columnsToAdd = new[]
+                        {
+                            // Not L10N
+                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.NeutralMass"),
+                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DetectionQValue"),
+                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Min"),
+                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Max"),
+                            PropertyPath.Parse(
+                                "Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Median")
+                        };
+                        foreach (var id in columnsToAdd)
+                        {
+                            Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                            viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                        }
+                        viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First().SetPivotReplicate(true);
+                    });
+
+                    OkDialog(viewEditor, () => viewEditor.OkDialog());
+                    OkDialog(editReportListDlg, () => editReportListDlg.OkDialog());
+
+                    RunUI(() =>
+                    {
+                        exportReportDlg.ReportName = qValuesReportName;
+                        exportReportDlg.OkDialog(reportFileName, TextUtil.SEPARATOR_CSV); // Not L10N
+                    });
+
+                    foreach (var line in File.ReadLines(reportFileName).Skip(1))
+                    {
+                        var values = line.Split(',').Select((strValue) =>
+                            double.TryParse(strValue, out var res) ? res : double.NaN
+                        ).ToArray();
+                        //skip the line if it has any N/As in it
+                        if (!values.Any(double.IsNaN))
+                        {
+                            var stats = new Statistics(values.Skip(4));
+                            //using numeric comparison due to rounding errors
+                            Assert.IsTrue(Math.Abs(values[1] - stats.Min()) <= 0.0001);
+                            Assert.IsTrue(Math.Abs(values[2] - stats.Max()) <= 0.0001);
+                            Assert.IsTrue(Math.Abs(values[3] - stats.Median()) <= 0.0001);
+                        }
+                    }
+                }
                 if (IsPauseForCoverShot)
                 {
                     RunUI(() =>

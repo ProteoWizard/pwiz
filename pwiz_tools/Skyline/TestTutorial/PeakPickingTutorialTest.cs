@@ -63,7 +63,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestPeakPickingTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "PeakPicking";
 
             ForceMzml = false;  // Mzml isn't faster for this test.
 
