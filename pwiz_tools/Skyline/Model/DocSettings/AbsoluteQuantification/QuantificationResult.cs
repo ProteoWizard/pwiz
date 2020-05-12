@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             if (CalculatedConcentration.HasValue)
             {
-                FormatCalculatedConcentration(CalculatedConcentration.Value, Units);
+                return FormatCalculatedConcentration(CalculatedConcentration.Value, Units);
             }
             else if (NormalizedArea.HasValue)
             {
