@@ -60,6 +60,7 @@
             this.comboTuning = new System.Windows.Forms.ComboBox();
             this.cbExportEdcMass = new System.Windows.Forms.CheckBox();
             this.cbWriteCoV = new System.Windows.Forms.CheckBox();
+            this.textPrimaryCount = new System.Windows.Forms.TextBox();
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
             this.labelOptimizing = new System.Windows.Forms.Label();
             this.labelMethods = new System.Windows.Forms.Label();
@@ -67,7 +68,6 @@
             this.panelThermoColumns = new System.Windows.Forms.Panel();
             this.panelAbSciexTOF = new System.Windows.Forms.Panel();
             this.panelTriggered = new System.Windows.Forms.Panel();
-            this.textPrimaryCount = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.panelThermoRt = new System.Windows.Forms.Panel();
@@ -76,6 +76,7 @@
             this.panelWaters = new System.Windows.Forms.Panel();
             this.labelPolarityFilter = new System.Windows.Forms.Label();
             this.panelTuneColumns = new System.Windows.Forms.Panel();
+            this.btnGraph = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
@@ -306,6 +307,13 @@
             this.helpTip.SetToolTip(this.cbWriteCoV, resources.GetString("cbWriteCoV.ToolTip"));
             this.cbWriteCoV.UseVisualStyleBackColor = true;
             // 
+            // textPrimaryCount
+            // 
+            resources.ApplyResources(this.textPrimaryCount, "textPrimaryCount");
+            this.textPrimaryCount.Name = "textPrimaryCount";
+            this.helpTip.SetToolTip(this.textPrimaryCount, resources.GetString("textPrimaryCount.ToolTip"));
+            this.textPrimaryCount.TextChanged += new System.EventHandler(this.textPrimaryCount_TextChanged);
+            // 
             // comboOptimizing
             // 
             this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -349,13 +357,6 @@
             this.panelTriggered.Controls.Add(this.label3);
             resources.ApplyResources(this.panelTriggered, "panelTriggered");
             this.panelTriggered.Name = "panelTriggered";
-            // 
-            // textPrimaryCount
-            // 
-            resources.ApplyResources(this.textPrimaryCount, "textPrimaryCount");
-            this.textPrimaryCount.Name = "textPrimaryCount";
-            this.helpTip.SetToolTip(this.textPrimaryCount, resources.GetString("textPrimaryCount.ToolTip"));
-            this.textPrimaryCount.TextChanged += new System.EventHandler(this.textPrimaryCount_TextChanged);
             // 
             // label5
             // 
@@ -402,12 +403,20 @@
             resources.ApplyResources(this.panelTuneColumns, "panelTuneColumns");
             this.panelTuneColumns.Name = "panelTuneColumns";
             // 
+            // btnGraph
+            // 
+            resources.ApplyResources(this.btnGraph, "btnGraph");
+            this.btnGraph.Name = "btnGraph";
+            this.btnGraph.UseVisualStyleBackColor = true;
+            this.btnGraph.Click += new System.EventHandler(this.btnGraph_Click);
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.btnGraph);
             this.Controls.Add(this.cbSortByMz);
             this.Controls.Add(this.cbWriteCoV);
             this.Controls.Add(this.panelTuneColumns);
@@ -516,5 +525,6 @@
         private System.Windows.Forms.CheckBox cbTune3;
         private System.Windows.Forms.CheckBox cbWriteCoV;
         private System.Windows.Forms.CheckBox cbSortByMz;
+        private System.Windows.Forms.Button btnGraph;
     }
 }

@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
@@ -62,12 +64,22 @@ namespace pwiz.Skyline.Controls.Graphs
             set { Settings.Default.PrimaryTransitionCountGraph = value; }
         }
 
+        public static string BrukerTemplateFile
+        {
+            get { return Settings.Default.BrukerPrmSqliteFile; }
+            set { Settings.Default.BrukerPrmSqliteFile = value; }
+        }
+
+        private bool _exportMethodDlg;
         private SrmDocument _documentShowing;
         private double[] _windowsShowing;
+        private string _brukerTemplate;
 
-        public RTScheduleGraphPane(GraphSummary graphSummary)
+        public RTScheduleGraphPane(GraphSummary graphSummary, bool isExportMethodDlg = false)
             : base(graphSummary)
         {
+            _exportMethodDlg = isExportMethodDlg;
+
             XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
             YAxis.Scale.MinAuto = false;
             YAxis.Scale.Min = 0;
@@ -75,19 +87,29 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void UpdateGraph(bool selectionChanged)
         {
-            SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
+            SrmDocument document = !_exportMethodDlg ? GraphSummary.DocumentUIContainer.DocumentUI : Program.MainWindow.DocumentUI;
             var windows = ScheduleWindows;
+            var brukerTemplate = BrukerTemplateFile;
             // No need to re-graph for a selection change
-            if (ReferenceEquals(document, _documentShowing) && ArrayUtil.EqualsDeep(windows, _windowsShowing))
+            if (ReferenceEquals(document, _documentShowing) && ArrayUtil.EqualsDeep(windows, _windowsShowing) &&
+                Equals(BrukerTemplateFile, _brukerTemplate))
                 return;
 
             _documentShowing = document;
             _windowsShowing = windows;
+            _brukerTemplate = brukerTemplate;
 
             // TODO: Make it possible to see transition scheduling when full-scan enabled.
-            YAxis.Title.Text = document.Settings.TransitionSettings.FullScan.IsEnabledMsMs
-                                   ? Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Precursors
-                                   : Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Transitions;
+            if (string.IsNullOrEmpty(brukerTemplate))
+            {
+                YAxis.Title.Text = document.Settings.TransitionSettings.FullScan.IsEnabledMsMs
+                    ? Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Precursors
+                    : Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Transitions;
+            }
+            else
+            {
+                YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations;
+            }
 
             CurveList.Clear();
 
@@ -129,6 +151,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void AddCurve(SrmDocument document, Color color)
         {
+            if (!string.IsNullOrEmpty(BrukerTemplateFile))
+            {
+                var exportProperties = new ExportDlgProperties(new ExportMethodDlg(document, ExportFileType.Method), new CancellationToken());
+                exportProperties.MethodType = ExportMethodType.Scheduled;
+                BrukerTimsTofMethodExporter.GetScheduling(document, exportProperties, BrukerTemplateFile, out var brukerPoints, out _);
+                AddCurve(document, brukerPoints, color);
+                return;
+            }
+
             var predict = document.Settings.PeptideSettings.Prediction;
             bool fullScan = document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
 
@@ -173,6 +204,11 @@ namespace pwiz.Skyline.Controls.Graphs
             for (double x = xMin; x < xMax; x += 0.1)
                 points.Add(x, PrecursorScheduleBase.GetOverlapCount(listSchedules, x));
 
+            AddCurve(document, points, color);
+        }
+
+        private void AddCurve(SrmDocument document, IPointList points, Color color)
+        {
             string label = string.Format(Resources.RTScheduleGraphPane_AddCurve__0__Minute_Window, GetSchedulingWindow(document));
             var curve = AddCurve(label, points, color);
             curve.Line.IsAntiAlias = true;

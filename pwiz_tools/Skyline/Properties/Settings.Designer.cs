@@ -2913,5 +2913,17 @@ namespace pwiz.Skyline.Properties {
                 this["GroupApplyToBy"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BrukerPrmSqliteFile {
+            get {
+                return ((string)(this["BrukerPrmSqliteFile"]));
+            }
+            set {
+                this["BrukerPrmSqliteFile"] = value;
+            }
+        }
     }
 }

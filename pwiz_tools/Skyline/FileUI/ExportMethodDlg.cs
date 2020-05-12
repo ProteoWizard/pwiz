@@ -30,6 +30,7 @@ using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -284,6 +285,7 @@ namespace pwiz.Skyline.FileUI
         {
             return Equals(type, ExportInstrumentType.AGILENT_TOF) ||
                    Equals(type, ExportInstrumentType.BRUKER_TOF) ||
+                   Equals(type, ExportInstrumentType.BRUKER_TIMSTOF) ||
                    Equals(type, ExportInstrumentType.SHIMADZU) ||
                    Equals(type, ExportInstrumentType.THERMO) ||
                    Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
@@ -325,6 +327,7 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.WATERS_XEVO_QTOF) ||
                        Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
                        Equals(type, ExportInstrumentType.BRUKER_TOF) ||
+                       Equals(type, ExportInstrumentType.BRUKER_TIMSTOF) ||
                        // LTQ can only schedule for inclusion lists, but then it always
                        // requires start and stop times.
                        Equals(type, ExportInstrumentType.THERMO_LTQ);
@@ -927,6 +930,20 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
+            if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
+            {
+                BrukerTimsTofMethodExporter.GetScheduling(_document, _exportProperties, templateName,
+                    out var points, out var missingIonMobility);
+                if (missingIonMobility.Length > 0)
+                {
+                    MessageDlg.Show(this,
+                        Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_predictor_or_spectral_library__The_following_ion_mobility_values_are_missing_ +
+                        Environment.NewLine + Environment.NewLine +
+                        TextUtil.LineSeparate(missingIonMobility.Select(k => k.ToString())));
+                    return;
+                }
+            }
+
             if (outputPath == null)
             {
                 string title = Text;
@@ -1499,7 +1516,9 @@ namespace pwiz.Skyline.FileUI
             bool standard = (targetType == ExportMethodType.Standard);
             bool triggered = (targetType == ExportMethodType.Triggered);
 
-            if (targetType != ExportMethodType.Standard && cbIgnoreProteins.Enabled)
+            btnGraph.Visible = !standard;
+
+            if (!standard && cbIgnoreProteins.Enabled)
             {
                 cbIgnoreProteins.Checked = true;
             }
@@ -1807,6 +1826,10 @@ namespace pwiz.Skyline.FileUI
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_AB_SCIEX));
                 }
+                else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
+                {
+                    listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_BRUKER_TIMSTOF));
+                }
                 else if (Equals(InstrumentType, ExportInstrumentType.SHIMADZU))
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_SHIMADZU));
@@ -1885,6 +1908,26 @@ namespace pwiz.Skyline.FileUI
             {
                 cbIgnoreProteins.Checked = true;
                 MessageDlg.Show(this, Resources.ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_not_yet_been_implemented_for_scheduled_methods_);
+            }
+        }
+        
+        private void btnGraph_Click(object sender, EventArgs e)
+        {
+            var brukerTemplate = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF)
+                ? textTemplateFile.Text
+                : null;
+
+            if (!string.IsNullOrEmpty(brukerTemplate) && !File.Exists(brukerTemplate))
+            {
+                MessageDlg.Show(this,
+                    string.Format(Resources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist,
+                        brukerTemplate));
+                return;
+            }
+
+            using (var dlg = new ExportMethodScheduleGraph(brukerTemplate))
+            {
+                dlg.ShowDialog(this);
             }
         }
 
