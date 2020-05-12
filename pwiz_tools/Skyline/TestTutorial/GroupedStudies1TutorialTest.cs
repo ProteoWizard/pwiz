@@ -49,7 +49,6 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
-using ZedGraph;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -63,6 +62,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsPauseForCoverShot = true;
+            CoverShotName = "GroupedStudies";
 
             ForceMzml = true;   // Mzml is faster for this test.
 
@@ -1492,15 +1492,6 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(settingsForm, () => settingsForm.Close());
             OkDialog(foldChangeGrid, () => foldChangeGrid.Close());
             OkDialog(foldChangeGraph, () => foldChangeGraph.Close());
-        }
-
-        private void ZoomYAxis(ZedGraphControl graphControl, int min, int max)
-        {
-            var pane = graphControl.GraphPane;
-            pane.YAxis.Scale.Min = min;
-            pane.YAxis.Scale.Max = max;
-            new ZoomState(pane, ZoomState.StateType.Zoom).ApplyState(pane);
-            graphControl.Refresh();
         }
 
         private static void TestApplyToAll()

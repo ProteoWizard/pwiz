@@ -50,7 +50,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestIrtTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "iRT";
 
             ForceMzml = true;   // 2-3x faster than raw files for this test.
 
@@ -567,6 +569,41 @@ namespace pwiz.SkylineTestTutorial
             WaitForRegression();
 
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 25);
+
+            if (IsPauseForCoverShot)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                });
+
+                RestoreCoverViewOnScreen();
+
+                var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+                RenameReplicate(manageResultsDlg, 0, "HELA_11_sMRM_150selected_90min");
+                OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
+
+                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunUI(() =>
+                {
+                    peptideSettingsUI.Top = SkylineWindow.Top;
+                    peptideSettingsUI.Left = SkylineWindow.Left - peptideSettingsUI.Width - 20;
+                });
+                var irtEditor = ShowDialog<EditIrtCalcDlg>(peptideSettingsUI.EditCalculator);
+                RunUI(() =>
+                {
+                    irtEditor.Height = SkylineWindow.DockPanel.Height + 10;
+                    irtEditor.Width += 25;
+                    irtEditor.Top = SkylineWindow.Bottom - irtEditor.Height - SkylineWindow.StatusBarHeight - 5;
+                    irtEditor.Left = SkylineWindow.Right - irtEditor.Width - 5;
+                });
+                PauseForCoverShot();
+                OkDialog(irtEditor, irtEditor.CancelDialog);
+                OkDialog(peptideSettingsUI, peptideSettingsUI.CancelDialog);
+                return;
+            }
 
             // Check outlier removal, p. 25
             RunUI(() =>

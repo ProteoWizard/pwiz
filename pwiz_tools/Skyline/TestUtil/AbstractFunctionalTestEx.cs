@@ -43,6 +43,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
+using ZedGraph;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -521,6 +522,24 @@ namespace pwiz.SkylineTestUtil
                 : SkylineWindow.GraphChromatograms.First();
         }
 
+        public static void ZoomXAxis(ZedGraphControl graphControl, double min, double max)
+        {
+            var pane = graphControl.GraphPane;
+            pane.XAxis.Scale.Min = min;
+            pane.XAxis.Scale.Max = max;
+            new ZoomState(pane, ZoomState.StateType.Zoom).ApplyState(pane);
+            graphControl.Refresh();
+        }
+
+        public static void ZoomYAxis(ZedGraphControl graphControl, double min, double max)
+        {
+            var pane = graphControl.GraphPane;
+            pane.YAxis.Scale.Min = min;
+            pane.YAxis.Scale.Max = max;
+            new ZoomState(pane, ZoomState.StateType.Zoom).ApplyState(pane);
+            graphControl.Refresh();
+        }
+
         public void AddFastaToBackgroundProteome(BuildBackgroundProteomeDlg proteomeDlg, string fastaFile, int repeats)
         {
             RunDlg<MessageDlg>(
@@ -584,6 +603,18 @@ namespace pwiz.SkylineTestUtil
                 else
                     yield return " null ";  // To help values line up
             }
+        }
+        protected static void RenameReplicate(ManageResultsDlg manageResultsDlg, int replicateIndex, string newName)
+        {
+            RunUI(() => manageResultsDlg.SelectedChromatograms = new[]
+            {
+                SkylineWindow.DocumentUI.Settings.MeasuredResults.Chromatograms[replicateIndex]
+            });
+            RunDlg<RenameResultDlg>(manageResultsDlg.RenameResult, renameDlg =>
+            {
+                renameDlg.ReplicateName = newName;
+                renameDlg.OkDialog();
+            });
         }
     }
 }

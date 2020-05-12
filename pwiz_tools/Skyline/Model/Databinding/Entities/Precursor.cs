@@ -563,6 +563,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var totalAreasNormalized = new List<double>();
             var totalAreasRatio = new List<double>();
             var maxHeights = new List<double>();
+            var detectionQValues = new List<double>();
             foreach (var result in results)
             {
                 if (result.BestRetentionTime.HasValue)
@@ -589,10 +590,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     maxHeights.Add(result.MaxHeight.Value);
                 }
+                if (result.DetectionQValue.HasValue)
+                {
+                    detectionQValues.Add(result.DetectionQValue.Value);
+                }
             }
             if (bestRetentionTimes.Count > 0)
             {
                 BestRetentionTime = new RetentionTimeSummary(new Statistics(bestRetentionTimes));
+            }
+            if (detectionQValues.Count > 0)
+            {
+                DetectionQValue = new DetectionQValueSummary(new Statistics(detectionQValues));
             }
             if (maxFhwms.Count > 0)
             {
@@ -622,6 +631,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string ReplicatePath { get { return @"/"; } }
         [ChildDisplayName("{0}BestRetentionTime")]
         public RetentionTimeSummary BestRetentionTime { get; private set; }
+        [ChildDisplayName("{0}DetectionQValue")]
+        public DetectionQValueSummary DetectionQValue { get; private set; }
         [ChildDisplayName("{0}MaxFwhm")]
         public FwhmSummary MaxFwhm { get; private set; }
         [ChildDisplayName("{0}TotalArea")]

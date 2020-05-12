@@ -26,6 +26,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -164,7 +165,8 @@ namespace TestPerf
                 PolishedProteins = 2465,
             };
 
-            TestTtofData();
+            if (!IsPauseForCoverShot)
+                TestTtofData();
         }
 
         private void TestTtofData()
@@ -219,7 +221,8 @@ namespace TestPerf
                 UnpolishedProteins = 7,
             };
 
-            TestQeData();
+            if (!IsPauseForCoverShot)
+                TestQeData();
         }
 
         [TestMethod]
@@ -252,7 +255,8 @@ namespace TestPerf
                 PolishedProteins = 2036,
             };
 
-            TestQeData();
+            if (!IsPauseForCoverShot)
+                TestQeData();
         }
        
         private void TestQeData()
@@ -303,6 +307,7 @@ namespace TestPerf
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsPauseForCoverShot = true;
+            CoverShotName = "DIA-SWATH";
 
             RunFunctionalTest();
 
@@ -311,13 +316,16 @@ namespace TestPerf
 
         private string DataPath { get { return TestFilesDirs.Last().PersistentFilesDir; } }
 
+        private PropertyPath _resultProperty = PropertyPath.Root.Property("FoldChangeResult");
+        private PropertyPath _proteinProperty = PropertyPath.Root.Property("Protein");
+
         private string GetTestPath(string path)
         {
             return TestFilesDirs[0].GetTestPath(Path.Combine(RootName, path));
         }
 
         /// <summary>
-        /// Change to true to write coefficient arrays
+        /// Change to true to write coefficient arrays.
         /// </summary>
         private bool IsRecordMode { get { return false; } }
 
@@ -729,18 +737,16 @@ namespace TestPerf
             PauseForScreenShot("Group comparison", 26);
 
             OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.OkDialog);
-            var fcResultProperty = PropertyPath.Root.Property("FoldChangeResult");
-            var proteinProperty = PropertyPath.Root.Property("Protein");
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(groupComparisonName));
             {
                 var fcGrid = WaitForOpenForm<FoldChangeGrid>();
                 var fcGridControl = fcGrid.DataboundGridControl;
-                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(fcResultProperty) != null && fcGridControl.RowCount > 11);
+                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(_resultProperty) != null && fcGridControl.RowCount > 11);
                 RunUI(() =>
                 {
-                    var foldChangeResultColumn = fcGridControl.FindColumn(fcResultProperty);
+                    var foldChangeResultColumn = fcGridControl.FindColumn(_resultProperty);
                     fcGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
-                    var proteinNameColumn = fcGridControl.FindColumn(proteinProperty);
+                    var proteinNameColumn = fcGridControl.FindColumn(_proteinProperty);
                     fcGridControl.DataGridView.AutoResizeColumn(proteinNameColumn.Index);
                     fcGridControl.DataGridView.FirstDisplayedScrollingRowIndex = 11;  // Scroll past iRT peptides
                 });
@@ -807,18 +813,7 @@ namespace TestPerf
             {
                 var fcGrid = WaitForOpenForm<FoldChangeGrid>(); // May have changed with RestoreViewsOnScreen
                 var fcGridControl = fcGrid.DataboundGridControl;
-                WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(proteinProperty) != null);
-                var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
-                {
-                    var proteinNameColumn = fcGridControl.FindColumn(proteinProperty);
-                    fcGridControl.QuickFilter(proteinNameColumn);
-                });
-                RunUI(() =>
-                {
-                    quickFilterForm.SetFilterOperation(0, FilterOperations.OP_NOT_CONTAINS);
-                    quickFilterForm.SetFilterOperand(0, _analysisValues.IrtFilterText);
-                });
-                OkDialog(quickFilterForm, quickFilterForm.OkDialog);
+                FilterIrtProtein(fcGridControl);
 
                 var volcanoPlot = WaitForOpenForm<FoldChangeVolcanoPlot>();    // May have changed with RestoreViewsOnScreen
                 WaitForConditionUI(() => volcanoPlot.CurveList.Count == 8 && 
@@ -833,7 +828,7 @@ namespace TestPerf
                 if (!IsRecordMode)
                     WaitForBarGraphPoints(barGraph, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta);
 
-                SortByFoldChange(fcGridControl, fcResultProperty);
+                SortByFoldChange(fcGridControl, _resultProperty);
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Bar Graph - peptides", 30);
 
                 var changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
@@ -863,9 +858,62 @@ namespace TestPerf
                 }
                 fcGrid = WaitForOpenForm<FoldChangeGrid>();
                 var fcGridControlFinal = fcGrid.DataboundGridControl;
-                SortByFoldChange(fcGridControlFinal, fcResultProperty);  // Re-apply the sort, in case it was lost in restoring views
+                SortByFoldChange(fcGridControlFinal, _resultProperty);  // Re-apply the sort, in case it was lost in restoring views
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Graph - proteins", 31);
 
+                if (_instrumentValues.InstrumentTypeName == "TTOF" && !_analysisValues.IsWholeProteome)
+                {
+                    var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+                    var editReportListDlg = ShowDialog<ManageViewsForm>(exportReportDlg.EditList);
+                    var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddView);
+                    string qValuesReportName = "Q-ValuesTest";
+                    string reportFileName = TestFilesDirs[0].GetTestPath(qValuesReportName + ".csv");
+                    RunUI(() =>
+                    {
+                        viewEditor.ViewName = qValuesReportName;
+                        var columnsToAdd = new[]
+                        {
+                            // Not L10N
+                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.NeutralMass"),
+                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DetectionQValue"),
+                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Min"),
+                            PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Max"),
+                            PropertyPath.Parse(
+                                "Proteins!*.Peptides!*.Precursors!*.ResultSummary.DetectionQValue.Median")
+                        };
+                        foreach (var id in columnsToAdd)
+                        {
+                            Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                            viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                        }
+                        viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First().SetPivotReplicate(true);
+                    });
+
+                    OkDialog(viewEditor, () => viewEditor.OkDialog());
+                    OkDialog(editReportListDlg, () => editReportListDlg.OkDialog());
+
+                    RunUI(() =>
+                    {
+                        exportReportDlg.ReportName = qValuesReportName;
+                        exportReportDlg.OkDialog(reportFileName, TextUtil.SEPARATOR_CSV); // Not L10N
+                    });
+
+                    foreach (var line in File.ReadLines(reportFileName).Skip(1))
+                    {
+                        var values = line.Split(',').Select((strValue) =>
+                            double.TryParse(strValue, out var res) ? res : double.NaN
+                        ).ToArray();
+                        //skip the line if it has any N/As in it
+                        if (!values.Any(double.IsNaN))
+                        {
+                            var stats = new Statistics(values.Skip(4));
+                            //using numeric comparison due to rounding errors
+                            Assert.IsTrue(Math.Abs(values[1] - stats.Min()) <= 0.0001);
+                            Assert.IsTrue(Math.Abs(values[2] - stats.Max()) <= 0.0001);
+                            Assert.IsTrue(Math.Abs(values[3] - stats.Median()) <= 0.0001);
+                        }
+                    }
+                }
                 if (IsPauseForCoverShot)
                 {
                     RunUI(() =>
@@ -875,10 +923,39 @@ namespace TestPerf
                         SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
                     });
 
-                    RestoreCoverViewOnScreen(false);
+                    RestoreCoverViewOnScreen();
+                    fcGrid = WaitForOpenForm<FoldChangeGrid>();
+                    fcGridControlFinal = fcGrid.DataboundGridControl;
+                    FilterIrtProtein(fcGridControlFinal);
+                    changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
+                    RunUI(() => changeGroupComparisonSettings.RadioScopePerPeptide.Checked = true);
+                    OkDialog(changeGroupComparisonSettings, changeGroupComparisonSettings.Close);
+
+                    RunUI(() =>
+                    {
+                        var fcFloatingWindow = fcGrid.Parent.Parent;
+                        fcFloatingWindow.Left = SkylineWindow.Left + 8;
+                        fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
+                    });
                     PauseForCoverShot();
                 }
             }
+        }
+
+        private void FilterIrtProtein(DataboundGridControl fcGridControl)
+        {
+            WaitForConditionUI(() => fcGridControl.IsComplete && fcGridControl.FindColumn(_proteinProperty) != null);
+            var quickFilterForm = ShowDialog<QuickFilterForm>(() =>
+            {
+                var proteinNameColumn = fcGridControl.FindColumn(_proteinProperty);
+                fcGridControl.QuickFilter(proteinNameColumn);
+            });
+            RunUI(() =>
+            {
+                quickFilterForm.SetFilterOperation(0, FilterOperations.OP_NOT_CONTAINS);
+                quickFilterForm.SetFilterOperand(0, _analysisValues.IrtFilterText);
+            });
+            OkDialog(quickFilterForm, quickFilterForm.OkDialog);
         }
 
         private void RestoreViewOnScreenNoSelChange(int pageName)
