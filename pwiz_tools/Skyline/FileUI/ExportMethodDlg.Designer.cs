@@ -77,6 +77,9 @@
             this.labelPolarityFilter = new System.Windows.Forms.Label();
             this.panelTuneColumns = new System.Windows.Forms.Panel();
             this.btnGraph = new System.Windows.Forms.Button();
+            this.panelBrukerTimsTof = new System.Windows.Forms.Panel();
+            this.textMs1RepetitionTime = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
@@ -85,6 +88,7 @@
             this.panelSciexTune.SuspendLayout();
             this.panelWaters.SuspendLayout();
             this.panelTuneColumns.SuspendLayout();
+            this.panelBrukerTimsTof.SuspendLayout();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -410,12 +414,30 @@
             this.btnGraph.UseVisualStyleBackColor = true;
             this.btnGraph.Click += new System.EventHandler(this.btnGraph_Click);
             // 
+            // panelBrukerTimsTof
+            // 
+            this.panelBrukerTimsTof.Controls.Add(this.textMs1RepetitionTime);
+            this.panelBrukerTimsTof.Controls.Add(this.label1);
+            resources.ApplyResources(this.panelBrukerTimsTof, "panelBrukerTimsTof");
+            this.panelBrukerTimsTof.Name = "panelBrukerTimsTof";
+            // 
+            // textMs1RepetitionTime
+            // 
+            resources.ApplyResources(this.textMs1RepetitionTime, "textMs1RepetitionTime");
+            this.textMs1RepetitionTime.Name = "textMs1RepetitionTime";
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.panelBrukerTimsTof);
             this.Controls.Add(this.btnGraph);
             this.Controls.Add(this.cbSortByMz);
             this.Controls.Add(this.cbWriteCoV);
@@ -472,6 +494,8 @@
             this.panelWaters.PerformLayout();
             this.panelTuneColumns.ResumeLayout(false);
             this.panelTuneColumns.PerformLayout();
+            this.panelBrukerTimsTof.ResumeLayout(false);
+            this.panelBrukerTimsTof.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -526,5 +550,8 @@
         private System.Windows.Forms.CheckBox cbWriteCoV;
         private System.Windows.Forms.CheckBox cbSortByMz;
         private System.Windows.Forms.Button btnGraph;
+        private System.Windows.Forms.Panel panelBrukerTimsTof;
+        private System.Windows.Forms.TextBox textMs1RepetitionTime;
+        private System.Windows.Forms.Label label1;
     }
 }

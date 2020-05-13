@@ -202,6 +202,7 @@ namespace pwiz.Skyline.FileUI
             cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
             cbExportEdcMass.Checked = Settings.Default.ExportEdcMass;
             textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
+            textMs1RepetitionTime.Text = Settings.Default.ExportMs1RepetitionTime.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             cbSlens.Top = textMaxTransitions.Bottom;
             cbWriteCoV.Top = cbSlens.Bottom;
@@ -212,6 +213,7 @@ namespace pwiz.Skyline.FileUI
             panelTuneColumns.Top = comboTargetType.Top + (comboTargetType.Height - panelTuneColumns.Height)/2;
             panelSciexTune.Top = labelOptimizing.Top;
             panelWaters.Top = labelDwellTime.Top - panelWaters.Height;
+            panelBrukerTimsTof.Top = labelOptimizing.Top;
 
             foreach (string tuneType in ExportOptimize.CompensationVoltageTuneTypes)
                 comboTuning.Items.Add(tuneType);
@@ -539,6 +541,11 @@ namespace pwiz.Skyline.FileUI
                     panelWaters.Visible = false;
                     break;
             }
+        }
+
+        private void UpdateBrukerTimsTofControls()
+        {
+            panelBrukerTimsTof.Visible = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF);
         }
 
         private void UpdateCovControls()
@@ -932,8 +939,7 @@ namespace pwiz.Skyline.FileUI
 
             if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
             {
-                BrukerTimsTofMethodExporter.GetScheduling(_document, _exportProperties, templateName,
-                    out var points, out var missingIonMobility);
+                BrukerTimsTofMethodExporter.GetScheduling(_document, _exportProperties, templateName, out _, out var missingIonMobility);
                 if (missingIonMobility.Length > 0)
                 {
                     MessageDlg.Show(this,
@@ -1047,6 +1053,8 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.ExportEdcMass = ExportEdcMass;
             if (comboPolarityFilter.Enabled)
                 Settings.Default.ExportPolarityFilterEnum = TypeSafeEnum.ValidateOrDefault((ExportPolarity)comboPolarityFilter.SelectedIndex, ExportPolarity.all).ToString();
+            if (textMs1RepetitionTime.Visible)
+                Settings.Default.ExportMs1RepetitionTime = _exportProperties.Ms1RepetitionTime;
             DialogResult = DialogResult.OK;
             Close();
         }
@@ -1230,6 +1238,14 @@ namespace pwiz.Skyline.FileUI
                     return false;
 
                 _exportProperties.RunLength = runLength;
+            }
+
+            if (textMs1RepetitionTime.Visible)
+            {
+                if (!helper.ValidateDecimalTextBox(textMs1RepetitionTime, 0, null, out var ms1RepetitionTime))
+                    return false;
+
+                _exportProperties.Ms1RepetitionTime = ms1RepetitionTime;
             }
 
             // If export method type is scheduled, and allows multiple scheduling options
@@ -1545,6 +1561,7 @@ namespace pwiz.Skyline.FileUI
             UpdateThermoColumns(targetType);
             UpdateAbSciexControls();
             UpdateWatersControls();
+            UpdateBrukerTimsTofControls();
             UpdateThermoRtControls(targetType);
             UpdateThermoSLensControl(targetType);
             UpdateThermoFaimsCvControl();

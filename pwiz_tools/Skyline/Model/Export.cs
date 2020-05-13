@@ -388,6 +388,8 @@ namespace pwiz.Skyline.Model
 
         public virtual bool ExportEdcMass { get; set; }
 
+        public virtual double Ms1RepetitionTime { get; set; }
+
         public TExp InitExporter<TExp>(TExp exporter)
             where TExp : AbstractMassListExporter
         {
@@ -605,6 +607,7 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new BrukerTimsTofMethodExporter(document));
             exporter.RunLength = RunLength;
+            exporter.Ms1RepetitionTime = Ms1RepetitionTime;
             PerformLongExport(m => exporter.ExportMethod(filename, templateName, m, out _, out _));
             return exporter;
         }
@@ -3128,6 +3131,7 @@ namespace pwiz.Skyline.Model
         private readonly HashSet<LibKey> _missingIonMobility;
 
         public double RunLength { get; set; }
+        public double Ms1RepetitionTime { get; set; }
 
         public LibKey[] MissingIonMobility => _missingIonMobility.OrderBy(k => k.ToString()).ToArray();
 
@@ -3213,7 +3217,10 @@ namespace pwiz.Skyline.Model
 
             using (var s = new Scheduler(fileName ?? templateName))
             {
-                s.SetAdditionalMeasurementParameters(new AdditionalMeasurementParameters {ms1_repetition_time = 10});
+                s.SetAdditionalMeasurementParameters(new AdditionalMeasurementParameters
+                {
+                    ms1_repetition_time = Ms1RepetitionTime
+                });
                 for (var i = 0; i < _targets.Count; i++)
                 {
                     var id = (i + 1).ToString();
@@ -3236,6 +3243,7 @@ namespace pwiz.Skyline.Model
         {
             var exporter = exportProperties.InitExporter(new BrukerTimsTofMethodExporter(document));
             exporter.RunLength = exportProperties.RunLength;
+            exporter.Ms1RepetitionTime = exportProperties.Ms1RepetitionTime;
             exporter.ExportMethod(null, templateName, null, out var timeSegments, out var schedulingEntries);
             missingIonMobility = exporter.MissingIonMobility;
 
