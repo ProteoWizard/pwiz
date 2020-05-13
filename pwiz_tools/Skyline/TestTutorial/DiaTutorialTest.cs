@@ -179,7 +179,7 @@ namespace pwiz.SkylineTestTutorial
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("interact-20130311_DDA_Pit01.pep.xml")}); // Not L10N
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
             });
-            PauseForScreenShot<BuildLibraryDlg>("Build Library form - input files", 24);
+            PauseForScreenShot<ImportPeptideSearchDlg>("Build Library form - input files", 24);
 
             const string prefixKeep = "DIA_Pit0";
             if (IsFullImportMode)

@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestTutorial
             //IsPauseForScreenShots = true;
             TestFilesZipPaths = new[]
             {
-                @"http://targetedproteomics.ethz.ch/tutorials2014/USB.zip",
+                @"https://skyline.gs.washington.edu/tutorials/SrmTutorialTest.zip",
                 @"TestTutorial\SRMViews.zip"
             };
             RunFunctionalTest();
