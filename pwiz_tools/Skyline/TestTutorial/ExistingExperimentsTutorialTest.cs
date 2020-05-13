@@ -24,7 +24,6 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -411,7 +410,7 @@ namespace pwiz.SkylineTestTutorial
 
             {
                 var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
-                PauseForScreenShot<ImportDocResultsDlg>("Import Results Common prefix form", 25);
+                PauseForScreenShot<ImportResultsNameDlg>("Import Results Common prefix form", 25);
 
                 OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
             }
