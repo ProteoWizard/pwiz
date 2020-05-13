@@ -28,6 +28,7 @@ using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
@@ -524,19 +525,29 @@ namespace pwiz.SkylineTestUtil
 
         public static void ZoomXAxis(ZedGraphControl graphControl, double min, double max)
         {
-            var pane = graphControl.GraphPane;
-            pane.XAxis.Scale.Min = min;
-            pane.XAxis.Scale.Max = max;
-            new ZoomState(pane, ZoomState.StateType.Zoom).ApplyState(pane);
-            graphControl.Refresh();
+            ZoomAxis(graphControl, pane => pane.XAxis.Scale, min, max);
         }
 
         public static void ZoomYAxis(ZedGraphControl graphControl, double min, double max)
         {
+            ZoomAxis(graphControl, pane => pane.YAxis.Scale, min, max);
+        }
+
+        private static void ZoomAxis(ZedGraphControl graphControl, Func<GraphPane, Scale> getScale, double min, double max)
+        {
             var pane = graphControl.GraphPane;
-            pane.YAxis.Scale.Min = min;
-            pane.YAxis.Scale.Max = max;
+            var scale = getScale(pane);
+            scale.Min = min;
+            scale.Max = max;
             new ZoomState(pane, ZoomState.StateType.Zoom).ApplyState(pane);
+
+            using (var graphics = graphControl.CreateGraphics())
+            {
+                foreach (MSGraphPane graphPane in graphControl.MasterPane.PaneList.OfType<MSGraphPane>())
+                {
+                    graphPane.SetScale(graphics);
+                }
+            }
             graphControl.Refresh();
         }
 
