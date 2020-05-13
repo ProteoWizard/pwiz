@@ -556,15 +556,7 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
     bool empty() const;
 
     /// returns true iff has nonnull and nonempty binaryDataArrayPtrs and integerDataArrayPtrs
-    bool hasBinaryData() const {
-        return binaryDataArrayPtrs.size() && 
-               binaryDataArrayPtrs[0] &&
-              !binaryDataArrayPtrs[0]->data.empty()
-              ||
-              integerDataArrayPtrs.size() &&
-              integerDataArrayPtrs[0] &&
-              !integerDataArrayPtrs[0]->data.empty();
-    };
+    bool hasBinaryData() const;
 
     /// copy binary data arrays into m/z-intensity pair array
     void getMZIntensityPairs(std::vector<MZIntensityPair>& output) const;

@@ -635,6 +635,16 @@ PWIZ_API_DECL bool Spectrum::empty() const
            ParamContainer::empty();
 }
 
+PWIZ_API_DECL bool Spectrum::hasBinaryData() const
+{
+    return (binaryDataArrayPtrs.size() &&
+            binaryDataArrayPtrs[0] &&
+            !binaryDataArrayPtrs[0]->data.empty())
+           ||
+           (integerDataArrayPtrs.size() &&
+            integerDataArrayPtrs[0] &&
+            !integerDataArrayPtrs[0]->data.empty());
+};
 
 namespace {
 

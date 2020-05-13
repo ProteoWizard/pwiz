@@ -456,9 +456,10 @@ class PeakCurve
             {
 
                 XYZData& region = GetPeakRegionList().at(j);
-                bool addPeak = isDefinitelyGreaterThan(peak.getX(), region.getX(), 1e-8f, true) && isDefinitelyLessThan(peak.getX(), region.getZ(), 1e-8f, true);
 
 #ifdef DIAUMPIRE_DEBUG
+                bool addPeak = isDefinitelyGreaterThan(peak.getX(), region.getX(), 1e-8f, true) && isDefinitelyLessThan(peak.getX(), region.getZ(), 1e-8f, true);
+
                 if (MsLevel == 1)
                     comparisonsByRegion[j].emplace_back((pointFormat % peak.getX() % region.getX() % region.getZ() % (addPeak ? 1 : 0)).str());
 #endif

@@ -467,7 +467,7 @@ namespace DiaUmpire {
     }
 
     template <typename T, typename ValueT>
-    std::decay_t<ValueT> map_lower_bound_or(const T& container, typename const T::key_type& key, ValueT&& defaultValue)
+    std::decay_t<ValueT> map_lower_bound_or(const T& container, typename T::key_type const& key, ValueT&& defaultValue)
     {
         auto itr = container.lower_bound(key);
         if (itr == container.end())
