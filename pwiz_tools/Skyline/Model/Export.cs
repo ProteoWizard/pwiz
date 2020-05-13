@@ -3247,24 +3247,20 @@ namespace pwiz.Skyline.Model
             exporter.ExportMethod(null, templateName, null, out var timeSegments, out var schedulingEntries);
             missingIonMobility = exporter.MissingIonMobility;
 
-            var timeSegmentCounts = new Dictionary<uint, int>();
+            var timeSegmentCounts = new Dictionary<uint, HashSet<uint>>();
             foreach (var entry in schedulingEntries)
             {
                 if (!timeSegmentCounts.ContainsKey(entry.time_segment_id))
-                {
-                    timeSegmentCounts[entry.time_segment_id] = 1;
-                }
-                else
-                {
-                    timeSegmentCounts[entry.time_segment_id]++;
-                }
+                    timeSegmentCounts[entry.time_segment_id ] = new HashSet<uint>();
+                timeSegmentCounts[entry.time_segment_id].Add(entry.frame_id);
             }
 
             var points = new List<PointPair>();
             for (uint i = 0; i < timeSegments.Count; i++)
             {
-                if (!timeSegmentCounts.TryGetValue(i, out var count))
-                    count = 0;
+                var count = 0;
+                if (timeSegmentCounts.TryGetValue(i, out var countSet))
+                    count = countSet.Count;
                 points.Add(new PointPair(timeSegments[(int)i].time_in_seconds_begin, count));
                 points.Add(new PointPair(timeSegments[(int)i].time_in_seconds_end, count));
             }
