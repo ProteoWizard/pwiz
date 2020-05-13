@@ -522,7 +522,7 @@ until primary transitions reach a certain intensity threshold.</value>
     <value>True</value>
   </data>
   <data name="labelTemplateFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 370</value>
+    <value>13, 389</value>
   </data>
   <data name="labelTemplateFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>70, 13</value>
@@ -546,7 +546,7 @@ until primary transitions reach a certain intensity threshold.</value>
     <value>17</value>
   </data>
   <data name="textTemplateFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 388</value>
+    <value>16, 407</value>
   </data>
   <data name="textTemplateFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>196, 20</value>
@@ -571,7 +571,7 @@ A single template transition may also be required for transition values not cont
     <value>16</value>
   </data>
   <data name="btnBrowseTemplate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>218, 387</value>
+    <value>218, 406</value>
   </data>
   <data name="btnBrowseTemplate.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -1391,7 +1391,7 @@ If unchecked, zeros will be written in their place.</value>
     <value>3</value>
   </data>
   <data name="btnGraph.Location" type="System.Drawing.Point, System.Drawing">
-    <value>153, 319</value>
+    <value>16, 346</value>
   </data>
   <data name="btnGraph.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -1421,7 +1421,7 @@ If unchecked, zeros will be written in their place.</value>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>885, 422</value>
+    <value>885, 441</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -1433,7 +1433,7 @@ If unchecked, zeros will be written in their place.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.127, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.133, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -1445,6 +1445,6 @@ If unchecked, zeros will be written in their place.</value>
     <value>ExportMethodDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.CreateHandleDebugBase, Skyline-daily, Version=20.1.1.127, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.CreateHandleDebugBase, Skyline-daily, Version=20.1.1.133, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

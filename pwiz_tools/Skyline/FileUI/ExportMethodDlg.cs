@@ -89,7 +89,7 @@ namespace pwiz.Skyline.FileUI
                 btnBrowseTemplate.Visible = false;
                 labelTemplateFile.Visible = false;
                 textTemplateFile.Visible = false;
-                Height -= textTemplateFile.Bottom - comboTargetType.Bottom;
+                Height -= textTemplateFile.Bottom - btnGraph.Bottom;
             }
 
             comboInstrument.Items.Clear();
