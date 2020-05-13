@@ -234,7 +234,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
 
             vector<float> times;
             vector<float> intensities;
-            rawdata_->ChromatogramReader.ReadMRMChromatogram(ie.function, ie.offset, times, intensities);
+            rawdata_->ChromatogramReader.ReadMassChromatogram(ie.function, ie.Q1, times, intensities, 1.f, false);
             result->defaultArrayLength = times.size();
 
             if (getBinaryData)
@@ -278,7 +278,18 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         //cout << "Time range: " << f1 << " - " << f2 << endl;
 
         vector<float> precursorMZs, productMZs, intensities;
-        rawdata_->Reader.ReadScan(function, 1, precursorMZs, intensities, productMZs);
+        try
+        {
+            if (spectrumType == MS_SRM_spectrum)
+                rawdata_->Reader.ReadScan(function, 1, precursorMZs, intensities, productMZs);
+            else
+                rawdata_->Reader.ReadScan(function, 1, precursorMZs, intensities);
+        }
+        catch (...)
+        {
+            cerr << "[ChromatogramList_Waters::createIndex] Unable to read scan 1 of function " << (function + 1) << endl;
+            continue;
+        }
 
         if (spectrumType == MS_SRM_spectrum && productMZs.size() != precursorMZs.size())
             throw runtime_error("[ChromatogramList_Waters::createIndex] MRM function " + lexical_cast<string>(function+1) + " has mismatch between product m/z count (" + lexical_cast<string>(productMZs.size()) + ") and precursor m/z count (" + lexical_cast<string>(precursorMZs.size()) + ")");

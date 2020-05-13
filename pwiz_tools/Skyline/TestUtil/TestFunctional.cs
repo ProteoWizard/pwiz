@@ -1102,6 +1102,11 @@ namespace pwiz.SkylineTestUtil
 
         private void PauseForScreenShot(string description, int? pageNum, Type formType, Form screenshotForm = null, int? timeout = null)
         {
+            if (formType != null)
+            {
+                var form = TryWaitForOpenForm(formType);
+                Assert.IsNotNull(form);
+            }
             if (Program.SkylineOffscreen)
                 return;
 

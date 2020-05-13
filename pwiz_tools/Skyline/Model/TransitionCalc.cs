@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model
                             massShift = -massShift;
                         var result = i;
                         nearestCharge = i;
-                        return Adduct.FromChargeProtonated(result);
+                        return Adduct.FromCharge(result, isCustomIon ? Adduct.ADDUCT_TYPE.non_proteomic : Adduct.ADDUCT_TYPE.proteomic);
                     }
                     if (deltaAbs < nearestDelta)
                     {
