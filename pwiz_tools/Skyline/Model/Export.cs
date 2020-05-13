@@ -3202,6 +3202,9 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor, out TimeSegmentList timeSegments, out SchedulingEntryList schedulingEntries)
         {
+            if (templateName == null)
+                throw new IOException(Resources.BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_);
+
             _missingIonMobility.Clear();
             InitExport(fileName, progressMonitor);
 

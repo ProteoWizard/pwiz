@@ -19,6 +19,7 @@
 
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -26,7 +27,9 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class ExportMethodScheduleGraph : FormEx
     {
-        public ExportMethodScheduleGraph(string brukerTemplate)
+        public readonly Exception Exception;
+
+        public ExportMethodScheduleGraph(SrmDocument document, string brukerTemplate)
         {
             InitializeComponent();
 
@@ -38,18 +41,33 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var pane = new RTScheduleGraphPane(null, true);
 
+            // Save existing settings
+            var oldWindows = RTScheduleGraphPane.ScheduleWindows;
+            RTScheduleGraphPane.ScheduleWindows = new double[] { };
             string oldBrukerTemplate = null;
             if (!string.IsNullOrEmpty(brukerTemplate) && !Equals(brukerTemplate, RTScheduleGraphPane.BrukerTemplateFile))
             {
                 oldBrukerTemplate = RTScheduleGraphPane.BrukerTemplateFile;
                 RTScheduleGraphPane.BrukerTemplateFile = brukerTemplate;
             }
-            masterPane.PaneList.Add(pane);
-            pane.UpdateGraph(false);
 
-            if (!Equals(oldBrukerTemplate, RTScheduleGraphPane.BrukerTemplateFile))
+            masterPane.PaneList.Add(pane);
+            try
             {
-                RTScheduleGraphPane.BrukerTemplateFile = oldBrukerTemplate;
+                pane.UpdateGraph(false);
+            }
+            catch (Exception x)
+            {
+                Exception = x;
+            }
+            finally
+            { 
+                // Restore settings
+                if (!Equals(oldBrukerTemplate, RTScheduleGraphPane.BrukerTemplateFile))
+                {
+                    RTScheduleGraphPane.BrukerTemplateFile = oldBrukerTemplate;
+                }
+                RTScheduleGraphPane.ScheduleWindows = oldWindows;
             }
         }
 

@@ -1421,6 +1421,11 @@ namespace pwiz.Skyline.FileUI
                 MessageDlg.Show(this, Resources.ExportMethodDlg_StrategyCheckChanged_Only_one_method_can_be_exported_in_DIA_mode);
                 radioSingle.Checked = true;
             }
+            else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF) && radioBuckets.Checked)
+            {
+                MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_StrategyCheckChanged_Multiple_methods_is_not_yet_supported_for__0__, InstrumentType));
+                radioSingle.Checked = true;
+            }
 
             textMaxTransitions.Enabled = radioBuckets.Checked;
             if (!textMaxTransitions.Enabled)
@@ -1924,9 +1929,14 @@ namespace pwiz.Skyline.FileUI
                         brukerTemplate));
                 return;
             }
-
-            using (var dlg = new ExportMethodScheduleGraph(brukerTemplate))
+            
+            using (var dlg = new ExportMethodScheduleGraph(_document, brukerTemplate))
             {
+                if (dlg.Exception != null)
+                {
+                    MessageDlg.ShowWithException(this, Resources.ExportMethodDlg_btnGraph_Click_An_error_occurred_, dlg.Exception);
+                    return;
+                }
                 dlg.ShowDialog(this);
             }
         }

@@ -2487,6 +2487,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error copying template file..
+        /// </summary>
+        public static string BrukerTimsTofMethodExporter_ExportMethod_Error_copying_template_file_ {
+            get {
+                return ResourceManager.GetString("BrukerTimsTofMethodExporter_ExportMethod_Error_copying_template_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Template is required for method export..
+        /// </summary>
+        public static string BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_ {
+            get {
+                return ResourceManager.GetString("BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred attempting to add the FASTA file {0}..
         /// </summary>
         public static string BuildBackgroundProteomeDlg_AddFastaFile_An_error_occurred_attempting_to_add_the_FASTA_file__0__ {
@@ -11190,6 +11208,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred..
+        /// </summary>
+        public static string ExportMethodDlg_btnGraph_Click_An_error_occurred_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_btnGraph_Click_An_error_occurred_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Grouping peptides by protein has not yet been implemented for scheduled methods..
         /// </summary>
         public static string ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_not_yet_been_implemented_for_scheduled_methods_ {
@@ -11746,6 +11773,16 @@ namespace pwiz.Skyline.Properties {
         public static string ExportMethodDlg_SetMethodType_Standard {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_SetMethodType_Standard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multiple methods is not yet supported for {0}..
+        /// </summary>
+        public static string ExportMethodDlg_StrategyCheckChanged_Multiple_methods_is_not_yet_supported_for__0__ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_StrategyCheckChanged_Multiple_methods_is_not_yet_supported_for__0" +
+                        "__", resourceCulture);
             }
         }
         
