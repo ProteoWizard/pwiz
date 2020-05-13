@@ -430,7 +430,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Display in AllChromatogramsGraph
             var loadingStatus = Status as ChromatogramLoadingStatus;
-            if (loadingStatus != null)
+            if (loadingStatus != null && modifiedSequence != null) // Don't show TIC, BPC etc
                 loadingStatus.Transitions.AddTransition(
                     modifiedSequence,
                     color,
