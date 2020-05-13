@@ -1438,6 +1438,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Max Detection Q Value.
+        /// </summary>
+        public static string MaxDetectionQValue {
+            get {
+                return ResourceManager.GetString("MaxDetectionQValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max End Time.
         /// </summary>
         public static string MaxEndTime {
@@ -1591,6 +1600,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Median.
+        /// </summary>
+        public static string Median {
+            get {
+                return ResourceManager.GetString("Median", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median Detection Q Value.
+        /// </summary>
+        public static string MedianDetectionQValue {
+            get {
+                return ResourceManager.GetString("MedianDetectionQValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min.
         /// </summary>
         public static string Min {
@@ -1605,6 +1632,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MinBestRetentionTime {
             get {
                 return ResourceManager.GetString("MinBestRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min Detection Q Value.
+        /// </summary>
+        public static string MinDetectionQValue {
+            get {
+                return ResourceManager.GetString("MinDetectionQValue", resourceCulture);
             }
         }
         

@@ -650,8 +650,10 @@ namespace pwiz.Skyline.Model.Lib
 
                     loader.UpdateProgress(status);
 
-                    if (!CreateCache(loader, status, 100 - loadPercent))
+                    if (!CreateCache(loader, status, 100 - loadPercent, out var warning))
                         return false;
+                    if (!string.IsNullOrEmpty(warning))
+                        status = status.ChangeWarningMessage(warning);
                 }
 
                 var valueCache = new ValueCache();
@@ -769,6 +771,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)"); // In a comment
         private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*: ([^ ]+)"); // On its own line
         private static readonly Regex REGEX_IRT = new Regex(@" iRT=([^ ,]+)");
+        private static readonly Regex REGEX_RI = new Regex(@"^Retention_index: ([^ ]+)"); // Retention Index for GC
         private static readonly Regex REGEX_RI_LINE = new Regex(@"^(?:Synon:.* )?RI: ([^ ]+)"); // Retention Index for GC
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)");  // Observer spectrum count
         private static readonly char[] MAJOR_SEP = {'/'};
@@ -782,9 +785,11 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS#?: (\d+-\d+-\d)"); // CONSIDER(bspratt): capture NIST# as well?
         private static readonly Regex REGEX_KEGG = new Regex(@"^(?:Synon:.* )?KEGG: (.*)");
         private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type: (.*)");
+        private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^PrecursorMz: ([^ ]+)");
+        private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode: (.*)");
 
-// ReSharper restore LocalizableElement
-        private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
+        // ReSharper restore LocalizableElement
+        private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent, out string warning)
         {
             var sm = loader.StreamManager;
             long size = sm.GetLength(FilePath);
@@ -792,6 +797,7 @@ namespace pwiz.Skyline.Model.Lib
             long readChars = 0;
             var knownKeys = new HashSet<LibKey>();
             var ambiguousKeys = new HashSet<LibKey>();
+            warning = null;
 
             using (TextReader reader = sm.CreateReader(FilePath))
             using (FileSaver fs = new FileSaver(CachePath, sm))
@@ -847,6 +853,8 @@ namespace pwiz.Skyline.Model.Lib
                     float tfRatio = 1000;
                     double? rt = null, irt = null;
                     int copies = 1;
+                    double? precursorMz = null;
+                    bool? isPositive = null;
 
                     // Process until the start of the peaks
                     while ((line = reader.ReadLine()) != null)
@@ -875,6 +883,8 @@ namespace pwiz.Skyline.Model.Lib
                         }
 
                         match = REGEX_RI_LINE.Match(line);
+                        if (!match.Success)
+                            match = REGEX_RI.Match(line);
                         if (match.Success)
                         {
                             // Note using RT as stand-in for RI (retention Time vs retention Index, LC vs GC)
@@ -924,6 +934,21 @@ namespace pwiz.Skyline.Model.Lib
                                     adduct = Adduct.EMPTY;
                                 continue;
                             }
+                            match = REGEX_PRECURSORMZ.Match(line);
+                            if (match.Success)
+                            {
+                                precursorMz = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                                continue;
+                            }
+                            match = REGEX_IONMODE.Match(line);
+                            if (match.Success)
+                            {
+                                if (string.Equals(@"positive", match.Groups[1].Value))
+                                    isPositive = true;
+                                else if (string.Equals(@"negative", match.Groups[1].Value))
+                                    isPositive = false;
+                                continue;
+                            }
                         }
 
                         // For peptides, a lot of useful info is jammed into the COMMENT line and must be further picked apart
@@ -954,6 +979,20 @@ namespace pwiz.Skyline.Model.Lib
                             ThrowIOException(lineCount, Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
                         else if (line.StartsWith(@"Name:"))
                             break;
+                    }
+
+                    // Try to infer adduct if none given
+                    if (charge == 0 && adduct.IsEmpty && precursorMz.HasValue && ! string.IsNullOrEmpty(formula))
+                    {
+                        var formulaIn = formula;
+                        charge = SmallMoleculeTransitionListReader.ValidateFormulaWithMzAndAdduct(0.01, true,
+                            ref formulaIn, ref adduct, new TypedMass(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
+                        if (!Equals(formula, formulaIn))
+                        {
+                            // We would not expect to adjust the formula in a library ipmort
+                            charge = 0;
+                            adduct = Adduct.EMPTY;
+                        }
                     }
 
                     if (isGC && adduct.IsEmpty)
@@ -1140,9 +1179,8 @@ namespace pwiz.Skyline.Model.Lib
                 var pairType = ambiguousKeys.Any(k => k.IsSmallMoleculeKey)
                     ? Resources.NistLibraryBase_CreateCache_molecule_adduct
                     : Resources.NistLibraryBase_CreateCache_peptide_charge;
-                var warning = string.Format(Resources.NistLibraryBase_CreateCache_,
+                warning = string.Format(Resources.NistLibraryBase_CreateCache_,
                     pairType, TextUtil.LineSeparate(ambiguousKeys.Select(k => k.ToString())));
-                throw new InvalidDataException(warning);
             }
 
             return true;

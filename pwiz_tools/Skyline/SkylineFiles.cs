@@ -1475,6 +1475,10 @@ namespace pwiz.Skyline
         
         private void peakBoundariesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (!DocumentUI.Settings.HasResults)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_imported_results_);
+            }
             using (OpenFileDialog dlg = new OpenFileDialog
             {
                 Title = Resources.SkylineWindow_ImportPeakBoundaries_Import_PeakBoundaries,

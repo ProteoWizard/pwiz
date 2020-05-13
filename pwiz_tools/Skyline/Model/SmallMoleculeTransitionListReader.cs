@@ -577,47 +577,102 @@ namespace pwiz.Skyline.Model
             get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.declusteringPotential); }
         }
 
-        private static int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, Adduct adduct,
-            TypedMass mz, int? charge, out TypedMass monoMass, out TypedMass averageMass, out double? mzCalc)
+        public static int? ValidateFormulaWithMzAndAdduct(double tolerance, bool useMonoIsotopicMass, ref string moleculeFormula, ref Adduct adduct,
+            TypedMass mz, int? charge, bool? isPositive, bool isPrecursor, out TypedMass monoMass, out TypedMass averageMass, out double? mzCalc)
         {
-            // Is the ion's formula the old style where user expected us to add a hydrogen?
-            var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            int massShift;
             var ion = new CustomIon(moleculeFormula);
             monoMass = ion.GetMass(MassType.Monoisotopic);
             averageMass = ion.GetMass(MassType.Average);
-            var mass = mz.IsMonoIsotopic()
-                ? monoMass
-                : averageMass;
+            var mass = mz.IsMonoIsotopic() ? monoMass : averageMass;
+
             // Does given charge, if any, agree with mass and mz?
-            if (adduct.IsEmpty && charge.HasValue)
+            var adductInferred = adduct;
+            if (adduct.IsEmpty && (charge??0) != 0)
             {
-                adduct = Adduct.NonProteomicProtonatedFromCharge(charge.Value);
+                adductInferred = Adduct.NonProteomicProtonatedFromCharge(charge.Value);
             }
-            mzCalc = adduct.AdductCharge != 0 ? adduct.MzFromNeutralMass(mass) : (double?) null;
+            mzCalc = adductInferred.AdductCharge != 0 ? adductInferred.MzFromNeutralMass(mass) : (double?) null;
             if (mzCalc.HasValue && tolerance >= (Math.Abs(mzCalc.Value - mz)))
             {
+                adduct = adductInferred;
                 return charge;
             }
-            int nearestCharge;
-            var calculatedCharge = TransitionCalc.CalcCharge(mass, mz, tolerance, true,
-                TransitionGroup.MIN_PRECURSOR_CHARGE,
-                TransitionGroup.MAX_PRECURSOR_CHARGE, new int[0],
-                TransitionCalc.MassShiftType.none, out massShift, out nearestCharge);
-            if (calculatedCharge.IsEmpty)
+
+            // See if this can be explained by (de)protonation within acceptable charge range
+            var minCharge = (isPositive ?? false)
+                ? TransitionGroup.MIN_PRECURSOR_CHARGE
+                : -TransitionGroup.MAX_PRECURSOR_CHARGE;
+            var maxCharge = (isPositive ?? true)
+                ? TransitionGroup.MAX_PRECURSOR_CHARGE
+                : -TransitionGroup.MIN_PRECURSOR_CHARGE;
+            adductInferred = TransitionCalc.CalcCharge(mass, mz, tolerance, true,
+                minCharge,
+                maxCharge, new int[0],
+                TransitionCalc.MassShiftType.none, out _, out _);
+
+            if (isPrecursor && adductInferred.IsEmpty)
+            {
+                // See if this can be explained by the more common adduct types, possibly with water loss
+                var matches = new Dictionary<double, Adduct>();
+                foreach (var text in Adduct.DEFACTO_STANDARD_ADDUCTS)
+                {
+                    adductInferred = Adduct.FromString(text, Adduct.ADDUCT_TYPE.non_proteomic, null);
+                    if (minCharge <= adductInferred.AdductCharge && adductInferred.AdductCharge <= maxCharge)
+                    {
+                        var err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
+                        if (err <= tolerance)
+                        {
+                            matches.Add(err, adductInferred);
+                        }
+                        else
+                        {
+                            // Try water loss
+                            var parts = text.Split('+', '-'); // Only for simple adducts like M+H, M+Na etc
+                            if (parts.Length == 2)
+                            {
+                                var tail = text.Substring(parts[0].Length);
+                                adductInferred = Adduct.FromString(parts[0] + @"-H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
+                                err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
+                                if (err <= tolerance)
+                                {
+                                    matches.Add(err, adductInferred);
+                                }
+                                else
+                                {
+                                    // Try double water loss (as in https://www.drugbank.ca/spectra/mzcal/DB01299 )
+                                    adductInferred = Adduct.FromString(parts[0] + @"-2H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
+                                    err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
+                                    if (err <= tolerance)
+                                    {
+                                        matches.Add(err, adductInferred);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (matches.Any())
+                {
+                    var best = matches.Keys.Min();
+                    adduct = matches[best];
+                    return adduct.AdductCharge;
+                }
+                adductInferred = Adduct.EMPTY; // No match
+            }
+
+            if (adductInferred.IsEmpty)
             {
                 // That formula and this mz don't yield a reasonable charge state - try adding an H
                 var ion2 = new CustomMolecule(BioMassCalc.AddH(ion.FormulaWithAdductApplied));
                 monoMass = ion2.GetMass(MassType.Monoisotopic);
                 averageMass = ion2.GetMass(MassType.Average);
-                mass = (document.Settings.TransitionSettings.Prediction.FragmentMassType.IsMonoisotopic())
+                mass = useMonoIsotopicMass
                     ? monoMass
                     : averageMass;
-                calculatedCharge = TransitionCalc.CalcCharge(mass, mz, tolerance, true,
-                    TransitionGroup.MIN_PRECURSOR_CHARGE,
-                    TransitionGroup.MAX_PRECURSOR_CHARGE, new int[0], TransitionCalc.MassShiftType.none, out massShift,
-                    out nearestCharge);
-                if (!calculatedCharge.IsEmpty)
+                adductInferred = TransitionCalc.CalcCharge(mass, mz, tolerance, true,
+                    minCharge,
+                    maxCharge, new int[0], TransitionCalc.MassShiftType.none, out _, out _);
+                if (!adductInferred.IsEmpty)
                 {
                     moleculeFormula = ion2.Formula;
                 }
@@ -627,7 +682,12 @@ namespace pwiz.Skyline.Model
                     averageMass = TypedMass.ZERO_AVERAGE_MASSNEUTRAL;
                 }
             }
-            charge = calculatedCharge.IsEmpty ? (int?) null : calculatedCharge.AdductCharge;
+
+            charge = adductInferred.IsEmpty ? (int?) null : adductInferred.AdductCharge;
+            if (charge.HasValue)
+            {
+                adduct = adductInferred;
+            }
             return charge;
         }
 
@@ -1295,19 +1355,31 @@ namespace pwiz.Skyline.Model
                         {
                             // Is the ion's formula the old style where user expected us to add a hydrogen? 
                             double? mzCalc;
-                            charge = ValidateFormulaWithMz(document, ref formula, adduct,  mz, charge, out monoMass, out averageMmass, out mzCalc);
+                            var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                            var useMonoisotopicMass = document.Settings.TransitionSettings.Prediction.FragmentMassType.IsMonoisotopic();
+                            var expectIsPositiveCharge = (precursorInfo == null || precursorInfo.Adduct.IsEmpty) ? 
+                                (charge ?? 0) != 0 ? (charge > 0) : (bool?)null:
+                                precursorInfo.Adduct.AdductCharge > 0;
+                            var initialCharge = charge;
+                            var initialAdduct = adduct;
+                            charge = ValidateFormulaWithMzAndAdduct(tolerance, useMonoisotopicMass,
+                                ref formula, ref adduct,  mz, charge, expectIsPositiveCharge, getPrecursorColumns, out monoMass, out averageMmass, out mzCalc);
                             row.SetCell(indexFormula, formula);
                             massOk = monoMass < CustomMolecule.MAX_MASS && averageMmass < CustomMolecule.MAX_MASS &&
                                      !(massTooLow = charge.HasValue && (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS)); // Null charge => masses are 0 but meaningless
                             if (adduct.IsEmpty && charge.HasValue)
                             {
-                                adduct = Adduct.FromChargeProtonated(charge);
+                                adduct = Adduct.FromCharge(charge.Value, Adduct.ADDUCT_TYPE.non_proteomic);
                             }
                             if (massOk)
                             {
                                 if (charge.HasValue)
                                 {
                                     row.UpdateCell(indexCharge, charge.Value);
+                                    if (!Equals(adduct, initialAdduct))
+                                    {
+                                        row.UpdateCell(indexAdduct, adduct); // Show the deduced adduct
+                                    }
                                     hasError = false;
                                     return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID);
                                 }

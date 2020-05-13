@@ -78,7 +78,7 @@
     <software id="MassHunter" version="6200 series TOF/6500 series Q-TOF B.06.00 (B6000)">
       <cvParam cvRef="MS" accession="MS:1000678" name="MassHunter Data Acquisition" value=""/>
     </software>
-    <software id="pwiz" version="3.0.19304">
+    <software id="pwiz" version="3.0.20071">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -4887,7 +4887,7 @@
     <chromatogramList count="1" defaultDataProcessingRef="pwiz_Reader_Agilent_conversion">
       <chromatogram index="0" id="TIC" defaultArrayLength="97">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="456">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -4899,6 +4899,12 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJytkKFLQ2EUxQ9sYUwc4kAMBpuvKGpQEcG37b3vngVhrAkGLVatMpTr1kRkWFY2ebDigk3MH8IUWRAZgkkMYpggKCKa9PmCf4HhcOBy749zLmC/EUkXgWoGWM8BZzmsXnrYTPuY6/moDxscXRkEj0ZLu4LCjqD5KVrsitamaVdiRNmltj7E1keJZFt0Jk683wvGZqlPZNCpMXip8uH8hLpdpu1UiA2HNp+ne91PvG4RuXmickx8rRFTp9RUkXirUvsGqQcTRLMmGG9ImMlgpGtgYwZ3Nz5w4SE49ID9bJg9i79O/6XJ8CeFDAqODx3y0NszcNs+4iVBKyE6cCu6lKYmF4hlK5EnUtEczrP/uwMrXnSDIBMxIm7IDP0HQJeJbQ==</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="97" encodedLength="24">
+            <cvParam cvRef="MS" accession="MS:1000519" name="32-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjZGBgYBzFA4oBS8gAYg==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

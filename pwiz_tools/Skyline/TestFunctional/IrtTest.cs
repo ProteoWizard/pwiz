@@ -1038,8 +1038,21 @@ namespace pwiz.SkylineTestFunctional
             {
                 irtCalc.CalcName = "Biognosys-10";
                 irtCalc.CreateDatabase(Path.Combine(testDir, "test.irtdb"));
+
+            });
+            // Test choosing an iRT standard with many rows before switching to a standard with fewer rows
+            RunUI(() =>
+            {
+                irtCalc.IrtStandards = IrtStandard.REPLICAL;
+                var standardPeptideCount = IrtStandard.REPLICAL.Peptides.Count;
+                var gridView = irtCalc.GridViewStandard;
+                Assert.AreEqual(standardPeptideCount, gridView.Rows.Count);
+                // Put the focus in the last row, and make sure nothing bad happens when we switch to a shorter
+                // iRT standard
+                irtCalc.GridViewStandard.CurrentCell = gridView.Rows[standardPeptideCount - 1].Cells[0];
                 irtCalc.IrtStandards = IrtStandard.BIOGNOSYS_10;
             });
+
             OkDialog(irtCalc, irtCalc.OkDialog);
             var addPeptides = ShowDialog<AddIrtStandardsToDocumentDlg>(peptideSettings.OkDialog);
             RunUI(() => addPeptides.NumTransitions = 3);

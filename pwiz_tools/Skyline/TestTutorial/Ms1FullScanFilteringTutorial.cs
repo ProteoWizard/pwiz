@@ -50,14 +50,16 @@ namespace pwiz.SkylineTestTutorial
     /// Testing the tutorial for MS1 Full-Scan Filtering
     /// </summary>
     [TestClass]
-    public class Ms1FullScanFilteringTutorial : AbstractFunctionalTest
+    public class Ms1FullScanFilteringTutorial : AbstractFunctionalTestEx
     {
         [TestMethod, MinidumpLeakThreshold(15)]
         [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "MS1Filtering";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-2_5.pdf";
 
@@ -316,7 +318,7 @@ namespace pwiz.SkylineTestTutorial
 
             var libraryExplorer = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(documentBaseName));
             var matchedPepModsDlg = WaitForOpenForm<AddModificationsDlg>();
-            PauseForScreenShot<MultiButtonMsgDlg>("Add mods alert", 12);
+            PauseForScreenShot<AddModificationsDlg>("Add mods alert", 12);
             RunUI(() =>
                 {
                     Assert.AreEqual(13, matchedPepModsDlg.NumMatched);
@@ -431,6 +433,19 @@ namespace pwiz.SkylineTestTutorial
 
             OkDialog(alignmentForm, alignmentForm.Close);
             PauseForScreenShot("Status bar clipped from main window - 4/51 pep 4/52 prec 10/156 tran", 21);
+
+            if (IsPauseForCoverShot)
+            {
+                RestoreCoverViewOnScreen();
+                ClickChromatogram("5b_MCF7_TiTip3", 34.5, 366);
+                TreeNode selectedNode = null;
+                RunUI(() => selectedNode = SkylineWindow.SequenceTree.SelectedNode);
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0]);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
+                PauseForCoverShot();
+                return;
+            }
 
             pepIndex = JumpToPeptide("SSKASLGSLEGEAEAEASSPK");
             RunUI(() => SkylineWindow.ShowChromatogramLegends(true));

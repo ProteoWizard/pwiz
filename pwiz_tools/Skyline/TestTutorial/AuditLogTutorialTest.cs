@@ -32,6 +32,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -72,7 +73,9 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            PauseStartPage = 20;
+//            PauseStartPage = 16;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "AuditLog";
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
                                                     
@@ -341,13 +344,7 @@ namespace pwiz.SkylineTestTutorial
             // View the calibration curve p. 15
             RunUI(()=>SkylineWindow.ShowCalibrationForm());
             var calibrationForm = FindOpenForm<CalibrationForm>();
-            ZoomState priorZoomState = null;
-            RunUI(() =>
-            {
-                PointF centerPoint =  calibrationForm.ZedGraphControl.GraphPane.GeneralTransform(new PointF(0, 0), CoordType.AxisXYScale);
-                priorZoomState = new ZoomState(calibrationForm.ZedGraphControl.GraphPane, ZoomState.StateType.Zoom);
-                calibrationForm.ZedGraphControl.ZoomPane(calibrationForm.ZedGraphControl.GraphPane, 0.52, centerPoint, true);
-            });
+            var priorZoomState = ZoomCalibrationCurve(calibrationForm, 0.52);
 
             RunUI(() =>
             {
@@ -407,6 +404,31 @@ namespace pwiz.SkylineTestTutorial
                 floatingWindow.Width -= 15;
             });
             PauseForScreenShot<AuditLogForm>("Audit Log with UndoRedo view.", 17);
+            if (IsPauseForCoverShot)
+            {
+                RunUI(() =>
+                {
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                });
+
+                RestoreCoverViewOnScreen();
+
+                var calibrationCoverForm = WaitForOpenForm<CalibrationForm>();
+                ZoomCalibrationCurve(calibrationCoverForm, 0.53);
+                var floatingLogWindow = SkylineWindow.AuditLogForm.Parent.Parent;
+                var floatingCalWindow = calibrationCoverForm.Parent.Parent;
+                RunUI(() =>
+                {
+                    floatingLogWindow.Top = SkylineWindow.Bottom - floatingLogWindow.Height - 8;
+                    floatingLogWindow.Left =
+                        (SkylineWindow.Left + SkylineWindow.Right) / 2 - floatingLogWindow.Width / 2;
+                    floatingCalWindow.Top = SkylineWindow.Top + 8;
+                    floatingCalWindow.Left = SkylineWindow.Right - floatingCalWindow.Width - 8;
+                    SkylineWindow.AuditLogForm.DataGridView.AutoResizeColumn(reasonIndex);
+                    SkylineWindow.AuditLogForm.DataGridView.AutoResizeColumn(reasonIndex - 1);
+                });
+                PauseForCoverShot();
+            }
 
             var customizeDialog = ShowDialog<ViewEditor>(SkylineWindow.AuditLogForm.NavBar.CustomizeView);
 
@@ -473,6 +495,19 @@ namespace pwiz.SkylineTestTutorial
                 Process.Start(requestUri.ToString());
                 PauseForScreenShot("Uploaded document audit log in Panorama (in browser).");
             }
+        }
+
+        private static ZoomState ZoomCalibrationCurve(CalibrationForm calibrationForm, double zoomFraction)
+        {
+            ZoomState priorZoomState = null;
+            RunUI(() =>
+            {
+                PointF centerPoint =
+                    calibrationForm.ZedGraphControl.GraphPane.GeneralTransform(new PointF(0, 0), CoordType.AxisXYScale);
+                priorZoomState = new ZoomState(calibrationForm.ZedGraphControl.GraphPane, ZoomState.StateType.Zoom);
+                calibrationForm.ZedGraphControl.ZoomPane(calibrationForm.ZedGraphControl.GraphPane, zoomFraction, centerPoint, true);
+            });
+            return priorZoomState;
         }
 
         private void VerifyCalibrationCurve(CalibrationForm calibrationForm, double slope, double intercept, double rSquared)
