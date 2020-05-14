@@ -271,13 +271,13 @@
     <value>NoControl</value>
   </data>
   <data name="lblTolerance.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 102</value>
+    <value>14, 224</value>
   </data>
   <data name="lblTolerance.Size" type="System.Drawing.Size, System.Drawing">
     <value>104, 13</value>
   </data>
   <data name="lblTolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="lblTolerance.Text" xml:space="preserve">
     <value>Ion &amp;match tolerance:</value>
@@ -295,13 +295,13 @@
     <value>4</value>
   </data>
   <data name="txtTolerance.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 118</value>
+    <value>17, 240</value>
   </data>
   <data name="txtTolerance.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
   </data>
   <data name="txtTolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;txtTolerance.Name" xml:space="preserve">
     <value>txtTolerance</value>
@@ -325,13 +325,13 @@
     <value>NoControl</value>
   </data>
   <data name="lblToleranceUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>99, 121</value>
+    <value>99, 243</value>
   </data>
   <data name="lblToleranceUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>25, 13</value>
   </data>
   <data name="lblToleranceUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="lblToleranceUnits.Text" xml:space="preserve">
     <value>m/z</value>
@@ -355,13 +355,13 @@
     <value>NoControl</value>
   </data>
   <data name="lblIonCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>141, 102</value>
+    <value>141, 224</value>
   </data>
   <data name="lblIonCount.Size" type="System.Drawing.Size, System.Drawing">
     <value>31, 13</value>
   </data>
   <data name="lblIonCount.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="lblIonCount.Text" xml:space="preserve">
     <value>&amp;Pick:</value>
@@ -385,13 +385,13 @@
     <value>NoControl</value>
   </data>
   <data name="lblIonCountUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 121</value>
+    <value>226, 243</value>
   </data>
   <data name="lblIonCountUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>65, 13</value>
   </data>
   <data name="lblIonCountUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="lblIonCountUnits.Text" xml:space="preserve">
     <value>product ions</value>
@@ -409,13 +409,13 @@
     <value>8</value>
   </data>
   <data name="txtIonCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 118</value>
+    <value>144, 240</value>
   </data>
   <data name="txtIonCount.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
   </data>
   <data name="txtIonCount.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="&gt;&gt;txtIonCount.Name" xml:space="preserve">
     <value>txtIonCount</value>
@@ -466,13 +466,13 @@
     <value>NoControl</value>
   </data>
   <data name="lblMinIonCountUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 147</value>
+    <value>226, 269</value>
   </data>
   <data name="lblMinIonCountUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>84, 13</value>
   </data>
   <data name="lblMinIonCountUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="lblMinIonCountUnits.Text" xml:space="preserve">
     <value>min product ions</value>
@@ -490,13 +490,13 @@
     <value>1</value>
   </data>
   <data name="txtMinIonCount.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 144</value>
+    <value>144, 266</value>
   </data>
   <data name="txtMinIonCount.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
   </data>
   <data name="txtMinIonCount.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+    <value>15</value>
   </data>
   <data name="&gt;&gt;txtMinIonCount.Name" xml:space="preserve">
     <value>txtMinIonCount</value>
@@ -775,16 +775,13 @@
     <value>5</value>
   </data>
   <data name="panelIonFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 186</value>
+    <value>17, 102</value>
   </data>
   <data name="panelIonFilter.Size" type="System.Drawing.Size, System.Drawing">
     <value>335, 100</value>
   </data>
   <data name="panelIonFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="panelIonFilter.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;panelIonFilter.Name" xml:space="preserve">
     <value>panelIonFilter</value>
