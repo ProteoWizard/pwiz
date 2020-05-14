@@ -105,7 +105,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
             auto ticPtr = rawfile_->getTIC(config_.globalChromatogramsAreMs1Only);
             if (getBinaryData)
             {
-                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, MS_number_of_detector_counts);
+                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
                 ticPtr->getXArray(result->getTimeArray()->data);
                 ticPtr->getYArray(result->getIntensityArray()->data);
             }
