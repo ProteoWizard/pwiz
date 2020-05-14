@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+	
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>1.3</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+  <data name="Section_Introductory" xml:space="preserve">
+    <value>はじめに</value>
+  </data>
+  <data name="MethodEdit_Caption" xml:space="preserve">
+    <value>ターゲットメソッドの編集</value>
+  </data>
+  <data name="MethodEdit_Description" xml:space="preserve">
+    <value>ターゲットプロテオミクス実験用Skylineドキュメント作成の実務経験を積みます。このチュートリアルでは、pepXML、mzXMLからはMS/MSスペクトルライブラリ、FASTA形式ファイルからはバックグラウンドプロテオームファイルを作成します。これらとGlobal Proteome Machineからの公開MS/MSスペクトルライブラリを組み合わせ、選択された酵母タンパク質、ペプチド、プロダクトイオンをターゲットとする新しいSkylineドキュメントの作成を導きます。このドキュメントから、トランジションリストをエクスポートし、AB 4000 Q Trapでの実行の準備を行ないます。</value>
+  </data>
+  <data name="MethodRefine_Caption" xml:space="preserve">
+    <value>ターゲットメソッドの最適化</value>
+  </data>
+  <data name="MethodRefine_Description" xml:space="preserve">
+    <value>SRM測定の広範なセットを用いた開始、装置データのインポート、ドキュメントのリファインにおいて実務経験を積みます。2000以上のトランジションやThermo TSQでスケジュールなしで測定される39のインジェクションが必要とされているリファインなしドキュメントから開始します。全39のインジェクションを単一繰り返し測定にインポートする方法を学びます。保持時間回帰やMS/MSスペクトルライブラリピーク強度相関に対し疎水性を使用し、測定ピークの信頼度を向上させます。Skyline最適化ダイアログを使用し、最も信頼性の高いピークに対する最良のトランジション以外すべてを削除します。スケジュール処理を通じ、ドキュメントをシングルインジェクションで測定可能なトランジションリストへと減らします。シングルインジェクションメソッドの複数の繰り返し測定のインポートと表示を行ないます。</value>
+  </data>
+  <data name="GroupedStudy_Caption" xml:space="preserve">
+    <value>グループに分けた試験データの処理</value>
+  </data>
+  <data name="GroupedStudy_Description" xml:space="preserve">
+    <value>複数の繰り返し測定試験日をSkylineで効果的に処理する方法について学びます。すでに検知可能に最適化されているターゲットの初期セットを、14ラットの血漿研究からの健常被験体および罹患被験体との間の差分存在量の証拠があるか、さらに最適化します。この処理で、パワフルなSkylineインタラクティブ表示を利用して、データの異常を素早く調べ理解する方法を学びます。また、Skylineバージョン3.1で導入されたSkylineグループ比較フレームワークに慣れていただきます。</value>
+  </data>
+  <data name="ExistingQuant_Caption" xml:space="preserve">
+    <value>既存&amp;定量的実験</value>
+  </data>
+  <data name="ExistingQuant_Description" xml:space="preserve">
+    <value>定量的実験や同位体標識参照ペプチドを用い、公開トランジションリストやSRM質量分析計データを使用して実験を始めることにより実務作業経験を積みます。ピーク領域や保持時間概要チャートをいくつか使用し、Skylineでの効果的なデータ分析方法を学びます。</value>
+  </data>
+  <data name="Section_Full_Scan_Acquisition_Data" xml:space="preserve">
+    <value>フルスキャン取得データ</value>
+  </data>
+  <data name="MS1Filtering_Caption" xml:space="preserve">
+    <value>MS1フルスキャンフィルタ</value>
+  </data>
+  <data name="MS1Filtering_Description" xml:space="preserve">
+    <value>データ依存取得 (DDA) 実験からMS1スキャンを使用するペプチド式で定量的差異を測定するためにSkylineドキュメント作成の実務経験を積みます。このチュートリアルでは、探索データセットからのスペクトルライブラリの生成、MS1フィルタ用のSkylineドキュメントの設定、MS/MSペプチド同定により導かれるピーク選択を用いたMS1スキャンからプリカーサ－イオンクロマトグラムを抽出するための質量分析計生データのインポート、さらにSkylineでの結果定量的データの処理を行ないます。探索データセットのラベルフリーの定量的分析に興味がある場合、このチュートリアルが検査用の新しいツールセットを提供します。</value>
+  </data>
+  <data name="TargetedMSMS_Caption" xml:space="preserve">
+    <value>ターゲットMS/MS (PRM)</value>
+  </data>
+  <data name="TargetedMSMS_Description" xml:space="preserve">
+    <value>低解像度Thermo LTQ、高解像度Agilent 6520 Q-TOFで取得されるターゲットMS/MS（並列反応モニタリング-PRMとも呼ばれる）データを用いて、実務作業経験を積みます。プリカーサーを使用するペプチドの定量化と低/高解像度装置で測定される断片イオンの選択度や感度の差異について新しい理解を深めます。クロマトグラフィーベースの定量的プロテオミクス作業用にSkylineが提供する豊富な一連の機能を使用して新しい作業方法を発見し、自分の質量分析データを理解します。</value>
+  </data>
+  <data name="DIA_Caption" xml:space="preserve">
+    <value>データ非依存性取得</value>
+  </data>
+  <data name="DIA_Description" xml:space="preserve">
+    <value>データ非依存性取得（DIA）データを利用する実務経験を積み、シリーズ内の同一装置上で取得したDIAおよびDDA実行を活用するワークフローを使用します。DIA単離スキームを定義しエクスポートします。実験のDIA実行の前に取得したDDAデータからスペクトルライブラリを構築します。そのスペクトルライブラリに基づき、タンパク質のターゲットセットのペプチドとトランジションを選択します。関連DIA実行をSkyline内にインポートし分析して、DIAによる作業の開始するためのシンプルなワークフローをマスターします。</value>
+  </data>
+  <data name="Section_Small_Molecules" xml:space="preserve">
+    <value>低分子</value>
+  </data>
+  <data name="SmallMolecule_Caption" xml:space="preserve">
+    <value>低分子ターゲット</value>
+  </data>
+  <data name="SmallMolecule_Description" xml:space="preserve">
+    <value>Skylineを利用して非プロテオミクスイオンをターゲットする方法を学びます。メタボロミクス実験で使用される分子トランジションリストをインポートし、Waters Xevo TQSからの14回の実行をインポートします。非プロテオミクス実験に、Skylineインターフェイスのパワーを利用する方法を学び始めましょう。</value>
+  </data>
+  <data name="Section_Advanced_Topics" xml:space="preserve">
+    <value>詳細なトピック</value>
+  </data>
+  <data name="iRT_Caption" xml:space="preserve">
+    <value>iRT保持時間予測</value>
+  </data>
+  <data name="iRT_Description" xml:space="preserve">
+    <value>スケジュール済みの取得やピーク強度検証に対し、保持時間予測に将来使用するためライブラリ内にある校正済みの実験的に測定されたペプチド保持時間の保存テクニックをiRTを使用して実務経験を積みます。このチュートリアルでは、自分のiRTカルキュレータを校正し、さらにiRTキットのペプチド標準に対し、Biognosysが提案するiRT-C18校正について学びます。SRMデータ、探索実験のMS1スキャンからフィルタされたスペクトルライブラリやクロマトグラムピークから新しいiRT値を校正します。また、新しいグラジエントを用いて新しい列でSRM取得をスケジュールするために、これらのiRTの再校正方法も学びます。クロマトグラムピーク強度検証においてさらに信頼性を高めるiRTに基づき、より正確な保持時間予測を確認できます。</value>
+  </data>
+</root>

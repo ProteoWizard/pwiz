@@ -146,6 +146,13 @@ void diff(const BinaryDataArray& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const IntegerDataArray& a,
+          const IntegerDataArray& b,
+          IntegerDataArray& a_b,
+          IntegerDataArray& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const Spectrum& a,
           const Spectrum& b,
           Spectrum& a_b,

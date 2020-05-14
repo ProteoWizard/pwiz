@@ -56,8 +56,10 @@ namespace pwiz.SkylineTestTutorial
         public void TestMethodEditTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
-            //IsPauseForAuditLog = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForAuditLog = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "MethodEdit";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-3_7.pdf";
             
@@ -204,6 +206,22 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             }
             PauseForScreenShot("Targets tree clipped from main window", 11); // Not L10N
+
+            if (IsPauseForCoverShot)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.SpectrumFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                });
+                RestoreCoverViewOnScreen(false);
+                RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SelectedNode.Parent.Parent.Parent);
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
+                PauseForCoverShot();
+                return;
+            }
 
             CheckTransitionCount("VDIIANDQGNR", 5); // Not L10N
 

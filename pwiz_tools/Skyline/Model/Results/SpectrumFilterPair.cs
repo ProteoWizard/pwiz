@@ -91,6 +91,8 @@ namespace pwiz.Skyline.Model.Results
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
 
+        public string ScanDescriptionFilter { get; set; }
+
         public int AddQ1FilterValues(IEnumerable<SignedMz> filterValues, Func<double, double> getFilterWindow)
         {
 
@@ -657,6 +659,4 @@ namespace pwiz.Skyline.Model.Results
             return CompareTo((SpectrumFilterValues)obj);
         }
     }
-
-
 }

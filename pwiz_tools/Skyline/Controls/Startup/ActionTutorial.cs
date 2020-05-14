@@ -51,7 +51,10 @@ namespace pwiz.Skyline.Controls.Startup
             small_molecule_targets,
             small_molecule_method_dev_and_ce_opt,
             small_molecule_quant,
-            hi_res_metabolomics
+            hi_res_metabolomics,
+            ion_mobility,
+            audit_logging,
+            dia_swath,
         }
 
         public TutorialType ImportType { get; set; }

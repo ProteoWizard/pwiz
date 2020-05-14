@@ -1068,13 +1068,13 @@ namespace pwiz.Skyline.Model
                 AddCounts(childNew, nodeCountStack);
             }
 
-            // If no children changed, then just return this node
-            if (ArrayUtil.ReferencesEqual(Children, childrenNew))
-                return this;
-
             // If this is a level below which empty nodes are removed, return null if empty
             if (levelRemoveEmpty.HasValue && levelRemoveEmpty.Value < 0 && childrenNew.Count == 0)
                 return null;
+
+            // If no children changed, then just return this node
+            if (ArrayUtil.ReferencesEqual(Children, childrenNew))
+                return this;
 
             return ChangeChildren(childrenNew, nodeCountStack).ChangeAutoManageChildren(false);
         }
