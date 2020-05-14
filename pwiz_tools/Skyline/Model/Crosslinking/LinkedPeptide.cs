@@ -218,5 +218,19 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             return result;
         }
+
+        /// <summary>
+        /// Returns the number of linked peptides in this tree (not including this linked peptide).
+        /// </summary>
+        public int CountDescendents()
+        {
+            int result = 0;
+            if (ExplicitMods != null)
+            {
+                result += ExplicitMods.Crosslinks.Values.Sum(linkedPeptide => 1 + linkedPeptide.CountDescendents());
+            }
+
+            return result;
+        }
     }
 }

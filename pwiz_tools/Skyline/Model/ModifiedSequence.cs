@@ -203,24 +203,50 @@ namespace pwiz.Skyline.Model
                 result.Append(modFormatter(modGroup.ToArray()));
             }
             result.Append(_unmodifiedSequence.Substring(seqCharsReturned));
-            foreach (var crosslinkMod in _explicitMods.Where(mod => null != mod.LinkedPeptideSequence))
+            var linkedMods = _explicitMods.Where(mod => null != mod.LinkedPeptideSequence)
+                .OrderBy(mod => mod.ExplicitMod.LinkedPeptide.CountDescendents()).ToList();
+            if (linkedMods.Any())
             {
                 result.Append(@"-");
-                string strMod = modFormatter(new[] {crosslinkMod});
-                if (strMod.Length == 0)
+                for (int iLinkedMod = 0; iLinkedMod < linkedMods.Count; iLinkedMod++)
                 {
-                    strMod = @"[]";
-                }
-                result.Append(strMod.Substring(0, strMod.Length - 1));
+                    var linkedMod = linkedMods[iLinkedMod];
+                    
+                    string strMod = modFormatter(new[] { linkedMod });
+                    if (strMod.Length == 0)
+                    {
+                        strMod = @"[]";
+                    }
+                    // Add the representation for the modification itself up to the closing bracket (e.g. "[DSS")
+                    result.Append(strMod.Substring(0, strMod.Length - 1));
 
-                result.Append(@"@");
-                result.Append(crosslinkMod.IndexAA + 1);
-                result.Append(@",");
-                result.Append(crosslinkMod.ExplicitMod.LinkedPeptide.IndexAa + 1);
-                result.Append(strMod.Substring(strMod.Length - 1));
-                result.Append(@"-");
-                result.Append(crosslinkMod.LinkedPeptideSequence.Format(modFormatter));
+                    result.Append(@"@");
+                    result.Append(linkedMod.IndexAA + 1);
+                    result.Append(@",");
+                    result.Append(linkedMod.ExplicitMod.LinkedPeptide.IndexAa + 1);
+                    
+                    // Add the closing bracket from the modification name
+                    result.Append(strMod.Substring(strMod.Length - 1));
+
+                    if (iLinkedMod != linkedMods.Count - 1)
+                    {
+                        // If this is not the last child, and this linked peptide has any descendents,
+                        // then append that many placeholder "[]".
+                        int descendentCount = linkedMod.ExplicitMod.LinkedPeptide.CountDescendents();
+                        if (descendentCount > 0)
+                        {
+                            result.Insert(result.Length, @"[]", descendentCount);
+                        }
+                    }
+                }
+
+                foreach (var linkedMod in linkedMods)
+                {
+                    result.Append(@"-");
+                    result.Append(linkedMod.LinkedPeptideSequence.Format(modFormatter));
+                }
             }
+
             return result.ToString();
         }
 

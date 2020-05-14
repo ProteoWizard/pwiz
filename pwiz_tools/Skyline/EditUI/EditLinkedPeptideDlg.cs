@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using EnvDTE;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
@@ -43,6 +44,7 @@ namespace pwiz.Skyline.EditUI
             {
                 tbxPeptideSequence.Text = linkedPeptide.Peptide.Sequence;
                 tbxAttachmentOrdinal.Text = (linkedPeptide.IndexAa + 1).ToString();
+                _explicitMods = linkedPeptide.ExplicitMods;
             }
         }
 

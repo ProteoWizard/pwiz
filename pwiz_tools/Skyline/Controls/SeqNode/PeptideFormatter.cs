@@ -237,7 +237,6 @@ namespace pwiz.Skyline.Controls.SeqNode
             bool first = true;
             foreach (var linkedPeptide in LinkedPeptides.Values)
             {
-                result.AddRange(linkedPeptide.GetTextSequencesForSelfAndChildren(displayModificationOption));
                 if (!first)
                 {
                     result.Add(new TextSequence
@@ -249,6 +248,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
 
                 first = false;
+                result.AddRange(linkedPeptide.GetTextSequencesForSelfAndChildren(displayModificationOption));
             }
 
             if (LinkedPeptides.Count > 1)

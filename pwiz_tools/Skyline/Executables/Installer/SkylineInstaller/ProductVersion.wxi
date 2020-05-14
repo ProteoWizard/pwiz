@@ -7,7 +7,7 @@
       <?define ProductName="Skyline (64 bit)"?>
     <?else?>
       <?define UpgradeCode="{08F72B41-9E5D-4A20-8CFF-8DAAE033CF34}"?>
-      <?define ProductName="Skyline-Daily (64 bit)"?>
+      <?define ProductName="Skyline-Daily Crosslinking Preview (64 bit)"?>
     <?endif?>
   <?else?>
     <?if $(var.Skyline.TargetName) = Skyline?>
