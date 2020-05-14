@@ -273,6 +273,7 @@
             resources.ApplyResources(this.cbCrosslinker, "cbCrosslinker");
             this.cbCrosslinker.Name = "cbCrosslinker";
             this.cbCrosslinker.UseVisualStyleBackColor = true;
+            this.cbCrosslinker.CheckedChanged += new System.EventHandler(this.cbCrosslinker_CheckedChanged);
             // 
             // EditStaticModDlg
             // 

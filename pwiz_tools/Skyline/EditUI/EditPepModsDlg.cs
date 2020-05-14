@@ -360,7 +360,7 @@ namespace pwiz.Skyline.EditUI
             {
                 if (!mod.IsMod(aa, indexAA, seq.Length))
                     continue;
-                if (!AllowCrosslinks && mod.CrosslinkerSettings != null)
+                if (false && !AllowCrosslinks && mod.CrosslinkerSettings != null)
                 {
                     continue;
                 }

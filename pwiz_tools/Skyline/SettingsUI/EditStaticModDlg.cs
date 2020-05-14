@@ -811,5 +811,10 @@ namespace pwiz.Skyline.SettingsUI
             get { return comboMod.Visible; }
             private set { comboMod.Visible = value; }
         }
+
+        private void cbCrosslinker_CheckedChanged(object sender, EventArgs e)
+        {
+            cbVariableMod.Enabled = !cbCrosslinker.Checked;
+        }
     }
 }
