@@ -186,6 +186,9 @@ void diff(const DataProcessing& a,
           DataProcessing& b_a,
           const DiffConfig& config)
 {
+    if (config.ignoreDataProcessing)
+        return;
+
     diff(a.id, b.id, a_b.id, b_a.id, config);
     vector_diff_diff(a.processingMethods, b.processingMethods, a_b.processingMethods, b_a.processingMethods, config);
 
@@ -929,7 +932,8 @@ void diff(const MSData& a,
         vector_diff_deep(a.instrumentConfigurationPtrs, b.instrumentConfigurationPtrs, a_b.instrumentConfigurationPtrs, b_a.instrumentConfigurationPtrs, config);
 
         // do diff on full DataProcessing list
-        vector_diff_deep(a.allDataProcessingPtrs(), b.allDataProcessingPtrs(), a_b.dataProcessingPtrs, b_a.dataProcessingPtrs, config);
+        if (!config.ignoreDataProcessing)
+            vector_diff_deep(a.allDataProcessingPtrs(), b.allDataProcessingPtrs(), a_b.dataProcessingPtrs, b_a.dataProcessingPtrs, config);
     }
 
     // ignore DataProcessing in SpectrumList/ChromatogramList

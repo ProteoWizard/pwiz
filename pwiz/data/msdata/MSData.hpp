@@ -556,15 +556,7 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
     bool empty() const;
 
     /// returns true iff has nonnull and nonempty binaryDataArrayPtrs and integerDataArrayPtrs
-    bool hasBinaryData() const {
-        return binaryDataArrayPtrs.size() && 
-               binaryDataArrayPtrs[0] &&
-              !binaryDataArrayPtrs[0]->data.empty()
-              ||
-              integerDataArrayPtrs.size() &&
-              integerDataArrayPtrs[0] &&
-              !integerDataArrayPtrs[0]->data.empty();
-    };
+    bool hasBinaryData() const;
 
     /// copy binary data arrays into m/z-intensity pair array
     void getMZIntensityPairs(std::vector<MZIntensityPair>& output) const;
@@ -738,6 +730,12 @@ class PWIZ_API_DECL SpectrumList
 
     /// issues a warning once per SpectrumList instance (based on string hash)
     virtual void warn_once(const char* msg) const; 
+
+    /// returns the minimum DetailLevel for which the given predicate returns true
+    /// - if the predicate returns indeterminate, another spectrum will be tried
+    /// - if the predicate returns false, a higher detail level will be tried
+    /// - e.g. spectrumList.min_level_accepted([](const Spectrum& s) { return s.hasCVParam(MS_ms_level); })
+    virtual DetailLevel min_level_accepted(std::function<boost::tribool(const Spectrum&)> predicate) const;
 
     virtual ~SpectrumList(){} 
 };
