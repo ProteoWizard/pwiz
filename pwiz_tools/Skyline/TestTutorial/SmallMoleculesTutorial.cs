@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override bool ShowStartPage
         {
-            get { return true; }  // So we can point out the UI mode control
+            get { return !IsPauseForScreenShots; }  // So we can point out the UI mode control
         }
 
         [TestMethod]
@@ -88,32 +88,31 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            // Setting the UI mode, p 2  
-            var startPage = WaitForOpenForm<StartPage>();
-            RunUI(()=>startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
-            PauseForScreenShot<StartPage>("Start Window proteomic", 2);
-            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
-            PauseForScreenShot<StartPage>("Start Window small molecule", 3);
-            ShowSkyline(() => startPage.DoAction(skylineWindow => true));
+            if (IsPauseForScreenShots)
+                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
+            else // old way of doing things
+            {
+                // Setting the UI mode, p 2  
+                var startPage = WaitForOpenForm<StartPage>();
+                RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
+//                PauseForScreenShot<StartPage>("Start Window proteomic", 2);
+                RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
+//                PauseForScreenShot<StartPage>("Start Window small molecule", 3);
+                ShowSkyline(() => startPage.DoAction(skylineWindow => true));
+            }
 
-            // Inserting a Transition List, p. 5
+            // Inserting a Transition List, p. 3
             {
                 var doc = SkylineWindow.Document;
 
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                 RunUI(() =>
                 {
-                    pasteDlg.Size = new Size(900, 375);
-                });
-                PauseForScreenShot<PasteDlg>("Paste Dialog in molecule mode", 5);
-
-                RunUI(() =>
-                {
                     pasteDlg.IsMolecule = true;
                     pasteDlg.SetSmallMoleculeColumns(null);  // Default columns
+                    pasteDlg.Height = 290;
                 });
-                PauseForScreenShot<PasteDlg>("Paste Dialog in small molecule mode, default columns - show Columns checklist", 3);
-
+                PauseForScreenShot<PasteDlg>("Paste Dialog in molecule mode", 3);
 
                 var columnsOrdered = new[]
                 {
@@ -135,12 +134,13 @@ namespace pwiz.SkylineTestTutorial
                 }
                 RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
                 WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 4);
+                PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns - show columns checklist", 5);
 
                 SetCsvFileClipboardText(GetTestPath("SMTutorial_TransitionList.csv"), true);
                 RunUI(pasteDlg.PasteTransitions);
                 RunUI(pasteDlg.ValidateCells);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 5);
+                RunUI(() => pasteDlg.Height = 428);
+                PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 6);
 
                 OkDialog(pasteDlg, pasteDlg.OkDialog);
                 var docTargets = WaitForDocumentChange(doc);
