@@ -318,7 +318,7 @@ namespace pwiz.SkylineTestTutorial
 
             var libraryExplorer = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(documentBaseName));
             var matchedPepModsDlg = WaitForOpenForm<AddModificationsDlg>();
-            PauseForScreenShot<MultiButtonMsgDlg>("Add mods alert", 12);
+            PauseForScreenShot<AddModificationsDlg>("Add mods alert", 12);
             RunUI(() =>
                 {
                     Assert.AreEqual(13, matchedPepModsDlg.NumMatched);
