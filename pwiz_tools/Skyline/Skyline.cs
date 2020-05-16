@@ -5134,6 +5134,10 @@ namespace pwiz.Skyline
                 // Update the progress UI immediately
                 UpdateProgressUI();
             }
+            if (!string.IsNullOrEmpty(e.Progress.WarningMessage))
+            {
+                MessageDlg.Show(this, e.Progress.WarningMessage);
+            }
         }
 
         private void ShowProgressErrorUI(ProgressUpdateEventArgs e)
