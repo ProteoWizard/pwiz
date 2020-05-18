@@ -154,6 +154,9 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
     vector<double> binary(sampleDataSize_);
     copy(sampleData_, sampleData_+sampleDataSize_, binary.begin());
 
+    vector<std::int64_t> binaryInt(sampleDataSize_);
+    copy(sampleData_, sampleData_ + sampleDataSize_, binaryInt.begin());
+
     bool checkNumpressMaxErrorSupression = (BinaryDataEncoder::Numpress_None != config.numpress)&&(config.numpressLinearErrorTolerance>0);
     if (checkNumpressMaxErrorSupression) 
     {
@@ -167,7 +170,8 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
     {
         *os_ << "original: " << binary.size() << endl;
         *os_ << setprecision(20) << fixed;
-        copy(binary.begin(), binary.end(), ostream_iterator<double>(*os_, "\n")); 
+        copy(binary.begin(), binary.end(), ostream_iterator<double>(*os_, " ")); 
+        *os_ << endl;
     }
 
     // instantiate encoder
@@ -179,8 +183,14 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
     string encoded;
     encoder.encode(binary, encoded);
 
+    string encodedInt;
+    encoder.encode(binaryInt, encodedInt);
+
     if (os_)
+    {
         *os_ << "encoded: " << encoded.size() << endl << encoded << endl;
+        *os_ << "encodedInt: " << encodedInt.size() << endl << encodedInt << endl;
+    }
 
     // regression testing for encoding
 
@@ -191,15 +201,24 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
     BinaryData<double> decoded;
     encoder.decode(encoded, decoded);
 
+    BinaryData<std::int64_t> decodedInt;
+    encoder.decode(encodedInt, decodedInt);
+
     if (os_)
     {
         *os_ << "decoded: " << decoded.size() << endl;
-        copy(decoded.begin(), decoded.end(), ostream_iterator<double>(*os_, "\n")); 
+        copy(decoded.begin(), decoded.end(), ostream_iterator<double>(*os_, " "));
+        *os_ << endl;
+
+        *os_ << "decodedInt: " << decodedInt.size() << endl;
+        copy(decodedInt.begin(), decodedInt.end(), ostream_iterator<std::int64_t>(*os_, " "));
+        *os_ << endl;
     }
 
     // validate by comparing scan data before/after encode/decode
 
     unit_assert(binary.size() == decoded.size());
+    unit_assert(binaryInt.size() == decodedInt.size());
 
     const double epsilon = config.precision == BinaryDataEncoder::Precision_64 ? 1e-14 : 1e-5 ;
 

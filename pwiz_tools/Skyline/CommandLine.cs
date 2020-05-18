@@ -259,7 +259,7 @@ namespace pwiz.Skyline
                     return false;
             }
 
-            if (commandArgs.AddDecoys)
+            if (commandArgs.AddDecoys || commandArgs.DiscardDecoys)
             {
                 if (!AddDecoys(commandArgs))
                     return false;
@@ -1869,7 +1869,16 @@ namespace pwiz.Skyline
 
         private bool AddDecoys(CommandArgs commandArgs)
         {
-            if (_doc.PeptideGroups.Contains(g => g.IsDecoy))
+            if (!commandArgs.AddDecoys)
+            {
+                if (!commandArgs.DiscardDecoys || !_doc.MoleculeGroups.Contains(g => g.IsDecoy))
+                    return true;
+
+                ModifyDocument(RefinementSettings.RemoveDecoys);
+                _out.WriteLine(Resources.CommandLine_AddDecoys_Decoys_discarded);
+                return true;
+            }
+            if (!commandArgs.DiscardDecoys && _doc.PeptideGroups.Contains(g => g.IsDecoy))
             {
                 _out.WriteLine(Resources.CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_);
                 return false;
@@ -1885,6 +1894,7 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.CommandLine_AddDecoys_Error_The_number_of_peptides,
                     numDecoys, numComparableGroups, CommandArgs.ARG_DECOYS_ADD.ArgumentText, CommandArgs.ARG_VALUE_DECOYS_ADD_SHUFFLE);
+                return false;
             }
             var refineAddDecoys = new RefinementSettings
             {
@@ -1892,8 +1902,16 @@ namespace pwiz.Skyline
                 NumberOfDecoys = numDecoys
             };
             int peptidesBefore = _doc.PeptideCount;
+            int decoyPeptideCount = 0;
+            if (commandArgs.DiscardDecoys)
+                decoyPeptideCount = _doc.MoleculeGroups.Where(g => g.IsDecoy).Sum(g => g.MoleculeCount);
+
             ModifyDocument(d => refineAddDecoys.GenerateDecoys(d));
-            _out.WriteLine(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method, _doc.PeptideCount - peptidesBefore, commandArgs.AddDecoysType);
+
+            if (decoyPeptideCount > 0)
+                _out.WriteLine(Resources.CommandLine_AddDecoys_Decoys_discarded);
+            _out.WriteLine(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
+                _doc.PeptideCount - (peptidesBefore - decoyPeptideCount), commandArgs.AddDecoysType);
             return true;
         }
 
@@ -3717,6 +3735,7 @@ namespace pwiz.Skyline
         private readonly DateTime _waitStart;
         private DateTime _lastOutput;
         private string _lastMessage;
+        private string _lastWarning;
 
         private readonly TextWriter _out;
         private Thread _waitingThread;
@@ -3813,6 +3832,12 @@ namespace pwiz.Skyline
             else if (writeMessage)
             {
                 _out.WriteLine(status.Message);
+            }
+
+            if (!string.IsNullOrEmpty(status.WarningMessage) && !Equals(_lastWarning, status.WarningMessage))
+            {
+                _out.WriteLine(status.WarningMessage);
+                _lastWarning = status.WarningMessage;
             }
 
             if (writeMessage)

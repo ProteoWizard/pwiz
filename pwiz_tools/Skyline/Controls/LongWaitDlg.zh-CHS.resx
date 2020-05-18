@@ -147,9 +147,6 @@
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="progressBar.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
   <data name="progressBar.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 56</value>
   </data>

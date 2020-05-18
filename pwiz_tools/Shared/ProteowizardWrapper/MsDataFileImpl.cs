@@ -93,6 +93,8 @@ namespace pwiz.ProteowizardWrapper
 
         private DetailLevel _detailLevelPrecursors = DetailLevel.InstantMetadata;
 
+        private DetailLevel _detailScanDescription = DetailLevel.FastMetadata;
+
         private CVID? _cvidIonMobility;
 
         private static double[] ToArray(BinaryDataArray binaryDataArray)
@@ -610,15 +612,52 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        private static readonly string[] msLevelOrFunctionArrayNames = { "ms level", "function" };
+
         public void GetChromatogram(int chromIndex, out string id,
-            out float[] timeArray, out float[] intensityArray)
+            out float[] timeArray, out float[] intensityArray, bool onlyMs1OrFunction1 = false)
         {
             using (Chromatogram chrom = ChromatogramList.chromatogram(chromIndex, true))
             {
                 id = chrom.id;
-                timeArray = ToFloatArray(chrom.binaryDataArrays[0].data);
-                intensityArray = ToFloatArray(chrom.binaryDataArrays[1].data);
-            }            
+                if (!onlyMs1OrFunction1)
+                {
+                    timeArray = ToFloatArray(chrom.binaryDataArrays[0].data);
+                    intensityArray = ToFloatArray(chrom.binaryDataArrays[1].data);
+                }
+                else
+                {
+                    // get array of ms level or function for each chromatogram point
+                    var msLevelOrFunctionArray = chrom.integerDataArrays.FirstOrDefault(o =>
+                        msLevelOrFunctionArrayNames.Contains(o.cvParam(CVID.MS_non_standard_data_array).value.ToString()));
+
+                    // if array is missing or empty, return no chromatogram data points (because they could be from any ms level or function)
+                    if (msLevelOrFunctionArray == null || msLevelOrFunctionArray.data.Count != chrom.binaryDataArrays[0].data.Count)
+                    {
+                        timeArray = intensityArray = null;
+                        return;
+                    }
+
+
+                    var timeList = new List<float>();
+                    var intensityList = new List<float>();
+                    var timeArrayData = chrom.binaryDataArrays[0].data;
+                    var intensityArrayData = chrom.binaryDataArrays[1].data;
+                    var msLevelOrFunctionArrayData = msLevelOrFunctionArray.data;
+
+                    for (int i = 0; i < msLevelOrFunctionArrayData.Count; ++i)
+                    {
+                        if (msLevelOrFunctionArrayData[i] != 1)
+                            continue;
+
+                        timeList.Add((float) timeArrayData[i]);
+                        intensityList.Add((float) intensityArrayData[i]);
+                    }
+
+                    timeArray = timeList.ToArray();
+                    intensityArray = intensityList.ToArray();
+                }
+            }
         }
 
         /// <summary>
@@ -813,7 +852,7 @@ namespace pwiz.ProteowizardWrapper
 
         private double[] GetIonMobilityArray(Spectrum s)
         {
-            BinaryData data = null;
+            BinaryDataDouble data = null;
             // Remember where the ion mobility value came from and continue getting it from the
             // same place throughout the file. Trying to get an ion mobility value from a CVID
             // where there is none can be slow.
@@ -847,7 +886,7 @@ namespace pwiz.ProteowizardWrapper
             return data?.Storage();
         }
 
-        private BinaryData TryGetIonMobilityData(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
+        private BinaryDataDouble TryGetIonMobilityData(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
         {
             var data = s.getArrayByCVID(cvid)?.data;
             if (data != null)
@@ -884,7 +923,8 @@ namespace pwiz.ProteowizardWrapper
                 RetentionTime = GetStartTime(spectrum),
                 PrecursorsByMsLevel = GetPrecursorsByMsLevel(spectrum),
                 Centroided = IsCentroided(spectrum),
-                NegativeCharge = NegativePolarity(spectrum)
+                NegativeCharge = NegativePolarity(spectrum),
+                ScanDescription = GetScanDescription(spectrum)
             };
             if (IonMobilityUnits == eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
             {
@@ -1111,14 +1151,14 @@ namespace pwiz.ProteowizardWrapper
         }
 
         public TVal GetMetaDataValue<TVal>(int scanIndex, Func<Spectrum, TVal> getValue, Func<TVal, bool> isUsableValue,
-            Func<TVal, TVal> returnValue, ref DetailLevel detailLevel)
+            Func<TVal, TVal> returnValue, ref DetailLevel detailLevel, DetailLevel maxDetailLevel = DetailLevel.FullMetadata)
         {
             var spectrum = GetCachedSpectrum(scanIndex, detailLevel);
             TVal val = getValue(spectrum);
-            if (isUsableValue(val) || detailLevel >= DetailLevel.FullMetadata)
+            if (isUsableValue(val) || detailLevel >= maxDetailLevel)
                 return returnValue(val);
             // If level is not found with faster metadata methods, try the slower ones.
-            if (detailLevel < DetailLevel.FullMetadata)
+            if (detailLevel < maxDetailLevel)
                 detailLevel++;
             return GetMetaDataValue(scanIndex, getValue, isUsableValue, returnValue, ref detailLevel);
         }
@@ -1134,6 +1174,20 @@ namespace pwiz.ProteowizardWrapper
             if (param.empty())
                 return null;
             return (int) param.value;
+        }
+
+        public string GetScanDescription(int scanIndex)
+        {
+            return GetMetaDataValue(scanIndex, GetScanDescription, v => v.IsNullOrEmpty(), v => v, ref _detailScanDescription, DetailLevel.FastMetadata);
+        }
+
+        private static string GetScanDescription(Spectrum spectrum)
+        {
+            const string USERPARAM_SCAN_DESCRIPTION = "scan description";
+            UserParam param = spectrum.userParam(USERPARAM_SCAN_DESCRIPTION);
+            if (param.empty())
+                return null;
+            return param.value.ToString().Trim();
         }
 
         public IonMobilityValue GetIonMobility(int scanIndex) // for non-combined-mode IMS
@@ -1527,6 +1581,8 @@ namespace pwiz.ProteowizardWrapper
         public double? MinIonMobility { get; set; }
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
+
+        public string ScanDescription { get; set; }
 
         public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
         {

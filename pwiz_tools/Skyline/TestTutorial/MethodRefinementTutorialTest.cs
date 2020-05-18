@@ -51,7 +51,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestMethodRefinementTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "MethodRefine";
 
             // Multi-file import has problems with mzML on this test
             ForceMzml = true; // (Settings.Default.ImportResultsSimultaneousFiles == 0);   // 2-3x faster than raw files for this test.
@@ -168,6 +170,18 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.AutoZoomNone);
             RestoreViewOnScreen(8);
             PauseForScreenShot("Chromatogram graph metafile", 8);
+
+            if (IsPauseForCoverShot)
+            {
+                RestoreCoverViewOnScreen();
+                RunUI(SkylineWindow.AutoZoomBestPeak);
+                // Change and restore selection to ensure all graphs are updated
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
+                PauseForCoverShot();
+                return;
+            }
 
             // Simple Manual Refinement, p. 6
             int startingNodeCount = SkylineWindow.SequenceTree.Nodes[0].GetNodeCount(false);

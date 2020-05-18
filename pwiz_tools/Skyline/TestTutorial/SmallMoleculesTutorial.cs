@@ -30,6 +30,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -54,7 +55,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestSmallMoleculesTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "SmallMolecule";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_6.pdf";
 
@@ -165,7 +168,7 @@ namespace pwiz.SkylineTestTutorial
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 6);
+                    PauseForScreenShot<ImportResultsDlg>("Import Results Files form", 6);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
                     var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
@@ -214,8 +217,36 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(string.IsNullOrEmpty(msg), msg);
                 RestoreViewOnScreen(9);
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 9);
-            }
 
+                if (IsPauseForCoverShot)
+                {
+                    RunUI(() =>
+                    {
+                        Settings.Default.ChromatogramFontSize = 14;
+                        Settings.Default.AreaFontSize = 14;
+                        SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                        SkylineWindow.AutoZoomBestPeak();
+                    });
+
+                    RestoreCoverViewOnScreen();
+
+                    var pasteCoverDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                    SetCsvFileClipboardText(GetTestPath("SMTutorial_TransitionList.csv"), true);
+                    RunUI(() =>
+                    {
+                        pasteCoverDlg.Size = new Size(810, 375);
+                        pasteCoverDlg.Left = SkylineWindow.Left + 8;
+                        pasteCoverDlg.Top = SkylineWindow.Bottom - pasteCoverDlg.Height - 8;
+                        pasteCoverDlg.PasteTransitions();
+                        pasteCoverDlg.ValidateCells();
+                        columnsOrdered.Remove(SmallMoleculeTransitionListColumnHeaders.labelType);
+                        pasteCoverDlg.SetSmallMoleculeColumns(columnsOrdered);
+                    });
+                    PauseForCoverShot();
+
+                    OkDialog(pasteCoverDlg, pasteCoverDlg.CancelDialog);
+                }
+            }
         }
     }
 }

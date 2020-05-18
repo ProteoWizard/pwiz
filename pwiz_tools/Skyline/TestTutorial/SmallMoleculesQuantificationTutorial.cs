@@ -60,7 +60,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestSmallMoleculesQuantificationTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "SmallMoleculeQuantification";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuantification.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
@@ -365,6 +367,31 @@ namespace pwiz.SkylineTestTutorial
                 SetDocumentGridExcludeFromCalibration();
                 PauseForScreenShot<CalibrationForm>("Calibration Curve - outliers disabled", 20);
 
+                if (IsPauseForCoverShot)
+                {
+                    RunUI(() =>
+                    {
+                        Settings.Default.ChromatogramFontSize = 14;
+                        Settings.Default.AreaFontSize = 14;
+                        SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                        SkylineWindow.AutoZoomBestPeak();
+                    });
+
+                    RestoreCoverViewOnScreen();
+
+                    RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, resultsDlg =>
+                    {
+                        resultsDlg.SelectedChromatograms =
+                            SkylineWindow.DocumentUI.Settings.MeasuredResults.Chromatograms.Take(15);
+                        resultsDlg.RemoveReplicates();
+                        resultsDlg.OkDialog();
+                    });
+
+                    RunUI(SkylineWindow.FocusDocument);
+                    PauseForCoverShot();
+                    return;
+                }
+
                 ImportReplicates(false); // Import the rest of the replicates
                 PauseForScreenShot<CalibrationForm>("Calibration Curve - all replicates loaded", 21);
 
@@ -393,7 +420,7 @@ namespace pwiz.SkylineTestTutorial
                 var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 if (isFirstPass)
                 {
-                    PauseForScreenShot<ImportResultsSamplesDlg>("Import Results form", 7);
+                    PauseForScreenShot<ImportResultsDlg>("Import Results form", 7);
                 }
                 var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets =
                     importResultsDlg1.GetDataSourcePathsFile(null));

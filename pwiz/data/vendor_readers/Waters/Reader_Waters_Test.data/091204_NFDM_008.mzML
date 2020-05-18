@@ -164,7 +164,7 @@
     <software id="MassLynx" version="4.1">
       <cvParam cvRef="MS" accession="MS:1000534" name="MassLynx" value=""/>
     </software>
-    <software id="pwiz_Reader_Waters" version="3.0.19304">
+    <software id="pwiz_Reader_Waters" version="3.0.20071">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -1998,7 +1998,7 @@
     <chromatogramList count="1" defaultDataProcessingRef="pwiz_Reader_Waters_conversion">
       <chromatogram index="0" id="TIC" defaultArrayLength="41">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="236">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -2010,6 +2010,12 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJyLbuJ015N+4Pql4aPLDs5ix/tXHzlUsy0C45PzGkHYXjfvEJBmBPOZLu1wOfJwuwuQ7aiX5wSWf1602kV/5yKXsyws7sof17heaH/sUsu2CGwWxAxGB5BaGGYAApCY6IIZLlwr57uYlMx2cXWc6JL7ZabLHYsZLt0yM12Wy7O6Z9xf5bro9kUXAPlbSEg=</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="41" encodedLength="72">
+            <cvParam cvRef="MS" accession="MS:1000519" name="32-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="function" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJx1zDsOACAIBFEEf3D/AzsFJhRavAYmGyLSkqFjYGJhw6Hptpq9lVs8/r89L+1L3To2fACb</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
