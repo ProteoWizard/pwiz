@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.Results
                 var newTimeIntensities = GetTimeIntensities(Source);
                 if (newTimeIntensities != null)
                 {
-                    if (oldTimeIntensities != null)
+                    if (oldTimeIntensities != null && ScanIndex >= 0 && ScanIndex < oldTimeIntensities.Times.Count)
                     {
                         var oldTime = oldTimeIntensities.Times[ScanIndex];
                         ScanIndex = newTimeIntensities.IndexOfNearestTime(oldTime);
