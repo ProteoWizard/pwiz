@@ -1304,6 +1304,32 @@ namespace pwiz.Skyline.Model.DocSettings
         }
     }
 
+    public class LoggableExplicitModList : IAuditLogObject
+    {
+        public LoggableExplicitModList(IsotopeLabelType labelType, IList<LoggableExplicitMod> modifications)
+        {
+            LabelType = labelType;
+            Modifications = modifications;
+        }
+
+        public IsotopeLabelType LabelType { get; private set; }
+
+        [TrackChildren(ignoreName: true, defaultValues: typeof(DefaultValuesNullOrEmpty))]
+        public IList<LoggableExplicitMod> Modifications { get; private set; }
+        public string AuditLogText
+        {
+            get
+            {
+                return LabelType.Name;
+            }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
+        }
+    }
+
     public sealed class TypedExplicitModifications : Immutable
     {
         // Cached masses for faster calculation

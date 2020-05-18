@@ -177,6 +177,8 @@ namespace pwiz.Common.SystemUtil
                 // Take queued items and process them, until the QueueWorker is stopped.
                 while (Exception == null)
                 {
+                    //CONSIDER: observed a hang here with two file loader threads trying to take from 
+                    //an empty queue. Maybe should use TryDequeue instead.
                     var item = _queue.Take();
                     if (item == null)
                         break;

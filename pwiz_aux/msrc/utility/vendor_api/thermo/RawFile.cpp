@@ -165,8 +165,11 @@ class RawFileImpl : public RawFile
 
     string filename_;
     bool isTemporary_;
+
+#ifndef _WIN64
     ControllerType currentControllerType_;
     long currentControllerNumber_;
+#endif
 
     mutable InstrumentModelType instrumentModel_;
     mutable vector<IonizationType> ionSources_;
@@ -265,9 +268,7 @@ class RawFileThreadImpl : public RawFile
 RawFileImpl::RawFileImpl(const string& filename)
 :   filename_(filename),
     isTemporary_(false),
-    instrumentModel_(InstrumentModelType_Unknown),
-    currentControllerType_(Controller_None),
-    currentControllerNumber_(-1)
+    instrumentModel_(InstrumentModelType_Unknown)
 {
     try
     {        
@@ -303,6 +304,8 @@ RawFileImpl::RawFileImpl(const string& filename)
         if (getNumberOfControllersOfType(Controller_MS) == 0)
             return; // none of the following metadata stuff works for non-MS controllers as far as I can tell
 
+        currentControllerType_ = Controller_None;
+        currentControllerNumber_ = -1;
         setCurrentController(Controller_MS, 1);
 
 #else // is WIN64
@@ -546,29 +549,34 @@ auto_ptr<LabelValueArray> RawFileImpl::getSequenceRowUserInfo()
 
 ControllerInfo RawFileImpl::getCurrentController() const
 {
+#ifndef _WIN64
     ControllerInfo result;
     result.type = currentControllerType_;
     result.controllerNumber = currentControllerNumber_;
     return result;
+#else
+    return getRawByThread(0)->getCurrentController();
+#endif
 }
 
 
 void RawFileImpl::setCurrentController(ControllerType type, long controllerNumber)
 {
+#ifndef _WIN64
     if (currentControllerType_ == type && currentControllerNumber_ == controllerNumber)
         return;
 
     try
     {
-#ifndef _WIN64
         checkResult(raw_->SetCurrentController(type, controllerNumber));
-#else
-        raw_->SelectInstrument((Thermo::Device) type, controllerNumber);
-#endif
         currentControllerType_ = type;
         currentControllerNumber_ = controllerNumber;
     }
     CATCH_AND_FORWARD
+#else
+    raw_->SelectInstrument((Thermo::Device) type, controllerNumber);
+    getRawByThread(0)->setCurrentController(type, controllerNumber);
+#endif
 }
 
 
@@ -702,9 +710,9 @@ std::string RawFileImpl::getSampleID() const
 
 std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& name) const
 {
+#ifndef _WIN64
     try
     {
-#ifndef _WIN64
         _variant_t v;
 
         try
@@ -732,22 +740,18 @@ std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& nam
             default:
                 throw RawEgg("[RawFileImpl::getTrailerExtraValue()] Unknown type.");
         }
-#else
-        auto findItr = trailerExtraIndexByName.find(name);
-        if (findItr == trailerExtraIndexByName.end())
-            return "";
-
-        return ToStdString(raw_->GetTrailerExtraValue(scanNumber, findItr->second)->ToString());
-#endif
     }
     CATCH_AND_FORWARD_EX(name)
+#else
+    return getRawByThread(0)->getTrailerExtraValue(scanNumber, name);
+#endif
 }
 
 double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& name) const
 {
+#ifndef _WIN64
     try
     {
-#ifndef _WIN64
         _variant_t v;
 
         try
@@ -766,23 +770,19 @@ double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& na
             default:
                 throw RawEgg("[RawFileImpl::getTrailerExtraValueDouble()] Unknown type.");
         }
-#else
-        auto findItr = trailerExtraIndexByName.find(name);
-        if (findItr == trailerExtraIndexByName.end())
-            return 0.0;
-        System::Object^ result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
-        return result == nullptr ? 0.0 : System::Convert::ToDouble(result);
-#endif
     }
     CATCH_AND_FORWARD_EX(name)
+#else
+    return getRawByThread(0)->getTrailerExtraValueDouble(scanNumber, name);
+#endif
 }
 
 
 long RawFileImpl::getTrailerExtraValueLong(long scanNumber, const string& name) const
 {
+#ifndef _WIN64
     try
     {
-#ifndef _WIN64
         _variant_t v;
 
         try
@@ -807,16 +807,11 @@ long RawFileImpl::getTrailerExtraValueLong(long scanNumber, const string& name) 
             default:
                 throw RawEgg("[RawFileImpl::getTrailerExtraValueLong()] Unknown type.");
         }
-#else
-        auto findItr = trailerExtraIndexByName.find(name);
-        if (findItr == trailerExtraIndexByName.end())
-            return 0;
-        
-        System::Object^ result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
-        return result == nullptr ? 0 : System::Convert::ToInt32(result);
-#endif
     }
     CATCH_AND_FORWARD_EX(name)
+#else
+    return getRawByThread(0)->getTrailerExtraValueLong(scanNumber, name);
+#endif
 }
 
 #ifndef _WIN64
@@ -1875,6 +1870,7 @@ void RawFileImpl::parseInstrumentMethod()
     sregex scanEventIsoWRegex = sregex::compile("\\s*MS.*:.*\\s+IsoW\\s+(\\S+)\\s*");
     sregex repeatedEventRegex = sregex::compile("\\s*Scan Event (\\d+) repeated for top (\\d+)\\s*");
     sregex defaultIsolationWidthRegex = sregex::compile("\\s*MS(\\d+) Isolation Width:\\s*(\\S+)\\s*");
+    sregex defaultIsolationWindowRegex = sregex::compile("\\s*Isolation Window \\(m/z\\) =\\s*(\\S+)\\s*");
     sregex isolationMzOffsetRegex = sregex::compile("\\s*Isolation m/z Offset =\\s*(\\S+)\\s*");
     sregex scanDescriptionRegex = sregex::compile("\\s*Scan Description =\\s*(\\S+)\\s*");
 
@@ -1933,7 +1929,7 @@ void RawFileImpl::parseInstrumentMethod()
         }
 
         // Data Dependent Settings:
-        if (bal::icontains(line, "Data Dependent Settings"))
+        if (bal::icontains(line, "Data Dependent Settings") || bal::icontains(line, "Scan DIAScan"))
         {
             dataDependentSettings = true;
             continue;
@@ -1947,6 +1943,13 @@ void RawFileImpl::parseInstrumentMethod()
                 int msLevel = lexical_cast<int>(what[1]);
                 double isolationWidth = lexical_cast<double>(what[2]);
                 defaultIsolationWidthBySegmentAndMsLevel[scanSegment][msLevel] = isolationWidth;
+                continue;
+            }
+            
+            if (regex_match(line, what, defaultIsolationWindowRegex))
+            {
+                double isolationWidth = lexical_cast<double>(what[1]);
+                defaultIsolationWidthBySegmentAndMsLevel[scanSegment][2] = isolationWidth;
                 continue;
             }
 
@@ -2507,19 +2510,26 @@ std::string RawFileThreadImpl::getSampleID() const
 
 std::string RawFileThreadImpl::getTrailerExtraValue(long scanNumber, const string& name) const
 {
+    if (currentControllerType_ != Controller_MS)
+        return "";
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
         if (findItr == rawFile_->trailerExtraIndexByName.end())
             return "";
 
-        return ToStdString(raw_->GetTrailerExtraValue(scanNumber, findItr->second)->ToString());
+        auto result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
+        return result == nullptr ? "" : ToStdString(result->ToString());
     }
     CATCH_AND_FORWARD_EX(name)
 }
 
 double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const string& name) const
 {
+    if (currentControllerType_ != Controller_MS)
+        return 0.0;
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
@@ -2534,6 +2544,9 @@ double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const stri
 
 long RawFileThreadImpl::getTrailerExtraValueLong(long scanNumber, const string& name) const
 {
+    if (currentControllerType_ != Controller_MS)
+        return 0;
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);

@@ -302,6 +302,16 @@ namespace pwiz.SkylineTestFunctional
             {
                 return FolderState.valid;
             }
+
+            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
+            {
+                throw new NotImplementedException();
+            }
+
+            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private class TestPanoramaPublishClient : AbstractPanoramaPublishClient

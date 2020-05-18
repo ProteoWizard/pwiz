@@ -421,6 +421,14 @@ namespace pwiz.SkylineTestData
                                        "--decoys-add");
             AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_);
 
+            output = RunCommand("--in=" + outPath, "--decoys-discard");
+            AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Decoys_discarded);
+
+            output = RunCommand("--in=" + outPath, "--decoys-add", "--decoys-discard");
+            AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Decoys_discarded);
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
+                expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+
             int tooManyPeptides = expectedPeptides + 1;
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add",
@@ -3113,6 +3121,16 @@ namespace pwiz.SkylineTestData
             public FolderState IsValidFolder(string folderPath, string username, string password)
             {
                 return MyFolderState;
+            }
+
+            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
+            {
+                return FolderOperationStatus.OK;
+            }
+
+            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+            {
+                return FolderOperationStatus.OK;
             }
         }
 

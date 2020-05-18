@@ -286,6 +286,7 @@ project pwiz
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
         <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
         <toolset>msvc:<define>BOOST_ALL_NO_LIB          # disable auto-link
+        <toolset>msvc:<define>_WIN32_WINNT=0x0601       # target Windows 7 or later
         <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
         <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
         <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
@@ -304,6 +305,10 @@ project pwiz
         <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
+
+        # target Windows 7 or later
+        <toolset>msvc:<define>_WIN32_WINNT=_WIN32_WINNT_WIN7
+        <toolset>msvc:<define>NTDDI_VERSION=NTDDI_WIN7
         
         <conditional>@secure-scl-throws
 
@@ -311,8 +316,8 @@ project pwiz
         # warning: '__cur' might be used uninitialized in this function 
         <toolset>gcc:<cxxflags>-Wno-uninitialized
 
-        # set standard to C++11
-        <toolset>gcc:<cxxflags>-std=c++11
+        # set standard to C++14
+        <toolset>gcc:<cxxflags>-std=c++14
 
         # avoid warnings like concept_check.hpp ... warning: unused typedef 'boost_concept_check'
         <toolset>clang:<cxxflags>-Wno-unused-local-typedef

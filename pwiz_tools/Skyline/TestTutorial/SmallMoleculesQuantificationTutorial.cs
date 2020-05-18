@@ -32,7 +32,6 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs.Calibration;
-using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -56,16 +55,14 @@ namespace pwiz.SkylineTestTutorial
         {
             get { return !ForceMzml && ExtensionTestContext.CanImportWatersRaw; }
         }
-        protected override bool ShowStartPage
-        {
-            get { return true; }  // So we can point out the UI mode control
-        }
 
         [TestMethod]
         public void TestSmallMoleculesQuantificationTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "SmallMoleculeQuantification";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuantification.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
@@ -89,14 +86,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            // Setting the UI mode, p 2  
-            var startPage = WaitForOpenForm<StartPage>();
-            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
-            PauseForScreenShot<StartPage>("Start Window proteomic", 2);
-            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
-            PauseForScreenShot<StartPage>("Start Window small molecule", 3);
-            RunUI(() => startPage.DoAction(skylineWindow => true));
-            WaitForOpenForm<SkylineWindow>();
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
 
             // Inserting a Transition List, p. 2
             {
@@ -377,6 +367,31 @@ namespace pwiz.SkylineTestTutorial
                 SetDocumentGridExcludeFromCalibration();
                 PauseForScreenShot<CalibrationForm>("Calibration Curve - outliers disabled", 20);
 
+                if (IsPauseForCoverShot)
+                {
+                    RunUI(() =>
+                    {
+                        Settings.Default.ChromatogramFontSize = 14;
+                        Settings.Default.AreaFontSize = 14;
+                        SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                        SkylineWindow.AutoZoomBestPeak();
+                    });
+
+                    RestoreCoverViewOnScreen();
+
+                    RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, resultsDlg =>
+                    {
+                        resultsDlg.SelectedChromatograms =
+                            SkylineWindow.DocumentUI.Settings.MeasuredResults.Chromatograms.Take(15);
+                        resultsDlg.RemoveReplicates();
+                        resultsDlg.OkDialog();
+                    });
+
+                    RunUI(SkylineWindow.FocusDocument);
+                    PauseForCoverShot();
+                    return;
+                }
+
                 ImportReplicates(false); // Import the rest of the replicates
                 PauseForScreenShot<CalibrationForm>("Calibration Curve - all replicates loaded", 21);
 
@@ -405,7 +420,7 @@ namespace pwiz.SkylineTestTutorial
                 var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 if (isFirstPass)
                 {
-                    PauseForScreenShot<ImportResultsSamplesDlg>("Import Results form", 7);
+                    PauseForScreenShot<ImportResultsDlg>("Import Results form", 7);
                 }
                 var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets =
                     importResultsDlg1.GetDataSourcePathsFile(null));

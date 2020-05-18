@@ -1999,6 +1999,7 @@ local rule register-toolset-really ( )
         feature.feature debug-store : object database : propagated ;
         feature.feature pch-source  :                 : dependency free ;
         feature.feature secure-scl          : default on off        : propagated ;
+        feature.feature iterator-debugging  : default on off        : propagated ;
         feature.feature assembly            :                       : free dependency ;
         feature.feature assembly-dependency :                       : free dependency ;
         feature.feature assembly-dependency-ex :                    : free ;
@@ -2070,6 +2071,11 @@ local rule register-toolset-really ( )
     # default behaviour.
     toolset.flags msvc.compile CFLAGS <secure-scl>on/<debug-symbols>off : -D_SECURE_SCL=1 ;
     toolset.flags msvc.compile CFLAGS <secure-scl>off : -D_SECURE_SCL=0 ;
+    
+    toolset.flags msvc.compile C++FLAGS  <iterator-debugging>default : ;
+    toolset.flags msvc.compile C++FLAGS  <iterator-debugging>on/<variant>debug : -D_ITERATOR_DEBUG_LEVEL=1 ;
+    toolset.flags msvc.compile C++FLAGS  <iterator-debugging>on/<variant>release : -D_ITERATOR_DEBUG_LEVEL=2 ;
+    toolset.flags msvc.compile C++FLAGS  <iterator-debugging>off : -D_ITERATOR_DEBUG_LEVEL=0 ;
 
     toolset.flags msvc.compile CFLAGS <optimization>speed : /O2 ;
     toolset.flags msvc.compile CFLAGS <optimization>space : /O1 ;

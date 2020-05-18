@@ -411,9 +411,6 @@
   <data name="MissingScoresFinder_Match__0__missing_from_peptide" xml:space="preserve">
     <value>{0}从肽段中缺失</value>
   </data>
-  <data name="StartPage_DIA_Description" xml:space="preserve">
-    <value>使用非数据依赖采集 (DIA) 作业获得亲身体验，通过使用由相同仪器依次采集的 DIA 和 DDA 运行的工作流。定义和导出 DIA 隔离方案。通过在 DIA 运行前采集的 DDA 数据，为实验建立谱图库。根据谱图库，为目标蛋白质组集选择肽段和离子对。在 Skyline 中导入和分析相关的 DIA运行，掌握开始处理 DIA数据的简单工作流。</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_User_Set" xml:space="preserve">
     <value>用户设定</value>
   </data>
@@ -466,9 +463,6 @@
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_" xml:space="preserve">
     <value>文档必须具有导入的结果。</value>
   </data>
-  <data name="StartPage_getBoxPanels_QuaSAR_Quantitative_Statistics" xml:space="preserve">
-    <value>QuaSAR 定量统计</value>
-  </data>
   <data name="WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation" xml:space="preserve">
     <value>未能发现有效的 MassLynx 安装。</value>
   </data>
@@ -489,9 +483,6 @@
   </data>
   <data name="Serializer_ReadHeader_Unsupported_file_version__0_" xml:space="preserve">
     <value>不被支持的文件版本{0}</value>
-  </data>
-  <data name="StartPage_getBoxPanels_targetedmsms" xml:space="preserve">
-    <value>获得使用从低分辨率 Thermo LTQ 和高分辨率 Agilent 6520 Q-TOF 采集定向 MS/MS（还称作“平行反应监测” - PRM）数据方面的实际经验。获得对在低分辨率和高分辨率仪器上测量母离子和片段离子来获得对肽段定量之间的选择性和敏感性差异的全新理解。发现处理并了解您的质谱数据的新方法，这些方法是由Skyline提供针对基于色谱的定量蛋白质组学的一系列丰富特征集。</value>
   </data>
   <data name="TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_" xml:space="preserve">
     <value>文件 Id {0}不匹配文档中的任何文件。</value>
@@ -718,9 +709,6 @@
   <data name="ChromatogramCache_LoadStructs_The_SKYD_file_format__0__is_not_supported_by_Skyline__1__" xml:space="preserve">
     <value>Skyline {1}不支持 SKYD 文件格式{0}。</value>
   </data>
-  <data name="LibraryExplorer_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\LibraryExplorer_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank" xml:space="preserve">
     <value>用户名不能为空</value>
   </data>
@@ -938,9 +926,6 @@
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_" xml:space="preserve">
     <value>明确漂移时间高能偏置（毫秒）</value>
   </data>
-  <data name="MS1Filtering_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\MS1Filtering_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_" xml:space="preserve">
     <value>错误细节可见于{0}。</value>
   </data>
@@ -994,9 +979,6 @@
   </data>
   <data name="SkylineWindow_EditNote_Edit_Note" xml:space="preserve">
     <value>编辑注释</value>
-  </data>
-  <data name="QuaSAR_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\QuaSAR_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="OverlapDemultiplexer_attempt_to_take_slice_of_deconvolution_matrix_failed_out_of_range" xml:space="preserve">
     <value>因范围外误差而尝试获取去卷积片段基质失败。</value>
@@ -1114,9 +1096,6 @@
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_In_Parallel" xml:space="preserve">
     <value>并行</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Targeted_MS_MS__PRM_" xml:space="preserve">
-    <value>靶向 MS/MS (PRM)</value>
   </data>
   <data name="AnnotationDefList_Title_Define_Annotations" xml:space="preserve">
     <value>定义注释</value>
@@ -1519,9 +1498,6 @@
   <data name="LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity" xml:space="preserve">
     <value>总亮度</value>
   </data>
-  <data name="StartPage_getBoxPanels_iRT_Retention_Time_Prediction" xml:space="preserve">
-    <value>iRT 保留时间预测</value>
-  </data>
   <data name="ExportReportDlg_ExportReport_Failed_exporting_to" xml:space="preserve">
     <value>导出至{0}失败。
 {1}</value>
@@ -1643,9 +1619,6 @@
   <data name="PanoramaHelper_ValidateServer_" xml:space="preserve">
     <value>在尝试验证 Panorama 服务器信息时出现未知错误。
 {0}</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Custom_Reports___Results_Grid" xml:space="preserve">
-    <value>自定义报告和结果网格</value>
   </data>
   <data name="SkylineViewContext_GetDocumentGridRowSources_Precursors" xml:space="preserve">
     <value>母离子</value>
@@ -1854,9 +1827,6 @@
   <data name="ExportMethodDlg_OkDialog_Isolation_List" xml:space="preserve">
     <value>隔离列表</value>
   </data>
-  <data name="StartPage_getBoxPanels_irt" xml:space="preserve">
-    <value>获得关于 iRT 的实际经验，iRT 是在库中保存校准的、实际测量的肽段保留时间，以便将来用于针对预定采集和峰值身份验证的保留时间预测中。在本教程中，您将校准自己的 iRT 计算器，并且还将了解到更多关于 Biognosys 针对 iRT 包中的肽段标准提出的 iRT-C18 校准内容。您将从 SRM 数据中校准新的 iRT 值，SRM 数据是在发现实验中从 MS1 扫描过滤的谱图库和色谱图峰值。同时，您还将了解到如何重新校准这些 iRT 值，以在具有新梯度和新色谱柱上进行预定 SRM 采集。您将看到基于 iRT 的更准确保留时间预测将如何在您的色谱图峰值身份验证中为您提供更高的可信度。</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Ratio_Dot_Product" xml:space="preserve">
     <value>比率点积</value>
   </data>
@@ -1883,9 +1853,6 @@
   </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides__0__" xml:space="preserve">
     <value>序列特异的肽段：{0}</value>
-  </data>
-  <data name="TargetedMSMS_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\TargetedMSMS_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PeptideGroupTreeNode_Heading_Protein" xml:space="preserve">
     <value>蛋白质</value>
@@ -2085,9 +2052,6 @@
   <data name="CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____" xml:space="preserve">
     <value>正在导出色谱图文件{0}...</value>
   </data>
-  <data name="StartPage_getBoxPanels_Targeted_Method_Refinement" xml:space="preserve">
-    <value>靶向方法调整</value>
-  </data>
   <data name="ReportSpec_ReadXml_The_name__0__is_not_a_valid_table_name" xml:space="preserve">
     <value>“{0}”不是有效的表格名称。</value>
   </data>
@@ -2135,9 +2099,6 @@
   </data>
   <data name="PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number_" xml:space="preserve">
     <value>子离子质荷比必须是数字。</value>
-  </data>
-  <data name="StartPage_getBoxPanels_peakpicking" xml:space="preserve">
-    <value>了解更多关于创建和测试在Skyline中如何匹配目标肽段和色谱图峰的高级模型。Skyline 2.5 版本现支持使用 mProphet 半监督学习算法创建单个色谱峰得分的线性结合。 在本教程中，您将学会生成诱饵肽段和离子对、创建和评估 mProphet 评分模型，以及将它们应用到 Skyline 色谱图峰拣选中，同时针对 SRM 和 DIA/SWATH 数据。 您将了解到 mProphet 分配的 q 值（基于 FDR 调整的 p 值），以及您可以如何将这些值与自己拣选的色谱峰关联并在自定义报告中导出它们。</value>
   </data>
   <data name="Molecule" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Molecule.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -2500,9 +2461,6 @@
   </data>
   <data name="Icojam-Blueberry-Basic-Arrow-left" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icojam-Blueberry-Basic-Arrow-left.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="StartPage_getBoxPanels_MS1_Full_Scan_Filtering" xml:space="preserve">
-    <value>MS1 全扫描过滤</value>
   </data>
   <data name="DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_" xml:space="preserve">
     <value>显示数据行时发生错误：</value>
@@ -2938,9 +2896,6 @@
   <data name="ExPeptideRowReaderCreateCheck_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
     <value>在“离子对设置”中核选“修饰”标签。</value>
   </data>
-  <data name="StartPage_getBoxPanels_ms1filtering" xml:space="preserve">
-    <value>获得创建 Skyline 文档，从而使用数据依赖采集 (DDA) 实验中的 MS1 扫描来检测肽段表达式中定量差异的实际经验。在本教程中，您将从发现数据集中生成一个谱图库、针对 MS1 过滤建立一个 Skyline 文档、导入原始质谱仪数据以从 MS1 扫描中提取母离子色谱图，借助 MS/MS 肽段鉴定指导峰拣选，并且进一步处理 Skyline 产生的定量数据。如果您对发现数据集的非标记定量分析感兴趣，本教程将为您的调查提供新的成套工具。</value>
-  </data>
   <data name="EditStaticModDlg_OkDialog_Unimod" xml:space="preserve">
     <value>Unimod</value>
   </data>
@@ -3034,9 +2989,6 @@
   </data>
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate" xml:space="preserve">
     <value>您必须至少选择一个重复测定</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Advanced_Peak_Picking_Models" xml:space="preserve">
-    <value>高级峰拣选模型</value>
   </data>
   <data name="ExportMethodDlg_DWELL_TIME_TXT" xml:space="preserve">
     <value>驻留时间（毫秒）(&amp;D)：</value>
@@ -3207,9 +3159,6 @@
   </data>
   <data name="SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
     <value>您是否想要针对下列修饰使用 Unimod 定义？</value>
-  </data>
-  <data name="StartPage_getBoxPanels_customreports" xml:space="preserve">
-    <value>从利用 Skyline 自定义当前报告的能力查看、编辑并从您的 Skyline 文档中导出一系列广泛数值方面获得实际经验。仪器输出经由skyline导出后的报告最，适合用于 Excel 或以 R、Matlab、Java、C++ 和其他语言书写的自定义代码进行深度统计分析。此外，学习使用“Skyline 结果网格”视图，以在 Skyline 中检查您的数据的同时获得对这些值的访问并添加自定义注释。遵循本教程，从而极大地扩大您使用 Skyline 可以实现的实验范畴。</value>
   </data>
   <data name="EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist" xml:space="preserve">
     <value>服务器{0}不存在。</value>
@@ -3588,9 +3537,6 @@
   <data name="WindowType_EXTRACTION_Extraction" xml:space="preserve">
     <value>提取</value>
   </data>
-  <data name="MethodEdit_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\MethodEdit_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="ComparePeakBoundaries_GenerateComparison_Missing_q_value_for_peptide__0__of_file__1_" xml:space="preserve">
     <value>缺失针对文件{1}中肽段{0}的 q 值</value>
   </data>
@@ -3710,9 +3656,6 @@
   </data>
   <data name="OptimizationDb_FILTER_OPTDB_Optimization_Libraries" xml:space="preserve">
     <value>最优化库</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Targeted_Method_Editing" xml:space="preserve">
-    <value>靶向方法编辑</value>
   </data>
   <data name="CreateIrtCalculatorDlg_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_" xml:space="preserve">
     <value>离子对列表字段必须包含至有效文件的路径。</value>
@@ -3940,9 +3883,6 @@
   <data name="ClipboardEx_GetData_ClipboardEx_implementation_problem" xml:space="preserve">
     <value>ClipboardEx 执行问题</value>
   </data>
-  <data name="CustomReports_thumb1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\CustomReports_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_" xml:space="preserve">
     <value>警告：iRT 计算器已经含有有{1}值的{0}。忽视{2}</value>
   </data>
@@ -4042,9 +3982,6 @@
   <data name="AggregateOp_AxisTitleCv" xml:space="preserve">
     <value>{0} 变异系数</value>
   </data>
-  <data name="AbsoluteQuant_thumb1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\AbsoluteQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="PeptideLibraries_DoValidate_Library_picked_peptide_count__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>库选择的肽段计数 {0} 必须在 {1} 和 {2} 之间。</value>
   </data>
@@ -4107,9 +4044,6 @@
   </data>
   <data name="OptimizationDb_ConvertFromOldFormat_Failed_to_convert__0__optimizations_to_new_format_" xml:space="preserve">
     <value>转换{0}优化至新格式失败。</value>
-  </data>
-  <data name="CustomReports_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\CustomReports_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
     <value>用户{0}没有权限上传至 Panorama 文件夹{1}</value>
@@ -4414,9 +4348,6 @@
   <data name="RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again" xml:space="preserve">
     <value>安装 R 软件包需要网络连接。请检查您的连接并重试</value>
   </data>
-  <data name="GroupedStudies_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\GroupedStudies_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__" xml:space="preserve">
     <value>读取文件{0}失败。{1}</value>
   </data>
@@ -4467,9 +4398,6 @@
   </data>
   <data name="Peptide_Validate_Peptide_sequence_exceeds_the_bounds_of_the_protein_sequence" xml:space="preserve">
     <value>肽段序列超出蛋白质序列的范围。</value>
-  </data>
-  <data name="PeakPicking_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\PeakPicking_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="RenameProteinsDlg_OkDialog_Edit_name__0__" xml:space="preserve">
     <value>编辑名称{0}</value>
@@ -4834,9 +4762,6 @@
   <data name="LineColNumberedIoException_FormatMessage__0___line__1__" xml:space="preserve">
     <value>{0}，第{1}行。</value>
   </data>
-  <data name="ExistingQuant_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\ExistingQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window" xml:space="preserve">
     <value>针对隔离窗口指定{0}。</value>
   </data>
@@ -4878,9 +4803,6 @@
   </data>
   <data name="MProphetPeakScoringModel_CalcLinearScore_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_" xml:space="preserve">
     <value>尝试使用具有{1}训练得分的模型以计分带有{0}特性的峰。</value>
-  </data>
-  <data name="ExistingQuant_thumb1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\ExistingQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ExportOptimize_CE_Collision_Energy" xml:space="preserve">
     <value>碰撞能量</value>
@@ -5063,9 +4985,6 @@
   <data name="PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened" xml:space="preserve">
     <value>文件{0}自其首次打开后已经被修饰。</value>
   </data>
-  <data name="MethodRefine_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\MethodRefine_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="MissingAnyResultsFinder_DisplayName_Missing_any_results" xml:space="preserve">
     <value>缺失任何结果</value>
   </data>
@@ -5140,9 +5059,6 @@
   </data>
   <data name="EditStaticModDlg_OkDialog_Use_non_standard_settings_for_this_name" xml:space="preserve">
     <value>针对此名称使用非标准设置？</value>
-  </data>
-  <data name="iRT_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\iRT_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__" xml:space="preserve">
     <value>文档节点结果计数 {0} 不匹配文档结果计数 {1}。</value>
@@ -5240,9 +5156,6 @@
   </data>
   <data name="TransitionFilter_FragmentRangeFirstName_Unsupported_first_fragment_name__0__" xml:space="preserve">
     <value>不支持的第一个片段名称{0}。</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Spectral_Library_Explorer" xml:space="preserve">
-    <value>谱图库浏览器</value>
   </data>
   <data name="ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_already_installed_" xml:space="preserve">
     <value>工具{0}已安装。</value>
@@ -5655,9 +5568,6 @@
   <data name="AbstractMassListExporter_ExportScheduledBuckets_transitions" xml:space="preserve">
     <value>离子对</value>
   </data>
-  <data name="StartPage_GroupedStudy_Description" xml:space="preserve">
-    <value>学习如何使用 Skyline 有效地处理多次重复测定研究数据。您将使用已调整为可检测到的初始目标集，再进一步调整该组集，用以研究 14 只大鼠血浆样本中健康对象和患病对象之间的丰度差异证据。在此过程中，您将学习如何使用强大的 Skyline 交互显示器来快速研究和理解数据异常。您也将体验到在 Skyline 版本 3.1 中引入的 Skyline 群组比较框架。</value>
-  </data>
   <data name="SkylineWindow_ImportResults_Import_results" xml:space="preserve">
     <value>导入结果</value>
   </data>
@@ -5864,18 +5774,6 @@
   </data>
   <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
     <value>参数(&amp;R)：</value>
-  </data>
-  <data name="SmallMolecule_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\SmallMolecule_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="SmallMoleculeMethodDevCEOpt_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\SmallMoleculeMethodDevCEOpt_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="SmallMoleculeQuantification_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\SmallMoleculeQuantification_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="SHiResMetabolomics_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\HiResMetabolomics_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference" xml:space="preserve">
     <value>mProphet 权重参考</value>
@@ -6101,9 +5999,6 @@
   <data name="RatioPropertyAccessor_PeptideRatioProperty_Ratio_To_Global_Standards" xml:space="preserve">
     <value>相对于总体标准品比率</value>
   </data>
-  <data name="DIA_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\DIA_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only" xml:space="preserve">
     <value>无法保存至{0}。文件为只读文件。</value>
   </data>
@@ -6160,9 +6055,6 @@
   </data>
   <data name="SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List" xml:space="preserve">
     <value>小分子离子对列表</value>
-  </data>
-  <data name="StartPage_getBoxPanels_" xml:space="preserve">
-    <value>从一组广泛的 SRM 测量，仪器数据导入和文档调整开始获得实际经验。从需要 2000 多个离子对和 39 次注射的未调整文档开始，在 Thermo TSQ 上进行非预定测量。了解如何将全部 39 次注射导入单一的重复测定。使用疏水性到保留时间的回归和 ms/ms 谱图库峰值强度相关性，以改进测量峰的可信度。使用 Skyline 调整对话，以针对最高置信度峰值删除最佳离子对之外的全部离子对。逐步调试预定计划，从而将文档缩减成可以在单次注射中测量的离子对列表。导入并查看单一注射方法中的多个重复测定。</value>
   </data>
   <data name="SaveSettingsDlg_OnClosing_The_name__0__already_exists" xml:space="preserve">
     <value>名称“{0}”已经存在。</value>
@@ -6487,9 +6379,6 @@
   <data name="DataProcessing" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\dataprocessing.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="StartPage_getBoxPanels_Collision_Energy_Optimization" xml:space="preserve">
-    <value>碰撞能量最优化</value>
-  </data>
   <data name="SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_targets_for_which_to_export_chromatograms_" xml:space="preserve">
     <value>文档必须包含针对其导出色谱图的目标。</value>
   </data>
@@ -6658,14 +6547,8 @@
   <data name="EmptyList" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\EmptyList.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="StartPage_getBoxPanels_Get_hands_on_experience_working_with_the_Skyline_Spectral_Library_Explorer__new_in_v0_7__Learn_more_about_working_with_isotope_labels_and_product_ion_neutral_losses_using_MS_MS_spectral_libraries_containing_15N_labeled_and_phosphorylated_peptides__Use_the_Library_Explorer_to_accelerate_the_transition_between_shotgun_discovery_experiments_and_targeted_investigation_" xml:space="preserve">
-    <value>获得使用 Skyline 谱图库浏览器 - 全新 v0.7 的实际经验。使用包含 15N 标记和磷酸化肽段的 MS/MS 谱图库来学习更多关于处理同位素标记和子离子中性丢失的内容。使用库浏览器来加速鸟枪发现式实验与靶向调查间的过渡。</value>
-  </data>
   <data name="TransitionPrediction_GetOptimizeFunction_Compensation_voltage_parameters_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_compensation_voltage" xml:space="preserve">
     <value>补偿电压参数必须在离子对设置的“预测”标签中被选定，以针对补偿电压导入最优数据。</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Existing___Quantitative_Experiments" xml:space="preserve">
-    <value>现有和定量实验</value>
   </data>
   <data name="EditCEDlg_ShowGraph_Precursor_m_z" xml:space="preserve">
     <value>母离子质荷比</value>
@@ -7039,9 +6922,6 @@
   <data name="ComparePeakPickingDlg_SaveGraph_Save_Model_Comparison_Graph" xml:space="preserve">
     <value>保存模型比较图</value>
   </data>
-  <data name="StartPage_getBoxPanels_methodedit" xml:space="preserve">
-    <value>获得针对定向蛋白质组实验创建 Skyline 文档的实际经验。在本教程中，您将从 pepXML ，mzXML和由FASTA格式文件创建得到的一个背景蛋白质组中创建一个 MS/MS 谱图库。您将这些内容与全球蛋白质组机构中的公共 MS/MS 谱图库相结合，以指导创建针对选定的酵母蛋白质、肽段和子离子的全新 Skyline 文档。从此文档中，您将导出一个可以在 AB 4000 Q Trap 上运行的离子对列表。</value>
-  </data>
   <data name="AllChromatogramsGraph_btnCancel_Click_Cancel_import" xml:space="preserve">
     <value>取消导入</value>
   </data>
@@ -7364,9 +7244,6 @@
   <data name="AnnotationDef_AnnotationTarget_Transitions" xml:space="preserve">
     <value>离子对</value>
   </data>
-  <data name="StartPage_getBoxPanels_Get_hands_on_experience_working_with_quantitative_experiments_and_isotope_labeled_reference_peptides__by_starting_with_experiments_with_published_transition_lists_and_SRM_mass_spectrometer_data__Learn_effective_ways_of_analyzing_your_data_in_Skyline_using_several_of_the_available_peak_area_and_retention_time_summary_charts_" xml:space="preserve">
-    <value>从已发布的离子对和 SRM 质谱仪实验开始，获得处理定量实验和同位素标记的参考肽段之亲身体验。了解利用若干种可用的峰面积和保留时间汇总图方法进行分析您在 Skyline 中的数据。</value>
-  </data>
   <data name="ExportOptimize_NONE_None" xml:space="preserve">
     <value>无</value>
   </data>
@@ -7486,9 +7363,6 @@
   </data>
   <data name="CommandLine_ExportInstrumentFile_Warning__No_export_strategy_specified__from__single____protein__or__buckets____Defaulting_to__single__" xml:space="preserve">
     <value>警告：未指定任何导出策略（从“单一”、“蛋白质”或“存储桶”）。默认设置为“单一”。</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_with_Excel_to_estimate_the_absolute_molecular_quantities_of_peptides_in_your_experiments__" xml:space="preserve">
-    <value>获得使用 Skyline 和 Excel 评估您的实验中肽段绝对分子含量的实际经验。</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_" xml:space="preserve">
     <value>本工具需要运行一个选定的蛋白质。</value>
@@ -7631,9 +7505,6 @@
   <data name="AreaPeptideGraphPane_UpdateAxes_Peak_Area" xml:space="preserve">
     <value>峰面积</value>
   </data>
-  <data name="StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_to_work_with_empirically_measured_optimal_collision_energy__CE__values__In_this_tutorial__you_will_create_scheduled_CE_optimization_transitions_lists_for_a_document_with_30_peptide_precursors__Using_supplied_RAW_files_from_a_Thermo_TSQ_Vantage__you_will_recalculate_the_linear_equation_used_to_calculate_CE_for_that_instrument__You_will_also_export_a_transition_list_with_CE_values_optimized_separately_for_each_transition_" xml:space="preserve">
-    <value>获得使用 Skyline 处理实际测量的最优碰撞能量 (CE) 值的实际动手经验。在本教程中，您将创建一个针对30 个肽段母离子的预定 最优化CE离子对列表的文档。使用从 Thermo TSQ Vantage 提供的原始文件，您将可以重新计算用于针对该仪器计算 CE 的线性方程。您还将导出带有分别针对每个离子对最优化的 CE 值的离子对列表。</value>
-  </data>
   <data name="ExportMethodDlg_VerifySchedulingAllowed_Triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_" xml:space="preserve">
     <value>触发采集需要一个谱图库或导入结果，以排名离子对。</value>
   </data>
@@ -7751,9 +7622,6 @@
   <data name="EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_database_may_be_out_of_synch_" xml:space="preserve">
     <value>更新 iRT 数据库中的肽段失败。数据库可能不同步。</value>
   </data>
-  <data name="AbsoluteQuant_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\AbsoluteQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_" xml:space="preserve">
     <value>全梯度色谱图将花费更长的时间来导入、占用更多磁盘空间，并且可能导致峰选择不太有效。</value>
   </data>
@@ -7841,9 +7709,6 @@
   <data name="GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms" xml:space="preserve">
     <value>选择一个肽段、母离子或离子对，以查看其色谱图</value>
   </data>
-  <data name="StartPage_getBoxPanels_Absolute_Quantification" xml:space="preserve">
-    <value>绝对定量</value>
-  </data>
   <data name="TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_" xml:space="preserve">
     <value>操作已由用户取消。</value>
   </data>
@@ -7918,9 +7783,6 @@
   </data>
   <data name="NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found" xml:space="preserve">
     <value>{0}（未发现）</value>
-  </data>
-  <data name="OptimizeCE_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\OptimizeCE_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found" xml:space="preserve">
     <value>未发现任何母离子色谱图</value>
@@ -8152,9 +8014,6 @@
   </data>
   <data name="BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create_the_proteome_file__0__" xml:space="preserve">
     <value>尝试创建蛋白质组文件{0}出错。</value>
-  </data>
-  <data name="StartPage_SmallMolecule_Description" xml:space="preserve">
-    <value>了解如何使用 Skyline 靶向非蛋白质组学离子。您将导入在代谢组学实验中使用的分子离子对列表，并将从 Waters Xevo TQS 导入 14 次运行。开始学习如何将 Skyline 界面的强大功能应用于非蛋白质组学实验。</value>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_" xml:space="preserve">
     <value>错误：以“--工具-添加-zip”命令指定的文件不是 .zip 文件。请指定有效的 .zip 文件。</value>
@@ -9973,15 +9832,6 @@
   <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
     <value>不能在没有诱饵的情况下自动训练 mProphet 模型，但诱饵选项导致没有生成诱饵。请增加每个目标的诱饵数量，或禁用 mProphet 模型的自动训练。</value>
   </data>
-  <data name="StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing" xml:space="preserve">
-    <value>分组研究数据处理</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Targets" xml:space="preserve">
-    <value>小分子标靶</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Data_Independent_Acquisition" xml:space="preserve">
-    <value>非数据依赖采集</value>
-  </data>
   <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
     <value>排除特征得分“{0}”</value>
   </data>
@@ -10149,36 +9999,6 @@
   </data>
   <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_" xml:space="preserve">
     <value>保留时间（分钟）</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Introductory" xml:space="preserve">
-    <value>引导</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Full_Scan_Acquisition_Data" xml:space="preserve">
-    <value>全扫描采集数据</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Small_Molecules" xml:space="preserve">
-    <value>小分子</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization" xml:space="preserve">
-    <value>小分子方法开发和 CE 优化</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Quantification" xml:space="preserve">
-    <value>小分子定量</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics" xml:space="preserve">
-    <value>高分辨率代谢组学</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Advanced_Topics" xml:space="preserve">
-    <value>高级主题</value>
-  </data>
-  <data name="StartPage_SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
-    <value>了解如何创建一个 Skyline 文档，使其靶向源自文献引文的稳定同位素标记分子，仅指定母离子质荷比、子离子质荷比和碰撞能量值。通过使用来自 Sciex 三重四极杆的初始 CE 值，从 Waters Xevo TQ-S 导入多重复测定数据集，从而对分子执行保留时间预定和碰撞能量优化。了解有多少最初为目标蛋白质组学使用而创建的现有 Skyline 特征现在可用于非蛋白质组学分子数据。</value>
-  </data>
-  <data name="StartPage_SmallMoleculeQuantification_Description" xml:space="preserve">
-    <value>了解如何创建一个 Skyline 文档，使其靶向指定了母离子化学式和加合物、以及子离子质荷比值的分子。导入在三重四极杆上使用 LC-MS/MS 收集到的多重复测定数据集，并查看有多少最初为目标蛋白质组学使用而创建的现有 Skyline 特征现在可用于非蛋白质组学分子数据。</value>
-  </data>
-  <data name="StartPage_HiResMetabolomics_Description" xml:space="preserve">
-    <value>了解如何创建一个 Skyline 文档，使其靶向指定母离子化学式和加合物的分子。导入在 Q Exactive Orbitrap 质谱仪上收集到的多重复测定数据集以获取一组血浆样本，并查看有多少最初为目标蛋白质组学使用而创建的现有 Skyline 特征可用于非蛋白质组学分子数据。</value>
   </data>
   <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
     <value>对数空间中的线性</value>
