@@ -3169,14 +3169,14 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
             {
                 target.time_in_seconds_begin = 0;
-                target.time_in_seconds_end = RunLength;
+                target.time_in_seconds_end = RunLength * 60;
             }
             else
             {
                 var predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                     SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
-                target.time_in_seconds_begin = predictedRT.Value - windowRT / 2;
-                target.time_in_seconds_end = predictedRT.Value + windowRT / 2;
+                target.time_in_seconds_begin = (predictedRT.Value - windowRT / 2) * 60;
+                target.time_in_seconds_end = (predictedRT.Value + windowRT / 2) * 60;
             }
             target.time_in_seconds = (target.time_in_seconds_begin + target.time_in_seconds_end) / 2;
 
@@ -3261,8 +3261,8 @@ namespace pwiz.Skyline.Model
                 var count = 0;
                 if (timeSegmentCounts.TryGetValue(i, out var countSet))
                     count = countSet.Count;
-                points.Add(new PointPair(timeSegments[(int)i].time_in_seconds_begin, count));
-                points.Add(new PointPair(timeSegments[(int)i].time_in_seconds_end, count));
+                points.Add(new PointPair(timeSegments[(int)i].time_in_seconds_begin / 60, count));
+                points.Add(new PointPair(timeSegments[(int)i].time_in_seconds_end / 60, count));
             }
 
             if (timeSegments.Count > 0)
