@@ -195,40 +195,44 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             if (workflow != ImportPeptideSearchDlg.Workflow.dia)
             {
-                int offset = panelIonFilter.Top - cbExclusionUseDIAWindow.Top;
+                var nextTop = Controls.Cast<Control>().Select(c => c.Top).Where(t => t > cbExclusionUseDIAWindow.Top).Min();
+                int offset = nextTop - cbExclusionUseDIAWindow.Top;
                 foreach (var control in Controls.Cast<Control>().Where(c => c.Top > cbExclusionUseDIAWindow.Top))
                     control.Top -= offset;
                 cbExclusionUseDIAWindow.Hide();
             }
-            // If these are just the document defaults, use something more appropriate for DIA
-            else
+            switch (workflow)
             {
-                var settingsCurrent = _documentContainer.Document.Settings.TransitionSettings;
-                var settings = settingsCurrent;
-                var defSettings = SrmSettingsList.GetDefault().TransitionSettings;
-                if (Equals(settings.Filter, defSettings.Filter))
-                {
-                    settings = settings.ChangeFilter(settings.Filter
-                        .ChangePeptidePrecursorCharges(new[] {Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED})
-                        .ChangePeptideProductCharges(new[] {Adduct.SINGLY_PROTONATED, Adduct.DOUBLY_PROTONATED})
-                        .ChangePeptideIonTypes(new[] {IonType.y, IonType.b, IonType.precursor})
-                        .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_3.GetKey())
-                        .ChangeFragmentRangeLastName(TransitionFilter.EndFragmentFinder.LAST_ION.GetKey()));
-                }
-                if (Equals(settings.Libraries, defSettings.Libraries))
-                {
-                    settings = settings.ChangeLibraries(settings.Libraries.ChangeIonMatchTolerance(0.05)
-                        .ChangeIonCount(6)
-                        .ChangeMinIonCount(6));
-                }
-                if (Equals(settings.Instrument, defSettings.Instrument))
-                {
-                    settings = settings.ChangeInstrument(settings.Instrument
-                        .ChangeMinMz(50)
-                        .ChangeMaxMz(2000));
-                }
-                if (!ReferenceEquals(settings, settingsCurrent))
-                    SetFields(settings);
+                case ImportPeptideSearchDlg.Workflow.dia:
+                case ImportPeptideSearchDlg.Workflow.prm:
+                    // If these are just the document defaults, use something more appropriate for DIA
+                    var settingsCurrent = _documentContainer.Document.Settings.TransitionSettings;
+                    var settings = settingsCurrent;
+                    var defSettings = SrmSettingsList.GetDefault().TransitionSettings;
+                    if (Equals(settings.Filter, defSettings.Filter))
+                    {
+                        settings = settings.ChangeFilter(settings.Filter
+                            .ChangePeptidePrecursorCharges(new[] { Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })
+                            .ChangePeptideProductCharges(new[] { Adduct.SINGLY_PROTONATED, Adduct.DOUBLY_PROTONATED })
+                            .ChangePeptideIonTypes(new[] { IonType.y, IonType.b, IonType.precursor })
+                            .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_3.GetKey())
+                            .ChangeFragmentRangeLastName(TransitionFilter.EndFragmentFinder.LAST_ION.GetKey()));
+                    }
+                    if (Equals(settings.Libraries, defSettings.Libraries))
+                    {
+                        settings = settings.ChangeLibraries(settings.Libraries.ChangeIonMatchTolerance(0.05)
+                            .ChangeIonCount(6)
+                            .ChangeMinIonCount(6));
+                    }
+                    if (Equals(settings.Instrument, defSettings.Instrument))
+                    {
+                        settings = settings.ChangeInstrument(settings.Instrument
+                            .ChangeMinMz(50)
+                            .ChangeMaxMz(2000));
+                    }
+                    if (!ReferenceEquals(settings, settingsCurrent))
+                        SetFields(settings);
+                    break;
             }
         }
 
