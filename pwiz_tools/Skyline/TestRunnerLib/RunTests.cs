@@ -91,7 +91,8 @@ namespace TestRunnerLib
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool LiveReports { get; set; }
         public bool TeamCityTestDecoration { get; set; }
-      
+        public bool Verbose { get; set; }
+
         public bool ReportSystemHeaps
         {
             get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
@@ -118,7 +119,8 @@ namespace TestRunnerLib
             bool useVendorReaders = true,
             int timeoutMultiplier = 1,
             string results = null,
-            StreamWriter log = null)
+            StreamWriter log = null,
+            bool verbose = false)
         {
             _buildMode = buildMode;
             _log = log;
@@ -148,6 +150,7 @@ namespace TestRunnerLib
             RecordAuditLogs = recordauditlogs; // Replace or create audit logs for tutorial tests
             LiveReports = true;
             TeamCityTestDecoration = teamcityTestDecoration;
+            Verbose = verbose;
 
             // Disable logging.
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
@@ -199,13 +202,19 @@ namespace TestRunnerLib
             }
             else
             {
+                string testName;
+                if (Verbose)
+                    testName = test.TestClassType.Name + "." + test.TestMethod.Name;
+                else
+                    testName = test.TestMethod.Name;
+
                 var time = DateTime.Now;
                 Log("[{0}:{1}] {2,3}.{3,-3} {4,-46} ({5}) ",
                     time.Hour.ToString("D2"),
                     time.Minute.ToString("D2"),
                     pass,
                     testNumber,
-                    test.TestMethod.Name,
+                    testName,
                     Language.TwoLetterISOLanguageName);
             }
 
