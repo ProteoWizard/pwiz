@@ -193,6 +193,8 @@ namespace pwiz.Skyline.Model
 
         private string Format(Func<IEnumerable<Modification>, string> modFormatter)
         {
+            return FormatSelf(modFormatter) + FormatLinkedPeptides(modFormatter);
+
             StringBuilder result = new StringBuilder();
             int seqCharsReturned = 0;
             foreach (var modGroup in _explicitMods.Where(mod=>null == mod.LinkedPeptideSequence).GroupBy(mod => mod.IndexAA))
@@ -205,6 +207,7 @@ namespace pwiz.Skyline.Model
             result.Append(_unmodifiedSequence.Substring(seqCharsReturned));
             var linkedMods = _explicitMods.Where(mod => null != mod.LinkedPeptideSequence)
                 .OrderBy(mod => mod.ExplicitMod.LinkedPeptide.CountDescendents()).ToList();
+
             if (linkedMods.Any())
             {
                 result.Append(@"-");
@@ -248,6 +251,68 @@ namespace pwiz.Skyline.Model
             }
 
             return result.ToString();
+        }
+
+        private string FormatSelf(Func<IEnumerable<Modification>, string> modFormatter)
+        {
+            StringBuilder result = new StringBuilder();
+            int seqCharsReturned = 0;
+            foreach (var modGroup in _explicitMods.Where(mod => null == mod.LinkedPeptideSequence).GroupBy(mod => mod.IndexAA))
+            {
+                result.Append(_unmodifiedSequence.Substring(seqCharsReturned,
+                    modGroup.Key + 1 - seqCharsReturned));
+                seqCharsReturned = modGroup.Key + 1;
+                result.Append(modFormatter(modGroup.ToArray()));
+            }
+            result.Append(_unmodifiedSequence.Substring(seqCharsReturned));
+            return result.ToString();
+        }
+
+        private string FormatLinkedPeptides(Func<IEnumerable<Modification>, string> modFormatter)
+        {
+            List<Tuple<int, Modification>> linkedModifications = new List<Tuple<int, Modification>>(GetModifications()
+                .Where(mod => null != mod.LinkedPeptideSequence).Select(mod => Tuple.Create(0, mod)));
+            if (linkedModifications.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var totalPeptides = 1 + linkedModifications.Sum(pep => 1 + pep.Item2.ExplicitMod.LinkedPeptide.CountDescendents());
+            StringBuilder peptideSequences = new StringBuilder();
+            StringBuilder crosslinks = new StringBuilder();
+            int peptideIndex = 0;
+            while (linkedModifications.Any())
+            {
+                peptideIndex++;
+                var linkedModTuple = linkedModifications[0];
+                linkedModifications.RemoveAt(0);
+                var linkedModification = linkedModTuple.Item2;
+                linkedModifications.AddRange(linkedModification.LinkedPeptideSequence.GetModifications()
+                    .Where(mod => null != mod.LinkedPeptideSequence).Select(mod => Tuple.Create(peptideIndex, mod)));
+
+                peptideSequences.Append(@"-");
+                peptideSequences.Append(linkedModification.LinkedPeptideSequence.FormatSelf(modFormatter));
+                var strMod = modFormatter(new[] {linkedModification});
+                if (strMod.Length == 0)
+                {
+                    strMod = @"[]";
+                }
+
+                crosslinks.Append(strMod.Substring(0, strMod.Length - 1));
+                crosslinks.Append(@"@");
+
+                var indexes = new List<string>(totalPeptides);
+                indexes.AddRange(Enumerable.Repeat(@"*", linkedModTuple.Item1));
+                indexes.Add((linkedModification.IndexAA + 1).ToString());
+                indexes.AddRange(Enumerable.Repeat(@"*", peptideIndex - linkedModTuple.Item1 - 1));
+                indexes.Add((linkedModification.ExplicitMod.LinkedPeptide.IndexAa + 1).ToString());
+                indexes.AddRange(Enumerable.Repeat(@"*", totalPeptides - peptideIndex - 1));
+                crosslinks.Append(string.Join(@",", indexes));
+
+                crosslinks.Append(strMod.Substring(strMod.Length - 1));
+            }
+
+            return peptideSequences + @"-" + crosslinks;
         }
 
         public IEnumerable<Modification> GetModifications()

@@ -1762,6 +1762,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Modifications.
+        /// </summary>
+        public static string LinkedPeptide_ExplicitModsStatic {
+            get {
+                return ResourceManager.GetString("LinkedPeptide_ExplicitModsStatic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sequence.
+        /// </summary>
+        public static string LinkedPeptide_PeptideSequence {
+            get {
+                return ResourceManager.GetString("LinkedPeptide_PeptideSequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Position.
+        /// </summary>
+        public static string LinkedPeptide_Position {
+            get {
+                return ResourceManager.GetString("LinkedPeptide_Position", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Rows.
         /// </summary>
         public static string ListData_Rows {
@@ -1794,6 +1821,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ListDef_Properties {
             get {
                 return ResourceManager.GetString("ListDef_Properties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linked peptide.
+        /// </summary>
+        public static string LoggableExplicitMod_LinkedPeptide {
+            get {
+                return ResourceManager.GetString("LoggableExplicitMod_LinkedPeptide", resourceCulture);
             }
         }
         
@@ -3162,15 +3198,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string RetentionScoreCalculatorSpec_AuditLogPersistencePath {
             get {
                 return ResourceManager.GetString("RetentionScoreCalculatorSpec_AuditLogPersistencePath", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to iRT database modified.
-        /// </summary>
-        public static string RetentionScoreCalculatorSpec_PersistenceModifiedTime {
-            get {
-                return ResourceManager.GetString("RetentionScoreCalculatorSpec_PersistenceModifiedTime", resourceCulture);
             }
         }
         

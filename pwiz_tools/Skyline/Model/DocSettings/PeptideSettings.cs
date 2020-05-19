@@ -1618,7 +1618,6 @@ namespace pwiz.Skyline.Model.DocSettings
             isotope_label,
             internal_standard,
             name,
-            max_crosslink_fragmentations
         }
 
         void IValidating.Validate()

@@ -408,6 +408,12 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.CrosslinkerSettings = crosslinkerSettings);
         }
+
+        [Track]
+        bool IsCrosslinker
+        {
+            get { return null != CrosslinkerSettings; }
+        }
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -1374,6 +1380,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren(ignoreName: true)]
         public ExplicitMod ExplicitMod { get; private set; }
+
+        [TrackChildren(defaultValues:null)]
+        public LinkedPeptide LinkedPeptide
+        {
+            get { return ExplicitMod.LinkedPeptide; }
+        }
 
         public string PeptideSequence { get; private set; }
 

@@ -190,9 +190,9 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             var transitionGroup = GetTransitionGroup(labelType, Adduct.SINGLY_PROTONATED);
             Transition transition;
-            if (complexFragmentIonName.IonType == IonType.precursor)
+            if (complexFragmentIonName.IonType == IonType.precursor || complexFragmentIonName.IonType == IonType.custom)
             {
-                transition = new Transition(transitionGroup, complexFragmentIonName.IonType, Peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED);
+                transition = new Transition(transitionGroup, IonType.precursor, Peptide.Length - 1, 0, Adduct.SINGLY_PROTONATED);
             }
             else
             {
@@ -231,6 +231,36 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return result;
+        }
+
+        [TrackChildren(defaultValues:typeof(DefaultValuesNullOrEmpty))]
+        [UsedImplicitly]
+        public IList<LoggableExplicitMod> ExplicitModsStatic
+        {
+            get
+            {
+                if (ExplicitMods != null)
+                {
+                    return ImmutableList.ValueOf(ExplicitMods.StaticModifications.Select(
+                        mod => new LoggableExplicitMod(mod, Peptide.Sequence)));
+                }
+
+                return ImmutableList.Empty<LoggableExplicitMod>();
+            }
+        }
+
+        [Track]
+        [UsedImplicitly]
+        public string PeptideSequence
+        {
+            get { return Peptide.Sequence; }
+        }
+
+        [Track]
+        [UsedImplicitly]
+        public int Position
+        {
+            get { return IndexAa + 1; }
         }
     }
 }
