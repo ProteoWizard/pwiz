@@ -306,6 +306,9 @@
   <data name="StaticMod_Terminus" xml:space="preserve">
     <value>Terminus</value>
   </data>
+  <data name="StaticMod_IsCrosslinker" xml:space="preserve">
+    <value>Crosslinker</value>
+  </data>
   <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
     <value>Use high-selectivity extraction</value>
   </data>

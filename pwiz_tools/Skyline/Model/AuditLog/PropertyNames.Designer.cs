@@ -3346,6 +3346,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Crosslinker.
+        /// </summary>
+        public static string StaticMod_IsCrosslinker {
+            get {
+                return ResourceManager.GetString("StaticMod_IsCrosslinker", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Variable.
         /// </summary>
         public static string StaticMod_IsVariable {
