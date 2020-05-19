@@ -143,6 +143,18 @@ class PWIZ_API_DECL IntegerSet
     /// returns the number of integers in the set
     size_t size() const;
 
+    /// empty set
+    const static IntegerSet emptySet;
+
+    /// natural numbers (1, 2, 3, ...)
+    const static IntegerSet positive;
+
+    /// negative integers (-1, -2, -3, ...)
+    const static IntegerSet negative;
+
+    /// whole numbers (0, 1, 2, ...)
+    const static IntegerSet whole;
+
     private:
 
     Intervals intervals_; 

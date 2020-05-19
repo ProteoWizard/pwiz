@@ -485,7 +485,7 @@ TICChromatogramImpl::TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataO
     y_.reserve(fullFileTIC.size());
     for (const auto& kvp : fullFileTIC)
     {
-        x_.push_back((double) kvp.first / ShimadzuUtil::MASSNUMBER_UNIT);
+        x_.push_back((double) kvp.first / 1e3);
         y_.push_back((double) kvp.second);
     }
 }
