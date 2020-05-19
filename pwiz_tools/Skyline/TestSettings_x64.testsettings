@@ -50,6 +50,7 @@
     <!-- BiblioSpec library building -->
     <DeploymentItem filename="BlibBuild.exe" />
     <DeploymentItem filename="BlibFilter.exe" />
+	<DeploymentItem filename="Instruments.xml" />
     <DeploymentItem filename="msparser.dll" />
     <DeploymentItem filename="msparserD.dll" />
 	<DeploymentItem filename="modifications.xml" />
