@@ -229,9 +229,9 @@ namespace pwiz.SkylineTest
             var peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", null, new []{peptideDocNode});
             var srmDocument = (SrmDocument) new SrmDocument(settings).ChangeChildren(new[] {peptideGroupDocNode});
             AssertEx.Serializable(srmDocument);
-            String docXML = null;
+            string docXML = null;
             AssertEx.RoundTrip(srmDocument, ref docXML);
-            Console.Out.WriteLine(docXML);
+            Assert.IsNotNull(docXML);
         }
 
         [TestMethod]
