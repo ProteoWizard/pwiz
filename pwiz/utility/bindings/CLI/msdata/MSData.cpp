@@ -614,10 +614,10 @@ void Chromatogram::defaultArrayLength::set(System::UInt64 value) {(*base_)->defa
 DataProcessing^ Chromatogram::dataProcessing::get()  {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
 //void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
 
-Precursor^ Chromatogram::precursor::get() {return gcnew Precursor(&(*base_)->precursor);}
+Precursor^ Chromatogram::precursor::get() {return gcnew Precursor(&(*base_)->precursor, this);}
 void Chromatogram::precursor::set(Precursor^ value) {(*base_)->precursor = *value->base_;}
 
-Product^ Chromatogram::product::get() {return gcnew Product(&(*base_)->product);}
+Product^ Chromatogram::product::get() {return gcnew Product(&(*base_)->product, this);}
 void Chromatogram::product::set(Product^ value) {(*base_)->product = *value->base_;}
 
 BinaryDataArrayList^ Chromatogram::binaryDataArrays::get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs, this);}
