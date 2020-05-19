@@ -2941,7 +2941,8 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} of the {1} entries in library &apos;{2}&apos; were invalid, including:
+        ///   Looks up a localized string similar to Invalid entries were found in the library &apos;{0}&apos;.
+        ///{1} of the {2} peptides or molecules were invalid, including:
         ///{3}.
         /// </summary>
         public static string CachedLibrary_WarnInvalidEntries_ {

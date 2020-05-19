@@ -1021,16 +1021,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             try
             {
-                var libraryKey = libKey.LibraryKey;
-                if (libraryKey is PeptideLibraryKey peptideLibraryKey)
-                {
-                    var unused = new Peptide(peptideLibraryKey.UnmodifiedSequence);
-                }
-                else if (libraryKey is MoleculeLibraryKey moleculeLibraryKey)
-                {
-                    var unused = moleculeLibraryKey.Target;
-                }
-
+                var unused = libKey.LibraryKey.CreatePeptideIdentityObj();
                 return true;
             }
             catch (Exception)
@@ -1048,7 +1039,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             var invalidText = TextUtil.LineSeparate(invalidEntries.Take(10).Select(key => key.ToString()));
             string warningMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_,
-                invalidEntries.Count, invalidEntries.Count + validEntryCount, Name, invalidText);
+                Name, invalidEntries.Count, invalidEntries.Count + validEntryCount, invalidText);
             progressStatus = progressStatus.ChangeWarningMessage(warningMessage);
             return progressStatus;
         }

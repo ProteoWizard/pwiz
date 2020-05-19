@@ -45,6 +45,7 @@ namespace pwiz.SkylineTestFunctional
             VerifyInvalidPeptideMessage("BiblioSpecInvalidPeptides.blib", 2, 30);
             VerifyInvalidPeptideMessage("SomeInvalidPeptides.sptxt", 1, 4);
             VerifyInvalidPeptideMessage("InvalidElibPeptides.elib", 15, 48);
+            VerifyInvalidPeptideMessage("BadExample.msp", 2, 3);
         }
 
         /// <summary>
@@ -77,8 +78,8 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             var messageDlg = WaitForOpenForm<AlertDlg>();
-            var expectedMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_, expectedInvalidCount,
-                expectedTotalCount, libName, string.Empty);
+            var expectedMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_, libName, expectedInvalidCount,
+                expectedTotalCount, string.Empty);
             StringAssert.StartsWith(messageDlg.Message, expectedMessage);
             OkDialog(messageDlg, messageDlg.OkDialog);
         }

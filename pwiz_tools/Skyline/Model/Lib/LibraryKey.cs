@@ -88,6 +88,13 @@ namespace pwiz.Skyline.Model.Lib
         {
             return new LibKey(libraryKey);
         }
+
+        /// <summary>
+        /// Creates a Peptide object corresponding to this LibraryKey. Will throw
+        /// an exception if this LibraryKey is malformed.
+        /// </summary>
+        /// <returns></returns>
+        public abstract Peptide CreatePeptideIdentityObj();
     }
 
     public class PeptideLibraryKey : LibraryKey
@@ -285,6 +292,11 @@ namespace pwiz.Skyline.Model.Lib
             newSequence.Append(UnmodifiedSequence.Substring(aaCount));
             return new PeptideLibraryKey(newSequence.ToString(), Charge);
         }
+
+        public override Peptide CreatePeptideIdentityObj()
+        {
+            return new Peptide(UnmodifiedSequence);
+        }
     }
 
     public class MoleculeLibraryKey : LibraryKey
@@ -416,6 +428,11 @@ namespace pwiz.Skyline.Model.Lib
             }
             return Equals(PreferredKey, that.PreferredKey) && Equals(Adduct, that.Adduct);
         }
+
+        public override Peptide CreatePeptideIdentityObj()
+        {
+            return new Peptide(Target);
+        }
     }
 
     public class PrecursorLibraryKey : LibraryKey
@@ -485,6 +502,11 @@ namespace pwiz.Skyline.Model.Lib
                 return precursor;
             var rt = RetentionTime.GetValueOrDefault().ToString(@"0.00", CultureInfo.CurrentCulture);
             return string.Format(@"{0} ({1})", precursor, rt);
+        }
+
+        public override Peptide CreatePeptideIdentityObj()
+        {
+            return null;
         }
     }
 }
