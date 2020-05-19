@@ -194,63 +194,6 @@ namespace pwiz.Skyline.Model
         private string Format(Func<IEnumerable<Modification>, string> modFormatter)
         {
             return FormatSelf(modFormatter) + FormatLinkedPeptides(modFormatter);
-
-            StringBuilder result = new StringBuilder();
-            int seqCharsReturned = 0;
-            foreach (var modGroup in _explicitMods.Where(mod=>null == mod.LinkedPeptideSequence).GroupBy(mod => mod.IndexAA))
-            {
-                result.Append(_unmodifiedSequence.Substring(seqCharsReturned,
-                    modGroup.Key + 1 - seqCharsReturned));
-                seqCharsReturned = modGroup.Key + 1;
-                result.Append(modFormatter(modGroup.ToArray()));
-            }
-            result.Append(_unmodifiedSequence.Substring(seqCharsReturned));
-            var linkedMods = _explicitMods.Where(mod => null != mod.LinkedPeptideSequence)
-                .OrderBy(mod => mod.ExplicitMod.LinkedPeptide.CountDescendents()).ToList();
-
-            if (linkedMods.Any())
-            {
-                result.Append(@"-");
-                for (int iLinkedMod = 0; iLinkedMod < linkedMods.Count; iLinkedMod++)
-                {
-                    var linkedMod = linkedMods[iLinkedMod];
-                    
-                    string strMod = modFormatter(new[] { linkedMod });
-                    if (strMod.Length == 0)
-                    {
-                        strMod = @"[]";
-                    }
-                    // Add the representation for the modification itself up to the closing bracket (e.g. "[DSS")
-                    result.Append(strMod.Substring(0, strMod.Length - 1));
-
-                    result.Append(@"@");
-                    result.Append(linkedMod.IndexAA + 1);
-                    result.Append(@",");
-                    result.Append(linkedMod.ExplicitMod.LinkedPeptide.IndexAa + 1);
-                    
-                    // Add the closing bracket from the modification name
-                    result.Append(strMod.Substring(strMod.Length - 1));
-
-                    if (iLinkedMod != linkedMods.Count - 1)
-                    {
-                        // If this is not the last child, and this linked peptide has any descendents,
-                        // then append that many placeholder "[]".
-                        int descendentCount = linkedMod.ExplicitMod.LinkedPeptide.CountDescendents();
-                        if (descendentCount > 0)
-                        {
-                            result.Insert(result.Length, @"[]", descendentCount);
-                        }
-                    }
-                }
-
-                foreach (var linkedMod in linkedMods)
-                {
-                    result.Append(@"-");
-                    result.Append(linkedMod.LinkedPeptideSequence.Format(modFormatter));
-                }
-            }
-
-            return result.ToString();
         }
 
         private string FormatSelf(Func<IEnumerable<Modification>, string> modFormatter)

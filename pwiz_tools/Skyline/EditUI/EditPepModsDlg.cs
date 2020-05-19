@@ -360,10 +360,6 @@ namespace pwiz.Skyline.EditUI
             {
                 if (!mod.IsMod(aa, indexAA, seq.Length))
                     continue;
-                if (false && !AllowCrosslinks && mod.CrosslinkerSettings != null)
-                {
-                    continue;
-                }
                 listItems.Add(mod.Name);
                 hasModOptions = true;
 

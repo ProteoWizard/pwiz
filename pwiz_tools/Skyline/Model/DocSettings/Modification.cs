@@ -409,7 +409,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.CrosslinkerSettings = crosslinkerSettings);
         }
 
-        [Track]
+        [Track(defaultValues:typeof(DefaultValuesFalse))]
         bool IsCrosslinker
         {
             get { return null != CrosslinkerSettings; }
