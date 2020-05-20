@@ -60,8 +60,10 @@ namespace pwiz.Skyline.SettingsUI
 //        public class IntegrationTab : IFormView { }    - not yet visible ever
         public class QuantificationTab : IFormView { }
 
-        private static readonly IFormView[] TAB_PAGES =
+        private readonly Dictionary<TabPage, TABS> _tabMap; // For dealing with hidden tabs when selecing active tab programattically
+        private static readonly IFormView[] TAB_PAGES = 
         {
+            // If you add to this, also update code for populating _tabMap below
             new DigestionTab(), new PredictionTab(), new FilterTab(), new LibraryTab(), new ModificationsTab(), new LabelsTab(), /* new IntegrationTab(), */ new QuantificationTab(), 
         };
 
@@ -89,6 +91,17 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
+            _tabMap = new Dictionary<TabPage, TABS>()
+            {
+                {tabDigestion, TABS.Digest},
+                {tabPrediction, TABS.Prediction},
+                {tabFilter, TABS.Filter},
+                {tabLibrary, TABS.Library},
+                {tabModifications, TABS.Modifications},
+                {tabLabels, TABS.Labels},
+                /*{tabIntegration, TABS.Integration},*/ 
+                {tabQuantification, TABS.Quantification}
+            };
             RestoreTabSel(selectTab);
 
             btnUpdateIonMobilityLibraries.Visible = false; // TODO: ion mobility libraries are more complex than initially thought - put this off until after summer 2014 release
@@ -308,10 +321,35 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+
+        // Adjust indexing for tabs that may be hidden due to UI mode
+        private int TabToControlIndex(TABS tab)
+        {
+            var control = _tabMap.FirstOrDefault(x => x.Value == tab).Key;
+            for (var controlIndex = 0; controlIndex < tabControl1.TabPages.Count; controlIndex++)
+            {
+                if (tabControl1.TabPages[controlIndex] == control)
+                {
+                    return controlIndex;
+                }
+            }
+            return 0;
+        }
+
+        // Adjusts indexing for tabs that may be hidden due to UI mode
+        private TABS ControlIndexToTab(int controlIndex)
+        {
+            if (_tabMap.TryGetValue(tabControl1.TabPages[controlIndex], out var tab))
+            {
+                return tab;
+            }
+            return 0;
+        }
+
         protected override void OnShown(EventArgs e)
         {
-            if (TabControlSel != null) 
-                tabControl1.SelectedIndex = (int) TabControlSel; 
+            if (TabControlSel.HasValue)
+                tabControl1.SelectedIndex = TabToControlIndex(TabControlSel.Value); 
             tabControl1.FocusFirstTabStop();
         }
 
@@ -1258,8 +1296,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public TABS SelectedTab
         {
-            get { return (TABS)tabControl1.SelectedIndex; }
-            set { tabControl1.SelectedIndex = (int)value; }
+            get { return ControlIndexToTab(tabControl1.SelectedIndex); }
+            set { tabControl1.SelectedIndex = TabToControlIndex(value); }
         }
 
         public void ChooseRegression(string name)
