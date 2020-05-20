@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditLinkedPeptideDlg));
             this.label1 = new System.Windows.Forms.Label();
             this.tbxPeptideSequence = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -39,79 +40,51 @@
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(15, 19);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(130, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Linked peptide sequence:";
             // 
             // tbxPeptideSequence
             // 
-            this.tbxPeptideSequence.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxPeptideSequence.Location = new System.Drawing.Point(18, 35);
+            resources.ApplyResources(this.tbxPeptideSequence, "tbxPeptideSequence");
             this.tbxPeptideSequence.Name = "tbxPeptideSequence";
-            this.tbxPeptideSequence.Size = new System.Drawing.Size(284, 20);
-            this.tbxPeptideSequence.TabIndex = 1;
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(15, 58);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(183, 13);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "Crosslink attaches at residue number:";
             // 
             // tbxAttachmentOrdinal
             // 
-            this.tbxAttachmentOrdinal.Location = new System.Drawing.Point(18, 74);
+            resources.ApplyResources(this.tbxAttachmentOrdinal, "tbxAttachmentOrdinal");
             this.tbxAttachmentOrdinal.Name = "tbxAttachmentOrdinal";
-            this.tbxAttachmentOrdinal.Size = new System.Drawing.Size(100, 20);
-            this.tbxAttachmentOrdinal.TabIndex = 3;
             // 
             // btnEditModifications
             // 
-            this.btnEditModifications.Location = new System.Drawing.Point(18, 109);
+            resources.ApplyResources(this.btnEditModifications, "btnEditModifications");
             this.btnEditModifications.Name = "btnEditModifications";
-            this.btnEditModifications.Size = new System.Drawing.Size(127, 23);
-            this.btnEditModifications.TabIndex = 6;
-            this.btnEditModifications.Text = "Edit Modifications...";
             this.btnEditModifications.UseVisualStyleBackColor = true;
             this.btnEditModifications.Click += new System.EventHandler(this.btnEditModifications_Click);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnCancel.Location = new System.Drawing.Point(227, 158);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 8;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnOk.Location = new System.Drawing.Point(146, 158);
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 7;
-            this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // EditLinkedPeptideDlg
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(314, 193);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.btnEditModifications);
@@ -121,8 +94,7 @@
             this.Controls.Add(this.label1);
             this.Name = "EditLinkedPeptideDlg";
             this.ShowIcon = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Edit Linked Peptide";
+            this.ShowInTaskbar = false;
             this.ResumeLayout(false);
             this.PerformLayout();
 
