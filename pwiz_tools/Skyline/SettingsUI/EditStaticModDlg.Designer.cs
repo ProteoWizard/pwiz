@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditStaticModDlg));
             this.textName = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
@@ -58,7 +57,6 @@
             this.tbbEditLoss = new System.Windows.Forms.ToolStripButton();
             this.tbbDeleteLoss = new System.Windows.Forms.ToolStripButton();
             this.comboMod = new System.Windows.Forms.ComboBox();
-            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.cbCrosslinker = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelAtoms.SuspendLayout();
@@ -262,12 +260,6 @@
             this.comboMod.SelectedIndexChanged += new System.EventHandler(this.comboMod_SelectedIndexChanged);
             this.comboMod.DropDownClosed += new System.EventHandler(this.comboMod_DropDownClosed);
             // 
-            // imageList1
-            // 
-            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
-            this.imageList1.TransparentColor = System.Drawing.Color.Magenta;
-            this.imageList1.Images.SetKeyName(0, "Delete.bmp");
-            // 
             // cbCrosslinker
             // 
             resources.ApplyResources(this.cbCrosslinker, "cbCrosslinker");
@@ -346,7 +338,6 @@
         private System.Windows.Forms.ToolStripButton tbbEditLoss;
         private System.Windows.Forms.ToolStripButton tbbDeleteLoss;
         private System.Windows.Forms.ComboBox comboMod;
-        private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.CheckBox cbCrosslinker;
     }
 }
