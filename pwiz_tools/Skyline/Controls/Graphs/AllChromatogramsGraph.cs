@@ -22,8 +22,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.ExceptionServices;
-using System.Security;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
