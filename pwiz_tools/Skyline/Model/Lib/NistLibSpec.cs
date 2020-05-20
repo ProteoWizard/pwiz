@@ -981,6 +981,12 @@ namespace pwiz.Skyline.Model.Lib
                             break;
                     }
 
+                    // Watch for strange formula specification as seen in MONA LipidBlast, e.g. "[C11H22NO4]+" seen with adduct [M]+
+                    if (formula != null && formula.StartsWith(@"["))
+                    {
+                        formula = formula.Substring(1).Split(']')[0];
+                    }
+
                     // Try to infer adduct if none given
                     if (charge == 0 && adduct.IsEmpty && precursorMz.HasValue && ! string.IsNullOrEmpty(formula))
                     {

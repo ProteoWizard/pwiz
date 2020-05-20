@@ -57,7 +57,7 @@ namespace pwiz.SkylineTest
         public void NistLoadLibrary()
         {
             var streamManager = new MemoryStreamManager();
-            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT);
+            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
             var expectedFragmentAnnotations = new Dictionary<int, List<SpectrumPeakAnnotation>>
             {
@@ -95,6 +95,11 @@ namespace pwiz.SkylineTest
 
             // Check ability to infer adduct from mz and formula
             Assert.AreEqual(1, lib2.Keys.Count(k => Equals("[M-H2O+H]", k.Adduct.AdductFormula)));
+
+            // Check ability to parse strangely decorated formula
+            Assert.AreEqual(1, lib2.Keys.Count(k => Equals("[M+]", k.Adduct.AdductFormula)));
+            Assert.AreEqual(1, lib2.Keys.Count(k => Equals("C11H22NO4", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
+            
 
         }
 
@@ -887,6 +892,29 @@ namespace pwiz.SkylineTest
             "60.0810 115745.10\n" +
             "61.4383 3796.87\n" +
             "64.3453 3654.89\n";
+
+        public const string TEXT_LIB_FORMULA_PLUS =
+            "\n" +
+            "Name: ACar 4:0\n" +
+            "Synon: [M]+\n" +
+            "Synon: $:00in-source\n" +
+            "DB#: LipidBlast000001\n" +
+            "InChIKey: QWYFHHGCZUCMBN-UHFFFAOYSA-O\n" +
+            "Precursor_type: [M]+\n" +
+            "Spectrum_type: MS2\n" +
+            "PrecursorMZ: 232.15433\n" +
+            "Instrument_type: in-silico QTOF\n" +
+            "Instrument: SCIEX 5600\n" +
+            "Ion_mode: P\n" +
+            "Collision_energy: 45 V\n" +
+            "Formula: [C11H22NO4]+\n" +
+            "MW: 232\n" +
+            "ExactMass: 232.1543346040907\n" +
+            // TODO(bspratt) - MoNA embeds a lot of information in Comments that we should pick out, like SMILES, InChIKey, retention time etc
+            "Comments: \"SMILES=CCCC(=O)OC(CC(O)=O)C[N+](C)(C)C\" \"compound class=ACar\" \"computed SMILES=O=C(O)CC(OC(=O)CCC)C[N+](C)(C)C\" \"computed InChI=InChI=1S/C11H21NO4/c1-5-6-11(15)16-9(7-10(13)14)8-12(2,3)4/h9H,5-8H2,1-4H3/p+1\" \"retention time=0.51\" \"collision energy spread=15 V\" \"author=Tobias Kind, Hiroshi Tsugawa\" \"computed mass accuracy=2.3431646471704717\" \"computed mass error=5.439758187435473E-4\" \"SPLASH=splash10-001r-7090000000-aa12589a2481560ea0d5\" \"submitter=Tobias Kind (University of California, Davis)\" \"MoNA Rating=3.6363636363636367\"\n" +
+            "Num Peaks: 2\n" +
+            "85.02841 80.080080\n" +
+            "232.1543 100.000000\n";
 
         public const string TEXT_LIB_BICINE_NIST =
             "\n" +
