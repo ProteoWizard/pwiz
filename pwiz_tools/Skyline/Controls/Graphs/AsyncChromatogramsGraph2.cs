@@ -568,12 +568,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _inCreateHandle;
         /// <summary>
         /// Override CreateHandle in order to try to track down intermittent test failures.
-        /// "HandleProcessCorruptedStateExceptions" just in case a type of exception is getting thrown
-        /// that cannot be caught by ordinary C# code.
         /// TODO(nicksh): Remove this override once the intermittent failure is figured out
         /// </summary>
-        [HandleProcessCorruptedStateExceptions]
-        [SecurityCritical]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         protected override void CreateHandle()
         {
