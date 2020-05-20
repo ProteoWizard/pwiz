@@ -286,5 +286,25 @@ namespace pwiz.SkylineTest
                     Transition.GetChargeIndicator(Adduct.FromChargeProtonated(tuple.Item3)));
             }
         }
+
+        [TestMethod]
+        public void TestCrosslinkPrecursorMz()
+        {
+            var srmSettings = SrmSettingsList.GetDefault();
+            srmSettings = srmSettings.ChangePeptideSettings(
+                srmSettings.PeptideSettings.ChangeModifications(
+                    srmSettings.PeptideSettings.Modifications.ChangeStaticModifications(new StaticMod[0])));
+            var mainPeptide = new Peptide("WQEGNVFSCSVMHEALHNHYTQK");
+            var otherPeptide = new Peptide("NQVSLTCLVK");
+            var linkedPeptide = new LinkedPeptide(otherPeptide, 6, ExplicitMods.EMPTY);
+            var crosslinkMod = new StaticMod("disulfide", "C", null, "-H2").ChangeCrosslinkerSettings(CrosslinkerSettings.EMPTY);
+
+            var transitionGroup = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
+            var explicitMod = new ExplicitMod(8, crosslinkMod).ChangeLinkedPeptide(linkedPeptide);
+            var explicitMods = new ExplicitMods(mainPeptide, new[]{explicitMod}, new List<TypedExplicitModifications>());
+            
+            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings, explicitMods, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+            Assert.AreEqual(1923.9111, transitionGroupDocNode.PrecursorMz, .001);
+        }
     }
 }

@@ -822,6 +822,7 @@ namespace pwiz.Skyline.Model
             var crosslinkBuilder = new CrosslinkBuilder(settings, TransitionGroup.Peptide, mods, LabelType);
             MassType massType = settings.TransitionSettings.Prediction.PrecursorMassType;
             mass = crosslinkBuilder.GetPrecursorMass(massType);
+            Assume.IsFalse(mass.IsMassH());
             if (settings.TransitionSettings.FullScan.IsHighResPrecursor)
             {
                 double decoyMassShift = 0;

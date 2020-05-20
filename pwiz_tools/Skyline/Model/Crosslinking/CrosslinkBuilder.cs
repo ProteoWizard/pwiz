@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             var mzDistribution = massDistribution.OffsetAndDivide(
                 adduct.AdductCharge * (BioMassCalc.MassProton + decoyMassShift), adduct.AdductCharge);
 
-            return IsotopeDistInfo.MakeIsotopeDistInfo(mzDistribution, GetPrecursorMass(MassType.Monoisotopic), adduct, Settings.TransitionSettings.FullScan);
+            return IsotopeDistInfo.MakeIsotopeDistInfo(mzDistribution, GetPrecursorMass(MassType.MonoisotopicMassH), adduct, Settings.TransitionSettings.FullScan);
         }
 
         public TypedMass GetPrecursorMass(MassType massType)
@@ -149,8 +149,12 @@ namespace pwiz.Skyline.Model.Crosslinking
             double mass = massType.IsMonoisotopic()
                 ? fragmentedMoleculeSettings.GetMonoMass(formula)
                 : fragmentedMoleculeSettings.GetAverageMass(formula);
+            if (massType.IsMassH())
+            {
+                mass += BioMassCalc.MassProton;
+            }
 
-            return new TypedMass(mass + BioMassCalc.MassProton, massType | MassType.bMassH);
+            return new TypedMass(mass, massType);
         }
 
         public MassDistribution GetPrecursorMassDistribution()

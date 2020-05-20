@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -174,8 +175,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
                 else
                 {
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, DocNode);
-                    return molecule.Formula ?? string.Empty;
+                    var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, DocNode.Peptide,
+                        DocNode.ExplicitMods, IsotopeLabelType.light);
+                    return crosslinkBuilder.GetPrecursorFormula().Molecule.ToString();
                 }
             }
         }
