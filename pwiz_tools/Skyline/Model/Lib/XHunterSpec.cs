@@ -377,7 +377,7 @@ namespace pwiz.Skyline.Model.Lib
                     revision = match.Groups[3].Value;
                 }
             }
-            var setLibKeys = new Dictionary<LibKey, bool>(size);
+            var setLibKeys = new HashSet<LibKey>(size);
             var libraryEntries = new List<XHunterSpectrumInfo>(size);
 
             const int countHeader = ((int) SpectrumHeaders2.count)*sizeof (int);
@@ -475,12 +475,13 @@ namespace pwiz.Skyline.Model.Lib
                 // Apparently, GPM libraries do contain redundancies, as we found
                 // when a revision lost this test.
                 var key = new LibKey(modifiedSequence, charge);
-                if (!setLibKeys.ContainsKey(key))
+                if (setLibKeys.Add(key))
                 {
-                    setLibKeys.Add(key, true);
                     libraryEntries.Add(new XHunterSpectrumInfo(key, i2, expect, numPeaks, location));
                 }
             }
+
+            libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries);
            
             using (FileSaver fs = new FileSaver(CachePath, sm))
             using (Stream outStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))

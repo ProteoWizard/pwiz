@@ -10803,4 +10803,9 @@ There might be something wrong with default web browser on this computer.</value
   <data name="CommandLine_AddDecoys_Decoys_discarded" xml:space="preserve">
     <value>Decoys discarded</value>
   </data>
+  <data name="CachedLibrary_WarnInvalidEntries_" xml:space="preserve">
+    <value>Invalid entries were found in the library '{0}'.
+{1} of the {2} peptides or molecules were invalid, including:
+{3}</value>
+  </data>
 </root>
