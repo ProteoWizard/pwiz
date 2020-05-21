@@ -224,12 +224,8 @@ namespace pwiz.Skyline.Model
                     // Add values that existed before the change. First check for exact match by
                     // global index, which will happen when explicit modifications are added,
                     // and then by content identity.
-                    if (mapIndexToChild.TryGetValue(nodePep.Id.GlobalIndex, out existing))
-                    {
-                        nodePepResult = (PeptideDocNode)existing;
-                        diffNode = diff;
-                    }
-                    else if (mapIdToChild.TryGetValue(nodePep.Key, out existing))
+                    if (mapIndexToChild.TryGetValue(nodePep.Id.GlobalIndex, out existing) ||
+                        mapIdToChild.TryGetValue(nodePep.Key, out existing))
                     {
                         nodePepResult = (PeptideDocNode) existing;
                         diffNode = diff;
