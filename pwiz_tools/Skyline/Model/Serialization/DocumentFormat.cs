@@ -66,7 +66,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_19_12 = new DocumentFormat(19.12); // Adds sample_id and serial_number
         public static readonly DocumentFormat VERSION_20_1 = new DocumentFormat(20.1); // Release format
         public static readonly DocumentFormat VERSION_20_11 = new DocumentFormat(20.11);
-        public static readonly DocumentFormat CURRENT = VERSION_20_11;
+        public static readonly DocumentFormat VERSION_20_12 = new DocumentFormat(20.12); // Crosslinked peptides
+        public static readonly DocumentFormat CURRENT = VERSION_20_12;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

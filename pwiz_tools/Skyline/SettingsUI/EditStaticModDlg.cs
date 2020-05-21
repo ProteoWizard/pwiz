@@ -27,6 +27,7 @@ using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -102,7 +103,10 @@ namespace pwiz.Skyline.SettingsUI
 
             ShowLoss = false;
             if (heavy)
+            {
                 btnLoss.Visible = false;
+                cbCrosslinker.Visible = false;
+            }
 
 
             Modification = _originalModification = modEditing;
@@ -114,7 +118,6 @@ namespace pwiz.Skyline.SettingsUI
             set
             {
                 var modification = value;
-
                 // Update the dialog.
                 if (modification == null)
                 {
@@ -182,7 +185,6 @@ namespace pwiz.Skyline.SettingsUI
 
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedItem = modification.RelativeRT.ToString();
-
                     listLosses.Items.Clear();
                     if (modification.HasLoss)
                     {
@@ -192,8 +194,16 @@ namespace pwiz.Skyline.SettingsUI
                     ShowLoss = listLosses.Items.Count > 0;
                     UpdateMasses();
                 }
+
+                cbCrosslinker.Checked = null != modification?.CrosslinkerSettings;
                 _modification = modification;
             }
+        }
+
+        public bool IsCrosslinker
+        {
+            get { return cbCrosslinker.Checked; }
+            set { cbCrosslinker.Checked = value; }
         }
 
         public string Formula
@@ -401,7 +411,6 @@ namespace pwiz.Skyline.SettingsUI
                                          monoMass,
                                          avgMass,
                                          losses);
-
             foreach (StaticMod mod in _existing)
             {
                 if (newMod.Equivalent(mod) && !(_editing && mod.Equals(_originalModification)))
@@ -419,6 +428,11 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     return;
                 }
+            }
+
+            if (cbCrosslinker.Checked)
+            {
+                newMod = newMod.ChangeCrosslinkerSettings(CrosslinkerSettings.EMPTY);
             }
             
             var uniMod = UniMod.GetModification(name, IsStructural);
@@ -796,6 +810,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return comboMod.Visible; }
             private set { comboMod.Visible = value; }
+        }
+
+        private void cbCrosslinker_CheckedChanged(object sender, EventArgs e)
+        {
+            cbVariableMod.Enabled = !cbCrosslinker.Checked;
         }
     }
 }

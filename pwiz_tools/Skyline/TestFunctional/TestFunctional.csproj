@@ -160,6 +160,7 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
+    <Compile Include="CrosslinkingTest.cs" />
     <Compile Include="ExplicitAnalyteConcentrationTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
