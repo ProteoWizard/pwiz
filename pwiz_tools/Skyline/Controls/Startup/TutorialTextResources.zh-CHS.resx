@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+	
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>1.3</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+  <data name="Section_Introductory" xml:space="preserve">
+    <value>引导</value>
+  </data>
+  <data name="MethodEdit_Caption" xml:space="preserve">
+    <value>靶向方法编辑</value>
+  </data>
+  <data name="MethodEdit_Description" xml:space="preserve">
+    <value>获得针对定向蛋白质组实验创建 Skyline 文档的实际经验。在本教程中，您将从 pepXML ，mzXML和由FASTA格式文件创建得到的一个背景蛋白质组中创建一个 MS/MS 谱图库。您将这些内容与全球蛋白质组机构中的公共 MS/MS 谱图库相结合，以指导创建针对选定的酵母蛋白质、肽段和子离子的全新 Skyline 文档。从此文档中，您将导出一个可以在 AB 4000 Q Trap 上运行的离子对列表。</value>
+  </data>
+  <data name="MethodRefine_Caption" xml:space="preserve">
+    <value>靶向方法调整</value>
+  </data>
+  <data name="MethodRefine_Description" xml:space="preserve">
+    <value>从一组广泛的 SRM 测量，仪器数据导入和文档调整开始获得实际经验。从需要 2000 多个离子对和 39 次注射的未调整文档开始，在 Thermo TSQ 上进行非预定测量。了解如何将全部 39 次注射导入单一的重复测定。使用疏水性到保留时间的回归和 ms/ms 谱图库峰值强度相关性，以改进测量峰的可信度。使用 Skyline 调整对话，以针对最高置信度峰值删除最佳离子对之外的全部离子对。逐步调试预定计划，从而将文档缩减成可以在单次注射中测量的离子对列表。导入并查看单一注射方法中的多个重复测定。</value>
+  </data>
+  <data name="ExistingQuant_Caption" xml:space="preserve">
+    <value>现有和定量实验</value>
+  </data>
+  <data name="ExistingQuant_Description" xml:space="preserve">
+    <value>从已发布的离子对和 SRM 质谱仪实验开始，获得处理定量实验和同位素标记的参考肽段之亲身体验。了解利用若干种可用的峰面积和保留时间汇总图方法进行分析您在 Skyline 中的数据。</value>
+  </data>
+  <data name="GroupedStudy_Caption" xml:space="preserve">
+    <value>分组研究数据处理</value>
+  </data>
+  <data name="GroupedStudy_Description" xml:space="preserve">
+    <value>学习如何使用 Skyline 有效地处理多次重复测定研究数据。您将使用已调整为可检测到的初始目标集，再进一步调整该组集，用以研究 14 只大鼠血浆样本中健康对象和患病对象之间的丰度差异证据。在此过程中，您将学习如何使用强大的 Skyline 交互显示器来快速研究和理解数据异常。您也将体验到在 Skyline 版本 3.1 中引入的 Skyline 群组比较框架。</value>
+  </data>
+  <data name="Section_Full_Scan_Acquisition_Data" xml:space="preserve">
+    <value>全扫描采集数据</value>
+  </data>
+  <data name="MS1Filtering_Caption" xml:space="preserve">
+    <value>MS1 全扫描过滤</value>
+  </data>
+  <data name="MS1Filtering_Description" xml:space="preserve">
+    <value>获得创建 Skyline 文档，从而使用数据依赖采集 (DDA) 实验中的 MS1 扫描来检测肽段表达式中定量差异的实际经验。在本教程中，您将从发现数据集中生成一个谱图库、针对 MS1 过滤建立一个 Skyline 文档、导入原始质谱仪数据以从 MS1 扫描中提取母离子色谱图，借助 MS/MS 肽段鉴定指导峰拣选，并且进一步处理 Skyline 产生的定量数据。如果您对发现数据集的非标记定量分析感兴趣，本教程将为您的调查提供新的成套工具。</value>
+  </data>
+  <data name="TargetedMSMS_Caption" xml:space="preserve">
+    <value>靶向 MS/MS (PRM)</value>
+  </data>
+  <data name="TargetedMSMS_Description" xml:space="preserve">
+    <value>获得使用从低分辨率 Thermo LTQ 和高分辨率 Agilent 6520 Q-TOF 采集定向 MS/MS（还称作“平行反应监测” - PRM）数据方面的实际经验。获得对在低分辨率和高分辨率仪器上测量母离子和片段离子来获得对肽段定量之间的选择性和敏感性差异的全新理解。发现处理并了解您的质谱数据的新方法，这些方法是由Skyline提供针对基于色谱的定量蛋白质组学的一系列丰富特征集。</value>
+  </data>
+  <data name="DIA_Caption" xml:space="preserve">
+    <value>非数据依赖采集</value>
+  </data>
+  <data name="DIA_Description" xml:space="preserve">
+    <value>使用非数据依赖采集 (DIA) 作业获得亲身体验，通过使用由相同仪器依次采集的 DIA 和 DDA 运行的工作流。定义和导出 DIA 隔离方案。通过在 DIA 运行前采集的 DDA 数据，为实验建立谱图库。根据谱图库，为目标蛋白质组集选择肽段和离子对。在 Skyline 中导入和分析相关的 DIA运行，掌握开始处理 DIA数据的简单工作流。</value>
+  </data>
+  <data name="Section_Small_Molecules" xml:space="preserve">
+    <value>小分子</value>
+  </data>
+  <data name="SmallMolecule_Caption" xml:space="preserve">
+    <value>小分子标靶</value>
+  </data>
+  <data name="SmallMolecule_Description" xml:space="preserve">
+    <value>了解如何使用 Skyline 靶向非蛋白质组学离子。您将导入在代谢组学实验中使用的分子离子对列表，并将从 Waters Xevo TQS 导入 14 次运行。开始学习如何将 Skyline 界面的强大功能应用于非蛋白质组学实验。</value>
+  </data>
+  <data name="Section_Advanced_Topics" xml:space="preserve">
+    <value>高级主题</value>
+  </data>
+  <data name="iRT_Caption" xml:space="preserve">
+    <value>iRT 保留时间预测</value>
+  </data>
+  <data name="iRT_Description" xml:space="preserve">
+    <value>获得关于 iRT 的实际经验，iRT 是在库中保存校准的、实际测量的肽段保留时间，以便将来用于针对预定采集和峰值身份验证的保留时间预测中。在本教程中，您将校准自己的 iRT 计算器，并且还将了解到更多关于 Biognosys 针对 iRT 包中的肽段标准提出的 iRT-C18 校准内容。您将从 SRM 数据中校准新的 iRT 值，SRM 数据是在发现实验中从 MS1 扫描过滤的谱图库和色谱图峰值。同时，您还将了解到如何重新校准这些 iRT 值，以在具有新梯度和新色谱柱上进行预定 SRM 采集。您将看到基于 iRT 的更准确保留时间预测将如何在您的色谱图峰值身份验证中为您提供更高的可信度。</value>
+  </data>
+</root>

@@ -122,7 +122,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             if (detailLevel < DetailLevel_FullMetadata)
                 return result;
 
-            map<double, double> fullFileTIC;
+            multimap<double, pair<int, double>> fullFileTIC;
 
             for(int function : rawdata_->FunctionIndexList())
             {
@@ -162,7 +162,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
                 const vector<float>& times = rawdata_->TimesByFunctionIndex()[function];
                 const vector<float>& intensities = rawdata_->TicByFunctionIndex()[function];
                 for (int i = 0, end = intensities.size(); i < end; ++i)
-                    fullFileTIC[times[i]] += intensities[i];
+                    fullFileTIC.insert(make_pair(times[i], make_pair(function+1, intensities[i])));
             }
 
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
@@ -172,14 +172,18 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
                 BinaryDataArrayPtr timeArray = result->getTimeArray();
                 BinaryDataArrayPtr intensityArray = result->getIntensityArray();
 
+                auto functionArray = boost::make_shared<IntegerDataArray>();
+                result->integerDataArrayPtrs.emplace_back(functionArray);
+                functionArray->set(MS_non_standard_data_array, "function", UO_dimensionless_unit);
+                functionArray->data.reserve(fullFileTIC.size());
+
                 timeArray->data.reserve(fullFileTIC.size());
                 intensityArray->data.reserve(fullFileTIC.size());
-                for (map<double, double>::iterator itr = fullFileTIC.begin();
-                     itr != fullFileTIC.end();
-                     ++itr)
+                for (auto itr = fullFileTIC.begin(); itr != fullFileTIC.end(); ++itr)
                 {
                     timeArray->data.push_back(itr->first);
-                    intensityArray->data.push_back(itr->second);
+                    intensityArray->data.push_back(itr->second.second);
+                    functionArray->data.push_back(itr->second.first);
                 }
             }
 
@@ -230,7 +234,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
 
             vector<float> times;
             vector<float> intensities;
-            rawdata_->ChromatogramReader.ReadMRMChromatogram(ie.function, ie.offset, times, intensities);
+            rawdata_->ChromatogramReader.ReadMassChromatogram(ie.function, ie.Q1, times, intensities, 1.f, false);
             result->defaultArrayLength = times.size();
 
             if (getBinaryData)
@@ -274,7 +278,18 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         //cout << "Time range: " << f1 << " - " << f2 << endl;
 
         vector<float> precursorMZs, productMZs, intensities;
-        rawdata_->Reader.ReadScan(function, 1, precursorMZs, intensities, productMZs);
+        try
+        {
+            if (spectrumType == MS_SRM_spectrum)
+                rawdata_->Reader.ReadScan(function, 1, precursorMZs, intensities, productMZs);
+            else
+                rawdata_->Reader.ReadScan(function, 1, precursorMZs, intensities);
+        }
+        catch (...)
+        {
+            cerr << "[ChromatogramList_Waters::createIndex] Unable to read scan 1 of function " << (function + 1) << endl;
+            continue;
+        }
 
         if (spectrumType == MS_SRM_spectrum && productMZs.size() != precursorMZs.size())
             throw runtime_error("[ChromatogramList_Waters::createIndex] MRM function " + lexical_cast<string>(function+1) + " has mismatch between product m/z count (" + lexical_cast<string>(productMZs.size()) + ") and precursor m/z count (" + lexical_cast<string>(precursorMZs.size()) + ")");

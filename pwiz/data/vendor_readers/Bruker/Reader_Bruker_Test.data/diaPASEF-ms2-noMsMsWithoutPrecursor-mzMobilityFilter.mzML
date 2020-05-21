@@ -34,7 +34,7 @@
     <software id="micrOTOFcontrol" version="6.0.110.229-14868-vc141">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.19326">
+    <software id="pwiz_Reader_Bruker" version="3.0.20071">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -5422,7 +5422,7 @@
     <chromatogramList count="2" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
       <chromatogram index="0" id="TIC" defaultArrayLength="4">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="52">
             <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -5435,11 +5435,17 @@
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJxjYGBgUMhVdARSDGb7VMC0zjdVEO2wqCzSEQBIdwXD</binary>
           </binaryDataArray>
+          <binaryDataArray arrayLength="4" encodedLength="20">
+            <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjYoAAJhw0AADAAAk=</binary>
+          </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
       <chromatogram index="1" id="BPC" defaultArrayLength="4">
         <cvParam cvRef="MS" accession="MS:1000628" name="basepeak chromatogram" value=""/>
-        <binaryDataArrayList count="2">
+        <binaryDataArrayList count="3">
           <binaryDataArray encodedLength="52">
             <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
@@ -5451,6 +5457,12 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJxjYACChhIHEMXAMQlCN/RC6IMHHQBACwUe</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="4" encodedLength="20">
+            <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjYoAAJhw0AADAAAk=</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

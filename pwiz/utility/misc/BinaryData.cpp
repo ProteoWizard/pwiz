@@ -469,6 +469,7 @@ PWIZ_API_DECL template <typename T> BinaryData<T>::iterator::iterator(BinaryData
 
 PWIZ_API_DECL template class BinaryData<double>;
 PWIZ_API_DECL template class BinaryData<float>;
+PWIZ_API_DECL template class BinaryData<std::int64_t>;
 
 #pragma managed(pop)
 

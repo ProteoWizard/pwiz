@@ -159,8 +159,10 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
+    <Compile Include="CrosslinkingTest.cs" />
     <Compile Include="ExplicitAnalyteConcentrationTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />
+    <Compile Include="InvalidPeptidesInLibraryTest.cs" />
     <Compile Include="LongWaitDlgResizeTest.cs" />
     <Compile Include="ReimportPeakBoundariesTest.cs" />
     <Compile Include="RescoreImportDocumentTest.cs" />
@@ -313,6 +315,7 @@
     <Compile Include="StartPageTest.cs" />
     <Compile Include="SummaryGraphLinePlotsTest.cs" />
     <Compile Include="SummaryGraphVisibilityTest.cs" />
+    <Compile Include="SureQuantScanDescriptionTest.cs" />
     <Compile Include="SurrogateStandardTest.cs" />
     <Compile Include="SynchronizeSummaryZoomingTest.cs" />
     <Compile Include="SynchSiblingsSmallMoleculesTest.cs" />
@@ -437,6 +440,7 @@
     <None Include="ImportTransitionListTest.zip" />
     <None Include="InsertTest.zip" />
     <None Include="InstallToolsTest.zip" />
+    <None Include="InvalidPeptidesInLibraryTest.zip" />
     <None Include="IonMobilityTest.zip" />
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
@@ -495,6 +499,7 @@
     <None Include="StandardTypeTest.zip" />
     <None Include="StartPageTest.zip" />
     <None Include="SummaryGraphVisibilityTest.zip" />
+    <None Include="SureQuantScanDescriptionTest.zip" />
     <None Include="SurrogateStandardTest.zip" />
     <None Include="SynchronizeSummaryZoomingTest.zip" />
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />

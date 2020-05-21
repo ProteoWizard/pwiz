@@ -52,7 +52,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
         public RetentionScoreCalculatorSpec Calculator { get; private set; }
 
         private DbIrtPeptide[] _originalPeptides;
-        private DbIrtPeptide[] _originalKnownPeptides;
         private string _originalDocumentXml;
         private IrtRegressionType _originalRegressionType;
         private readonly StandardGridViewDriver _gridViewStandardDriver;
@@ -79,7 +78,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             _gridViewLibraryDriver.StandardPeptideList = _gridViewStandardDriver.Items;
 
             comboRegressionType.Items.AddRange(IrtRegressionType.ALL.Cast<object>().ToArray());
-            SelectedRegressionType = IrtRegressionType.DEFAULT;
+            _originalRegressionType = SelectedRegressionType = IrtRegressionType.DEFAULT;
 
             _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
@@ -316,7 +315,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 // Clone all of the peptides to use for comparison in OkDialog
                 _originalPeptides = dbPeptides.Select(p => new DbIrtPeptide(p)).ToArray();
-                _originalKnownPeptides = _originalPeptides.Where(p => IrtStandard.AnyContains(p, IRT_TOLERANCE)).ToArray();
                 _originalDocumentXml = db.DocumentXml;
                 _originalRegressionType = db.RegressionType;
 
@@ -1353,16 +1351,20 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return;
             }
 
-            // Any known iRT standard peptides that were in the calculator when it was loaded
-            // but are not in the newly selected standard will be moved to the library peptide list.
-            if (_originalPeptides != null && IrtStandard.ALL.Any(standard => standard.Name.Equals(selected.Name)))
+            // Make sure this change preserves the original set of peptides in the library by moving
+            // the original standards to the library when they are not present in the new standards.
+            if (_originalPeptides != null)
             {
-                foreach (var original in _originalKnownPeptides.Where(peptide =>
-                    !selected.Contains(peptide, IRT_TOLERANCE) &&
-                    IrtStandard.ContainsMatch(StandardPeptides, peptide, IRT_TOLERANCE) &&
-                    !IrtStandard.ContainsMatch(LibraryPeptides, peptide, null)))
+                foreach (var original in _originalPeptides.Where(peptide => peptide.Standard))
                 {
-                    LibraryPeptideList.Add(new DbIrtPeptide(original) { Standard = false });
+                    int indexStandards = selected.Peptides.IndexOf(p => Equals(p.ModifiedTarget, original.ModifiedTarget));
+                    int indexLibrary = LibraryPeptideList.IndexOf(p => Equals(p.ModifiedTarget, original.ModifiedTarget));
+                    // Make sure an original standard does not get removed from the library entirely
+                    if (indexStandards == -1 && indexLibrary == -1)
+                        LibraryPeptideList.Add(new DbIrtPeptide(original) { Standard = false });
+                    // Make sure an original standard doesn't get added to both standards and library
+                    else if (indexStandards != -1 && indexLibrary != -1)
+                        LibraryPeptideList.RemoveAt(indexLibrary);
                 }
             }
             LoadStandard(selected.Peptides);
@@ -1408,6 +1410,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     LibraryPeptideList.Remove(libraryPeptide);
                 }
             }
+        }
+
+        public DataGridViewEx GridViewStandard
+        {
+            get { return gridViewStandard; }
         }
     }
 }

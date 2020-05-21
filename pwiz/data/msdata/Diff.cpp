@@ -186,6 +186,9 @@ void diff(const DataProcessing& a,
           DataProcessing& b_a,
           const DiffConfig& config)
 {
+    if (config.ignoreDataProcessing)
+        return;
+
     diff(a.id, b.id, a_b.id, b_a.id, config);
     vector_diff_diff(a.processingMethods, b.processingMethods, a_b.processingMethods, b_a.processingMethods, config);
 
@@ -300,21 +303,22 @@ void diff(const ScanList& a,
 
 // measure maximum relative difference between elements in the vectors;
 // returns the index and magnitude of the largest difference
-pair<size_t, double> maxdiff(const vector<double>& a, const vector<double>& b)
+template <typename T>
+pair<size_t, T> maxdiff_and_index(const vector<T>& a, const vector<T>& b)
 {
     if (a.size() != b.size()) 
         throw runtime_error("[Diff::maxdiff()] Sizes differ.");
 
-    vector<double>::const_iterator i = a.begin(); 
-    vector<double>::const_iterator j = b.begin(); 
+    auto i = a.begin();
+    auto j = b.begin(); 
 
-    pair<size_t, double> max;
+    pair<size_t, T> max;
 
     for (; i!=a.end(); ++i, ++j)
     {
-        double denominator = min(*i, *j);
+        T denominator = min(*i, *j);
         if (denominator == 0) denominator = 1;
-        double current = fabs(*i - *j)/denominator;
+        T current = fabs(*i - *j)/denominator;
         if (max.second < current) max = make_pair(i-a.begin(), current);
 
     }
@@ -326,12 +330,12 @@ pair<size_t, double> maxdiff(const vector<double>& a, const vector<double>& b)
 const char* userParamName_BinaryDataArrayDifference_ = "Binary data array difference";
 const char* userParamName_BinaryDataArrayDifferenceAtIndex_ = "Binary data array difference at index";
 
-PWIZ_API_DECL
-void diff(const BinaryDataArray& a,
-          const BinaryDataArray& b,
-          BinaryDataArray& a_b,
-          BinaryDataArray& b_a,
-          const DiffConfig& config)
+template <typename BinaryDataArrayType>
+void diffBinaryDataArray(const BinaryDataArrayType& a,
+                         const BinaryDataArrayType& b,
+                         BinaryDataArrayType& a_b,
+                         BinaryDataArrayType& b_a,
+                         const DiffConfig& config)
 {
     if (!config.ignoreMetadata)
     {
@@ -348,9 +352,10 @@ void diff(const BinaryDataArray& a,
     }
     else
     {
-        pair<size_t, double> max = maxdiff(a.data, b.data);
+        auto max = maxdiff_and_index(static_cast<const vector<typename BinaryDataArrayType::value_type>&>(a.data),
+                                     static_cast<const vector<typename BinaryDataArrayType::value_type>&>(b.data));
        
-        if (max.second > config.precision + numeric_limits<double>::epsilon())
+        if (max.second > config.precision + numeric_limits<typename BinaryDataArrayType::value_type>::epsilon())
         {
             a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
                                                lexical_cast<string>(max.second),
@@ -372,13 +377,34 @@ void diff(const BinaryDataArray& a,
     }
 }
 
+PWIZ_API_DECL
+void diff(const BinaryDataArray& a,
+          const BinaryDataArray& b,
+          BinaryDataArray& a_b,
+          BinaryDataArray& b_a,
+          const DiffConfig& config)
+{
+    diffBinaryDataArray(a, b, a_b, b_a, config);
+}
+
 
 PWIZ_API_DECL
-void diff(const vector<BinaryDataArrayPtr>& a,
-          const vector<BinaryDataArrayPtr>& b,
-          vector<BinaryDataArrayPtr>& a_b,
-          vector<BinaryDataArrayPtr>& b_a,
-          const DiffConfig& config, pair<size_t, double>& maxPrecisionDiff)
+void diff(const IntegerDataArray& a,
+          const IntegerDataArray& b,
+          IntegerDataArray& a_b,
+          IntegerDataArray& b_a,
+          const DiffConfig& config)
+{
+    diffBinaryDataArray(a, b, a_b, b_a, config);
+}
+
+
+template <typename BinaryDataArrayPtrType>
+void diff(const vector<BinaryDataArrayPtrType>& a,
+          const vector<BinaryDataArrayPtrType>& b,
+          vector<BinaryDataArrayPtrType>& a_b,
+          vector<BinaryDataArrayPtrType>& b_a,
+          const DiffConfig& config, pair<size_t, typename BinaryDataArrayPtrType::element_type::value_type>& maxPrecisionDiff)
 {
     if (a.size() != b.size())
         throw runtime_error("[Diff::diff(vector<BinaryDataArrayPtr>)] Sizes differ.");
@@ -386,11 +412,10 @@ void diff(const vector<BinaryDataArrayPtr>& a,
     a_b.clear();
     b_a.clear();
 
-    for (vector<BinaryDataArrayPtr>::const_iterator i=a.begin(), j=b.begin();
-         i!=a.end(); ++i, ++j)
+    for (auto i=a.begin(), j=b.begin(); i!=a.end(); ++i, ++j)
     {
-        BinaryDataArrayPtr temp_a_b(new BinaryDataArray);
-        BinaryDataArrayPtr temp_b_a(new BinaryDataArray);
+        BinaryDataArrayPtrType temp_a_b(new typename BinaryDataArrayPtrType::element_type);
+        BinaryDataArrayPtrType temp_b_a(new typename BinaryDataArrayPtrType::element_type);
         diff(**i, **j, *temp_a_b, *temp_b_a, config); 
 
         if (!temp_a_b->empty() || !temp_b_a->empty())
@@ -401,7 +426,7 @@ void diff(const vector<BinaryDataArrayPtr>& a,
             //if UserParam with binary data diff exists, cast it to a double and compare with maxPrecisionDiff
             if(!temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).empty())
             {
-                double max = lexical_cast<double>(temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).value);
+                auto max = lexical_cast<typename BinaryDataArrayPtrType::element_type::value_type>(temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).value);
                 if (max>maxPrecisionDiff.second)
                 {
                     size_t maxIndex = lexical_cast<size_t>(temp_a_b->userParam(userParamName_BinaryDataArrayDifferenceAtIndex_).value);
@@ -464,17 +489,18 @@ void diff(const Spectrum& a,
 
     // special handling for binary data arrays
 
-    if ((!config.ignoreExtraBinaryDataArrays && a.binaryDataArrayPtrs.size() != b.binaryDataArrayPtrs.size()) ||
+    if ((!config.ignoreExtraBinaryDataArrays && a.binaryDataArrayPtrs.size() + a.integerDataArrayPtrs.size() != b.binaryDataArrayPtrs.size() + b.integerDataArrayPtrs.size()) ||
         (config.ignoreExtraBinaryDataArrays && (a.binaryDataArrayPtrs.size() < 2 || b.binaryDataArrayPtrs.size() < 2)))
     {
         a_b.userParams.push_back(UserParam("Binary data array count: " + 
-                                 lexical_cast<string>(a.binaryDataArrayPtrs.size())));
+                                 lexical_cast<string>(a.binaryDataArrayPtrs.size() + a.integerDataArrayPtrs.size())));
         b_a.userParams.push_back(UserParam("Binary data array count: " + 
-                                 lexical_cast<string>(b.binaryDataArrayPtrs.size())));
+                                 lexical_cast<string>(b.binaryDataArrayPtrs.size() + b.integerDataArrayPtrs.size())));
     }
     else
     {
         pair<size_t, double> maxPrecisionDiff(0, 0);
+        pair<size_t, std::int64_t> maxPrecisionDiffInt(0, 0);
         if (config.ignoreExtraBinaryDataArrays)
         {
             // only check 2 primary arrays
@@ -489,6 +515,9 @@ void diff(const Spectrum& a,
             diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
                  a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
                  config, maxPrecisionDiff);
+            diff(a.integerDataArrayPtrs, b.integerDataArrayPtrs,
+                 a_b.integerDataArrayPtrs, b_a.integerDataArrayPtrs,
+                 config, maxPrecisionDiffInt);
         }
       
         if (maxPrecisionDiff.second>(config.precision+numeric_limits<double>::epsilon()))   
@@ -501,6 +530,19 @@ void diff(const Spectrum& a,
             a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifferenceAtIndex_,
                                                lexical_cast<string>(maxPrecisionDiff.first),
                                                "xsd:float"));
+            b_a.userParams.push_back(a_b.userParams.back());
+        }
+
+        if (maxPrecisionDiffInt.second > 0)
+        {
+            a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
+                                               lexical_cast<string>(maxPrecisionDiffInt.second),
+                                               "xsd:int"));
+            b_a.userParams.push_back(a_b.userParams.back());
+
+            a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifferenceAtIndex_,
+                                               lexical_cast<string>(maxPrecisionDiffInt.first),
+                                               "xsd:int"));
             b_a.userParams.push_back(a_b.userParams.back());
         }
     }
@@ -545,17 +587,18 @@ void diff(const Chromatogram& a,
 
     // special handling for binary data arrays
 
-    if ((!config.ignoreExtraBinaryDataArrays && a.binaryDataArrayPtrs.size() != b.binaryDataArrayPtrs.size()) ||
+    if ((!config.ignoreExtraBinaryDataArrays && a.binaryDataArrayPtrs.size() + a.integerDataArrayPtrs.size() != b.binaryDataArrayPtrs.size() + b.integerDataArrayPtrs.size()) ||
         (config.ignoreExtraBinaryDataArrays && (a.binaryDataArrayPtrs.size() < 2 || b.binaryDataArrayPtrs.size() < 2)))
     {
         a_b.userParams.push_back(UserParam("Binary data array count: " + 
-                                 lexical_cast<string>(a.binaryDataArrayPtrs.size())));
+                                 lexical_cast<string>(a.binaryDataArrayPtrs.size() + a.integerDataArrayPtrs.size())));
         b_a.userParams.push_back(UserParam("Binary data array count: " + 
-                                 lexical_cast<string>(b.binaryDataArrayPtrs.size())));
+                                 lexical_cast<string>(b.binaryDataArrayPtrs.size() + b.integerDataArrayPtrs.size())));
     }
     else
     {
         pair<size_t, double> maxPrecisionDiff(0, 0);
+        pair<size_t, std::int64_t> maxPrecisionDiffInt(0, 0);
         if (config.ignoreExtraBinaryDataArrays)
         {
             // only check 2 primary arrays
@@ -570,6 +613,9 @@ void diff(const Chromatogram& a,
             diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
                  a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
                  config, maxPrecisionDiff);
+            diff(a.integerDataArrayPtrs, b.integerDataArrayPtrs,
+                 a_b.integerDataArrayPtrs, b_a.integerDataArrayPtrs,
+                 config, maxPrecisionDiffInt);
         }
 
         if (maxPrecisionDiff.second>(config.precision+numeric_limits<double>::epsilon()))   
@@ -582,6 +628,19 @@ void diff(const Chromatogram& a,
             a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifferenceAtIndex_,
                                                lexical_cast<string>(maxPrecisionDiff.first),
                                                "xsd:float"));
+            b_a.userParams.push_back(a_b.userParams.back());
+        }
+
+        if (maxPrecisionDiffInt.second > 0)
+        {
+            a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
+                                               lexical_cast<string>(maxPrecisionDiffInt.second),
+                                               "xsd:int"));
+            b_a.userParams.push_back(a_b.userParams.back());
+
+            a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifferenceAtIndex_,
+                                               lexical_cast<string>(maxPrecisionDiffInt.first),
+                                               "xsd:int"));
             b_a.userParams.push_back(a_b.userParams.back());
         }
     }
@@ -873,7 +932,8 @@ void diff(const MSData& a,
         vector_diff_deep(a.instrumentConfigurationPtrs, b.instrumentConfigurationPtrs, a_b.instrumentConfigurationPtrs, b_a.instrumentConfigurationPtrs, config);
 
         // do diff on full DataProcessing list
-        vector_diff_deep(a.allDataProcessingPtrs(), b.allDataProcessingPtrs(), a_b.dataProcessingPtrs, b_a.dataProcessingPtrs, config);
+        if (!config.ignoreDataProcessing)
+            vector_diff_deep(a.allDataProcessingPtrs(), b.allDataProcessingPtrs(), a_b.dataProcessingPtrs, b_a.dataProcessingPtrs, config);
     }
 
     // ignore DataProcessing in SpectrumList/ChromatogramList

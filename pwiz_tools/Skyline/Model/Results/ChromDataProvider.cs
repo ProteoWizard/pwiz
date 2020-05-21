@@ -169,15 +169,14 @@ namespace pwiz.Skyline.Model.Results
             }
             else if (index == TicChromatogramIndex || index == BpcChromatogramIndex)
             {
-                _dataFile.GetChromatogram(index, out string id, out times, out intensities);
+                _dataFile.GetChromatogram(index, out string id, out times, out intensities, true);
             }
             else
             {
                 times = intensities = null;
-                return false;
             }
 
-            return true;
+            return times != null;
         }
 
         /// <summary>
@@ -198,15 +197,6 @@ namespace pwiz.Skyline.Model.Results
             }
 
             if (times.Length == 0)
-            {
-                return false;
-            }
-
-            // If the number of points in the chromatogram is more than half of the total
-            // spectra, then this chromatogram probably includes MS2 scans, and should not 
-            // be used for calculating TIC Area.
-            // The number 2 is necessary because demultiplexing doubles the number of spectra.
-            if (times.Length >= _dataFile.SpectrumCount / 2)
             {
                 return false;
             }

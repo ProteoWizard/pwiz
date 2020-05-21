@@ -78,6 +78,21 @@ using std::lower_bound;
 using std::upper_bound;
 
 
+namespace pwiz {
+namespace util {
+
+/// swaps a container with an empty one to release its internal memory
+template<typename T> void deallocate(T& container)
+{
+    container.clear();
+    T tmp;
+    std::swap(tmp, container);
+}
+
+} // namespace util
+} // namespace pwiz
+
+
 #ifndef PWIZ_CONFIG_NO_CONTAINER_OUTPUT_OPERATORS
 
 // output operators for standard containers

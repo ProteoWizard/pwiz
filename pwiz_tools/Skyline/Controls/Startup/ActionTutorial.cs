@@ -51,7 +51,10 @@ namespace pwiz.Skyline.Controls.Startup
             small_molecule_targets,
             small_molecule_method_dev_and_ce_opt,
             small_molecule_quant,
-            hi_res_metabolomics
+            hi_res_metabolomics,
+            ion_mobility,
+            audit_logging,
+            dia_swath,
         }
 
         public TutorialType ImportType { get; set; }
@@ -218,7 +221,18 @@ namespace pwiz.Skyline.Controls.Startup
                         MessageDlg.Show(Program.MainWindow,
                             string.Format(Resources.ActionTutorial_client_DownloadFileCompleted_File_saved_at___0_, extractDir));
                     }
-                    Process.Start(PdfFileLocation); // Opens Tutorial PDF in users default browser.
+
+                    try
+                    {
+                        Process.Start(PdfFileLocation); // Opens Tutorial PDF in users default browser.
+                    }
+                    catch (Exception e)
+                    {
+                        string message = string.Format(Resources
+                                .ActionTutorial_ExtractTutorial_An_error_occurred_while_trying_to_display_the_document___0____,
+                            PdfFileLocation);
+                        MessageDlg.ShowWithException(Program.MainWindow, message, e);
+                    }
                 }));
                
             }

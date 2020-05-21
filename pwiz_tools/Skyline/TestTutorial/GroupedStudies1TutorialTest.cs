@@ -60,7 +60,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestGroupedStudies1Tutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "GroupedStudies";
 
             ForceMzml = true;   // Mzml is faster for this test.
 
@@ -1353,17 +1355,18 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(idendityAnnotation, groupComparison.IdentityAnnotation);
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete &&
-                foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult")) != null);
+            var foldChangeGridControl = foldChangeGrid.DataboundGridControl;
+            WaitForConditionUI(() => foldChangeGridControl.IsComplete &&
+                foldChangeGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult")) != null);
             RunUI(() =>
             {
                 var foldChangeResultColumn =
-                    foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
-                foldChangeGrid.DataboundGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
+                    foldChangeGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                foldChangeGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
             });
-            WaitForConditionUI(() => 0 != foldChangeGrid.DataboundGridControl.RowCount,
+            WaitForConditionUI(() => 0 != foldChangeGridControl.RowCount,
                 "0 != foldChangeGrid.DataboundGridControl.RowCount");
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete,
+            WaitForConditionUI(() => foldChangeGridControl.IsComplete,
                 "foldChangeGrid.DataboundGridControl.IsComplete");
             PauseForScreenShot<FoldChangeGrid>("Healthy v. Diseased:Grid", 65);
             RunUI(() =>
@@ -1371,11 +1374,14 @@ namespace pwiz.SkylineTestTutorial
                 foldChangeGrid.ShowGraph();
             });
             PauseForScreenShot<FoldChangeBarGraph>("Healthy v Diseased:Graph", 66);
-            var foldChangeGraph = FindOpenForm<FoldChangeBarGraph>();
-            RunUI(() =>
+            if (IsPauseForCoverShot)
             {
-                foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating);
-            });
+                RestoreCoverViewOnScreen();
+                foldChangeGrid = WaitForOpenForm<FoldChangeGrid>();
+            }
+            var foldChangeGraph = WaitForOpenForm<FoldChangeBarGraph>();
+            if (!IsPauseForCoverShot)
+                RunUI(() => foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating));
             RunUI(() =>
             {
                 var foldChangeResultColumn =
@@ -1404,6 +1410,37 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => 11 == foldChangeGrid.DataboundGridControl.RowCount);
             RunUI(() => Assert.AreEqual(11, foldChangeGrid.DataboundGridControl.RowCount));
             PauseForScreenShot<FoldChangeBarGraph>("Right click on the graph and choose Copy", 67);
+
+            if (IsPauseForCoverShot)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    SkylineWindow.ShowPeakAreaLegend(false);
+                    SkylineWindow.ShowChromatogramLegends(false);
+                    SkylineWindow.ShowAllTransitions();
+                    SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                    SkylineWindow.GroupByReplicateValue(null);
+                });
+                RunUI(SkylineWindow.AutoZoomBestPeak);
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
+                WaitForGraphs();
+                RunUI(() =>
+                {
+                    ZoomYAxis(foldChangeGraph.ZedGraphControl, -6, 6);
+                    var gcFloatingWindow = foldChangeGraph.Parent.Parent;
+                    gcFloatingWindow.Top = SkylineWindow.Top + 5;
+                    gcFloatingWindow.Height = SkylineWindow.Height - 10;
+                    gcFloatingWindow.Left = SkylineWindow.Right - gcFloatingWindow.Width - 5;
+                });
+                PauseForCoverShot();
+                return;
+            }
+
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             var settingsForm = ShowDialog<EditGroupComparisonDlg>(foldChangeGrid.ShowChangeSettings);
             RunUI(() => settingsForm.ComboIdentityAnnotation.SelectedIndex = 0);
@@ -1435,6 +1472,7 @@ namespace pwiz.SkylineTestTutorial
             }
             WaitForConditionUI(() => 92 == foldChangeGrid.DataboundGridControl.RowCount);
             PauseForScreenShot<FoldChangeBarGraph>("Copy the graph", 68);
+
             RunUI(() =>
             {
                 foldChangeGrid.DataboundGridControl.DataGridView.SelectAll();

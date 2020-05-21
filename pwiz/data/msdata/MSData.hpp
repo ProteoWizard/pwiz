@@ -403,11 +403,13 @@ struct PWIZ_API_DECL ScanList : public ParamContainer
 /// The structure into which encoded binary data goes. Byte ordering is always little endian (Intel style). Computers using a different endian style MUST convert to/from little endian when writing/reading mzML
 struct PWIZ_API_DECL BinaryDataArray : public ParamContainer
 {
+    typedef double value_type;
+
     /// this optional attribute may reference the 'id' attribute of the appropriate dataProcessing.
     DataProcessingPtr dataProcessingPtr;
 
     /// the binary data.
-    pwiz::util::BinaryData<double> data;
+    pwiz::util::BinaryData<value_type> data;
 
     /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
@@ -415,6 +417,25 @@ struct PWIZ_API_DECL BinaryDataArray : public ParamContainer
 
 
 typedef boost::shared_ptr<BinaryDataArray> BinaryDataArrayPtr;
+
+
+/// The structure into which encoded integer binary data goes. Byte ordering is always little endian (Intel style). Computers using a different endian style MUST convert to/from little endian when writing/reading mzML
+struct PWIZ_API_DECL IntegerDataArray : public ParamContainer
+{
+    typedef std::int64_t value_type;
+
+    /// this optional attribute may reference the 'id' attribute of the appropriate dataProcessing.
+    DataProcessingPtr dataProcessingPtr;
+
+    /// the binary data.
+    pwiz::util::BinaryData<value_type> data;
+
+    /// returns true iff the element contains no params and all members are empty or null
+    bool empty() const;
+};
+
+
+typedef boost::shared_ptr<IntegerDataArray> IntegerDataArrayPtr;
 
 
 #pragma pack(1)
@@ -523,7 +544,10 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
     std::vector<Product> products;
 
     /// list of binary data arrays.
-    std::vector<BinaryDataArrayPtr> binaryDataArrayPtrs; 
+    std::vector<BinaryDataArrayPtr> binaryDataArrayPtrs;
+
+    /// list of integer data arrays.
+    std::vector<IntegerDataArrayPtr> integerDataArrayPtrs;
 
 
     Spectrum() : defaultArrayLength(0) {}
@@ -531,12 +555,8 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
     /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
 
-    /// returns true iff has nonnull and nonempty BinaryDataArrayPtr
-    bool hasBinaryData() const {
-        return binaryDataArrayPtrs.size() && 
-               binaryDataArrayPtrs[0] &&
-              !binaryDataArrayPtrs[0]->data.empty();
-    };
+    /// returns true iff has nonnull and nonempty binaryDataArrayPtrs and integerDataArrayPtrs
+    bool hasBinaryData() const;
 
     /// copy binary data arrays into m/z-intensity pair array
     void getMZIntensityPairs(std::vector<MZIntensityPair>& output) const;
@@ -592,7 +612,10 @@ struct PWIZ_API_DECL Chromatogram : public ChromatogramIdentity, public ParamCon
     Product product;
 
     /// list of binary data arrays.
-    std::vector<BinaryDataArrayPtr> binaryDataArrayPtrs; 
+    std::vector<BinaryDataArrayPtr> binaryDataArrayPtrs;
+
+    /// list of integer data arrays.
+    std::vector<IntegerDataArrayPtr> integerDataArrayPtrs;
 
     Chromatogram() : defaultArrayLength(0) {}
 
@@ -707,6 +730,12 @@ class PWIZ_API_DECL SpectrumList
 
     /// issues a warning once per SpectrumList instance (based on string hash)
     virtual void warn_once(const char* msg) const; 
+
+    /// returns the minimum DetailLevel for which the given predicate returns true
+    /// - if the predicate returns indeterminate, another spectrum will be tried
+    /// - if the predicate returns false, a higher detail level will be tried
+    /// - e.g. spectrumList.min_level_accepted([](const Spectrum& s) { return s.hasCVParam(MS_ms_level); })
+    virtual DetailLevel min_level_accepted(std::function<boost::tribool(const Spectrum&)> predicate) const;
 
     virtual ~SpectrumList(){} 
 };

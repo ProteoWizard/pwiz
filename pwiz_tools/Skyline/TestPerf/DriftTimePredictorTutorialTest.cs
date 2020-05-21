@@ -24,12 +24,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.SkylineTestUtil;
@@ -53,6 +55,8 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
         {
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "IMSFiltering";
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DriftTraining-3_1_1.pdf";
 //            LinkPdf = "file:///C:/Users/brend/Downloads/DriftTraining-3_1_1.pdf";
@@ -207,6 +211,30 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
                 RunUI(() => fullScanGraph.SetZoom(false));
                 PauseForScreenShot("Full scan unzoomed 3D MS/MS graph", 14);
+
+                if (IsPauseForCoverShot)
+                {
+                    RunUI(() =>
+                    {
+                        Settings.Default.ChromatogramFontSize = 14;
+                        Settings.Default.AreaFontSize = 14;
+                        SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    });
+
+                    RestoreCoverViewOnScreen();
+
+                    ClickChromatogram(clickTime2, 5.8E+4, PaneKey.PRODUCTS);
+
+                    var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+                    RenameReplicate(manageResultsDlg, 0, "BSA");
+                    RenameReplicate(manageResultsDlg, 1, "Yeast_BSA");
+                    OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
+
+                    RunUI(SkylineWindow.FocusDocument);
+
+                    PauseForCoverShot();
+                    return;
+                }
 
                 const double clickTime3 = 41.48;
                 ClickChromatogram(yeastReplicateName, clickTime3, 3.14E+4, PaneKey.PRODUCTS);

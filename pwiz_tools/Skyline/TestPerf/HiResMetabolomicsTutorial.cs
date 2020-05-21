@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -44,13 +45,15 @@ using pwiz.SkylineTestUtil;
 namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB download
 {
     [TestClass]
-    public class HiResMetabolomicsTutorialTest : AbstractFunctionalTest
+    public class HiResMetabolomicsTutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestHiResMetabolomicsTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "HiResMetabolomics";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
@@ -211,7 +214,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(Path.Combine(TestFilesDirs.First().PersistentFilesDir, GetDataFolder()));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 6);
+                    PauseForScreenShot<ImportResultsDlg>("Import Results Files form", 6);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
                     OkDialog(importResultsDlg1,importResultsDlg1.OkDialog);
@@ -256,8 +259,43 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     RunUI(() => SkylineWindow.ShowDocumentGrid(true));
                     documentGrid = FindOpenForm<DocumentGridForm>();
                 }
-                RunUI(() => documentGrid.ChooseView(Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification));
+                if (!IsPauseForCoverShot)
+                    RunUI(() => documentGrid.ChooseView(Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification));
+                else
+                {
+                    RunUI(() => documentGrid.DataboundGridControl.ChooseView(new ViewName(ViewGroup.BUILT_IN.Id,
+                        Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules)));
+                }
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 9);
+
+                if (IsPauseForCoverShot)
+                {
+                    RunUI(() =>
+                    {
+                        Settings.Default.ChromatogramFontSize = 14;
+                        Settings.Default.AreaFontSize = 14;
+                        SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                        SkylineWindow.AutoZoomBestPeak();
+                        SkylineWindow.ShowPeakAreaLegend(false);
+                        SkylineWindow.ShowRTLegend(false);
+                    });
+
+                    RestoreCoverViewOnScreen();
+
+                    RunUI(SkylineWindow.FocusDocument);
+
+                    ClickChromatogram("GW2_01", 1.148979, 209663764);
+
+                    // TODO: This doesn't exactly reproduce the screen shot. The profile curve does not get adjusted.
+                    RunUI(() => ZoomXAxis(SkylineWindow.GraphFullScan.ZedGraphControl, 332.25, 332.28));
+                    RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                    WaitForGraphs();
+                    RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
+                    WaitForGraphs();
+
+                    PauseForCoverShot();
+                    return;
+                }
 
                 using (new WaitDocumentChange(1, true))
                 {
@@ -279,7 +317,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 }
 
-               var documentGrid2 = FindOpenForm<DocumentGridForm>();
+                var documentGrid2 = FindOpenForm<DocumentGridForm>();
                 RunUI(() =>
                 {
                     documentGrid2.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates);

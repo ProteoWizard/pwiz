@@ -245,6 +245,10 @@ namespace pwiz.Skyline.SettingsUI
 
         protected virtual bool DoRowValidating(int rowIndex)
         {
+            if (rowIndex >= Items.Count)
+            {
+                return true;
+            }
             var row = GridView.Rows[rowIndex];
             if (row.IsNewRow)
                 return true;
