@@ -2941,6 +2941,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid entries were found in the library &apos;{0}&apos;.
+        ///{1} of the {2} peptides or molecules were invalid, including:
+        ///{3}.
+        /// </summary>
+        public static string CachedLibrary_WarnInvalidEntries_ {
+            get {
+                return ResourceManager.GetString("CachedLibrary_WarnInvalidEntries_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Start value must be less than End value..
         /// </summary>
         public static string CalculateIsolationSchemeDlg_OkDialog_Start_value_must_be_less_than_End_value {
