@@ -21,7 +21,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -454,7 +456,8 @@ namespace pwiz.Skyline.Model
         {
         }
 
-        public Transition(TransitionGroup group, IonType type, int? offset, int? massIndex, Adduct adduct, int? decoyMassShift, CustomMolecule customMolecule = null)
+        public Transition(TransitionGroup group, IonType type, int? offset, int? massIndex, Adduct adduct,
+            int? decoyMassShift, CustomMolecule customMolecule = null)
         {
             _group = group;
 
@@ -712,6 +715,35 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public bool HasAnyCrosslinks(ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinks)
+        {
+            return HasAnyCrosslinks(IonType, CleavageOffset, crosslinks);
+        }
+
+        public static bool HasAnyCrosslinks(IonType ionType, int cleavageOffset,
+            ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinks)
+        {
+            if (crosslinks == null || crosslinks.Count == 0)
+            {
+                return false;
+            }
+            switch (ionType)
+            {
+                case IonType.precursor:
+                    return true;
+                case IonType.a:
+                case IonType.b:
+                case IonType.c:
+                    return cleavageOffset >= crosslinks.Keys[0].IndexAa;
+                case IonType.x:
+                case IonType.y:
+                case IonType.z:
+                    return cleavageOffset < crosslinks.Keys[crosslinks.Count - 1].IndexAa;
+                default:
+                    return false;
+            }
+        }
+
         #region object overrides
 
         public bool Equals(Transition obj)
@@ -773,6 +805,7 @@ namespace pwiz.Skyline.Model
                 }
                 return text;
             }
+
             return string.Format(@"{0} - {1}{2}{3}{4}",
                                  AA,
                                  IonType.ToString().ToLowerInvariant(),
@@ -791,6 +824,7 @@ namespace pwiz.Skyline.Model
         {
             Transition = transition.Transition;
             Losses = losses;
+            ComplexFragmentIonName = transition.ComplexFragmentIon.GetName();
             if (Transition.IsCustom())
             {
                 if (!string.IsNullOrEmpty(transition.PrimaryCustomIonEquivalenceKey))
@@ -811,12 +845,14 @@ namespace pwiz.Skyline.Model
         public Transition Transition { get; private set; }
         public TransitionLosses Losses { get; private set; }
         public string CustomIonEquivalenceTestValue { get; private set;  }
+        public ComplexFragmentIonName ComplexFragmentIonName { get; private set; }
 
         public bool Equivalent(TransitionLossKey other)
         {
             return Equals(CustomIonEquivalenceTestValue, other.CustomIonEquivalenceTestValue) &&
                 other.Transition.Equivalent(Transition) &&
-                Equals(other.Losses, Losses);
+                Equals(other.Losses, Losses) &&
+                Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
         }
 
         #region object overrides
@@ -825,7 +861,8 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Transition, Transition) && Equals(other.Losses, Losses);
+            return Equals(other.Transition, Transition) && Equals(other.Losses, Losses) &&
+                   Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
         }
 
         public override bool Equals(object obj)
