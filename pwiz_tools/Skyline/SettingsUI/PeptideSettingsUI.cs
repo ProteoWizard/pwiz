@@ -49,23 +49,22 @@ namespace pwiz.Skyline.SettingsUI
 
 // ReSharper disable InconsistentNaming
         public enum TABS { Digest, Prediction, Filter, Library, Modifications, Labels, /* Integration, */ Quantification }
-// ReSharper restore InconsistentNaming
+        // ReSharper restore InconsistentNaming
 
-        public class DigestionTab : IFormView { }
-        public class PredictionTab : IFormView { }
-        public class FilterTab : IFormView { }
-        public class LibraryTab : IFormView { }
-        public class ModificationsTab : IFormView { }
-        public class LabelsTab : IFormView { }
-//        public class IntegrationTab : IFormView { }    - not yet visible ever
-        public class QuantificationTab : IFormView { }
-
-        private readonly Dictionary<TabPage, TABS> _tabMap; // For dealing with hidden tabs when selecing active tab programattically
-        private static readonly IFormView[] TAB_PAGES = 
+        public class TabWithPage : IFormView
         {
-            // If you add to this, also update code for populating _tabMap below
-            new DigestionTab(), new PredictionTab(), new FilterTab(), new LibraryTab(), new ModificationsTab(), new LabelsTab(), /* new IntegrationTab(), */ new QuantificationTab(), 
-        };
+            public TabPage Page;
+        }
+        public class DigestionTab : TabWithPage { }
+        public class PredictionTab : TabWithPage { }
+        public class FilterTab : TabWithPage { }
+        public class LibraryTab : TabWithPage { }
+        public class ModificationsTab : TabWithPage { }
+        public class LabelsTab : TabWithPage { }
+        /* public class IntegrationTab : TabWithPage { } never visible */
+        public class QuantificationTab : TabWithPage { }
+
+        private readonly Dictionary<TABS, TabWithPage> _tabPages;
 
         private readonly SkylineWindow _parent;
         private readonly LibraryManager _libraryManager;
@@ -91,17 +90,18 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
-            _tabMap = new Dictionary<TabPage, TABS>()
+            _tabPages = new Dictionary<TABS, TabWithPage>
             {
-                {tabDigestion, TABS.Digest},
-                {tabPrediction, TABS.Prediction},
-                {tabFilter, TABS.Filter},
-                {tabLibrary, TABS.Library},
-                {tabModifications, TABS.Modifications},
-                {tabLabels, TABS.Labels},
-                /*{tabIntegration, TABS.Integration},*/ 
-                {tabQuantification, TABS.Quantification}
+                {TABS.Digest, new DigestionTab { Page = tabDigestion }},
+                {TABS.Prediction, new PredictionTab {Page = tabPrediction }},
+                {TABS.Filter, new FilterTab {Page = tabFilter}},
+                {TABS.Library, new LibraryTab {Page = tabLibrary}},
+                {TABS.Modifications, new ModificationsTab {Page = tabModifications}},
+                {TABS.Labels, new LabelsTab {Page = tabLabels}},
+                // {TABS.Integration, new IntegrationTab {Page = tabIntegration}},
+                {TABS.Quantification, new QuantificationTab {Page = tabQuantification}}
             };
+
             RestoreTabSel(selectTab);
 
             btnUpdateIonMobilityLibraries.Visible = false; // TODO: ion mobility libraries are more complex than initially thought - put this off until after summer 2014 release
@@ -320,36 +320,34 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
         }
-
-
-        // Adjust indexing for tabs that may be hidden due to UI mode
-        private int TabToControlIndex(TABS tab)
+        // Adjusts indexing for tabs that may be hidden due to UI mode
+        private int TabEnumToControlIndex(TABS tab)
         {
-            var control = _tabMap.FirstOrDefault(x => x.Value == tab).Key;
-            for (var controlIndex = 0; controlIndex < tabControl1.TabPages.Count; controlIndex++)
-            {
-                if (tabControl1.TabPages[controlIndex] == control)
-                {
-                    return controlIndex;
-                }
-            }
-            return 0;
+            int tabIndex = tabControl1.TabPages.IndexOf(_tabPages[tab].Page);
+            if (tabIndex != -1)
+                return tabIndex;
+            return 0; // The tab is not visible default to the first tab
         }
 
         // Adjusts indexing for tabs that may be hidden due to UI mode
-        private TABS ControlIndexToTab(int controlIndex)
+        private TABS ControlIndexToTabEnum(int controlIndex)
         {
-            if (_tabMap.TryGetValue(tabControl1.TabPages[controlIndex], out var tab))
-            {
-                return tab;
-            }
-            return 0;
+            var control = tabControl1.TabPages[controlIndex];
+            var kvp = _tabPages.FirstOrDefault(p => ReferenceEquals(p.Value.Page, control));
+            return kvp.Key;
+        }
+
+        // Adjusts indexing for tabs that may be hidden due to UI mode
+        private TabWithPage ControlIndexToTabPage(int controlIndex)
+        {
+            var tab = ControlIndexToTabEnum(controlIndex);
+            return _tabPages[tab];
         }
 
         protected override void OnShown(EventArgs e)
         {
             if (TabControlSel.HasValue)
-                tabControl1.SelectedIndex = TabToControlIndex(TabControlSel.Value); 
+                tabControl1.SelectedIndex = TabEnumToControlIndex(TabControlSel.Value); 
             tabControl1.FocusFirstTabStop();
         }
 
@@ -1290,14 +1288,14 @@ namespace pwiz.Skyline.SettingsUI
             {
                 int selectedIndex = 0;
                 Invoke(new Action(() => selectedIndex = tabControl1.SelectedIndex));
-                return TAB_PAGES[selectedIndex];
+                return ControlIndexToTabPage(selectedIndex);
             }
         }
 
         public TABS SelectedTab
         {
-            get { return ControlIndexToTab(tabControl1.SelectedIndex); }
-            set { tabControl1.SelectedIndex = TabToControlIndex(value); }
+            get { return ControlIndexToTabEnum(tabControl1.SelectedIndex); }
+            set { tabControl1.SelectedIndex = TabEnumToControlIndex(value); }
         }
 
         public void ChooseRegression(string name)
