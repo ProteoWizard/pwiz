@@ -115,7 +115,7 @@ namespace pwiz.Topograph.Enrichment
             var isotopeAbundances = res.IsotopeAbundances.SetAbundances(
                 tempName, MassDistribution.NewInstance(heavyMasses, 0, 0));
             res = res.SetIsotopeAbundances(isotopeAbundances);
-            var formula = Molecule.Parse(res.Formulas[AminoAcidSymbol.Value]);
+            var formula = res.GetAminoAcidFormula(AminoAcidSymbol.Value);
             var tracerFormula = Molecule.Parse(formula + tempName + AtomCount);
             TraceeMasses = res.GetMassDistribution(formula, 0);
             TracerMasses = res.GetMassDistribution(tracerFormula, 0);
