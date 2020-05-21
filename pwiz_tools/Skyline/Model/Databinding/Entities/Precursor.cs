@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
@@ -153,18 +154,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             else
             {
-                PeptideDocNode parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
-                if (parent == null)
-                {
-                    adduct = Util.Adduct.EMPTY;
-                    formula = String.Empty;
-                    return;
-                }
-
-                var molecule = RefinementSettings.ConvertToSmallMolecule(
-                    RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, out adduct,
-                    DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.TransitionGroup.LabelType);
-                formula = molecule.Formula ?? string.Empty;
+                var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, DocNode.TransitionGroup.Peptide,
+                    Peptide.DocNode.ExplicitMods, DocNode.LabelType);
+                adduct = Util.Adduct.FromChargeProtonated(Charge);
+                formula = crosslinkBuilder.GetPrecursorFormula().Molecule.ToString();
             }
         }
 
