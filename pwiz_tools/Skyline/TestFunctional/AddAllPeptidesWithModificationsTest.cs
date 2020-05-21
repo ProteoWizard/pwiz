@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Properties;
@@ -47,12 +49,11 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AddAllPeptidesTest.sky")));
-            var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() =>
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, pepSettingsUi =>
             {
-                peptideSettingsUi.PickedLibraries = new string[0];
+                pepSettingsUi.PickedLibraries = new string[0];
+                pepSettingsUi.OkDialog();
             });
-            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
             RunUI(()=>SkylineWindow.ViewSpectralLibraries());
             var addModificationsDlg = WaitForOpenForm<AddModificationsDlg>();
             OkDialog(addModificationsDlg, addModificationsDlg.OkDialogAll);
@@ -72,6 +73,17 @@ namespace pwiz.SkylineTestFunctional
             var multiButtonMessageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(multiButtonMessageDlg, multiButtonMessageDlg.BtnYesClick);
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
+            Assert.AreEqual(true, SkylineWindow.Document.PeptideGroups.First().AutoManageChildren);
+
+            // Also make sure that changing the enzyme in Peptide Settings does not cause any problems.
+            foreach (var enzyme in new EnzymeList().Skip(2).Take(2))
+            {
+                RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, pepSettingsUi =>
+                {
+                    pepSettingsUi.ComboEnzymeSelected = enzyme.ToString();
+                    pepSettingsUi.OkDialog();
+                });
+            }
         }
     }
 }
