@@ -1263,7 +1263,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public int MaxVariableMods { get; private set; }
         [Track]
         public int MaxNeutralLosses { get; private set; }
-
         public int CountLabelTypes { get { return _modifications.Count; } }
 
         [Track]
@@ -1617,7 +1616,7 @@ namespace pwiz.Skyline.Model.DocSettings
             max_neutral_losses,
             isotope_label,
             internal_standard,
-            name,
+            name
         }
 
         void IValidating.Validate()
@@ -1658,7 +1657,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var list = new List<TypedModifications>();
             var internalStandardTypes = new[] {IsotopeLabelType.heavy};
-            
+
             MaxVariableMods = reader.GetIntAttribute(ATTR.max_variable_mods, DEFAULT_MAX_VARIABLE_MODS);
             MaxNeutralLosses = reader.GetIntAttribute(ATTR.max_neutral_losses, DEFAULT_MAX_NEUTRAL_LOSSES);
 
@@ -1750,7 +1749,6 @@ namespace pwiz.Skyline.Model.DocSettings
                     throw new InvalidDataException(string.Format(Resources.PeptideModifications_ReadXml_Internal_standard_type__0__not_found,
                                                                  internalStandardNames[iMissingType]));
                 }
-
                 reader.ReadEndElement();
             }
 
@@ -1759,6 +1757,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             _modifications = MakeReadOnly(list.ToArray());
             InternalStandardTypes = internalStandardTypes;
+
             DoValidate();
         }
 
