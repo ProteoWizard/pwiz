@@ -43,6 +43,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         private readonly IEnumerable<IonMobilityPredictor> _existing;
         private bool _showRegressions;
         private readonly bool _smallMoleculeUI; // Set true if document is non empty and not purely peptides
+        private MeasuredDriftTimeTable _driftTable;
+
 
         public const int COLUMN_SEQUENCE = 0;
         public const int COLUMN_CHARGE = 1;
@@ -72,8 +74,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 gridMeasuredDriftTimes.Columns[COLUMN_CHARGE].HeaderText = Resources.EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct;
             }
 
-            var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
-            MeasuredDriftTimeSequence.TargetResolver = targetResolver;
+            _driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes, ModeUI);
+
+            MeasuredDriftTimeSequence.SetSmallMoleculesColumnManagementProvider(_driftTable); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
 
             // TODO: ion mobility libraries are more complex than initially thought - leave these conversions to the mass spec vendors for now
             labelIonMobilityLibrary.Visible = comboLibrary.Visible = false;
@@ -227,8 +230,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             var helper = new MessageBoxHelper(this);
 
-            var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes, MeasuredDriftTimeSequence.TargetResolver);
-
             var table = new ChargeRegressionTable(gridRegression);
 
             string name;
@@ -245,7 +246,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     return;
                 }
             }
-            if (driftTable.GetTableMeasuredIonMobility(cbOffsetHighEnergySpectra.Checked, Units) == null) // Some error detected in the measured drift times table
+            if (_driftTable.GetTableMeasuredIonMobility(cbOffsetHighEnergySpectra.Checked, Units) == null) // Some error detected in the measured drift times table
             {
                 return;
             }
@@ -301,7 +302,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var ionMobilityLibrary = _driverIonMobilityLibraryListComboDriver.SelectedItem;
 
             IonMobilityPredictor predictor =
-                new IonMobilityPredictor(name, driftTable.GetTableMeasuredIonMobility(cbOffsetHighEnergySpectra.Checked, Units), 
+                new IonMobilityPredictor(name, _driftTable.GetTableMeasuredIonMobility(cbOffsetHighEnergySpectra.Checked, Units), 
                     ionMobilityLibrary, table.GetTableChargeRegressionLines(), peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
 
             _predictor = predictor;
@@ -437,7 +438,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             try
             {
-                var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes, MeasuredDriftTimeSequence.TargetResolver);
+                var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes, ModeUI);
                 bool useHighEnergyOffset = cbOffsetHighEnergySpectra.Checked;
                 var tempDriftTimePredictor = new IonMobilityPredictor(@"tmp", driftTable.GetTableMeasuredIonMobility(useHighEnergyOffset, Units), null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 30, 0, 0);
                 using (var longWaitDlg = new LongWaitDlg
@@ -463,6 +464,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 MessageDlg.ShowException(this, ex);
             }
         }
+
+        public pwiz.Common.Controls.CommonDataGridView MeasuredDriftTimes { get { return gridMeasuredDriftTimes;} }
 
         #endregion
 
@@ -513,25 +516,33 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         }
     }
 
-    public class MeasuredDriftTimeTable
+    public class MeasuredDriftTimeTable : ISmallMoleculeColumnsManagementProvider
     {
         private readonly DataGridView _gridMeasuredDriftTimePeptides;
-        private readonly TargetResolver _targetResolver;
+        public TargetResolver TargetResolver { get; }
+        public SmallMoleculeColumnsManager SmallMoleculeColumnsManager { get; }
 
-        public MeasuredDriftTimeTable(DataGridView gridMeasuredDriftTimePeptides, TargetResolver targetResolver)
+        public MeasuredDriftTimeTable(DataGridView gridMeasuredDriftTimePeptides, SrmDocument.DOCUMENT_TYPE modeUI)
         {
             _gridMeasuredDriftTimePeptides = gridMeasuredDriftTimePeptides;
-            _targetResolver = targetResolver;
+            TargetResolver =  TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
+            SmallMoleculeColumnsManager =
+                new SmallMoleculeColumnsManager(gridMeasuredDriftTimePeptides, TargetResolver, modeUI, true);
         }
 
         public Dictionary<LibKey, IonMobilityAndCCS> GetTableMeasuredIonMobility(bool useHighEnergyOffsets, eIonMobilityUnits units)
         {
             var e = new CancelEventArgs();
             var dict = new Dictionary<LibKey, IonMobilityAndCCS>();
+            var rowNumber = 0;
+
             foreach (DataGridViewRow row in _gridMeasuredDriftTimePeptides.Rows)
             {
                 if (row.IsNewRow)
+                {
+                    rowNumber++;
                     continue;
+                }
 
                 string seq;
                 if (!ValidateSequence(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_SEQUENCE], out seq))
@@ -540,7 +551,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 // OK, we have a non-empty "sequence" string, but is that actually a peptide or a molecule?
                 // See if there's anything in the document whose text representation matches what's in the list
                
-                var target = _targetResolver.ResolveTarget(seq);
+                var target = TargetResolver.TryResolveTarget(seq, out _) ?? SmallMoleculeColumnsManager.TryGetSmallMoleculeTargetFromDetails(seq, row.Cells, rowNumber++, out _);
                 if (target == null || target.IsEmpty)
                     return null;
 
@@ -689,7 +700,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             e.Cancel = true;
         }
 
-        public static string ValidateMeasuredDriftTimeCellValues(string[] values)
+        public static string ValidateMeasuredDriftTimeCellValues(string[] values, DataGridView grid, int row)
         {
             Adduct tempAdduct;
             double tempDouble;
@@ -702,12 +713,30 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (string.IsNullOrEmpty(sequence))
                 return Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_A_modified_peptide_sequence_is_required_for_each_entry_;
 
-            if (!FastaSequence.IsExSequence(sequence))
-                return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_sequence__0__is_not_a_valid_modified_peptide_sequence_, sequence);
-
+            Target smallMoleculeTarget = null;
+            TargetColumn targetColumn = null;
+            var isPeptide = FastaSequence.IsExSequence(sequence);
+            if (!isPeptide)
+            {
+                // Try to understand it as a small molecule description
+                targetColumn = grid?.Columns[EditDriftTimePredictorDlg.COLUMN_SEQUENCE] as TargetColumn;
+                smallMoleculeTarget = targetColumn?.TryResolveTarget(sequence, values, row, out _);
+                if (smallMoleculeTarget == null)
+                {
+                    return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_sequence__0__is_not_a_valid_modified_peptide_sequence_, sequence);
+                }
+            }
             try
             {
-                values[EditDriftTimePredictorDlg.COLUMN_SEQUENCE] = SequenceMassCalc.NormalizeModifiedSequence(sequence);
+                if (smallMoleculeTarget == null)
+                {
+                    values[EditDriftTimePredictorDlg.COLUMN_SEQUENCE] = SequenceMassCalc.NormalizeModifiedSequence(sequence);
+                }
+                else
+                {
+                    values[EditDriftTimePredictorDlg.COLUMN_SEQUENCE] = sequence;
+                    targetColumn.SmallMoleculeColumnsManager?.UpdateSmallMoleculeDetails(smallMoleculeTarget, row);
+                }
             }
             catch (Exception x)
             {
@@ -732,17 +761,27 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
             if (values.Length > EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET)
             {
-                // Parse high energy offset, if any
-                if (!string.IsNullOrEmpty(values[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET]) &&
+                if (grid?.Columns[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET].Visible??true) // No grid in unit tests
+                {
+                    // Parse high energy offset, if any
+                    if (!string.IsNullOrEmpty(values[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET]) &&
                         !double.TryParse(values[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET].Trim(), out tempDouble))
-                    return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_, values[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET].Trim());
+                        return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_, values[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET].Trim());
+                }
+                else
+                {
+                    if (isPeptide)
+                    {
+                        return string.Format(Resources.SettingsUIUtil_DoPasteText_Incorrect_number_of_columns__0__found_on_line__1__, values.Length, row);
+                    }
+                }
             }
             return null;
         }
 
-        public static bool ValidateMeasuredDriftTimeCellValues(string[] values, IWin32Window parent, int lineNumber)
+        public static bool ValidateMeasuredDriftTimeCellValues(string[] values, IWin32Window parent, DataGridView grid, int lineNumber)
         {
-            string message = ValidateMeasuredDriftTimeCellValues(values);
+            var message = ValidateMeasuredDriftTimeCellValues(values, grid, lineNumber);
 
             if (message == null)
                 return true;

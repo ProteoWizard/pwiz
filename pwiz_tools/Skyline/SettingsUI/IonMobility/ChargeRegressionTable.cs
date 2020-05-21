@@ -150,7 +150,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         }
 
 
-        public static string ValidateRegressionCellValues(string[] values)
+        public static string ValidateRegressionCellValues(string[] values, DataGridView grid)
         {
             int tempInt;
             double tempDouble;
@@ -170,9 +170,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return null;
         }
 
-        public static bool ValidateRegressionCellValues(string[] values, IWin32Window parent, int lineNumber)
+        public static bool ValidateRegressionCellValues(string[] values, IWin32Window parent, DataGridView grid, int lineNumber)
         {
-            string message = ValidateRegressionCellValues(values);
+            string message = ValidateRegressionCellValues(values, grid);
 
             if (message == null)
                 return true;

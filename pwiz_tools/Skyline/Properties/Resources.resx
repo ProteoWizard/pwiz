@@ -10976,4 +10976,7 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="FastaImporter_Import__0__proteins_and__1__peptides_added" xml:space="preserve">
     <value>{0} proteins and {1} peptides added</value>
   </data>
+  <data name="SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Molecule_description_on_line__0__requires_at_least_a_name_and_chemical_formula" xml:space="preserve">
+    <value>Molecule description on line {0} requires at least a name and chemical formula</value>
+  </data>
 </root>

@@ -827,7 +827,7 @@ namespace pwiz.Skyline.SettingsUI
                 return isolationWindow;
             }
 
-            private bool ValidateRow(object[] columns, IWin32Window parent, int lineNumber)
+            private bool ValidateRow(object[] columns, IWin32Window parent, DataGridView grid, int lineNumber)
             {
                 try
                 {

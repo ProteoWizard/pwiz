@@ -728,14 +728,13 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             GridView.RowValidating += gridView_RowValidating;
         }
 
-        public static string ValidateRow(object[] columns, int lineNumber)
+        public static string ValidateRow(object[] columns, DataGridView grid, int lineNumber)
         {
             if (columns.Length < 2)
             {
                 return Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_at_least_two_columns_;
             }
 
-            // TODO(bspratt) small molecule handling
             string seq = columns[EditIonMobilityLibraryDlg.COLUMN_SEQUENCE] as string;
             string collisionalcrosssection = columns[EditIonMobilityLibraryDlg.COLUMN_COLLISIONAL_CROSS_SECTION] as string;
             string highenergydrifttimeoffset = (columns.Length > 2) ? columns[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC] as string : string.Empty;
@@ -746,7 +745,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
             else if (!FastaSequence.IsExSequence(seq))
             {
-                message = string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1__, seq, lineNumber);
+                // Use target resolver if available
+                var targetColumn = grid?.Columns[EditIonMobilityLibraryDlg.COLUMN_SEQUENCE] as TargetColumn;
+                if (targetColumn == null || targetColumn.TryResolveTarget(seq, columns.Select(c=>c as string).ToArray(), lineNumber, out _) == null)
+                {
+                    message = string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1__, seq, lineNumber);
+                }
             }
             else
             {
@@ -794,9 +798,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return message;
         }
 
-        public static bool ValidateRow(object[] columns, IWin32Window parent, int lineNumber)
+        public static bool ValidateRow(object[] columns, IWin32Window parent, DataGridView grid, int lineNumber)
         {
-            string message = ValidateRow(columns, lineNumber);
+            string message = ValidateRow(columns, grid, lineNumber);
             if (message == null)
                 return true;
             MessageDlg.Show(parent, message);

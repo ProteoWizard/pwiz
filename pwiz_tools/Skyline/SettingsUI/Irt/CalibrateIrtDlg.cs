@@ -251,7 +251,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return false;
             }
             var targetResolver = TargetResolver.MakeTargetResolver(document);
-            _gridViewDriver.TargetResolver = targetResolver;
+            _gridViewDriver.SetTargetResolver(targetResolver);
 
             var docTargets = document.Molecules.Where(nodePep => nodePep.SchedulingTime.HasValue).Select(nodePep => nodePep.ModifiedTarget).Distinct().ToArray();
             var count = docTargets.Length;
@@ -614,7 +614,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             private readonly IrtPeptidePicker _picker;
 
             public CalibrationGridViewDriver(CalibrateIrtDlg parent, DataGridViewEx gridView, BindingSource bindingSource,
-                SortableBindingList<StandardPeptide> items) : base(gridView, bindingSource, items)
+                SortableBindingList<StandardPeptide> items) : base(gridView, bindingSource, items, null, parent.ModeUI)
             {
                 _parent = parent;
                 _picker = new IrtPeptidePicker();

@@ -18,6 +18,8 @@
  */
 
 
+using System;
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
@@ -25,6 +27,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf 
@@ -54,15 +57,59 @@ namespace TestPerf
 
         private string DataPath { get { return TestFilesDirs.Last().PersistentFilesDir; } }
 
+        private string AddSmallMolDetails(string line, params Tuple<string, string>[] additions)
+        {
+            string HandleL10N(string text)
+            {
+                var inQuotes = false;
+                for (var i = 0; i < text.Length; i++)
+                {
+                    if (text[i] == '\"')
+                    {
+                        inQuotes = !inQuotes;
+                    }
+                    else if (!inQuotes)
+                    {
+                        if (text[i] == ',')
+                            text = text.Substring(0, i) + TextUtil.CsvSeparator + text.Substring(i + 1);
+                        else if (text[i] == '.')
+                            text = text.Substring(0, i) + CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator + text.Substring(i + 1);
+                    }
+                }
+
+                return text;
+            }
+
+            foreach (var addition in additions)
+            {
+                var find = HandleL10N(addition.Item1);
+                var replace = HandleL10N(addition.Item2);
+                line = line.Replace(find, replace);
+            }
+            return line;
+        }
+
         protected override void DoTest()
         {
             // Empty doc with suitable full scan settings
             RunUI(() => SkylineWindow.OpenFile(
                 TestFilesDirs[0].GetTestPath(@"DriftTimePredictorSmallMoleculesTest.sky")));
 
-            var transitionList = TestFilesDirs[0].GetTestPath(@"Skyline Transition List wo CCS.csv");
+            var transitionListFile = TestFilesDirs[0].GetTestPath(@"Skyline Transition List wo CCS.csv");
+            var transitionList = GetCsvFileText(transitionListFile);
+            // Add a bit more detail to molecules
+            var inchikeySulfamethizole = "VACCAVUAMIDAGB-UHFFFAOYSA-N";
+            var inchiSulfamethizole = "InChI=1S/C9H10N4O2S2/c1-6-11-12-9(16-6)13-17(14,15)8-4-2-7(10)3-5-8/h2-5H,10H2,1H3,(H,12,13)";
+            var keggSulfamethizole = "D00870";
+            var smilesSulfamethizole = "O=S(=O)(Nc1nnc(s1)C)c2ccc(N)cc2";
+            var casSulfadimidine = "57-68-1";
+            transitionList = AddSmallMolDetails(transitionList, 
+                    new Tuple<string, string>("\r\n", ",,,,,\r\n"),
+                    new Tuple<string, string>(" Time,,,,,", " Time,CAS,KEGG,SMILES,InChI,InChiKey"),
+                    new Tuple<string, string>("1.103,,,,,", "1.103,,"+keggSulfamethizole+","+smilesSulfamethizole +",\""+inchiSulfamethizole+"\","+inchikeySulfamethizole),
+                    new Tuple<string, string>("0.949,,,,,", "0.949,"+casSulfadimidine+",,,,"));
             // Transition list is suitably formatted with headers to just drop into the targets tree
-            SetCsvFileClipboardText(transitionList);
+            SetClipboardText(transitionList);
             RunUI(() => SkylineWindow.Paste());
             var document = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(document, null, 1, 4, 4, 4);
@@ -97,10 +144,22 @@ namespace TestPerf
                 driftPredictor.SetResolvingPower(50);
                 driftPredictor.GetDriftTimesFromResults();
             });
-
             // Check that a new value was calculated for all precursors
             RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, driftPredictor.Predictor.IonMobilityRows.Count));
-
+            RunUI(() =>
+            {
+                for (var loop = 0; loop < 2; loop++)
+                {
+                    var cells = driftPredictor.MeasuredDriftTimes.Rows[loop*2].Cells;
+                    var expectedDetails = loop == 0 ?
+                            new[] { "C9H10N4O2S2", inchikeySulfamethizole, string.Empty, inchiSulfamethizole.Replace("InChI=", string.Empty), smilesSulfamethizole, keggSulfamethizole } :
+                            new[] { "C12H14N4O2S", string.Empty, casSulfadimidine, string.Empty, string.Empty, string.Empty };
+                    for (var i = 0; i < expectedDetails.Length; i++)
+                    {
+                        AssertEx.AreEqual(expectedDetails[i], cells[i+5].FormattedValue);
+                    }
+                }
+            });
             OkDialog(driftPredictor, () => driftPredictor.OkDialog());
 
             RunUI(() =>

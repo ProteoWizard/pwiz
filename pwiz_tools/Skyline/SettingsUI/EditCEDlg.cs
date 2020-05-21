@@ -235,7 +235,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private static bool ValidateRegressionCellValues(string[] values, IWin32Window parent, int lineNumber)
+        private static bool ValidateRegressionCellValues(string[] values, IWin32Window parent, DataGridView grid, int lineNumber)
         {
             int tempInt;
             double tempDouble;

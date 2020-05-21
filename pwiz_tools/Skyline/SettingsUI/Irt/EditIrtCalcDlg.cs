@@ -73,7 +73,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             Icon = Resources.Skyline;
 
             _gridViewStandardDriver = new StandardGridViewDriver(this, gridViewStandard, bindingSourceStandard, new SortableBindingList<DbIrtPeptide>());
-            _gridViewLibraryDriver = new LibraryGridViewDriver(gridViewLibrary, bindingSourceLibrary, new SortableBindingList<DbIrtPeptide>());
+            _gridViewLibraryDriver = new LibraryGridViewDriver(this, gridViewLibrary, bindingSourceLibrary, new SortableBindingList<DbIrtPeptide>());
             _gridViewStandardDriver.GridLibrary = gridViewLibrary;
             _gridViewStandardDriver.LibraryPeptideList = _gridViewLibraryDriver.Items;
             _gridViewLibraryDriver.StandardPeptideList = _gridViewStandardDriver.Items;
@@ -94,10 +94,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI, 
                 _originalPeptides?.Select(p=>p.Target));
-            _gridViewStandardDriver.TargetResolver = targetResolver;
-            _gridViewLibraryDriver.TargetResolver = targetResolver;
-            columnStandardSequence.TargetResolver = targetResolver;
-            columnLibrarySequence.TargetResolver = targetResolver;
+            _gridViewStandardDriver.SetTargetResolver(targetResolver);
+            _gridViewLibraryDriver.SetTargetResolver(targetResolver);
+            columnStandardSequence.SetSmallMoleculesColumnManagementProvider(_gridViewStandardDriver); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
+            columnLibrarySequence.SetSmallMoleculesColumnManagementProvider(_gridViewLibraryDriver); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
         }
 
         private void OnLoad(object sender, EventArgs e)
@@ -666,7 +666,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             public StandardGridViewDriver(EditIrtCalcDlg parent, DataGridViewEx gridView, BindingSource bindingSource,
                 SortableBindingList<DbIrtPeptide> items)
-                : base(gridView, bindingSource, items)
+                : base(gridView, bindingSource, items, null, parent.ModeUI)
             {
                 AllowNegativeTime = true;
                 GridView.CellValueChanged += parent.HandleStandardsChanged;
@@ -746,8 +746,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private class LibraryGridViewDriver : PeptideGridViewDriver<DbIrtPeptide>
         {
-            public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource, SortableBindingList<DbIrtPeptide> items)
-                : base(gridView, bindingSource, items)
+            public LibraryGridViewDriver(EditIrtCalcDlg parent, DataGridViewEx gridView, BindingSource bindingSource, SortableBindingList<DbIrtPeptide> items)
+                : base(gridView, bindingSource, items, null, parent.ModeUI)
             {
                 AllowNegativeTime = true;
             }

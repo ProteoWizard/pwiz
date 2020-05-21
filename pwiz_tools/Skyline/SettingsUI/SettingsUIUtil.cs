@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -48,7 +49,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public delegate bool ValidateCellValues(string[] values, IWin32Window parent, int lineNumber);
+        public delegate bool ValidateCellValues(string[] values, IWin32Window parent, DataGridView grid, int lineNumber);
 
         public static bool DoPaste(this DataGridView grid, Control parent, ValidateCellValues validate)
         {
@@ -62,6 +63,20 @@ namespace pwiz.Skyline.SettingsUI
 
             bool result = DoPasteText(parent, textClip, grid, validate,
                 (values, lineNum) => grid.Rows.Add(values.ToArray()));
+
+            // Show small molecule details as needed
+            if (grid.Columns.Cast<DataGridViewColumn>().FirstOrDefault(column => column is TargetColumn) is TargetColumn targetColumn)
+            {
+                var targetCol = Array.IndexOf(grid.Columns.Cast<DataGridViewColumn>().ToArray(), targetColumn);
+                for (var line = 0; line < grid.RowCount; line++)
+                {
+                    var target = targetColumn.TryResolveTarget(grid.Rows[line].Cells[targetCol]?.Value?.ToString(), grid.Rows[line].Cells, line, out _);
+                    if (target != null && !target.IsProteomic)
+                    {
+                        targetColumn.SmallMoleculeColumnsManager?.UpdateSmallMoleculeDetails(target,line);
+                    }
+                }
+            }
 
             grid.ResumeLayout();
             return result;
@@ -86,6 +101,7 @@ namespace pwiz.Skyline.SettingsUI
             TextReader reader = new StringReader(textClip);
 
             int columnCount = grid.Columns.Cast<DataGridViewColumn>().Count(column => column.Visible);
+            int nHidden = grid.Columns.Cast<DataGridViewColumn>().Count() - columnCount;
 
             int lineNum = 0;
             String line;
@@ -106,8 +122,19 @@ namespace pwiz.Skyline.SettingsUI
                 for (int i = 0; i < columns.Length; i++)
                     columns[i] = columns[i].Trim();
 
-                if (!validate(columns, parent, lineNum))
+                if (!validate(columns, parent, grid, lineNum))
                     return false;
+
+                // If there is a SmallMoleculeColumnsManager for this grid, make sure to adjust for hidden columns if user is pasting in small molecule details
+                if (nHidden != 0 && // Hidden columns
+                    grid.Columns.Cast<DataGridViewColumn>().FirstOrDefault(column => column is TargetColumn) is TargetColumn targetColumn)
+                {
+                    var smDetailsManager = targetColumn.SmallMoleculeColumnsManager;
+                    if (smDetailsManager != null)
+                    {
+                        columns = smDetailsManager.PadHiddenColumns(columns);
+                    }
+                }
 
                 addRow(columns, lineNum);
             }

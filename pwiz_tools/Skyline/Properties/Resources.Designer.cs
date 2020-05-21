@@ -28104,6 +28104,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule description on line {0} requires at least a name and chemical formula.
+        /// </summary>
+        public static string SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Molecule_description_on_line__0__requires_at_least_a_name_and_chemical_formula {
+            get {
+                return ResourceManager.GetString("SmallMoleculeColumnsManager_TryGetSmallMoleculeTargetFromDetails_Molecule_descrip" +
+                        "tion_on_line__0__requires_at_least_a_name_and_chemical_formula", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average mass.
         /// </summary>
         public static string SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass {

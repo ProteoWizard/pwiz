@@ -57,7 +57,7 @@ namespace pwiz.Skyline.SettingsUI
 
             Icon = Resources.Skyline;
 
-            _gridViewDriver = new RetentionTimeGridViewDriver(gridPeptides, bindingPeptides,
+            _gridViewDriver = new RetentionTimeGridViewDriver(this, gridPeptides, bindingPeptides,
                                                             new SortableBindingList<MeasuredPeptide>());
 
             _driverCalculators = new SettingsListComboDriver<RetentionScoreCalculatorSpec>(
@@ -282,10 +282,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private class RetentionTimeGridViewDriver : PeptideGridViewDriver<MeasuredPeptide>
         {
-            public RetentionTimeGridViewDriver(DataGridViewEx gridView,
+            public RetentionTimeGridViewDriver(EditRTDlg parent, DataGridViewEx gridView,
                                              BindingSource bindingSource,
                                              SortableBindingList<MeasuredPeptide> items)
-                : base(gridView, bindingSource, items)
+                : base(gridView, bindingSource, items, null, parent.ModeUI)
             {
             }
 

@@ -2019,7 +2019,10 @@ namespace pwiz.Skyline.Model.Lib
         public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
             string inChiKey, IDictionary<string, string> otherKeys)
         {
-            return Create(moleculeName, chemicalFormulaOrMassesString, inChiKey, otherKeys == null ? string.Empty : string.Join(@"\t", otherKeys.Select(kvp => kvp.Key + @":" + kvp.Value)));
+            return Create(moleculeName, chemicalFormulaOrMassesString, inChiKey, 
+                otherKeys == null ? 
+                    string.Empty : 
+                    string.Join(TextUtil.SEPARATOR_TSV_STR, otherKeys.Where(pair => !pair.Key.Equals(MoleculeAccessionNumbers.TagInChiKey)).Select(kvp => kvp.Key + @":" + kvp.Value)));
         }
 
         public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,

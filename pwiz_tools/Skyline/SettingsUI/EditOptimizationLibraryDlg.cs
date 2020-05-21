@@ -65,10 +65,11 @@ namespace pwiz.Skyline.SettingsUI
             var knownLibraryTargets = _existing.Where(l => l.IsUsable).SelectMany(l => l.GetOptimizations()).Select(o => o.Target);
 
             var targetResolver = TargetResolver.MakeTargetResolver(document, knownLibraryTargets);
-            columnSequence.TargetResolver = targetResolver; // Makes it possible to show just "caffeine" instead of "#$#caffeine#C8H10N4O2#"
 
             _gridViewLibraryDriver = new LibraryGridViewDriver(gridViewLibrary, bindingSourceLibrary,
                                                                new SortableBindingList<DbOptimization>(), this, document, targetResolver);
+            columnSequence.SetSmallMoleculesColumnManagementProvider(_gridViewLibraryDriver); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
+
 
             if (lib != null)
             {
@@ -394,7 +395,6 @@ namespace pwiz.Skyline.SettingsUI
 
             private readonly EditOptimizationLibraryDlg _form;
             private readonly SrmDocument _document;
-            private readonly TargetResolver _targetResolver;
 
             public BindingList<DbOptimization> Optimizations { get; private set; }
 
@@ -402,7 +402,7 @@ namespace pwiz.Skyline.SettingsUI
 
             public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
                                          SortableBindingList<DbOptimization> items, EditOptimizationLibraryDlg form, SrmDocument document, TargetResolver targetResolver)
-                : base(gridView, bindingSource, items)
+                : base(gridView, bindingSource, items, targetResolver, form.ModeUI)
             {
                 gridView.UserDeletingRow += gridView_UserDeletingRow;
                 gridView.UserDeletedRow += gridView_UserDeletedRow;
@@ -410,7 +410,6 @@ namespace pwiz.Skyline.SettingsUI
                 gridView.CellParsing += gridView_CellParsing;
                 _form = form;
                 _document = document;
-                _targetResolver = targetResolver ?? TargetResolver.MakeTargetResolver(document);
                 Optimizations = new BindingList<DbOptimization>();
                 Optimizations.ListChanged += OptimizationsChanged;
             }
@@ -496,7 +495,7 @@ namespace pwiz.Skyline.SettingsUI
                                 }
                                 else
                                 {
-                                    e.Value = _targetResolver.FormatTarget(optimization.Target) + optimization.Adduct.AdductFormula;
+                                    e.Value = FormatTarget(optimization.Target, e.RowIndex) + optimization.Adduct.AdductFormula;
                                 }
 
                                 e.FormattingApplied = true;
@@ -665,9 +664,9 @@ namespace pwiz.Skyline.SettingsUI
                     : string.Format(culture, @"{0} -{1}", normalizedIon, Math.Round(double.Parse(matches[0].Groups[@"loss"].Value, culture), 1));
             }
 
-            private bool ValidateOptimizationRow(object[] columns, IWin32Window parent, int lineNumber)
+            private bool ValidateOptimizationRow(object[] columns, IWin32Window parent, DataGridView grid, int lineNumber)
             {
-                if (columns.Length != GridView.Columns.Cast<DataGridViewColumn>().Count(column => column.Visible))
+                if (columns.Length != GridView.Columns.Cast<DataGridViewColumn>().Count(column => column.Visible && !column.ReadOnly)) // Don't count small mol columns that are display only e.g. Formula
                 {
                     MessageDlg.Show(parent, Resources.LibraryGridViewDriver_ValidateOptimizationRow_The_pasted_text_must_contain_the_same_number_of_columns_as_the_table_);
                     return false;
@@ -804,7 +803,7 @@ namespace pwiz.Skyline.SettingsUI
                     text = text.Substring(0, adductPosition);
                 }
 
-                target = _targetResolver.TryResolveTarget(text, out var msg) ?? Target.FromSerializableString(text);
+                target = TryResolveTarget(text, out var msg) ?? Target.FromSerializableString(text);
                 return !target.IsProteomic;
             }
 

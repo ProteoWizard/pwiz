@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Model
     /// <summary>
     /// Given a list of known targets, decides how to reversibly convert them to strings so they can
     /// be looked up by peptide sequence, name, accession number etc.
-    /// CONSIDER(bspratt) make this case insenstive? More useful for user intraction that way
+    /// CONSIDER(bspratt) make this case insensitive? More useful for user interaction that way
     /// </summary>
     public class TargetResolver
     {
@@ -98,6 +98,7 @@ namespace pwiz.Skyline.Model
                     allTargets = allTargets.Concat(others);
                 }
             }
+
             return new TargetResolver(allTargets);
         }
 
@@ -113,14 +114,13 @@ namespace pwiz.Skyline.Model
                 return target.Sequence;
             }
 
-            string name = GetTargetDisplayName(target);
-            if (_targetsByName[name].Count() == 1)
-            {
-                return name;
-            }
-
-            return target.ToSerializableString();
+            return GetTargetDisplayName(target); // Show the friendly name, assume that details (formula, InChiKey etc) are handled by SmallMoleculeColumnsManager or similar
         }
+
+        /// <summary>
+        /// Returns an enumerable of all targets available to the resolver
+        /// </summary>
+        public IEnumerable<Target> AvailableTargets { get { return _targetsByName.SelectMany(t => t); } }
 
         /// <summary>
         /// Returns the string to be used when presenting a target in the UI

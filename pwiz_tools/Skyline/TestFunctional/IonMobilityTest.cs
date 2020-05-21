@@ -211,6 +211,9 @@ namespace pwiz.SkylineTestFunctional
                 });
                 var doc = WaitForDocumentLoaded();
 
+                // Set UI for mixed proteomics / small mol sp we can test pasting of small mol details
+                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
+
                 // Verify that the schema has been updated to include these new settings
                 AssertEx.ValidatesAgainstSchema(doc);
                 // Do some DT calculations
@@ -302,17 +305,49 @@ namespace pwiz.SkylineTestFunctional
                 // An error will appear because the column count is wrong
                 ShowDialog<MessageDlg>(driftTimePredictorDlg3.PasteMeasuredDriftTimes);
                 var errorDlg = WaitForOpenForm<MessageDlg>();
-                Assert.AreEqual(string.Format(Resources.SettingsUIUtil_DoPasteText_Incorrect_number_of_columns__0__found_on_line__1__, 5, 1), errorDlg.Message);
+                Assert.IsTrue(errorDlg.Message.Contains(string.Format(Resources.SettingsUIUtil_DoPasteText_Incorrect_number_of_columns__0__found_on_line__1__, 5, 1)));
                 errorDlg.OkDialog();
                 RunUI(() =>
                 {
                     // And now paste in four columns, should be OK
                     SetClipboardText(fourCols);
                     driftTimePredictorDlg3.PasteMeasuredDriftTimes();
+                });
 
+                // Try pasting molecule data
+                string DescribeAsSmallMolecule(string s)
+                {
+                    // N.B.the formula is correct but other details are from an unrelated molecule
+                    var inchikeySulfamethizole = "VACCAVUAMIDAGB-UHFFFAOYSA-N";
+                    var inchiSulfamethizole = "InChI=1S/C9H10N4O2S2/c1-6-11-12-9(16-6)13-17(14,15)8-4-2-7(10)3-5-8/h2-5H,10H2,1H3,(H,12,13)";
+                    var keggSulfamethizole = "D00870";
+                    var smilesSulfamethizole = "O=S(=O)(Nc1nnc(s1)C)c2ccc(N)cc2";
+                    var casSulfadimidine = "57-68-1";
+                    return string.Join("\t", "pep_" + s.Replace("\t5\t", "\tM+5H\t"), "C35H54N8O20", inchikeySulfamethizole,
+                        casSulfadimidine, "", inchiSulfamethizole, smilesSulfamethizole, keggSulfamethizole);
+                }
+
+                var smallMolFiveCols = DescribeAsSmallMolecule(fiveCols);
+                RunUI(() =>
+                {
+                    driftTimePredictorDlg3.SetOffsetHighEnergySpectraCheckbox(true);
+                    SetClipboardText(smallMolFiveCols);
+                    driftTimePredictorDlg3.PasteMeasuredDriftTimes();
+                });
+                // And again, without HE offset column
+                var smallMolFourCols = DescribeAsSmallMolecule(fourCols);
+                RunUI(() =>
+                {
+                    driftTimePredictorDlg3.SetOffsetHighEnergySpectraCheckbox(false);
+                    SetClipboardText(smallMolFourCols);
+                    driftTimePredictorDlg3.PasteMeasuredDriftTimes();
+                });
+
+                RunUI(() =>
+                {
                     // Finally turn the high energy column back on, and put in a value
                     driftTimePredictorDlg3.SetOffsetHighEnergySpectraCheckbox(true);
-                    SetClipboardText(fiveCols);
+                    SetClipboardText(fiveCols + "\n" + smallMolFiveCols);
                     driftTimePredictorDlg3.PasteMeasuredDriftTimes();
                 });
                 // Simulate picking "Add..." from the Ion Mobility Library combo control
@@ -580,36 +615,36 @@ namespace pwiz.SkylineTestFunctional
                 Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__,
                 99, TransitionGroup.MAX_PRECURSOR_CHARGE));
             string[] dtValues = { null, null, null, null, null };
-            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(new[] { "", "" }),
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(new[] { "", "" }, null, 0),
                 Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_pasted_text_must_have_three_columns_);
-            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues, null, 0),
                 Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_A_modified_peptide_sequence_is_required_for_each_entry_);
             dtValues[EditDriftTimePredictorDlg.COLUMN_SEQUENCE] = "$%$%!";
-            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues, null, 0),
                 String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_sequence__0__is_not_a_valid_modified_peptide_sequence_, dtValues[0]));
             dtValues[EditDriftTimePredictorDlg.COLUMN_SEQUENCE] = "JKLM";
             dtValues[EditDriftTimePredictorDlg.COLUMN_CHARGE] = "dog";
             dtValues[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY] = "-0.2";
             dtValues[EditDriftTimePredictorDlg.COLUMN_CCS] = "1";
             dtValues[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET] = "";
-            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues, null, 0),
                 String.Format(Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__,
                     dtValues[EditDriftTimePredictorDlg.COLUMN_CHARGE].Trim(), TransitionGroup.MAX_PRECURSOR_CHARGE));
             dtValues[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY] = (17.9).ToString(CultureInfo.CurrentCulture);
             dtValues[EditDriftTimePredictorDlg.COLUMN_CHARGE] = "2";
-            Assert.IsNull(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues), 
-                string.Format("unexpected error {0}", MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues)));
+            Assert.IsNull(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues, null, 0), 
+                string.Format("unexpected error {0}", MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues, null, 0)));
             dtValues[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY] = "fish";
-            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues, null, 0),
                 String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_, dtValues[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY].Trim()));
             dtValues[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY] = (17.9).ToString(CultureInfo.CurrentCulture);
             dtValues[EditDriftTimePredictorDlg.COLUMN_CCS] = "fish";
             dtValues[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET] = "-.3";
-            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues, null, 0),
                 String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_collisional_cross_section_, dtValues[EditDriftTimePredictorDlg.COLUMN_CCS].Trim()));
             dtValues[EditDriftTimePredictorDlg.COLUMN_CCS] = "123";
             dtValues[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET] = "dog";
-            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues, null, 0),
                 String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_, dtValues[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET].Trim()));
 
             AssertEx.Contains(ChargeRegressionTable.ValidateCharge(0),
@@ -624,62 +659,62 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNull(ChargeRegressionTable.ValidateCharge(TransitionGroup.MAX_PRECURSOR_CHARGE));
 
             string[] values = { "", "", "" };
-            AssertEx.Contains(ChargeRegressionTable.ValidateRegressionCellValues(values),
+            AssertEx.Contains(ChargeRegressionTable.ValidateRegressionCellValues(values, null),
                 string.Format(
                 Resources.EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__,
                 values[0], TransitionGroup.MAX_PRECURSOR_CHARGE));
 
             values[0] = "1";
-            AssertEx.Contains(ChargeRegressionTable.ValidateRegressionCellValues(values),
+            AssertEx.Contains(ChargeRegressionTable.ValidateRegressionCellValues(values, null),
                 string.Format(Resources.EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope_, values[1]));
 
             values[1] = "1";
-            AssertEx.Contains(ChargeRegressionTable.ValidateRegressionCellValues(values),
+            AssertEx.Contains(ChargeRegressionTable.ValidateRegressionCellValues(values, null),
                 string.Format(Resources.EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept_, values[2]));
 
             values[2] = "1";
-            Assert.IsNull(ChargeRegressionTable.ValidateRegressionCellValues(values));
+            Assert.IsNull(ChargeRegressionTable.ValidateRegressionCellValues(values, null));
 
             object[] column = { "1" };
-            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(column, 1),
+            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(column, null, 1),
                Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_at_least_two_columns_);
 
             object[] columns = { "", "", "" };
             const int lineNumber = 1;
-            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, lineNumber),
+            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, null, lineNumber),
                string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_peptide_sequence_on_line__0__, lineNumber));
 
             columns[0] = "@#%!";
-            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, lineNumber),
+            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, null, lineNumber),
                string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1__, columns[0], lineNumber));
 
             columns[0] = "JKLM";
-            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, lineNumber),
+            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, null, lineNumber),
                string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_collisional_cross_section_value_on_line__0__, lineNumber));
 
             columns[1] = "fish";
-            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, lineNumber),
+            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, null, lineNumber),
                 string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_collisional_cross_section_on_line__1__,
                             columns[1], lineNumber));
 
             columns[1] = "0";
-            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, lineNumber),
+            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, null, lineNumber),
                 string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_collisional_cross_section__0__must_be_greater_than_zero_on_line__1__,
                                 columns[1], lineNumber));
 
             columns[1] = "1";
-            Assert.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, lineNumber));
+            Assert.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, null, lineNumber));
 
             columns[2] = "zeke"; // HighEnergyDriftTimeOffsetMsec
-            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, lineNumber),
+            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, null, lineNumber),
                 string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_high_energy_drift_time_offset_on_line__1__,
                                 columns[2], lineNumber));
 
             columns[2] = ""; // HighEnergyDriftTimeOffsetMsec
-            Assert.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, lineNumber));
+            Assert.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, null, lineNumber));
 
             columns[2] = "1"; // HighEnergyDriftTimeOffsetMsec (usually negative, but we don't demand it)
-            Assert.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, lineNumber));
+            Assert.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, null, lineNumber));
 
 
             var pep = BuildValidatingIonMobilityPeptide(string.Empty, Adduct.EMPTY, 0, 0);

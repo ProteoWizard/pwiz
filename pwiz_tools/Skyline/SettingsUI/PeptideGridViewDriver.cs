@@ -31,23 +31,38 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public abstract class PeptideGridViewDriver<TItem> : SimpleGridViewDriver<TItem>
+
+    public abstract class PeptideGridViewDriver<TItem> : SimpleGridViewDriver<TItem>, ISmallMoleculeColumnsManagementProvider
         where TItem : IPeptideData
+
     {
         public const int COLUMN_SEQUENCE = 0;
         public const int COLUMN_TIME = 1;
 
-        protected PeptideGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource, SortableBindingList<TItem> items)
+        protected PeptideGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource, SortableBindingList<TItem> items, TargetResolver targetResolver, SrmDocument.DOCUMENT_TYPE modeUI)
             : base(gridView, bindingSource, items)
         {
             GridView.CellValidating += gridView_CellValidating;
             GridView.RowValidating += gridView_RowValidating;
-            TargetResolver = TargetResolver.EMPTY;
+            TargetResolver = targetResolver ?? TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI, items?.Select(p => p.Target));
+            SmallMoleculeColumnsManager = new SmallMoleculeColumnsManager(gridView, TargetResolver, modeUI, true);
+            // Find any TargetColumns and have them use us as small molecule column management provider
+            foreach (var col in this.GridView.Columns)
+            {
+                (col as TargetColumn)?.SetSmallMoleculesColumnManagementProvider(this); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
+            }
         }
 
         protected bool AllowNegativeTime { get; set; }
 
-        public TargetResolver TargetResolver { get; set; }
+        public TargetResolver TargetResolver { get; private set; }
+        public SmallMoleculeColumnsManager SmallMoleculeColumnsManager { get; private set;  }
+
+        public void SetTargetResolver(TargetResolver targetResolver)
+        {
+            TargetResolver = targetResolver;
+            SmallMoleculeColumnsManager = SmallMoleculeColumnsManager.ChangeTargetResolver(targetResolver);
+        }
 
         public static string ValidateUniquePeptides(IEnumerable<Target> peptides, IEnumerable<Target> existing, string existingName)
         {
@@ -96,17 +111,27 @@ namespace pwiz.Skyline.SettingsUI
             return null;
         }
 
-        public static bool ValidateRowWithTime(object[] columns, IWin32Window parent, int lineNumber)
+        public static bool ValidateRowWithTime(object[] columns, IWin32Window parent, DataGridView grid, int lineNumber)
         {
-            return ValidateRow(columns, parent, lineNumber, true);
+            return ValidateRow(columns, parent, grid, lineNumber, true);
         }
 
-        public static bool ValidateRowWithIrt(object[] columns, IWin32Window parent, int lineNumber)
+        public static bool ValidateRowWithIrt(object[] columns, IWin32Window parent, DataGridView grid, int lineNumber)
         {
-            return ValidateRow(columns, parent, lineNumber, false);
+            return ValidateRow(columns, parent, grid, lineNumber, false);
         }
 
-        public static bool ValidateRow(object[] columns, IWin32Window parent, int lineNumber, bool postiveTime)
+        /// <summary>
+        /// Format the given target, and update any small molecule fields in its display row
+        /// </summary>
+        public string FormatTarget(Target target, int row)
+        {
+            var result = TargetResolver.FormatTarget(target);
+            SmallMoleculeColumnsManager.UpdateSmallMoleculeDetails(target, row);
+            return result;
+        }
+
+        public static bool ValidateRow(object[] columns, IWin32Window parent, DataGridView grid, int lineNumber, bool postiveTime)
         {
             if (columns.Length != 2)
             {
@@ -123,7 +148,12 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (!FastaSequence.IsExSequence(seq))
             {
-                message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
+                // Use target resolver if available
+                var targetColumn = grid?.Columns[COLUMN_SEQUENCE] as TargetColumn;
+                if (targetColumn == null || targetColumn.TryResolveTarget(seq, columns.Select(c => c as string).ToArray(), lineNumber, out _) == null)
+                {
+                    message = string.Format(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
+                }
             }
             else
             {
@@ -188,6 +218,7 @@ namespace pwiz.Skyline.SettingsUI
                 var sequence = TryResolveTarget(value, out errorText);
                 if (errorText == null)
                 {
+                    SmallMoleculeColumnsManager.UpdateSmallMoleculeDetails(sequence, GridView.Rows[rowIndex]); // If this is a small molecule, show formula, InChiKey etc
                     int iExist = Items.ToArray().IndexOf(pep => Equals(pep.Target, sequence));
                     if (iExist != -1 && iExist != rowIndex)
                         errorText = string.Format(Resources.PeptideGridViewDriver_DoCellValidating_The_sequence__0__is_already_present_in_the_list, sequence);
@@ -219,7 +250,7 @@ namespace pwiz.Skyline.SettingsUI
                 return true;
             var cell = row.Cells[COLUMN_SEQUENCE];
             string errorText;
-            TryResolveTarget(cell.FormattedValue, out errorText);
+            var target = TryResolveTarget(cell.FormattedValue, out errorText);
             if (errorText == null)
             {
                 cell = row.Cells[COLUMN_TIME];
@@ -245,6 +276,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 return false;
             }
+
             return true;
         }
     }
