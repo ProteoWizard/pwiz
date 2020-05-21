@@ -224,8 +224,12 @@ namespace pwiz.Skyline.Model
                     // Add values that existed before the change. First check for exact match by
                     // global index, which will happen when explicit modifications are added,
                     // and then by content identity.
-                    if (mapIndexToChild.TryGetValue(nodePep.Id.GlobalIndex, out existing) ||
-                        mapIdToChild.TryGetValue(nodePep.Key, out existing))
+                    if (mapIndexToChild.TryGetValue(nodePep.Id.GlobalIndex, out existing))
+                    {
+                        nodePepResult = (PeptideDocNode)existing;
+                        diffNode = diff;
+                    }
+                    else if (mapIdToChild.TryGetValue(nodePep.Key, out existing))
                     {
                         nodePepResult = (PeptideDocNode) existing;
                         diffNode = diff;
@@ -403,6 +407,8 @@ namespace pwiz.Skyline.Model
             {
                 var setNonExplicit = new HashSet<Peptide>();
                 IPeptideFilter filter = (useFilter ? settings : PeptideFilter.UNFILTERED);
+                var explicitKeys = Peptides.Where(nodePep => nodePep.HasExplicitMods && !nodePep.HasVariableMods)
+                    .Select(nodePep => nodePep.Key).ToHashSet();
                 foreach (PeptideDocNode nodePep in Children)
                 {
                     if (monitor != null && monitor.IsCanceled())
@@ -422,8 +428,11 @@ namespace pwiz.Skyline.Model
                             peptide = (Peptide) peptide.Copy();
                         foreach (PeptideDocNode nodePepResult in peptide.CreateDocNodes(settings, filter))
                         {
-                            yield return nodePepResult;
-                            returnedResult = true;
+                            if (!explicitKeys.Contains(nodePepResult.Key))
+                            {
+                                yield return nodePepResult;
+                                returnedResult = true;
+                            }
                         }
                         // Make sure the peptide is not removed due to filtering
                         if (!returnedResult)
