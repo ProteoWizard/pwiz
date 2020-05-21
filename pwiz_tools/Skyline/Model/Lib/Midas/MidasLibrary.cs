@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
         private const int SCHEMA_VERSION_CURRENT = 1;
 
         private const double PRECURSOR_TOLERANCE_CHROM = 0.7;
-        private const double PRECURSOR_TOLERANCE = 0.001;
+        private const double PRECURSOR_TOLERANCE = 0.005;
         private const double RT_TOLERANCE = 0.001;
 
         private int SchemaVersion { get; set; }
