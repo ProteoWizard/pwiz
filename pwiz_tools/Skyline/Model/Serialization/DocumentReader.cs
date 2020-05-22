@@ -28,6 +28,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
@@ -245,6 +246,9 @@ namespace pwiz.Skyline.Model.Serialization
             public Adduct ProductAdduct { get; private set; }
             public int? DecoyMassShift { get; private set; }
             public TransitionLosses Losses { get; private set; }
+
+            public List<KeyValuePair<ModificationSite, ComplexFragmentIonName>> LinkedFragmentIons { get; private set; }
+            public bool OrphanedCrosslinkIon { get; private set; }
             public Annotations Annotations { get; private set; }
             public TransitionLibInfo LibInfo { get; private set; }
             public Results<TransitionChromInfo> Results { get; private set; }
@@ -270,6 +274,7 @@ namespace pwiz.Skyline.Model.Serialization
                 ProductAdduct = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.product_charge));
                 DecoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
                 Quantitative = reader.GetBoolAttribute(ATTR.quantitative, true);
+                OrphanedCrosslinkIon = reader.GetBoolAttribute(ATTR.orphaned_crosslink_ion);
                 string measuredIonName = reader.GetAttribute(ATTR.measured_ion_name);
                 if (measuredIonName != null)
                 {
@@ -286,6 +291,7 @@ namespace pwiz.Skyline.Model.Serialization
             public void ReadXmlElements(XmlReader reader, out double? declaredProductMz)
             {
                 declaredProductMz = null;
+                LinkedFragmentIons = new List<KeyValuePair<ModificationSite, ComplexFragmentIonName>>();
                 if (reader.IsEmptyElement)
                 {
                     reader.Read();
@@ -298,6 +304,10 @@ namespace pwiz.Skyline.Model.Serialization
                     {  // The order of these elements may depend on the version of the file being read
                         if (reader.IsStartElement(EL.losses))
                             Losses = ReadTransitionLosses(reader);
+                        else if (reader.IsStartElement(EL.linked_fragment_ion))
+                        {
+                            LinkedFragmentIons.Add(ReadLinkedFragmentIon(reader));
+                        }
                         else if (reader.IsStartElement(EL.transition_lib_info))
                             LibInfo = ReadTransitionLibInfo(reader);
                         else if (reader.IsStartElement(EL.transition_results) || reader.IsStartElement(EL.results_data))
@@ -354,6 +364,51 @@ namespace pwiz.Skyline.Model.Serialization
                     return new TransitionLosses(listLosses, massType);
                 }
                 return null;
+            }
+
+            private KeyValuePair<ModificationSite, ComplexFragmentIonName> ReadLinkedFragmentIon(XmlReader reader)
+            {
+                ComplexFragmentIonName linkedIon;
+                string strFragmentType = reader.GetAttribute(ATTR.fragment_type);
+                if (strFragmentType == null)
+                {
+                    // blank fragment type means orphaned fragment ion
+                    linkedIon = ComplexFragmentIonName.ORPHAN;
+                }
+                else
+                {
+                    linkedIon = new ComplexFragmentIonName(TypeSafeEnum.Parse<IonType>(strFragmentType), reader.GetIntAttribute(ATTR.fragment_ordinal));
+                }
+                    
+                var modificationSite = new ModificationSite(reader.GetIntAttribute(ATTR.index_aa),
+                    reader.GetAttribute(ATTR.modification_name));
+                bool empty = reader.IsEmptyElement;
+                reader.Read();
+                if (!empty)
+                {
+                    while (reader.IsStartElement())
+                    {
+                        if (reader.IsStartElement(EL.losses))
+                        {
+                            var losses = ReadTransitionLosses(reader);
+                            if (losses != null)
+                            {
+                                foreach (var loss in losses.Losses)
+                                {
+                                    // TODO
+                                }
+                            }
+                        }
+                        else if (reader.IsStartElement(EL.linked_fragment_ion))
+                        {
+                            var child = ReadLinkedFragmentIon(reader);
+                            linkedIon = linkedIon.AddChild(child.Key, child.Value);
+                        }
+                    }
+                    reader.ReadEndElement();
+                }
+
+                return new KeyValuePair<ModificationSite, ComplexFragmentIonName>(modificationSite, linkedIon);
             }
 
             private static TransitionLibInfo ReadTransitionLibInfo(XmlReader reader)
@@ -948,7 +1003,7 @@ namespace pwiz.Skyline.Model.Serialization
             reader.Skip();
         }
 
-        private ExplicitMods ReadExplicitMods(XmlReader reader, Peptide peptide)
+        public ExplicitMods ReadExplicitMods(XmlReader reader, Peptide peptide)
         {
             IList<ExplicitMod> staticMods = null;
             TypedExplicitModifications staticTypedMods = null;
@@ -1003,6 +1058,7 @@ namespace pwiz.Skyline.Model.Serialization
                         listHeavyMods.Add(new TypedExplicitModifications(peptide,
                             IsotopeLabelType.heavy, new ExplicitMod[0]));
                     }
+
                     reader.ReadEndElement();
                 }
             }
@@ -1037,13 +1093,49 @@ namespace pwiz.Skyline.Model.Serialization
                     if (indexMod == -1)
                         throw new InvalidDataException(string.Format(Resources.TransitionInfo_ReadTransitionLosses_No_modification_named__0__was_found_in_this_document, nameMod));
                     StaticMod modAdd = typedMods.Modifications[indexMod];
-                    listMods.Add(new ExplicitMod(indexAA, modAdd));
-                    // Consume tag
-                    reader.Read();
+                    var explicitMod = new ExplicitMod(indexAA, modAdd);
+                    if (reader.IsEmptyElement)
+                    {
+                        // Consume tag
+                        reader.Read();
+                    }
+                    else
+                    {
+                        reader.Read();
+                        explicitMod = explicitMod.ChangeLinkedPeptide(ReadLinkedPeptide(reader));
+                        reader.ReadEndElement();
+                    }
+
+                    listMods.Add(explicitMod);
                 }
                 reader.ReadEndElement();
             }
             return new TypedExplicitModifications(peptide, typedMods.LabelType, listMods.ToArray());
+        }
+
+        private LinkedPeptide ReadLinkedPeptide(XmlReader reader)
+        {
+            if (!reader.IsStartElement(EL.linked_peptide))
+            {
+                return null;
+            }
+
+            var sequence = reader.GetAttribute(ATTR.sequence);
+            int indexAa = reader.GetIntAttribute(ATTR.index_aa);
+            var peptide = new Peptide(sequence);
+            ExplicitMods explicitMods = null;
+            if (reader.IsEmptyElement)
+            {
+                reader.Read();
+            }
+            else
+            {
+                reader.ReadStartElement();
+                explicitMods = ReadExplicitMods(reader, peptide);
+                reader.ReadEndElement();
+            }
+            return new LinkedPeptide(peptide, indexAa, explicitMods);
+
         }
 
         private Results<PeptideChromInfo> ReadPeptideResults(XmlReader reader)
@@ -1225,7 +1317,6 @@ namespace pwiz.Skyline.Model.Serialization
 
                 // No heavy transition support in v0.1, and no full-scan filtering
                 var massH = Settings.GetFragmentMass(null, mods, transition, null);
-
                 var node = new TransitionDocNode(transition, info.Losses, massH, TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY);
                 curList.Add(node);
                 ValidateSerializedVsCalculatedProductMz(declaredProductMz, node); // Sanity check
@@ -1256,6 +1347,7 @@ namespace pwiz.Skyline.Model.Serialization
             var group = nodeGroup.TransitionGroup;
             var isotopeDist = nodeGroup.IsotopeDist;
             var list = new List<TransitionDocNode>();
+            CrosslinkBuilder crosslinkBuilder = new CrosslinkBuilder(Settings, nodeGroup.Peptide, mods, nodeGroup.LabelType);
             if (reader.IsStartElement(EL.transition_data))
             {
                 string strContent = reader.ReadElementString();
@@ -1264,13 +1356,13 @@ namespace pwiz.Skyline.Model.Serialization
                 transitionData.MergeFrom(data);
                 foreach (var transitionProto in transitionData.Transitions)
                 {
-                    list.Add(TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, transitionProto));
+                    list.Add(TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto));
                 }
             }
             else
             {
                 while (reader.IsStartElement(EL.transition))
-                    list.Add(ReadTransitionXml(reader, group, mods, isotopeDist, pre422ExplicitTransitionValues));
+                    list.Add(ReadTransitionXml(reader, group, mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder));
             }
             return list.ToArray();
         }
@@ -1284,9 +1376,10 @@ namespace pwiz.Skyline.Model.Serialization
         /// <param name="mods">Explicit mods for the peptide</param>
         /// <param name="isotopeDist">Isotope peak distribution to use for assigning M+N m/z values</param>
         /// <param name="pre422ExplicitTransitionValues">Items that may have been saved at precursor level in older formats</param>
+        /// <param name="crosslinkBuilder">CrosslinkBuilder object that can be shared across all transitions</param>
         /// <returns>A new <see cref="TransitionDocNode"/></returns>
         private TransitionDocNode ReadTransitionXml(XmlReader reader, TransitionGroup group,
-            ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues)
+            ExplicitMods mods, IsotopeDistInfo isotopeDist, ExplicitTransitionValues pre422ExplicitTransitionValues, CrosslinkBuilder crosslinkBuilder)
         {
             TransitionInfo info = new TransitionInfo(this);
 
@@ -1373,15 +1466,35 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             var losses = info.Losses;
-            var mass = Settings.GetFragmentMass(group, mods, transition, isotopeDist);
-
+            
             var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(transition, losses, isotopeDist);
-
             if (group.DecoyMassShift.HasValue && !info.DecoyMassShift.HasValue)
                 throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
-            var node = new TransitionDocNode(transition, info.Annotations, losses,
-                mass, new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, info.LibInfo, info.Quantitative), info.ExplicitValues, info.Results);
+            var quantInfo = new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, info.LibInfo, info.Quantitative);
+
+            TransitionDocNode node;
+            if (mods != null && mods.HasCrosslinks)
+            {
+                ComplexFragmentIon complexFragmentIon = new ComplexFragmentIon(transition, info.Losses, mods.Crosslinks, info.OrphanedCrosslinkIon);
+                foreach (var linkedIon in info.LinkedFragmentIons)
+                {
+                    var linkedPeptide = mods.GetLinkedPeptide(linkedIon.Key);
+                    complexFragmentIon = complexFragmentIon.AddChild(linkedIon.Key,
+                        linkedPeptide.MakeComplexFragmentIon(group.LabelType, linkedIon.Value));
+                }
+
+                node = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, info.Annotations,
+                    quantInfo, info.ExplicitValues, info.Results);
+            }
+            else
+            {
+                var mass = Settings.GetFragmentMass(group, mods, transition, isotopeDist);
+                node = new TransitionDocNode(transition, info.Annotations, losses,
+                    mass, quantInfo, info.ExplicitValues, info.Results);
+            }
+
             ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
+
             return node;
         }
 
