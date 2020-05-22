@@ -76,12 +76,13 @@ namespace pwiz.SkylineTestFunctional
             {
                 peptideSettingsUI.PickedLibraries = peptideSettingsUI.PickedLibraries.Append(libName).ToArray();
             });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-            var messageDlg = WaitForOpenForm<AlertDlg>();
+
+            var messageDlg = ShowDialog<AlertDlg>(peptideSettingsUI.OkDialog);
             var expectedMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_, libName, expectedInvalidCount,
                 expectedTotalCount, string.Empty);
             StringAssert.StartsWith(messageDlg.Message, expectedMessage);
             OkDialog(messageDlg, messageDlg.OkDialog);
+            WaitForClosedForm(peptideSettingsUI);
         }
     }
 }
