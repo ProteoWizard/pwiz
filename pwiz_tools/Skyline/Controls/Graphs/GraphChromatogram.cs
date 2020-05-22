@@ -32,6 +32,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Themes;
@@ -2282,11 +2283,29 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (listTimes.Count > 0)
                         chromGraphPrimary.RetentionMsMs = listTimes.ToArray();
 
-                    if (settings.PeptideSettings.Libraries.HasMidasLibrary)
+                    if (settings.PeptideSettings.Libraries.HasMidasLibrary && _stateProvider.SelectedNode != null)
                     {
-                        chromGraphPrimary.MidasRetentionMsMs = settings.PeptideSettings.Libraries.MidasLibraries.SelectMany(
-                            lib => lib.GetSpectraByPrecursor(chromGraphPrimary.Chromatogram.FilePath, chromGraphPrimary.Chromatogram.PrecursorMz))
-                            .Select(s => s.RetentionTime).ToArray();
+                        PeptideDocNode nodePep = null;
+                        TransitionGroupDocNode nodeTranGroup = null;
+                        switch (_stateProvider.SelectedNode)
+                        {
+                            case TransitionGroupTreeNode treeNodeTranGroup:
+                                nodePep = treeNodeTranGroup.PepNode;
+                                nodeTranGroup = treeNodeTranGroup.DocNode;
+                                break;
+                            case TransitionTreeNode treeNodeTran:
+                                nodePep = treeNodeTran.PepNode;
+                                nodeTranGroup = treeNodeTran.TransitionGroupNode;
+                                break;
+                        }
+
+                        if (nodePep != null && nodeTranGroup != null)
+                        {
+                            var libKey = new LibKey(nodePep.ModifiedTarget, nodeTranGroup.PrecursorCharge);
+                            chromGraphPrimary.MidasRetentionMsMs = settings.PeptideSettings.Libraries.MidasLibraries
+                                .SelectMany(lib => lib.GetSpectraByPeptide(chromGraphPrimary.Chromatogram.FilePath, libKey))
+                                .Select(s => s.RetentionTime).ToArray();
+                        }
                     }
                 }
                 if (Settings.Default.ShowAlignedPeptideIdTimes)

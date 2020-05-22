@@ -997,6 +997,53 @@ namespace pwiz.Skyline.Model.Lib
             _libraryEntries = new LibKeyMap<TInfo>(entryList, entryList.Select(entry=>entry.Key.LibraryKey));
         }
 
+        protected List<TInfo> FilterInvalidLibraryEntries(ref IProgressStatus status, IEnumerable<TInfo> entries)
+        {
+            var validEntries = new List<TInfo>();
+            var invalidKeys = new List<LibKey>();
+            foreach (var entry in entries)
+            {
+                if (!IsValidLibKey(entry.Key))
+                {
+                    invalidKeys.Add(entry.Key);
+                }
+                else
+                {
+                    validEntries.Add(entry);
+                }
+            }
+
+            status = WarnInvalidEntries(status, validEntries.Count, invalidKeys);
+            return validEntries;
+        }
+
+        protected bool IsValidLibKey(LibKey libKey)
+        {
+            try
+            {
+                var unused = libKey.LibraryKey.CreatePeptideIdentityObj();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        protected IProgressStatus WarnInvalidEntries(IProgressStatus progressStatus, int validEntryCount,
+            ICollection<LibKey> invalidEntries)
+        {
+            if (invalidEntries.Count == 0)
+            {
+                return progressStatus;
+            }
+            var invalidText = TextUtil.LineSeparate(invalidEntries.Take(10).Select(key => key.ToString()));
+            string warningMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_,
+                Name, invalidEntries.Count, invalidEntries.Count + validEntryCount, invalidText);
+            progressStatus = progressStatus.ChangeWarningMessage(warningMessage);
+            return progressStatus;
+        }
+
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
         {
             var index = FindEntry(key);

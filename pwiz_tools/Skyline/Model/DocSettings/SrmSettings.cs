@@ -328,11 +328,17 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public TypedMass GetFragmentMass(TransitionGroup group, ExplicitMods mods,
-                                      Transition transition, IsotopeDistInfo isotopeDist)
+            Transition transition, IsotopeDistInfo isotopeDist)
         {
+            Assume.IsTrue(mods == null || !mods.HasCrosslinks, @"Use ComplexFragmentIon.GetFragmentMass");
             // Return the singly protonated mass (massH) of the peptide fragment, or custom molecule mass before electron removal
-            var labelType = group==null ? IsotopeLabelType.light : group.LabelType;
+            var labelType = group == null ? IsotopeLabelType.light : group.LabelType;
+            return GetSimpleFragmentMass(labelType, mods, transition, isotopeDist);
+        }
 
+        private TypedMass GetSimpleFragmentMass(IsotopeLabelType labelType, ExplicitMods mods, Transition transition,
+            IsotopeDistInfo isotopeDist)
+        {
             IFragmentMassCalc calc;
             if (transition.IsNonReporterCustomIon())
             {
@@ -346,11 +352,24 @@ namespace pwiz.Skyline.Model.DocSettings
             if (calc == null)
             {
                 Assume.Fail(string.Format(@"Unable to locate fragment calculator for isotope label type {0} and mods {1}",
-                        labelType == null ? @"(null)" : labelType.ToString(),
-                        mods == null ? @"(null)" : mods.ToString()));
+                    labelType == null ? @"(null)" : labelType.ToString(),
+                    mods == null ? @"(null)" : mods.ToString()));
                 return TypedMass.ZERO_MONO_MASSH;   // Keep resharper happy
             }
             return calc.GetFragmentMass(transition, isotopeDist);
+
+        }
+
+        public TypedMass RecalculateTransitionMass(ExplicitMods explicitMods, TransitionDocNode transition,
+            IsotopeDistInfo isotopeDist)
+        {
+            if (explicitMods == null || !explicitMods.HasCrosslinks)
+            {
+                return GetSimpleFragmentMass(transition.Transition.Group.LabelType, explicitMods, transition.Transition,
+                    isotopeDist);
+            }
+
+            return transition.ComplexFragmentIon.GetFragmentMass(this, explicitMods);
         }
 
         public ChromSource GetChromSource(TransitionDocNode nodeTran)
@@ -367,6 +386,15 @@ namespace pwiz.Skyline.Model.DocSettings
                                           SequenceModFormatType format = SequenceModFormatType.full_precision,
                                           bool useExplicitModsOnly = false)
         {
+            if (mods != null && mods.HasCrosslinks)
+            {
+                var modifiedSequence = ModifiedSequence.GetModifiedSequence(this, seq.Sequence, mods, labelType)
+                    .ReplaceCrosslinksWithMasses(this, labelType);
+                string strModifiedSequence = TransitionSettings.Prediction.PrecursorMassType.IsMonoisotopic()
+                    ? modifiedSequence.MonoisotopicMasses
+                    : modifiedSequence.AverageMasses;
+                return new Target(strModifiedSequence);
+            }
             return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, format, useExplicitModsOnly);
         }
 

@@ -672,7 +672,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
 
-                var setLibKeys = new Dictionary<LibKey, bool>(rows);
+                var setLibKeys = new HashSet<LibKey>(rows);
                 var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
                 var librarySourceFiles = new List<BiblioLiteSourceInfo>();
 
@@ -770,19 +770,21 @@ namespace pwiz.Skyline.Model.Lib
                         }
                         // These libraries should not have duplicates, but just in case.
                         // CONSIDER: Emit error about redundancy?
-                        if (!setLibKeys.ContainsKey(key))
+                        if (setLibKeys.Add(key))
                         {
-                            setLibKeys.Add(key, true);
                             string scoreName = null;
                             if (scoreType.HasValue)
                             {
                                 scoreTypesById.TryGetValue(scoreType.Value, out scoreName);
                             }
+
                             libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id,
                                 retentionTimesByFileId, driftTimesByFileId, peakBoundariesByFileId, score, scoreName));
                         }
                     }
                 }
+
+                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries);
 
                 if (schemaVer > 0)
                 {

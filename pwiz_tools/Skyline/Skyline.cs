@@ -2273,7 +2273,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    using (var dlg = new EditPepModsDlg(DocumentUI.Settings, nodePep))
+                    using (var dlg = new EditPepModsDlg(DocumentUI.Settings, nodePep, true))
                     {
                         dlg.Height = Math.Min(dlg.Height, Screen.FromControl(this).WorkingArea.Height);
                         if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -5133,6 +5133,10 @@ namespace pwiz.Skyline
 
                 // Update the progress UI immediately
                 UpdateProgressUI();
+            }
+            if (!string.IsNullOrEmpty(e.Progress.WarningMessage))
+            {
+                MessageDlg.Show(this, e.Progress.WarningMessage);
             }
         }
 
