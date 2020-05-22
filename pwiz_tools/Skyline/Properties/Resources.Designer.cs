@@ -2959,6 +2959,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid entries were found in the library &apos;{0}&apos;.
+        ///{1} of the {2} peptides or molecules were invalid, including:
+        ///{3}.
+        /// </summary>
+        public static string CachedLibrary_WarnInvalidEntries_ {
+            get {
+                return ResourceManager.GetString("CachedLibrary_WarnInvalidEntries_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Start value must be less than End value..
         /// </summary>
         public static string CalculateIsolationSchemeDlg_OkDialog_Start_value_must_be_less_than_End_value {
@@ -9862,6 +9873,26 @@ namespace pwiz.Skyline.Properties {
         public static string EditLibraryDlg_OkDialog_The_path__0__is_a_directory {
             get {
                 return ResourceManager.GetString("EditLibraryDlg_OkDialog_The_path__0__is_a_directory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap EditLink {
+            get {
+                object obj = ResourceManager.GetObject("EditLink", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The crosslinker &apos;{0}&apos; cannot attach to the amino acid &apos;{1}&apos;..
+        /// </summary>
+        public static string EditLinkedPeptideDlg_TryMakeLinkedPeptide_The_crosslinker___0___cannot_attach_to_the_amino_acid___1___ {
+            get {
+                return ResourceManager.GetString("EditLinkedPeptideDlg_TryMakeLinkedPeptide_The_crosslinker___0___cannot_attach_to_" +
+                        "the_amino_acid___1___", resourceCulture);
             }
         }
         

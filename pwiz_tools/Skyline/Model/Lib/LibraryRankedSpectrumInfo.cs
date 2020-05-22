@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -211,7 +212,7 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public class MatchedFragmentIon
+    public class MatchedFragmentIon : Immutable
     {
         public MatchedFragmentIon(IonType ionType, int ordinal, Adduct charge, string fragmentName, TransitionLosses losses, double predictedMz)
         {
@@ -234,5 +235,17 @@ namespace pwiz.Skyline.Model.Lib
         public double PredictedMz { get; private set; }
 
         public string FragmentName { get; private set; } // For small molecules
+
+        public ComplexFragmentIonName ComplexFragmentIonName { get; private set; }
+
+        public MatchedFragmentIon ChangeComplexFragmentIonName(ComplexFragmentIonName complexFragmentIonName)
+        {
+            return ChangeProp(ImClone(this), im => im.ComplexFragmentIonName = complexFragmentIonName);
+        }
+
+        public MatchedFragmentIon ChangePredictedMz(double predictedMz)
+        {
+            return ChangeProp(ImClone(this), im => im.PredictedMz = predictedMz);
+        }
     }
 }

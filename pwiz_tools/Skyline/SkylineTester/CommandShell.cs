@@ -57,11 +57,13 @@ namespace SkylineTester
 
         private string _workingDirectory;
         private readonly List<string> _commands = new List<string>();
+        private readonly HashSet<string> _commandsWithRetry = new HashSet<string>();
         private Action<bool> _doneAction;
         private Action _restartAction;
         private readonly StringBuilder _logBuffer = new StringBuilder();
         private bool _logEmpty;
         private Process _process;
+        private bool _restartOnProcessFailure;
         private string _processName;
         private bool _processKilled;
         private Timer _outputTimer;
@@ -78,6 +80,13 @@ namespace SkylineTester
         {
             _commands.Add(command.With(args));
             return _commands.Count - 1;
+        }
+
+        public int AddWithRetry(string command, params object[] args)
+        {
+            var result = Add(command, args);
+            _commandsWithRetry.Add(_commands[result]);
+            return result;
         }
 
         public void AddImmediate(string command, params object[] args)
@@ -221,6 +230,7 @@ namespace SkylineTester
                 // Run a command in a separate process.
                 else
                 {
+                    _restartOnProcessFailure = _commandsWithRetry.Contains(line);
                     try
                     {
                         StartProcess(
@@ -234,7 +244,7 @@ namespace SkylineTester
                             Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! Command not found " + command);
                         else
                             Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! " + e);
-                        CommandsDone(EXIT_TYPE.error_stop);    // Quit if any command fails
+                        CommandsDone(_restartOnProcessFailure ? EXIT_TYPE.error_restart : EXIT_TYPE.error_stop);    // Quit if any command fails
                     }
                     _workingDirectory = DefaultDirectory;
                     return;
@@ -466,7 +476,7 @@ namespace SkylineTester
                 {
                     if (!processKilled)
                         Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + exitCode + Environment.NewLine);
-                    RunUI(() => CommandsDone(EXIT_TYPE.error_stop));
+                    RunUI(() => CommandsDone(_restartOnProcessFailure && !processKilled ? EXIT_TYPE.error_restart : EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause
                 catch (Exception)

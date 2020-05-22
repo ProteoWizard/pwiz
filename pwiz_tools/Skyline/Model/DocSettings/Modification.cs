@@ -25,6 +25,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -345,6 +346,8 @@ namespace pwiz.Skyline.Model.DocSettings
         private readonly int? _precisionRequired;
         public int PrecisionRequired { get { return _precisionRequired ?? 1; }}
 
+        public CrosslinkerSettings CrosslinkerSettings { get; private set; }
+
         #region Property change methods
 
         public StaticMod ChangeExplicit(bool prop)
@@ -401,7 +404,16 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             return result;
         }
+        public StaticMod ChangeCrosslinkerSettings(CrosslinkerSettings crosslinkerSettings)
+        {
+            return ChangeProp(ImClone(this), im => im.CrosslinkerSettings = crosslinkerSettings);
+        }
 
+        [Track(defaultValues:typeof(DefaultValuesFalse))]
+        bool IsCrosslinker
+        {
+            get { return null != CrosslinkerSettings; }
+        }
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -436,6 +448,11 @@ namespace pwiz.Skyline.Model.DocSettings
 //            label_37Cl,
 //            label_81Br,
 // ReSharper restore InconsistentNaming
+        }
+
+        private enum EL
+        {
+            crosslinker
         }
 
         private void Validate()
@@ -560,14 +577,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
             ShortName = reader.GetAttribute(ATTR.short_name);
 
+            bool empty = reader.IsEmptyElement;
             // Consume tag
             reader.Read();
-
-            var listLosses = new List<FragmentLoss>();
-            reader.ReadElements(listLosses);
-            if (listLosses.Count > 0)
+            if (!empty)
             {
-                Losses = listLosses.ToArray();
+                var listLosses = new List<FragmentLoss>();
+                reader.ReadElements(listLosses);
+                if (listLosses.Count > 0)
+                {
+                    Losses = listLosses.ToArray();
+                }
+
+                if (reader.IsStartElement(EL.crosslinker))
+                {
+                    CrosslinkerSettings = CrosslinkerSettings.EMPTY;
+                    reader.Read();
+                }
                 reader.ReadEndElement();
             }
 
@@ -604,6 +630,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
             if (Losses != null)
                 writer.WriteElements(Losses);
+            if (CrosslinkerSettings != null)
+            {
+                writer.WriteStartElement(EL.crosslinker);
+                writer.WriteEndElement();
+            }
         }
 
         #endregion
@@ -633,7 +664,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 !obj.Terminus.Equals(Terminus) ||
                 !obj.AverageMass.Equals(AverageMass) ||
                 !obj.MonoisotopicMass.Equals(MonoisotopicMass) ||
-                !Equals(obj.RelativeRT, RelativeRT))
+                !Equals(obj.RelativeRT, RelativeRT) ||
+                !Equals(obj.CrosslinkerSettings, CrosslinkerSettings))
             {
                 return false;
             }
@@ -752,6 +784,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (MonoisotopicMass.HasValue ? MonoisotopicMass.Value.GetHashCode() : 0);
                 result = (result*397) ^ (_losses != null ? _losses.GetHashCodeDeep() : 0);
                 result = (result*397) ^ (ShortName != null ? ShortName.GetHashCode() : 0);
+                result = (result*397) ^ (CrosslinkerSettings != null ? CrosslinkerSettings.GetHashCode() : 0);
                 return result;
             }
         }
@@ -856,6 +889,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 modifications.AddRange(heavyMods);
             }
             _modifications = MakeReadOnly(modifications.ToArray());
+            Crosslinks = GetLinkedPeptides(StaticModifications);
         }
 
         /// <summary>
@@ -900,6 +934,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 modifications.Add(typedHeavyMods.AddModMasses(staticTypedMods));
             }
             _modifications = MakeReadOnly(modifications.ToArray());
+            Crosslinks = GetLinkedPeptides(StaticModifications);
         }
 
         private static IList<ExplicitMod> MergeExplicitMods(IList<ExplicitMod> modsPrimary,
@@ -1000,6 +1035,41 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return GetModifications(IsotopeLabelType.heavy); }
         }
 
+        public ImmutableSortedList<ModificationSite, LinkedPeptide> Crosslinks
+        {
+            get; private set;
+        }
+
+        public bool HasCrosslinks
+        {
+            get { return Crosslinks.Any(); }
+        }
+
+        public bool HasMultipleCrosslinks
+        {
+            get
+            {
+                if (Crosslinks.Count == 1)
+                {
+                    var linkedPeptide = Crosslinks.Values[0];
+                    return linkedPeptide.ExplicitMods != null && linkedPeptide.ExplicitMods.HasMultipleCrosslinks;
+                }
+
+                return Crosslinks.Count > 1;
+            }
+        }
+
+        public LinkedPeptide GetLinkedPeptide(ModificationSite modificationSite)
+        {
+            LinkedPeptide linkedPeptide;
+            if (!Crosslinks.TryGetValue(modificationSite, out linkedPeptide))
+            {
+                throw new ArgumentException(@"No linked peptide found at site " + modificationSite);
+            }
+
+            return linkedPeptide;
+        }
+
         public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)
         {
             int index = GetModIndex(labelType);
@@ -1095,11 +1165,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 modifications.Add(typedHeavyMods);                
             }
+
             if (ArrayUtil.ReferencesEqual(modifications, _modifications))
                 return this;
             if (modifications.Count == 0)
                 return null;
-            return ChangeProp(ImClone(this), im => im._modifications = MakeReadOnly(modifications));
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._modifications = ImmutableList.ValueOf(modifications);
+            });
         }
 
         /// <summary>
@@ -1209,6 +1283,17 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        private static ImmutableSortedList<ModificationSite, LinkedPeptide> GetLinkedPeptides(
+            IEnumerable<ExplicitMod> explicitMods)
+        {
+            if (explicitMods == null)
+            {
+                return ImmutableSortedList<ModificationSite, LinkedPeptide>.EMPTY;
+            }
+            return ImmutableSortedList.FromValues(explicitMods.Where(mod => null != mod.LinkedPeptide)
+                .Select(mod => new KeyValuePair<ModificationSite, LinkedPeptide>(mod.ModificationSite, mod.LinkedPeptide)));
+        }
     }
 
     public sealed class ExplicitMod : Immutable
@@ -1218,7 +1303,7 @@ namespace pwiz.Skyline.Model.DocSettings
             IndexAA = indexAA;
             // In the document context, all static non-variable mods must have the explicit
             // flag off to behave correctly for equality checks.  Only in the
-            // settings context is the explicit flag necessary to destinguish
+            // settings context is the explicit flag necessary to distinguish
             // between the global implicit modifications and the explicit modifications
             // which do not apply to everything.
             if (modification.IsUserSet)
@@ -1229,6 +1314,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public int IndexAA { get; private set; }
         public StaticMod Modification { get; private set; }
 
+        public LinkedPeptide LinkedPeptide { get; private set; }
+
+        public ModificationSite ModificationSite
+        {
+            get { return new ModificationSite(IndexAA, Modification.Name); }
+        }
+
         #region Property change methods
 
         public ExplicitMod ChangeModification(StaticMod prop)
@@ -1236,6 +1328,11 @@ namespace pwiz.Skyline.Model.DocSettings
             if (prop.IsExplicit)
                 prop = prop.ChangeExplicit(false);
             return ChangeProp(ImClone(this), (im, v) => im.Modification = v, prop);
+        }
+
+        public ExplicitMod ChangeLinkedPeptide(LinkedPeptide linkedPeptide)
+        {
+            return ChangeProp(ImClone(this), im => im.LinkedPeptide = linkedPeptide);
         }
 
         #endregion
@@ -1247,7 +1344,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return obj.IndexAA == IndexAA &&
-                Equals(obj.Modification, Modification);
+                Equals(obj.Modification, Modification) &&
+                Equals(obj.LinkedPeptide, LinkedPeptide);
         }
 
         public override bool Equals(object obj)
@@ -1264,6 +1362,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int result = IndexAA;
                 result = (result*397) ^ Modification.GetHashCode();
+                result = (result * 397) ^ (LinkedPeptide == null ? 0 : LinkedPeptide.GetHashCode());
                 return result;
             }
         }
@@ -1281,6 +1380,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren(ignoreName: true)]
         public ExplicitMod ExplicitMod { get; private set; }
+
+        [TrackChildren(defaultValues:typeof(DefaultValuesNull))]
+        public LinkedPeptide LinkedPeptide
+        {
+            get { return ExplicitMod.LinkedPeptide; }
+        }
 
         public string PeptideSequence { get; private set; }
 
