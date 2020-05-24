@@ -124,12 +124,12 @@ namespace pwiz.Skyline.Model.MSAmanda
             get { return Properties.Resources.MSAmandaLogo; }
         }
 
-        public override void SetMS1Tolerance(double mass, string unit)
+        public override void SetPrecursorMassTolerance(double mass, string unit)
         {
             SetTolerance(mass, unit, true);
         }
 
-        public override void SetMS2Tolerance(double mass, string unit)
+        public override void SetFragmentIonMassTolerance(double mass, string unit)
         {
             SetTolerance(mass, unit, false);
         }
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.MSAmanda
         }
 
 
-        private void InitializeEngine(CancellationTokenSource token)
+        private void InitializeEngine(CancellationTokenSource token, string spectrumFileName)
         {
             _outputParameters = new OutputParameters();
             _outputParameters.DBFile = FastaFileNames[0];
@@ -167,7 +167,8 @@ namespace pwiz.Skyline.Model.MSAmanda
             //2 == mzid
             _outputParameters.SetOutputFileFormat(2);
             _outputParameters.IsPercolatorOutput = true;
-            _outputParameters.SpectraFiles = SpectrumFileNames.ToList();
+            //_outputParameters.SpectraFiles = SpectrumFileNames.ToList();
+            _outputParameters.SpectraFiles = new List<string>() { spectrumFileName};
             Settings.GenerateDecoyDb = true;
             Settings.ConsideredCharges.Clear();
             Settings.ConsideredCharges.Add(2);
@@ -235,10 +236,11 @@ namespace pwiz.Skyline.Model.MSAmanda
         {
             try
             {
-                InitializeEngine(tokenSource);
+                
                 List<Spectrum> spectra = new List<Spectrum>();
                 foreach (string rawFileName in SpectrumFileNames)
                 {
+                    InitializeEngine(tokenSource, rawFileName);
                     if (tokenSource.Token.IsCancellationRequested)
                     {
                         

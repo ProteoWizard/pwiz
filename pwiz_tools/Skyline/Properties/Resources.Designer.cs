@@ -14371,6 +14371,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A FASTA file is required for the DDA search..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Finish.
         /// </summary>
         public static string ImportPeptideSearchDlg_NextPage_Finish {
@@ -14385,6 +14394,15 @@ namespace pwiz.Skyline.Properties {
         public static string ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_ {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import FASTA (required).
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_Import_FASTA__required_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Import_FASTA__required_", resourceCulture);
             }
         }
         
@@ -17037,6 +17055,15 @@ namespace pwiz.Skyline.Properties {
         public static string MatchModificationsControl_AddModification_Add__0__modification__1_ {
             get {
                 return ResourceManager.GetString("MatchModificationsControl_AddModification_Add__0__modification__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify all modifications you want to include in the search:.
+        /// </summary>
+        public static string MatchModificationsControl_ModificationLabelText_DDA_Search {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_ModificationLabelText_DDA_Search", resourceCulture);
             }
         }
         

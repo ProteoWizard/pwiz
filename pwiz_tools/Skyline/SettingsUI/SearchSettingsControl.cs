@@ -187,7 +187,7 @@ namespace pwiz.Skyline.SettingsUI
                     "MS1 tolerance unit must be selected");
                 return false;
             }
-            ImportPeptideSearch.SearchEngine.SetMS1Tolerance(ms1Tol, ms1Unit);
+            ImportPeptideSearch.SearchEngine.SetPrecursorMassTolerance(ms1Tol, ms1Unit);
 
             double ms2Tol;
             if (!helper.ValidateDecimalTextBox(txtMS2Tolerance, 0, 100, out ms2Tol))
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.SettingsUI
                     "MS2 tolerance unit must be selected");
                 return false;
             }
-            ImportPeptideSearch.SearchEngine.SetMS2Tolerance(ms2Tol, ms2Unit);
+            ImportPeptideSearch.SearchEngine.SetFragmentIonMassTolerance(ms2Tol, ms2Unit);
 
             string fragmentIons;
             if (!ValidateCombobox(cbFragmentIons, out fragmentIons))

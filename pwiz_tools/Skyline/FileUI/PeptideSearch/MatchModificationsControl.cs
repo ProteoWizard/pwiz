@@ -122,7 +122,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             if (!ImportPeptideSearch.HasDocLib && !ImportPeptideSearch.IsDDASearch)
                 return false;
-
+            if (ImportPeptideSearch.IsDDASearch)
+              labelModifications.Text = Resources.MatchModificationsControl_ModificationLabelText_DDA_Search;
+        
             ImportPeptideSearch.InitializeModifications(document);
             FillLists(document);
             return modificationsListBox.Items.Count > 1 || unmatchedListBox.Items.Count > 1;

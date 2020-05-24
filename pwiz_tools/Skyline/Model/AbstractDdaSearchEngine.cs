@@ -17,8 +17,8 @@ namespace pwiz.Skyline.Model
         protected string[] SpectrumFileNames { get; set; }
         protected string[] FastaFileNames { get; set; }
 
-        public abstract void SetMS1Tolerance(double mass, string unit);
-        public abstract void SetMS2Tolerance(double mass, string unit);
+        public abstract void SetPrecursorMassTolerance(double mass, string unit);
+        public abstract void SetFragmentIonMassTolerance(double mass, string unit);
         public abstract void SetFragmentIons(string ions);
         public abstract void SetEnzyme(Enzyme enzyme, int maxMissedCleavages);
 

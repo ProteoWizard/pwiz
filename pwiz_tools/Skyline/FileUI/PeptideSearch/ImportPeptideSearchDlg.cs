@@ -428,10 +428,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         // did not, so hide the "early finish" button for
                         // the rest of the wizard pages.
                         ShowEarlyFinish(false);
-
-                        if (FastaOptional)
+                        
+                        if (BuildPepSearchLibControl.PerformDDASearch) {
+                            lblFasta.Text = Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__required_;
+                        } else if (FastaOptional)
                             lblFasta.Text = Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_;
-
+                        
                         // The next page is going to be the chromatograms page.
                         var oldImportResultsControl = (ImportResultsControl) ImportResultsControl;
 
@@ -561,6 +563,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)
                     if (ImportPeptideSearch.IsDDASearch)
                     {
+                        if (!ImportFastaControl.ContainsFastaContent) 
+                        {
+                            MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch,
+                                Program.Name, MessageBoxButtons.OK);
+                            
+                                return;
+                            
+                        }
                        
                         SearchSettingsControl.LoadModifications();
                         break;
@@ -588,22 +598,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
                 case Pages.dda_search_page: // this is really the last page
                                             //todo check if search was correct
-                                            //todo calculate library
                     var eCancel2 = new CancelEventArgs();
-                    var origName = BuildPepSearchLibControl.SearchFilenames[0];
+                    //change search files to result files
+                    for (int i = 0; i < BuildPepSearchLibControl.SearchFilenames.Length; ++i) { 
+                      var origName = BuildPepSearchLibControl.SearchFilenames[i];
                 
-                    var outFilePath = Path.GetFileNameWithoutExtension(origName) + ".mzid";
-                    BuildPepSearchLibControl.SearchFilenames[0] = Path.Combine(Path.GetDirectoryName(BuildPepSearchLibControl.SearchFilenames[0]), outFilePath);
-                    BuildPepSearchLibControl.PerformDDASearch = false;
-                    ImportPeptideSearch.SearchFilenames[0] = BuildPepSearchLibControl.SearchFilenames[0];
-                    ImportPeptideSearch.SpectrumSourceFiles.Clear();
-                    ImportPeptideSearch.SpectrumSourceFiles.Add(BuildPepSearchLibControl.SearchFilenames[0], new ImportPeptideSearch.FoundResultsFilePossibilities(origName) { ExactMatch = origName });
+                      var outFilePath = Path.GetFileNameWithoutExtension(origName) + ".mzid";
+                      BuildPepSearchLibControl.SearchFilenames[i] = Path.Combine(Path.GetDirectoryName(BuildPepSearchLibControl.SearchFilenames[i]), outFilePath);
+                      BuildPepSearchLibControl.PerformDDASearch = false;
+                      ImportPeptideSearch.SearchFilenames[i] = BuildPepSearchLibControl.SearchFilenames[i];
+                      ImportPeptideSearch.SpectrumSourceFiles.Clear();
+                      ImportPeptideSearch.SpectrumSourceFiles.Add(BuildPepSearchLibControl.SearchFilenames[i], new ImportPeptideSearch.FoundResultsFilePossibilities(origName) { ExactMatch = origName });
+                    }
                     if (!BuildPeptideSearchLibrary(eCancel2)) {
                       // Page shows error
                       if (eCancel2.Cancel)
                         return;
                       CloseWizard(DialogResult.Cancel);
                     }
+                    //todo ask for modifications 
+
                     //fasta file necessary
                     //load proteins after search
                     if (!ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
@@ -683,7 +697,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.dda_search_settings_page:
                     btnNext.Enabled = true;
                     break;
-            }
+                case Pages.dda_search_page:
+                    SearchControl.OnSearchFinished -= SearchControl_OnSearchFinished;
+                    break;
+      }
         }
 
         private void UpdateButtons()
