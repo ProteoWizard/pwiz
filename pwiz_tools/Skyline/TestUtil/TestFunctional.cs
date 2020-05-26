@@ -921,7 +921,7 @@ namespace pwiz.SkylineTestUtil
 
         public bool IsPauseForScreenShots
         {
-            get { return _isPauseForScreenShots || Program.PauseSeconds < 0; }
+            get { return _isPauseForScreenShots || Program.PauseSeconds == -1; }
             set
             {
                 _isPauseForScreenShots = value;
@@ -932,7 +932,20 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public bool IsPauseForCoverShot { get; set; }
+        private static bool _isPauseForCoverShot;
+
+        public bool IsPauseForCoverShot
+        {
+            get { return _isPauseForCoverShot || Program.PauseSeconds == -2; }
+            set
+            {
+                _isPauseForCoverShot = value;
+                if (_isPauseForCoverShot)
+                {
+                    Program.PauseSeconds = -2;
+                }
+            }
+        }
 
         public int PauseStartPage { get; set; }
 
@@ -1009,12 +1022,18 @@ namespace pwiz.SkylineTestUtil
                 formSeen.Saw(formType);
                 bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
 
-                PauseAndContinueForm.Show(description, LinkPage(pageNum), showMatchingPages, timeout);
+                PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), LinkPage(pageNum), showMatchingPages, timeout);
             }
             else
             {
                 PauseForForm(formType);
             }
+        }
+
+        public void PauseForCoverShot()
+        {
+            // TODO: Use the ScreenshotManager in master branch to put the screenshot on the clipboard
+            PauseTest("Cover shot at 1200 x 800");
         }
 
         public void PauseForAuditLog()

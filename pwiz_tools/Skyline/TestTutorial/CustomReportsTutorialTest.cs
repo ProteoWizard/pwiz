@@ -52,7 +52,8 @@ namespace pwiz.SkylineTestTutorial
         public void TestCustomReportsTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/CustomReports-2_5.pdf";
 
@@ -97,8 +98,8 @@ namespace pwiz.SkylineTestTutorial
             DoCreatingASimpleReport();
             DoExportingReportDataToAFile();
             DoSharingManagingModifyingReportTemplates();
-            DoQualityControlSummaryReports();
-            DoResultsGridView();
+            if (DoQualityControlSummaryReports())
+                DoResultsGridView();
         }
 
 
@@ -198,7 +199,7 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(manageViewsForm, manageViewsForm.Close); // Not L10N
             }
 
-            // Managing Report Templayes in Skyline, p. 10
+            // Managing Report Templates in Skyline, p. 10
             var editReportListDlg0 = ShowDialog<ManageViewsForm>(exportReportDlg1.EditList);
             RunUI(() => editReportListDlg0.SelectView(customReportName));
             PauseForScreenShot<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>("Edit Reports form", 12);   // p. 11
@@ -317,7 +318,7 @@ namespace pwiz.SkylineTestTutorial
 
             OkDialog(exportReportDlg1, exportReportDlg1.CancelClick);
         }
-        protected void DoQualityControlSummaryReports()
+        protected bool DoQualityControlSummaryReports()
         {
             // Quality Control Summary Reports, p. 18
             RunUI(() =>
@@ -339,6 +340,35 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => documentGridForm.ChooseView("Summary Statistics"));
             WaitForConditionUI(() => documentGridForm.IsComplete);
             PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 20);
+
+            if (IsPauseForCoverShot)
+            {
+                RestoreCoverViewOnScreen();
+                var documentGridFormCover = WaitForOpenForm<DocumentGridForm>();
+                RunUI(SkylineWindow.AutoZoomBestPeak);
+                WaitForGraphs();
+                var viewEditorCover = ShowDialog<ViewEditor>(documentGridFormCover.NavBar.CustomizeView);
+                RunUI(() =>
+                {
+                    viewEditorCover.Top = SkylineWindow.Top + 10;
+                    viewEditorCover.Width -= 40;
+                    viewEditorCover.Left = SkylineWindow.Right - viewEditorCover.Width;
+                    var columnsExpand = new[]
+                    {
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.MaxFwhm.Cv"),
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.TotalArea.Cv"),
+                        PropertyPath.Parse("Proteins!*"), 
+                    };
+                    foreach (var id in columnsExpand)
+                    {
+                        Assert.IsTrue(viewEditorCover.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                    }
+                });
+                PauseForCoverShot();
+
+                OkDialog(viewEditorCover, viewEditorCover.CancelButton.PerformClick);
+                return false;
+            }
 
             var viewEditor = ShowDialog<ViewEditor>(documentGridForm.NavBar.CustomizeView);
             RunUI(() => Assert.AreEqual(11, viewEditor.ChooseColumnsTab.ColumnCount));
@@ -371,6 +401,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas view", 24);
+            return true;    // Continue subsequent tests
         }
 
         protected void DoResultsGridView()

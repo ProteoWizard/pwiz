@@ -373,8 +373,8 @@ namespace SkylineTester
                     tutorialTests.AddRange(GetTestInfos(tutorialDll, "NoLocalizationAttribute", "Tutorial"));
                 foreach (var test in tutorialTests.ToArray())
                 {
-                    // Remove any tutorial tests we've hacked for small molecule testing - not of interest to localizers
-                    if (test.Contains("AsSmallMolecule"))
+                    // Remove any tutorial tests we've hacked for extra testing (extending test name not to end with Tutorial) - not of interest to localizers
+                    if (!test.EndsWith("Tutorial"))
                         tutorialTests.Remove(test);
                 }
                 var tutorialNodes = new TreeNode[tutorialTests.Count];
@@ -1436,6 +1436,7 @@ namespace SkylineTester
         public SplitContainer   OutputSplitContainer        { get { return outputSplitContainer; } }
         public CheckBox         Pass0                       { get { return pass0; } }
         public CheckBox         Pass1                       { get { return pass1; } }
+        public RadioButton      PauseTutorialsCoverShots   { get { return pauseTutorialsCoverShots; } }
         public RadioButton      PauseTutorialsScreenShots   { get { return pauseTutorialsScreenShots; } }
         public NumericUpDown    PauseTutorialsSeconds       { get { return pauseTutorialsSeconds; } }
         public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }

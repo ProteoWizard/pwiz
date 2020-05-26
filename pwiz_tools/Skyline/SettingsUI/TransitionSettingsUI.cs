@@ -1035,6 +1035,11 @@ namespace pwiz.Skyline.SettingsUI
             FullScanSettingsControl.AddIsolationScheme();
         }
 
+        public void EditCurrentIsolationScheme()
+        {
+            FullScanSettingsControl.EditCurrentIsolationScheme();
+        }
+
         public void EditIsolationScheme()
         {
             FullScanSettingsControl.EditIsolationScheme();

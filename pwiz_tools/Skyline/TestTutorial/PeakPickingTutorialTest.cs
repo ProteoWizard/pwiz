@@ -251,6 +251,25 @@ namespace pwiz.SkylineTestTutorial
                     RemovePeptide(missingPeptides[i], isDecoys[i]);
             }
 
+            if (IsPauseForCoverShot)
+            {
+                RestoreCoverViewOnScreen();
+                var reintegrateDlgCover = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+                var editModelCover = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlgCover.AddPeakScoringModel);
+                RunUI(() =>
+                {
+                    editModelCover.Top = SkylineWindow.Top + 8;
+                    editModelCover.Left = SkylineWindow.Right - editModelCover.Width - 8;
+                    editModelCover.PeakScoringModelName = "SRMCourse";
+                    editModelCover.TrainModelClick();
+                });
+                PauseForCoverShot();
+
+                OkDialog(editModelCover, editModelCover.CancelDialog);
+                OkDialog(reintegrateDlgCover, reintegrateDlgCover.CancelDialog);
+                return;
+            }
+
             var reintegrateDlgNew = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             var editListLibrary = ShowDialog<EditListDlg<SettingsListBase<PeakScoringModelSpec>, PeakScoringModelSpec>>(
                 reintegrateDlgNew.EditPeakScoringModel);

@@ -1239,6 +1239,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             set { textCalculatorName.Text = value; }
         }
 
+        public string CalcPath
+        {
+            get { return textDatabase.Text; }
+            set { textDatabase.Text = value; }
+        }
+
         public void DoPasteStandard()
         {
             _gridViewStandardDriver.OnPaste();
@@ -1360,6 +1366,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     LibraryPeptideList.Remove(libraryPeptide);
                 }
             }
+        }
+
+        public DataGridViewEx GridViewStandard
+        {
+            get { return gridViewStandard; }
         }
     }
 }

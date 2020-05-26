@@ -124,6 +124,12 @@ namespace pwiz.SkylineTestUtil
                         dlg.Left = screen.WorkingArea.Left;
                     }
                 }
+
+                // Make sure the form is on screen
+                if (dlg.Left < screen.WorkingArea.Left)
+                    dlg.Left = screen.WorkingArea.Left;
+                if (dlg.Top < screen.WorkingArea.Top)
+                    dlg.Top = screen.WorkingArea.Left;
                 dlg.Show(parentWindow);
             });
 

@@ -79,6 +79,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             set { textFilePath.Text = value; }
         }
 
+        public void FilePathFocus()
+        {
+            textFilePath.Focus();
+            textFilePath.SelectionStart = textFilePath.Text.Length;
+        }
+
         public void OkDialog()
         {
             if (Source == SpectralLibrarySource.file)

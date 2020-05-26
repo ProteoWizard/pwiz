@@ -411,9 +411,6 @@
   <data name="MissingScoresFinder_Match__0__missing_from_peptide" xml:space="preserve">
     <value>{0}がペプチドから欠損しています</value>
   </data>
-  <data name="StartPage_DIA_Description" xml:space="preserve">
-    <value>データ非依存性取得（DIA）データを利用する実務経験を積み、シリーズ内の同一装置上で取得したDIAおよびDDA実行を活用するワークフローを使用します。DIA単離スキームを定義しエクスポートします。実験のDIA実行の前に取得したDDAデータからスペクトルライブラリを構築します。そのスペクトルライブラリに基づき、タンパク質のターゲットセットのペプチドとトランジションを選択します。関連DIA実行をSkyline内にインポートし分析して、DIAによる作業の開始するためのシンプルなワークフローをマスターします。</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_User_Set" xml:space="preserve">
     <value>ユーザーセット</value>
   </data>
@@ -466,9 +463,6 @@
   <data name="SkylineWindow_ShowReintegrateDialog_The_document_must_have_imported_results_" xml:space="preserve">
     <value>ドキュメントには、インポート結果が必要です。</value>
   </data>
-  <data name="StartPage_getBoxPanels_QuaSAR_Quantitative_Statistics" xml:space="preserve">
-    <value>QuaSAR定量化統計</value>
-  </data>
   <data name="WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation" xml:space="preserve">
     <value>有効なMassLynxのインストールが見つかりませんでした。</value>
   </data>
@@ -489,9 +483,6 @@
   </data>
   <data name="Serializer_ReadHeader_Unsupported_file_version__0_" xml:space="preserve">
     <value>サポートされていないファイルバージョン{0}</value>
-  </data>
-  <data name="StartPage_getBoxPanels_targetedmsms" xml:space="preserve">
-    <value>低解像度Thermo LTQ、高解像度Agilent 6520 Q-TOFで取得されるターゲットMS/MS（並列反応モニタリング-PRMとも呼ばれる）データを用いて、実務作業経験を積みます。プリカーサーを使用するペプチドの定量化と低/高解像度装置で測定される断片イオンの選択度や感度の差異について新しい理解を深めます。クロマトグラフィーベースの定量的プロテオミクス作業用にSkylineが提供する豊富な一連の機能を使用して新しい作業方法を発見し、自分の質量分析データを理解します。</value>
   </data>
   <data name="TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_" xml:space="preserve">
     <value>ファイルID{0}はドキュメント内のどのファイルにも一致しません。</value>
@@ -718,9 +709,6 @@
   <data name="ChromatogramCache_LoadStructs_The_SKYD_file_format__0__is_not_supported_by_Skyline__1__" xml:space="preserve">
     <value>SKYDファイル形式{0}はSkyline{1}ではサポートされていません。</value>
   </data>
-  <data name="LibraryExplorer_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\LibraryExplorer_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="EditRemoteAccountDlg_ValidateValues_Username_cannot_be_blank" xml:space="preserve">
     <value>ユーザー名は空白にできません</value>
   </data>
@@ -938,9 +926,6 @@
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_" xml:space="preserve">
     <value>明示的ドリフト時間高エネルギーオフセット（ミリ秒）</value>
   </data>
-  <data name="MS1Filtering_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\MS1Filtering_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Error_details_can_be_found_at__0_" xml:space="preserve">
     <value>エラー詳細は{0}で確認可能です</value>
   </data>
@@ -994,9 +979,6 @@
   </data>
   <data name="SkylineWindow_EditNote_Edit_Note" xml:space="preserve">
     <value>メモを編集</value>
-  </data>
-  <data name="QuaSAR_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\QuaSAR_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="OverlapDemultiplexer_attempt_to_take_slice_of_deconvolution_matrix_failed_out_of_range" xml:space="preserve">
     <value>範囲外エラーにより、デコンボリューションマトリックスのスライスの取り出しに失敗しました。</value>
@@ -1114,9 +1096,6 @@
   </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_In_Parallel" xml:space="preserve">
     <value>並行</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Targeted_MS_MS__PRM_" xml:space="preserve">
-    <value>ターゲットMS/MS (PRM)</value>
   </data>
   <data name="AnnotationDefList_Title_Define_Annotations" xml:space="preserve">
     <value>注釈を定義</value>
@@ -1519,9 +1498,6 @@
   <data name="LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity" xml:space="preserve">
     <value>総強度</value>
   </data>
-  <data name="StartPage_getBoxPanels_iRT_Retention_Time_Prediction" xml:space="preserve">
-    <value>iRT保持時間予測</value>
-  </data>
   <data name="ExportReportDlg_ExportReport_Failed_exporting_to" xml:space="preserve">
     <value>{0}へのエクスポートに失敗しました。
 {1}</value>
@@ -1643,9 +1619,6 @@
   <data name="PanoramaHelper_ValidateServer_" xml:space="preserve">
     <value>Panoramaサーバー情報を検証しようとした際に不明なエラーが発生しました。
 {0}</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Custom_Reports___Results_Grid" xml:space="preserve">
-    <value>カスタムレポート&amp;結果グリッド</value>
   </data>
   <data name="SkylineViewContext_GetDocumentGridRowSources_Precursors" xml:space="preserve">
     <value>プリカーサー</value>
@@ -1854,9 +1827,6 @@
   <data name="ExportMethodDlg_OkDialog_Isolation_List" xml:space="preserve">
     <value>単離リスト</value>
   </data>
-  <data name="StartPage_getBoxPanels_irt" xml:space="preserve">
-    <value>スケジュール済みの取得やピーク強度検証に対し、保持時間予測に将来使用するためライブラリ内にある校正済みの実験的に測定されたペプチド保持時間の保存テクニックをiRTを使用して実務経験を積みます。このチュートリアルでは、自分のiRTカルキュレータを校正し、さらにiRTキットのペプチド標準に対し、Biognosysが提案するiRT-C18校正について学びます。SRMデータ、探索実験のMS1スキャンからフィルタされたスペクトルライブラリやクロマトグラムピークから新しいiRT値を校正します。また、新しいグラジエントを用いて新しい列でSRM取得をスケジュールするために、これらのiRTの再校正方法も学びます。クロマトグラムピーク強度検証においてさらに信頼性を高めるiRTに基づき、より正確な保持時間予測を確認できます。</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Ratio_Dot_Product" xml:space="preserve">
     <value>比率内積</value>
   </data>
@@ -1883,9 +1853,6 @@
   </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides__0__" xml:space="preserve">
     <value>ユニークペプチド：{0}</value>
-  </data>
-  <data name="TargetedMSMS_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\TargetedMSMS_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PeptideGroupTreeNode_Heading_Protein" xml:space="preserve">
     <value>タンパク質</value>
@@ -2085,9 +2052,6 @@
   <data name="CommandLine_ExportChromatograms_Exporting_chromatograms_file__0____" xml:space="preserve">
     <value>クロマトグラムファイル{0}をエクスポート中...</value>
   </data>
-  <data name="StartPage_getBoxPanels_Targeted_Method_Refinement" xml:space="preserve">
-    <value>ターゲットメソッドの最適化</value>
-  </data>
   <data name="ReportSpec_ReadXml_The_name__0__is_not_a_valid_table_name" xml:space="preserve">
     <value>「{0}」という名前は有効な表名ではありません。</value>
   </data>
@@ -2135,9 +2099,6 @@
   </data>
   <data name="PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number_" xml:space="preserve">
     <value>プロダクトm/zは数字でなければなりません。</value>
-  </data>
-  <data name="StartPage_getBoxPanels_peakpicking" xml:space="preserve">
-    <value>Skylineのクロマトグラムピークを伴う一致するターゲットペプチドに対する詳細モデルの作成やテストについて学びます。Skylineの2.5リリースでは、mProphet半教師付き学習アルゴリズムを使用し、個別のピークスコアの一時結合作成をサポートします。 このチュートリアルでは、デコイペプチドやトランジションの生成、mProphetスコアモデルの作成やアクセス、SRM、DIA/SWATHデータ両方におけるSkylineクロマトグラムピーク選択への適用について学びます。 q値（調整p値、FDRに基づく）に割り当てられたmProphet、選択ピークの関連付け方法、カスタムレポートへのエクスポート方法について学びます。</value>
   </data>
   <data name="Molecule" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Molecule.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -2500,9 +2461,6 @@
   </data>
   <data name="Icojam-Blueberry-Basic-Arrow-left" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icojam-Blueberry-Basic-Arrow-left.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="StartPage_getBoxPanels_MS1_Full_Scan_Filtering" xml:space="preserve">
-    <value>MS1フルスキャンフィルタ</value>
   </data>
   <data name="DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_" xml:space="preserve">
     <value>データ行を表示中にエラーが発生しました：</value>
@@ -2938,9 +2896,6 @@
   <data name="ExPeptideRowReaderCreateCheck_the_Modifications_tab_in_Transition_Settings" xml:space="preserve">
     <value>トランジション設定の修飾タブを確認します。</value>
   </data>
-  <data name="StartPage_getBoxPanels_ms1filtering" xml:space="preserve">
-    <value>データ依存取得 (DDA) 実験からMS1スキャンを使用するペプチド式で定量的差異を測定するためにSkylineドキュメント作成の実務経験を積みます。このチュートリアルでは、探索データセットからのスペクトルライブラリの生成、MS1フィルタ用のSkylineドキュメントの設定、MS/MSペプチド同定により導かれるピーク選択を用いたMS1スキャンからプリカーサ－イオンクロマトグラムを抽出するための質量分析計生データのインポート、さらにSkylineでの結果定量的データの処理を行ないます。探索データセットのラベルフリーの定量的分析に興味がある場合、このチュートリアルが検査用の新しいツールセットを提供します。</value>
-  </data>
   <data name="EditStaticModDlg_OkDialog_Unimod" xml:space="preserve">
     <value>Unimod</value>
   </data>
@@ -3034,9 +2989,6 @@
   </data>
   <data name="ChooseSchedulingReplicatesDlg_btnOk_Click_You_must_choose_at_least_one_replicate" xml:space="preserve">
     <value>1つ以上の繰り返し測定を選択しなければなりません</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Advanced_Peak_Picking_Models" xml:space="preserve">
-    <value>詳細ピーク選択モデル</value>
   </data>
   <data name="ExportMethodDlg_DWELL_TIME_TXT" xml:space="preserve">
     <value>ドウェル時間 (ms)(&amp;D)：</value>
@@ -3207,9 +3159,6 @@
   </data>
   <data name="SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
     <value>以下の修飾にUnimod定義を使用しますか？</value>
-  </data>
-  <data name="StartPage_getBoxPanels_customreports" xml:space="preserve">
-    <value>Skylineドキュメントから広範な値の表示、編集、エクスポートを行なうことのできるSkylineのカスタムライブレポートを使用し、実務作業経験を積みます。これらのレポートはExcelでの使用に最適であり、またSkylineを用いた装置出力処理後、ディープ統計分析を行なうためにカスタムコードを使用してR、Matlab、Java、C++、その他の言語で書かれています。またSkyline結果グリッドビューを使用するこれらの値へのアクセスの取得方法、Skylineでデータの検査中にカスタム注釈の追加方法について学びます。このチュートリアルに従うことで、Skylineを使用して実現可能な実験の範囲が格段に広がります。</value>
   </data>
   <data name="EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist" xml:space="preserve">
     <value>サーバー{0}が存在していません。</value>
@@ -3588,9 +3537,6 @@
   <data name="WindowType_EXTRACTION_Extraction" xml:space="preserve">
     <value>抽出</value>
   </data>
-  <data name="MethodEdit_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\MethodEdit_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="ComparePeakBoundaries_GenerateComparison_Missing_q_value_for_peptide__0__of_file__1_" xml:space="preserve">
     <value>ファイル{1}のペプチド{0}に対する欠損したq値</value>
   </data>
@@ -3710,9 +3656,6 @@
   </data>
   <data name="OptimizationDb_FILTER_OPTDB_Optimization_Libraries" xml:space="preserve">
     <value>最適化ライブラリ</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Targeted_Method_Editing" xml:space="preserve">
-    <value>ターゲットメソッドの編集</value>
   </data>
   <data name="CreateIrtCalculatorDlg_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_" xml:space="preserve">
     <value>トランジションリスト欄には有効なファイルに対するパスが含まれていなければなりません。</value>
@@ -3940,9 +3883,6 @@
   <data name="ClipboardEx_GetData_ClipboardEx_implementation_problem" xml:space="preserve">
     <value>ClipboardEx実装の問題</value>
   </data>
-  <data name="CustomReports_thumb1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\CustomReports_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_" xml:space="preserve">
     <value>警告：iRTカルキュレータには値{1}を含む{0}が既にあります。 {2}を無視します</value>
   </data>
@@ -4042,9 +3982,6 @@
   <data name="AggregateOp_AxisTitleCv" xml:space="preserve">
     <value>{0}CV</value>
   </data>
-  <data name="AbsoluteQuant_thumb1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\AbsoluteQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="PeptideLibraries_DoValidate_Library_picked_peptide_count__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>ライブラリ選択ペプチド数{0}は{1}と{2}の間でなければなりません。</value>
   </data>
@@ -4107,9 +4044,6 @@
   </data>
   <data name="OptimizationDb_ConvertFromOldFormat_Failed_to_convert__0__optimizations_to_new_format_" xml:space="preserve">
     <value>{0}を新しい形式に最適化する変換に失敗しました。</value>
-  </data>
-  <data name="CustomReports_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\CustomReports_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
     <value>ユーザー{0}には、Panoramaフォルダ{1}にアップロードする権限がありません</value>
@@ -4414,9 +4348,6 @@
   <data name="RInstaller_InstallPackages_Installing_R_packages_requires_an_internet_connection__Please_check_your_connection_and_try_again" xml:space="preserve">
     <value>Rパッケージのインストールには、インターネット接続が必要です。インターネット接続を確認してからもう一度お試しください</value>
   </data>
-  <data name="GroupedStudies_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\GroupedStudies_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__" xml:space="preserve">
     <value>ファイル{0}の読み取りに失敗しました。{1}</value>
   </data>
@@ -4467,9 +4398,6 @@
   </data>
   <data name="Peptide_Validate_Peptide_sequence_exceeds_the_bounds_of_the_protein_sequence" xml:space="preserve">
     <value>ペプチドシークエンスがタンパク質シークエンスの境界を超えています。</value>
-  </data>
-  <data name="PeakPicking_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\PeakPicking_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="RenameProteinsDlg_OkDialog_Edit_name__0__" xml:space="preserve">
     <value>名前{0}を編集</value>
@@ -4834,9 +4762,6 @@
   <data name="LineColNumberedIoException_FormatMessage__0___line__1__" xml:space="preserve">
     <value>{0}、{1}行。</value>
   </data>
-  <data name="ExistingQuant_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\ExistingQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window" xml:space="preserve">
     <value>単離ウィンドウに対し{0}を指定します。</value>
   </data>
@@ -4878,9 +4803,6 @@
   </data>
   <data name="MProphetPeakScoringModel_CalcLinearScore_Attempted_to_score_a_peak_with__0__features_using_a_model_with__1__trained_scores_" xml:space="preserve">
     <value>{1}個のトレーニングされたスコアのあるモデルを使用して{0}個の機能を持つピークをスコアしようとしています。</value>
-  </data>
-  <data name="ExistingQuant_thumb1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\ExistingQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ExportOptimize_CE_Collision_Energy" xml:space="preserve">
     <value>衝突エネルギー</value>
@@ -5063,9 +4985,6 @@
   <data name="PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened" xml:space="preserve">
     <value>ファイル{0}は最初に開かれた後に変更されています。</value>
   </data>
-  <data name="MethodRefine_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\MethodRefine_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="MissingAnyResultsFinder_DisplayName_Missing_any_results" xml:space="preserve">
     <value>欠損している任意の結果</value>
   </data>
@@ -5140,9 +5059,6 @@
   </data>
   <data name="EditStaticModDlg_OkDialog_Use_non_standard_settings_for_this_name" xml:space="preserve">
     <value>この名前に対し非標準設定を使用しますか？</value>
-  </data>
-  <data name="iRT_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\iRT_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__" xml:space="preserve">
     <value>DocNodeの結果数{0}がドキュメントの結果数{1}と一致しません。</value>
@@ -5240,9 +5156,6 @@
   </data>
   <data name="TransitionFilter_FragmentRangeFirstName_Unsupported_first_fragment_name__0__" xml:space="preserve">
     <value>最初の断片名{0}はサポートされていません。</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Spectral_Library_Explorer" xml:space="preserve">
-    <value>スペクトルライブラリエクスプローラー</value>
   </data>
   <data name="ConfigureToolsDlg_OverwriteOrInParallel_The_tool__0__is_already_installed_" xml:space="preserve">
     <value>ツール{0}は既にインストールされています。</value>
@@ -5655,9 +5568,6 @@
   <data name="AbstractMassListExporter_ExportScheduledBuckets_transitions" xml:space="preserve">
     <value>トランジション</value>
   </data>
-  <data name="StartPage_GroupedStudy_Description" xml:space="preserve">
-    <value>複数の繰り返し測定試験日をSkylineで効果的に処理する方法について学びます。すでに検知可能に最適化されているターゲットの初期セットを、14ラットの血漿研究からの健常被験体および罹患被験体との間の差分存在量の証拠があるか、さらに最適化します。この処理で、パワフルなSkylineインタラクティブ表示を利用して、データの異常を素早く調べ理解する方法を学びます。また、Skylineバージョン3.1で導入されたSkylineグループ比較フレームワークに慣れていただきます。</value>
-  </data>
   <data name="SkylineWindow_ImportResults_Import_results" xml:space="preserve">
     <value>結果をインポート</value>
   </data>
@@ -5864,18 +5774,6 @@
   </data>
   <data name="ConfigureToolsDlg_textCommand_TextChanged_A_rguments_" xml:space="preserve">
     <value>引数(&amp;R)：</value>
-  </data>
-  <data name="SmallMolecule_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\SmallMolecule_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="SmallMoleculeMethodDevCEOpt_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\SmallMoleculeMethodDevCEOpt_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="SmallMoleculeQuantification_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\SmallMoleculeQuantification_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="SHiResMetabolomics_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\HiResMetabolomics_thumb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="MQuestReferenceShapeCalc_MQuestReferenceShapeCalc_mProphet_weighted_reference" xml:space="preserve">
     <value>mProphetの加重基準</value>
@@ -6101,9 +5999,6 @@
   <data name="RatioPropertyAccessor_PeptideRatioProperty_Ratio_To_Global_Standards" xml:space="preserve">
     <value>グローバル標準に対する比率</value>
   </data>
-  <data name="DIA_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\DIA_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only" xml:space="preserve">
     <value>{0}に保存できません。ファイルは読み取り専用です。</value>
   </data>
@@ -6160,9 +6055,6 @@
   </data>
   <data name="SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List" xml:space="preserve">
     <value>低分子トランジションリスト</value>
-  </data>
-  <data name="StartPage_getBoxPanels_" xml:space="preserve">
-    <value>SRM測定の広範なセットを用いた開始、装置データのインポート、ドキュメントのリファインにおいて実務経験を積みます。2000以上のトランジションやThermo TSQでスケジュールなしで測定される39のインジェクションが必要とされているリファインなしドキュメントから開始します。全39のインジェクションを単一繰り返し測定にインポートする方法を学びます。保持時間回帰やMS/MSスペクトルライブラリピーク強度相関に対し疎水性を使用し、測定ピークの信頼度を向上させます。Skyline最適化ダイアログを使用し、最も信頼性の高いピークに対する最良のトランジション以外すべてを削除します。スケジュール処理を通じ、ドキュメントをシングルインジェクションで測定可能なトランジションリストへと減らします。シングルインジェクションメソッドの複数の繰り返し測定のインポートと表示を行ないます。</value>
   </data>
   <data name="SaveSettingsDlg_OnClosing_The_name__0__already_exists" xml:space="preserve">
     <value>名前{0}が既に存在しています。</value>
@@ -6487,9 +6379,6 @@
   <data name="DataProcessing" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\dataprocessing.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="StartPage_getBoxPanels_Collision_Energy_Optimization" xml:space="preserve">
-    <value>衝突エネルギー最適化</value>
-  </data>
   <data name="SkylineWindow_ShowChromatogramFeaturesDialog_The_document_must_have_targets_for_which_to_export_chromatograms_" xml:space="preserve">
     <value>ドキュメントには、クロマトグラムをエクスポートするターゲットが含まれている必要があります。</value>
   </data>
@@ -6658,14 +6547,8 @@
   <data name="EmptyList" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\EmptyList.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="StartPage_getBoxPanels_Get_hands_on_experience_working_with_the_Skyline_Spectral_Library_Explorer__new_in_v0_7__Learn_more_about_working_with_isotope_labels_and_product_ion_neutral_losses_using_MS_MS_spectral_libraries_containing_15N_labeled_and_phosphorylated_peptides__Use_the_Library_Explorer_to_accelerate_the_transition_between_shotgun_discovery_experiments_and_targeted_investigation_" xml:space="preserve">
-    <value>v0.7の新しいSkylineスペクトルライブラリエクスプローラーを使用し実務作業経験を積みます。15Nの標識やリン酸化ペプチドを含むMS/MSスペクトルライブラリを使用する同位体標識とプロダクトイオンニュートラルロスでの作業についてのさらに学習します。ライブラリエクスプローラーを使用し、ショットガン探索実験とターゲット検査間のトランジションを加速します。</value>
-  </data>
   <data name="TransitionPrediction_GetOptimizeFunction_Compensation_voltage_parameters_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_compensation_voltage" xml:space="preserve">
     <value>補償電圧に対する最適化データをインポートするために、トランジション設定の予測タブで補償電圧パラメータを選択しなければなりません</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Existing___Quantitative_Experiments" xml:space="preserve">
-    <value>既存&amp;定量的実験</value>
   </data>
   <data name="EditCEDlg_ShowGraph_Precursor_m_z" xml:space="preserve">
     <value>プリカーサーm/z</value>
@@ -7039,9 +6922,6 @@
   <data name="ComparePeakPickingDlg_SaveGraph_Save_Model_Comparison_Graph" xml:space="preserve">
     <value>モデル比較グラフを保存</value>
   </data>
-  <data name="StartPage_getBoxPanels_methodedit" xml:space="preserve">
-    <value>ターゲットプロテオミクス実験用Skylineドキュメント作成の実務経験を積みます。このチュートリアルでは、pepXML、mzXMLからはMS/MSスペクトルライブラリ、FASTA形式ファイルからはバックグラウンドプロテオームファイルを作成します。これらとGlobal Proteome Machineからの公開MS/MSスペクトルライブラリを組み合わせ、選択された酵母タンパク質、ペプチド、プロダクトイオンをターゲットとする新しいSkylineドキュメントの作成を導きます。このドキュメントから、トランジションリストをエクスポートし、AB 4000 Q Trapでの実行の準備を行ないます。</value>
-  </data>
   <data name="AllChromatogramsGraph_btnCancel_Click_Cancel_import" xml:space="preserve">
     <value>インポートをキャンセル</value>
   </data>
@@ -7364,9 +7244,6 @@
   <data name="AnnotationDef_AnnotationTarget_Transitions" xml:space="preserve">
     <value>トランジション</value>
   </data>
-  <data name="StartPage_getBoxPanels_Get_hands_on_experience_working_with_quantitative_experiments_and_isotope_labeled_reference_peptides__by_starting_with_experiments_with_published_transition_lists_and_SRM_mass_spectrometer_data__Learn_effective_ways_of_analyzing_your_data_in_Skyline_using_several_of_the_available_peak_area_and_retention_time_summary_charts_" xml:space="preserve">
-    <value>定量的実験や同位体標識参照ペプチドを用い、公開トランジションリストやSRM質量分析計データを使用して実験を始めることにより実務作業経験を積みます。ピーク領域や保持時間概要チャートをいくつか使用し、Skylineでの効果的なデータ分析方法を学びます。</value>
-  </data>
   <data name="ExportOptimize_NONE_None" xml:space="preserve">
     <value>なし</value>
   </data>
@@ -7486,9 +7363,6 @@
   </data>
   <data name="CommandLine_ExportInstrumentFile_Warning__No_export_strategy_specified__from__single____protein__or__buckets____Defaulting_to__single__" xml:space="preserve">
     <value>警告： エクスポート方法が指定されていません（「単一」、「タンパク質」、「バケット」の中から）。「単一」にデフォルト中。</value>
-  </data>
-  <data name="StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_with_Excel_to_estimate_the_absolute_molecular_quantities_of_peptides_in_your_experiments__" xml:space="preserve">
-    <value>実験におけるペプチドの絶対的分子量を推定するためにExcelとともにSkylineを使用する実務経験を積みます。</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_" xml:space="preserve">
     <value>このツールを実行するには選択したタンパク質が必要です。</value>
@@ -7631,9 +7505,6 @@
   <data name="AreaPeptideGraphPane_UpdateAxes_Peak_Area" xml:space="preserve">
     <value>ピーク面積</value>
   </data>
-  <data name="StartPage_getBoxPanels_Get_hands_on_experience_using_Skyline_to_work_with_empirically_measured_optimal_collision_energy__CE__values__In_this_tutorial__you_will_create_scheduled_CE_optimization_transitions_lists_for_a_document_with_30_peptide_precursors__Using_supplied_RAW_files_from_a_Thermo_TSQ_Vantage__you_will_recalculate_the_linear_equation_used_to_calculate_CE_for_that_instrument__You_will_also_export_a_transition_list_with_CE_values_optimized_separately_for_each_transition_" xml:space="preserve">
-    <value>実験的に測定された最適衝突エネルギー (CE) 値を用いて作業するためSkylineを使用して実務経験を積みます。このチュートリアルでは、30個のペプチドプリカーサーを持つドキュメントに対し、CE最適化トランジションリストを作成します。Thermo TSQ Vantageから供給された生ファイルを使用し、この装置に対するCEを計算するために一次方程式を使用して再計算します。各トランジションから分離して最適化されたまたCE値を含むトランジションリストをエクスポートします。</value>
-  </data>
   <data name="ExportMethodDlg_VerifySchedulingAllowed_Triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_" xml:space="preserve">
     <value>トランジションをランクするために、トリガーされた取得には、スペクトルライブラリまたはインポートされた結果が必要です。</value>
   </data>
@@ -7751,9 +7622,6 @@
   <data name="EditIrtCalcDlg_OkDialog_Failure_updating_peptides_in_the_iRT_database___The_database_may_be_out_of_synch_" xml:space="preserve">
     <value>iRTデータベース内のペプチドのアップデートに失敗しました。データベースが同期していない可能性があります。</value>
   </data>
-  <data name="AbsoluteQuant_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\AbsoluteQuant_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="FullScanSettingsControl_UpdateRetentionTimeFilterUi_Full_gradient_chromatograms_will_take_longer_to_import__consume_more_disk_space__and_may_make_peak_picking_less_effective_" xml:space="preserve">
     <value>全グラジエントクロマトグラムのインポートには時間がかかり、ディスク容量を消費する上、ピークの選択が効果的に行えない場合があります。</value>
   </data>
@@ -7841,9 +7709,6 @@
   <data name="GraphChromatogram_UpdateUI_Select_a_peptide__precursor_or_transition_to_view_its_chromatograms" xml:space="preserve">
     <value>ペプチド、プリカーサー、またはトランジションを選択して、クロマトグラムを表示</value>
   </data>
-  <data name="StartPage_getBoxPanels_Absolute_Quantification" xml:space="preserve">
-    <value>絶対的定量化</value>
-  </data>
   <data name="TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_" xml:space="preserve">
     <value>ユーザーによって操作がキャンセルされました。</value>
   </data>
@@ -7918,9 +7783,6 @@
   </data>
   <data name="NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found" xml:space="preserve">
     <value>{0}（見つかりませんでした）</value>
-  </data>
-  <data name="OptimizeCE_thumb" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\OptimizeCE_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found" xml:space="preserve">
     <value>プリカーサーイオンクロマトグラムが見つかりません</value>
@@ -8152,9 +8014,6 @@
   </data>
   <data name="BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create_the_proteome_file__0__" xml:space="preserve">
     <value>プロ手オームファイル{0}を作成しようとした際にエラーが発生しました。</value>
-  </data>
-  <data name="StartPage_SmallMolecule_Description" xml:space="preserve">
-    <value>Skylineを利用して非プロテオミクスイオンをターゲットする方法を学びます。メタボロミクス実験で使用される分子トランジションリストをインポートし、Waters Xevo TQSからの14回の実行をインポートします。非プロテオミクス実験に、Skylineインターフェイスのパワーを利用する方法を学び始めましょう。</value>
   </data>
   <data name="CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_" xml:space="preserve">
     <value>エラー：--tool-add-zipコマンドで指定されたファイルは.zipファイルではありません。有効な.zipファイルを指定してください。</value>
@@ -9965,15 +9824,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
     <value>デコイなしではmProphetモデルを自動的にトレーニングすることはできませんが、デコイオプションではデコイは生成されませんでした。ターゲット毎のデコイ数を増やすか、mProphetモデルの自動トレーニングを無効にしてください。</value>
   </data>
-  <data name="StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing" xml:space="preserve">
-    <value>グループに分けた試験データの処理</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Targets" xml:space="preserve">
-    <value>低分子ターゲット</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Data_Independent_Acquisition" xml:space="preserve">
-    <value>データ非依存性取得</value>
-  </data>
   <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
     <value>フィーチャースコア「{0}」を除外中</value>
   </data>
@@ -10141,36 +9991,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_" xml:space="preserve">
     <value>RT（分）</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Introductory" xml:space="preserve">
-    <value>はじめに</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Full_Scan_Acquisition_Data" xml:space="preserve">
-    <value>フルスキャン取得データ</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Small_Molecules" xml:space="preserve">
-    <value>低分子</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Method_Development_and_CE_Optimization" xml:space="preserve">
-    <value>低分子メソッド開発とCE最適化</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Quantification" xml:space="preserve">
-    <value>低分子の定量化</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Hi_Res_Metabolomics" xml:space="preserve">
-    <value>高分解能メタボロミクス</value>
-  </data>
-  <data name="StartPage_PopulateTutorialPanel_Advanced_Topics" xml:space="preserve">
-    <value>詳細なトピック</value>
-  </data>
-  <data name="StartPage_SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
-    <value>プリカーサーm/z、プロダクトイオンm/zおよび衝突エネルギーの値のみが指定されている文献引用から、安定同位体標識付分子をターゲットとするSkylineドキュメントを作成する方法を学びます。Sciex製Triple QuadによるCE初期値を用いたWaters製Xevo TQ-Sの複数の繰り返し測定データセットをインポートすることで、分子の保持時間スケジュール設定と衝突エネルギーの最適化を実施します。ターゲットプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
-  </data>
-  <data name="StartPage_SmallMoleculeQuantification_Description" xml:space="preserve">
-    <value>プリカーサーイオン化学式と付加イオン、およびプロダクトイオンm/zの値として指定された分子をターゲットとするSkylineドキュメントを作成する方法を学びます。三連四重極質量分析計でLC-MS/MSを用いて収集した複数の繰り返し測定データセットをインポートし、ターゲットプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
-  </data>
-  <data name="StartPage_HiResMetabolomics_Description" xml:space="preserve">
-    <value>プリカーサーイオン化学式と付加イオンとして指定された分子をターゲットとするSkylineドキュメントを作成する方法を学びます。一連の血漿試料をQ Exactive Orbitrap質量分析計でデータ収集した複数の繰り返し測定データセットをインポートし、ターゲットプロテオミクス用に当初作成されたSkylineの多くの既存機能が、現在では非プロテオミクス分子データにいかに適用されているかを学びます。</value>
   </data>
   <data name="LinearInLogSpace_Label_Linear_in_Log_Space" xml:space="preserve">
     <value>対数空間の線形</value>
