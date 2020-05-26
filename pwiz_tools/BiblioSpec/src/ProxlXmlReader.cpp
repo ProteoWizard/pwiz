@@ -294,7 +294,9 @@ void ProxlXmlReader::calcPsms() {
                             PSM* psm = new PSM();
                             *psm = *proxlPsm;
                             psm->unmodSeq = pepA.sequence_ + "-" + pepB.sequence_;
-                            psm->modifiedSeq = (modSeqCrosslinkFormat % pepA.sequence_ % pepB.sequence_ % proxlPsm->linkerMass_ % pepA.links_[0] % pepB.links_[0]).str();
+                            string modifiedPepA = blibMaker_.generateModifiedSeq(pepA.sequence_.c_str(), pepA.mods_);
+                            string modifiedPepB = blibMaker_.generateModifiedSeq(pepB.sequence_.c_str(), pepB.mods_);
+                            psm->modifiedSeq = (modSeqCrosslinkFormat % modifiedPepA % modifiedPepB % proxlPsm->linkerMass_ % pepA.links_[0] % pepB.links_[0]).str();
                             psm->mods = pepA.mods_;
                             psm->mods.push_back(SeqMod(pepA.links_[0], pepB.mass() + proxlPsm->linkerMass_));
                             lookup->second.push_back(psm);
@@ -313,6 +315,7 @@ void ProxlXmlReader::calcPsms() {
                             PSM* psm = new PSM();
                             *psm = *proxlPsm;
                             psm->unmodSeq = pepA.sequence_;
+                            psm->modifiedSeq = blibMaker_.generateModifiedSeq(psm->unmodSeq.c_str(), pepA.mods_);
                             psm->modifiedSeq = (modSeqLooplinkFormat % pepA.sequence_ % proxlPsm->linkerMass_ % pepA.links_[0] % pepA.links_[1]).str();
                             psm->mods = pepA.mods_;
                             psm->mods.push_back(SeqMod(pepA.links_[0], proxlPsm->linkerMass_));
