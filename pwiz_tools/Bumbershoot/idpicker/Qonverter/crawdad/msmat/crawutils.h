@@ -1012,7 +1012,7 @@ float tvalue_ind(const std::vector<T>& a, const std::vector<T>& b)
    df = n1 + n2 - 2;
    if (df <= 0)
      {
-       std::cerr << "Invalid arguments to independent t-test (requires at least two numbers in one class)." << std::cerr;
+       //std::cerr << "Invalid arguments to independent t-test (requires at least two numbers in one class)." << std::cerr;
        throw("Invalid arguments to independent t-test (requires at least two numbers in one class).");
      }
    m1 = vector_avg(a);
