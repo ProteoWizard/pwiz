@@ -79,24 +79,6 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/AuditLog-20_1_1.pdf.
-        /// </summary>
-        internal static string AuditLog_pdf {
-            get {
-                return ResourceManager.GetString("AuditLog_pdf", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/tutorials/AuditLog.zip.
-        /// </summary>
-        internal static string AuditLog_zip {
-            get {
-                return ResourceManager.GetString("AuditLog_zip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/CustomReports-2_5.pdf.
         /// </summary>
         internal static string CustomReports_pdf {
@@ -259,7 +241,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/iRT-2_5.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/iRT-20_1.pdf.
         /// </summary>
         internal static string iRT_pdf {
             get {
@@ -421,7 +403,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Small%20Molecule%20Targets.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-20_1.pdf.
         /// </summary>
         internal static string SmallMolecule_pdf {
             get {
@@ -439,7 +421,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Small%20Molecule%20Method%20Dev%20and%20CE%20Opt.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeMethodDevCEOpt-20_1.pdf.
         /// </summary>
         internal static string SmallMoleculeMethodDevCEOpt_pdf {
             get {
@@ -457,7 +439,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Small%20Molecule%20Quantification.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-20_1.pdf.
         /// </summary>
         internal static string SmallMoleculeQuantification_pdf {
             get {

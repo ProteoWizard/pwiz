@@ -527,17 +527,6 @@ namespace pwiz.Skyline.Controls.Startup
                     ),
                     Description = TutorialTextResources.LibraryExplorer_Description
                 },
-                new TutorialActionBoxControl
-                {
-                    Caption = TutorialTextResources.AuditLog_Caption,
-                    Icon = TutorialImageResources.AuditLog_start,
-                    EventAction = ()=>Tutorial(ActionTutorial.TutorialType.audit_logging,
-                        TutorialLinkResources.AuditLog_zip,
-                        TutorialLinkResources.AuditLog_pdf,
-                        string.Empty
-                    ),
-                    Description = TutorialTextResources.AuditLog_Description
-                },
             };
 
             Control previousBox = null;

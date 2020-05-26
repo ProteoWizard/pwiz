@@ -53,7 +53,6 @@ namespace pwiz.Skyline.Controls.Startup
             small_molecule_quant,
             hi_res_metabolomics,
             ion_mobility,
-            audit_logging,
             dia_swath,
         }
 
