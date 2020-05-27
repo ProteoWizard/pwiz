@@ -349,7 +349,7 @@ const std::vector<PrmTimeSegments> testTimeSegments =
     { 1664.8, 1673.2 },
     { 1673.2, 1706.8 },
     { 1706.8, 1714.0 },
-    { 1714.0, 0x1.fffffffffffffp+1023 },
+    //{ 1714.0, 0x1.fffffffffffffp+1023 },
 };
 
 const std::vector<PrmPasefSchedulingEntry> testSchedulingEntries =
@@ -490,6 +490,26 @@ const std::vector<PrmPasefSchedulingEntry> testSchedulingEntries =
     { 3, 14, 20 },
 };
 
+bool ShowProgressNoCancel(double progressPercentage)
+{
+    Console::WriteLine("{0:0.0}%", progressPercentage);
+    return false;
+}
+
+static bool canceled = false;
+bool ShowProgressCancelAt50(double progressPercentage)
+{
+    if (canceled)
+        throw runtime_error("progress callback called after cancel");
+    Console::WriteLine("{0:0.0}%", progressPercentage);
+    if (progressPercentage > 50)
+    {
+        canceled = true;
+        return true;
+    }
+    return false;
+}
+
 void test()
 {
     using namespace pwiz::CLI::Bruker::PrmScheduling;
@@ -533,7 +553,7 @@ void test()
 
     auto timeSegments = gcnew TimeSegmentList();
     auto schedulingEntries = gcnew SchedulingEntryList();
-    s->GetScheduling(timeSegments, schedulingEntries);
+    s->GetScheduling(timeSegments, schedulingEntries, gcnew ProgressUpdate(ShowProgressNoCancel));
     //unit_assert_operator_equal(testSchedulingEntries.size(), schedulingEntries->Count);
     unit_assert(testSchedulingEntries.size() <= schedulingEntries->Count);
     for (size_t i=0; i < testSchedulingEntries.size(); ++i)
@@ -561,6 +581,11 @@ void test()
     }
 
     s->WriteScheduling();
+
+    // test cancelling during scheduling
+    timeSegments->Clear();
+    schedulingEntries->Clear();
+    s->GetScheduling(timeSegments, schedulingEntries, gcnew ProgressUpdate(ShowProgressCancelAt50));
 }
 
 int main(int argc, char* argv[])

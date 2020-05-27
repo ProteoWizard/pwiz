@@ -232,6 +232,11 @@ public ref class PasefSchedulingEntry
     DEFINE_PRIMITIVE_PROPERTY(uint32_t, System::UInt32, measurement_mode_id);
 };
 
+/// <summary>
+/// Gives progress information during scheduling algorithm. Return true to cancel and false to continue.
+/// </summary>
+public delegate bool ProgressUpdate(double progressPercentage);
+
 extern "C" {
     void getMethodInfo(const ::PrmMethodInfo *prm_method_info, void *user_data)
     {
@@ -250,11 +255,20 @@ extern "C" {
         auto& entries = *((std::vector<::PrmPasefSchedulingEntry>*) user_data);
         std::copy(&prm_scheduling_entries[0], prm_scheduling_entries + num_entries, entries.begin());
     }
+
+    typedef bool(__stdcall *ProgressUpdateCallback)(double percentage);
+
+    bool progressUpdateCallback(double progressPercentage, void* user_data)
+    {
+        auto progressUpdateFunctionPtr = (ProgressUpdateCallback)user_data;
+        return progressUpdateFunctionPtr(progressPercentage);
+    }
 }
 
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MethodInfoList, ::PrmMethodInfo, MethodInfo, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SchedulingEntryList, ::PrmPasefSchedulingEntry, PasefSchedulingEntry, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TimeSegmentList, ::PrmTimeSegments, TimeSegments, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+
 
 /// <summary>
 /// Information about an ontology or CV source and a short 'lookup' tag to refer to.
@@ -324,10 +338,15 @@ public ref class Scheduler
     }
 
     ///<summary>get the prm scheduling results for further evaluation and visualization</summary>
-    void GetScheduling(TimeSegmentList^ timeSegmentList, SchedulingEntryList^ schedulingEntryList)
+    void GetScheduling(TimeSegmentList^ timeSegmentList, SchedulingEntryList^ schedulingEntryList, ProgressUpdate^ progressUpdateDelegate)
     {
-        if (!prm_scheduling_prm_targets(handle_))
-            throw gcnew System::Exception(GetLastErrorString());
+        System::IntPtr callbackPtr = System::Runtime::InteropServices::Marshal::GetFunctionPointerForDelegate(progressUpdateDelegate);
+        if (!prm_scheduling_prm_targets(handle_, (prm_progress_cancel_function*)&progressUpdateCallback, callbackPtr.ToPointer()))
+        {
+            auto lastError = GetLastErrorString();
+            if (!lastError->Contains("user request"))
+                throw gcnew System::Exception(GetLastErrorString());
+        }
 
         schedulingEntryList->base().resize(prm_get_num_scheduling_entries(handle_));
         timeSegmentList->base().resize(prm_get_num_time_segments(handle_));

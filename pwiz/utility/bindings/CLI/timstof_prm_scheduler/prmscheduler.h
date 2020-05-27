@@ -293,6 +293,15 @@ extern "C" {
         const char* external_id
     );
 
+    /// function type for a callback function checking whether calculation should be canceled
+    /// and giving the percentage of progress
+    /// true: cancel calculation
+    /// false: continue
+    typedef bool(prm_progress_cancel_function)(
+        double progress_percentage,
+        void *user_data_progress //< capture emulation for the user space for the progress
+        );
+
     /// Determine a prm-PASEF target scheduling for the given targets
     ///
     /// \returns error code
@@ -304,7 +313,9 @@ extern "C" {
     /// string describing the problem.
     ///
     BdalPRMSchedulerDllSpec uint32_t prm_scheduling_prm_targets(
-        uint64_t handle
+        uint64_t handle,
+        prm_progress_cancel_function *callback_progress_cancel,
+        void *user_data_progress //< will be passed to callback, emulating a capture
     );
 
     /// function type that takes over the PrmPasefSchedulingEntrys
