@@ -23,5 +23,19 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(ImmutableList.Singleton(19), libKey.Crosslinks[0].Positions[0]);
             Assert.AreEqual(ImmutableList.Singleton(6), libKey.Crosslinks[0].Positions[1]);
         }
+
+        [TestMethod]
+        public void TestCrosslinkWithModifications()
+        {
+            CrosslinkLibraryKey libKey = CrosslinkSequenceParser.ParseCrosslinkLibraryKey(
+                "C[+57.02146]C[+57.02146]TKPESER-EKVLTSSAR-[+138.0681@4,2]", 1);
+            Assert.AreEqual(2, libKey.PeptideLibraryKeys.Count);
+            Assert.AreEqual("C[+57.02146]C[+57.02146]TKPESER", libKey.PeptideLibraryKeys[0].ModifiedSequence);
+            Assert.AreEqual("EKVLTSSAR", libKey.PeptideLibraryKeys[1].ModifiedSequence);
+            Assert.AreEqual("+138.0681", libKey.Crosslinks[0].Name);
+            Assert.AreEqual(2, libKey.Crosslinks[0].Positions.Count);
+            Assert.AreEqual(ImmutableList.Singleton(4), libKey.Crosslinks[0].Positions[0]);
+            Assert.AreEqual(ImmutableList.Singleton(2), libKey.Crosslinks[0].Positions[1]);
+        }
     }
 }

@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 if (ch == '[')
                 {
                     inBracket = true;
-                    if (ich == ichLast + 1)
+                    if (ich == ichLast)
                     {
                         inCrosslinks = true;
                     }

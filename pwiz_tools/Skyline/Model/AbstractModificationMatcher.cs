@@ -637,6 +637,10 @@ namespace pwiz.Skyline.Model
         {
             nodeGroupMatched = null;
             var mainPeptide = MakePeptideDocNode(crosslinkLibraryKey.PeptideLibraryKeys[0]);
+            if (mainPeptide == null)
+            {
+                return null;
+            }
 
             var crosslinks = MakeCrosslinkMods(crosslinkLibraryKey, ImmutableList.Singleton(0));
             if (crosslinks == null)
@@ -832,14 +836,71 @@ namespace pwiz.Skyline.Model
                     aaModKey.Terminus = ModTerminus.C;
                 }
 
-                var aaModMatch = GetMatch(aaModKey);
-                if (aaModMatch == null)
+                var staticMod = FindModification(aaModKey);
+                if (staticMod == null)
                 {
                     return null;
                 }
-                explicitModList.Add(new ExplicitMod(mod.Key, aaModMatch.Value.StructuralMod));
+                explicitModList.Add(new ExplicitMod(mod.Key, staticMod));
             }
             return new PeptideDocNode(peptide, new ExplicitMods(peptide, explicitModList, null));
+        }
+
+        private StaticMod FindModification(AAModKey aaModKey)
+        {
+            if (Matches != null)
+            {
+                var match = GetMatch(aaModKey);
+                if (match != null)
+                {
+                    return match.Value.StructuralMod;
+                }
+            }
+
+            MassModification massModification = aaModKey.Mass.HasValue
+                ? new MassModification(aaModKey.Mass.Value, MassModification.MAX_PRECISION_TO_KEEP)
+                : null;
+
+            foreach (var staticMod in Settings.PeptideSettings.Modifications.StaticModifications)
+            {
+                if (massModification != null)
+                {
+                    if (!staticMod.MonoisotopicMass.HasValue)
+                    {
+                        continue;
+                    }
+
+                    if (!massModification.Matches(new MassModification(staticMod.MonoisotopicMass.Value,
+                        MassModification.MAX_PRECISION_TO_KEEP)))
+                    {
+                        continue;
+                    }
+                }
+                else if (staticMod.Name != aaModKey.Name)
+                {
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(staticMod.AAs))
+                {
+                    if (!staticMod.AAs.Contains(aaModKey.AA))
+                    {
+                        continue;
+                    }
+                }
+
+                if (staticMod.Terminus.HasValue)
+                {
+                    if (staticMod.Terminus != aaModKey.Terminus)
+                    {
+                        continue;
+                    }
+                }
+
+                return staticMod;
+            }
+
+            return null;
         }
 
         private class MaxModFilter : IPeptideFilter

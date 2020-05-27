@@ -570,6 +570,11 @@ namespace pwiz.Skyline.Model.Lib
             return libraryKeyProto;
         }
 
+        public override LibraryKey StripModifications()
+        {
+            return PeptideLibraryKeys.First().StripModifications();
+        }
+
         public override Peptide CreatePeptideIdentityObj()
         {
             return PeptideLibraryKeys.First().CreatePeptideIdentityObj();
