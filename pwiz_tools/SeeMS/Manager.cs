@@ -296,7 +296,7 @@ namespace seems
 			{
                 OnLoadDataSourceProgress("Opening data source: " + Path.GetFileNameWithoutExtension(filepath), 0);
 
-                string[] spectrumListFilterList = spectrumListFilters.Split(';');
+                string[] spectrumListFilterList = spectrumListFilters.Split(';').Where(o => o.Length > 0).ToArray();
 
 			    bool fileAlreadyOpen = dataSourceMap.ContainsKey(filepath);
 

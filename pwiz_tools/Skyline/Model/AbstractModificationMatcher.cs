@@ -526,14 +526,14 @@ namespace pwiz.Skyline.Model
         private TransitionDocNode TransitionFromPeakAndAnnotations(LibKey key, TransitionGroupDocNode nodeGroup,
             Adduct fragmentCharge, SpectrumPeaksInfo.MI peak, int? rank)
         {
-            var charge = fragmentCharge;
+            var spectrumPeakAnnotationIon = peak.AnnotationsAggregateDescriptionIon;
+            var charge = spectrumPeakAnnotationIon.Adduct.IsEmpty ? fragmentCharge : spectrumPeakAnnotationIon.Adduct;
             var monoisotopicMass = charge.MassFromMz(peak.Mz, MassType.Monoisotopic);
             var averageMass = charge.MassFromMz(peak.Mz, MassType.Average);
             // Caution here - library peak (observed) mz may not exactly match (theoretical) mz of the annotation
 
             // In the case of multiple annotations, produce single transition for display in library explorer
             var annotations = peak.GetAnnotationsEnumerator().ToArray();
-            var spectrumPeakAnnotationIon = peak.AnnotationsAggregateDescriptionIon;
             var molecule = spectrumPeakAnnotationIon.Adduct.IsEmpty
                 ? new CustomMolecule(monoisotopicMass, averageMass)
                 : spectrumPeakAnnotationIon;
@@ -551,7 +551,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             var transition = new Transition(nodeGroup.TransitionGroup,
-                spectrumPeakAnnotationIon.Adduct.IsEmpty ? charge : spectrumPeakAnnotationIon.Adduct, 0, molecule);
+                charge, 0, molecule);
             return new TransitionDocNode(transition, Annotations.EMPTY.ChangeNote(note), null, monoisotopicMass,
                 rank.HasValue ?
                     new TransitionDocNode.TransitionQuantInfo(null,
