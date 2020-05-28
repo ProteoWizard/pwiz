@@ -81,14 +81,12 @@ lib PrmPasefScheduler
         <link>shared
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>static/<using-clr>false
         <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No"
-        <assembly-dependency>timstof_prm_scheduler.prmsqlite
         <cxxflags>/permissive
         $(clr-requirement)
     : # default-build
     : # usage-requirements
         <library>prmscheduler
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>static/<using-clr>false
-        <assembly-dependency>timstof_prm_scheduler.prmsqlite
     ;
     
 
@@ -127,7 +125,7 @@ rule unit-test-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties)
     {
-        result += <using-clr>true <dependency>PrmPasefScheduler <assembly>PrmPasefScheduler ;
+        result += <using-clr>true <dependency>PrmPasefScheduler <assembly>PrmPasefScheduler <assembly-dependency>timstof_prm_scheduler.prmsqlite ;
     }
     else
     {
