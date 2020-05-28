@@ -395,13 +395,23 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (mods != null && mods.HasCrosslinks)
             {
-                var modifiedSequence = ModifiedSequence.GetModifiedSequence(this, seq.Sequence, mods, labelType);
-                string strModifiedSequence = TransitionSettings.Prediction.PrecursorMassType.IsMonoisotopic()
-                    ? modifiedSequence.MonoisotopicMasses
-                    : modifiedSequence.AverageMasses;
-                return new Target(strModifiedSequence);
+                return GetCrosslinkModifiedSequence(seq, labelType, mods, false);
             }
             return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, format, useExplicitModsOnly);
+        }
+
+        public Target GetCrosslinkModifiedSequence(Target seq, IsotopeLabelType labelType, ExplicitMods mods,
+            bool replaceCrosslinksWithMasses)
+        {
+            var modifiedSequence = ModifiedSequence.GetModifiedSequence(this, seq.Sequence, mods, labelType);
+            if (replaceCrosslinksWithMasses)
+            {
+                modifiedSequence = modifiedSequence.ReplaceCrosslinksWithMasses(this, labelType);
+            }
+            string strModifiedSequence = TransitionSettings.Prediction.PrecursorMassType.IsMonoisotopic()
+                ? modifiedSequence.MonoisotopicMasses
+                : modifiedSequence.AverageMasses;
+            return new Target(strModifiedSequence);
         }
 
         public Adduct GetModifiedAdduct(Adduct adduct, string neutralFormula,
@@ -1211,7 +1221,18 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private IEnumerable<TypedSequence> GetTypedSequences(Target sequence, ExplicitMods mods, Adduct adduct, bool assumeProteomicWhenEmpty = false)
         {
-            if (adduct.IsProteomic || (assumeProteomicWhenEmpty && adduct.IsEmpty))
+            if (mods != null && mods.HasCrosslinks)
+            {
+                yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, IsotopeLabelType.light, mods, false), IsotopeLabelType.light, adduct);
+//                yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, IsotopeLabelType.light, mods, true), IsotopeLabelType.light, adduct);
+
+                foreach (var labelTypeHeavy in GetHeavyLabelTypes(mods))
+                {
+                    yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, labelTypeHeavy, mods, false), labelTypeHeavy, adduct);
+//                    yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, labelTypeHeavy, mods, true), labelTypeHeavy, adduct);
+                }
+            }
+            else if (adduct.IsProteomic || (assumeProteomicWhenEmpty && adduct.IsEmpty))
             {
                 var labelType = IsotopeLabelType.light;
                 var modifiedSequence = GetModifiedSequence(sequence, labelType, mods);

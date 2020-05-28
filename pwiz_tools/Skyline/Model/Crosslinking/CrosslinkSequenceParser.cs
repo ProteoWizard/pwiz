@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Management;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 
@@ -52,6 +53,11 @@ namespace pwiz.Skyline.Model.Crosslinking
                     if (sequence.EndsWith(@"-"))
                     {
                         sequence = sequence.Substring(sequence.Length - 1);
+                    }
+
+                    if (!FastaSequence.IsExSequence(sequence))
+                    {
+                        throw CommonException.Create(new ParseExceptionDetail("Invalid peptide sequence", ich));
                     }
                     peptideSequences.Add(new PeptideLibraryKey(sequence, 0));
                 }
