@@ -280,9 +280,9 @@ public ref class Scheduler
 
 
     public:
-    Scheduler(System::String^ scheduling_file_directory_name)
+    Scheduler(System::String^ scheduling_file_name)
     {
-        handle_ = prm_scheduling_file_open(ToStdString(scheduling_file_directory_name).c_str());
+        handle_ = prm_scheduling_file_open(ToStdString(scheduling_file_name).c_str());
         if (!handle_)
             throw gcnew System::Exception(GetLastErrorString());
     }

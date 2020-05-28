@@ -118,14 +118,13 @@ make PrmPasefScheduler.xml
         @merge_xdc_data_files
     : # requirements
     ;
-    
 
 rule unit-test-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties)
     {
-        result += <using-clr>true <dependency>PrmPasefScheduler <assembly>PrmPasefScheduler <assembly-dependency>timstof_prm_scheduler.prmsqlite ;
+        result += <using-clr>true <dependency>PrmPasefScheduler <assembly>PrmPasefScheduler ;
     }
     else
     {
