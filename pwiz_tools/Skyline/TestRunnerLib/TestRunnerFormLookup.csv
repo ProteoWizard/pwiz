@@ -60,6 +60,7 @@ EditIsolationSchemeDlg,TestCalculateIsolationWindows
 EditIsotopeEnrichmentDlg,TestEditDialogs
 EditLabelTypeListDlg,TestExplicitMultiType
 EditLibraryDlg,TestRetentionTimeAlignment
+EditLinkedPeptideDlg,TestCrosslinking
 EditListDlg`2,TestEditStaticMod
 EditMeasuredIonDlg,TestEditDialogs
 EditNoteDlg,TestEditNote
