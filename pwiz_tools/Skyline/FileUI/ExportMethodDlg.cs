@@ -939,7 +939,7 @@ namespace pwiz.Skyline.FileUI
 
             if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
             {
-                BrukerTimsTofMethodExporter.GetScheduling(_document, _exportProperties, templateName, out _, out var missingIonMobility);
+                var missingIonMobility = BrukerTimsTofMethodExporter.GetMissingIonMobility(_document, _exportProperties, templateName);
                 if (missingIonMobility.Length > 0)
                 {
                     MessageDlg.Show(this,

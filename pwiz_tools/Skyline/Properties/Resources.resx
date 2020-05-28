@@ -10835,4 +10835,7 @@ There might be something wrong with default web browser on this computer.</value
 {1} of the {2} peptides or molecules were invalid, including:
 {3}</value>
   </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___" xml:space="preserve">
+    <value>Getting scheduling...</value>
+  </data>
 </root>
