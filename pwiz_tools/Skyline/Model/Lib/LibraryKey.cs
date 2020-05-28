@@ -650,7 +650,20 @@ namespace pwiz.Skyline.Model.Lib
                 stringBuilder.Append(@"]");
                 return stringBuilder.ToString();
             }
-         
+
+            public IEnumerable<int> PeptideIndexesWithLinks
+            {
+                get
+                {
+                    for (int i = 0; i < Positions.Count; i++)
+                    {
+                        if (Positions[i].Any())
+                        {
+                            yield return i;
+                        }
+                    }
+                }
+            }
         }
 
         public static ImmutableList<ImmutableList<int>> MakePositions(IEnumerable<IEnumerable<int>> positions)
@@ -668,5 +681,70 @@ namespace pwiz.Skyline.Model.Lib
             return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Join(String.Empty, Crosslinks) + Transition.GetChargeIndicator(Adduct);
         }
 
+        /// <summary>
+        /// Returns true if Skyline can handle the structure of the crosslinks in this CrosslinkLibraryKey
+        /// </summary>
+        /// <returns></returns>
+        public bool IsSupportedBySkyline()
+        {
+            var queue = new List<ImmutableList<int>>();
+            var remainingCrosslinks = new List<List<int>>();
+            foreach (var crosslink in Crosslinks)
+            {
+                if (crosslink.Positions.Any(positionSet => positionSet.Count > 1))
+                {
+                    // Currently, looplinks are not supported, but will be supported in the future.
+                    return false;
+                }
+                var peptideIndexesWithLinks = crosslink.PeptideIndexesWithLinks.ToList();
+                if (peptideIndexesWithLinks.Count != 2)
+                {
+                    return false;
+                }
+                if (peptideIndexesWithLinks.Contains(0))
+                {
+                    queue.Add(ImmutableList.ValueOf(peptideIndexesWithLinks));
+                }
+                else
+                {
+                    remainingCrosslinks.Add(peptideIndexesWithLinks);
+                }
+            }
+
+            if (queue.Count == 0)
+            {
+                return false;
+            }
+
+            while (queue.Count != 0)
+            {
+                var entry = queue[0];
+                queue.RemoveAt(0);
+                int currentPeptideIndex = entry[entry.Count - 1];
+                for (int iCrosslink = remainingCrosslinks.Count - 1; iCrosslink >= 0; iCrosslink--)
+                {
+                    var crosslinkIndexes = remainingCrosslinks[iCrosslink];
+                    if (crosslinkIndexes.Remove(currentPeptideIndex))
+                    {
+                        remainingCrosslinks.RemoveAt(iCrosslink);
+                        Assume.AreEqual(1, crosslinkIndexes.Count);
+                        var otherPeptideIndex = crosslinkIndexes[0];
+                        if (entry.Contains(otherPeptideIndex))
+                        {
+                            // Circular references between peptides are not supported
+                            return false;
+                        }
+                        queue.Add(ImmutableList.ValueOf(entry.Append(otherPeptideIndex)));
+                    }
+                }
+            }
+
+            if (remainingCrosslinks.Count != 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }

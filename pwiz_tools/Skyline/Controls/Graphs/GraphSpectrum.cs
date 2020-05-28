@@ -691,7 +691,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 rankAdducts,
                 rankTypes,
                 null);
-            return new SpectrumGraphItem(selection.Precursor, selection.Transition, spectrumInfoR,
+            return new SpectrumGraphItem(selection.Peptide, selection.Precursor, selection.Transition, spectrumInfoR,
                 spectrum.Name)
             {
                 ShowTypes = types,
@@ -951,7 +951,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     _spectrum.Name, _mirrorSpectrum.Name);
                             GraphPane.Title.Text = TextUtil.LineSeparate(
                                 libraryStr,
-                                SpectrumGraphItem.GetTitle(_mirrorSpectrum.Precursor, _mirrorSpectrum.LabelType),
+                                SpectrumGraphItem.GetTitle(selection.Peptide, _mirrorSpectrum.Precursor, _mirrorSpectrum.LabelType),
                                 prositEx.Message);
                             graphControl.Refresh();
                             return;

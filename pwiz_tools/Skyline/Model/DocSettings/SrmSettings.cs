@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
@@ -289,7 +290,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TypedMass GetPrecursorMass(IsotopeLabelType labelType, Target seq, ExplicitMods mods)
         {
-            return GetPrecursorCalc(labelType, mods).GetPrecursorMass(seq);
+            var precursorCalc = GetPrecursorCalc(labelType, mods);
+
+            if (mods != null && mods.HasCrosslinks)
+            {
+                var crosslinkBuilder = new CrosslinkBuilder(this, new Peptide(seq), mods, labelType);
+                return crosslinkBuilder.GetPrecursorMass(precursorCalc.MassType);
+            }
+            return precursorCalc.GetPrecursorMass(seq);
         }
 
         public TypedMass GetPrecursorMass(IsotopeLabelType labelType, CustomMolecule mol, TypedModifications mods, Adduct adductForIsotopeLabels, out string isotopicFormula)
@@ -1432,7 +1440,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // a variable modification, or the library contains some form of the peptide.
                 // This is a performance improvement over checking every variable modification
                 // of a peptide when it is not even in the library.
-                (peptide.IsCustomMolecule || (mods != null && mods.IsVariableStaticMods) || LibrariesContainAny(peptide.Target)))
+                (peptide.IsCustomMolecule || (mods != null && (mods.IsVariableStaticMods || mods.HasCrosslinks)) || LibrariesContainAny(peptide.Target)))
             {
                 // Only allow variable modifications, if the peptide has no modifications
                 // or already checking variable modifications, and there is reason to check

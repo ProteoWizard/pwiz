@@ -597,6 +597,12 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
+            var crosslinkLibraryKey = CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(target.Sequence, 0);
+
+            if (null != crosslinkLibraryKey)
+            {
+                return CreateCrosslinkDocNode(peptide, crosslinkLibraryKey, diff, out nodeGroupMatched);
+            }
             var seq = target.Sequence;
             seq = Transition.StripChargeIndicators(seq, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
             if (peptide == null)
@@ -635,6 +641,11 @@ namespace pwiz.Skyline.Model
             SrmSettingsDiff diff,
             out TransitionGroupDocNode nodeGroupMatched)
         {
+            if (!crosslinkLibraryKey.IsSupportedBySkyline())
+            {
+                nodeGroupMatched = null;
+                return null;
+            }
             nodeGroupMatched = null;
             var mainPeptide = MakePeptideDocNode(crosslinkLibraryKey.PeptideLibraryKeys[0]);
             if (mainPeptide == null)
@@ -656,51 +667,13 @@ namespace pwiz.Skyline.Model
             staticMods.AddRange(crosslinks);
             var newMods = new ExplicitMods(mainPeptide.Peptide, staticMods,
                 mainPeptide.ExplicitMods?.GetHeavyModifications());
-            var crosslinkedPeptide = mainPeptide.ChangeExplicitMods(newMods).ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL, true);
+            var crosslinkedPeptide = mainPeptide.ChangeExplicitMods(newMods).ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL);
             nodeGroupMatched = new TransitionGroupDocNode(new TransitionGroup(mainPeptide.Peptide, crosslinkLibraryKey.Adduct, IsotopeLabelType.light),
                 Annotations.EMPTY, 
                 Settings, newMods, null, ExplicitTransitionGroupValues.EMPTY, null, null, true);
             crosslinkedPeptide = (PeptideDocNode) crosslinkedPeptide.ChangeChildren(new DocNode[] {nodeGroupMatched});
             return crosslinkedPeptide;
         }
-
-        // private ExplicitMod MakeCrosslinkMod(CrosslinkLibraryKey crosslinkLibraryKey, SrmSettingsDiff diff,
-        //     CrosslinkLibraryKey.Crosslink crosslink, int peptideIndex)
-        // {
-        //     if (!crosslink.Positions[peptideIndex].Any())
-        //     {
-        //         return null;
-        //     }
-        //
-        //     int aaIndex = crosslink.AaIndexes[peptideIndex].First();
-        //     for (int linkedPeptideIndex = peptideIndex + 1;
-        //         linkedPeptideIndex < crosslinkLibraryKey.PeptideLibraryKeys.Count;
-        //         linkedPeptideIndex++)   
-        //     {
-        //         if (!crosslink.Positions[linkedPeptideIndex].Any())
-        //         {
-        //             continue;
-        //         }
-        //
-        //         int aaIndex2 = crosslink.AaIndexes[linkedPeptideIndex].First();
-        //         var crosslinkMod = FindCrosslinkMod(crosslink.Name,
-        //             crosslinkLibraryKey.PeptideLibraryKeys[peptideIndex].UnmodifiedSequence, aaIndex,
-        //             crosslinkLibraryKey.PeptideLibraryKeys[linkedPeptideIndex].UnmodifiedSequence, aaIndex2);
-        //         if (crosslinkMod == null)
-        //         {
-        //             return null;
-        //         }
-        //         var linkedPeptide = MakeLinkedPeptide(crosslinkLibraryKey.PeptideLibraryKeys[linkedPeptideIndex], aaIndex2);
-        //         if (linkedPeptide == null)
-        //         {
-        //             return null;
-        //         }
-        //
-        //         return new ExplicitMod(aaIndex, crosslinkMod).ChangeLinkedPeptide(linkedPeptide);
-        //     }
-        //
-        //     return null;
-        // }
 
         private LinkedPeptide MakeLinkedPeptide(CrosslinkLibraryKey crosslinkLibraryKey, CrosslinkLibraryKey.Crosslink crosslink, IList<int> peptideIndexes)
         {
@@ -766,7 +739,7 @@ namespace pwiz.Skyline.Model
             return explicitMods;
         }
 
-        private StaticMod FindCrosslinkMod(string crosslinkName, String sequence1, int indexAa1, String sequence2,
+        private StaticMod FindCrosslinkMod(string crosslinkName, string sequence1, int indexAa1, String sequence2,
             int indexAa2)
         {
             IEnumerable<StaticMod> allMods = Settings.PeptideSettings.Modifications.StaticModifications;
@@ -787,8 +760,7 @@ namespace pwiz.Skyline.Model
                     continue;
                 }
 
-                if (!new MassModification(mod.MonoisotopicMass.Value, MassModification.MAX_PRECISION_FOR_LIB).Matches(
-                    massModification))
+                if (!massModification.Matches(MassModification.FromMass(mod.MonoisotopicMass.Value)))
                 {
                     continue;
                 }
@@ -858,7 +830,7 @@ namespace pwiz.Skyline.Model
             }
 
             MassModification massModification = aaModKey.Mass.HasValue
-                ? new MassModification(aaModKey.Mass.Value, MassModification.MAX_PRECISION_TO_KEEP)
+                ? MassModification.FromMass(aaModKey.Mass.Value)
                 : null;
 
             foreach (var staticMod in Settings.PeptideSettings.Modifications.StaticModifications)
@@ -870,8 +842,7 @@ namespace pwiz.Skyline.Model
                         continue;
                     }
 
-                    if (!massModification.Matches(new MassModification(staticMod.MonoisotopicMass.Value,
-                        MassModification.MAX_PRECISION_TO_KEEP)))
+                    if (!massModification.Matches(MassModification.FromMass(staticMod.MonoisotopicMass.Value)))
                     {
                         continue;
                     }
