@@ -45,6 +45,14 @@ protected:
         STATIC_MODIFICATIONS_STATE
     };
 
+    enum class LinkType
+    {
+        Unlinked,
+        Crosslink,
+        Looplink,
+        Other
+    };
+
     class ProxlPeptide {
     public:
         ProxlPeptide() {}
@@ -64,7 +72,8 @@ protected:
     
     struct ProxlMatches {
         std::vector<ProxlPeptide> peptides_;
-        std::map< std::string, vector<ProxlPsm*> > psms_;        
+        std::map< std::string, vector<ProxlPsm*> > psms_;
+        LinkType linkType_;
     };
 
     static double aaMasses_[128];
@@ -79,6 +88,8 @@ protected:
 
     ProxlPsm* curProxlPsm_;
     std::vector<ProxlMatches> proxlMatches_;
+    vector<std::string> dirs_;       ///< directories where spec files might be
+    vector<std::string> extensions_; ///< possible extensions of spec files (.mzXML)
 };
 
 }

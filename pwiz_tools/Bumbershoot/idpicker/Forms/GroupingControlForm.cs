@@ -480,8 +480,32 @@ namespace IDPicker.Forms
 
         private void miResetFiles_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Are you sure you want to remove all groups?", "Remove All", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                RemoveGroupNode((tlvBranch) tlvGroupedFiles.GetModelObject(0), true);
+            if (MessageBox.Show("Are you sure you want to remove all groups?", "Remove All", MessageBoxButtons.YesNo) != DialogResult.Yes)
+                return;
+
+            tlvGroupedFiles.ClearObjects();
+            _rootNode = new tlvBranch
+            {
+                Text = "/",
+                Parent = new tlvBranch { Text = null },
+                Children = new List<tlvBranch>(),
+                Data = new SpectrumSourceGroup { Name = "/" }
+            };
+            tlvGroupedFiles.AddObject(_rootNode);
+
+            foreach (var ss in session.Query<SpectrumSource>())
+            {
+                var lvTag = new tlvBranch
+                {
+                    Text = ss.Name,
+                    Parent = new tlvBranch { Text = null },
+                    Children = new List<tlvBranch>(),
+                    Data = ss
+                };
+                var lvi = new ListViewItem { Text = ss.Name, Tag = lvTag };
+                lvNonGroupedFiles.Items.Add(lvi);
+            }
+
         }
 
         private void miExpandGroups_Click(object sender, EventArgs e)
@@ -656,17 +680,19 @@ namespace IDPicker.Forms
                 tlvGroupedFiles.RemoveObject(item);
             lvNonGroupedFiles.Items.Clear();
 
-            var sourcesByGroup = session.Query<SpectrumSource>().Where(o => o.Group != null)
-                                                                .ToLookup(o => (int)o.Group.Id.Value)
+            var groups = session.Query<SpectrumSourceGroup>().ToList();
+
+            // if root group is only group, put sources with null group into root group
+            var sourcesByGroup = session.Query<SpectrumSource>().Where(o => o.Group != null || groups.Count == 1)
+                                                                .ToLookup(o => (int)(o.Group?.Id ?? 1))
                                                                 .ToDictionary(o => o.Key, o => o.ToList());
 
-            var groups = session.Query<SpectrumSourceGroup>().ToList();
             var groupNode = new tlvBranch
             {
                 Text = "/",
                 Parent = new tlvBranch { Text = null },
                 Children = new List<tlvBranch>(),
-                Data = (from g in groups where g.Name == "/" select g).Single()
+                Data = (from g in groups where g.Name == "/" select g).First()
             };
 
             groups.Remove(groupNode.Data as SpectrumSourceGroup);
@@ -787,7 +813,7 @@ namespace IDPicker.Forms
             var ofd = new OpenFileDialog
                           {
                               CheckPathExists = true,
-                              Filter = "Assemble.txt file|*.txt|All files|*.*",
+                              Filter = "Assemble.txt file|*.txt;*.tabular|All files|*.*",
                               FilterIndex = 0,
                               Title = "Select a text file describing your source hierarchy."
                           };
@@ -820,6 +846,8 @@ namespace IDPicker.Forms
                         Match lineMatch = groupFilemaskPair.Match(line);
                         string group = lineMatch.Groups[3].ToString() + lineMatch.Groups[4].ToString();
                         string filemask = lineMatch.Groups[7].ToString() + lineMatch.Groups[8].ToString();
+
+                        group = group.TrimEnd(' ', '/');
 
                         // for wildcards, use old style behavior
                         if (filemask.IndexOfAny("*?".ToCharArray()) > -1)
