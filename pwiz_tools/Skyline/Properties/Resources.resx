@@ -10814,4 +10814,20 @@ There might be something wrong with default web browser on this computer.</value
 {1} of the {2} peptides or molecules were invalid, including:
 {3}</value>
   </data>
+  <data name="CrosslinkSequenceParser_ParseCrosslinkLibraryKey_Invalid_peptide_sequence" xml:space="preserve">
+    <value>Invalid peptide sequence</value>
+  </data>
+  <data name="CrosslinkSequenceParser_ParseCrosslink_Unable_to_parse___0___as_a_number" xml:space="preserve">
+    <value>Unable to parse '{0}' as a number</value>
+  </data>
+  <data name="CrosslinkSequenceParser_Expected_Expected___0__" xml:space="preserve">
+    <value>Expected '{0}'</value>
+  </data>
+  <data name="ParseExceptionDetail_ToString__at_position__0_" xml:space="preserve">
+    <value>{0} at position {1}</value>
+    <comment>Examples: 
+Expected '-' at position 17
+Invalid peptide sequence at position 18
+</comment>
+  </data>
 </root>

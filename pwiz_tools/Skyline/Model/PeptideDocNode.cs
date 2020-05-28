@@ -2024,6 +2024,7 @@ namespace pwiz.Skyline.Model
                        ? String.Format(Resources.PeptideDocNodeToString__0__rank__1__, Peptide, Rank)
                        : Peptide.ToString();
         }
+
         #endregion
     }
 

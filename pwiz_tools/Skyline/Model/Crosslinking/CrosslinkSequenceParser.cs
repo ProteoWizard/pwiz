@@ -1,9 +1,27 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Management;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
@@ -25,7 +43,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 return null;
             }
         }
-        public static bool LooksLikeCrosslinkSequence(string str)
+        private static bool LooksLikeCrosslinkSequence(string str)
         {
             return FastaSequence.StripModifications(str).IndexOf('-') >= 0;
         }
@@ -57,7 +75,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
                     if (!FastaSequence.IsExSequence(sequence))
                     {
-                        throw CommonException.Create(new ParseExceptionDetail("Invalid peptide sequence", ich));
+                        throw CommonException.Create(new ParseExceptionDetail(Resources.CrosslinkSequenceParser_ParseCrosslinkLibraryKey_Invalid_peptide_sequence, ich));
                     }
                     peptideSequences.Add(new PeptideLibraryKey(sequence, 0));
                 }
@@ -106,7 +124,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                         }
                         catch (Exception)
                         {
-                            string message = string.Format("Unable to parse '{0}' as a number", value);
+                            string message = string.Format(Resources.CrosslinkSequenceParser_ParseCrosslink_Unable_to_parse___0___as_a_number, value);
                             throw CommonException.Create(new ParseExceptionDetail(message, position + ichAt));
                         }
                     }
@@ -118,7 +136,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         private static ParseExceptionDetail Expected(char ch, int position)
         {
-            return new ParseExceptionDetail(string.Format("Expected '{0}'", ch), position);
+            return new ParseExceptionDetail(string.Format(Resources.CrosslinkSequenceParser_Expected_Expected___0__, ch), position);
         }
 
         private static IEnumerable<string> Tokenize(string str)
@@ -179,7 +197,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 string message = Message;
                 if (Position.HasValue)
                 {
-                    message += " at position " + (Position + 1);
+                    message = string.Format(Resources.ParseExceptionDetail_ToString__at_position__0_, message, Position + 1);
                 }
                 return message;
             }

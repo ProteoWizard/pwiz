@@ -184,7 +184,7 @@ message LibraryKeyProto
 	string adduct = 8;
 	double precursorMz = 9;
 	double retentionTime = 10;
-	repeated LibraryKeyProto children = 11;
+	repeated string crosslinkedSequences = 11;
 	repeated Crosslinker crosslinkers = 12;
 }
 

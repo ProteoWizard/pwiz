@@ -524,8 +524,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public CrosslinkLibraryKey(LibraryKeyProto libraryKeyProto)
         {
-            PeptideLibraryKeys = ImmutableList.ValueOf(libraryKeyProto.Children
-                .Select(child => new PeptideLibraryKey(child.ModifiedSequence, 0)));
+            PeptideLibraryKeys = ImmutableList.ValueOf(libraryKeyProto.CrosslinkedSequences
+                .Select(sequence => new PeptideLibraryKey(sequence, 0)));
             Crosslinks = ImmutableList.ValueOf(libraryKeyProto.Crosslinkers.Select(crosslinkProto =>
                 new Crosslink(crosslinkProto.Name, crosslinkProto.Positions.Select(pos => pos.Position.ToArray()))));
             Charge = libraryKeyProto.Charge;
@@ -551,7 +551,7 @@ namespace pwiz.Skyline.Model.Lib
             };
             foreach (var peptideLibraryKey in PeptideLibraryKeys)
             {
-                libraryKeyProto.Children.Add(new LibraryKeyProto() { ModifiedSequence = peptideLibraryKey.ModifiedSequence});
+                libraryKeyProto.CrosslinkedSequences.Add(peptideLibraryKey.ModifiedSequence);
             }
             foreach (var crosslinker in Crosslinks)
             {

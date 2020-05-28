@@ -638,11 +638,6 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>True if the library contains any spectra for this peptide regardless of modification or charge</returns>
         public abstract bool ContainsAny(Target target);
 
-        public virtual bool HasAnyCrosslinks()
-        {
-            return false;
-        }
-
         /// <summary>
         /// Some details for the library. 
         /// This can be the library revision, program version, 
@@ -969,11 +964,6 @@ namespace pwiz.Skyline.Model.Lib
         public override bool ContainsAny(Target target)
         {
             return _libraryEntries.ItemsWithUnmodifiedSequence(target).Any();
-        }
-
-        public override bool HasAnyCrosslinks()
-        {
-            return _libraryEntries.Index.HasAnyCrosslinks();
         }
 
         public override bool Contains(LibKey key)

@@ -476,7 +476,6 @@
     <Compile Include="Model\MassModification.cs" />
     <Compile Include="Model\DisplayModificationOption.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
-    <Compile Include="Model\PeptideSequenceMatcher.cs" />
     <Compile Include="Model\Prosit\Config\PrositConfig.cs" />
     <Compile Include="Model\Prosit\Models\PrositIntensityModel.cs" />
     <Compile Include="Model\Prosit\Models\PrositModel.cs" />

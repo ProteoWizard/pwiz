@@ -40,8 +40,8 @@ namespace pwiz.Skyline.Model.Lib
                 new PeptideSubIndex(allItems),
                 new MoleculeSubIndex(allItems),
                 new PrecursorSubIndex(allItems),
-                new CrosslinkSubIndex(allItems), 
-            }.Where(subIndex=>subIndex.Count != 0));
+                new CrosslinkSubIndex(allItems),
+            }.Where(subIndex => subIndex.Any()));
             Count = _subIndexes.Sum(index => index.Count);
         }
 
@@ -259,11 +259,6 @@ namespace pwiz.Skyline.Model.Lib
             }
             modifiedSequence.Append(unmodifiedSequence.Substring(ichUnmodified));
             return modifiedSequence.ToString();
-        }
-
-        public bool HasAnyCrosslinks()
-        {
-            return _subIndexes.OfType<CrosslinkSubIndex>().Any();
         }
 
         private interface ISubIndex : IEnumerable<IndexItem>
