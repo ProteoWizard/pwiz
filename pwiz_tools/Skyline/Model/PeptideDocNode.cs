@@ -84,9 +84,9 @@ namespace pwiz.Skyline.Model
 
             if (settings != null)
             {
-                var calcPre = settings.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
-                ModifiedTarget = calcPre.GetModifiedSequence(Peptide.Target, SequenceModFormatType.full_precision, false);
-                ModifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Target, true).DisplayName;
+                CalculateModifiedTarget(settings, out Target modifiedTarget, out string modifiedSequenceDisplay);
+                ModifiedTarget = modifiedTarget;
+                ModifiedSequenceDisplay = modifiedSequenceDisplay;
             }
             else
             {
@@ -571,9 +571,7 @@ namespace pwiz.Skyline.Model
             if (!IsProteomic)
                 return this; // Settings have no effect on custom ions
 
-            var calcPre = settingsNew.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
-            var modifiedTarget = calcPre.GetModifiedSequence(Peptide.Target, SequenceModFormatType.full_precision, false);
-            string modifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Target, true).Sequence;
+            CalculateModifiedTarget(settingsNew, out Target modifiedTarget, out string modifiedSequenceDisplay);
             if (Equals(modifiedTarget, ModifiedTarget) &&
                 String.Equals(modifiedSequenceDisplay, ModifiedSequenceDisplay))
             {
@@ -584,6 +582,24 @@ namespace pwiz.Skyline.Model
                     im.ModifiedTarget = modifiedTarget;
                     im.ModifiedSequenceDisplay = modifiedSequenceDisplay;
                 });
+        }
+
+        private void CalculateModifiedTarget(SrmSettings srmSettings, out Target modifiedTarget,
+            out string modifiedSequenceDisplay)
+        {
+            if (ExplicitMods == null || !ExplicitMods.HasCrosslinks)
+            {
+                var calcPre = srmSettings.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
+
+                modifiedTarget =
+                    calcPre.GetModifiedSequence(Peptide.Target, SequenceModFormatType.full_precision, false);
+                modifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Target, true).DisplayName;
+            }
+            else
+            {
+                modifiedTarget = srmSettings.GetCrosslinkModifiedSequence(Peptide.Target, IsotopeLabelType.light, ExplicitMods, false);
+                modifiedSequenceDisplay = modifiedTarget.ToString();
+            }
         }
 
         public PeptideDocNode ChangeExplicitMods(ExplicitMods prop)
@@ -2008,7 +2024,6 @@ namespace pwiz.Skyline.Model
                        ? String.Format(Resources.PeptideDocNodeToString__0__rank__1__, Peptide, Rank)
                        : Peptide.ToString();
         }
-
         #endregion
     }
 
