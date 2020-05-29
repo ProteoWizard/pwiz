@@ -488,7 +488,7 @@ namespace pwiz.Skyline.EditUI
                     {
                         Column = colPeptideSequence.Index,
                         Line = i,
-                        Message = "The structure of this crosslinked peptide is not supported by Skyline"
+                        Message = Resources.PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline
                     });
                     return null;
                 }
