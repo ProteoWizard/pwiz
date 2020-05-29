@@ -279,6 +279,7 @@ project pwiz
 
         # avoid deprecation warnings
         <define>BOOST_NO_AUTO_PTR
+        <define>_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING # TODO: remove this next time Boost is updated
 
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
@@ -286,7 +287,6 @@ project pwiz
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
         <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
         <toolset>msvc:<define>BOOST_ALL_NO_LIB          # disable auto-link
-        <toolset>msvc:<define>_WIN32_WINNT=0x0601       # target Windows 7 or later
         <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
         <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
         <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
@@ -312,9 +312,8 @@ project pwiz
         
         <conditional>@secure-scl-throws
 
-        # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
-        # warning: '__cur' might be used uninitialized in this function 
-        <toolset>gcc:<cxxflags>-Wno-uninitialized
+        <toolset>gcc:<cxxflags>-Wno-uninitialized       # warning: '__cur' might be used uninitialized in this function 
+        <toolset>gcc:<cxxflags>-Wno-parentheses         # warning: suggest parentheses around '&&' within '||'
 
         # set standard to C++14
         <toolset>gcc:<cxxflags>-std=c++14
