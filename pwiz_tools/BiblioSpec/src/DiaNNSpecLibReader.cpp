@@ -154,8 +154,9 @@ std::vector<MOD> Modifications = {
     MOD("UniMod:269", (float)10.027228, 1)
 };
 
-inline int closing_bracket(const std::string &name, char symbol, int pos) {
-    int end, par;
+inline size_t closing_bracket(const std::string &name, char symbol, size_t pos) {
+    size_t end;
+    int par;
     char close = (symbol == '(' ? ')' : ']');
     for (end = pos + 1, par = 1; end < name.size(); end++) {
         char s = name[end];
@@ -170,7 +171,7 @@ inline int closing_bracket(const std::string &name, char symbol, int pos) {
 
 inline std::string get_aas(const std::string &name, vector<SeqMod>& mods)
 {
-    int i, j, end;
+    size_t i, j, end;
     std::string result, mod;
     int modPrefixLength = 8; // length of "(UniMod:"
 
@@ -186,7 +187,7 @@ inline std::string get_aas(const std::string &name, vector<SeqMod>& mods)
             i += modPrefixLength;
             mod = name.substr(i, end-i);
             CVID unimodCvid = (CVID) (UNIMOD_unimod_root_node + lexical_cast<int>(mod));
-            mods.emplace_back(SeqMod(j, pwiz::data::unimod::modification(unimodCvid).deltaMonoisotopicMass()));
+            mods.emplace_back(SeqMod((int) j, pwiz::data::unimod::modification(unimodCvid).deltaMonoisotopicMass()));
             continue;
         }
         ++j;
@@ -196,7 +197,7 @@ inline std::string get_aas(const std::string &name, vector<SeqMod>& mods)
 }
 
 inline void to_eg(std::string &eg, const std::string &name) {
-    int i, j;
+    size_t i, j;
 
     eg.clear();
     for (i = 0; i < name.size(); i++) {
@@ -205,7 +206,7 @@ inline void to_eg(std::string &eg, const std::string &name) {
             if (symbol != '(' && symbol != '[') continue;
             i++;
 
-            int end = closing_bracket(name, symbol, i);
+            size_t end = closing_bracket(name, symbol, i);
             if (end == std::string::npos) throw std::runtime_error(std::string("incorrect peptide name format: ") + name);
 
             std::string mod = name.substr(i, end - i);
@@ -459,23 +460,23 @@ class Library {
         eg.clear(), elution_groups.clear(), elution_groups.reserve(entries.size());
         for (auto &e : entries) {
             auto name = to_eg(e.name);
-            auto egp = eg.insert(std::pair<std::string, int>(name, eg.size()));
+            auto egp = eg.insert(std::pair<std::string, int>(name, (int) eg.size()));
             elution_groups.push_back(e.eg_id = egp.first->second);
         }
         eg.clear();
     }
 
     void elution_group_index() {
-        int i, egt = 0, peg;
+        size_t i, egt = 0, peg;
         for (i = 0; i < elution_groups.size(); i++) if (elution_groups[i] > egt) egt = elution_groups[i]; egt++;
         co_elution_index.resize(egt, std::pair<int, int>(0, 1));
         std::set<std::pair<int, int> > ce;
-        for (i = 0; i < elution_groups.size(); i++) ce.insert(std::pair<int, int>(elution_groups[i], i));
+        for (i = 0; i < elution_groups.size(); i++) ce.insert(std::pair<int, int>(elution_groups[i], (int) i));
         co_elution.resize(ce.size()); i = peg = 0;
         if (co_elution_index.size()) co_elution_index[0].second = 0;
         for (auto it = ce.begin(); it != ce.end(); it++, i++) {
             co_elution[i] = it->second;
-            if (it->first != peg) co_elution_index[it->first].first = i;
+            if (it->first != peg) co_elution_index[it->first].first = (int) i;
             else co_elution_index[it->first].second++;
             peg = it->first;
         }
@@ -511,16 +512,13 @@ class Library {
             if (gc) for (auto &f : e.target.fragments) if (!(int)f.charge) gen_charges = true, gc = 0;
         }
 
-        int ps = proteins.size(), pis = protein_ids.size();
+        int ps = (int) proteins.size(), pis = (int) protein_ids.size();
         if (ps) if (!proteins[0].id.size()) ps--;
         if (pis) if (!protein_ids[0].ids.size()) pis--;
 
         elution_group_index();
 
-        Verbosity::status((ostringstream() << "Spectral library loaded: "
-            << ps << " protein isoforms, "
-            << pis << " protein groups and "
-            << entries.size() << " precursors in " << co_elution_index.size() << " elution groups.\n").str().c_str());
+        Verbosity::status("Spectral library loaded: %d protein isoforms, %d protein groups and %d precursors in %d elution groups.", ps, pis, entries.size(), co_elution_index.size());
 
         return true;
     }
