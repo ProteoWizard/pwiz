@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -113,23 +114,29 @@ namespace pwiz.Skyline.Controls.Graphs
 
             CurveList.Clear();
 
-            AddCurve(document, Color.Blue);
-            for (int i = 0; i < windows.Length; i++)
+            using (var longWait = new LongWaitDlg())
             {
-                double window = windows[i];
-                // Do not show the window used by the current document twice.
-                if (window == GetSchedulingWindow(document))
-                    continue;
-
-                var settings = document.Settings.ChangePeptidePrediction(p => p.ChangeMeasuredRTWindow(window));
-                if (settings.PeptideSettings.Prediction.RetentionTime != null)
+                longWait.PerformWork(null, 800, progressMonitor =>
                 {
-                    settings = settings.ChangePeptidePrediction(p =>
-                        p.ChangeRetentionTime(p.RetentionTime.ChangeTimeWindow(window)));
-                }
-                var docWindow = document.ChangeSettings(settings);
+                    AddCurve(document, Color.Blue, progressMonitor);
+                    for (int i = 0; i < windows.Length; i++)
+                    {
+                        double window = windows[i];
+                        // Do not show the window used by the current document twice.
+                        if (window == GetSchedulingWindow(document))
+                            continue;
 
-                AddCurve(docWindow, COLORS_WINDOW[(i+1)%COLORS_WINDOW.Count]);
+                        var settings = document.Settings.ChangePeptidePrediction(p => p.ChangeMeasuredRTWindow(window));
+                        if (settings.PeptideSettings.Prediction.RetentionTime != null)
+                        {
+                            settings = settings.ChangePeptidePrediction(p =>
+                                p.ChangeRetentionTime(p.RetentionTime.ChangeTimeWindow(window)));
+                        }
+                        var docWindow = document.ChangeSettings(settings);
+
+                        AddCurve(docWindow, COLORS_WINDOW[(i + 1) % COLORS_WINDOW.Count], progressMonitor);
+                    }
+                });
             }
 
             AxisChange();
@@ -149,13 +156,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
 
-        private void AddCurve(SrmDocument document, Color color)
+        private void AddCurve(SrmDocument document, Color color, IProgressMonitor progressMonitor)
         {
             if (!string.IsNullOrEmpty(BrukerTemplateFile))
             {
                 var exportProperties = new ExportDlgProperties(new ExportMethodDlg(document, ExportFileType.Method), new CancellationToken());
                 exportProperties.MethodType = ExportMethodType.Scheduled;
-                BrukerTimsTofMethodExporter.GetScheduling(document, exportProperties, BrukerTemplateFile, out var brukerPoints, out _);
+                BrukerTimsTofMethodExporter.GetScheduling(document, exportProperties, BrukerTemplateFile, progressMonitor, out var brukerPoints);
                 AddCurve(document, brukerPoints, color);
                 return;
             }

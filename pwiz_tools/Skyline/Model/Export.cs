@@ -3228,30 +3228,52 @@ namespace pwiz.Skyline.Model
                     s.AddInputTarget(_targets[i], id, description);
                 }
 
+                var progress = new ProgressStatus(Resources.BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___);
+
                 timeSegments = new TimeSegmentList();
                 schedulingEntries = new SchedulingEntryList();
-                s.GetScheduling(timeSegments, schedulingEntries);
-                if (!string.IsNullOrEmpty(fileName))
+
+                bool ProgressCallback(double progressPercentage)
                 {
-                    s.WriteScheduling();
+                    // return true to cancel, false to continue
+                    if (progressMonitor == null) return false;
+
+                    if (progressMonitor.IsCanceled) return true;
+
+                    progressMonitor.UpdateProgress(progress.ChangePercentComplete((int) Math.Round(progressPercentage)));
+                    return false;
                 }
+
+                s.GetScheduling(timeSegments, schedulingEntries, ProgressCallback);
+
+                if (!string.IsNullOrEmpty(fileName) && (progressMonitor == null || !progressMonitor.IsCanceled))
+                    s.WriteScheduling();
             }
         }
 
-        public static void GetScheduling(SrmDocument document, ExportProperties exportProperties, string templateName,
-            out IPointList pointList, out LibKey[] missingIonMobility)
+        public static LibKey[] GetMissingIonMobility(SrmDocument document, ExportProperties exportProperties,
+            string templateName)
         {
             var exporter = exportProperties.InitExporter(new BrukerTimsTofMethodExporter(document));
             exporter.RunLength = exportProperties.RunLength;
             exporter.Ms1RepetitionTime = exportProperties.Ms1RepetitionTime;
-            exporter.ExportMethod(null, templateName, null, out var timeSegments, out var schedulingEntries);
-            missingIonMobility = exporter.MissingIonMobility;
+            exporter.InitExport(null, null);
+            return exporter.MissingIonMobility;
+        }
+
+        public static void GetScheduling(SrmDocument document, ExportProperties exportProperties, string templateName,
+            IProgressMonitor progressMonitor, out IPointList pointList)
+        {
+            var exporter = exportProperties.InitExporter(new BrukerTimsTofMethodExporter(document));
+            exporter.RunLength = exportProperties.RunLength;
+            exporter.Ms1RepetitionTime = exportProperties.Ms1RepetitionTime;
+            exporter.ExportMethod(null, templateName, progressMonitor, out var timeSegments, out var schedulingEntries);
 
             var timeSegmentCounts = new Dictionary<uint, HashSet<uint>>();
             foreach (var entry in schedulingEntries)
             {
                 if (!timeSegmentCounts.ContainsKey(entry.time_segment_id))
-                    timeSegmentCounts[entry.time_segment_id ] = new HashSet<uint>();
+                    timeSegmentCounts[entry.time_segment_id] = new HashSet<uint>();
                 timeSegmentCounts[entry.time_segment_id].Add(entry.frame_id);
             }
 
@@ -3261,8 +3283,8 @@ namespace pwiz.Skyline.Model
                 var count = 0;
                 if (timeSegmentCounts.TryGetValue(i, out var countSet))
                     count = countSet.Count;
-                points.Add(new PointPair(timeSegments[(int)i].time_in_seconds_begin / 60, count));
-                points.Add(new PointPair(timeSegments[(int)i].time_in_seconds_end / 60, count));
+                points.Add(new PointPair(timeSegments[(int) i].time_in_seconds_begin / 60, count));
+                points.Add(new PointPair(timeSegments[(int) i].time_in_seconds_end / 60, count));
             }
 
             if (timeSegments.Count > 0)
@@ -3282,6 +3304,7 @@ namespace pwiz.Skyline.Model
 
                 points.Add(new PointPair(points.Last().X, 0));
             }
+
             pointList = new PointPairList(points);
         }
     }

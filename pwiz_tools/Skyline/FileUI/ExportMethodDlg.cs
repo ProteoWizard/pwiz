@@ -207,6 +207,9 @@ namespace pwiz.Skyline.FileUI
             cbSlens.Top = textMaxTransitions.Bottom;
             cbWriteCoV.Top = cbSlens.Bottom;
             panelThermoColumns.Top = labelDwellTime.Top;
+            var panelOffset = panelThermoColumns.Controls.Cast<Control>().Min(c => c.Left);
+            foreach (var control in panelThermoColumns.Controls.Cast<Control>())
+                control.Left -= panelOffset;
             panelThermoRt.Top = panelThermoColumns.Top - (int)(panelThermoRt.Height*0.8);
             panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
             panelTriggered.Top = textDwellTime.Top + (textDwellTime.Height - panelTriggered.Height)/2;
@@ -939,7 +942,7 @@ namespace pwiz.Skyline.FileUI
 
             if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
             {
-                BrukerTimsTofMethodExporter.GetScheduling(_document, _exportProperties, templateName, out _, out var missingIonMobility);
+                var missingIonMobility = BrukerTimsTofMethodExporter.GetMissingIonMobility(_document, _exportProperties, templateName);
                 if (missingIonMobility.Length > 0)
                 {
                     MessageDlg.Show(this,

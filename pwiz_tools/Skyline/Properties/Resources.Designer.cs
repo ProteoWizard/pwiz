@@ -2496,6 +2496,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Getting scheduling....
+        /// </summary>
+        public static string BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___ {
+            get {
+                return ResourceManager.GetString("BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Template is required for method export..
         /// </summary>
         public static string BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_ {
