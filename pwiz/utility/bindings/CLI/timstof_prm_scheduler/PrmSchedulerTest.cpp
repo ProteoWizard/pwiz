@@ -524,7 +524,9 @@ void test()
     parameters->ms1_repetition_time = 10;
 
     //bfs::create_directory("test_scheduling_dir");
-    auto s = gcnew Scheduler(ToSystemString(pwiz::util::env::get("PWIZ_ROOT") + "/pwiz/utility/bindings/CLI/timstof_prm_scheduler/timstof_prm_scheduler.prmsqlite"));
+    string templateFilepath = pwiz::util::env::get("PWIZ_ROOT") + "/pwiz/utility/bindings/CLI/timstof_prm_scheduler/timstof_prm_scheduler.prmsqlite";
+    bfs::copy_file(templateFilepath, "timstof_prm_scheduler.prmsqlite", bfs::copy_option::overwrite_if_exists);
+    auto s = gcnew Scheduler(ToSystemString("timstof_prm_scheduler.prmsqlite"));
     s->SetAdditionalMeasurementParameters(parameters);
 
     for (const auto& testTarget : testTargets)
