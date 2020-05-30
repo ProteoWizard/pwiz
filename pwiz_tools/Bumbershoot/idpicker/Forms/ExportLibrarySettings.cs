@@ -61,11 +61,14 @@ namespace IDPicker.Forms
         {
             double result;
             var tolerance = _session.CreateSQLQuery("Select value from analysisParameter where name=\"FragmentMzTolerance\"").List<string>().FirstOrDefault();
-            if (tolerance.EndsWith("mz") && double.TryParse(tolerance.Substring(0, tolerance.Length - 2), out result))
-                return result;
-            if (tolerance.EndsWith("ppm") &&
-                double.TryParse(tolerance.Substring(0, tolerance.Length - 3), out result))
-                return result / 1000;
+            if (tolerance != null)
+            {
+                if (tolerance.EndsWith("mz") && double.TryParse(tolerance.Substring(0, tolerance.Length - 2), out result))
+                    return result;
+                if (tolerance.EndsWith("ppm") && double.TryParse(tolerance.Substring(0, tolerance.Length - 3), out result))
+                    return result / 1000;
+            }
+
             return 0.5;
         }
 
