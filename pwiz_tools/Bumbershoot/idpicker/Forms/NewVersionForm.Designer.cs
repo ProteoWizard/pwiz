@@ -58,6 +58,7 @@ namespace IDPicker.Forms
             this.noButton = new System.Windows.Forms.Button();
             this.showChangeLogCheckbox = new System.Windows.Forms.CheckBox();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
             this.splitContainer.SuspendLayout();
@@ -71,13 +72,13 @@ namespace IDPicker.Forms
             this.textTemplate.Size = new System.Drawing.Size(200, 65);
             this.textTemplate.TabIndex = 0;
             this.textTemplate.Text = "There is a newer version of {0} available.\r\nYou are using version {1}.\r\nThe lates" +
-                "t version is {2}.\r\n\r\nDownload it now?";
+    "t version is {2}.\r\n\r\nDownload it now?";
             // 
             // changelogTextBox
             // 
-            this.changelogTextBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.changelogTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.changelogTextBox.BackColor = System.Drawing.SystemColors.Window;
             this.changelogTextBox.Location = new System.Drawing.Point(12, 3);
             this.changelogTextBox.Multiline = true;
@@ -109,7 +110,7 @@ namespace IDPicker.Forms
             // 
             // showChangeLogCheckbox
             // 
-            this.showChangeLogCheckbox.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.showChangeLogCheckbox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.showChangeLogCheckbox.Appearance = System.Windows.Forms.Appearance.Button;
             this.showChangeLogCheckbox.AutoSize = true;
             this.showChangeLogCheckbox.Checked = true;
@@ -120,6 +121,7 @@ namespace IDPicker.Forms
             this.showChangeLogCheckbox.TabIndex = 4;
             this.showChangeLogCheckbox.Text = "Show Change Log";
             this.showChangeLogCheckbox.UseVisualStyleBackColor = true;
+            this.showChangeLogCheckbox.Visible = false;
             this.showChangeLogCheckbox.CheckedChanged += new System.EventHandler(this.showChangeLogCheckbox_CheckedChanged);
             // 
             // splitContainer
@@ -163,6 +165,7 @@ namespace IDPicker.Forms
             this.splitContainer.Panel1.PerformLayout();
             this.splitContainer.Panel2.ResumeLayout(false);
             this.splitContainer.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
             this.splitContainer.ResumeLayout(false);
             this.ResumeLayout(false);
 
