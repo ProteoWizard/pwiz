@@ -107,7 +107,8 @@ namespace IDPicker
 
             if (matches.Length == 0)
                 throw new ArgumentException("Cannot find source file corresponding to \"" +
-                                            source + "\"\r\n\r\n" +
+                                            source + "\"\r\nin these directories:\r\n" +
+                                            String.Join("\r\n", paths) + "\r\n\r\n" +
                                             "Check that this source file can be " +
                                             "found in the source search paths " +
                                             "(configured in Tools/Options) with one of the " +

@@ -260,15 +260,18 @@ namespace IDPicker.Forms
 
             public static NHibernate.IQuery GetQuery(NHibernate.ISession session, DataFilter dataFilter)
             {
-                if (dataFilter.Spectrum != null && dataFilter.Spectrum.Count == 1 ||
-                    dataFilter.Peptide != null && dataFilter.Peptide.Count == 1 ||
-                    dataFilter.DistinctMatchKey != null && dataFilter.DistinctMatchKey.Count == 1)
+                if (dataFilter.Spectrum?.Count == 1 ||
+                    dataFilter.Peptide?.Count == 1 ||
+                    dataFilter.DistinctMatchKey?.Count == 1)
                 {
                     var basicFilter = new DataFilter(dataFilter)
                     {
                         AminoAcidOffset = null,
                         Cluster = null,
-                        Protein = null
+                        Protein = null,
+                        ProteinGroup = null,
+                        Gene = null,
+                        GeneGroup = null
                     };
 
                     if (dataFilter.Spectrum != null)
