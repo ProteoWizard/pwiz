@@ -172,6 +172,9 @@ int main(int argc, char* argv[])
                 } else if (has_extension(result_file, ".mlb")) {
                     ShimadzuMLBReader mlbReader(builder, result_file, progress_cptr);
                     success = mlbReader.parseFile();
+                } else if (has_extension(result_file, ".speclib")) {
+                    DiaNNSpecLibReader diannReader(builder, result_file, progress_cptr);
+                    success = diannReader.parseFile();
                 } else if (has_extension(result_file, ".tsv")) {
                     auto tsvReader = TSVReader::create(builder, result_file, progress_cptr);
                     success = tsvReader->parseFile();
