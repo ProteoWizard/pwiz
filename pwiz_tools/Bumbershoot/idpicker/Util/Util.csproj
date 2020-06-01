@@ -152,9 +152,7 @@
     <Compile Include="CookieAwareWebClient.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DataGridViewCustomCells.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="DataGridViewCustomCells.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="MruDictionary.cs" />
     <Compile Include="Path.cs" />

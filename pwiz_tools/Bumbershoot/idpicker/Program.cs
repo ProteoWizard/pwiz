@@ -161,7 +161,7 @@ namespace IDPicker
                 e.InnerException.StackTrace.Contains("IDPicker"))
                 e = e.InnerException;
 
-            using (var reportForm = new ReportErrorDlg(e, ReportErrorDlg.ReportChoice.choice))
+            using (var reportForm = new ReportErrorDlg(e, ReportErrorDlg.ReportChoice.never))
             {
                 reportForm.StartPosition = FormStartPosition.CenterParent;
 
@@ -279,7 +279,7 @@ namespace IDPicker
         private static string filterRevisionLog (string log)
         {
             var lines = log.Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            return String.Join("\r\n", lines.Where(o=> o.TrimStart().StartsWith("-")).Select(o=> o.TrimEnd('\r')).ToArray());
+            return String.Join("\r\n", lines.Where(o=> o.TrimStart().StartsWith("- IDPicker: ")).Select(o=> o.TrimEnd('\r')).ToArray());
         }
 
         public static bool CheckForUpdates ()
@@ -289,8 +289,9 @@ namespace IDPicker
 
             string teamcityURL = "http://teamcity.labkey.org";
             string buildType = Environment.Is64BitProcess ? "Bumbershoot_Windows_X86_64" : "ProteoWizard_Bumbershoot_Windows_X86";
-            string buildsURL = String.Format("{0}/httpAuth/app/rest/buildTypes/id:{1}/builds?status=SUCCESS&count=1&guest=1", teamcityURL, buildType);
+            string buildsURL = String.Format("{0}/guestAuth/app/rest/buildTypes/id:{1}/builds?status=SUCCESS&count=1", teamcityURL, buildType);
             string latestArtifactURL;
+            string latestVersionFullString;
             Version latestVersion;
 
             lock (webClient)
@@ -304,10 +305,12 @@ namespace IDPicker
                 string buildId = xml.Substring(startIndex, endIndex - startIndex);
 
                 latestArtifactURL = String.Format("{0}/repository/download/{1}/{2}:id", teamcityURL, buildType, buildId);
-                latestVersion = new Version(webClient.DownloadString(latestArtifactURL + "/IDPICKER_VERSION?guest=1"));
+                latestVersionFullString = webClient.DownloadString(latestArtifactURL + "/IDPICKER_VERSION?guest=1");
+                latestVersion = new Version(String.Join(".", latestVersionFullString.Split('.', '-').Take(3)));
             }
 
-            Version currentVersion = new Version(Util.Version);
+            string currentVersionFullString = Util.Version;
+            Version currentVersion = new Version(String.Join(".", currentVersionFullString.Split('.', '-').Take(3)));
 
             if (currentVersion < latestVersion)
             {
@@ -366,7 +369,7 @@ namespace IDPicker
                     {
                         string archSuffix = Environment.Is64BitProcess ? "x86_64" : "x86";
                         string guestAccess = Application.ExecutablePath.Contains("build-nt-x86") ? "" : "?guest=1"; // don't log me out of TC session
-                        string installerURL = String.Format("{0}/IDPicker-{1}-{2}.msi{3}", latestArtifactURL, latestVersion, archSuffix, guestAccess);
+                        string installerURL = String.Format("{0}/IDPicker-{1}-{2}.msi{3}", latestArtifactURL, latestVersionFullString, archSuffix, guestAccess);
                         System.Diagnostics.Process.Start(installerURL);
                     }
                 }));

@@ -232,6 +232,7 @@ blib-test-build pride-xcorr : -o : output/pride-xcorr.blib : pride-xcorr.check z
 blib-test-build pride-bytes : -o : output/pride-xcorr-bytes.blib : pride-xcorr-bytes.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.bytes.pride.xml ;
 blib-test-build pride-xcorr-no-charges : -o : output/pride-xcorr-nocharges.blib : pride-xcorr-nocharges.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.xcorr.nocharges.pride.xml ;
 blib-test-build pride-mill : -o : output/pride-mill.blib : pride-mill.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.mill.pride.xml ;
+blib-test-build tiny-proxl : --unicode -o : output/tiny-proxl.blib : tiny-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny.proxl.xml ;
 blib-test-build tiny-msf : --unicode -o : output/tiny-msf.blib : tiny-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny.msf ;
 blib-test-build tiny-v2-msf : -o : output/tiny-v2-msf.blib : tiny-v2-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2.msf ;
 blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered-pdResult.blib : tiny-v2-filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2-filtered.pdResult ;
@@ -287,6 +288,9 @@ blib-test-build peptideshaker-mzid : --unicode -o : output/MoTai_PeptideShaker.b
 
 # Test mzid format from MetaMorpheus and WIFF
 blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : metamorpheus.check : $(TEST_INPUTS_PATH)/metamorpheus.mzid ;
+
+# Test DiaNN specLib format
+blib-test-build diann-speclib : -o : output/diann-speclib.blib : diann-speclib.check : $(TEST_INPUTS_PATH)/diann-swath.speclib ;
 
 # Test waters csv format
 blib-test-build mse : --unicode -o : output/mse.blib : mse.check : $(TEST_INPUTS_PATH)/tiny_final_fragment.csv ;
