@@ -42,6 +42,7 @@
     <ClCompile Include="src\BlibUtils.cpp" />
     <ClCompile Include="src\BuildParser.cpp" />
     <ClCompile Include="src\CommandLine.cpp" />
+    <ClCompile Include="src\DiaNNSpecLibReader.cpp" />
     <ClCompile Include="src\DotProduct.cpp" />
     <ClCompile Include="src\IdpXMLreader.cpp" />
     <ClCompile Include="src\LibReader.cpp" />
@@ -106,6 +107,7 @@
     <ClInclude Include="src\CommandLine.h" />
     <ClInclude Include="src\DelimitedFileConsumer.h" />
     <ClInclude Include="src\DelimitedFileReader.h" />
+    <ClInclude Include="src\DiaNNSpecLibReader.h" />
     <ClInclude Include="src\DotProduct.h" />
     <ClInclude Include="src\IdpXMLreader.h" />
     <ClInclude Include="src\LibReader.h" />
