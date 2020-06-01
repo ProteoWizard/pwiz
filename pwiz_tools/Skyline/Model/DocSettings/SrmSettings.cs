@@ -1224,12 +1224,10 @@ namespace pwiz.Skyline.Model.DocSettings
             if (mods != null && mods.HasCrosslinks)
             {
                 yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, IsotopeLabelType.light, mods, false), IsotopeLabelType.light, adduct);
-//                yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, IsotopeLabelType.light, mods, true), IsotopeLabelType.light, adduct);
 
                 foreach (var labelTypeHeavy in GetHeavyLabelTypes(mods))
                 {
                     yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, labelTypeHeavy, mods, false), labelTypeHeavy, adduct);
-//                    yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, labelTypeHeavy, mods, true), labelTypeHeavy, adduct);
                 }
             }
             else if (adduct.IsProteomic || (assumeProteomicWhenEmpty && adduct.IsEmpty))
