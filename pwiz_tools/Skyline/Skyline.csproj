@@ -420,6 +420,7 @@
     <Compile Include="Model\Crosslinking\CrosslinkBuilder.cs" />
     <Compile Include="Model\Crosslinking\ComplexFragmentIonName.cs" />
     <Compile Include="Model\Crosslinking\CrosslinkerDef.cs" />
+    <Compile Include="Model\Crosslinking\CrosslinkSequenceParser.cs" />
     <Compile Include="Model\Crosslinking\ModificationSite.cs" />
     <Compile Include="Model\Crosslinking\LinkedPeptide.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">

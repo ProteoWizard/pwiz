@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>
             {
                 transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.Filter;
-                transitionSettingsUi.PrecursorCharges = "4,3,2";
+                transitionSettingsUi.PrecursorCharges = "4,5";
                 transitionSettingsUi.ProductCharges = "4,3,2,1";
                 transitionSettingsUi.FragmentTypes = "y";
             });
@@ -71,19 +71,19 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(transitionSettingsUi, transitionSettingsUi.OkDialog);
             RunUI(()=>
             {
-                SkylineWindow.Paste("DDSPDLPKLKPDPNTLCDEFK\r\nSLGKVGTR");
+                SkylineWindow.Paste("LCVLHEKTPVSEK");
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo(1, 0);
             });
 
             var modifyPeptideDlg = ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);
             var editCrosslinkModDlg = ShowDialog<EditLinkedPeptideDlg>(() =>
             {
-                modifyPeptideDlg.SelectModification(IsotopeLabelType.light, 9, crosslinkerName);
+                modifyPeptideDlg.SelectModification(IsotopeLabelType.light, 6, crosslinkerName);
             });
             RunUI(() =>
             {
-                editCrosslinkModDlg.PeptideSequence = "SLGKVGTR";
-                editCrosslinkModDlg.AttachmentOrdinal = 4;
+                editCrosslinkModDlg.PeptideSequence = "CASIQKFGER";
+                editCrosslinkModDlg.AttachmentOrdinal = 6;
             });
             OkDialog(editCrosslinkModDlg, editCrosslinkModDlg.OkDialog);
             OkDialog(modifyPeptideDlg, modifyPeptideDlg.OkDialog);
@@ -92,6 +92,21 @@ namespace pwiz.SkylineTestFunctional
             var graphSpectrum = FindOpenForm<GraphSpectrum>();
             Assert.IsNotNull(graphSpectrum.AvailableSpectra);
             var availableSpectra = graphSpectrum.AvailableSpectra.ToList();
+            Assert.AreEqual(1, availableSpectra.Count);
+            RunDlg<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg, pasteDlg=>
+            {
+                SetClipboardText("KSAPATGGVKKPHR-VTIAQGGVLPNIQAVLLPKK-[+138.0681@11,19]");
+                pasteDlg.PastePeptides();
+                pasteDlg.OkDialog();
+            });
+            RunUI(() =>
+            {
+                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo(2, 3);
+            });
+            WaitForGraphs();
+            graphSpectrum = FindOpenForm<GraphSpectrum>();
+            Assert.IsNotNull(graphSpectrum.AvailableSpectra);
+            availableSpectra = graphSpectrum.AvailableSpectra.ToList();
             Assert.AreEqual(1, availableSpectra.Count);
             RunUI(()=>SkylineWindow.SaveDocument());
         }

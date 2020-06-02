@@ -30,6 +30,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
@@ -2646,7 +2647,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public LibKey(string sequence, int charge) : this()
         {
-            LibraryKey = new PeptideLibraryKey(sequence, charge);
+            LibraryKey = (LibraryKey) CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(sequence, charge)
+                         ?? new PeptideLibraryKey(sequence, charge);
         }
 
         public LibKey(SmallMoleculeLibraryAttributes attributes, Adduct adduct) : this()
@@ -2658,7 +2660,9 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (adduct.IsProteomic)
             {
-                LibraryKey = new PeptideLibraryKey(primaryKey, adduct.AdductCharge);
+                LibraryKey = (LibraryKey)
+                             CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(primaryKey, adduct.AdductCharge)
+                             ?? new PeptideLibraryKey(primaryKey, adduct.AdductCharge);
             }
             else
             {
@@ -2680,7 +2684,11 @@ namespace pwiz.Skyline.Model.Lib
             : this()
         {
             if (target.IsProteomic)
-                LibraryKey = new PeptideLibraryKey(target.Sequence, adduct.AdductCharge);
+            {
+                LibraryKey = (LibraryKey)
+                             CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(target.Sequence, adduct.AdductCharge)
+                             ?? new PeptideLibraryKey(target.Sequence, adduct.AdductCharge);
+            }
             else
                 LibraryKey = new MoleculeLibraryKey(target.Molecule.GetSmallMoleculeLibraryAttributes(), adduct);
         }

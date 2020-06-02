@@ -7649,6 +7649,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected &apos;{0}&apos;.
+        /// </summary>
+        public static string CrosslinkSequenceParser_Expected_Expected___0__ {
+            get {
+                return ResourceManager.GetString("CrosslinkSequenceParser_Expected_Expected___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to parse &apos;{0}&apos; as a number.
+        /// </summary>
+        public static string CrosslinkSequenceParser_ParseCrosslink_Unable_to_parse___0___as_a_number {
+            get {
+                return ResourceManager.GetString("CrosslinkSequenceParser_ParseCrosslink_Unable_to_parse___0___as_a_number", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid peptide sequence.
+        /// </summary>
+        public static string CrosslinkSequenceParser_ParseCrosslinkLibraryKey_Invalid_peptide_sequence {
+            get {
+                return ResourceManager.GetString("CrosslinkSequenceParser_ParseCrosslinkLibraryKey_Invalid_peptide_sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ion.
         /// </summary>
         public static string CustomIon_DisplayName_Ion {
@@ -19123,6 +19150,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} at position {1}.
+        /// </summary>
+        public static string ParseExceptionDetail_ToString__at_position__0_ {
+            get {
+                return ResourceManager.GetString("ParseExceptionDetail_ToString__at_position__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Paste {
@@ -19404,6 +19440,16 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank {
             get {
                 return ResourceManager.GetString("PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The structure of this crosslinked peptide is not supported by Skyline.
+        /// </summary>
+        public static string PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline {
+            get {
+                return ResourceManager.GetString("PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_su" +
+                        "pported_by_Skyline", resourceCulture);
             }
         }
         
