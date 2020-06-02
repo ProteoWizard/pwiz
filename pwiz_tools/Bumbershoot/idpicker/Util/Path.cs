@@ -46,12 +46,22 @@ namespace IDPicker
                 DirectoryInfo dir = new DirectoryInfo(searchPath);
                 foreach (string ext in matchingFileExtensions)
                 {
-                    string queryPath = Path.Combine(dir.FullName, fileNameWithoutExtension + "." + ext);
+                    string queryPath = Path.Combine(dir.FullName, fileNameWithoutExtension + ext);
                     if (File.Exists(queryPath))
                     {
                         fileMatches.Add(queryPath);
                         if (stopAtFirstMatch)
                             break;
+                    }
+                    else if (!ext.StartsWith("."))
+                    {
+                        queryPath = Path.Combine(dir.FullName, fileNameWithoutExtension + "." + ext);
+                        if (File.Exists(queryPath))
+                        {
+                            fileMatches.Add(queryPath);
+                            if (stopAtFirstMatch)
+                                break;
+                        }
                     }
                 }
 
