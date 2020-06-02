@@ -367,8 +367,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return null;
             }
+
+            double? bestLoq = null;
             var concentrationReplicateLookup = GetStandardConcentrations().ToLookup(entry=>entry.Value, entry=>entry.Key);
-            foreach (var concentrationReplicate in concentrationReplicateLookup.OrderBy(grouping=>grouping.Key))
+            foreach (var concentrationReplicate in concentrationReplicateLookup.OrderByDescending(grouping=>grouping.Key))
             {
                 var peakAreas = new List<double>();
                 foreach (var standardIdentifier in concentrationReplicate)
@@ -381,14 +383,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 }
                 if (QuantificationSettings.MaxLoqCv.HasValue)
                 {
-                    double cv = peakAreas.StandardDeviation() / peakAreas.Mean();
-                    if (double.IsNaN(cv) || double.IsInfinity(cv))
+                    if (peakAreas.Count > 1)
                     {
-                        continue;
-                    }
-                    if (cv * 100 > QuantificationSettings.MaxLoqCv)
-                    {
-                        continue;
+                        double cv = peakAreas.StandardDeviation() / peakAreas.Mean();
+                        if (double.IsNaN(cv) || double.IsInfinity(cv))
+                        {
+                            break;
+                        }
+                        if (cv * 100 > QuantificationSettings.MaxLoqCv)
+                        {
+                            break;
+                        }
                     }
                 }
                 if (QuantificationSettings.MaxLoqBias.HasValue)
@@ -402,22 +407,22 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                         GetConcentrationFromXValue(calibrationCurve.GetFittedX(meanPeakArea));
                     if (!backCalculatedConcentration.HasValue)
                     {
-                        continue;
+                        break;
                     }
                     double bias = (concentrationReplicate.Key - backCalculatedConcentration.Value) /
                                   concentrationReplicate.Key;
                     if (double.IsNaN(bias) || double.IsInfinity(bias))
                     {
-                        continue;
+                        break;
                     }
                     if (Math.Abs(bias * 100) > QuantificationSettings.MaxLoqBias.Value)
                     {
-                        continue;
+                        break;
                     }
                 }
-                return concentrationReplicate.Key;
+                bestLoq = concentrationReplicate.Key;
             }
-            return null;
+            return bestLoq;
         }
 
         private CalibrationCurve GetCalibrationCurveFromPoints(IList<WeightedPoint> points)

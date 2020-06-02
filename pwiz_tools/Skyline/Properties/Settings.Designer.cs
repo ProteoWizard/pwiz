@@ -2913,5 +2913,29 @@ namespace pwiz.Skyline.Properties {
                 this["GroupApplyToBy"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BrukerPrmSqliteFile {
+            get {
+                return ((string)(this["BrukerPrmSqliteFile"]));
+            }
+            set {
+                this["BrukerPrmSqliteFile"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public double ExportMs1RepetitionTime {
+            get {
+                return ((double)(this["ExportMs1RepetitionTime"]));
+            }
+            set {
+                this["ExportMs1RepetitionTime"] = value;
+            }
+        }
     }
 }
