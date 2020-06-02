@@ -96,6 +96,8 @@ public ref class AdditionalMeasurementParameters
     ///<summary> ms1_repetition_time : time in seconds between two MS-1 frames if they are in competition with
     ///                  MS-2 frames. If no targets are defined, MS-1 frames are done instead</summary>
     DEFINE_PRIMITIVE_PROPERTY(double, double, ms1_repetition_time);
+
+    DEFINE_PRIMITIVE_PROPERTY(bool, bool, default_pasef_collision_energies);
 };
 
 

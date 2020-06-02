@@ -3219,7 +3219,8 @@ namespace pwiz.Skyline.Model
             {
                 s.SetAdditionalMeasurementParameters(new AdditionalMeasurementParameters
                 {
-                    ms1_repetition_time = Ms1RepetitionTime
+                    ms1_repetition_time = Ms1RepetitionTime,
+                    default_pasef_collision_energies = _targets.All(t => t.collision_energy == 0)
                 });
                 for (var i = 0; i < _targets.Count; i++)
                 {
