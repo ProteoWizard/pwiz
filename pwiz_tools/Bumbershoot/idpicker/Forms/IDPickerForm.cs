@@ -480,9 +480,14 @@ namespace IDPicker
                                 result = sourcePath;
                                 break;
                             }
-                            catch
+                            catch (ArgumentException e)
                             {
                                 // couldn't find the source in that directory; prompt user again
+                                MessageBox.Show(e.Message);
+                            }
+                            catch(Exception e)
+                            {
+                                Program.HandleException(e);
                             }
                         }
                     }));
