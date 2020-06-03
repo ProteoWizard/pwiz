@@ -1789,7 +1789,36 @@ double RawFileImpl::getPrecursorMass(long scanNumber, MSOrder msOrder) const
 
 double RawFileImpl::calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyWithOffset) const
 {
-    return getRawByThread(0)->calculateIsolationMzWithOffset(scanNumber, isolationMzPossiblyWithOffset);
+    try
+    {
+        // if scan description is empty, scan can't be mapped back to instrument method, and thus reported mass is not known (could be either offset or original)
+        string scanDescription = getTrailerExtraValue(scanNumber, "Scan Description:");
+        if (bal::trim_copy(scanDescription).empty())
+        {
+            double monoMz = getTrailerExtraValueDouble(scanNumber, "Monoisotopic M/Z:");
+            if (monoMz > 0)
+            {
+                double offset = getTrailerExtraValueDouble(scanNumber, "MS2 Isolation Offset:");
+                double iw = getTrailerExtraValueDouble(scanNumber, "MS2 Isolation Width:");
+                if (iw - fabs(monoMz - isolationMzPossiblyWithOffset) < -fabs(offset)) // if true, reported mass is probably original
+                    isolationMzPossiblyWithOffset += offset;
+            }
+        }
+        else
+        {
+            if (isolationMzOffsetByScanDescription.empty())
+                return isolationMzPossiblyWithOffset;
+
+            auto findItr = isolationMzOffsetByScanDescription.find(scanDescription);
+            if (findItr != isolationMzOffsetByScanDescription.end() && !findItr->second.reportedMassIsOffset)
+                isolationMzPossiblyWithOffset += findItr->second.offset;
+        }
+    }
+    catch (RawEgg&)
+    {
+    }
+
+    return isolationMzPossiblyWithOffset;
 }
 
 
@@ -2656,36 +2685,7 @@ double RawFileThreadImpl::getPrecursorMass(long scanNumber, MSOrder msOrder) con
 
 double RawFileThreadImpl::calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyWithOffset) const
 {
-    try
-    {
-        // if scan description is empty, scan can't be mapped back to instrument method, and thus reported mass is not known (could be either offset or original)
-        string scanDescription = getTrailerExtraValue(scanNumber, "Scan Description:");
-        if (bal::trim_copy(scanDescription).empty())
-        {
-            double monoMz = getTrailerExtraValueDouble(scanNumber, "Monoisotopic M/Z:");
-            if (monoMz > 0)
-            {
-                double offset = getTrailerExtraValueDouble(scanNumber, "MS2 Isolation Offset:");
-                double iw = getTrailerExtraValueDouble(scanNumber, "MS2 Isolation Width:");
-                if (iw - fabs(monoMz - isolationMzPossiblyWithOffset) < -fabs(offset)) // if true, reported mass is probably original
-                    isolationMzPossiblyWithOffset += offset;
-            }
-        }
-        else
-        {
-            if (rawFile_->isolationMzOffsetByScanDescription.empty())
-                return isolationMzPossiblyWithOffset;
-
-            auto findItr = rawFile_->isolationMzOffsetByScanDescription.find(scanDescription);
-            if (findItr != rawFile_->isolationMzOffsetByScanDescription.end() && !findItr->second.reportedMassIsOffset)
-                isolationMzPossiblyWithOffset += findItr->second.offset;
-        }
-    }
-    catch (RawEgg&)
-    {
-    }
-
-    return isolationMzPossiblyWithOffset;
+    return rawFile_->calculateIsolationMzWithOffset(scanNumber, isolationMzPossiblyWithOffset);
 }
 
 
