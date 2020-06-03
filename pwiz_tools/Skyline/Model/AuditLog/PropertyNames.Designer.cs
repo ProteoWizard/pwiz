@@ -3643,11 +3643,47 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion range from.
+        /// </summary>
+        public static string TransitionFilterAndLibrariesSettings_IonRangeFrom {
+            get {
+                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_IonRangeFrom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion range to.
+        /// </summary>
+        public static string TransitionFilterAndLibrariesSettings_IonRangeTo {
+            get {
+                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_IonRangeTo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max ion m/z.
+        /// </summary>
+        public static string TransitionFilterAndLibrariesSettings_MaxIonMz {
+            get {
+                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_MaxIonMz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Pick min product ions.
         /// </summary>
         public static string TransitionFilterAndLibrariesSettings_MinIonCount {
             get {
                 return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_MinIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min ion m/z.
+        /// </summary>
+        public static string TransitionFilterAndLibrariesSettings_MinIonMz {
+            get {
+                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_MinIonMz", resourceCulture);
             }
         }
         
