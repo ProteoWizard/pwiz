@@ -1501,6 +1501,7 @@
   </data>
   <data name="TransitionFilterAndLibrariesSettings_MaxIonMz" xml:space="preserve">
     <value>Max ion m/z</value>
+  </data>
   <data name="LoggableExplicitMod_LinkedPeptide" xml:space="preserve">
     <value>Linked peptide</value>
   </data>
