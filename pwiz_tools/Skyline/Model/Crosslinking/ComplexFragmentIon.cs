@@ -296,9 +296,8 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             if (IsIonTypePrecursor)
             {
-                return IonTypeExtension.GetLocalizedString(IonType.precursor) + Transition.GetMassIndexText(Transition.MassIndex);
+                return IonTypeExtension.GetLocalizedString(IonType.precursor);
             }
-            Assume.AreEqual(0, Transition.MassIndex);
             StringBuilder stringBuilder = new StringBuilder();
             // Simple case of two peptides linked together
             if (CrosslinkStructure.Count == 1 && CrosslinkStructure.Values[0].CrosslinkStructure.Count == 0)
@@ -363,7 +362,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public string GetTargetsTreeLabel()
         {
-            return GetLabel(true);
+            return GetLabel(true) + Transition.GetMassIndexText(Transition.MassIndex);
         }
     }
 }

@@ -165,6 +165,14 @@ message LibraryKeyProto
 		peptide = 0;
 		small_molecule = 1;
 		precursor_mz = 2;
+		crosslink = 3;
+	}
+	message Crosslinker {
+		string name = 1;
+		repeated Positions positions = 2;
+	}
+	message Positions {
+		repeated int32 position = 1;
 	}
 	KeyType keyType = 1;
 	string modifiedSequence = 2;
@@ -176,5 +184,7 @@ message LibraryKeyProto
 	string adduct = 8;
 	double precursorMz = 9;
 	double retentionTime = 10;
+	repeated string crosslinkedSequences = 11;
+	repeated Crosslinker crosslinkers = 12;
 }
 

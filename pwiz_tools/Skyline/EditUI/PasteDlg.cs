@@ -31,6 +31,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -464,17 +465,34 @@ namespace pwiz.Skyline.EditUI
                     });
                     return null;
                 }
-                if (!FastaSequence.IsExSequence(peptideSequence))
+
+                CrosslinkLibraryKey crosslinkLibraryKey =
+                    CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(peptideSequence, 0);
+                if (crosslinkLibraryKey == null)
+                {
+                    if (!FastaSequence.IsExSequence(peptideSequence))
+                    {
+                        ShowPeptideError(new PasteError
+                        {
+                            Column = colPeptideSequence.Index,
+                            Line = i,
+                            Message = Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters
+                        });
+                        return null;
+                    }
+                    peptideSequence = FastaSequence.NormalizeNTerminalMod(peptideSequence);
+                }
+                else if (!crosslinkLibraryKey.IsSupportedBySkyline())
                 {
                     ShowPeptideError(new PasteError
                     {
                         Column = colPeptideSequence.Index,
                         Line = i,
-                        Message = Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters
+                        Message = Resources.PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline
                     });
                     return null;
                 }
-                peptideSequence = FastaSequence.NormalizeNTerminalMod(peptideSequence);
+
                 listSequences.Add(peptideSequence);
             }
             return listSequences;

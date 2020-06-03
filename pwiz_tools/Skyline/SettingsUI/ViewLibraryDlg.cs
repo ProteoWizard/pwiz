@@ -548,7 +548,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (null != pepInfo.Key.LibraryKey.Target)
             {
-                var peptide = new Peptide(pepInfo.Key.LibraryKey.StripModifications().Target);
+                var peptide = pepInfo.Key.LibraryKey.CreatePeptideIdentityObj();
                 transitionGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, pepInfo.Adduct,
                                                       IsotopeLabelType.light, true, null), null);
                 if (pepInfo.Key.IsSmallMoleculeKey)
@@ -1925,9 +1925,20 @@ namespace pwiz.Skyline.SettingsUI
         private static IEnumerable<ModificationInfo> GetModifications(ViewLibraryPepInfo pep)
         {
             IList<ModificationInfo> modList = new List<ModificationInfo>();
-            if (!pep.Target.IsProteomic)
+            string sequence;
+            if (pep.Key.LibraryKey is PeptideLibraryKey peptideLibraryKey)
+            {
+                sequence = peptideLibraryKey.ModifiedSequence;
+            }
+            else if (pep.Key.LibraryKey is CrosslinkLibraryKey crosslinkLibraryKey)
+            {
+                sequence = string.Join(string.Empty,
+                    crosslinkLibraryKey.PeptideLibraryKeys.Select(key => key.ModifiedSequence));
+            }
+            else
+            {
                 return modList;
-            string sequence = pep.Target.Sequence;
+            }
             int iMod = -1;
             for (int i = 0; i < sequence.Length; i++)
             {
