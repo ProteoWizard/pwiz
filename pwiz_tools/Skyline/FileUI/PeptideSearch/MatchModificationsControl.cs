@@ -123,7 +123,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!ImportPeptideSearch.HasDocLib && !ImportPeptideSearch.IsDDASearch)
                 return false;
             if (ImportPeptideSearch.IsDDASearch)
-              labelModifications.Text = Resources.MatchModificationsControl_ModificationLabelText_DDA_Search;
+                labelModifications.Text = Resources.MatchModificationsControl_ModificationLabelText_DDA_Search;
         
             ImportPeptideSearch.InitializeModifications(document);
             FillLists(document);
@@ -133,7 +133,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public SrmSettings AddCheckedModifications(SrmDocument document)
         {
             if (modificationsListBox.CheckedItems.Count == 0 && !ImportPeptideSearch.IsDDASearch)
-                {
+            {
                 if (!ImportPeptideSearch.IsDDASearch)
                     return document.Settings;
                 else
@@ -146,20 +146,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Find checked static mods
             List<StaticMod> structuralMods;
             List<StaticMod> newHeavyMods; 
-      if (ImportPeptideSearch.IsDDASearch)
+            if (ImportPeptideSearch.IsDDASearch)
             {
                 structuralMods = (from mod in Settings.Default.StaticModList
                     from ListBoxModification checkedMod in modificationsListBox.CheckedItems
                     where mod.Equivalent(checkedMod.Mod)
                     select mod).ToList();
-        //TODO Check for amanda
+                //TODO Check for amanda
         
                 newHeavyMods = new List<StaticMod>();
 
             }
             else
             {
-            
             structuralMods = (from mod in ImportPeptideSearch.MatcherPepMods.StaticModifications
                 from ListBoxModification checkedMod in modificationsListBox.CheckedItems
                 where mod.Equivalent(checkedMod.Mod)
@@ -187,7 +186,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             else
             {
-             //todo check for amanda   ImportPeptideSearch.UpdateModificationMatches(document);
+                ImportPeptideSearch.UpdateModificationMatches(document);
                 modsToAdd = ImportPeptideSearch.GetMatchedMods();
             }
 

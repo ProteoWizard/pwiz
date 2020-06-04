@@ -50,14 +50,23 @@
     <!-- BiblioSpec library building -->
     <DeploymentItem filename="BlibBuild.exe" />
     <DeploymentItem filename="BlibFilter.exe" />
-	<DeploymentItem filename="Instruments.xml" />
+    <DeploymentItem filename="Instruments.xml" />
+    <DeploymentItem filename="Enzymes.xml" />
+    <DeploymentItem filename="percolator\percolator.exe" outputDirectory="percolator" />
+    <DeploymentItem filename="percolator\qvality.exe" outputDirectory="percolator" />
+    <DeploymentItem filename="..\Shared\Lib\Microsoft.VC140.CRT\x64\vcomp140.dll" outputDirectory="percolator" />
+    <DeploymentItem filename="..\Shared\Lib\Microsoft.VC140.CRT\x64\msvcp140.dll" outputDirectory="percolator" />
+    <DeploymentItem filename="..\Shared\Lib\Microsoft.VC140.CRT\x64\vcruntime140.dll" outputDirectory="percolator" />
+    <DeploymentItem filename="percolator\xerces-c_3_1.dll" outputDirectory="percolator" />
     <DeploymentItem filename="msparser.dll" />
     <DeploymentItem filename="msparserD.dll" />
-	<DeploymentItem filename="modifications.xml" />
+    <DeploymentItem filename="modifications.xml" />
     <DeploymentItem filename="unimod.xml" />
     <DeploymentItem filename="unimod_2.xsd" />
     <DeploymentItem filename="quantitation_1.xsd" />
     <DeploymentItem filename="quantitation_2.xsd" />
+    <DeploymentItem filename="..\..\pwiz\data\common\unimod.obo" />
+    <DeploymentItem filename="..\..\pwiz\data\common\psi-ms.obo" />
     <DeploymentItem filename="SkylineCmd.exe" />
 	<!-- Prosit gRPC -->
 	<DeploymentItem filename="..\Shared\Lib\grpc_csharp_ext.x86.dll" />

@@ -34,7 +34,9 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
+using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -250,9 +252,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void btnAddFile_Click(object sender, EventArgs e)
         {
-          if (PerformDDASearch)
+            if (PerformDDASearch)
             {
-                
+                // exclude UNIFI from source types
+                var sourceTypes = MsDataFileImpl.GetFileExtensionsByType().Where(o => o.Value.Count > 0).OrderBy(o => o.Key).ToList();
+                var allExtensions = sourceTypes.SelectMany(o => o.Value);
+
+                // create Filter string as a series of "|<type> (<exts>)|<exts>"
+                var filter = new StringBuilder();
+                filter.Append("|Any spectra format|" + String.Join(";", allExtensions));
+                foreach (var typeExtsPair in sourceTypes)
+                    filter.AppendFormat("|{0} ({1})|{1}", typeExtsPair.Key, String.Join(";", typeExtsPair.Value));
+
                 using (OpenFileDialog dlg = new OpenFileDialog
                 {
                     //todo add resources here
@@ -260,8 +271,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     InitialDirectory = Path.GetDirectoryName(DocumentContainer.DocumentFilePath),
                     CheckPathExists = true,
                     Multiselect = true,
-                    Filter = "spectrum files(*.mgf;*.MGF;*.mzML;*.mzml;*.MZML; *.raw)|*.mgf;*.MGF;*.mzML;*.mzml;*.MZML;*.raw"
-                    // FASTA files often have no extension as well as .fasta and others
+                    Filter = filter.ToString()
                 })
                 {
                     if (dlg.ShowDialog(WizardForm) == DialogResult.OK)

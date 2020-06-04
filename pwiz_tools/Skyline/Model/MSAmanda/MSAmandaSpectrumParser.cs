@@ -124,15 +124,10 @@ namespace pwiz.Skyline.Model.MSAmanda
 
         public int GetTotalNumberOfSpectra(string spectraFile)
         {
-            //if (rawfileName != spectraFile)
-            //{
-                MsDataFileImpl filereader = new MsDataFileImpl(spectraFile, preferOnlyMsLevel:2);
-                return filereader.SpectrumCount;
-            //}
-            //else
-            //{
-            //    spectrumFileReader.
-            //}
+            if (rawFileName != spectraFile)
+                return 0;
+            MsDataFileImpl filereader = new MsDataFileImpl(spectraFile, preferOnlyMsLevel:2);
+            return filereader.SpectrumCount;
         }
     }
 }

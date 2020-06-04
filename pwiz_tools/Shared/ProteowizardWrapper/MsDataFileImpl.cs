@@ -59,6 +59,12 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        public static IEnumerable<KeyValuePair<string, IList<string>>> GetFileExtensionsByType()
+        {
+            foreach (var typeExtsPair in FULL_READER_LIST.getFileExtensionsByType())
+                yield return typeExtsPair;
+        }
+
         // By default this creates dummy non-functional performance timers.
         // Place "MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false;" in 
         // the calling code to enable performance measurement.

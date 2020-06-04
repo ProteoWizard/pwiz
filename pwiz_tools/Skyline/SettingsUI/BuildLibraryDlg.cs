@@ -584,17 +584,13 @@ namespace pwiz.Skyline.SettingsUI
 
         private static bool IsValidInputFile(string fileName, bool performDDASearch = false)
         {
-            foreach (string extResult in RESULTS_EXTS)
-            {
-                if (PathEx.HasExtension(fileName, extResult))
-                    return true;
-            }
-
             if (performDDASearch)
+                return true; // these are validated in OpenFileDialog
+            else
             {
-                foreach (string extSearchFile in SEARCH_FILE_EXTS)
+                foreach (string extResult in RESULTS_EXTS)
                 {
-                    if (PathEx.HasExtension(fileName, extSearchFile))
+                    if (PathEx.HasExtension(fileName, extResult))
                         return true;
                 }
             }

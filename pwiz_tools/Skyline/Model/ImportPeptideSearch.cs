@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model
         public double CutoffScore { get; set; }
         public Library DocLib { get; private set; }
         public Dictionary<string, FoundResultsFilePossibilities> SpectrumSourceFiles { get; set; }
-        public AbstractDdaSearchEngine SearchEngine { get; set; } = new MSAmandaSearchWrapper();
+        public AbstractDdaSearchEngine SearchEngine { get; set; }
 
         public bool HasDocLib { get { return DocLib != null; } }
         public IrtStandard IrtStandard { get; set; }
@@ -383,18 +383,19 @@ namespace pwiz.Skyline.Model
 
         public SrmSettings AddModifications(SrmDocument document, PeptideModifications modifications)
         {
-          if (!IsDDASearch)
+            if (!IsDDASearch)
             {
-            _matcher.MatcherPepMods = modifications;
-            return document.Settings.ChangePeptideModifications(mods => _matcher.SafeMergeImplicitMods(document));
-          }
-          else
+                _matcher.MatcherPepMods = modifications;
+                return document.Settings.ChangePeptideModifications(mods => _matcher.SafeMergeImplicitMods(document));
+            }
+            else
             {
-                return document.Settings.ChangePeptideSettings(document.Settings.PeptideSettings.ChangeModifications(modifications));
+                return document.Settings.ChangePeptideSettings(
+                    document.Settings.PeptideSettings.ChangeModifications(modifications));
 
                 //todo add heavy modifications
                 //document.Settings.PeptideSettings.Modifications.ChangeModifications(IsotopeLabelType.heavy, modifications.HeavyModifications.)
-                return document.Settings;
+                //return document.Settings;
             }
         }
 

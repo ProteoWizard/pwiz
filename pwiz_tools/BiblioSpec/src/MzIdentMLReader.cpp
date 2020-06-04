@@ -115,6 +115,7 @@ bool MzIdentMLReader::parseFile(){
     specExtensions.push_back(".MGF");
     specExtensions.push_back(".mzXML");
     specExtensions.push_back(".mzML");
+    specExtensions.push_back(".mz5");
     #ifdef VENDOR_READERS
 	    specExtensions.push_back(".raw"); // Waters/Thermo
 	    specExtensions.push_back(".wiff"); // Sciex

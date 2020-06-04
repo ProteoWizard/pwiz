@@ -32,6 +32,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.MSAmanda;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -150,7 +151,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             };
             getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
 
-             SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch)
+            SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch)
             {
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(18, 50)
@@ -399,20 +400,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 case Pages.spectra_page:
                     {
-                      ImportPeptideSearch.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch;
-                    ImportFastaControl.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch;
+                        ImportPeptideSearch.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch;
+                        ImportFastaControl.IsDDASearch = BuildPepSearchLibControl.PerformDDASearch;
                         if (!BuildPepSearchLibControl.UseExistingLibrary)
                         {
-                           if (!BuildPepSearchLibControl.PerformDDASearch)
-                          {
-                            HasPeakBoundaries = BuildPepSearchLibControl.SearchFilenames.All(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV));
-                            if (BuildPepSearchLibControl.SearchFilenames.Any(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV)) && !HasPeakBoundaries)
+                            if (!BuildPepSearchLibControl.PerformDDASearch)
                             {
-                                MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_);
-                                return;
+                                HasPeakBoundaries = BuildPepSearchLibControl.SearchFilenames.All(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV));
+                                if (BuildPepSearchLibControl.SearchFilenames.Any(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV)) && !HasPeakBoundaries)
+                                {
+                                    MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_);
+                                    return;
+                                }
                             }
                         }
-                      }
 
                         var eCancel = new CancelEventArgs();
                         if (!BuildPeptideSearchLibrary(eCancel))
@@ -431,6 +432,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         
                         if (BuildPepSearchLibControl.PerformDDASearch) {
                             lblFasta.Text = Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__required_;
+                            _pagesToSkip.Add(Pages.chromatograms_page);
                         } else if (FastaOptional)
                             lblFasta.Text = Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_;
                         
@@ -568,23 +570,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             MessageBox.Show(this, Resources.ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch,
                                 Program.Name, MessageBoxButtons.OK);
                             
-                                return;
+                            return;
                             
                         }
-                       
+
+                        ImportPeptideSearch.SearchEngine = new MSAmandaSearchWrapper();
+                        SearchSettingsControl.InitializeEngine();
                         SearchSettingsControl.LoadModifications();
                         break;
                     }
                     else
                     {
-                    if (FastaOptional && !ImportFastaControl.ContainsFastaContent || ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
-                    {
-                        WizardFinish();
+                        if (FastaOptional && !ImportFastaControl.ContainsFastaContent || ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
+                        {
+                            WizardFinish();
+                        }
+                        return;
                     }
-                    return;
-            }
-            case Pages.dda_search_settings_page:
-                    //todo load and start search
+                case Pages.dda_search_settings_page:
                     bool valid = SearchSettingsControl.SaveAllSettings();
                     if (!valid) return;
                     ImportPeptideSearch.SearchEngine.SetEnzyme(Document.Settings.PeptideSettings.Enzyme, Document.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages);
@@ -596,6 +599,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     btnBack.Enabled = false;
                     SearchControl.RunSearch();
                     break;
+
                 case Pages.dda_search_page: // this is really the last page
                                             //todo check if search was correct
                     var eCancel2 = new CancelEventArgs();

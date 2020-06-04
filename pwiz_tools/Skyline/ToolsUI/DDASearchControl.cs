@@ -64,7 +64,7 @@ namespace pwiz.Skyline.ToolsUI
             if (string.IsNullOrEmpty(txtSearchProgress.Text))
             {
                 //search for first time
-                ImportPeptideSearch.SearchEngine.SearchProgessChanged += SearchEngine_MessageNotificationEvent;
+                ImportPeptideSearch.SearchEngine.SearchProgressChanged += SearchEngine_MessageNotificationEvent;
             }
             txtSearchProgress.Text = "";
             btnCancel.Enabled = true;

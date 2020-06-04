@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
-using EnvDTE;
 using MSAmanda.Core;
 using MSAmanda.Utils;
 using MSAmanda.InOutput;
 using MSAmanda.InOutput.Output;
-using pwiz.ProteowizardWrapper;
+using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Util;
 using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
-using AmandaSettings = MSAmanda.InOutput.Settings;
+//using AmandaSettings = MSAmanda.InOutput.Settings;
+using OperationCanceledException = System.OperationCanceledException;
 using Thread = System.Threading.Thread;
 
 namespace pwiz.Skyline.Model.MSAmanda
@@ -31,7 +32,7 @@ namespace pwiz.Skyline.Model.MSAmanda
         private OutputParameters _outputParameters;
         private MSAmandaSpectrumParser amandaInputParser;
 
-        public override event NotificationEventHandler SearchProgessChanged;
+        public override event NotificationEventHandler SearchProgressChanged;
 
 
 
@@ -50,7 +51,8 @@ namespace pwiz.Skyline.Model.MSAmanda
         private readonly string _baseDir = "C:\\ProgramData\\MSAmanda2.0";
         #endregion
 
-        public MSAmandaSearchWrapper(){
+        public MSAmandaSearchWrapper()
+        {
             if (!helper.IsInitialized())
             {
                 helper.InitLogWriter(_baseDir);
@@ -64,16 +66,20 @@ namespace pwiz.Skyline.Model.MSAmanda
             AvailableSettings = new SettingsFile(helper, Settings, mzID);
             AvailableSettings.AllEnzymes = new List<MSAmandaEnzyme>();
             AvailableSettings.AllModifications = new List<Modification>();
-            AvailableSettings.ParseEnzymeFile(ENZYME_FILENAME, "", AvailableSettings.AllEnzymes);
-            AvailableSettings.ParseUnimodFile(UNIMOD_FILENAME, AvailableSettings.AllModifications);
-            AvailableSettings.ParseOboFiles();
-            AvailableSettings.ReadInstrumentsFile(INSTRUMENTS_FILENAME);
-            
+
+            using (var d = new CurrentDirectorySetter(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)))
+            {
+                if (!AvailableSettings.ParseEnzymeFile(ENZYME_FILENAME, "", AvailableSettings.AllEnzymes)) throw new Exception($"enzymes file '{ENZYME_FILENAME}' not found");
+                if (!AvailableSettings.ParseUnimodFile(UNIMOD_FILENAME, AvailableSettings.AllModifications)) throw new Exception($"unimod file '{UNIMOD_FILENAME}' not found");
+                if (!AvailableSettings.ParseOboFiles()) throw new Exception($"obo files (psi-ms.obo and unimod.obo) not found");
+                if (!AvailableSettings.ReadInstrumentsFile(INSTRUMENTS_FILENAME)) throw new Exception($"instruments file '{INSTRUMENTS_FILENAME}' not found");
+            }
+
         }
 
         private void Helper_SearchProgressChanged(string message)
         {
-            SearchProgessChanged?.Invoke(this, new MessageEventArgs(){Message = message});
+            SearchProgressChanged?.Invoke(this, new MessageEventArgs(){Message = message});
         }
 
         public override void SetEnzyme(pwiz.Skyline.Model.DocSettings.Enzyme enzyme, int maxMissedCleavages)
@@ -90,48 +96,25 @@ namespace pwiz.Skyline.Model.MSAmanda
             }
         }
 
-       
-
-        public void SetTolerance(double tol, string unit, bool isMS1)
-        {
-            MassUnit massUnit = MassUnit.DA;
-            switch (unit.ToUpper())
-            {
-                case "PPM":
-                    massUnit = MassUnit.PPM;
-                    break;
-                case "MMU":
-                    massUnit = MassUnit.MMU;
-                    break;
-                default:
-                    massUnit = MassUnit.DA;
-                    break;
-            }
-            Tolerance tolerance = new Tolerance(tol, massUnit);
-            if (isMS1)
-                Settings.Ms1Tolerance = tolerance;
-            else
-                Settings.Ms2Tolerance = tolerance;
-        }
 
         public override string[] FragmentIons
         {
             get { return Settings.ChemicalData.Instruments.Keys.ToArray(); }
         }
-        public override string EngineName { get { return "MS Amanda"; } }
+        public override string EngineName { get { return @"MS Amanda"; } }
         public override Bitmap SearchEngineLogo
         {
             get { return Properties.Resources.MSAmandaLogo; }
         }
 
-        public override void SetPrecursorMassTolerance(double mass, string unit)
+        public override void SetPrecursorMassTolerance(MzTolerance tol)
         {
-            SetTolerance(mass, unit, true);
+            Settings.Ms1Tolerance = new Tolerance(tol.Value, (MassUnit) tol.Unit);
         }
 
-        public override void SetFragmentIonMassTolerance(double mass, string unit)
+        public override void SetFragmentIonMassTolerance(MzTolerance tol)
         {
-            SetTolerance(mass, unit, false);
+            Settings.Ms2Tolerance = new Tolerance(tol.Value, (MassUnit)tol.Unit);
         }
 
         public override void SetFragmentIons(string ions)
@@ -142,7 +125,7 @@ namespace pwiz.Skyline.Model.MSAmanda
             }
         }
 
-        private MSAmandaEngine amandaSearchEngine;
+        //private MSAmandaEngine amandaSearchEngine;
 
         private List<FastaDBFile> GetFastaFileList()
         {
@@ -162,6 +145,7 @@ namespace pwiz.Skyline.Model.MSAmanda
         private void InitializeEngine(CancellationTokenSource token, string spectrumFileName)
         {
             _outputParameters = new OutputParameters();
+            _outputParameters.FastaFiles = FastaFileNames.ToList();
             _outputParameters.DBFile = FastaFileNames[0];
             //_outputParameters.IsMzOutput = true;
             //2 == mzid
@@ -236,32 +220,39 @@ namespace pwiz.Skyline.Model.MSAmanda
         {
             try
             {
-                
-                List<Spectrum> spectra = new List<Spectrum>();
-                foreach (string rawFileName in SpectrumFileNames)
+                using (var c = new CurrentCultureSetter(CultureInfo.InvariantCulture))
                 {
-                    InitializeEngine(tokenSource, rawFileName);
-                    if (tokenSource.Token.IsCancellationRequested)
+                    List<Spectrum> spectra = new List<Spectrum>();
+                    foreach (string rawFileName in SpectrumFileNames)
                     {
-                        
                         tokenSource.Token.ThrowIfCancellationRequested();
+
+                        try
+                        {
+                            InitializeEngine(tokenSource, rawFileName);
+
+                            amandaInputParser = new MSAmandaSpectrumParser(rawFileName, Settings.ConsideredCharges, true);
+                            SearchEngine.SetInputParser(amandaInputParser);
+
+                            SearchEngine.PerformSearch(_outputParameters.DBFile);
+                            //Dictionary<int, SpectrumMatchesCollection> result = amandaSearchEngine.PerformSearch(spectra);
+                            //WriteResults(result);
+                        }
+                        finally
+                        {
+                            SearchEngine.Dispose();
+                        }
                     }
-
-                    amandaInputParser = new MSAmandaSpectrumParser(rawFileName, Settings.ConsideredCharges, true);
-                    SearchEngine.SetInputParser(amandaInputParser);
-
-                    SearchEngine.PerformSearch(_outputParameters.DBFile);
-                    //Dictionary<int, SpectrumMatchesCollection> result = amandaSearchEngine.PerformSearch(spectra);
-                    //WriteResults(result);
-
-
                 }
-
+            }
+            catch (OperationCanceledException)
+            {
+                helper.WriteMessage("Search is being canceled", true);
+                success = false;
             }
             catch (Exception ex)
             {
-        SearchEngine.Dispose();
-                helper.WriteMessage("Search is being canceled", true);
+                helper.WriteMessage($"Search failed: {ex.Message}", true);
                 success = false;
             }
 
@@ -269,30 +260,28 @@ namespace pwiz.Skyline.Model.MSAmanda
                 success = false;
             
             return success;
-           
-
         }
 
         
 
         
 
-        public override void SaveModifications(Dictionary<StaticMod, bool> fixedAndVariableModifs)
+        public override void SaveModifications(IList<StaticMod> modifications)
         {
             Settings.SelectedModifications.Clear();
-            foreach (var item in fixedAndVariableModifs)
+            foreach (var item in modifications)
             {
-                string name = item.Key.Name.Split(' ')[0];
+                string name = item.Name.Split(' ')[0];
                 var elemsFromUnimod = AvailableSettings.AllModifications.FindAll(m => m.Title == name);
                 if (elemsFromUnimod.Count> 0)
                 {
-                    foreach (char aa in item.Key.AminoAcids)
+                    foreach (char aa in item.AminoAcids)
                     {
                         var elem = elemsFromUnimod.Find(m => m.AA == aa);
                         if (elem != null)
                         {
                             Modification modClone = new Modification(elem);
-                            modClone.Fixed = item.Value;
+                            modClone.Fixed = item.IsVariable;
                             Settings.SelectedModifications.Add(modClone);
                         }
                         else

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using NHibernate.Mapping.ByCode;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -56,11 +57,15 @@ namespace pwiz.Skyline.SettingsUI
         //    }
         //}
 
-        public SearchSettingsControl(IModifyDocumentContainer documentContainer,ImportPeptideSearch importPeptideSearch)
+        public SearchSettingsControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch)
         {
             InitializeComponent();
             ImportPeptideSearch = importPeptideSearch;
             _documentContainer = documentContainer;
+        }
+
+        public void InitializeEngine()
+        {
             lblSearchEngineName.Text = ImportPeptideSearch.SearchEngine.EngineName;
 
             LoadComboboxEntries();
@@ -77,24 +82,6 @@ namespace pwiz.Skyline.SettingsUI
 
         public void LoadModifications()
         {
-            //
-            List<string> checkedItemNames = new List<string>();
-            foreach (var elem in clbFixedModifs.CheckedItems)
-            {
-                checkedItemNames.Add(((MatchModificationsControl.ListBoxModification)elem).ToString());
-            }
-            clbFixedModifs.Items.Clear();
-            foreach (var mod in _documentContainer.Document.Settings.PeptideSettings.Modifications.StaticModifications)
-            {
-                MatchModificationsControl.ListBoxModification modi =
-                    new MatchModificationsControl.ListBoxModification(mod);
-                if (checkedItemNames.Contains(modi.ToString()) || !modi.Mod.IsVariable)
-                    clbFixedModifs.Items.Add(modi, CheckState.Checked);
-                else
-                    clbFixedModifs.Items.Add(modi, CheckState.Unchecked);
-
-            }
-
             ///clbFixedModifs.Items.AddRange(_documentContainer.Document.Settings.PeptideSettings.Modifications.StaticModifications.Select(m => m.).ToArray());
         }
 
@@ -156,17 +143,19 @@ namespace pwiz.Skyline.SettingsUI
        
         public bool SaveAllSettings()
         {
+            //var checkedItems = searchEngines.CheckedItems.Cast<string>().ToList();
+
             bool valid = ValidateEntries();
             if (!valid)
                 return false;
-            Dictionary<StaticMod, bool> fixedAndVariableModifs = new Dictionary<StaticMod, bool>();
-            for (int i = 0; i <clbFixedModifs.Items.Count; ++i)
+            /*Dictionary<StaticMod, bool> fixedAndVariableModifs = new Dictionary<StaticMod, bool>();
+            for (int i = 0; i <searchEngines.Items.Count; ++i)
             {
                 fixedAndVariableModifs.Add(
-                    ((MatchModificationsControl.ListBoxModification) clbFixedModifs.Items[i]).Mod,
-                    clbFixedModifs.GetItemCheckState(i) == CheckState.Checked);
-            }
-            ImportPeptideSearch.SearchEngine.SaveModifications(fixedAndVariableModifs);
+                    ((MatchModificationsControl.ListBoxModification) searchEngines.Items[i]).Mod,
+                    searchEngines.GetItemCheckState(i) == CheckState.Checked);
+            }*/
+            ImportPeptideSearch.SearchEngine.SaveModifications(_documentContainer.Document.Settings.PeptideSettings.Modifications.StaticModifications);
             return true;
         }
 
@@ -180,14 +169,7 @@ namespace pwiz.Skyline.SettingsUI
                     "MS1 Tolerance incorrect");
                 return false;
             }
-            string ms1Unit;
-            if (!ValidateCombobox(cbMS1TolUnit, out ms1Unit))
-            {
-                helper.ShowTextBoxError(cbMS1TolUnit, /*add resource here */
-                    "MS1 tolerance unit must be selected");
-                return false;
-            }
-            ImportPeptideSearch.SearchEngine.SetPrecursorMassTolerance(ms1Tol, ms1Unit);
+            ImportPeptideSearch.SearchEngine.SetPrecursorMassTolerance(new MzTolerance(ms1Tol, (MzTolerance.Units) cbMS1TolUnit.SelectedIndex));
 
             double ms2Tol;
             if (!helper.ValidateDecimalTextBox(txtMS2Tolerance, 0, 100, out ms2Tol))
@@ -196,14 +178,7 @@ namespace pwiz.Skyline.SettingsUI
                     "MS2 Tolerance incorrect");
                 return false;
             }
-            string ms2Unit;
-            if (!ValidateCombobox(cbMS2TolUnit, out ms2Unit))
-            {
-                helper.ShowTextBoxError(cbMS2TolUnit, /*add resource here */
-                    "MS2 tolerance unit must be selected");
-                return false;
-            }
-            ImportPeptideSearch.SearchEngine.SetFragmentIonMassTolerance(ms2Tol, ms2Unit);
+            ImportPeptideSearch.SearchEngine.SetFragmentIonMassTolerance(new MzTolerance(ms2Tol, (MzTolerance.Units) cbMS1TolUnit.SelectedIndex));
 
             string fragmentIons;
             if (!ValidateCombobox(cbFragmentIons, out fragmentIons))
@@ -215,6 +190,29 @@ namespace pwiz.Skyline.SettingsUI
             ImportPeptideSearch.SearchEngine.SetFragmentIons(fragmentIons);
 
             return true;
+        }
+
+        public void SetPrecursorTolerance(MzTolerance tolerance)
+        {
+            txtMS1Tolerance.Text = tolerance.Value.ToString();
+            cbMS1TolUnit.SelectedIndex = (int) tolerance.Unit;
+            ImportPeptideSearch.SearchEngine.SetPrecursorMassTolerance(tolerance);
+        }
+
+        public void SetFragmentTolerance(MzTolerance tolerance)
+        {
+            txtMS2Tolerance.Text = tolerance.Value.ToString();
+            cbMS2TolUnit.SelectedIndex = (int) tolerance.Unit;
+            ImportPeptideSearch.SearchEngine.SetFragmentIonMassTolerance(tolerance);
+        }
+
+        public void SetFragmentIons(string fragmentIons)
+        {
+            int i = cbFragmentIons.Items.IndexOf(fragmentIons);
+            if (i < 0)
+                throw new ArgumentException("fragmentIons value not found in ComboBox items");
+            cbFragmentIons.SelectedIndex = i;
+            ImportPeptideSearch.SearchEngine.SetFragmentIons(fragmentIons);
         }
     }
     

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model
@@ -17,13 +18,13 @@ namespace pwiz.Skyline.Model
         protected string[] SpectrumFileNames { get; set; }
         protected string[] FastaFileNames { get; set; }
 
-        public abstract void SetPrecursorMassTolerance(double mass, string unit);
-        public abstract void SetFragmentIonMassTolerance(double mass, string unit);
+        public abstract void SetPrecursorMassTolerance(MzTolerance mzTolerance);
+        public abstract void SetFragmentIonMassTolerance(MzTolerance mzTolerance);
         public abstract void SetFragmentIons(string ions);
         public abstract void SetEnzyme(Enzyme enzyme, int maxMissedCleavages);
 
         public delegate void NotificationEventHandler(object sender, MessageEventArgs e);
-        public abstract event NotificationEventHandler SearchProgessChanged;
+        public abstract event NotificationEventHandler SearchProgressChanged;
 
         public class MessageEventArgs : EventArgs
         {
@@ -45,7 +46,7 @@ namespace pwiz.Skyline.Model
             FastaFileNames = new string[] {fastFile};
         }
 
-        public abstract void SaveModifications(Dictionary<StaticMod, bool> fixedAndVariableModifs);
+        public abstract void SaveModifications(IList<StaticMod> modifications);
 
     }
 }
