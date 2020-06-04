@@ -287,11 +287,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             peptideIonTypes = peptideIonTypes.Distinct().ToArray();
 
             bool exclusionUseDIAWindow = cbExclusionUseDIAWindow.Visible && cbExclusionUseDIAWindow.Checked;
-            var filter = new TransitionFilter(peptidePrecursorCharges, peptideProductCharges, peptideIonTypes,
-                settings.Filter.SmallMoleculePrecursorAdducts, settings.Filter.SmallMoleculeFragmentAdducts, settings.Filter.SmallMoleculeIonTypes, 
-                IonFilter ? IonRangeFrom : settings.Filter.FragmentRangeFirst.Label,
-                IonFilter ? IonRangeTo : settings.Filter.FragmentRangeLast.Label,
-                settings.Filter.MeasuredIons, settings.Filter.PrecursorMzWindow, exclusionUseDIAWindow, settings.Filter.AutoSelect);
+            string fragmentRangeFirst = TransitionFilter.GetStartFragmentNameFromLabel(
+                IonFilter ? IonRangeFrom : settings.Filter.FragmentRangeFirst.Label);
+            string fragmentRangeLast = TransitionFilter.GetEndFragmentNameFromLabel(
+                IonFilter ? IonRangeTo : settings.Filter.FragmentRangeLast.Label);
+            var filter = new TransitionFilter(
+                peptidePrecursorCharges,
+                peptideProductCharges,
+                peptideIonTypes,
+                settings.Filter.SmallMoleculePrecursorAdducts,
+                settings.Filter.SmallMoleculeFragmentAdducts,
+                settings.Filter.SmallMoleculeIonTypes, 
+                fragmentRangeFirst,
+                fragmentRangeLast,
+                settings.Filter.MeasuredIons,
+                settings.Filter.PrecursorMzWindow,
+                exclusionUseDIAWindow,
+                settings.Filter.AutoSelect);
             Helpers.AssignIfEquals(ref filter, settings.Filter);
 
             // Validate and store library settings
