@@ -60,6 +60,8 @@ BOOST_ENUM(QuantitationMethod,
     (TMT2plex)
     (TMT6plex)
     (TMT10plex)
+    (TMT11plex)
+    (TMTpro16plex)
 );
 
 // allow enum values to be the LHS of an equality expression
@@ -76,6 +78,8 @@ using std::pair;
 using pwiz::chemistry::MZTolerance;
 namespace sqlite = sqlite3pp;
 
+static const int MAX_ITRAQ_REPORTER_IONS = 8;
+static const int MAX_TMT_REPORTER_IONS = 16;
 
 struct QuantitationConfiguration
 {
