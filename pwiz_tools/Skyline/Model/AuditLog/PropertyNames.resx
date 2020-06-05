@@ -1491,10 +1491,10 @@
     <value>Integration</value>
   </data>
   <data name="TransitionFilterAndLibrariesSettings_IonRangeFrom" xml:space="preserve">
-    <value>Ion range from</value>
+    <value>Product ion selection start</value>
   </data>
   <data name="TransitionFilterAndLibrariesSettings_IonRangeTo" xml:space="preserve">
-    <value>Ion range to</value>
+    <value>Product ion selection end</value>
   </data>
   <data name="TransitionFilterAndLibrariesSettings_MinIonMz" xml:space="preserve">
     <value>Min ion m/z</value>

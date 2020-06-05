@@ -440,8 +440,8 @@ namespace TestPerf
             {
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
                 importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
-                importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom = TransitionFilter.StartFragmentFinder.MZ_PRECURSOR.GetKey();
-                importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo = TransitionFilter.EndFragmentFinder.IONS_3.GetKey();
+                importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom = TransitionFilter.StartFragmentFinder.MZ_PRECURSOR.Label;
+                importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo = TransitionFilter.EndFragmentFinder.IONS_3.Label;
                 importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = true;
                 importPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = new[]
                 {
