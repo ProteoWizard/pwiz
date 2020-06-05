@@ -3643,7 +3643,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ion range from.
+        ///   Looks up a localized string similar to Product ion selection start.
         /// </summary>
         public static string TransitionFilterAndLibrariesSettings_IonRangeFrom {
             get {
@@ -3652,7 +3652,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ion range to.
+        ///   Looks up a localized string similar to Product ion selection end.
         /// </summary>
         public static string TransitionFilterAndLibrariesSettings_IonRangeTo {
             get {

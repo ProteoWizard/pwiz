@@ -1451,4 +1451,10 @@
   <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
     <value>定量</value>
   </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonRangeFrom" xml:space="preserve">
+    <value>子离子选择开始</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonRangeTo" xml:space="preserve">
+    <value>子离子选择结束</value>
+  </data>
 </root>
