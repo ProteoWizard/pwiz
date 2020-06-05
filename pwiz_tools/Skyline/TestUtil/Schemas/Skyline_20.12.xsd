@@ -1142,10 +1142,12 @@
         <!-- label can be "heavy", "light" or a user defined name -->
         <xs:attribute name="isotope_label" type="xs:string"/>
         <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
+        <xs:attribute name="explicit_collision_energy" type="xs:double"/> <!-- may itself be overridden at transition level -->
         <xs:attribute name="explicit_ion_mobility" type="xs:double"/>
         <xs:attribute name="explicit_ion_mobility_units" type="xs:string"/>
         <xs:attribute name="explicit_ccs_sqa" type="xs:double"/>
-       <xs:attribute name="explicit_compensation_voltage" type="xs:double"/>
+        <xs:attribute name="explicit_compensation_voltage" type="xs:double"/>
+        <!-- end values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
         <xs:attribute name="precursor_concentration" type="xs:double"/>
       </xs:extension>
     </xs:complexContent>
@@ -1249,7 +1251,7 @@
         <xs:attribute name="quantitative" type="xs:boolean" />
         <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
         <!-- these attributes were formerly at the precursor level (4.21 and earlier) but are really per-transition -->
-        <xs:attribute name="explicit_collision_energy" type="xs:double"/>
+        <xs:attribute name="explicit_collision_energy" type="xs:double"/> <!-- as of 20.12 there is also a precursor-level value for this, but this overrides -->
         <xs:attribute name="explicit_declustering_potential" type="xs:double"/>
         <xs:attribute name="explicit_ion_mobility_high_energy_offset" type="xs:double"/>
         <xs:attribute name="explicit_s_lens" type="xs:double"/>

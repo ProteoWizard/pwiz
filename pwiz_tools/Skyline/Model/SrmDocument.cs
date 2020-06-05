@@ -2115,10 +2115,15 @@ namespace pwiz.Skyline.Model
         public static double GetCollisionEnergy(SrmSettings settings, PeptideDocNode nodePep,
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CollisionEnergyRegression regression, int step)
         {
-            var ce = nodeTran==null // If we're only given a precursor, use the explicit CE of its children if they all agree
-                ? (nodeGroup.Children.Any() && nodeGroup.Children.All( node => ((TransitionDocNode)node).ExplicitValues.CollisionEnergy == ((TransitionDocNode)nodeGroup.Children.First()).ExplicitValues.CollisionEnergy) 
-                    ? ((TransitionDocNode)nodeGroup.Children.First()).ExplicitValues.CollisionEnergy : null)
-                : nodeTran.ExplicitValues.CollisionEnergy;
+            // Collision Energy explicitly declared at the transition level is taken to be the correct value.
+            // If that is not present, explicitly declared value at the precursor level is used.
+            // If that is not present, the CE is calculated using the provided regression if any.
+            var ce = nodeTran == null ?
+                // If we're only given a precursor, use the explicit CE of its children if they all agree, else use precursor explicit CE
+                (nodeGroup.Children.Select(node => ((TransitionDocNode)node).ExplicitValues.CollisionEnergy).Distinct().Count() == 1 ? 
+                    ((TransitionDocNode)nodeGroup.Children.First()).ExplicitValues.CollisionEnergy : null) ?? nodeGroup.ExplicitValues.CollisionEnergy :
+                // Otherwise use explicit precursor CE if no explicit transition CE given
+                nodeTran.ExplicitValues.CollisionEnergy ?? nodeGroup.ExplicitValues.CollisionEnergy; 
             if (regression != null)
             {
                 if (!ce.HasValue)
