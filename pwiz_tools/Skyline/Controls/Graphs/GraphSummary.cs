@@ -76,6 +76,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class RTGraphView : IFormView {}
         public class AreaGraphView : IFormView {}
+        public class DetectionsGraphView : IFormView { }
 
         public interface IStateProvider
         {
@@ -543,7 +544,9 @@ namespace pwiz.Skyline.Controls.Graphs
         schedule = 1 << 3,
         run_to_run_regression = 1 << 4,
         histogram = 1 << 5,
-        histogram2d = 1 << 6
+        histogram2d = 1 << 6,
+        detections = 1 << 7,
+        detections_histogram = 1 << 8
     }
 
     public static class Extensions

@@ -68,6 +68,7 @@ namespace pwiz.Skyline
         private readonly List<GraphSummary> _listGraphRetentionTime = new List<GraphSummary>();
         private readonly List<GraphSummary> _listGraphPeakArea = new List<GraphSummary>();
         private readonly List<GraphSummary> _listGraphMassError = new List<GraphSummary>();
+        private readonly List<GraphSummary> _listGraphDetections = new List<GraphSummary>();
 
         private DockableForm _resultsGridForm;
         private DocumentGridForm _documentGridForm;
@@ -379,6 +380,19 @@ namespace pwiz.Skyline
                         UpdateUIGraphMassError(enable);
                     }
                 }
+
+                if (detectionsPlotsMenuItem.Enabled != enable)
+                {
+                    detectionsPlotsMenuItem.Enabled = enable;
+                    detectionsHistogramMenuItem.Enabled = enable;
+                    detectionsReplicateComparisonMenuItem.Enabled = Enabled;
+                    if (!deserialized)
+                    {
+                        layoutLock.EnsureLocked();
+                        UpdateUIGraphDetection(enable);
+                    }
+                }
+
                 if (_graphFullScan != null && _graphFullScan.Visible && !enable)
                 {
                     layoutLock.EnsureLocked();
@@ -593,6 +607,9 @@ namespace pwiz.Skyline
             type = MassErrorGraphController.GraphType;
             _listGraphMassError.ToList().ForEach(DestroyGraphMassError);
             MassErrorGraphController.GraphType = type;
+
+            type = DetectionsGraphController.GraphType;
+            _listGraphDetections.ToList().ForEach(DestroyGraphDetections);
 
             FormUtil.OpenForms.OfType<FoldChangeForm>().ForEach(f => f.Close());
 
@@ -2645,7 +2662,8 @@ namespace pwiz.Skyline
                     graphChrom.Focus();
                 }
                 else
-                    graphChrom.Hide();
+                    if(graphChrom.DockState != DockState.Hidden)
+                        graphChrom.Hide();
             }
             else if (show)
             {
@@ -5819,6 +5837,120 @@ namespace pwiz.Skyline
                 }
             }
         }
+
+        #endregion
+
+        #region Detections Graph
+        private void detectionsPlotsMenuItem_Click(object sender, EventArgs e)
+        {
+            var types = Settings.Default.DetectionGraphTypes;
+            detectionsReplicateComparisonMenuItem.Checked = detectionsReplicateComparisonMenuItem.Checked = GraphChecked(_listGraphDetections, types, GraphTypeSummary.detections);
+            detectionsHistogramMenuItem.Checked = detectionsHistogramMenuItem.Checked = GraphChecked(_listGraphDetections, types, GraphTypeSummary.detections_histogram);
+        }
+
+        private void graphDetections_DropDownOpening(object sender, EventArgs e)
+        {
+            var types = Settings.Default.DetectionGraphTypes;
+            detectionsReplicateComparisonMenuItem.Checked = detectionsReplicateComparisonMenuItem.Checked = GraphChecked(_listGraphDetections, types, GraphTypeSummary.detections);
+            detectionsHistogramMenuItem.Checked = detectionsHistogramMenuItem.Checked = GraphChecked(_listGraphDetections, types, GraphTypeSummary.detections_histogram);
+        }
+
+        private void detectionsReplicateComparisonMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowDetectionsReplicateComparisonGraph();
+        }
+
+        private void detectionsHistogramMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowDetectionsHistogramGraph();
+        }
+
+        public void UpdateUIGraphDetection(bool visible)
+        {
+            var list = Settings.Default.DetectionGraphTypes.ToArray();
+            ShowGraphMassError(visible);
+            if (!visible)
+            {
+                Settings.Default.DetectionGraphTypes.Clear();
+                Settings.Default.DetectionGraphTypes.AddRange(list);
+            }
+        }
+
+        public void ShowDetectionsReplicateComparisonGraph()
+        {
+            Settings.Default.DetectionGraphTypes.Insert(0, GraphTypeSummary.detections);
+            ShowGraphDetection(true, GraphTypeSummary.detections);
+            UpdateDetectionsGraph();
+        }
+
+        public void ShowDetectionsHistogramGraph()
+        {
+            //Settings.Default.DetectionGraphTypes.Insert(0, GraphTypeSummary.detections_histogram);
+            //ShowGraphDetections(true, GraphTypeSummary.detections);
+            //UpdateDetectionsGraph();
+        }
+
+        public void ShowGraphDetection(bool show)
+        {
+            Settings.Default.DetectionGraphTypes.ToList().ForEach(t => ShowGraphDetection(show, t));
+        }
+
+        public void ShowGraphDetection(bool show, GraphTypeSummary type)
+        {
+            ShowGraph(_listGraphDetections, show, type, CreateGraphDetections);
+        } 
+
+        private GraphSummary CreateGraphDetections(GraphTypeSummary type)
+        {
+            if (type == GraphTypeSummary.invalid)
+                return null;
+
+            GraphSummary graph = new GraphSummary(type, this, new DetectionsGraphController(), SelectedResultsIndex);
+            graph.FormClosed += graphDetections_FormClosed;
+            graph.VisibleChanged += graphDetections_VisibleChanged;
+            graph.GraphControl.ZoomEvent += GraphControl_ZoomEvent;
+            graph.Toolbar = new DetectionsToolbar(graph);
+            _listGraphDetections.Insert(0, graph);
+
+            return graph;
+        }
+
+        private void DestroyGraphDetections(GraphSummary graph)
+        {
+            graph.FormClosed -= graphDetections_FormClosed;
+            graph.VisibleChanged -= graphDetections_VisibleChanged;
+            graph.HideOnClose = false;                   
+            graph.Close();
+            _listGraphDetections.Remove(graph);
+            Settings.Default.DetectionGraphTypes.Remove(graph.Type);
+        }
+
+        private void graphDetections_VisibleChanged(object sender, EventArgs e)
+        {
+            var graph = (GraphSummary)sender;
+            if (graph.Visible)
+            {
+                Settings.Default.DetectionGraphTypes.Insert(0, graph.Type);
+                _listGraphDetections.Remove(graph);
+                _listGraphDetections.Insert(0, graph);
+            }
+            else if (graph.IsHidden)
+            {
+                Settings.Default.DetectionGraphTypes.Remove(graph.Type);
+            }
+        }
+
+        private void graphDetections_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            GraphSummary graph = (GraphSummary)sender;
+            _listGraphDetections.Remove(graph);
+            Settings.Default.DetectionGraphTypes.Remove(graph.Type);
+        }
+        public void UpdateDetectionsGraph()
+        {
+            _listGraphDetections.ForEach(g => g.UpdateUI());
+        }
+
 
         #endregion
 

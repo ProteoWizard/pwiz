@@ -304,6 +304,32 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
+        public UniqueList<GraphTypeSummary> DetectionGraphTypes
+        {
+            get
+            {
+                if (this[@"DetectionGraphTypes"] == null)
+                {
+                    DetectionGraphTypes = ShowDetectionGraph
+                        ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(DetectionGraphType, GraphTypeSummary.detections) }
+                        : new UniqueList<GraphTypeSummary>();
+                }
+
+                return (UniqueList<GraphTypeSummary>)this[@"DetectionGraphTypes"];
+            }
+            set
+            {
+                value.CollectionChanged += (sender, args) =>
+                {
+                    if (DetectionGraphTypes.Any())
+                        DetectionGraphType = DetectionGraphTypes.First().ToString();
+                };
+
+                this[@"DetectionGraphTypes"] = value;
+            }
+        }
+
+        [UserScopedSettingAttribute]
         public UniqueList<GraphTypeSummary> RTGraphTypes
         {
             get

@@ -919,7 +919,22 @@ namespace pwiz.Skyline.Properties {
                 this["AreaGraphType"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("detection")]
+        public string DetectionGraphType
+        {
+            get
+            {
+                return ((string)(this["DetectionGraphType"]));
+            }
+            set
+            {
+                this["DetectionGraphType"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
@@ -931,7 +946,22 @@ namespace pwiz.Skyline.Properties {
                 this["ShowPeakAreaGraph"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowDetectionGraph
+        {
+            get
+            {
+                return ((bool)(this["ShowDetectionGraph"]));
+            }
+            set
+            {
+                this["ShowDetectionGraph"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
