@@ -981,6 +981,12 @@ namespace pwiz.Skyline.Model.Lib
                             break;
                     }
 
+                    // Watch for strange formula specification as seen in MONA LipidBlast, e.g. "[C11H22NO4]+" seen with adduct [M]+
+                    if (formula != null && formula.StartsWith(@"["))
+                    {
+                        formula = formula.Substring(1).Split(']')[0];
+                    }
+
                     // Try to infer adduct if none given
                     if (charge == 0 && adduct.IsEmpty && precursorMz.HasValue && ! string.IsNullOrEmpty(formula))
                     {
@@ -1111,7 +1117,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, otherKeys), adduct);
                     var info = new NistSpectrumInfo(key, tfRatio, rt, irt, Convert.ToSingle(totalIntensity),
-                                                    (ushort) copies, (ushort) numPeaks, lenCompressed, lenAnnotations, location);
+                        (ushort) copies, (ushort) numPeaks, lenCompressed, lenAnnotations, location);
                     if (!isPeptide)
                     {
                         // Keep an eye out for ambiguous keys, probably due to library containing multiple machine types etc
@@ -1119,14 +1125,14 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             ambiguousKeys.Add(key); // Already in knownKeys, note ambiguity
                         }
-                    }                    
+                    }
                     libraryEntries.Add(info);
                 }
 
-                var libraryEntriesArray = libraryEntries.ToArray();
+                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries);
 
                 long locationHeaders = outStream.Position;
-                foreach (var info in libraryEntriesArray)
+                foreach (var info in libraryEntries)
                 {
                     outStream.Write(BitConverter.GetBytes(info.Key.Charge), 0, sizeof (int));
                     outStream.Write(BitConverter.GetBytes(info.TFRatio), 0, sizeof (float));
@@ -1158,7 +1164,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
 
                 outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(libraryEntriesArray.Length), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(libraryEntries.Count), 0, sizeof(int));
                 outStream.Write(BitConverter.GetBytes(locationHeaders), 0, sizeof(long));
 
                 

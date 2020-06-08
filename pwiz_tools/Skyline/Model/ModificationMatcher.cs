@@ -350,7 +350,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public PeptideDocNode GetModifiedNode(string seq)
+        public override PeptideDocNode GetModifiedNode(string seq)
         {
             return GetModifiedNode(seq, null);
         }

@@ -995,11 +995,7 @@ namespace pwiz.ProteowizardWrapper
             get
             {
                 var len = ChromatogramCount;
-
-                // Many files have just one TIC chromatogram
-                if (len < 2)
-                    return false;
-
+                
                 for (var i = 0; i < len; i++)
                 {
                     int index;

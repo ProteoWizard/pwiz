@@ -147,6 +147,8 @@
     <Compile Include="CommandLineImportDocTest.cs" />
     <Compile Include="CommandLineMProphetTest.cs" />
     <Compile Include="CreateTextSequencesTest.cs" />
+    <Compile Include="CrosslinkModTest.cs" />
+    <Compile Include="CrosslinkSequenceParserTest.cs" />
     <Compile Include="CustomMoleculeTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />
@@ -158,6 +160,7 @@
     <Compile Include="ExplicitModTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
     <Compile Include="FindNodeTest.cs" />
+    <Compile Include="FragmentedMoleculeTest.cs" />
     <Compile Include="FullScanPrecursorTest.cs" />
     <Compile Include="IdentityTest.cs" />
     <Compile Include="InternetAccessTest.cs" />

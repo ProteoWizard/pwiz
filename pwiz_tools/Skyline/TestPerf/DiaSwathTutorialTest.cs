@@ -438,6 +438,10 @@ namespace TestPerf
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
             RunUI(() =>
             {
+                importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
+                importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
+                importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom = TransitionFilter.StartFragmentFinder.MZ_PRECURSOR.Label;
+                importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo = TransitionFilter.EndFragmentFinder.IONS_3.Label;
                 importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = true;
                 importPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = new[]
                 {
@@ -451,10 +455,10 @@ namespace TestPerf
                 }
                 else
                 {
-                importPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes = new[]
-                {
-                    IonType.y, IonType.b    // Removes precursor
-                };
+                    importPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes = new[]
+                    {
+                        IonType.y, IonType.b    // Removes precursor
+                    };
                 }
                 // Verify other values shown in the tutorial
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.IonCount);

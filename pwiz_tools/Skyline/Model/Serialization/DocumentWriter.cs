@@ -25,6 +25,7 @@ using System.Xml;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
@@ -309,7 +310,7 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteEndElement();
         }
 
-        private void WriteExplicitMods(XmlWriter writer, string sequence, ExplicitMods mods)
+        public void WriteExplicitMods(XmlWriter writer, string sequence, ExplicitMods mods)
         {
             if (mods == null ||
                 string.IsNullOrEmpty(sequence) && !mods.HasIsotopeLabels)
@@ -415,9 +416,24 @@ namespace pwiz.Skyline.Model.Serialization
                     writer.WriteAttribute(ATTR.mass_diff,
                         string.Format(CultureInfo.InvariantCulture, @"{0}{1}", (massDiff < 0 ? string.Empty : @"+"),
                             Math.Round(massDiff, 1)));
-
+                    if (null != mod.LinkedPeptide)
+                    {
+                        WriteLinkedPeptide(writer, mod.LinkedPeptide);
+                    }
                     writer.WriteEndElement();
                 }
+            }
+            writer.WriteEndElement();
+        }
+
+        private void WriteLinkedPeptide(XmlWriter writer, LinkedPeptide linkedPeptide)
+        {
+            writer.WriteStartElement(EL.linked_peptide);
+            writer.WriteAttribute(ATTR.sequence, linkedPeptide.Peptide.Sequence);
+            writer.WriteAttribute(ATTR.index_aa, linkedPeptide.IndexAa);
+            if (null != linkedPeptide.ExplicitMods)
+            {
+                WriteExplicitMods(writer, linkedPeptide.Peptide.Sequence, linkedPeptide.ExplicitMods);
             }
             writer.WriteEndElement();
         }
@@ -611,6 +627,11 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
+            if (nodeTransition.ComplexFragmentIon.IsOrphan)
+            {
+                writer.WriteAttribute(ATTR.orphaned_crosslink_ion, true);
+            }
+
             // Order of elements matters for XSD validation
             WriteAnnotations(writer, nodeTransition.Annotations);
             writer.WriteElementString(EL.precursor_mz, SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz));
@@ -673,6 +694,10 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteElementString(EL.declustering_potential, dp.Value);
             }
             WriteTransitionLosses(writer, nodeTransition.Losses);
+            foreach (var linkedIon in nodeTransition.ComplexFragmentIon.Children)
+            {
+                WriteLinkedIon(writer, linkedIon.Key, linkedIon.Value);
+            }
 
             if (nodeTransition.HasLibInfo)
             {
@@ -729,6 +754,28 @@ namespace pwiz.Skyline.Model.Serialization
                         writer.WriteAttribute(ATTR.loss_index, indexLoss);
                 }
                 writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
+        }
+
+        private void WriteLinkedIon(XmlWriter writer, ModificationSite modificationSite, ComplexFragmentIon complexFragmentIon)
+        {
+            writer.WriteStartElement(EL.linked_fragment_ion);
+            if (!complexFragmentIon.IsOrphan)
+            {
+                // blank fragment type means orphaned fragment ion
+                writer.WriteAttribute(ATTR.fragment_type, complexFragmentIon.Transition.IonType);
+            }
+            if (complexFragmentIon.Transition.IonType != IonType.precursor)
+            {
+                writer.WriteAttribute(ATTR.fragment_ordinal, complexFragmentIon.Transition.Ordinal);
+            }
+            writer.WriteAttribute(ATTR.index_aa, modificationSite.IndexAa);
+            writer.WriteAttribute(ATTR.modification_name, modificationSite.ModName);
+            WriteTransitionLosses(writer, complexFragmentIon.TransitionLosses);
+            foreach (var child in complexFragmentIon.Children)
+            {
+                WriteLinkedIon(writer, child.Key, child.Value);
             }
             writer.WriteEndElement();
         }

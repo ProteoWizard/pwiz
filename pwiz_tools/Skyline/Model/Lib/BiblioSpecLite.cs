@@ -32,6 +32,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -672,7 +673,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
 
-                var setLibKeys = new Dictionary<LibKey, bool>(rows);
+                var setLibKeys = new HashSet<LibKey>(rows);
                 var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
                 var librarySourceFiles = new List<BiblioLiteSourceInfo>();
 
@@ -761,8 +762,13 @@ namespace pwiz.Skyline.Model.Lib
                         LibKey key;
                         if (isProteomic)
                         {
-                            var peptideLibraryKey = new PeptideLibraryKey(sequence, charge);
-                            key = new LibKey(peptideLibraryKey);
+                            LibraryKey libraryKey =
+                                CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(sequence, charge);
+                            if (libraryKey == null)
+                            {
+                                libraryKey = new PeptideLibraryKey(sequence, charge);
+                            }
+                            key = new LibKey(libraryKey);
                         }
                         else
                         {
@@ -770,19 +776,21 @@ namespace pwiz.Skyline.Model.Lib
                         }
                         // These libraries should not have duplicates, but just in case.
                         // CONSIDER: Emit error about redundancy?
-                        if (!setLibKeys.ContainsKey(key))
+                        if (setLibKeys.Add(key))
                         {
-                            setLibKeys.Add(key, true);
                             string scoreName = null;
                             if (scoreType.HasValue)
                             {
                                 scoreTypesById.TryGetValue(scoreType.Value, out scoreName);
                             }
+
                             libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id,
                                 retentionTimesByFileId, driftTimesByFileId, peakBoundariesByFileId, score, scoreName));
                         }
                     }
                 }
+
+                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries);
 
                 if (schemaVer > 0)
                 {

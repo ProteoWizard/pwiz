@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
@@ -289,7 +290,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TypedMass GetPrecursorMass(IsotopeLabelType labelType, Target seq, ExplicitMods mods)
         {
-            return GetPrecursorCalc(labelType, mods).GetPrecursorMass(seq);
+            var precursorCalc = GetPrecursorCalc(labelType, mods);
+
+            if (mods != null && mods.HasCrosslinks)
+            {
+                var crosslinkBuilder = new CrosslinkBuilder(this, new Peptide(seq), mods, labelType);
+                return crosslinkBuilder.GetPrecursorMass(precursorCalc.MassType);
+            }
+            return precursorCalc.GetPrecursorMass(seq);
         }
 
         public TypedMass GetPrecursorMass(IsotopeLabelType labelType, CustomMolecule mol, TypedModifications mods, Adduct adductForIsotopeLabels, out string isotopicFormula)
@@ -327,11 +335,17 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public TypedMass GetFragmentMass(TransitionGroup group, ExplicitMods mods,
-                                      Transition transition, IsotopeDistInfo isotopeDist)
+            Transition transition, IsotopeDistInfo isotopeDist)
         {
+            Assume.IsTrue(mods == null || !mods.HasCrosslinks, @"Use ComplexFragmentIon.GetFragmentMass");
             // Return the singly protonated mass (massH) of the peptide fragment, or custom molecule mass before electron removal
-            var labelType = group==null ? IsotopeLabelType.light : group.LabelType;
+            var labelType = group == null ? IsotopeLabelType.light : group.LabelType;
+            return GetSimpleFragmentMass(labelType, mods, transition, isotopeDist);
+        }
 
+        private TypedMass GetSimpleFragmentMass(IsotopeLabelType labelType, ExplicitMods mods, Transition transition,
+            IsotopeDistInfo isotopeDist)
+        {
             IFragmentMassCalc calc;
             if (transition.IsNonReporterCustomIon())
             {
@@ -345,11 +359,24 @@ namespace pwiz.Skyline.Model.DocSettings
             if (calc == null)
             {
                 Assume.Fail(string.Format(@"Unable to locate fragment calculator for isotope label type {0} and mods {1}",
-                        labelType == null ? @"(null)" : labelType.ToString(),
-                        mods == null ? @"(null)" : mods.ToString()));
+                    labelType == null ? @"(null)" : labelType.ToString(),
+                    mods == null ? @"(null)" : mods.ToString()));
                 return TypedMass.ZERO_MONO_MASSH;   // Keep resharper happy
             }
             return calc.GetFragmentMass(transition, isotopeDist);
+
+        }
+
+        public TypedMass RecalculateTransitionMass(ExplicitMods explicitMods, TransitionDocNode transition,
+            IsotopeDistInfo isotopeDist)
+        {
+            if (explicitMods == null || !explicitMods.HasCrosslinks)
+            {
+                return GetSimpleFragmentMass(transition.Transition.Group.LabelType, explicitMods, transition.Transition,
+                    isotopeDist);
+            }
+
+            return transition.ComplexFragmentIon.GetFragmentMass(this, explicitMods);
         }
 
         public ChromSource GetChromSource(TransitionDocNode nodeTran)
@@ -366,7 +393,25 @@ namespace pwiz.Skyline.Model.DocSettings
                                           SequenceModFormatType format = SequenceModFormatType.full_precision,
                                           bool useExplicitModsOnly = false)
         {
+            if (mods != null && mods.HasCrosslinks)
+            {
+                return GetCrosslinkModifiedSequence(seq, labelType, mods, false);
+            }
             return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, format, useExplicitModsOnly);
+        }
+
+        public Target GetCrosslinkModifiedSequence(Target seq, IsotopeLabelType labelType, ExplicitMods mods,
+            bool replaceCrosslinksWithMasses)
+        {
+            var modifiedSequence = ModifiedSequence.GetModifiedSequence(this, seq.Sequence, mods, labelType);
+            if (replaceCrosslinksWithMasses)
+            {
+                modifiedSequence = modifiedSequence.ReplaceCrosslinksWithMasses(this, labelType);
+            }
+            string strModifiedSequence = TransitionSettings.Prediction.PrecursorMassType.IsMonoisotopic()
+                ? modifiedSequence.MonoisotopicMasses
+                : modifiedSequence.AverageMasses;
+            return new Target(strModifiedSequence);
         }
 
         public Adduct GetModifiedAdduct(Adduct adduct, string neutralFormula,
@@ -1176,7 +1221,16 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private IEnumerable<TypedSequence> GetTypedSequences(Target sequence, ExplicitMods mods, Adduct adduct, bool assumeProteomicWhenEmpty = false)
         {
-            if (adduct.IsProteomic || (assumeProteomicWhenEmpty && adduct.IsEmpty))
+            if (mods != null && mods.HasCrosslinks)
+            {
+                yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, IsotopeLabelType.light, mods, false), IsotopeLabelType.light, adduct);
+
+                foreach (var labelTypeHeavy in GetHeavyLabelTypes(mods))
+                {
+                    yield return new TypedSequence(GetCrosslinkModifiedSequence(sequence, labelTypeHeavy, mods, false), labelTypeHeavy, adduct);
+                }
+            }
+            else if (adduct.IsProteomic || (assumeProteomicWhenEmpty && adduct.IsEmpty))
             {
                 var labelType = IsotopeLabelType.light;
                 var modifiedSequence = GetModifiedSequence(sequence, labelType, mods);
@@ -1405,7 +1459,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // a variable modification, or the library contains some form of the peptide.
                 // This is a performance improvement over checking every variable modification
                 // of a peptide when it is not even in the library.
-                (peptide.IsCustomMolecule || (mods != null && mods.IsVariableStaticMods) || LibrariesContainAny(peptide.Target)))
+                (peptide.IsCustomMolecule || (mods != null && (mods.IsVariableStaticMods || mods.HasCrosslinks)) || LibrariesContainAny(peptide.Target)))
             {
                 // Only allow variable modifications, if the peptide has no modifications
                 // or already checking variable modifications, and there is reason to check

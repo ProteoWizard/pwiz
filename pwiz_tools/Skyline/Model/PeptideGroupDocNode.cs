@@ -416,6 +416,8 @@ namespace pwiz.Skyline.Model
             {
                 var setNonExplicit = new HashSet<Peptide>();
                 IPeptideFilter filter = (useFilter ? settings : PeptideFilter.UNFILTERED);
+                var explicitKeys = Peptides.Where(nodePep => nodePep.HasExplicitMods && !nodePep.HasVariableMods)
+                    .Select(nodePep => nodePep.Key).ToHashSet();
                 foreach (PeptideDocNode nodePep in Children)
                 {
                     if (monitor != null && monitor.IsCanceled())
@@ -435,8 +437,11 @@ namespace pwiz.Skyline.Model
                             peptide = (Peptide) peptide.Copy();
                         foreach (PeptideDocNode nodePepResult in peptide.CreateDocNodes(settings, filter))
                         {
-                            yield return nodePepResult;
-                            returnedResult = true;
+                            if (!explicitKeys.Contains(nodePepResult.Key))
+                            {
+                                yield return nodePepResult;
+                                returnedResult = true;
+                            }
                         }
                         // Make sure the peptide is not removed due to filtering
                         if (!returnedResult)

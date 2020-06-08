@@ -306,6 +306,9 @@
   <data name="StaticMod_Terminus" xml:space="preserve">
     <value>Terminus</value>
   </data>
+  <data name="StaticMod_IsCrosslinker" xml:space="preserve">
+    <value>Crosslinker</value>
+  </data>
   <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
     <value>Use high-selectivity extraction</value>
   </data>
@@ -1486,5 +1489,29 @@
   </data>
   <data name="PeptideSettings_Integration" xml:space="preserve">
     <value>Integration</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonRangeFrom" xml:space="preserve">
+    <value>Product ion selection start</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonRangeTo" xml:space="preserve">
+    <value>Product ion selection end</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_MinIonMz" xml:space="preserve">
+    <value>Min ion m/z</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_MaxIonMz" xml:space="preserve">
+    <value>Max ion m/z</value>
+  </data>
+  <data name="LoggableExplicitMod_LinkedPeptide" xml:space="preserve">
+    <value>Linked peptide</value>
+  </data>
+  <data name="LinkedPeptide_ExplicitModsStatic" xml:space="preserve">
+    <value>Modifications</value>
+  </data>
+  <data name="LinkedPeptide_PeptideSequence" xml:space="preserve">
+    <value>Sequence</value>
+  </data>
+  <data name="LinkedPeptide_Position" xml:space="preserve">
+    <value>Position</value>
   </data>
 </root>

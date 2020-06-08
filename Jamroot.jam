@@ -279,6 +279,7 @@ project pwiz
 
         # avoid deprecation warnings
         <define>BOOST_NO_AUTO_PTR
+        <define>_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING # TODO: remove this next time Boost is updated
 
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
@@ -304,15 +305,18 @@ project pwiz
         <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
+
+        # target Windows 7 or later
+        <toolset>msvc:<define>_WIN32_WINNT=_WIN32_WINNT_WIN7
+        <toolset>msvc:<define>NTDDI_VERSION=NTDDI_WIN7
         
         <conditional>@secure-scl-throws
 
-        # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
-        # warning: '__cur' might be used uninitialized in this function 
-        <toolset>gcc:<cxxflags>-Wno-uninitialized
+        <toolset>gcc:<cxxflags>-Wno-uninitialized       # warning: '__cur' might be used uninitialized in this function 
+        <toolset>gcc:<cxxflags>-Wno-parentheses         # warning: suggest parentheses around '&&' within '||'
 
-        # set standard to C++11
-        <toolset>gcc:<cxxflags>-std=c++11
+        # set standard to C++14
+        <toolset>gcc:<cxxflags>-std=c++14
 
         # avoid warnings like concept_check.hpp ... warning: unused typedef 'boost_concept_check'
         <toolset>clang:<cxxflags>-Wno-unused-local-typedef

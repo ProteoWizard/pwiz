@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -213,7 +213,7 @@ namespace TestRunner
                 "runsmallmoleculeversions=off;" +
                 "recordauditlogs=off;" +
                 "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
-                "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off";
+                "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off;verbose=off";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
 
             switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
@@ -422,6 +422,7 @@ namespace TestRunner
             var maxSecondsPerTest = commandLineArgs.ArgAsDouble("maxsecondspertest");
             var dmpDir = commandLineArgs.ArgAsString("dmpdir");
             bool teamcityTestDecoration = commandLineArgs.ArgAsBool("teamcitytestdecoration");
+            bool verbose = commandLineArgs.ArgAsBool("verbose");
 
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
 
@@ -464,7 +465,7 @@ namespace TestRunner
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration,
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, useVendorReaders, timeoutMultiplier, 
-                results, log);
+                results, log, verbose);
             
             if (asNightly && !string.IsNullOrEmpty(dmpDir) && Directory.Exists(dmpDir))
             {
@@ -933,6 +934,7 @@ namespace TestRunner
         {
             var inputList = testList.Split(',');
             var outputList = new List<string>();
+            var allTests = GetTestList(TEST_DLLS);
 
             // Check for empty list.
             if (inputList.Length == 1 && inputList[0] == "")
@@ -955,6 +957,17 @@ namespace TestRunner
                             // split multiple test names in one line
                             outputList.AddRange(lineParts[0].Trim().Split(' ', '\t'));
                         }
+                    }
+                }
+                else if (name.StartsWith("~"))
+                {
+                    // e.g. ~.*Waters.*
+                    var testRegex = new Regex(name.Substring(1));
+                    foreach (var testInfo in allTests)
+                    {
+                        var testName = testInfo.TestClassType.Name + "." + testInfo.TestMethod.Name;
+                        if (testRegex.IsMatch(testName))
+                            outputList.Add(testName);
                     }
                 }
                 else if (name.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase))
