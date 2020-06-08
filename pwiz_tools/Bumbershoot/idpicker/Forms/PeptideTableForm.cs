@@ -375,43 +375,12 @@ namespace IDPicker.Forms
         private Map<long, Map<long, PivotData>> statsBySpectrumSource, basicStatsBySpectrumSource;
         private Map<long, Map<long, PivotData>> statsBySpectrumSourceGroup, basicStatsBySpectrumSourceGroup;
 
-        List<DataGridViewTextBoxColumn> iTRAQ_ReporterIonColumns, TMT_ReporterIonColumns;
-
         public PeptideTableForm ()
         {
             InitializeComponent();
 
             Text = TabText = "Peptide View";
             Icon = Properties.Resources.PeptideViewIcon;
-
-            iTRAQ_ReporterIonColumns = new List<DataGridViewTextBoxColumn>();
-            TMT_ReporterIonColumns = new List<DataGridViewTextBoxColumn>();
-
-            foreach (int ion in new int[] { 113, 114, 115, 116, 117, 118, 119, 121 })
-            {
-                var column = new DataGridViewTextBoxColumn
-                {
-                    HeaderText = "iTRAQ-" + ion.ToString(),
-                    Name = "iTRAQ-" + ion.ToString() + "Column",
-                    ReadOnly = true,
-                    Tag = iTRAQ_ReporterIonColumns.Count,
-                    Width = 100
-                };
-                iTRAQ_ReporterIonColumns.Add(column);
-            }
-
-            foreach (string ion in new string[] { "126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131" })
-            {
-                var column = new DataGridViewTextBoxColumn
-                {
-                    HeaderText = "TMT-" + ion,
-                    Name = "TMT-" + ion + "Column",
-                    ReadOnly = true,
-                    Tag = TMT_ReporterIonColumns.Count,
-                    Width = 100
-                };
-                TMT_ReporterIonColumns.Add(column);
-            }
 
             treeDataGridView.Columns.AddRange(iTRAQ_ReporterIonColumns.ToArray());
             treeDataGridView.Columns.AddRange(TMT_ReporterIonColumns.ToArray());
@@ -1174,8 +1143,12 @@ namespace IDPicker.Forms
                     else if (quantitationMethods.Contains(QuantitationMethod.ITRAQ4plex))
                         iTRAQ_ReporterIonColumns.GetRange(1, 4).ForEach(o => columnsIrrelevantForGrouping.Remove(o));
 
-                    if (quantitationMethods.Contains(QuantitationMethod.TMT10plex))
+                    if (quantitationMethods.Contains(QuantitationMethod.TMTpro16plex))
                         TMT_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Remove(o));
+                    else if (quantitationMethods.Contains(QuantitationMethod.TMT11plex))
+                        TMT_ReporterIonColumns.GetRange(0, 11).ForEach(o => columnsIrrelevantForGrouping.Remove(o));
+                    else if (quantitationMethods.Contains(QuantitationMethod.TMT10plex))
+                        TMT_ReporterIonColumns.GetRange(0, 10).ForEach(o => columnsIrrelevantForGrouping.Remove(o));
                     else if (quantitationMethods.Contains(QuantitationMethod.TMT6plex))
                         TMT_ReporterIonColumns.Where(o => new List<int> {0, 1, 4, 5, 8, 9}.Contains((int) o.Tag)).ForEach(o => columnsIrrelevantForGrouping.Remove(o));
                     else if (quantitationMethods.Contains(QuantitationMethod.TMT2plex))
