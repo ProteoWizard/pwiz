@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model.Serialization
 
             // Ignore userSet during load, since all values are still calculated
             // from the child transitions.  Otherwise inconsistency is possible.
-            //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
+//            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
             const UserSet userSet = UserSet.FALSE;
             int countRatios = Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
             return new TransitionGroupChromInfo(fileInfo.FileId,
