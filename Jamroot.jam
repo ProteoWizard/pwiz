@@ -313,10 +313,16 @@ project pwiz
         <conditional>@secure-scl-throws
 
         <toolset>gcc:<cxxflags>-Wno-uninitialized       # warning: '__cur' might be used uninitialized in this function 
-        <toolset>gcc:<cxxflags>-Wno-parentheses         # warning: suggest parentheses around '&&' within '||'
 
         # set standard to C++14
         <toolset>gcc:<cxxflags>-std=c++14
+        <toolset>darwin:<cxxflags>-std=c++14
+        <toolset>clang:<cxxflags>-std=c++14
+
+        # disable "warning: suggest parentheses around '&&' within '||'"
+        <toolset>gcc:<cxxflags>-Wno-parentheses
+        <toolset>clang:<cxxflags>-Wno-parentheses
+        <toolset>darwin:<cxxflags>-Wno-parentheses
 
         # avoid warnings like concept_check.hpp ... warning: unused typedef 'boost_concept_check'
         <toolset>clang:<cxxflags>-Wno-unused-local-typedef
@@ -329,6 +335,7 @@ project pwiz
         # allow MSVC region pragmas
         <toolset>gcc:<cxxflags>-Wno-unknown-pragmas
         <toolset>clang:<cxxflags>-Wno-unknown-pragmas
+        <toolset>darwin:<cxxflags>-Wno-unknown-pragmas
 
         $(PREDEF_CHECKS)
         
@@ -341,8 +348,6 @@ project pwiz
         # allow "long long" even with -pedantic
         <toolset>gcc:<cxxflags>-Wno-long-long
         <toolset>darwin:<cxxflags>-Wno-long-long
-        <toolset>darwin:<cxxflags>-std=c++11
-        <toolset>clang:<cxxflags>-std=c++11
 
         # any GCC executable that uses shared libraries must have all its code built with -fPIC
         <conditional>@static-with-fpic
