@@ -441,6 +441,7 @@ namespace pwiz.Skyline
             this.previousReplicateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nextReplicateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator44 = new System.Windows.Forms.ToolStripSeparator();
+            this.closeChromatogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.closeAllChromatogramsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transitionsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -3468,6 +3469,7 @@ namespace pwiz.Skyline
             this.previousReplicateMenuItem,
             this.nextReplicateMenuItem,
             this.toolStripSeparator44,
+            this.closeChromatogramMenuItem,
             this.closeAllChromatogramsMenuItem});
             resources.ApplyResources(this.chromatogramsMenuItem, "chromatogramsMenuItem");
             this.chromatogramsMenuItem.Name = "chromatogramsMenuItem";
@@ -3499,6 +3501,12 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator44.Name = "toolStripSeparator44";
             resources.ApplyResources(this.toolStripSeparator44, "toolStripSeparator44");
+            // 
+            // closeChromatogramMenuItem
+            // 
+            this.closeChromatogramMenuItem.Name = "closeChromatogramMenuItem";
+            resources.ApplyResources(this.closeChromatogramMenuItem, "closeChromatogramMenuItem");
+            this.closeChromatogramMenuItem.Click += new System.EventHandler(this.closeChromatogramMenuItem_Click);
             // 
             // closeAllChromatogramsMenuItem
             // 
@@ -4911,6 +4919,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem applyPeakGroupToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groupApplyToByToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logRegressionContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem closeChromatogramMenuItem;
     }
 }
 
