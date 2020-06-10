@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             TestScale(453, 457, 0, 80);
             SetScanType(ChromSource.ms1, 33.23, 27.9);
             TestScale(452, 456, 0, 400);
- 
+
             // Check filtered spectrum.
             SetFilter(true);
             TestScale(452, 456, 0, 40);
