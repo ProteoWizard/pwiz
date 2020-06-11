@@ -1702,6 +1702,7 @@ namespace pwiz.Skyline
                 copyToolBarButton.Enabled = copyMenuItem.Enabled = false;
                 pasteToolBarButton.Enabled = pasteMenuItem.Enabled = false;
                 deleteMenuItem.Enabled = false;
+                selectAllMenuItem.Enabled = false;
                 // If it is a grid, then disable next and previous replicate keys in favor of ctrl-Up and ctrl-Down
                 // working in the grid
                 if (_activeClipboardControl is DataboundGridControl)
@@ -1715,6 +1716,7 @@ namespace pwiz.Skyline
             copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
             pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
             deleteMenuItem.Enabled = enabled;
+            selectAllMenuItem.Enabled = true;
             // Always enable these, as they are harmless if enabled with no results and otherwise unmanaged.
             nextReplicateMenuItem.Enabled = previousReplicateMenuItem.Enabled = true;
         }
