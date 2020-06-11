@@ -1,497 +1,479 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
-    Microsoft ResX Schema 
-    
-    Version 2.0
-    
-    The primary goals of this format is to allow a simple XML format 
-    that is mostly human readable. The generation and parsing of the 
-    various data types are done through the TypeConverter classes 
-    associated with the data types.
-    
-    Example:
-    
-    ... ado.net/XML headers & schema ...
-    <resheader name="resmimetype">text/microsoft-resx</resheader>
-    <resheader name="version">2.0</resheader>
-    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
-    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-        <value>[base64 mime encoded serialized .NET Framework object]</value>
-    </data>
-    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-        <comment>This is a comment</comment>
-    </data>
-                
-    There are any number of "resheader" rows that contain simple 
-    name/value pairs.
-    
-    Each data row contains a name, and value. The row also contains a 
-    type or mimetype. Type corresponds to a .NET class that support 
-    text/value conversion through the TypeConverter architecture. 
-    Classes that don't support this are serialized and stored with the 
-    mimetype set.
-    
-    The mimetype is used for serialized objects, and tells the 
-    ResXResourceReader how to depersist the object. This is currently not 
-    extensible. For a given mimetype the value must be set accordingly:
-    
-    Note - application/x-microsoft.net.object.binary.base64 is the format 
-    that the ResXResourceWriter will generate, however the reader can 
-    read any of the formats listed below.
-    
-    mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
-            : and then encoded with base64 encoding.
-    
-    mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-            : and then encoded with base64 encoding.
+	<!-- 
+		Microsoft ResX Schema
 
-    mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array 
-            : using a System.ComponentModel.TypeConverter
-            : and then encoded with base64 encoding.
-    -->
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-    <xsd:element name="root" msdata:IsDataSet="true">
-      <xsd:complexType>
-        <xsd:choice maxOccurs="unbounded">
-          <xsd:element name="metadata">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" />
-              </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="assembly">
-            <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="data">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="resheader">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-            </xsd:complexType>
-          </xsd:element>
-        </xsd:choice>
-      </xsd:complexType>
-    </xsd:element>
-  </xsd:schema>
-  <resheader name="resmimetype">
-    <value>text/microsoft-resx</value>
-  </resheader>
-  <resheader name="version">
-    <value>2.0</value>
-  </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
-  <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
-  <data name="AbsFoldChange" xml:space="preserve">
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+	
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>1.3</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+
+  <data name="AbsFoldChange">
     <value>Absolute value of the fold change</value>
   </data>
-  <data name="AbsLog2FoldChange" xml:space="preserve">
+  <data name="AbsLog2FoldChange">
     <value>Absolute value of the log base 2 of the fold change</value>
   </data>
-  <data name="AdjustedPValue" xml:space="preserve">
+  <data name="AdjustedPValue">
     <value>P-value adjusted for the multiple comparisons within this group comparison across the multiple peptides or proteins. The adjustment is done using the Benjamini-Hochberg procedure.</value>
   </data>
-  <data name="Accuracy" xml:space="preserve">
+  <data name="Accuracy">
     <value>Ratio of Calculated Concentration the Analyte Concentration (specified on the Replicate)</value>
   </data>
-  <data name="AcquiredTime" xml:space="preserve">
+  <data name="AcquiredTime">
     <value>Last time and date at which the mass spectrometer began acquiring this
 replicate data. Or #N/A if the file was imported with a version older than 1.1.</value>
   </data>
-  <data name="AnalyteConcentration" xml:space="preserve">
+  <data name="AnalyteConcentration">
     <value>Known quantity of analyte that was spiked into the external or quality control standard.</value>
   </data>
-  <data name="Area" xml:space="preserve">
+  <data name="Area">
     <value>Area under the curve (AUC), minus background, for the transition peak.</value>
   </data>
-  <data name="AreaNormalized" xml:space="preserve">
+  <data name="AreaNormalized">
     <value>The Area normalized to the sum of the Area values for all transitions
 in the document.</value>
   </data>
-  <data name="AreaRatio" xml:space="preserve">
+  <data name="AreaRatio">
     <value>The ratio of the Area of this transition to its corresponding transition in the
 first internal standard label type, before version 0.7 this was always light/heavy, and
 appeared on the heavy transitions.</value>
   </data>
-  <data name="AttributeAreaProportion" xml:space="preserve">
+  <data name="AttributeAreaProportion">
     <value>The ratio of the normalized area to the sum of the normalized areas of all of the other peptides or molecules in the document that have the same Attribute Area Proportion.</value>
   </data>
-  <data name="AttributeGroupId" xml:space="preserve">
+  <data name="AttributeGroupId">
     <value>Affects the grouping of peptides or molecules in the calculation of Attribute Area Proportion.</value>
   </data>
-  <data name="AutoSelectMolecules" xml:space="preserve">
+  <data name="AutoSelectMolecules">
     <value>If true, then Skyline will automatically add or remove molecules from the Molecule List based on the current settings.</value>
   </data>
-  <data name="AutoSelectPeptides" xml:space="preserve">
+  <data name="AutoSelectPeptides">
     <value>If true, then Skyline will automatically add or remove peptides based on the Peptide Settings Filter.</value>
   </data>
-  <data name="AutoSelectPrecursors" xml:space="preserve">
+  <data name="AutoSelectPrecursors">
     <value>If true, then Skyline will automatically add or remove precursors based on the Transition Settings Filter, spectral library, etc.</value>
   </data>
-  <data name="AutoSelectTransitions" xml:space="preserve">
+  <data name="AutoSelectTransitions">
     <value>If true, then Skyline will automatically add or remove transitions from the precursor depending on the Transition Settings Filter, spectral library, etc.</value>
   </data>
-  <data name="AverageMassErrorPPM" xml:space="preserve">
+  <data name="AverageMassErrorPPM">
     <value>Average Mass Error PPM</value>
   </data>
-  <data name="AverageMasses" xml:space="preserve">
+  <data name="AverageMasses">
     <value>The modified sequence which specifies modifications with their average masses, e.g. "C[+57.05162]".</value>
   </data>
-  <data name="AverageMeasuredRetentionTime" xml:space="preserve">
+  <data name="AverageMeasuredRetentionTime">
     <value>The average peptide retention time over all replicates</value>
   </data>
-  <data name="Background" xml:space="preserve">
+  <data name="Background">
     <value>The area of the rectangle formed by the integration boundaries, and the
 baseline and a line perpendicular to minimum intersection intensity between the
 integration boundaries and the chromatogram for the transition peak.</value>
   </data>
-  <data name="BatchFiguresOfMerit" xml:space="preserve">
+  <data name="BatchFiguresOfMerit">
     <value>Figures of merit calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
   </data>
-  <data name="BatchLimitOfDetection" xml:space="preserve">
+  <data name="BatchLimitOfDetection">
     <value>Lower limit of detection calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
   </data>
-  <data name="BatchLimitOfQuantification" xml:space="preserve">
+  <data name="BatchLimitOfQuantification">
     <value>Lower limit of quantification calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
   </data>
-  <data name="BatchName" xml:space="preserve">
+  <data name="BatchName">
     <value>Name of the batch that this replicate belongs to. The calibration curve for a particular replicate
 will be calculated using the subset of external standards with the same batch name.</value>
   </data>
-  <data name="BeginPos" xml:space="preserve">
+  <data name="BeginPos">
     <value>The position of the first (N-terminal) amino acid of the peptide within its
 containing protein sequence, or #N/A if no protein sequence is available.
     </value>
   </data>
-  <data name="BestReplicate" xml:space="preserve">
+  <data name="BestReplicate">
     <value>True if this replicate has the highest overall peptide peak score.</value>
   </data>
-  <data name="BestRetentionTime" xml:space="preserve">
+  <data name="BestRetentionTime">
     <value>The RetentionTime value of the transition with the highest
 maximum intensity for the precursor.</value>
   </data>
-  <data name="CalculatedConcentration" xml:space="preserve">
+  <data name="CalculatedConcentration">
     <value>The concentration of the analyte is calculated by either:
-    1. Using the calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
+    1. Using the calibration curve (if the Peptide Settings > Quantification has a Regression Fit specified)
     2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration</value>
   </data>
-  <data name="CalibrationCurve" xml:space="preserve">
+  <data name="CalibrationCurve">
     <value>Calibration Curve that was calculated using Replicates whose Sample Type was "Standard" and that had an "Analyte Concentration" specified.</value>
   </data>
-  <data name="Chromatogram" xml:space="preserve">
+  <data name="Chromatogram">
     <value>Chromatogram for the transition and replicate.</value>
   </data>
-  <data name="ChromatogramExtractionWidth" xml:space="preserve">
+  <data name="ChromatogramExtractionWidth">
     <value>Full width of the channel over which the spectrum intensities were summed</value>
   </data>
-  <data name="ChromatogramIonMobility" xml:space="preserve">
+  <data name="ChromatogramIonMobility">
     <value>Center of the ion mobility window that was used to filter spectra during chromatogram extraction</value>
   </data>
-  <data name="ChromatogramIonMobilityExtractionWidth" xml:space="preserve">
+  <data name="ChromatogramIonMobilityExtractionWidth">
     <value>Full width of the ion mobility window that was used to filter spectra during chromatogram extraction</value>
   </data>
-  <data name="ChromatogramIonMobilityUnits" xml:space="preserve">
+  <data name="ChromatogramIonMobilityUnits">
     <value>Unitys of the chromatogram ion mobility and chromatogram ion mobility extraction width</value>
   </data>
-  <data name="ChromatogramPrecursorMz" xml:space="preserve">
+  <data name="ChromatogramPrecursorMz">
     <value>Precursor m/z of the chromatogram</value>
   </data>
-  <data name="ChromatogramProductMz" xml:space="preserve">
+  <data name="ChromatogramProductMz">
     <value>Product m/z of the chromatogram</value>
   </data>
-  <data name="ChromatogramSource" xml:space="preserve">
+  <data name="ChromatogramSource">
     <value>Type of scans from which the chromatogram was extracted: one of "fragment", "sim", "ms1", or "unknown"</value>
     <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
   </data>
-  <data name="Coeluting" xml:space="preserve">
+  <data name="Coeluting">
     <value>True if this transition's peak has similar apex and extents as the other transitions within the peak group.</value>
   </data>
-  <data name="ConfidenceLevel" xml:space="preserve">
+  <data name="ConfidenceLevel">
     <value>Confidence level which was used to determine the confidence interval around the fold change.</value>
   </data>
-  <data name="CleavageAa" xml:space="preserve">
+  <data name="CleavageAa">
     <value>Specific amino acid residue in the peptide after (C-terminal of) which the
 peptide was cleaved upon fragmentation. (e.g. P, M, S, T, etc.)</value>
   </data>
-  <data name="CollisionEnergy" xml:space="preserve">
+  <data name="CollisionEnergy">
     <value>Collision Energy for the precursor ion according to instrument/vendor
 specific default collision energy equation within Skyline</value>
   </data>
-  <data name="ConcentrationMultiplier" xml:space="preserve">
+  <data name="ConcentrationMultiplier">
     <value>Value to multiply the replicate's "analyte concentration" by in order to get the specific concentration of the specific peptide or molecule.</value>
   </data>
-  <data name="CountTruncated" xml:space="preserve">
+  <data name="CountTruncated">
     <value>The number of transitions for a precursor that integrate a peak with a
 boundary at either end of the acquisition time range, where intensity at the end is
 greater than 1% of the entire peak height higher than the other extent.</value>
   </data>
-  <data name="Cv" xml:space="preserve">
+  <data name="Cv">
     <value>Cv</value>
   </data>
-  <data name="CvArea" xml:space="preserve">
+  <data name="CvArea">
     <value>Coefficient of variation (CV) of the transition Area values.</value>
   </data>
-  <data name="CvAreaNormalized" xml:space="preserve">
+  <data name="CvAreaNormalized">
     <value>Coefficient of variation (CV) of the transition AreaNormalized
 values.</value>
   </data>
-  <data name="CvAreaRatio" xml:space="preserve">
+  <data name="CvAreaRatio">
     <value>Coefficient of variation (CV) of the transition AreaRatio values.</value>
   </data>
-  <data name="CvBestRetentionTime" xml:space="preserve">
+  <data name="CvBestRetentionTime">
     <value>Coefficient of variation (CV) of the precursor
 BestRetentionTime values.</value>
   </data>
-  <data name="CvFwhm" xml:space="preserve">
+  <data name="CvFwhm">
     <value>Coefficient of variation (CV) of the transition Fwhm (peak width) values</value>
   </data>
-  <data name="CvMaxFwhm" xml:space="preserve">
+  <data name="CvMaxFwhm">
     <value>Coefficient of variation (CV) of the precursor MaxFwhm (peak width)
 values.</value>
   </data>
-  <data name="CvMaxHeight" xml:space="preserve">
+  <data name="CvMaxHeight">
     <value>Cv Max Height</value>
   </data>
-  <data name="CvRetentionTime" xml:space="preserve">
+  <data name="CvRetentionTime">
     <value>Coefficient of variation (CV) of the transition RetentionTime values.</value>
   </data>
-  <data name="CvTotalArea" xml:space="preserve">
+  <data name="CvTotalArea">
     <value>Coefficient of variation (CV) of the precursor TotalArea values</value>
   </data>
-  <data name="CvTotalAreaNormalized" xml:space="preserve">
+  <data name="CvTotalAreaNormalized">
     <value>Coefficient of variation (CV) of the precursor TotalAreaNormalized values.</value>
   </data>
-  <data name="CvTotalAreaRatio" xml:space="preserve">
+  <data name="CvTotalAreaRatio">
     <value>Coefficient of variation (CV) of the precursor TotalAreaRatio values</value>
   </data>
-  <data name="DegreesOfFreedom" xml:space="preserve">
+  <data name="DegreesOfFreedom">
     <value>Number of degrees of freedom which was used to calculate the confidence interval of the T-test.</value>
   </data>
-  <data name="DeclusteringPotential" xml:space="preserve">
+  <data name="DeclusteringPotential">
     <value>Declustering Potential for the precursor ion according to
 instrument/vendor specific default declustering potential equation within Skyline</value>
   </data>
-  <data name="DecoyMzShift" xml:space="preserve">
+  <data name="DecoyMzShift">
     <value>Shift in m/z applied to the precursor to create
 the decoy m/z</value>
   </data>
-  <data name="DetectionQValue" xml:space="preserve">
+  <data name="DetectionQValue">
     <value>A false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
   </data>
-  <data name="DetectionZScore" xml:space="preserve">
+  <data name="DetectionZScore">
     <value>A normalized mProphet score assigned to each chosen peak (target and decoy) after applying a mProphet model, expressed as the number of standard deviations (SD) from the mean decoy score.</value>
   </data>
-  <data name="EndPos" xml:space="preserve">
+  <data name="EndPos">
     <value>The position of the last (C-terminal) amino acid of the peptide within its
 containing protein sequence, or #N/A if no protein sequence is available</value>
   </data>
-  <data name="EndTime" xml:space="preserve">
+  <data name="EndTime">
     <value>Retention time at the ending integration boundary for the transition peak.</value>
   </data>
-  <data name="EstimatedValue" xml:space="preserve">
+  <data name="EstimatedValue">
     <value>Slope of the linear regression.</value>
   </data>
-  <data name="ErrorMessage" xml:space="preserve">
+  <data name="ErrorMessage">
     <value>Text of the error message, if any, which occurred while trying to calculate this value.</value>
   </data>
-  <data name="ExcludeFromCalibration" xml:space="preserve">
+  <data name="ExcludeFromCalibration">
     <value>Whether the results in the replicate should be excluded from the peptide's calibration curve calculation.</value>
   </data>
-  <data name="ExplicitAnalyteConcentration" xml:space="preserve">
+  <data name="ExplicitAnalyteConcentration">
     <value>The concentration of this particular molecule or peptide in this particular replicate.
 If the Explicit Analyte Concentration is not specified then the concentration of the analyte is assumed 
 to be the Analyte Concentration from the Replicate times the Concentration Multiplier of the Peptide or Molecule.</value>
   </data>
-  <data name="ExplicitCollisionEnergy" xml:space="preserve">
+  <data name="ExplicitCollisionEnergy">
     <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library or per-precursor explicit values.</value>
   </data>
-  <data name="ExplicitCompensationVoltage" xml:space="preserve">
+  <data name="ExplicitCompensationVoltage">
     <value>The exact desired compensation voltage (ion mobility filter) to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</value>
   </data>
-  <data name="ExplicitConeVoltage" xml:space="preserve">
+  <data name="ExplicitConeVoltage">
     <value>The exact desired cone voltage (Waters instruments only) to be used in SRM methods or transitions lists for a target.</value>
   </data>
-  <data name="ExplicitDeclusteringPotential" xml:space="preserve">
+  <data name="ExplicitDeclusteringPotential">
     <value>The exact desired declustering potential (SCIEX instruments only) to be used in SRM methods or transitions lists for a target, overriding all model values.</value>
   </data>
-  <data name="ExplicitDriftTimeHighEnergyOffsetMsec" xml:space="preserve">
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
     <value>The exact desired drift time high energy offset (in milliseconds) to be used in extracting chromatograms from ion mobility high-energy mass spectra, overriding all model values.</value>
   </data>
-  <data name="ExplicitDriftTimeMsec" xml:space="preserve">
+  <data name="ExplicitDriftTimeMsec">
     <value>The exact desired drift time (in milliseconds) to be used in extracting chromatograms from ion mobility mass spectra, overriding all model values.</value>
   </data>
-  <data name="ExplicitIonMobility" xml:space="preserve">
+  <data name="ExplicitIonMobility">
     <value>The ion mobility value of the center of the filter window used when extracting chromatograms</value>
   </data>
-  <data name="ExplicitIonMobilityHighEnergyOffset" xml:space="preserve">
+  <data name="ExplicitIonMobilityHighEnergyOffset">
     <value>The ion mobility high energy offset to be used when extracting chromatograms</value>
   </data>
-  <data name="ExplicitIonMobilityUnits" xml:space="preserve">
+  <data name="ExplicitIonMobilityUnits">
     <value>The units of the Explicit Ion Mobility values.</value>
   </data>
-  <data name="ExplicitGlobalStandardArea" xml:space="preserve">
+  <data name="ExplicitGlobalStandardArea">
     <value>Value to use when calculating "ratio to global standards". 
     Use this when you want to normalize peak areas in a particular replicate by dividing by a value that you calculated outside of Skyline.</value>
   </data>
-  <data name="ExplicitRetentionTime" xml:space="preserve">
+  <data name="ExplicitRetentionTime">
     <value>The exact predicted retention time (in minutes) to be used for a target, overriding all other methods of prediction.</value>
   </data>
-  <data name="ExplicitRetentionTimeWindow" xml:space="preserve">
+  <data name="ExplicitRetentionTimeWindow">
     <value>The exact desired retention time window (in minutes) to be used for a target, overriding all other settings used to derive this value.</value>
   </data>
-  <data name="ExplicitSLens" xml:space="preserve">
+  <data name="ExplicitSLens">
     <value>The exact desired SLens value (Thermo instruments only) to be used in SRM methods or transitions lists for a target.</value>
   </data>
-  <data name="FiguresOfMerit" xml:space="preserve">
+  <data name="FiguresOfMerit">
     <value>The limits of detection and quantification for the peptide or molecule. The method for calculating these quantities can be chosen on the Quantification tab of the Peptide Settings.</value>
   </data>
-  <data name="FileIndex" xml:space="preserve">
+  <data name="FileIndex">
     <value>File Index</value>
   </data>
-  <data name="FileName" xml:space="preserve">
+  <data name="FileName">
     <value>The name of the file from which the data was imported</value>
   </data>
-  <data name="Files" xml:space="preserve">
+  <data name="Files">
     <value>Files</value>
   </data>
-  <data name="FoldChange" xml:space="preserve">
+  <data name="FoldChange">
     <value>The fold change value. The fold change is the ratio of the normalized intensity of the treatment group to the normalized intensity of the control group.</value>
   </data>
-  <data name="FoldChangeResult" xml:space="preserve">
+  <data name="FoldChangeResult">
     <value>Result of comparing values between the two groups.</value>
   </data>
-  <data name="FragmentIon" xml:space="preserve">
+  <data name="FragmentIon">
     <value>The name of the product ion peptide fragment (e.g. y8, y10, b7, etc.).</value>
   </data>
-  <data name="FragmentIonOrdinal" xml:space="preserve">
+  <data name="FragmentIonOrdinal">
     <value>Position of the amino acid in the peptide after (C-terminal of)
 which the peptide was cleaved upon fragmentation. (e.g. 8, 10, 7, etc.)</value>
   </data>
-  <data name="FragmentIonType" xml:space="preserve">
+  <data name="FragmentIonType">
     <value>The type of the product ion (y, b, c, z, a, x, precursor)</value>
   </data>
-  <data name="FullNames" xml:space="preserve">
+  <data name="FullNames">
     <value>The modified sequence where modifications are referred to by their full names, e.g. "C[Carbamidomethyl (C)]".</value>
   </data>
-  <data name="FullScanFilterWidth" xml:space="preserve">
+  <data name="FullScanFilterWidth">
     <value>Full Scan Filter Width</value>
   </data>
-  <data name="Fwhm" xml:space="preserve">
+  <data name="Fwhm">
     <value>Full width at half max (FWHM) for the transition peak.</value>
   </data>
-  <data name="FwhmDegenerate" xml:space="preserve">
+  <data name="FwhmDegenerate">
     <value>Fwhm Degenerate</value>
   </data>
-  <data name="Height" xml:space="preserve">
+  <data name="Height">
     <value>The maximum intensity of the points between the transition peak integration
 boundaries.</value>
   </data>
-  <data name="Group" xml:space="preserve">
+  <data name="Group">
     <value>Value of the replicate annotation of the replicates that were compared to the control group.</value>
   </data>
-  <data name="Identified" xml:space="preserve">
+  <data name="Identified">
     <value>True if a MS/MS peptide identification exists for the result file at a time
 between the peak integration boundaries.</value>
   </data>
-  <data name="Intensities" xml:space="preserve">
+  <data name="Intensities">
     <value>Comma separated list of chromatogram intensities.</value>
   </data>
-  <data name="Intercept" xml:space="preserve">
+  <data name="Intercept">
     <value>Y-intercept in the fitted line or curve</value>
   </data>
-  <data name="InternalStandardConcentration" xml:space="preserve">
+  <data name="InternalStandardConcentration">
     <value>Quantity of internal standard in the sample.</value>
   </data>
-  <data name="InterpolatedData" xml:space="preserve">
+  <data name="InterpolatedData">
     <value>Chromatogram data which was interpolated in the time dimension so that the retention times are evenly spaced, and all transitions within the peptide or molecule have the same number of points.</value>
   </data>
-  <data name="InterpolatedIntensities" xml:space="preserve">
+  <data name="InterpolatedIntensities">
     <value>Chromatogram intensities from the interpolated data.</value>
   </data>
-  <data name="InterpolatedMassErrors" xml:space="preserve">
+  <data name="InterpolatedMassErrors">
     <value>Chromatogram mass errors from the interpolated data.</value>
   </data>
-  <data name="InterpolatedNumberOfPoints" xml:space="preserve">
+  <data name="InterpolatedNumberOfPoints">
     <value>The number of points in the interpolated chromatogram.</value>
   </data>
-  <data name="InterpolatedSpectrumIds" xml:space="preserve">
+  <data name="InterpolatedSpectrumIds">
     <value>Identifiers of the spectra that contributed to the points in the interpolated chromatogram.</value>
   </data>
-  <data name="InterpolatedTimes" xml:space="preserve">
+  <data name="InterpolatedTimes">
     <value>The retention times in the interpolated chromatogram.</value>
   </data>
-  <data name="IonFormula" xml:space="preserve">
+  <data name="IonFormula">
     <value>An atomic chemical formula for the fully charged (and possibly isotope labeled) ion to be measured in a mass spectrometer.</value>
   </data>
-  <data name="IonName" xml:space="preserve">
+  <data name="IonName">
     <value>The name of the precursor.</value>
   </data>
-  <data name="IsDecoy" xml:space="preserve">
+  <data name="IsDecoy">
     <value>True if this is a decoy precursor.</value>
   </data>
-  <data name="IsotopeDistIndex" xml:space="preserve">
+  <data name="IsotopeDistIndex">
     <value>Zero for the monoisotopic peak, 1 for M+1, 2 for M+2, etc. </value>
   </data>
-  <data name="IsotopeDistProportion" xml:space="preserve">
+  <data name="IsotopeDistProportion">
     <value>The proportion of the entire isotope distribution predicted for
 this isotope peak. Currently only available for precursor transitions filtered from high
 resolution MS1 scans.</value>
   </data>
-  <data name="IsotopeDistRank" xml:space="preserve">
+  <data name="IsotopeDistRank">
     <value>The rank based on the IsotopeDistProportion among all isotope
 peaks for the predicted isotope distribution, shown in the user interface as “(irank #)”.
 Currently only available for precursor transitions filtered from high resolution MS1
 scans.</value>
   </data>
-  <data name="IsotopeDotProduct" xml:space="preserve">
+  <data name="IsotopeDotProduct">
     <value>The dot-product calculation described above, but between the
 individual precursor (M, M+1, M+2, etc.) peak areas of the precursor and the intensities
 of the predicted isotope distribution, or #N/A if the transition is not a precursor isotope,
 or the chromatogram was not extracted from high resolution MS1 data.</value>
   </data>
-  <data name="IsotopeLabelType" xml:space="preserve">
+  <data name="IsotopeLabelType">
     <value>A label type name associated with the precursor ion (light/heavy),
 indicating which isotope modifications are applied</value>
   </data>
-  <data name="Key" xml:space="preserve">
+  <data name="Key">
     <value>Key</value>
   </data>
-  <data name="LibraryDotProduct" xml:space="preserve">
+  <data name="LibraryDotProduct">
     <value>The dot-product between the individual transition peak areas
 of the precursor and the intensities of the matching ion peaks in the matched MS/MS
 spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
@@ -500,619 +482,622 @@ precursor has not matching library spectrum or has fewer than 4 transitions. Thi
 useful value for method refinement. It works best when 6 or more transitions are
 present.</value>
   </data>
-  <data name="LibraryIntensity" xml:space="preserve">
+  <data name="LibraryIntensity">
     <value>The MS/MS peak intensity corresponding to the transition product
 ion in the matching library spectrum.</value>
   </data>
-  <data name="LibraryName" xml:space="preserve">
+  <data name="LibraryName">
     <value>The name of a MS/MS spectral library, if a MS/MS spectral library
 spectrum is associated with the precursor ion.</value>
   </data>
-  <data name="LibraryProbabilityScore" xml:space="preserve">
+  <data name="LibraryProbabilityScore">
     <value>The probability score assigned to this match in the input files used to build the spectral library.</value>
   </data>
-  <data name="LibraryRank" xml:space="preserve">
+  <data name="LibraryRank">
     <value>The rank based on LibraryIntensity of this transition among all transitions
 allowed by the transition Filter settings, shown in the user interface as “(rank #)”.</value>
   </data>
-  <data name="LibraryScore1" xml:space="preserve">
+  <data name="LibraryScore1">
     <value>Raw peptide library score that may or may not be used to rank among
 precursors of a protein.</value>
   </data>
-  <data name="LibraryScore2" xml:space="preserve">
+  <data name="LibraryScore2">
     <value>Raw peptide library score that may or may not be used to rank among
 precursors of a protein.</value>
   </data>
-  <data name="LibraryScore3" xml:space="preserve">
+  <data name="LibraryScore3">
     <value>Raw peptide library score that may or may not be used to rank among
 precursors of a protein.</value>
   </data>
-  <data name="LibraryType" xml:space="preserve">
+  <data name="LibraryType">
     <value>The type of MS/MS spectral library (BiblioSpec, GPM, NIST), if a MS/MS
 spectral library spectrum is associated with the precursor ion.</value>
   </data>
-  <data name="LimitOfDetection" xml:space="preserve">
+  <data name="LimitOfDetection">
     <value> The lower concentration limit at which the analyte can be reliably distinguished from a blank.
       The options about for calculating the lower limit of detection can be specified on the Quantification tab of the Peptide Settings.</value>
   </data>
-  <data name="LimitOfQuantification" xml:space="preserve">
+  <data name="LimitOfQuantification">
     <value>The lower concentration limit where the analyte is said to be quantifiable.
 The options for determining this value can be specified on the Quantification tab of the Peptide Settings.</value>
   </data>
-  <data name="LinearFit" xml:space="preserve">
+  <data name="LinearFit">
     <value>The result of doing the linear regression to determine the fold change.</value>
   </data>
-  <data name="Log2FoldChange" xml:space="preserve">
+  <data name="Log2FoldChange">
     <value>The logarithm base 2 of the fold change value.</value>
   </data>
-  <data name="Losses" xml:space="preserve">
+  <data name="Losses">
     <value>A comma separated list of all neutral losses from this fragment</value>
   </data>
-  <data name="LossFormulas" xml:space="preserve">
+  <data name="LossFormulas">
     <value>A comma separated list of the chemical forumulas for all neutral losses from this fragment, or empty if not all losses have formulas</value>
   </data>
-  <data name="LossNeutralMass" xml:space="preserve">
+  <data name="LossNeutralMass">
     <value>The total mass of all neutral losses from this fragment.</value>
   </data>
-  <data name="MassErrorPPM" xml:space="preserve">
+  <data name="MassErrorPPM">
     <value>Mass Error PPM</value>
   </data>
-  <data name="MassErrors" xml:space="preserve">
+  <data name="MassErrors">
     <value>The mass errors of the chromatogram.</value>
   </data>
-  <data name="Max" xml:space="preserve">
+  <data name="Max">
     <value>Max</value>
   </data>
-  <data name="MaxBestRetentionTime" xml:space="preserve">
+  <data name="MaxBestRetentionTime">
     <value>Maximum of the precursor BestRetentionTime values</value>
   </data>
   <data name="MaxDetectionQValue" xml:space="preserve">
     <value>A  maximum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mPro
 phet model.</value>
   </data>
-  <data name="MaxEndTime" xml:space="preserve">
+  <data name="MaxEndTime">
     <value>Maximum EndTime of all transitions for a precursor. Unless manually
 edited all transitions for a precursor use the same integration boundaries.</value>
   </data>
-  <data name="MaxFoldChange" xml:space="preserve">
+  <data name="MaxFoldChange">
     <value>The upper bound of the confidence interval of the fold change.</value>
   </data>
-  <data name="MaxFwhm" xml:space="preserve">
+  <data name="MaxFwhm">
     <value>The maximum full width at half max (FWHM) of the transitions for the
 precursor.</value>
   </data>
-  <data name="MaxHeight" xml:space="preserve">
+  <data name="MaxHeight">
     <value>Max Height</value>
   </data>
-  <data name="MaxRetentionTime" xml:space="preserve">
+  <data name="MaxRetentionTime">
     <value>Maximum of the transition RetentionTime values.</value>
   </data>
-  <data name="Median" xml:space="preserve">
+  <data name="Median">
     <value>Median</value>
   </data>
-  <data name="Mean" xml:space="preserve">
+  <data name="Mean">
     <value>Mean</value>
   </data>
-  <data name="MeanArea" xml:space="preserve">
+  <data name="MeanArea">
     <value>Mean of the transition Area values.</value>
   </data>
-  <data name="MeanAreaNormalized" xml:space="preserve">
+  <data name="MeanAreaNormalized">
     <value>Mean of the transition AreaNormalized values</value>
   </data>
-  <data name="MeanAreaRatio" xml:space="preserve">
+  <data name="MeanAreaRatio">
     <value>Mean of the transition AreaRatio values.</value>
   </data>
-  <data name="MeanBestRetentionTime" xml:space="preserve">
+  <data name="MeanBestRetentionTime">
     <value>Mean of the precursor BestRetentionTime values.</value>
   </data>
-  <data name="MeanFwhm" xml:space="preserve">
+  <data name="MeanFwhm">
     <value>Mean of the transition Fwhm (peak width) values.</value>
   </data>
-  <data name="MeanMaxFwhm" xml:space="preserve">
+  <data name="MeanMaxFwhm">
     <value>Mean of the precursor MaxFwhm (peak width) values.</value>
   </data>
-  <data name="MeanMaxHeight" xml:space="preserve">
+  <data name="MeanMaxHeight">
     <value>Mean Max Height</value>
   </data>
-  <data name="MeanRetentionTime" xml:space="preserve">
+  <data name="MeanRetentionTime">
     <value>Mean of the transition RetentionTime values.</value>
   </data>
-  <data name="MeanTotalArea" xml:space="preserve">
+  <data name="MeanTotalArea">
     <value>Mean of the precursor TotalArea values.</value>
   </data>
-  <data name="MeanTotalAreaNormalized" xml:space="preserve">
+  <data name="MeanTotalAreaNormalized">
     <value>Mean of the precursor TotalAreaNormalized values</value>
   </data>
-  <data name="MeanTotalAreaRatio" xml:space="preserve">
+  <data name="MeanTotalAreaRatio">
     <value> Mean of the precursor TotalAreaRatio values.</value>
   </data>
   <data name="MedianDetectionQValue" xml:space="preserve">
     <value>A  median of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
   </data>
-  <data name="Min" xml:space="preserve">
+  <data name="Min">
     <value>Min</value>
   </data>
-  <data name="MinBestRetentionTime" xml:space="preserve">
+  <data name="MinBestRetentionTime">
     <value>Minimum of the precursor BestRetentionTime values</value>
   </data>
-  <data name="MinFoldChange" xml:space="preserve">
+  <data name="MinFoldChange">
     <value>The lower bound of the confidence interval of the fold change.</value>
   </data>
-  <data name="MinRetentionTime" xml:space="preserve">
+  <data name="MinRetentionTime">
     <value>Minimum of the transition RetentionTime values.</value>
   </data>
   <data name="MinDetectionQValue" xml:space="preserve">
     <value>A  minimum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
   </data>
-  <data name="MinStartTime" xml:space="preserve">
+  <data name="MinStartTime">
     <value>Minimum StartTime of all transitions for a precursor. Unless manually
 edited all transitions for a precursor use the same integration boundaries</value>
   </data>
-  <data name="MissedCleavages" xml:space="preserve">
+  <data name="MissedCleavages">
     <value>The number of missed cleavage sites in the peptide sequence</value>
   </data>
-  <data name="ModifiedAreaProportion" xml:space="preserve">
+  <data name="ModifiedAreaProportion">
     <value>The normalized area of this peptide result divided by the sum of all peptide results in this protein and replicate that have the same unmodified sequence.</value>
   </data>
-  <data name="ModifiedSequence" xml:space="preserve">
+  <data name="ModifiedSequence">
     <value>Peptide sequence including any amino acid modifications such as
 cysteine alkylation. (example: AGLC[+57]QTFVYGGC[+57]R)</value>
   </data>
-  <data name="ModifiedSequenceAverageMasses" xml:space="preserve">
+  <data name="ModifiedSequenceAverageMasses">
     <value>The modified sequence of the precursor where modifications are referred to by their average masses, e.g. "C[+57.05162]".</value>
   </data>
-  <data name="ModifiedSequenceFullNames" xml:space="preserve">
+  <data name="ModifiedSequenceFullNames">
     <value>The modified sequence of the precursor where modifications are referred to by their full names, e.g. "C[Carbamidomethyl (C)]".</value>
   </data>
-  <data name="ModifiedSequenceMonoisotopicMasses" xml:space="preserve">
+  <data name="ModifiedSequenceMonoisotopicMasses">
     <value>The modified sequence of the precursor where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>
   </data>
-  <data name="ModifiedSequenceThreeLetterCodes" xml:space="preserve">
+  <data name="ModifiedSequenceThreeLetterCodes">
     <value>The modified sequence of the precursor where modifications are referred to by their three letter codes, e.g. "C[CAM]". If the modification does not have a three letter code, then its full name is used instead.</value>
   </data>
-  <data name="ModifiedSequenceUnimodIds" xml:space="preserve">
+  <data name="ModifiedSequenceUnimodIds">
     <value>The modified sequence of the precursor where modifications are referred to by their unimod id, e.g. "C(unimod:4)". If the modification does not have a unimod id, then its full name is used instead.</value>
   </data>
-  <data name="ModifiedTime" xml:space="preserve">
+  <data name="ModifiedTime">
     <value>Last time and date at which the original mass spectrometer file was
 modified on disk</value>
   </data>
-  <data name="Molecule" xml:space="preserve">
+  <data name="Molecule">
     <value>Molecules belong to Molecule Lists and contain Percursors.</value>
   </data>
-  <data name="MoleculeFormula" xml:space="preserve">
+  <data name="MoleculeFormula">
     <value>An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</value>
   </data>
-  <data name="MoleculeListLocator" xml:space="preserve">
-    <value>Unique identifier of the molecule list within the document. This begins with "MoleculeGroup:".</value>
+  <data name="MoleculeListLocator">
+      <value>Unique identifier of the molecule list within the document. This begins with "MoleculeGroup:".</value>
     <comment>Do not translate "MoleculeGroup:".</comment>
   </data>
-  <data name="MoleculeListName" xml:space="preserve">
+  <data name="MoleculeListName">
     <value>The name of the molecule list.</value>
   </data>
-  <data name="MoleculeListNote" xml:space="preserve">
+  <data name="MoleculeListNote">
     <value>A free text note associated with the molecule list.</value>
   </data>
-  <data name="MoleculeList" xml:space="preserve">
+  <data name="MoleculeList">
     <value>A grouping of molecules in a Skyline document.</value>
   </data>
-  <data name="MoleculeLists" xml:space="preserve">
+  <data name="MoleculeLists">
     <value>The top level set of the groupings of all of the molecules in a Skyline document.</value>
   </data>
-  <data name="MoleculeLocator" xml:space="preserve">
+  <data name="MoleculeLocator">
     <value>Unique identifier of the molecule within the document. This begins with "Molecule:".</value>
     <comment>Do not translate "Molecule:".</comment>
   </data>
-  <data name="MoleculeName" xml:space="preserve">
+  <data name="MoleculeName">
     <value>A general name that may be assigned to a molecule in its neutral, unlabeled form.</value>
   </data>
-  <data name="MoleculeNote" xml:space="preserve">
+  <data name="MoleculeNote">
     <value>A free text note associated with the molecule.</value>
   </data>
-  <data name="MoleculePeakFoundRatio" xml:space="preserve">
+  <data name="MoleculePeakFoundRatio">
     <value>Molecule Peak Found Ratio</value>
   </data>
-  <data name="MonoisotopicMasses" xml:space="preserve">
+  <data name="MonoisotopicMasses">
     <value>The modified sequence where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>
   </data>
-  <data name="MoleculeResult" xml:space="preserve">
+  <data name="MoleculeResult">
     <value>Molecule Result</value>
   </data>
-  <data name="MoleculeResultLocator" xml:space="preserve">
+  <data name="MoleculeResultLocator">
     <value>Unique identifier of the Molecule Result within the document. This will begin with "MoleculeResult:" and will contain the molecule name and the replicate name.</value>
     <comment>Do not translate "MoleculeResult:"</comment>
   </data>
-  <data name="MoleculeResults" xml:space="preserve">
+  <data name="MoleculeResults">
     <value>The results associated with the molecule.</value>
   </data>
-  <data name="MoleculeRetentionTime" xml:space="preserve">
+  <data name="MoleculeRetentionTime">
     <value>The average of the Best Retention Time values for the precursors in a particular replicate.</value>
   </data>
-  <data name="Molecules" xml:space="preserve">
+  <data name="Molecules">
     <value>The molecules in a Molecule List.</value>
   </data>
-  <data name="MsLevel" xml:space="preserve">
+  <data name="MsLevel">
     <value>Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2).</value>
   </data>
-  <data name="NextAa" xml:space="preserve">
+  <data name="NextAa">
     <value>Next Aa</value>
   </data>
-  <data name="NormalizationMethod" xml:space="preserve">
+  <data name="NormalizationMethod">
     <value>Override of the normalization method to use with this particular molecule for absolute quantification and group comparisons.</value>
   </data>
-  <data name="NormalizedArea" xml:space="preserve">
+  <data name="NormalizedArea">
     <value>Value obtained by normalizing the peptide/molecule intensity according to either the explicit "Normalization Method" for the peptide/molecule or the normalization method specified on:
-    Settings &gt; Peptide Settings &gt; Quantification</value>
+    Settings > Peptide Settings > Quantification</value>
   </data>
-  <data name="NumberOfPoints" xml:space="preserve">
+  <data name="NumberOfPoints">
     <value>The number of points in the chromatogram.</value>
   </data>
-  <data name="OptCollisionEnergy" xml:space="preserve">
+  <data name="OptCollisionEnergy">
     <value>The collision energy value corresponding to the OptStep if
 collision energy optimization is being performed</value>
   </data>
-  <data name="OptCompensationVoltage" xml:space="preserve">
+  <data name="OptCompensationVoltage">
     <value>The compensation voltage value (for ion mobility filtering) corresponding to the OptStep if compensation voltage optimization is being performed</value>
   </data>
-  <data name="OptDeclusteringPotential" xml:space="preserve">
+  <data name="OptDeclusteringPotential">
     <value>The declustering potential value corresponding to the
 OptStep if declustering potential optimization is being performed</value>
   </data>
-  <data name="OptStep" xml:space="preserve">
+  <data name="OptStep">
     <value>Optimization step value indicating distance from the default value for the
 parameter being optimized, 0 for the default parameter value, or if no optimization is
 being performed in the replicate.</value>
   </data>
-  <data name="PeakRank" xml:space="preserve">
+  <data name="PeakRank">
     <value>The rank based on Area of this transition among all other transitions of the
 same precursor.</value>
   </data>
-  <data name="PeakRankByLevel" xml:space="preserve">
+  <data name="PeakRankByLevel">
     <value>Peak area ranking in a specific replicate by MS level (i.e. MS1 and MS/MS get ranked separately)</value>
   </data>
-  <data name="Peptide" xml:space="preserve">
+  <data name="Peptide">
     <value>Peptide</value>
   </data>
-  <data name="PeptideDocumentLocation" xml:space="preserve">
+  <data name="PeptideDocumentLocation">
     <value>Unique identifier of the peptide within the Skyline document. This can be used when writing external tools which call back into Skyline to change the selection, etc.</value>
   </data>
-  <data name="PeptideLocator" xml:space="preserve">
+  <data name="PeptideLocator">
     <value>Unique identifier of the peptide within the Skyline document. This will always start with "Molecule:", and usually ends with the peptide modified sequence or molecule name.</value>
     <comment>Do not translate "Molecule:"</comment>
   </data>
-  <data name="PeptideModifiedSequence" xml:space="preserve">
+  <data name="PeptideModifiedSequence">
     <value>Amino acid sequence annotated with only structural
 modification delta masses (e.g. AC[+57]GR).</value>
   </data>
-  <data name="PeptideModifiedSequenceAverageMasses" xml:space="preserve">
+  <data name="PeptideModifiedSequenceAverageMasses">
     <value>The modified sequence of the peptide where modifications are referred to by their average masses, e.g. "C[+57.05162]".</value>
   </data>
-  <data name="PeptideModifiedSequenceFullNames" xml:space="preserve">
+  <data name="PeptideModifiedSequenceFullNames">
     <value>The modified sequence of the peptide where modifications are referred to by their full names, e.g. "C[Carbamidomethyl (C)]".</value>
   </data>
-  <data name="PeptideModifiedSequenceMonoisotopicMasses" xml:space="preserve">
+  <data name="PeptideModifiedSequenceMonoisotopicMasses">
     <value>The modified sequence of the peptide where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>
   </data>
-  <data name="PeptideModifiedSequenceThreeLetterCodes" xml:space="preserve">
+  <data name="PeptideModifiedSequenceThreeLetterCodes">
     <value>The modified sequence of the peptide where modifications are referred to by their three letter codes, e.g. "C[CAM]". If the modification does not have a three letter code, then its full name is used instead.</value>
   </data>
-  <data name="PeptideModifiedSequenceUnimodIds" xml:space="preserve">
+  <data name="PeptideModifiedSequenceUnimodIds">
     <value>The modified sequence of the peptide where modifications are referred to by their unimod id, e.g. "C(unimod:4)". If the modification does not have a unimod id, then its full name is used instead.</value>
   </data>
-  <data name="PeptideNote" xml:space="preserve">
+  <data name="PeptideNote">
     <value>A free text note associated with the peptide by clicking Edit Note on the
 Edit menu</value>
   </data>
-  <data name="PeptidePeakFoundRatio" xml:space="preserve">
+  <data name="PeptidePeakFoundRatio">
     <value>Peptide Peak Found Ratio</value>
   </data>
-  <data name="PeptideResult" xml:space="preserve">
+  <data name="PeptideResult">
     <value>Peptide Result</value>
   </data>
-  <data name="PeptideResultDocumentLocation" xml:space="preserve">
+  <data name="PeptideResultDocumentLocation">
     <value>Unique identifier of the Peptide Result within the document. This can be used when writing interactive external tools.</value>
   </data>
-  <data name="PeptideResultLocator" xml:space="preserve">
+  <data name="PeptideResultLocator">
     <value>Unique identifier of the Peptide Result within the document. This will begin with "MoleculeResult:" and will contain the peptide modified sequence and the replicate name.</value>
     <comment>Do not translate "MoleculeResult:"</comment>
   </data>
-  <data name="PeptideResults" xml:space="preserve">
+  <data name="PeptideResults">
     <value>Peptide Results</value>
   </data>
-  <data name="PeptideRetentionTime" xml:space="preserve">
+  <data name="PeptideRetentionTime">
     <value>Peptide retention time for each replicate run.</value>
   </data>
-  <data name="Peptides" xml:space="preserve">
+  <data name="Peptides">
     <value>Peptides</value>
   </data>
-  <data name="PeptideSequence" xml:space="preserve">
+  <data name="PeptideSequence">
     <value>Amino acid sequence of the peptide.</value>
   </data>
-  <data name="PeptideSequenceLength" xml:space="preserve">
+  <data name="PeptideSequenceLength">
     <value>Amino acid count in the sequence of the peptide.</value>
   </data>
-  <data name="PointCount" xml:space="preserve">
+  <data name="PointCount">
     <value>Number of data points that were used in the curve fit.</value>
   </data>
-  <data name="PointsAcrossPeak" xml:space="preserve">
+  <data name="PointsAcrossPeak">
     <value>Number of chromatogram points between the start and end time of the integrated peak.</value>
   </data>
-  <data name="Precursor" xml:space="preserve">
+  <data name="Precursor">
     <value>Precursor</value>
   </data>
-  <data name="PrecursorAccuracy" xml:space="preserve">
+  <data name="PrecursorAccuracy">
     <value>Ratio of the Precursor Calculated Concentration to the Precursor Concentration specified on the Precursor.</value>
   </data>
-  <data name="PrecursorAdduct" xml:space="preserve">
+  <data name="PrecursorAdduct">
     <value>The adduct which is applied to the molecule to make the precursor.</value>
   </data>
-  <data name="PrecursorCalculatedConcentration" xml:space="preserve">
+  <data name="PrecursorCalculatedConcentration">
     <value>The concentration of the Precursor Result calculated using the isotopolog response curve.</value>
   </data>
-  <data name="PrecursorCharge" xml:space="preserve">
+  <data name="PrecursorCharge">
     <value>
       The charge associated with the precursor ion.
     </value>
   </data>
-  <data name="PrecursorConcentration" xml:space="preserve">
+  <data name="PrecursorConcentration">
     <value>The concentration at which this precursor was spiked into the sample. This is used for generating Isotopolog Response Curves.</value>
   </data>
-  <data name="PrecursorIonFormula" xml:space="preserve">
+  <data name="PrecursorExplicitCollisionEnergy" xml:space="preserve">
+    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values. May in turn be overridden by per-transition Explicit Collision Energy.</value>
+  </data>
+  <data name="PrecursorIonFormula">
     <value>The formula of the precursor ion.</value>
   </data>
-  <data name="PrecursorIonName" xml:space="preserve">
+  <data name="PrecursorIonName">
     <value>The name of the precursor.</value>
   </data>
-  <data name="PrecursorLocator" xml:space="preserve">
+  <data name="PrecursorLocator">
     <value>Unique identifier of the precursor within the document. This will begin with "Precursor:" and usually ends with the precursor's label type followed by its adduct.</value>
     <comment>Do not translate "Precursor:"</comment>
   </data>
-  <data name="PrecursorNeutralFormula" xml:space="preserve">
+  <data name="PrecursorNeutralFormula">
     <value>The formula of the precursor ion. This is deprecated and "PrecursorIonFomula" should be used instead.</value>
   </data>
-  <data name="PrecursorNormalizedArea" xml:space="preserve">
+  <data name="PrecursorNormalizedArea">
     <value>The normalized area of the Precursor Result.
 This is equal to the Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
 If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Precursor Total Area.</value>
   </data>
-  <data name="PrecursorMz" xml:space="preserve">
+  <data name="PrecursorMz">
     <value>The mass to charge ratio (m/z) of the precursor ion.</value>
   </data>
-  <data name="PrecursorNeutralMass" xml:space="preserve">
+  <data name="PrecursorNeutralMass">
     <value>Neutral mass of the precursor in Daltons</value>
   </data>
-  <data name="PrecursorNote" xml:space="preserve">
+  <data name="PrecursorNote">
     <value>A free text note associated with a precursor by clicking Edit Note on
 the Edit menu</value>
   </data>
-  <data name="PrecursorPeakFoundRatio" xml:space="preserve">
+  <data name="PrecursorPeakFoundRatio">
     <value>The ratio of transitions for which a peak was measured to the
 total number of transitions in the peptide. Peak indicators in the peptide tree view
-correspond to green = 1.0 (all transitions integrated), orange &gt;= 0.5, red &lt; 0.5.</value>
+correspond to green = 1.0 (all transitions integrated), orange >= 0.5, red &lt; 0.5.</value>
   </data>
-  <data name="PrecursorQuantification" xml:space="preserve">
+  <data name="PrecursorQuantification">
     <value>Values related to using the isotopolog response curve to quantify the precursor result.</value>
   </data>
-  <data name="PrecursorReplicateNote" xml:space="preserve">
+  <data name="PrecursorReplicateNote">
     <value>A free text note associated with a result set of the precursor
 using the Results Grid.</value>
   </data>
-  <data name="PrecursorResult" xml:space="preserve">
+  <data name="PrecursorResult">
     <value>Precursor Result</value>
   </data>
-  <data name="PrecursorResultLocator" xml:space="preserve">
+  <data name="PrecursorResultLocator">
     <value>Unique identifier of the precursor result within the document. This begins with "PrecursorResult:" and usually ends with the replicate name but may have additional attributes for the optimization step and result file.</value>
     <comment>Do not translate "PrecursorResult:".</comment>
   </data>
-  <data name="PrecursorResults" xml:space="preserve">
+  <data name="PrecursorResults">
     <value>Precursor Results</value>
   </data>
-  <data name="PrecursorResultsSummary" xml:space="preserve">
+  <data name="PrecursorResultsSummary">
     <value>Precursor Results Summary</value>
   </data>
-  <data name="Precursors" xml:space="preserve">
+  <data name="Precursors">
     <value>Precursors</value>
   </data>
-  <data name="PredictedResultRetentionTime" xml:space="preserve">
+  <data name="PredictedResultRetentionTime">
     <value>Peptide retention time for each replicate run.</value>
   </data>
-  <data name="PredictedRetentionTime" xml:space="preserve">
+  <data name="PredictedRetentionTime">
     <value>The retention time predicted by a retention time regression
 between a set of measured results and a retention time calculator (currently only
 SSRCalc 3.0 is available), or #N/A if no retention time regression has been assigned.</value>
   </data>
-  <data name="PreviousAa" xml:space="preserve">
+  <data name="PreviousAa">
     <value>Previous Aa</value>
   </data>
-  <data name="ProductCharge" xml:space="preserve">
+  <data name="ProductCharge">
     <value>Charge (z) of the product ion.</value>
   </data>
-  <data name="ProductDecoyMzShift" xml:space="preserve">
+  <data name="ProductDecoyMzShift">
     <value>Shift in m/z applied to the product ion to create
 the decoy m/z.</value>
   </data>
-  <data name="ProductAdduct" xml:space="preserve">
+  <data name="ProductAdduct">
     <value>The adduct applied to the product ion.</value>
   </data>
-  <data name="ProductIonFormula" xml:space="preserve">
+  <data name="ProductIonFormula">
     <value>The formula of the product ion.</value>
   </data>
-  <data name="ProductNeutralFormula" xml:space="preserve">
+  <data name="ProductNeutralFormula">
     <value>The formula of the product ion. This is deprecated, and "ProductIonFormula" should be used instead.</value>
   </data>
-  <data name="ProductMz" xml:space="preserve">
+  <data name="ProductMz">
     <value>The mass to charge ratio (m/z) of the product ion.</value>
   </data>
-  <data name="ProductNeutralMass" xml:space="preserve">
+  <data name="ProductNeutralMass">
     <value>Neutral mass of the product ion peptide fragment in Daltons.</value>
   </data>
-  <data name="Protein" xml:space="preserve">
+  <data name="Protein">
     <value>Protein</value>
   </data>
-  <data name="ProteinAccession" xml:space="preserve">
+  <data name="ProteinAccession">
     <value>Protein Accession</value>
   </data>
-  <data name="ProteinDescription" xml:space="preserve">
+  <data name="ProteinDescription">
     <value>When proteins are imported into Skyline through public FASTA
 sequence files, a Protein Description is provided. You can see the Protein Description
 also when you hover over the protein name in the peptide tree view.</value>
   </data>
-  <data name="ProteinGene" xml:space="preserve">
+  <data name="ProteinGene">
     <value>Protein Gene</value>
   </data>
-  <data name="ProteinLocator" xml:space="preserve">
+  <data name="ProteinLocator">
     <value>Unique identifier of the protein within the document. This begins with "MoleculeGroup:" and usually ends with the protein name but may have additional attributes if the protein name is not unique within the document.</value>
     <comment>Do not translate "MoleculeGroup:".</comment>
   </data>
-  <data name="ProteinName" xml:space="preserve">
+  <data name="ProteinName">
     <value>Protein Name as defined or entered into Skyline (in some cases in
 conjunction with the accession number)</value>
   </data>
-  <data name="ProteinNote" xml:space="preserve">
+  <data name="ProteinNote">
     <value>A free text note associated with the protein by clicking Edit Note on the
 Edit menu</value>
   </data>
-  <data name="ProteinPreferredName" xml:space="preserve">
+  <data name="ProteinPreferredName">
     <value>Protein Preferred Name</value>
   </data>
-  <data name="Proteins" xml:space="preserve">
+  <data name="Proteins">
     <value>Proteins</value>
   </data>
-  <data name="ProteinSequence" xml:space="preserve">
+  <data name="ProteinSequence">
     <value>When proteins are imported into Skyline through public FASTA
 sequence files the full protein sequence is accessible. You can see the protein sequence
 also when you hover over the protein name in the peptide tree view.</value>
   </data>
-  <data name="ProteinSpecies" xml:space="preserve">
+  <data name="ProteinSpecies">
     <value>Protein Species</value>
   </data>
-  <data name="PValue" xml:space="preserve">
+  <data name="PValue">
     <value>The P-value indicating the probability that random chance could have produced a result as extreme as what was observed.</value>
   </data>
-  <data name="QuadraticCoefficient" xml:space="preserve">
+  <data name="QuadraticCoefficient">
     <value>Coefficient of the x-squared term in a quadratic regression.</value>
   </data>
-  <data name="Quantification" xml:space="preserve">
+  <data name="Quantification">
     <value>Values related to using the calibration curve or normalization method to quantify the analyte.</value>
   </data>
-  <data name="Quantitative" xml:space="preserve">
+  <data name="Quantitative">
     <value>Whether the transition's peak area should be included when quantifying peptides.</value>
   </data>
-  <data name="Range" xml:space="preserve">
+  <data name="Range">
     <value>Range</value>
   </data>
-  <data name="RangeBestRetentionTime" xml:space="preserve">
+  <data name="RangeBestRetentionTime">
     <value>The difference between MaxBestRetentionTime and
 MinBestRetentionTime, which can be used to gauge the spread of retention times
 measured.</value>
   </data>
-  <data name="RangeRetentionTime" xml:space="preserve">
+  <data name="RangeRetentionTime">
     <value>The difference between MaxRetentionTime and
 MinRetentionTime, which can be used to gauge the spread of retention times
 measured.</value>
   </data>
-  <data name="RatioDotProduct" xml:space="preserve">
+  <data name="RatioDotProduct">
     <value>Ratio Dot Product</value>
   </data>
-  <data name="RatioToStandard" xml:space="preserve">
+  <data name="RatioToStandard">
     <value>Peptide area ratio of light to heavy</value>
   </data>
-  <data name="RawData" xml:space="preserve">
+  <data name="RawData">
     <value>The raw (uninterpolated) chromatogram data. The chromatograms have unevenly spaced times, and the chromatograms of each transition potentially has a different number of points.</value>
   </data>
-  <data name="RawIntensities" xml:space="preserve">
+  <data name="RawIntensities">
     <value>The intensities of the raw (uninterpolated) chromatogram.</value>
   </data>
-  <data name="RawMassErrors" xml:space="preserve">
+  <data name="RawMassErrors">
     <value>The mass errors of the raw (uninterpolated) chromatogram.</value>
   </data>
-  <data name="RawNumberOfPoints" xml:space="preserve">
+  <data name="RawNumberOfPoints">
     <value>The number of points in the raw (uninterpolated) chromatogram.</value>
   </data>
-  <data name="RawSpectrumIds" xml:space="preserve">
+  <data name="RawSpectrumIds">
     <value>Identifiers of the spectra that contributed to the points in the raw (uninterpolated) chromatogram.</value>
   </data>
-  <data name="RawTimes" xml:space="preserve">
+  <data name="RawTimes">
     <value>The retention times in the raw (uninterpolated) chromatogram.</value>
   </data>
-  <data name="Replicate" xml:space="preserve">
+  <data name="Replicate">
     <value>Replicate</value>
   </data>
-  <data name="ReplicateCalibrationCurve" xml:space="preserve">
+  <data name="ReplicateCalibrationCurve">
     <value>The calibration curve made using the replicates that have the same Batch Name as this replicate.
 If the Precursor Concentration is specified on any of the Precursors in this Peptide then the Calibration Curve will be an isotopolog response curve.</value>
   </data>
-  <data name="ReplicateCount" xml:space="preserve">
+  <data name="ReplicateCount">
     <value>Number of replicates that had valid intensities and contributed to the result.</value>
   </data>
-  <data name="ReplicateErrorMessage" xml:space="preserve">
+  <data name="ReplicateErrorMessage">
     <value>Text of the error message, if any, which occurred while trying to fit the Replicate Calibration Curve</value>
   </data>
-  <data name="ReplicateIndex" xml:space="preserve">
+  <data name="ReplicateIndex">
     <value>Replicate Index</value>
   </data>
-  <data name="ReplicateIntercept" xml:space="preserve">
+  <data name="ReplicateIntercept">
     <value>The intercept of the Replicate Calibration Curve</value>
   </data>
-  <data name="ReplicateLocator" xml:space="preserve">
+  <data name="ReplicateLocator">
     <value>Unique identifier of the replicate within the document. This is always "Replicate:/" followed by the name of the replicate.</value>
     <comment>Do not translate "Replicate:/".</comment>
   </data>
-  <data name="ReplicateName" xml:space="preserve">
+  <data name="ReplicateName">
     <value>The replicate name assigned to the data during import.</value>
   </data>
-  <data name="ReplicatePath" xml:space="preserve">
+  <data name="ReplicatePath">
     <value>Replicate Path</value>
   </data>
-  <data name="ReplicatePointCount" xml:space="preserve">
+  <data name="ReplicatePointCount">
     <value>The number of data points that were fitted on the Replicate Calibration Curve</value>
   </data>
-  <data name="ReplicateQuadraticCoefficient" xml:space="preserve">
+  <data name="ReplicateQuadraticCoefficient">
     <value>The coefficient of the x-squared term on the Replicate Calibration Curve</value>
   </data>
-  <data name="ReplicateRSquared" xml:space="preserve">
+  <data name="ReplicateRSquared">
     <value>The coefficient of determination on the Replicate Calibration Curve</value>
   </data>
-  <data name="ReplicateSlope" xml:space="preserve">
+  <data name="ReplicateSlope">
     <value>The slope of the Replicate Calibration Curve</value>
   </data>
-  <data name="Replicates" xml:space="preserve">
+  <data name="Replicates">
     <value>Replicates</value>
   </data>
-  <data name="ReplicateTurningPoint" xml:space="preserve">
+  <data name="ReplicateTurningPoint">
     <value>The bilinear turning point on the Replicate Calibration Curve</value>
   </data>
-  <data name="ResultFile" xml:space="preserve">
+  <data name="ResultFile">
     <value>Result File</value>
   </data>
-  <data name="ResultFileLocator" xml:space="preserve">
+  <data name="ResultFileLocator">
     <value>Unique identifier of the result file within the document. This begins with "ResultFile:/" followed by the replicate name. 
 This usually ends with the result filename, but may have additional attributes such as the full path if the filename is not unique within the replicate.</value>
     <comment>Do not translate "ResultFile:/".</comment>
   </data>
-  <data name="Results" xml:space="preserve">
+  <data name="Results">
     <value>Results</value>
   </data>
-  <data name="RetentionTime" xml:space="preserve">
+  <data name="RetentionTime">
     <value>Retention time at the maximum intensity for a transition peak.</value>
   </data>
-  <data name="RetentionTimeCalculatorScore" xml:space="preserve">
+  <data name="RetentionTimeCalculatorScore">
     <value>The raw score for the peptide from the current
 retention score calculator, if one is used (e.g. SSRCalc or iRT score)
     </value>
   </data>
-  <data name="RSquared" xml:space="preserve">
+  <data name="RSquared">
     <value>Coefficient of determination</value>
   </data>
-  <data name="SampleDilutionFactor" xml:space="preserve">
+  <data name="SampleDilutionFactor">
     <value>The amount by which the sample was diluted before being analyzed. 
 External standards typically have a dilution factor of 1, and unknown samples may have been diluted by a factor greater than 1 in order to bring them into the quantifiable range for the instrument.</value>
   </data>
-  <data name="SampleName" xml:space="preserve">
+  <data name="SampleName">
     <value>The sample name, if the data was imported from a multi-sample WIFF
 file, or the file name again for other file types.</value>
   </data>
-  <data name="SampleType" xml:space="preserve">
+  <data name="SampleType">
     <value>Type of the sample.  One of the following: 
       Unknown (sample being measured)
       Standard (external standard containing a known amount of analyte to be used in calibration curve)
@@ -1121,179 +1106,179 @@ file, or the file name again for other file types.</value>
       Blank
       Double Blank</value>
   </data>
-  <data name="Slope" xml:space="preserve">
+  <data name="Slope">
     <value>Coefficient of the linear term in the fitted curve or line.</value>
   </data>
-  <data name="SpectrumIds" xml:space="preserve">
+  <data name="SpectrumIds">
     <value>Identifiers of the spectra that contributed to the chromatogram.</value>
   </data>
-  <data name="StandardError" xml:space="preserve">
+  <data name="StandardError">
     <value>The standard error of the estimated value in the linear fit.</value>
   </data>
-  <data name="StandardType" xml:space="preserve">
+  <data name="StandardType">
     <value>Standard Type</value>
   </data>
-  <data name="StartTime" xml:space="preserve">
+  <data name="StartTime">
     <value>Retention time at the starting integration boundary for the transition peak</value>
   </data>
-  <data name="Stdev" xml:space="preserve">
+  <data name="Stdev">
     <value>Stdev</value>
   </data>
-  <data name="StdevArea" xml:space="preserve">
+  <data name="StdevArea">
     <value>Standard deviation of the transition Area values</value>
   </data>
-  <data name="StdevAreaNormalized" xml:space="preserve">
+  <data name="StdevAreaNormalized">
     <value>Standard deviation of the transition AreaNormalized values.</value>
   </data>
-  <data name="StdevAreaRatio" xml:space="preserve">
+  <data name="StdevAreaRatio">
     <value>Standard deviation of the transition AreaRatio values.</value>
   </data>
-  <data name="StdevBestRetentionTime" xml:space="preserve">
+  <data name="StdevBestRetentionTime">
     <value>Standard deviation of the precursor BestRetentionTime
       values.</value>
   </data>
-  <data name="StdevFwhm" xml:space="preserve">
+  <data name="StdevFwhm">
     <value>Standard deviation of the transition Fwhm (peak width) values.</value>
   </data>
-  <data name="StdevMaxFwhm" xml:space="preserve">
+  <data name="StdevMaxFwhm">
     <value>Standard deviation of the precursor MaxFwhm (peak width) values.</value>
   </data>
-  <data name="StdevMaxHeight" xml:space="preserve">
+  <data name="StdevMaxHeight">
     <value>Stdev Max Height</value>
   </data>
-  <data name="StdevRetentionTime" xml:space="preserve">
+  <data name="StdevRetentionTime">
     <value>Standard deviation of the transition RetentionTime values.</value>
   </data>
-  <data name="StdevTotalArea" xml:space="preserve">
+  <data name="StdevTotalArea">
     <value>Standard deviation of the precursor TotalArea values</value>
   </data>
-  <data name="StdevTotalAreaNormalized" xml:space="preserve">
+  <data name="StdevTotalAreaNormalized">
     <value>Stdev Total Area Normalized</value>
   </data>
-  <data name="StdevTotalAreaRatio" xml:space="preserve">
+  <data name="StdevTotalAreaRatio">
     <value>Standard deviation of the precursor TotalAreaNormalized
 values.</value>
   </data>
-  <data name="ThreeLetterCodes" xml:space="preserve">
+  <data name="ThreeLetterCodes">
     <value>The modified sequence where modifications are referred to by their three letter codes, e.g. "C[CAM]". If the modification does not have a three letter code, then its full name is used instead.</value>
   </data>
-  <data name="TicArea" xml:space="preserve">
+  <data name="TicArea">
     <value>Integral of the total ion current over the entire run.</value>
   </data>
-  <data name="Times" xml:space="preserve">
+  <data name="Times">
     <value>The retention times of the chromatogram.</value>
   </data>
-  <data name="TotalArea" xml:space="preserve">
+  <data name="TotalArea">
     <value>The summed Area values of all individual transitions for the particular
 precursor.</value>
   </data>
-  <data name="TotalAreaFragment" xml:space="preserve">
+  <data name="TotalAreaFragment">
     <value>Total Area Fragment</value>
   </data>
-  <data name="TotalAreaMs1" xml:space="preserve">
+  <data name="TotalAreaMs1">
     <value>Total Area MS1</value>
   </data>
-  <data name="TotalAreaNormalized" xml:space="preserve">
+  <data name="TotalAreaNormalized">
     <value>The TotalArea normalized to the sum of the TotalArea values
 for all peptide precursors in the document</value>
   </data>
-  <data name="TotalAreaRatio" xml:space="preserve">
+  <data name="TotalAreaRatio">
     <value>The ratio of the TotalArea of this precursor to the first internal
 standard label type, before version 0.7 this was always light/heavy, and appeared on the
 heavy precursor.</value>
   </data>
-  <data name="TotalBackground" xml:space="preserve">
+  <data name="TotalBackground">
     <value>The summed Background values of all individual transitions for the
 particular precursor</value>
   </data>
-  <data name="TotalBackgroundFragment" xml:space="preserve">
+  <data name="TotalBackgroundFragment">
     <value>Total Background Fragment</value>
   </data>
-  <data name="TotalBackgroundMs1" xml:space="preserve">
+  <data name="TotalBackgroundMs1">
     <value>Total Background MS1</value>
   </data>
-  <data name="Transition" xml:space="preserve">
+  <data name="Transition">
     <value>Transition</value>
   </data>
-  <data name="TransitionCount" xml:space="preserve">
+  <data name="TransitionCount">
     <value>Number of transitions under this precursor.</value>
   </data>
-  <data name="TransitionIsDecoy" xml:space="preserve">
+  <data name="TransitionIsDecoy">
     <value>True if this is a decoy transition</value>
   </data>
-  <data name="TransitionLocator" xml:space="preserve">
+  <data name="TransitionLocator">
     <value>Unique identifier of the transition within the document. This begins with "Transition:".</value>
     <comment>Do not translate "Transition:"</comment>
   </data>
-  <data name="TransitionNote" xml:space="preserve">
+  <data name="TransitionNote">
     <value>A free text note associated with the transition by clicking Edit Note on
 the Edit menu</value>
   </data>
-  <data name="TransitionReplicateNote" xml:space="preserve">
+  <data name="TransitionReplicateNote">
     <value>A free text note associated with a result set of the transition
 using the Results Grid.</value>
   </data>
-  <data name="TransitionResult" xml:space="preserve">
+  <data name="TransitionResult">
     <value>Transition Result</value>
   </data>
-  <data name="TransitionResultLocator" xml:space="preserve">
+  <data name="TransitionResultLocator">
     <value>Unique identifier of the transition result within the document. This begins with "TransitionResult:" and usually ends with the replicate name, but may have additional attributes for the optimization step and result file.</value>
     <comment>Do not translate "TransitionResult:".</comment>
   </data>
-  <data name="TransitionResults" xml:space="preserve">
+  <data name="TransitionResults">
     <value>Transition Results</value>
   </data>
-  <data name="TransitionResultsSummary" xml:space="preserve">
+  <data name="TransitionResultsSummary">
     <value>Transition Results Summary</value>
   </data>
-  <data name="Transitions" xml:space="preserve">
+  <data name="Transitions">
     <value>Transitions</value>
   </data>
-  <data name="Truncated" xml:space="preserve">
+  <data name="Truncated">
     <value>True if the integrated a peak has a boundary at either end of the acquisition
 time range, where intensity at the end is greater than 1% of the entire peak height
 higher than the other extent.</value>
   </data>
-  <data name="TurningPoint" xml:space="preserve">
+  <data name="TurningPoint">
     <value>For bilinear regressions, the X-coordinate where the two lines intersect.</value>
   </data>
-  <data name="TValue" xml:space="preserve">
+  <data name="TValue">
     <value>The estimated value of the linear fit by the standard error.</value>
   </data>
-  <data name="UnimodIds" xml:space="preserve">
+  <data name="UnimodIds">
     <value>The modified sequence where modifications are referred to by their unimod id, e.g. "C(unimod:4)". If the modification does not have a unimod id, then its full name is used instead.</value>
   </data>
-  <data name="UserSetPeak" xml:space="preserve">
+  <data name="UserSetPeak">
     <value>True if the default choice of peak or its boundaries was manually altered</value>
   </data>
-  <data name="UserSetTotal" xml:space="preserve">
+  <data name="UserSetTotal">
     <value>True if the default choice of peak or its boundaries was manually altered.</value>
   </data>
-  <data name="CollisionalCrossSection" xml:space="preserve">
+  <data name="CollisionalCrossSection">
     <value>A measure of ion mobility, in square angstroms, which is typically converted to appropriate units (eg drift time, inverseK0) and used in extracting chromatograms from ion mobility mass spectra.</value>
   </data>
-  <data name="DriftTimeFragment" xml:space="preserve">
+  <data name="DriftTimeFragment">
     <value>Ion mobility drift time (in milliseconds) for fragment ions, which typically move faster due to more energetic collisions. (For backward compatibility only: IonMobilityFragment and IonMobilityUnits are the preferred terms.)</value>
   </data>
-  <data name="DriftTimeMS1" xml:space="preserve">
+  <data name="DriftTimeMS1">
     <value>Ion mobility drift time (in milliseconds)  for precursor ions, which typically move slightly slower than fragment ions as they are less energetic. (For backward compatibility only: IonMobilityMS1 and IonMobilityUnits are the preferred terms.)</value>
   </data>
-  <data name="DriftTimeWindow" xml:space="preserve">
+  <data name="DriftTimeWindow">
     <value>Ion mobility drift time window (in milliseconds)  used in chromatogram extraction. (For backward compatibility only: IonMobilityWindow and IonMobilityUnits are the preferred terms.)</value>
   </data>
-  <data name="ExplicitCollisionalCrossSection" xml:space="preserve">
+  <data name="ExplicitCollisionalCrossSection">
     <value>The exact desired collisional cross section (in square angstroms) to be converted to ion mobility and used in extracting chromatograms from ion mobility mass spectra, overriding all model values. </value>
   </data>
-  <data name="IonMobilityFragment" xml:space="preserve">
+  <data name="IonMobilityFragment">
     <value>Center of the ion mobility filter window used in chromatogram extraction for a fragment ion. This may differ from the value for precursor ions , as fragment ions may move faster due to more energetic collisions,</value>
   </data>
-  <data name="IonMobilityMS1" xml:space="preserve">
+  <data name="IonMobilityMS1">
     <value>Center of the ion mobility filter window used in chromatogram extraction for a precursor ion.</value>
   </data>
-  <data name="IonMobilityWindow" xml:space="preserve">
+  <data name="IonMobilityWindow">
     <value>Width of the ion mobility filter window used in chromatogram extraction.</value>
   </data>
-  <data name="IonMobilityUnits" xml:space="preserve">
+  <data name="IonMobilityUnits">
     <value>Units for ion mobility used in chromatogram extraction.</value>
   </data>
   <data name="CAS" xml:space="preserve">
@@ -1314,46 +1299,46 @@ higher than the other extent.</value>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
-  <data name="Time" xml:space="preserve">
+  <data name="Time">
     <value>Time at which this change was made, expressed in your current local time zone</value>
   </data>
-  <data name="UTCTime" xml:space="preserve">
+  <data name="UTCTime">
     <value>Time at which this change was made, expressed in universal time (GMT)</value>
   </data>
-  <data name="TimeStamp" xml:space="preserve">
+  <data name="TimeStamp">
     <value>Time at which this change was made, expressed as the local time of change and offset to UTC time</value>
   </data>
-  <data name="UndoRedoMessage" xml:space="preserve">
+  <data name="UndoRedoMessage">
     <value>Description of the change</value>
   </data>
-  <data name="SummaryMessage" xml:space="preserve">
+  <data name="SummaryMessage">
     <value>Description of the change</value>
   </data>
-  <data name="AllInfoMessage" xml:space="preserve">
+  <data name="AllInfoMessage">
     <value>Detailed description of the change</value>
   </data>
-  <data name="User" xml:space="preserve">
+  <data name="User">
     <value>User who made the change</value>
   </data>
-  <data name="Reason" xml:space="preserve">
+  <data name="Reason">
     <value>Reason the user gave for making the change</value>
   </data>
-  <data name="DetailReason" xml:space="preserve">
+  <data name="DetailReason">
     <value>Detailed reason the user gave for making the change</value>
   </data>
-  <data name="SkylineVersion" xml:space="preserve">
+  <data name="SkylineVersion">
     <value>Version of Skyline in which the change was made</value>
   </data>
-  <data name="Details" xml:space="preserve">
+  <data name="Details">
     <value>List of detailed change messages and reasons</value>
   </data>
-  <data name="AuditLogRow" xml:space="preserve">
+  <data name="AuditLogRow">
     <value>Row of audit log information</value>
   </data>
-  <data name="AuditLogRowId" xml:space="preserve">
+  <data name="AuditLogRowId">
     <value>Id of the entry</value>
   </data>
-  <data name="AuditLogDetailRowId" xml:space="preserve">
+  <data name="AuditLogDetailRowId">
     <value>Id of the detailed message</value>
   </data>
   <data name="SampleId" xml:space="preserve">
@@ -1361,8 +1346,5 @@ higher than the other extent.</value>
   </data>
   <data name="InstrumentSerialNumber" xml:space="preserve">
     <value>The instrument serial number read from an imported result file</value>
-  </data>
-  <data name="PrecursorExplicitCollisionEnergy" xml:space="preserve">
-    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values. May in turn be overridden by per-transition Explicit Collision Energy.</value>
   </data>
 </root>
