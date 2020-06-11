@@ -353,6 +353,12 @@
     <Compile Include="Controls\Graphs\DetectionsToolbar.Designer.cs">
       <DependentUpon>DetectionsToolbar.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\DetectionToolbarProperties.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\DetectionToolbarProperties.Designer.cs">
+      <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />
     <Compile Include="Controls\ImageListBox.cs">
@@ -2102,6 +2108,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\DetectionsToolbar.resx">
       <DependentUpon>DetectionsToolbar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\DetectionToolbarProperties.resx">
+      <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\FileProgressControl.ja.resx">
       <DependentUpon>FileProgressControl.cs</DependentUpon>

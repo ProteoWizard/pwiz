@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Util;
+using Settings = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.Settings;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -31,14 +32,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public List<string> ReplicateNames { get; private set; }
 
-        public static DetectionPlotData INVALID = new DetectionPlotData(null, DetectionsPlotPane.DefaultSettings);
+        public static DetectionPlotData INVALID = new DetectionPlotData(null);
 
-        public DetectionPlotData(SrmDocument document, DetectionsPlotPane.Settings settings)
+        public DetectionPlotData(SrmDocument document)
         {
-            if (document == null || settings.QValueCutoff == 0 || settings.QValueCutoff == 1 ||
+            if (document == null || Settings.QValueCutoff == 0 || Settings.QValueCutoff == 1 ||
                 !document.Settings.HasResults) return;
 
-            QValueCutoff = settings.QValueCutoff;
+            QValueCutoff = Settings.QValueCutoff;
             if (document.MoleculeTransitionGroupCount == 0 || document.PeptideCount == 0 ||
                 document.MeasuredResults.Chromatograms.Count == 0)
                 return;
@@ -89,8 +90,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            _data[DetectionsPlotPane.TargetType.precursor] = new DataSet(_precursorData, ReplicateCount, QValueCutoff);
-            _data[DetectionsPlotPane.TargetType.peptide] = new DataSet(_peptideData, ReplicateCount, QValueCutoff);
+            _data[DetectionsPlotPane.TargetType.PRECURSOR] = new DataSet(_precursorData, ReplicateCount, QValueCutoff);
+            _data[DetectionsPlotPane.TargetType.PEPTIDE] = new DataSet(_peptideData, ReplicateCount, QValueCutoff);
 
             _isValid = true;
         }

@@ -21,7 +21,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -48,36 +51,178 @@ namespace pwiz.Skyline.Controls.Graphs
     public class DetectionsPlotPane : SummaryReplicateGraphPane, IDisposable, IDetectionsPlotInfo    // CONSIDER: Base class instead?
 
     {
-        public enum TargetType { precursor, peptide }
-        public enum YScaleFactorType { one = 1, hundreds = 100, thousands = 1000}
+        public class IntLabeledValue : LabeledValues<int>
+        {
+            protected IntLabeledValue(int value, Func<string> getLabelFunc) : base(value, getLabelFunc)
+            {
+                Value = value;
+            }
+            public float Value { get; private set; }
+
+            public override string ToString()
+            {
+                return Label;
+            }
+
+            public static IEnumerable<T> GetValues<T>() where T : IntLabeledValue
+            {
+                return (IEnumerable<T>)typeof(T).InvokeMember("GetValues", BindingFlags.InvokeMethod, 
+                    null, null, new object[0]);
+            }
+
+            public static T GetDefaultValue<T>() where T : IntLabeledValue
+            {
+                return (T)typeof(T).InvokeMember("GetDefaultValue", BindingFlags.InvokeMethod,
+                    null, null, new object[0]);
+            }
+
+            public static T GetFromString<T>(string str) where T : IntLabeledValue
+            {
+                var res = GetValues<T>().FirstOrDefault(
+                    (t) => t.Label.Equals(str));
+                if (res == default(T))
+                    return GetDefaultValue<T>();
+                else return res;
+            }
+
+            public static void PopulateCombo<T>(ComboBox comboBox, T currentValue) where T : IntLabeledValue
+            {
+                comboBox.Items.Clear();
+                foreach (var val in GetValues<T>())
+                {
+                    comboBox.Items.Add(val);
+                    if (Equals(val, currentValue))
+                    {
+                        comboBox.SelectedIndex = comboBox.Items.Count - 1;
+                    }
+                }
+            }
+            public static void PopulateCombo<T>(ToolStripComboBox comboBox, T currentValue) where T : IntLabeledValue
+            {
+                comboBox.Items.Clear();
+                foreach (var val in GetValues<T>())
+                {
+                    comboBox.Items.Add(val);
+                    if (Equals(val, currentValue))
+                    {
+                        comboBox.SelectedIndex = comboBox.Items.Count - 1;
+                    }
+                }
+            }
+
+            public static T GetValue<T>(ComboBox comboBox, T defaultVal) where T : IntLabeledValue
+            {
+                return comboBox.SelectedItem as T ?? defaultVal;
+            }
+            public static T GetValue<T>(ToolStripComboBox comboBox, T defaultVal) where T : IntLabeledValue
+            {
+                return comboBox.SelectedItem as T ?? defaultVal;
+            }
+        }
+
+        public class TargetType : IntLabeledValue
+        {
+            private TargetType(int value, Func<string> getLabelFunc) : base(value, getLabelFunc){}
+
+            public static readonly TargetType PRECURSOR = new TargetType(0, () => Resources.DetectionPlot_TargetType_Precursor);
+            public static readonly TargetType PEPTIDE = new TargetType(1, () => Resources.DetectionPlot_TargetType_Peptide);
+
+            public static IEnumerable<TargetType> GetValues()
+            {
+                return new[] {PRECURSOR, PEPTIDE};
+            }
+
+            public static TargetType GetDefaultValue()
+            {
+                return PRECURSOR;
+            }
+        }
+
+        public class YScaleFactorType : IntLabeledValue
+        {
+            private YScaleFactorType(int value, Func<string> getLabelFunc) : base(value, getLabelFunc) { }
+
+            public static readonly YScaleFactorType ONE = new YScaleFactorType(1, () => Resources.DetectionPlot_YScale_One);
+            public static readonly YScaleFactorType HUNDRED = new YScaleFactorType(100, () => Resources.DetectionPlot_YScale_Hundred);
+            public static readonly YScaleFactorType THOUSAND = new YScaleFactorType(100, () => Resources.DetectionPlot_YScale_Thousand);
+
+            public static IEnumerable<YScaleFactorType> GetValues()
+            {
+                return new[] { ONE, HUNDRED, THOUSAND };
+            }
+            public static YScaleFactorType GetDefaultValue()
+            {
+                return THOUSAND;
+            }
+        }
+
+
+        //        public enum TargetType { precursor, peptide }
+        //public enum YScaleFactorType { one = 1, hundreds = 100, thousands = 1000}
 
         public class Settings
         {
-            public Settings(float qValueCutoff, TargetType targetType, YScaleFactorType yScale, int repCount)
+            public static float QValueCutoff
             {
-                QValueCutoff = qValueCutoff;
-                TargetType = targetType;
-                YScaleFactor = yScale;
-                RepCount = repCount;
+                get { return pwiz.Skyline.Properties.Settings.Default.DetectionsQValueCutoff; }
+                set { pwiz.Skyline.Properties.Settings.Default.DetectionsQValueCutoff = value; }
             }
 
-            public float QValueCutoff { get; set; }
-            public TargetType TargetType { get; set; }
-            public YScaleFactorType YScaleFactor { get; set; }
-            public int RepCount { get; set; }
+            public static TargetType TargetType
+            {
+                get
+                {
+                    return IntLabeledValue.GetFromString<TargetType>(
+                        pwiz.Skyline.Properties.Settings.Default.DetectionsTargetType);
+                }
+                set { pwiz.Skyline.Properties.Settings.Default.DetectionsTargetType = value.ToString(); }
+            }
+            public static YScaleFactorType YScaleFactor
+            {
+                get
+                {
+                    return IntLabeledValue.GetFromString<YScaleFactorType>(
+                        pwiz.Skyline.Properties.Settings.Default.DetectionsYScaleFactor);
+                }
+                set { pwiz.Skyline.Properties.Settings.Default.DetectionsYScaleFactor = value.ToString(); }
+            }
+
+            public static int RepCount
+            {
+                get { return pwiz.Skyline.Properties.Settings.Default.DetectionsRepCount; }
+                set { pwiz.Skyline.Properties.Settings.Default.DetectionsRepCount = value; }
+            }
+
+            public static float FontSize
+            {
+                get { return pwiz.Skyline.Properties.Settings.Default.AreaFontSize; }
+                set { pwiz.Skyline.Properties.Settings.Default.AreaFontSize = value; }
+            }
+
+            public static bool ShowAtLeastN
+            {
+                get { return pwiz.Skyline.Properties.Settings.Default.DetectionsShowAtLeastN; }
+                set { pwiz.Skyline.Properties.Settings.Default.DetectionsShowAtLeastN = value; }
+            }
+
+            public static bool ShowSelection
+            {
+                get { return pwiz.Skyline.Properties.Settings.Default.DetectionsShowSelection; }
+                set { pwiz.Skyline.Properties.Settings.Default.DetectionsShowSelection = value; }
+            }
+
+            public static bool ShowMean
+            {
+                get { return pwiz.Skyline.Properties.Settings.Default.DetectionsShowMean; }
+                set { pwiz.Skyline.Properties.Settings.Default.DetectionsShowMean = value; }
+            }
+
         }
 
         private DetectionPlotData _detectionData = DetectionPlotData.INVALID;
         public int MaxRepCount { get; private set; }
 
         public static int DefaultMaxRepCount => 20;
-        private static Settings _defaultSettings = new Settings(0.01f, TargetType.precursor, YScaleFactorType.thousands, 10);
-        public static Settings DefaultSettings
-        {
-            get { return _defaultSettings; }
-        }
-
-        public Settings settings { get; private set; }
 
         private readonly List<StickItem> _stickItems;
 
@@ -85,15 +230,14 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             MaxRepCount = graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
 
-            settings = DefaultSettings;
-            settings.RepCount = (int) MaxRepCount / 2;
+            Settings.RepCount = (int) MaxRepCount / 2;
             if (GraphSummary.Toolbar is DetectionsToolbar toolbar)
-                toolbar.UpdateUI(settings, MaxRepCount);
+                toolbar.UpdateUI();
 
             _stickItems = new List<StickItem>(2);
             if (GraphSummary.DocumentUIContainer.DocumentUI.Settings.HasResults)
             {
-                _detectionData = new DetectionPlotData(graphSummary.DocumentUIContainer.DocumentUI, settings);
+                _detectionData = new DetectionPlotData(graphSummary.DocumentUIContainer.DocumentUI);
             }
             XAxis.Type = AxisType.Text;
             XAxis.Title.Text = "Replicate";
@@ -157,6 +301,19 @@ namespace pwiz.Skyline.Controls.Graphs
             AddLabels(g);
 
             base.Draw(g);
+
+            if (Settings.ShowAtLeastN)
+            {
+                DetectionPlotData.DataSet targetData = _detectionData.GetData(Settings.TargetType);
+                float yScale = (float)Settings.YScaleFactor.Value;
+                double lineY = targetData.getCountForMinReplicates(Settings.RepCount) / yScale;
+                
+                var lineYDevice = YAxis.Scale.Transform(lineY);
+                using (var pen = new Pen(Color.Blue, 1){DashStyle = DashStyle.DashDot})
+                {
+                    g.DrawLine(pen, Chart.Rect.Left, lineYDevice, Chart.Rect.Right, lineYDevice);
+                }
+            }
         } 
 
         private double PaneHeightToYValue(double height)
@@ -175,10 +332,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             if (GraphSummary.Toolbar is DetectionsToolbar toolbar)
             {
-                var newSettings = toolbar.GetSettings();
-                if(settings.QValueCutoff != newSettings.QValueCutoff)
-                    _detectionData = new DetectionPlotData(GraphSummary.DocumentUIContainer.DocumentUI, newSettings);
-                settings = newSettings;
+                var oldCutoff = Settings.QValueCutoff;
+                if(Settings.QValueCutoff != oldCutoff)
+                    _detectionData = new DetectionPlotData(GraphSummary.DocumentUIContainer.DocumentUI);
             }
             else
                 return;
@@ -190,9 +346,9 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
             _stickItems.Clear();
 
-            DetectionPlotData.DataSet targetData = _detectionData.GetData(settings.TargetType);
+            DetectionPlotData.DataSet targetData = _detectionData.GetData(Settings.TargetType);
             //draw bars
-            float yScale = (float) settings.YScaleFactor;
+            float yScale = (float) Settings.YScaleFactor.Value;
             var counts = targetData.TargetsCount.ToList();
             var countPoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)
                 .Select(i => new PointPair(i, counts[i]/yScale)).ToList());
@@ -219,22 +375,24 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.Max = _detectionData.ReplicateCount + 1;
             XAxis.Scale.TextLabels = _detectionData.ReplicateNames.ToArray();
 
-            YAxis.Scale.Max = _detectionData.GetData(settings.TargetType).MaxCount/yScale * 1.05;
-            if (settings.YScaleFactor != YScaleFactorType.one)
-                YAxis.Title.Text = $"Detections ({settings.YScaleFactor.ToString()})";
+            YAxis.Scale.Max = _detectionData.GetData(Settings.TargetType).MaxCount/yScale * 1.05;
+            if (Settings.YScaleFactor != YScaleFactorType.ONE)
+                YAxis.Title.Text = $"Detections ({Settings.YScaleFactor.ToString()})";
             else
                 YAxis.Title.Text = "Detections";
 
-            double lineY = targetData.getCountForMinReplicates(settings.RepCount)/yScale;
-
-            var linePoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)
-                .Select(i => new PointPair(i, lineY)).ToList());
-
-            var line = new LineItem(
-                    string.Format("at least {0}", settings.RepCount),
-                    linePoints, Color.Blue, SymbolType.None)
-                { Line = { Style = DashStyle.Dash } };
-            CurveList.Insert(3,line);
+            if (Settings.ShowAtLeastN)
+            {
+                //This is a placeholder to make sure the line shows in the legend.
+                //Actual drawing happens in the Draw method because ZedGraph doesn't allow
+                // to draw end to end line for an ordinal axis
+                var linePoints = new PointPairList( new[] {new PointPair(0, 0)} );
+                var line = new LineItem(
+                        string.Format("at least {0}", Settings.RepCount),
+                        linePoints, Color.Blue, SymbolType.None)
+                    {Line = {Style = DashStyle.DashDot}};
+                CurveList.Insert(3, line);
+            }
         }
 
         private BarItem MakeBarItem(PointPairList points, Color color)

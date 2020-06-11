@@ -30,187 +30,59 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DetectionsToolbar));
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripDropDownButtonLevel = new System.Windows.Forms.ToolStripDropDownButton();
-            this.toolStripMenuItemPrecursors = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemPeptides = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripDropDownButtonQCutoff = new System.Windows.Forms.ToolStripDropDownButton();
-            this.toolStripMenuItem01 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem05 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemCustom = new pwiz.Skyline.Controls.Graphs.LabeledTextMenuItem();
-            this.toolStripDropDownButtonMultiple = new System.Windows.Forms.ToolStripDropDownButton();
-            this.onesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.hundredsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.thousandsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripDropDownButtonRepCount = new System.Windows.Forms.ToolStripDropDownButton();
-            this.toolStripMenuItemRepCountDefault = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItemRepCount = new pwiz.Skyline.Controls.Graphs.LabeledTrackBarMenuItem();
+            this.pbProperties = new System.Windows.Forms.ToolStripButton();
+            this.cbLevel = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // toolStrip1
             // 
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripDropDownButtonLevel,
             this.toolStripSeparator2,
-            this.toolStripDropDownButtonQCutoff,
-            this.toolStripSeparator1,
-            this.toolStripDropDownButtonMultiple,
-            this.toolStripSeparator3,
-            this.toolStripDropDownButtonRepCount
-            });
+            this.pbProperties,
+            this.toolStripLabel1,
+            this.cbLevel});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(646, 27);
+            this.toolStrip1.Size = new System.Drawing.Size(646, 28);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
-            // 
-            // toolStripDropDownButtonLevel
-            // 
-            this.toolStripDropDownButtonLevel.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripDropDownButtonLevel.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItemPrecursors,
-            this.toolStripMenuItemPeptides});
-            this.toolStripDropDownButtonLevel.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripDropDownButtonLevel.Name = "toolStripDropDownButtonLevel";
-            this.toolStripDropDownButtonLevel.Size = new System.Drawing.Size(60, 24);
-            this.toolStripDropDownButtonLevel.Text = "Level:";
-            this.toolStripDropDownButtonLevel.Tag = "Level:";
-            this.toolStripDropDownButtonLevel.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
-            this.toolStripDropDownButtonLevel.ToolTipText = "Select what counts would be shown: precursors or peptides.";
-            this.toolStripDropDownButtonLevel.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.DropDownItemClicked);
-            // 
-            // toolStripMenuItemPrecursors
-            // 
-            this.toolStripMenuItemPrecursors.Name = "toolStripMenuItemPrecursors";
-            this.toolStripMenuItemPrecursors.Size = new System.Drawing.Size(145, 26);
-            this.toolStripMenuItemPrecursors.Text = "Precursor";
-            this.toolStripMenuItemPrecursors.ToolTipText = "Show precursor counts.";
-            this.toolStripMenuItemPrecursors.Tag = DetectionsPlotPane.TargetType.precursor;
-            // 
-            // toolStripMenuItemPeptides
-            // 
-            this.toolStripMenuItemPeptides.Name = "toolStripMenuItemPeptides";
-            this.toolStripMenuItemPeptides.Size = new System.Drawing.Size(145, 26);
-            this.toolStripMenuItemPeptides.Text = "Peptides";
-            this.toolStripMenuItemPeptides.Tag = DetectionsPlotPane.TargetType.peptide;
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 27);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 28);
             // 
-            // toolStripDropDownButtonQCutoff
+            // pbProperties
             // 
-            this.toolStripDropDownButtonQCutoff.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripDropDownButtonQCutoff.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem01,
-            this.toolStripMenuItem05,
-            this.toolStripMenuItemCustom});
-            this.toolStripDropDownButtonQCutoff.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripDropDownButtonQCutoff.Name = "toolStripDropDownButtonQCutoff";
-            this.toolStripDropDownButtonQCutoff.Size = new System.Drawing.Size(121, 24);
-            this.toolStripDropDownButtonQCutoff.Text = "Q-Value Cutoff:";
-            this.toolStripDropDownButtonQCutoff.Tag = "Q-Value Cutoff:";
-            this.toolStripDropDownButtonQCutoff.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
-            this.toolStripDropDownButtonQCutoff.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.DropDownItemClicked);
+            this.pbProperties.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.pbProperties.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.pbProperties.Image = ((System.Drawing.Image)(resources.GetObject("pbProperties.Image")));
+            this.pbProperties.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.pbProperties.Name = "pbProperties";
+            this.pbProperties.Size = new System.Drawing.Size(80, 25);
+            this.pbProperties.Text = "Properties";
+            this.pbProperties.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
+            this.pbProperties.Click += new System.EventHandler(this.pbProperties_Click);
             // 
-            // toolStripMenuItem01
+            // cbLevel
             // 
-            this.toolStripMenuItem01.Name = "toolStripMenuItem01";
-            this.toolStripMenuItem01.Size = new System.Drawing.Size(217, 26);
-            this.toolStripMenuItem01.Text = "0.01";
+            this.cbLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbLevel.Name = "cbLevel";
+            this.cbLevel.Size = new System.Drawing.Size(121, 28);
+            this.cbLevel.SelectedIndexChanged += new System.EventHandler(this.cbLevel_SelectedIndexChanged);
             // 
-            // toolStripMenuItem05
+            // toolStripLabel1
             // 
-            this.toolStripMenuItem05.Name = "toolStripMenuItem05";
-            this.toolStripMenuItem05.Size = new System.Drawing.Size(217, 26);
-            this.toolStripMenuItem05.Text = "0.05";
-            // 
-            // toolStripMenuItemCustom
-            // 
-            this.toolStripMenuItemCustom.BackColor = System.Drawing.Color.Transparent;
-            this.toolStripMenuItemCustom.Name = "toolStripMenuItemCustom";
-            this.toolStripMenuItemCustom.Size = new System.Drawing.Size(151, 37);
-            this.toolStripMenuItemCustom.Text = "0.01";
-            this.toolStripMenuItemCustom.ValueChanged += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.DropDownItemClicked);
-            // 
-            // toolStripDropDownButtonMultiple
-            // 
-            this.toolStripDropDownButtonMultiple.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripDropDownButtonMultiple.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.onesToolStripMenuItem,
-            this.hundredsToolStripMenuItem,
-            this.thousandsToolStripMenuItem});
-            this.toolStripDropDownButtonMultiple.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripDropDownButtonMultiple.Name = "toolStripDropDownButtonMultiple";
-            this.toolStripDropDownButtonMultiple.Size = new System.Drawing.Size(124, 24);
-            this.toolStripDropDownButtonMultiple.Text = "Count Multiple:";
-            this.toolStripDropDownButtonMultiple.Tag = "Count Multiple:";
-            this.toolStripDropDownButtonMultiple.ToolTipText = "Scale of the Counts axis.";
-            this.toolStripDropDownButtonMultiple.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.DropDownItemClicked);
-            // 
-            // onesToolStripMenuItem
-            // 
-            this.onesToolStripMenuItem.Name = "onesToolStripMenuItem";
-            this.onesToolStripMenuItem.Size = new System.Drawing.Size(154, 26);
-            this.onesToolStripMenuItem.Tag = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.YScaleFactorType.one;
-            this.onesToolStripMenuItem.Text = "Ones";
-            // 
-            // hundredsToolStripMenuItem
-            // 
-            this.hundredsToolStripMenuItem.Name = "hundredsToolStripMenuItem";
-            this.hundredsToolStripMenuItem.Size = new System.Drawing.Size(154, 26);
-            this.hundredsToolStripMenuItem.Tag = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.YScaleFactorType.hundreds;
-            this.hundredsToolStripMenuItem.Text = "Hundreds";
-            // 
-            // thousandsToolStripMenuItem
-            // 
-            this.thousandsToolStripMenuItem.Name = "thousandsToolStripMenuItem";
-            this.thousandsToolStripMenuItem.Size = new System.Drawing.Size(154, 26);
-            this.thousandsToolStripMenuItem.Tag = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.YScaleFactorType.thousands;
-            this.thousandsToolStripMenuItem.Text = "Thousands";
-            // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 27);
-            // 
-            // toolStripDropDownButtonRepCount
-            // 
-            this.toolStripDropDownButtonRepCount.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripDropDownButtonRepCount.DropDownItems.AddRange(
-                new System.Windows.Forms.ToolStripItem[] {
-                                    this.toolStripMenuItemRepCountDefault,
-                                    this.toolStripMenuItemRepCount});
-            this.toolStripDropDownButtonRepCount.Name = "toolStripDropDownButtonRepCount";
-            this.toolStripDropDownButtonRepCount.Size = new System.Drawing.Size(121, 24);
-            this.toolStripDropDownButtonRepCount.Text = "Replicate Count:";
-            this.toolStripDropDownButtonRepCount.Tag = "Replicate Count:";
-            this.toolStripDropDownButtonRepCount.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
-            this.toolStripDropDownButtonRepCount.DropDownItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.DropDownItemClicked);
-            // 
-            // toolStripMenuItemRCDefault
-            // 
-            this.toolStripMenuItemRepCountDefault.Name = "toolStripMenuItemRepCountDefault";
-            this.toolStripMenuItemRepCountDefault.Size = new System.Drawing.Size(217, 26);
-            this.toolStripMenuItemRepCountDefault.Text = "Default";
-            // 
-            // toolStripMenuItemRepCount
-            // 
-            this.toolStripMenuItemRepCount.BackColor = System.Drawing.Color.Transparent;
-            this.toolStripMenuItemRepCount.Name = "toolStripMenuItemRepCount";
-            this.toolStripMenuItemRepCount.Size = new System.Drawing.Size(300, 37);
-            this.toolStripMenuItemRepCount.Text = "Rep Count:";
-            this.toolStripMenuItemRepCount.ValueChanged += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.DropDownItemClicked);
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(111, 25);
+            this.toolStripLabel1.Text = "Level: ";
             // 
             // DetectionsToolbar
             // 
@@ -229,22 +101,9 @@ namespace pwiz.Skyline.Controls.Graphs
         #endregion
 
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButtonLevel;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemPrecursors;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemPeptides;
-        private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButtonQCutoff;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem01;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem05;
-        private pwiz.Skyline.Controls.Graphs.LabeledTextMenuItem toolStripMenuItemCustom;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-        private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButtonMultiple;
-        private System.Windows.Forms.ToolStripMenuItem onesToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem hundredsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem thousandsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-        private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButtonRepCount;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemRepCountDefault;
-        private pwiz.Skyline.Controls.Graphs.LabeledTrackBarMenuItem toolStripMenuItemRepCount;
+        private System.Windows.Forms.ToolStripButton pbProperties;
+        private System.Windows.Forms.ToolStripComboBox cbLevel;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
     }
 }

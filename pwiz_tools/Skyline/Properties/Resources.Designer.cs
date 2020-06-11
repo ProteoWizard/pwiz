@@ -3275,26 +3275,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Caret_icon {
-            get {
-                object obj = ResourceManager.GetObject("Caret_icon", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Caret_icon_small {
-            get {
-                object obj = ResourceManager.GetObject("Caret_icon_small", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Standard peptides must exist in the database..
         /// </summary>
         public static string ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database {
@@ -8140,6 +8120,51 @@ namespace pwiz.Skyline.Properties {
         public static string Demultiplexer_GetDeconvRegionsForMz_TheIsolationSchemeIsInconsistentlySpecified {
             get {
                 return ResourceManager.GetString("Demultiplexer_GetDeconvRegionsForMz_TheIsolationSchemeIsInconsistentlySpecified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide.
+        /// </summary>
+        public static string DetectionPlot_TargetType_Peptide {
+            get {
+                return ResourceManager.GetString("DetectionPlot_TargetType_Peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor.
+        /// </summary>
+        public static string DetectionPlot_TargetType_Precursor {
+            get {
+                return ResourceManager.GetString("DetectionPlot_TargetType_Precursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hundreds.
+        /// </summary>
+        public static string DetectionPlot_YScale_Hundred {
+            get {
+                return ResourceManager.GetString("DetectionPlot_YScale_Hundred", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to One.
+        /// </summary>
+        public static string DetectionPlot_YScale_One {
+            get {
+                return ResourceManager.GetString("DetectionPlot_YScale_One", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Thousands.
+        /// </summary>
+        public static string DetectionPlot_YScale_Thousand {
+            get {
+                return ResourceManager.GetString("DetectionPlot_YScale_Thousand", resourceCulture);
             }
         }
         
@@ -14812,7 +14837,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct components  [rest of string was truncated]&quot;;.
+        ///Recognized adduct com [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -19354,7 +19379,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
@@ -29411,16 +29436,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be" +
                         "_installed_correctly_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap tick_small {
-            get {
-                object obj = ResourceManager.GetObject("tick_small", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
