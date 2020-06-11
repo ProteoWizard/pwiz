@@ -40,7 +40,6 @@ namespace pwiz.Skyline.Model.Crosslinking
             ExplicitMods = explicitMods;
         }
 
-        [CanBeNull]
         public Peptide Peptide { get; private set; }
         public int IndexAa { get; private set; }
 
