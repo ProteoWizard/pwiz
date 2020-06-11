@@ -33,6 +33,7 @@ namespace pwiz.Skyline.EditUI
         private SrmSettings _settings;
         private ExplicitMods _explicitMods;
         private StaticMod _crosslinkMod;
+        private string _rememberedPeptideSequence;
 
         public EditLinkedPeptideDlg(SrmSettings settings, PeptideDocNode parentPeptide, LinkedPeptide linkedPeptide, StaticMod crosslinkMod)
         {
@@ -45,6 +46,10 @@ namespace pwiz.Skyline.EditUI
                 if (linkedPeptide.Peptide != null)
                 {
                     tbxPeptideSequence.Text = linkedPeptide.Peptide.Sequence;
+                }
+                else
+                {
+                    cbxLooplink.Checked = true;
                 }
                 tbxAttachmentOrdinal.Text = (linkedPeptide.IndexAa + 1).ToString();
                 _explicitMods = linkedPeptide.ExplicitMods;
@@ -101,11 +106,16 @@ namespace pwiz.Skyline.EditUI
         private bool TryMakePeptide(out Peptide peptide)
         {
             peptide = null;
+            if (cbxLooplink.Checked)
+            {
+                return true;
+            }
             var messageBoxHelper = new MessageBoxHelper(this);
             var peptideSequence = tbxPeptideSequence.Text.Trim();
             if (string.IsNullOrEmpty(peptideSequence))
             {
-                return true;
+                messageBoxHelper.ShowTextBoxError(tbxPeptideSequence, Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank);
+                return false;
             }
             if (!FastaSequence.IsExSequence(peptideSequence))
             {
@@ -187,6 +197,27 @@ namespace pwiz.Skyline.EditUI
                 return int.Parse(tbxAttachmentOrdinal.Text);
             }
             set { tbxAttachmentOrdinal.Text = value.HasValue ? value.ToString() : string.Empty; }
+        }
+
+        private void cbxLooplink_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbxLooplink.Checked)
+            {
+                _rememberedPeptideSequence = tbxPeptideSequence.Text;
+                tbxPeptideSequence.Text = string.Empty;
+                tbxPeptideSequence.Enabled = false;
+                btnEditModifications.Enabled = false;
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(tbxPeptideSequence.Text))
+                {
+                    tbxPeptideSequence.Text = _rememberedPeptideSequence;
+                }
+
+                tbxPeptideSequence.Enabled = true;
+                btnEditModifications.Enabled = true;
+            }
         }
     }
 }
