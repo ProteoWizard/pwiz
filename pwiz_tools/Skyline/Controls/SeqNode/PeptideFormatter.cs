@@ -80,11 +80,22 @@ namespace pwiz.Skyline.Controls.SeqNode
             var peptideFormatter = new PeptideFormatter(srmSettings, lightModifiedSequence, heavyModifiedSequences, modFontHolder);
             if (explicitMods != null && explicitMods.HasCrosslinks)
             {
-                var linkedPeptides = explicitMods.Crosslinks.ReplaceValues(explicitMods.Crosslinks.Select(
-                    entry => MakePeptideFormatter(srmSettings,
-                            entry.Value.Peptide, entry.Value.ExplicitMods, heavyLabelTypes, modFontHolder)
-                        .ChangeCrosslinkedIndexAa(entry.Value.IndexAa)));
-                peptideFormatter = peptideFormatter.ChangeLinkedPeptides(linkedPeptides);
+                var linkedPeptides = new List<KeyValuePair<ModificationSite, PeptideFormatter>>();
+                foreach (var entry in explicitMods.Crosslinks)
+                {
+                    if (entry.Value.Peptide == null)
+                    {
+                        continue;
+                    }
+
+                    var childFormatter = MakePeptideFormatter(srmSettings, entry.Value.Peptide,
+                            entry.Value.ExplicitMods, heavyLabelTypes, modFontHolder)
+                        .ChangeCrosslinkedIndexAa(entry.Value.IndexAa);
+                    linkedPeptides.Add(new KeyValuePair<ModificationSite, PeptideFormatter>(entry.Key, childFormatter));
+                }
+
+                peptideFormatter = peptideFormatter
+                    .ChangeLinkedPeptides(ImmutableSortedList.FromValues(linkedPeptides));
             }
 
             return peptideFormatter;

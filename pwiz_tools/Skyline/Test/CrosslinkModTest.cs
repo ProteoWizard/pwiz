@@ -306,5 +306,36 @@ namespace pwiz.SkylineTest
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings, explicitMods, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
             Assert.AreEqual(1923.9111, transitionGroupDocNode.PrecursorMz, .001);
         }
+
+        [TestMethod]
+        public void TestLooplink()
+        {
+            var peptide = new Peptide("PEPTIDE");
+            var srmSettings = SrmSettingsList.GetDefault();
+            var transitionFilter = srmSettings.TransitionSettings.Filter;
+            transitionFilter = transitionFilter
+                .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_1.Name)
+                .ChangeFragmentRangeLastName(@"last ion")
+                .ChangePeptideIonTypes(new[] { IonType.precursor, IonType.y, IonType.b });
+            srmSettings = srmSettings.ChangeTransitionSettings(
+                srmSettings.TransitionSettings.ChangeFilter(transitionFilter));
+
+            var transitionGroup = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
+            var crosslinkerDef = new StaticMod("dss", null, null, "C8H10O2");
+            var linkedPeptide = new LinkedPeptide(null, 5, null);
+            var crosslinkMod = new ExplicitMod(2, crosslinkerDef).ChangeLinkedPeptide(linkedPeptide);
+            var explicitModsWithCrosslink = new ExplicitMods(peptide, new[] { crosslinkMod }, new TypedExplicitModifications[0]);
+            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings,
+                explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+            var modifiedSequence = ModifiedSequence.GetModifiedSequence(srmSettings, peptide.Sequence,
+                explicitModsWithCrosslink, IsotopeLabelType.light);
+            Assert.AreEqual("PEPTIDE-[dss@3-6]", modifiedSequence.FullNames);
+
+            var choices = transitionGroupDocNode.GetPrecursorChoices(srmSettings, explicitModsWithCrosslink, true)
+                .Cast<TransitionDocNode>().ToArray();
+            var complexFragmentIons = choices.Select(transition => transition.ComplexFragmentIon.GetName()).ToArray();
+
+            Assert.AreNotEqual(0, complexFragmentIons.Length);
+        }
     }
 }

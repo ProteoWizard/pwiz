@@ -40,8 +40,14 @@ namespace pwiz.Skyline.Model.Crosslinking
             ExplicitMods = explicitMods;
         }
 
+        [CanBeNull]
         public Peptide Peptide { get; private set; }
         public int IndexAa { get; private set; }
+
+        public int Ordinal
+        {
+            get { return IndexAa + 1; }
+        }
 
         [CanBeNull]
         public ExplicitMods ExplicitMods { get; private set; }
@@ -176,7 +182,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             var result = startingFragmentIons;
             if (mods != null)
             {
-                foreach (var crosslinkMod in mods.Crosslinks)
+                foreach (var crosslinkMod in mods.LinkedCrossslinks)
                 {
                     result = crosslinkMod.Value.PermuteFragmentIons(settings, maxFragmentationCount, useFilter,
                         crosslinkMod.Key, result);
@@ -220,14 +226,18 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
 
         /// <summary>
-        /// Returns the number of linked peptides in this tree (not including this linked peptide).
+        /// Returns the number of linked peptides in this tree (including this linked peptide, unless it is a looplink).
         /// </summary>
         public int CountDescendents()
         {
-            int result = 0;
+            if (Peptide == null)
+            {
+                return 0;
+            }
+            int result = 1;
             if (ExplicitMods != null)
             {
-                result += ExplicitMods.Crosslinks.Values.Sum(linkedPeptide => 1 + linkedPeptide.CountDescendents());
+                result += ExplicitMods.Crosslinks.Values.Sum(linkedPeptide => linkedPeptide.CountDescendents());
             }
 
             return result;
@@ -253,7 +263,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         [UsedImplicitly]
         public string PeptideSequence
         {
-            get { return Peptide.Sequence; }
+            get { return Peptide?.Sequence; }
         }
 
         [Track]

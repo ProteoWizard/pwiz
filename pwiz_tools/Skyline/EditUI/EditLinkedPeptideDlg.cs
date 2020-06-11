@@ -34,19 +34,23 @@ namespace pwiz.Skyline.EditUI
         private ExplicitMods _explicitMods;
         private StaticMod _crosslinkMod;
 
-        public EditLinkedPeptideDlg(SrmSettings settings, LinkedPeptide linkedPeptide, StaticMod crosslinkMod)
+        public EditLinkedPeptideDlg(SrmSettings settings, PeptideDocNode parentPeptide, LinkedPeptide linkedPeptide, StaticMod crosslinkMod)
         {
             InitializeComponent();
             _settings = settings;
+            ParentPeptide = parentPeptide;
             _crosslinkMod = crosslinkMod;
             if (linkedPeptide != null)
             {
-                tbxPeptideSequence.Text = linkedPeptide.Peptide.Sequence;
+                if (linkedPeptide.Peptide != null)
+                {
+                    tbxPeptideSequence.Text = linkedPeptide.Peptide.Sequence;
+                }
                 tbxAttachmentOrdinal.Text = (linkedPeptide.IndexAa + 1).ToString();
                 _explicitMods = linkedPeptide.ExplicitMods;
             }
         }
-
+        public PeptideDocNode ParentPeptide { get; private set; }
         public LinkedPeptide LinkedPeptide { get; private set; }
 
         public void OkDialog()
@@ -70,7 +74,7 @@ namespace pwiz.Skyline.EditUI
                 return false;
             }
 
-            string peptideSequence = peptide.Sequence;
+            string peptideSequence = peptide == null ? ParentPeptide.Peptide.Sequence : peptide.Sequence;
             var messageBoxHelper = new MessageBoxHelper(this);
             int aaOrdinal;
             if (!messageBoxHelper.ValidateNumberTextBox(tbxAttachmentOrdinal, 1, peptideSequence.Length, out aaOrdinal))
@@ -101,8 +105,7 @@ namespace pwiz.Skyline.EditUI
             var peptideSequence = tbxPeptideSequence.Text.Trim();
             if (string.IsNullOrEmpty(peptideSequence))
             {
-                messageBoxHelper.ShowTextBoxError(tbxPeptideSequence, Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank);
-                return false;
+                return true;
             }
             if (!FastaSequence.IsExSequence(peptideSequence))
             {
