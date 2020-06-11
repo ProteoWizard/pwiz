@@ -25,6 +25,9 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// Tests creating a library (.blib) from .proxl.xml (crosslinking) search results.
+    /// </summary>
     [TestClass]
     public class ProxlTest : AbstractFunctionalTest
     {
