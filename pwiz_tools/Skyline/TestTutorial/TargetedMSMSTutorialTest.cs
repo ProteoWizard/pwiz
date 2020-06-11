@@ -415,10 +415,13 @@ namespace pwiz.SkylineTestTutorial
 
             // We're on the "Configure Transition Settings" page of the wizard.
             // We've already set up these settings, so just click next.
+            // Min/max ion m/z have been set to new defaults, since we haven't changed them, so set them back.
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
+                importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 

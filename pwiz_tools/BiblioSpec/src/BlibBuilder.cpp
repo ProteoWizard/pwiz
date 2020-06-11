@@ -101,6 +101,7 @@ static vector<string> supportedTypes = {
     ".proxl.xml",
     ".ssl",
     ".mlb",
+    ".speclib",
     ".tsv",
     ".osw",
     ".mzTab",

@@ -32,6 +32,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -761,8 +762,13 @@ namespace pwiz.Skyline.Model.Lib
                         LibKey key;
                         if (isProteomic)
                         {
-                            var peptideLibraryKey = new PeptideLibraryKey(sequence, charge);
-                            key = new LibKey(peptideLibraryKey);
+                            LibraryKey libraryKey =
+                                CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(sequence, charge);
+                            if (libraryKey == null)
+                            {
+                                libraryKey = new PeptideLibraryKey(sequence, charge);
+                            }
+                            key = new LibKey(libraryKey);
                         }
                         else
                         {

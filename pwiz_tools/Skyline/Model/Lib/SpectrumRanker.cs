@@ -467,7 +467,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             var moleculeMasses = MoleculeMassesObj;
             int ordinal;
-            int peptideLength = TargetInfoObj.LookupSequence.Sequence.Length;
+            int peptideLength = TargetInfoObj.LookupSequence.Sequence?.Length ?? 0;
             TypedMass matchMass, predictedMass;
             if (ionType == IonType.precursor)
             {

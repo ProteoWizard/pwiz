@@ -64,6 +64,7 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_MZTAB,
             BiblioSpecLiteBuilder.EXT_MZTAB_TXT,
             BiblioSpecLiteBuilder.EXT_OPEN_SWATH,
+            BiblioSpecLiteBuilder.EXT_SPECLIB,
        };
 
         private string[] _inputFileNames = new string[0];

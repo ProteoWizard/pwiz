@@ -319,6 +319,20 @@ namespace pwiz.Skyline.SettingsUI
                             filter.ChangeSmallMoleculePrecursorAdducts(new[] { charge }))
                             .ChangeAutoSelect(true))
                     .ChangeMeasuredResults(null);
+                var staticMods = settings.PeptideSettings.Modifications.StaticModifications.ToList();
+                foreach (var crosslinkMod in Properties.Settings.Default.StaticModList.Where(mod =>
+                    null != mod.CrosslinkerSettings))
+                {
+                    if (!staticMods.Any(mod => mod.Name == crosslinkMod.Name))
+                    {
+                        staticMods.Add(crosslinkMod);
+                    }
+                }
+
+                settings = settings.ChangePeptideSettings(
+                    settings.PeptideSettings.ChangeModifications(
+                        settings.PeptideSettings.Modifications.ChangeStaticModifications(staticMods)));
+
 
                 _chargeSettingsMap[charge] = settings;
             }

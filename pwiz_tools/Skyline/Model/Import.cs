@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
@@ -1632,9 +1633,15 @@ namespace pwiz.Skyline.Model
                 provider = LocalizationHelper.CurrentCulture;
                 sep = TextUtil.SEPARATOR_CSV_INTL;           
             }
-            else if (TrySplitColumns(line, TextUtil.SEPARATOR_CSV, out columns))
+            else
             {
-                sep = TextUtil.SEPARATOR_CSV;           
+                if (null == CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(line.Trim(), 0))
+                {
+                    if (TrySplitColumns(line, TextUtil.SEPARATOR_CSV, out columns))
+                    {
+                        sep = TextUtil.SEPARATOR_CSV;
+                    }
+                }
             }
 
             if (sep == '\0')
