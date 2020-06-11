@@ -165,6 +165,7 @@
     <Compile Include="GroupComparisonRefineTest.cs" />
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
     <Compile Include="LongWaitDlgResizeTest.cs" />
+    <Compile Include="ProxlTest.cs" />
     <Compile Include="ReimportPeakBoundariesTest.cs" />
     <Compile Include="RescoreImportDocumentTest.cs" />
     <Compile Include="RescoreRawChromatogramsTest.cs" />
@@ -475,6 +476,7 @@
     <None Include="PrositSkylineIntegrationTest.zip" />
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
+    <None Include="ProxlTest.zip" />
     <None Include="QuantitativeTest.zip" />
     <None Include="ReimportPeakBoundariesTest.zip" />
     <None Include="ReintegrateDlgTest.zip" />
