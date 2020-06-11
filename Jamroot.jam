@@ -1456,20 +1456,39 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     <dependency>copy_boost_subset
   ;
 
-.exclusion-list =
+.common-src-exclusions = 
     "exclude:.svn"
+    "exclude:.git"
     "exclude:*.bak"
     "exclude:cvgen*.exe"
     "exclude:svnrev.hpp"
     "exclude:Version.cpp"
     "exclude:Reader_*_Test.data"
-    "exclude:example_data/small* # large files in example_data"
-    "exclude:bootstrap exclude:bin.* # boost-build intermediate directories"
-    "exclude:bin exclude:obj exclude:TestResults # C#.NET intermediate directories"
-    "exclude:_ReSharper.* # ReSharper directory for C# projects"
-    "exclude:*.ncb exclude:*.suo exclude:*.user exclude:*.p12 # More visual studio files"
-    "exclude:*.xdc # .NET XML documentation sources"
-    "exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed"
+    "exclude:example_data/small*" # large files in example_data
+    "exclude:bin" "exclude:obj" "exclude:TestResults" # C#.NET intermediate directories
+    "exclude:_ReSharper.*" # ReSharper directory for C# projects
+    "exclude:*.ncb" "exclude:*.suo" "exclude:*.user" "exclude:*.p12" "exclude:*.sdf" "exclude:.vs" # More visual studio files
+    "exclude:*.xdc" # .NET XML documentation sources
+    "exclude:tar.excluded" # a place to put any files in these directories that shouldn't be tarballed
+    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Clearcore*.dll"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Sciex*.dll"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/OFX*.dll"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.dll"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x86"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Waters/*_x*"
+    "exclude:pwiz_aux/msrc/utility/update"
+    "exclude:bootstrap" # boost-build intermediate directories
+    "exclude:$(PWIZ_LIBRARIES_PATH)/boost-build/src/engine/bin*"
+    "exclude:$(PWIZ_LIBRARIES_PATH)/boost-build/src/engine/bjam*"
+    "exclude:$(PWIZ_LIBRARIES_PATH)/boost-build/src/engine/b2*"
+;
+
+.pwiz-src-exclusions = $(.common-src-exclusions)
     "exclude:pwiz_tools/BiblioSpec"
     "exclude:pwiz_tools/Skyline"
     "exclude:pwiz_tools/Topograph"
@@ -1485,17 +1504,6 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     "exclude:pwiz_tools/Shared/Lib/x64"
     "exclude:pwiz_tools/Shared/Lib/mysql.*"
     "exclude:pwiz_tools/Shared/Lib/zlib.*"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Clearcore*.dll"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/Sciex*.dll"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/OFX*.dll"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.dll"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x86"
-    "exclude:pwiz_aux/msrc/utility/vendor_api/Waters/*_x*"
 ;
 
 # the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
@@ -1507,9 +1515,9 @@ This source tree is a subset of the full pwiz source tree.
 ) > "$(<)"
 }
 
-.common-sources =
+constant .common-sources :
     "path-anchor:$(PWIZ_ROOT_PATH)"
-    $(.exclusion-list)
+    $(.common-src-exclusions)
     
     $(PWIZ_ROOT_PATH)/Jamroot.jam
     $(PWIZ_ROOT_PATH)/NOTICE
@@ -1519,13 +1527,15 @@ This source tree is a subset of the full pwiz source tree.
     $(PWIZ_ROOT_PATH)/clean.bat
     $(PWIZ_ROOT_PATH)/clean.sh
 
-    $(PWIZ_ROOT_PATH)/doc
-    $(PWIZ_ROOT_PATH)/example_data
-
     $(PWIZ_ROOT_PATH)/pwiz
     $(PWIZ_ROOT_PATH)/pwiz_aux
     $(PWIZ_ROOT_PATH)/pwiz_tools
     $(PWIZ_ROOT_PATH)/scripts
+;
+
+.pwiz-sources = $(.pwiz-src-exclusions) $(.common-sources)
+    $(PWIZ_ROOT_PATH)/doc
+    $(PWIZ_ROOT_PATH)/example_data
 
     "path-anchor:$(PWIZ_BUILD_PATH)"
     $(PWIZ_BUILD_PATH)/SUBSET
@@ -1573,13 +1583,13 @@ This source tree is a subset of the full pwiz source tree.
 .common-requirements = <location>$(.common-location) <dependency>boost_$(BOOST_VERSION:J=_).tar.bz2 <dependency>SUBSET <dependency>VERSION ;
 
 # l = without libraries, t = without tests, v = without vendor APIs
-tar.create pwiz-src.tar.bz2             : $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-$(version-tag:J=_).tar.bz2 ;
-tar.create pwiz-src-without-l.tar.bz2   : $(.common-sources) : $(.common-requirements) <name>pwiz-src-without-l-$(version-tag:J=_).tar.bz2 ;
-tar.create pwiz-src-without-lt.tar.bz2  : $(.no-t) $(.common-sources)  : $(.common-requirements) <name>pwiz-src-without-lt-$(version-tag:J=_).tar.bz2 ;
-tar.create pwiz-src-without-ltv.tar.bz2 : $(.no-t) $(.no-v) $(.common-sources) : $(.common-requirements) <name>pwiz-src-without-ltv-$(version-tag:J=_).tar.bz2 ;
-tar.create pwiz-src-without-lv.tar.bz2  : $(.no-v) $(.common-sources) : $(.common-requirements) <name>pwiz-src-without-lv-$(version-tag:J=_).tar.bz2 ;
-tar.create pwiz-src-without-t.tar.bz2   : $(.no-t) $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-t-$(version-tag:J=_).tar.bz2 ;
-tar.create pwiz-src-without-tv.tar.bz2  : $(.no-t) $(.no-v) $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-tv-$(version-tag:J=_).tar.bz2 ;
-tar.create pwiz-src-without-v.tar.bz2   : $(.no-v) $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-v-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src.tar.bz2             : $(.pwiz-sources) $(.l) : $(.common-requirements) <name>pwiz-src-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-l.tar.bz2   : $(.pwiz-sources) : $(.common-requirements) <name>pwiz-src-without-l-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-lt.tar.bz2  : $(.no-t) $(.pwiz-sources)  : $(.common-requirements) <name>pwiz-src-without-lt-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-ltv.tar.bz2 : $(.no-t) $(.no-v) $(.pwiz-sources) : $(.common-requirements) <name>pwiz-src-without-ltv-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-lv.tar.bz2  : $(.no-v) $(.pwiz-sources) : $(.common-requirements) <name>pwiz-src-without-lv-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-t.tar.bz2   : $(.no-t) $(.pwiz-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-t-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-tv.tar.bz2  : $(.no-t) $(.no-v) $(.pwiz-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-tv-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-v.tar.bz2   : $(.no-v) $(.pwiz-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-v-$(version-tag:J=_).tar.bz2 ;
 
 } # if SUBSET
