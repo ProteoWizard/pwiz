@@ -332,6 +332,12 @@ namespace pwiz.Skyline.Model.Crosslinking
                     }
                 }
 
+                if (!complexFragmentIon.Transition.Adduct.IsValidProductAdduct(transitionGroup.PrecursorAdduct,
+                    complexFragmentIon.TransitionLosses))
+                {
+                    continue;
+                }
+
                 var complexTransitionDocNode = MakeTransitionDocNode(complexFragmentIon, isotopeDist);
                 yield return complexTransitionDocNode;
             }

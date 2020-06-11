@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             [CanBeNull] ExplicitMods mods, 
             SrmSettings settings, int maxFragmentationCount, bool useFilter, IEnumerable<ComplexFragmentIon> startingFragmentIons)
         {
-            var result = startingFragmentIons;
+            var result = FilterImpossibleCleavages(mods, startingFragmentIons);
             if (mods != null)
             {
                 foreach (var crosslinkMod in mods.LinkedCrossslinks)
@@ -190,6 +190,48 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return result.Where(cfi => !cfi.IsEmptyOrphan);
+        }
+
+        /// <summary>
+        /// Remove ions where fragmentation is occurring between two ends of a looplink.
+        /// </summary>
+        public static IEnumerable<ComplexFragmentIon> FilterImpossibleCleavages(ExplicitMods mods,
+            IEnumerable<ComplexFragmentIon> startingFragmentIons)
+        {
+            if (mods == null)
+            {
+                return startingFragmentIons;
+            }
+            var looplinks = new List<Tuple<int, int>>();
+            foreach (var crosslinkMod in mods.Crosslinks)
+            {
+                if (crosslinkMod.Value.Peptide == null)
+                {
+                    int index1 = crosslinkMod.Key.IndexAa;
+                    int index2 = crosslinkMod.Value.IndexAa;
+                    if (index1 == index2)
+                    {
+                        continue;
+                    }
+                    looplinks.Add(Tuple.Create(Math.Min(index1, index2), Math.Max(index1, index2)));
+                }
+            }
+
+            if (!looplinks.Any())
+            {
+                return startingFragmentIons;
+            }
+
+            return startingFragmentIons.Where(cfi =>
+            {
+                if (cfi.Transition.IonType == IonType.precursor || cfi.IsOrphan)
+                {
+                    return true;
+                }
+
+                int cleavageOffset = cfi.Transition.CleavageOffset;
+                return !looplinks.Any(looplink => looplink.Item1 <= cleavageOffset && looplink.Item2 > cleavageOffset);
+            });
         }
 
         public ComplexFragmentIon MakeComplexFragmentIon(IsotopeLabelType labelType, ComplexFragmentIonName complexFragmentIonName)

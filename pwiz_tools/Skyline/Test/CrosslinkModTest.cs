@@ -24,6 +24,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -334,8 +335,38 @@ namespace pwiz.SkylineTest
             var choices = transitionGroupDocNode.GetPrecursorChoices(srmSettings, explicitModsWithCrosslink, true)
                 .Cast<TransitionDocNode>().ToArray();
             var complexFragmentIons = choices.Select(transition => transition.ComplexFragmentIon.GetName()).ToArray();
+            // Make sure none of the transitions involve a cleavage in between the two ends of the looplink
+            // PEpTIdE
+            var yOrdinals = complexFragmentIons.Where(ion => ion.IonType == IonType.y).Select(ion => ion.Ordinal)
+                .Distinct().ToList();
+            var bOrdinals = complexFragmentIons.Where(ion => ion.IonType == IonType.b).Select(ion => ion.Ordinal)
+                .Distinct().ToList();
+            CollectionAssert.AreEquivalent(new[]{6,5,1}, yOrdinals);
+            CollectionAssert.AreEquivalent(new[]{1,2,6}, bOrdinals);
+        }
 
-            Assert.AreNotEqual(0, complexFragmentIons.Length);
+        [TestMethod]
+        public void TestLooplinkCrosslinkLibraryKey()
+        {
+            var crosslinkLibraryKey = new CrosslinkLibraryKey(new []{new PeptideLibraryKey("AKIQDKEGIPPDQQR", 0)}, new[]{new CrosslinkLibraryKey.Crosslink("+138.0681", new[]{new []{2,6}})}, 3);
+            var srmSettings = SrmSettingsList.GetDefault();
+            srmSettings = srmSettings.ChangePeptideSettings(
+                srmSettings.PeptideSettings.ChangeModifications(srmSettings.PeptideSettings.Modifications
+                    .ChangeStaticModifications(
+                        srmSettings.PeptideSettings.Modifications.StaticModifications
+                            .Append(new StaticMod("DSS", "K", null, "C8H10O2").ChangeCrosslinkerSettings(
+                                CrosslinkerSettings.EMPTY)).ToList()
+                    )));
+            var libKeyModificationMatcher = new LibKeyModificationMatcher();
+            libKeyModificationMatcher.CreateMatches(srmSettings, new[] {new LibKey(crosslinkLibraryKey)},
+                new MappedList<string, StaticMod>(), new MappedList<string, StaticMod>());
+
+            var peptideDocNode = libKeyModificationMatcher.CreateDocNodeFromSettings(new LibKey(crosslinkLibraryKey),
+                new Peptide("AKIQDKEGIPPDQQR"), SrmSettingsDiff.ALL, out _);
+            Assert.IsNotNull(peptideDocNode);
+            Assert.IsNotNull(peptideDocNode.ExplicitMods);
+            Assert.AreEqual(1, peptideDocNode.ExplicitMods.Crosslinks.Count);
+            Assert.AreEqual(null, peptideDocNode.ExplicitMods.Crosslinks[0].Value.Peptide);
         }
     }
 }

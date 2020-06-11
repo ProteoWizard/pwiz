@@ -239,17 +239,23 @@ namespace pwiz.Skyline.Model
                 var linkedModTuple = linkedModifications[0];
                 linkedModifications.RemoveAt(0);
                 var linkedModification = linkedModTuple.Item2;
-                foreach (var mod in GetModifications().Where(mod => null == mod.ExplicitMod.LinkedPeptide))
+                if (linkedModTuple.Item2.LinkedPeptideSequence != null)
                 {
-                    if (mod.LinkedPeptideSequence == null)
+                    foreach (var mod in linkedModTuple.Item2.LinkedPeptideSequence.GetModifications()
+                        .Where(mod => null != mod.ExplicitMod.LinkedPeptide))
                     {
-                        crosslinks.Append(FormatCrosslinkMod(modFormatter, totalPeptides, mod, peptideIndex, peptideIndex));
-                    }
-                    else
-                    {
-                        linkedModifications.Add(Tuple.Create(peptideIndex, mod));
+                        if (mod.LinkedPeptideSequence == null)
+                        {
+                            crosslinks.Append(FormatCrosslinkMod(modFormatter, totalPeptides, mod, peptideIndex,
+                                peptideIndex));
+                        }
+                        else
+                        {
+                            linkedModifications.Add(Tuple.Create(peptideIndex, mod));
+                        }
                     }
                 }
+
                 peptideSequences.Append(@"-");
                 peptideSequences.Append(linkedModification.LinkedPeptideSequence.FormatSelf(modFormatter));
                 crosslinks.Append(FormatCrosslinkMod(modFormatter, totalPeptides, linkedModification,

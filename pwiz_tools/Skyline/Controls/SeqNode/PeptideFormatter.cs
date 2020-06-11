@@ -156,12 +156,14 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             Font font = ModFontHolder.Plain;
             Color color = Color.Black;
-            String strAminoAcid = UnmodifiedSequence.Substring(residue, 1);
+            string strAminoAcid = UnmodifiedSequence.Substring(residue, 1);
 
             var modsAtResidue = GetModificationsAtResidue(displayModificationOption, residue).ToArray();
-            if (residue == CrosslinkedIndexAa || modsAtResidue.Any(labeledMod=> labeledMod.Item2.Any(mod=>mod.ExplicitMod.LinkedPeptide != null)))
+            if (residue == CrosslinkedIndexAa
+                || modsAtResidue.Any(labeledMod => labeledMod.Item2.Any(mod => mod.ExplicitMod.LinkedPeptide != null))
+                || _lightSequenceInfo.LooplinkSites.Contains(residue))
             {
-                return new TextSequence()
+                return new TextSequence
                 {
                     Color = COLOR_CROSSLINK,
                     Font = ModFontHolder.LightAndHeavy,
@@ -293,10 +295,14 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 ModifiedSequence = modifiedSequence;
                 ModificationsByResidue = modifiedSequence.GetModifications().ToLookup(mod => mod.IndexAA);
+                LooplinkSites = ImmutableList.ValueOf(modifiedSequence.GetModifications()
+                    .Where(mod => mod.ExplicitMod.LinkedPeptide != null && mod.ExplicitMod.LinkedPeptide.Peptide == null)
+                    .Select(mod => mod.ExplicitMod.LinkedPeptide.IndexAa));
             }
 
             public ModifiedSequence ModifiedSequence { get; private set; }
             public ILookup<int, ModifiedSequence.Modification> ModificationsByResidue { get; private set; }
+            public ICollection<int> LooplinkSites { get; private set; }
         }
     }
 }

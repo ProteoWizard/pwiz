@@ -704,7 +704,31 @@ namespace pwiz.Skyline.Model
         public IList<ExplicitMod> MakeCrosslinkMods(CrosslinkLibraryKey crosslinkLibraryKey, IList<int> peptideIndexes)
         {
             int thisPeptideIndex = peptideIndexes[peptideIndexes.Count - 1];
+            string thisPeptideSequence = crosslinkLibraryKey.PeptideLibraryKeys[thisPeptideIndex].UnmodifiedSequence;
             List<ExplicitMod> explicitMods = new List<ExplicitMod>();
+            // Deal with any looplinks
+            foreach (var crosslink in crosslinkLibraryKey.Crosslinks)
+            {
+                if (!crosslink.PeptideIndexesWithLinks.SequenceEqual(ImmutableList.Singleton(thisPeptideIndex)))
+                {
+                    continue;
+                }
+
+                var aaIndexes = crosslink.AaIndexes[thisPeptideIndex].ToList();
+                if (aaIndexes.Count != 2)
+                {
+                    return null;
+                }
+                var crosslinkMod = FindCrosslinkMod(crosslink.Name, thisPeptideSequence, aaIndexes[0], thisPeptideSequence, aaIndexes[1]);
+                if (crosslinkMod == null)
+                {
+                    return null;
+                }
+
+                explicitMods.Add(new ExplicitMod(aaIndexes[0], crosslinkMod)
+                    .ChangeLinkedPeptide(new LinkedPeptide(null, aaIndexes[1], null)));
+            }
+
             for (int iPeptide = 0; iPeptide < crosslinkLibraryKey.PeptideLibraryKeys.Count; iPeptide++)
             {
                 if (peptideIndexes.Contains(iPeptide))
@@ -720,7 +744,7 @@ namespace pwiz.Skyline.Model
                     }
 
                     var crosslinkMod = FindCrosslinkMod(crosslink.Name,
-                        crosslinkLibraryKey.PeptideLibraryKeys[thisPeptideIndex].UnmodifiedSequence,
+                        thisPeptideSequence,
                         crosslink.AaIndexes[thisPeptideIndex].First(),
                         crosslinkLibraryKey.PeptideLibraryKeys[iPeptide].UnmodifiedSequence,
                         crosslink.AaIndexes[iPeptide].First());

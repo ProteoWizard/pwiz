@@ -1120,9 +1120,13 @@ namespace pwiz.Skyline.Model.Serialization
                 return null;
             }
 
-            var sequence = reader.GetAttribute(ATTR.sequence);
             int indexAa = reader.GetIntAttribute(ATTR.index_aa);
-            var peptide = new Peptide(sequence);
+            var sequence = reader.GetAttribute(ATTR.sequence);
+            Peptide peptide = null;
+            if (!string.IsNullOrEmpty(sequence))
+            {
+                peptide = new Peptide(sequence);
+            }
             ExplicitMods explicitMods = null;
             if (reader.IsEmptyElement)
             {
