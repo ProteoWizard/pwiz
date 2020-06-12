@@ -2132,26 +2132,29 @@ namespace pwiz.Skyline.Model
 
         private static double? GetExplicitCollisionEnergy(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
-            double? ce = null;
-
             if (nodeTran != null)
             {
                 // Collision Energy explicitly declared at the transition level is taken to be the correct value.
-                ce = nodeTran.ExplicitValues.CollisionEnergy;
+                var ce = nodeTran.ExplicitValues.CollisionEnergy;
+                if (ce.HasValue)
+                {
+                    return ce;
+                }
             }
             else
             {
                 // If we're only given a precursor, use the explicit CE of its children if they all agree.
                 if (nodeGroup.Children.Select(node => ((TransitionDocNode) node).ExplicitValues.CollisionEnergy).Distinct().Count() == 1)
-                    ce = ((TransitionDocNode) nodeGroup.Children.First()).ExplicitValues.CollisionEnergy;
+                {
+                    var ce = ((TransitionDocNode) nodeGroup.Children.First()).ExplicitValues.CollisionEnergy;
+                    if (ce.HasValue)
+                    {
+                        return ce;
+                    }
+                }
             }
-            if (!ce.HasValue)
-            {
-                // If no transition-level declaration then explicitly declared value at the precursor level is used.
-                ce = nodeGroup.ExplicitValues.CollisionEnergy;
-            }
-
-            return ce;
+            // If no transition-level declaration then explicitly declared value at the precursor level is used.
+            return nodeGroup.ExplicitValues.CollisionEnergy;
         }
 
         public double? GetOptimizedCollisionEnergy(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)
