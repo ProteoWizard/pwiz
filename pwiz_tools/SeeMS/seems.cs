@@ -157,10 +157,10 @@ namespace seems
 			// if on SRM, disable annotation
 		}
 
-		private void openFile( string filepath )
+		private void openFile( OpenDataSourceDialog.MSDataRunPath filepath )
 		{
             // update recent files list
-            recentFilesMenu.AddFile( filepath, Path.GetFileName( filepath ) );
+            recentFilesMenu.AddFile( filepath.ToString(), filepath.ToString().Split('\\').Last() );
             recentFilesMenu.SaveToRegistry();
 
 			Manager.OpenFile(filepath, closeIfOpen: true);
@@ -245,9 +245,9 @@ namespace seems
                 foreach (var fileListPair in idOrIndexListByFile)
                 {
                     if (fileListPair.Value.Count > 0)
-                        Manager.OpenFile(fileListPair.Key, fileListPair.Value, annotationByFile[fileListPair.Key]);
+                        Manager.OpenFile(new OpenDataSourceDialog.MSDataRunPath(fileListPair.Key), fileListPair.Value, annotationByFile[fileListPair.Key]);
                     else
-                        Manager.OpenFile(fileListPair.Key);
+                        Manager.OpenFile(new OpenDataSourceDialog.MSDataRunPath(fileListPair.Key));
                 }
             }
             catch (Exception ex)
@@ -303,12 +303,16 @@ namespace seems
         }
 
 		private void openFile_Click( object sender, EventArgs e )
-        {
+		{
+		    browseToFileDialog.InitialDirectory = Properties.Settings.Default.LastBrowseToFileLocation;
 			if( browseToFileDialog.ShowDialog() == DialogResult.OK )
 			{
-                foreach( string dataSource in browseToFileDialog.DataSources )
+                foreach( var dataSource in browseToFileDialog.DataSources )
                     openFile( dataSource );
-			}
+
+			    Properties.Settings.Default.LastBrowseToFileLocation = browseToFileDialog.CurrentDirectory;
+			    Properties.Settings.Default.Save();
+            }
 		}
 
 		private void cascadeWindowMenuItem_Click( object sender, EventArgs e )
@@ -339,7 +343,7 @@ namespace seems
 
 		private void recentFilesFileMenuItem_Click( int index, string filepath )
 		{
-			openFile( filepath );
+			openFile( new OpenDataSourceDialog.MSDataRunPath(filepath) );
 		}
 
 		private void exitFileMenuItem_Click( object sender, EventArgs e )

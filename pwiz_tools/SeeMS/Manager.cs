@@ -270,31 +270,33 @@ namespace seems
             LoadDefaultAnnotationSettings();
         }
 
-        public void OpenFile( string filepath, bool closeIfOpen = false )
+        public void OpenFile(OpenDataSourceDialog.MSDataRunPath filepath, bool closeIfOpen = false )
         {
             OpenFile(filepath, -1, closeIfOpen);
         }
 
-        public void OpenFile( string filepath, int index, bool closeIfOpen = false )
+        public void OpenFile(OpenDataSourceDialog.MSDataRunPath filepath, int index, bool closeIfOpen = false )
         {
             OpenFile(filepath, index > 0 ? new List<object> { index } : null, null, closeIfOpen);
         }
 
-        public void OpenFile( string filepath, string id, bool closeIfOpen = false )
+        public void OpenFile(OpenDataSourceDialog.MSDataRunPath filepath, string id, bool closeIfOpen = false )
         {
             OpenFile(filepath, new List<object> { id }, null, closeIfOpen);
         }
 
-        public void OpenFile (string filepath, IList<object> idOrIndexList, IAnnotation annotation, bool closeIfOpen = false )
+        public void OpenFile (OpenDataSourceDialog.MSDataRunPath filepath, IList<object> idOrIndexList, IAnnotation annotation, bool closeIfOpen = false )
         {
             OpenFile(filepath, idOrIndexList, annotation, "", closeIfOpen);
         }
 
-        public void OpenFile(string filepath, IList<object> idOrIndexList, IAnnotation annotation, string spectrumListFilters, bool closeIfOpen = false)
+        public void OpenFile(OpenDataSourceDialog.MSDataRunPath msDataRunPath, IList<object> idOrIndexList, IAnnotation annotation, string spectrumListFilters, bool closeIfOpen = false)
         {
+            string filepath = msDataRunPath.ToString();
+
 			try
 			{
-                OnLoadDataSourceProgress("Opening data source: " + Path.GetFileNameWithoutExtension(filepath), 0);
+                OnLoadDataSourceProgress("Opening data source: " + Path.GetFileNameWithoutExtension(msDataRunPath.Filepath), 0);
 
                 string[] spectrumListFilterList = spectrumListFilters.Split(';').Where(o => o.Length > 0).ToArray();
 
@@ -317,7 +319,7 @@ namespace seems
 
                 if (!fileAlreadyOpen)
                 {
-                    var newSource = new ManagedDataSource(new SpectrumSource(filepath));
+                    var newSource = new ManagedDataSource(new SpectrumSource(msDataRunPath));
                     dataSourceMap.Add(filepath, newSource);
 
                     if (spectrumListFilters.Length > 0)
@@ -337,7 +339,7 @@ namespace seems
                     foreach (object idOrIndex in idOrIndexList)
                     {
                         Type indexType = typeof(MassSpectrum);
-                        int index = -1;
+                        //int index = -1;
                         if (idOrIndex is int)
                             indexListByType[indexType].Add((int)idOrIndex);
                         else if (idOrIndex is string)
@@ -544,7 +546,7 @@ namespace seems
                     foreach (object idOrIndex in idOrIndexList)
                     {
                         Type indexType = typeof(MassSpectrum);
-                        int index = -1;
+                        //int index = -1;
                         if (idOrIndex is int)
                             indexListByType[indexType].Add((int)idOrIndex);
                         else if (idOrIndex is string)
@@ -775,7 +777,7 @@ namespace seems
             Application.DoEvents();
 
             var ionMobilityColumn = spectrumListForm.GridView.Columns["IonMobility"];
-            if (ionMobilityColumn != null && ionMobilityColumn.Visible || sl.spectrum(0, true).GetIonMobilityArray() != null)
+            if (ionMobilityColumn != null && ionMobilityColumn.Visible || sl.size() > 0 && sl.spectrum(0, true).GetIonMobilityArray() != null)
             {
                 var heatmapForm = new HeatmapForm(this, managedDataSource);
                 heatmapForm.Show(DockPanel, DockState.Document);
