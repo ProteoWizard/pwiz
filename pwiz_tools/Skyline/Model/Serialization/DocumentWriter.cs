@@ -189,6 +189,8 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private void WriteExplicitTransitionGroupValuesAttributes(XmlWriter writer, ExplicitTransitionGroupValues importedAttributes)
         {
+            if (DocumentFormat < DocumentFormat.VERSION_4_22 || DocumentFormat >= DocumentFormat.VERSION_20_12) // Format supports per-precursor explicit CE?
+                writer.WriteAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
             writer.WriteAttributeNullable(ATTR.explicit_ion_mobility, importedAttributes.IonMobility);
             if (importedAttributes.IonMobility.HasValue)
                 writer.WriteAttribute(ATTR.explicit_ion_mobility_units, importedAttributes.IonMobilityUnits.ToString());

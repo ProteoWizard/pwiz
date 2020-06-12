@@ -2115,12 +2115,10 @@ namespace pwiz.Skyline.Model
         public static double GetCollisionEnergy(SrmSettings settings, PeptideDocNode nodePep,
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CollisionEnergyRegression regression, int step)
         {
-            var ce = nodeTran==null // If we're only given a precursor, use the explicit CE of its children if they all agree
-                ? (nodeGroup.Children.Any() && nodeGroup.Children.All( node => ((TransitionDocNode)node).ExplicitValues.CollisionEnergy == ((TransitionDocNode)nodeGroup.Children.First()).ExplicitValues.CollisionEnergy) 
-                    ? ((TransitionDocNode)nodeGroup.Children.First()).ExplicitValues.CollisionEnergy : null)
-                : nodeTran.ExplicitValues.CollisionEnergy;
+            var ce = GetExplicitCollisionEnergy(nodeGroup, nodeTran);
             if (regression != null)
             {
+                // If still no explicit CE value found the CE is calculated using the provided regression, if any.
                 if (!ce.HasValue)
                 {
                     var charge = nodeGroup.TransitionGroup.PrecursorAdduct;
@@ -2130,6 +2128,28 @@ namespace pwiz.Skyline.Model
                 return ce.Value + regression.StepSize * step;
             }
             return ce ?? 0.0;
+        }
+
+        private static double? GetExplicitCollisionEnergy(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
+        {
+            double? ce = null;
+            if (nodeTran != null)
+            {
+                // Collision Energy explicitly declared at the transition level is taken to be the correct value.
+                ce = nodeTran.ExplicitValues.CollisionEnergy;
+            }
+            else
+            {
+                // If we're only given a precursor, use the explicit CE of its children if they all agree.
+                var ceValues = nodeGroup.Transitions.Select(node =>
+                    node.ExplicitValues.CollisionEnergy).Distinct().ToArray();
+                if (ceValues.Length == 1)
+                {
+                    ce = ceValues[0];
+                }
+            }
+            // If no transition-level declaration then explicitly declared value at the precursor level is used.
+            return ce ?? nodeGroup.ExplicitValues.CollisionEnergy;
         }
 
         public double? GetOptimizedCollisionEnergy(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)

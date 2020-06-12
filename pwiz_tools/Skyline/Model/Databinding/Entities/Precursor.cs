@@ -241,15 +241,30 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        [Obsolete("Use Transition.ExplicitCollisionEnergy instead")]
+        [Obsolete("Use PrecursorExplicitCollisionEnergy instead")]
         public double? ExplicitCollisionEnergy
         {
             get
             {
-                // If all transitions have the same value, show that
-                return Transitions.Any() && Transitions.All(t => Equals(t.ExplicitCollisionEnergy, Transitions.First().ExplicitCollisionEnergy))
-                    ? Transitions.First().ExplicitCollisionEnergy
-                    : null;
+                return PrecursorExplicitCollisionEnergy;
+            }
+            set
+            {
+                PrecursorExplicitCollisionEnergy = value;
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        public double? PrecursorExplicitCollisionEnergy
+        {
+            get
+            {
+                return DocNode.ExplicitValues.CollisionEnergy;
+            }
+            set
+            {
+                ChangeDocNode(EditColumnDescription(nameof(PrecursorExplicitCollisionEnergy), value),
+                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeCollisionEnergy(value)));
             }
         }
 
@@ -267,7 +282,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        [Obsolete("Use Transition.ExplicitConeVolrage instead")]
+        [Obsolete("Use Transition.ExplicitConeVoltage instead")]
         public double? ExplicitConeVoltage
         {
             get

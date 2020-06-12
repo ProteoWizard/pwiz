@@ -868,7 +868,13 @@ namespace pwiz.Skyline.Model.Serialization
             double? importedIonMobility = importedDriftTimeMsec ?? importedCompensationVoltage ?? reader.GetNullableDoubleAttribute(ATTR.explicit_ion_mobility);
             double? importedCCS = reader.GetNullableDoubleAttribute(ATTR.explicit_ccs_sqa);
             pre422ExplicitValues = formatVersion >= DocumentFormat.VERSION_4_22 ? null : ReadExplicitTransitionValuesAttributes(reader, formatVersion); // Formerly (pre-4.22) these per-transition values were serialized at peptide level
-            return ExplicitTransitionGroupValues.Create(importedIonMobility,importedIonMobilityUnits, importedCCS);
+            // CollisionEnergy was made per-transition in 4.22, we added a per-precursor override in 20.12
+            double? importedCollisionEnergy = pre422ExplicitValues?.CollisionEnergy ?? reader.GetNullableDoubleAttribute(ATTR.explicit_collision_energy);
+            if (pre422ExplicitValues != null)
+            {
+                pre422ExplicitValues = pre422ExplicitValues.ChangeCollisionEnergy(null); // As of 20.12 we're back to tracking this at precursor level (with per-transition overrides)
+            }
+            return ExplicitTransitionGroupValues.Create(importedCollisionEnergy, importedIonMobility, importedIonMobilityUnits, importedCCS);
         }
 
         /// <summary>
