@@ -116,6 +116,7 @@ namespace pwiz.Skyline.Model.Serialization
             WriteProteinMetadataXML(writer, node.ProteinMetadataOverrides, true); // write the protein metadata, skipping the name and description we already wrote
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
+            writer.WriteAttributeNullable(ATTR.decoy_match_proportion, node.ProportionDecoysMatch);
 
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
@@ -428,11 +429,14 @@ namespace pwiz.Skyline.Model.Serialization
         private void WriteLinkedPeptide(XmlWriter writer, LinkedPeptide linkedPeptide)
         {
             writer.WriteStartElement(EL.linked_peptide);
-            writer.WriteAttribute(ATTR.sequence, linkedPeptide.Peptide.Sequence);
             writer.WriteAttribute(ATTR.index_aa, linkedPeptide.IndexAa);
-            if (null != linkedPeptide.ExplicitMods)
+            if (linkedPeptide.Peptide != null)
             {
-                WriteExplicitMods(writer, linkedPeptide.Peptide.Sequence, linkedPeptide.ExplicitMods);
+                writer.WriteAttributeIfString(ATTR.sequence, linkedPeptide.Peptide.Sequence);
+                if (null != linkedPeptide.ExplicitMods)
+                {
+                    WriteExplicitMods(writer, linkedPeptide.Peptide.Sequence, linkedPeptide.ExplicitMods);
+                }
             }
             writer.WriteEndElement();
         }

@@ -36,6 +36,7 @@
             this.btnEditModifications = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
+            this.cbxLooplink = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label1
@@ -79,12 +80,20 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
+            // cbxLooplink
+            // 
+            resources.ApplyResources(this.cbxLooplink, "cbxLooplink");
+            this.cbxLooplink.Name = "cbxLooplink";
+            this.cbxLooplink.UseVisualStyleBackColor = true;
+            this.cbxLooplink.CheckedChanged += new System.EventHandler(this.cbxLooplink_CheckedChanged);
+            // 
             // EditLinkedPeptideDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbxLooplink);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.btnEditModifications);
@@ -109,5 +118,6 @@
         private System.Windows.Forms.Button btnEditModifications;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
+        private System.Windows.Forms.CheckBox cbxLooplink;
     }
 }

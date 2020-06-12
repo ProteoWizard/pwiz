@@ -2557,44 +2557,50 @@ namespace pwiz.Skyline
                 }
             }
 
-            if (!CheckDecoys(DocumentUI, out var numDecoys, out var numNoSource, out var numWrongTransitionCount))
+            var decoyGroup = DocumentUI.PeptideGroups.FirstOrDefault(group => group.IsDecoy);
+            if (decoyGroup != null)
             {
-                var sb = new StringBuilder();
-                sb.AppendLine(numDecoys == 1
-                    ? Resources.SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the_targets_
-                    : string.Format(Resources.SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_, numDecoys));
-
-                sb.AppendLine(string.Empty);
-                if (numNoSource == 1)
-                    sb.AppendLine(Resources.SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target);
-                else if (numNoSource > 1)
-                    sb.AppendLine(string.Format(Resources.SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target, numNoSource));
-                if (numWrongTransitionCount == 1)
-                    sb.AppendLine(Resources.SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_as_its_matching_target);
-                else if (numWrongTransitionCount > 0)
-                    sb.AppendLine(string.Format(Resources.SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions_as_their_matching_targets, numWrongTransitionCount));
-                sb.AppendLine(string.Empty);
-                sb.AppendLine(Resources.SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_);
-                using (var dlg = new MultiButtonMsgDlg(sb.ToString(),
-                    Resources.SkylineWindow_ImportResults_Generate, Resources.SkylineWindow_ImportResults_Continue, true))
+                decoyGroup.CheckDecoys(DocumentUI, out var numNoSource, out var numWrongTransitionCount, out var proportionDecoysMatch);
+                if ((!decoyGroup.ProportionDecoysMatch.HasValue && proportionDecoysMatch <= 0.99) || // over 99% of decoys must match targets if proportion is not set
+                    (decoyGroup.ProportionDecoysMatch.HasValue && proportionDecoysMatch < decoyGroup.ProportionDecoysMatch)) // proportion of decoys matching targets has decreased since generation
                 {
-                    switch (dlg.ShowDialog(this))
+                    var sb = new StringBuilder();
+                    sb.AppendLine(decoyGroup.PeptideCount == 1
+                        ? Resources.SkylineWindow_ImportResults_The_document_contains_a_decoy_that_does_not_match_the_targets_
+                        : string.Format(Resources.SkylineWindow_ImportResults_The_document_contains_decoys_that_do_not_match_the_targets__Out_of__0__decoys_, decoyGroup.PeptideCount));
+
+                    sb.AppendLine(string.Empty);
+                    if (numNoSource == 1)
+                        sb.AppendLine(Resources.SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target);
+                    else if (numNoSource > 1)
+                        sb.AppendLine(string.Format(Resources.SkylineWindow_ImportResults__0__decoys_do_not_have_a_matching_target, numNoSource));
+                    if (numWrongTransitionCount == 1)
+                        sb.AppendLine(Resources.SkylineWindow_ImportResults_1_decoy_does_not_have_the_same_number_of_transitions_as_its_matching_target);
+                    else if (numWrongTransitionCount > 0)
+                        sb.AppendLine(string.Format(Resources.SkylineWindow_ImportResults__0__decoys_do_not_have_the_same_number_of_transitions_as_their_matching_targets, numWrongTransitionCount));
+                    sb.AppendLine(string.Empty);
+                    sb.AppendLine(Resources.SkylineWindow_ImportResults_Do_you_want_to_generate_new_decoys_or_continue_with_the_current_decoys_);
+                    using (var dlg = new MultiButtonMsgDlg(sb.ToString(),
+                        Resources.SkylineWindow_ImportResults_Generate, Resources.SkylineWindow_ImportResults_Continue, true))
                     {
-                        case DialogResult.Yes:
-                            if (!ShowGenerateDecoysDlg(dlg))
-                                return;
-                            break;
-                        case DialogResult.No:
-                            using (var dlg2 = new MultiButtonMsgDlg(
-                                Resources.SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_matching_targets_and_decoys_may_produce_incorrect_results_,
-                                MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
-                            {
-                                if (dlg2.ShowDialog(dlg) == DialogResult.No)
+                        switch (dlg.ShowDialog(this))
+                        {
+                            case DialogResult.Yes:
+                                if (!ShowGenerateDecoysDlg(dlg))
                                     return;
-                            }
-                            break;
-                        case DialogResult.Cancel:
-                            return;
+                                break;
+                            case DialogResult.No:
+                                using (var dlg2 = new MultiButtonMsgDlg(
+                                    Resources.SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_matching_targets_and_decoys_may_produce_incorrect_results_,
+                                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                                {
+                                    if (dlg2.ShowDialog(dlg) == DialogResult.No)
+                                        return;
+                                }
+                                break;
+                            case DialogResult.Cancel:
+                                return;
+                        }
                     }
                 }
             }
@@ -2700,28 +2706,6 @@ namespace pwiz.Skyline
             var existingPeptides = new LibKeyIndex(document.Molecules.Select(pep=>new LibKey(pep.ModifiedTarget, Adduct.EMPTY).LibraryKey));
             return RCalcIrt.IrtPeptides(document)
                 .Where(target => !existingPeptides.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false).Any());
-        }
-
-        public static bool CheckDecoys(SrmDocument document, out int numDecoys, out int numNoSource, out int numWrongTransitionCount)
-        {
-            var targets = document.Peptides.Where(pep => !pep.IsDecoy).ToLookup(pep => pep.ModifiedTarget);
-
-            numDecoys = 0;
-            numNoSource = 0;
-            numWrongTransitionCount = 0;
-
-            foreach (var decoy in document.Peptides.Where(pep => pep.IsDecoy))
-            {
-                numDecoys++;
-                var sources = targets[decoy.SourceModifiedTarget].ToArray();
-                if (sources.Length == 0)
-                    numNoSource++;
-                else if (sources.All(target => target.TransitionCount != decoy.TransitionCount))
-                    numWrongTransitionCount++;
-            }
-
-            // TODO(kaipot): Not quite ready for general use - failing existing documents which may not be broken
-            return true; // numNoSource == 0 && numWrongTransitionCount == 0;
         }
 
         public SrmDocument ImportResults(SrmDocument doc, List<KeyValuePair<string, MsDataFileUri[]>> namedResults, string optimize)
