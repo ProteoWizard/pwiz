@@ -29,38 +29,36 @@ namespace pwiz.Skyline.Model
         /// be specified in an imported transition list or by some other means.
         /// </summary>
 
-        public static readonly ExplicitTransitionGroupValues EMPTY = new ExplicitTransitionGroupValues(null);
+        public static readonly ExplicitTransitionGroupValues EMPTY = new ExplicitTransitionGroupValues(null, null, eIonMobilityUnits.none, null);
 
-        public static ExplicitTransitionGroupValues Create(double? explicitIonMobility,
+        public static ExplicitTransitionGroupValues Create(double? explicitCollisionEnergy,
+            double? explicitIonMobility,
             eIonMobilityUnits explicitIonMobilityUnits,
             double? explicitCollisionalCrossSectionSqA)
         {
-            if (explicitIonMobility.HasValue || explicitCollisionalCrossSectionSqA.HasValue)
+            if (explicitCollisionEnergy.HasValue || explicitIonMobility.HasValue || explicitCollisionalCrossSectionSqA.HasValue)
             {
-                return new ExplicitTransitionGroupValues(explicitIonMobility, explicitIonMobilityUnits,
+                return new ExplicitTransitionGroupValues(explicitCollisionEnergy, 
+                    explicitIonMobility, explicitIonMobilityUnits,
                     explicitCollisionalCrossSectionSqA);
             }
 
             return EMPTY;
         }
 
-        private ExplicitTransitionGroupValues(double? explicitIonMobility,
+        private ExplicitTransitionGroupValues(double? explicitCollisionEnergy,
+            double? explicitIonMobility,
             eIonMobilityUnits explicitIonMobilityUnits,
-            double? explicitCollisionalCrossSectionSqA) 
+            double? explicitCollisionalCrossSectionSqA)
         {
+            CollisionEnergy = explicitCollisionEnergy;
             IonMobility = explicitIonMobility;
             IonMobilityUnits = explicitIonMobilityUnits;
             CollisionalCrossSectionSqA = explicitCollisionalCrossSectionSqA;
         }
 
-        public ExplicitTransitionGroupValues(ExplicitTransitionGroupValues other)
-            : this(
-                (other == null) ? null : other.IonMobility,
-                (other == null) ? eIonMobilityUnits.none : other.IonMobilityUnits,
-                (other == null) ? null : other.CollisionalCrossSectionSqA)
-        {
-        }
-
+        [Track]
+        public double? CollisionEnergy { get; private set; } // Any transition level explicit CE values will override this
         [Track]
         public double? CollisionalCrossSectionSqA { get; private set; } // For import formats with explicit values for CCS
         [Track]
@@ -81,9 +79,15 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), (im, v) => im.CollisionalCrossSectionSqA = v, ccs);
         }
 
+        public ExplicitTransitionGroupValues ChangeCollisionEnergy(double? ce)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.CollisionEnergy = v, ce);
+        }
+
         protected bool Equals(ExplicitTransitionGroupValues other)
         {
             return Equals(IonMobility, other.IonMobility) &&
+                   Equals(CollisionEnergy, other.CollisionEnergy) &&
                    Equals(IonMobilityUnits, other.IonMobilityUnits) &&
                    Equals(CollisionalCrossSectionSqA, other.CollisionalCrossSectionSqA);
         }
@@ -103,6 +107,7 @@ namespace pwiz.Skyline.Model
                 int hashCode = IonMobility.GetHashCode();
                 hashCode = (hashCode * 397) ^ IonMobilityUnits.GetHashCode();
                 hashCode = (hashCode * 397) ^ CollisionalCrossSectionSqA.GetHashCode();
+                hashCode = (hashCode * 397) ^ CollisionEnergy.GetHashCode();
                 return hashCode;
             }
         }
