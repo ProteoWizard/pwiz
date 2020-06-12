@@ -691,29 +691,33 @@ namespace pwiz.Skyline.Model.Lib
             var remainingCrosslinks = new List<List<int>>();
             foreach (var crosslink in Crosslinks)
             {
-                if (crosslink.Positions.Any(positionSet => positionSet.Count > 1))
-                {
-                    // Currently, looplinks are not supported, but will be supported in the future.
-                    return false;
-                }
                 var peptideIndexesWithLinks = crosslink.PeptideIndexesWithLinks.ToList();
-                if (peptideIndexesWithLinks.Count != 2)
+                if (peptideIndexesWithLinks.Count == 1)
                 {
-                    return false;
+                    if (crosslink.AaIndexes[peptideIndexesWithLinks[0]].Count() != 2)
+                    {
+                        return false;
+                    }
                 }
-                if (peptideIndexesWithLinks.Contains(0))
+                else if (peptideIndexesWithLinks.Count == 2)
                 {
-                    queue.Add(ImmutableList.ValueOf(peptideIndexesWithLinks));
+                    if (peptideIndexesWithLinks.Any(index => crosslink.AaIndexes[index].Count() != 1))
+                    {
+                        return false;
+                    }
+                    if (peptideIndexesWithLinks.Contains(0))
+                    {
+                        queue.Add(ImmutableList.ValueOf(peptideIndexesWithLinks));
+                    }
+                    else
+                    {
+                        remainingCrosslinks.Add(peptideIndexesWithLinks);
+                    }
                 }
                 else
                 {
-                    remainingCrosslinks.Add(peptideIndexesWithLinks);
+                    return false;
                 }
-            }
-
-            if (queue.Count == 0)
-            {
-                return false;
             }
 
             while (queue.Count != 0)
