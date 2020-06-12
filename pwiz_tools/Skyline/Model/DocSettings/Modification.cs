@@ -1040,6 +1040,11 @@ namespace pwiz.Skyline.Model.DocSettings
             get; private set;
         }
 
+        public IEnumerable<KeyValuePair<ModificationSite, LinkedPeptide>> LinkedCrossslinks
+        {
+            get { return Crosslinks.Where(entry => entry.Value.Peptide != null); }
+        }
+
         public bool HasCrosslinks
         {
             get { return Crosslinks.Any(); }

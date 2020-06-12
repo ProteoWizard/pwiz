@@ -192,9 +192,9 @@ namespace pwiz.Skyline.Model.Crosslinking
             var moleculeMassOffset = new MoleculeMassOffset(GetSimplePrecursorMolecule().PrecursorFormula);
             if (ExplicitMods != null)
             {
-                foreach (var child in ExplicitMods.Crosslinks.Keys)
+                foreach (var child in ExplicitMods.LinkedCrossslinks)
                 {
-                    moleculeMassOffset = moleculeMassOffset.Plus(GetChildBuilder(child).GetPrecursorFormula());
+                    moleculeMassOffset = moleculeMassOffset.Plus(GetChildBuilder(child.Key).GetPrecursorFormula());
                 }
             }
 
@@ -330,6 +330,12 @@ namespace pwiz.Skyline.Model.Crosslinking
                             continue;
                         }
                     }
+                }
+
+                if (!complexFragmentIon.Transition.Adduct.IsValidProductAdduct(transitionGroup.PrecursorAdduct,
+                    complexFragmentIon.TransitionLosses))
+                {
+                    continue;
                 }
 
                 var complexTransitionDocNode = MakeTransitionDocNode(complexFragmentIon, isotopeDist);
