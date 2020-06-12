@@ -126,13 +126,13 @@
     <value>15, 19</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>127, 13</value>
+    <value>130, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Linked peptide sequence</value>
+    <value>Linked peptide &amp;sequence:</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -184,7 +184,7 @@
     <value>3</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Crosslink attaches at residue number:</value>
+    <value>Crosslink attaches at residue &amp;number:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -229,7 +229,7 @@
     <value>5</value>
   </data>
   <data name="btnEditModifications.Text" xml:space="preserve">
-    <value>Edit Modifications...</value>
+    <value>Edit &amp;Modifications...</value>
   </data>
   <data name="&gt;&gt;btnEditModifications.Name" xml:space="preserve">
     <value>btnEditModifications</value>
@@ -316,7 +316,7 @@
     <value>2</value>
   </data>
   <data name="cbxLooplink.Text" xml:space="preserve">
-    <value>Loop-link</value>
+    <value>&amp;Loop-link</value>
   </data>
   <data name="&gt;&gt;cbxLooplink.Name" xml:space="preserve">
     <value>cbxLooplink</value>
