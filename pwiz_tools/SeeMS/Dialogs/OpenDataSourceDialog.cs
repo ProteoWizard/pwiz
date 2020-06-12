@@ -515,6 +515,7 @@ namespace seems
             sourceInfoList.Add( new SourceInfo() );
             sourceInfoList[0].type = getSourceType( dirInfo );
             sourceInfoList[0].name = dirInfo.Name;
+            sourceInfoList[0].path = new MSDataRunPath(dirInfo.FullName, 0);
             sourceInfoList[0].dateModified = dirInfo.LastWriteTime;
             sourceInfoList[0].hasDetails = getDetails;
 

@@ -163,7 +163,7 @@ namespace seems
             recentFilesMenu.AddFile( filepath.ToString(), filepath.ToString().Split('\\').Last() );
             recentFilesMenu.SaveToRegistry();
 
-			Manager.OpenFile(filepath, closeIfOpen: true);
+			Manager.OpenFile(filepath.ToString(), closeIfOpen: true);
 		}
 
         private delegate void ParseArgsCallback (string[] args);
@@ -245,9 +245,9 @@ namespace seems
                 foreach (var fileListPair in idOrIndexListByFile)
                 {
                     if (fileListPair.Value.Count > 0)
-                        Manager.OpenFile(new OpenDataSourceDialog.MSDataRunPath(fileListPair.Key), fileListPair.Value, annotationByFile[fileListPair.Key]);
+                        Manager.OpenFile(fileListPair.Key, fileListPair.Value, annotationByFile[fileListPair.Key]);
                     else
-                        Manager.OpenFile(new OpenDataSourceDialog.MSDataRunPath(fileListPair.Key));
+                        Manager.OpenFile(fileListPair.Key);
                 }
             }
             catch (Exception ex)

@@ -270,28 +270,29 @@ namespace seems
             LoadDefaultAnnotationSettings();
         }
 
-        public void OpenFile(OpenDataSourceDialog.MSDataRunPath filepath, bool closeIfOpen = false )
+        public void OpenFile(string filepath, bool closeIfOpen = false )
         {
             OpenFile(filepath, -1, closeIfOpen);
         }
 
-        public void OpenFile(OpenDataSourceDialog.MSDataRunPath filepath, int index, bool closeIfOpen = false )
+        public void OpenFile(string filepath, int index, bool closeIfOpen = false )
         {
             OpenFile(filepath, index > 0 ? new List<object> { index } : null, null, closeIfOpen);
         }
 
-        public void OpenFile(OpenDataSourceDialog.MSDataRunPath filepath, string id, bool closeIfOpen = false )
+        public void OpenFile(string filepath, string id, bool closeIfOpen = false )
         {
             OpenFile(filepath, new List<object> { id }, null, closeIfOpen);
         }
 
-        public void OpenFile (OpenDataSourceDialog.MSDataRunPath filepath, IList<object> idOrIndexList, IAnnotation annotation, bool closeIfOpen = false )
+        public void OpenFile (string filepath, IList<object> idOrIndexList, IAnnotation annotation, bool closeIfOpen = false )
         {
             OpenFile(filepath, idOrIndexList, annotation, "", closeIfOpen);
         }
 
-        public void OpenFile(OpenDataSourceDialog.MSDataRunPath msDataRunPath, IList<object> idOrIndexList, IAnnotation annotation, string spectrumListFilters, bool closeIfOpen = false)
+        public void OpenFile(string filepathOrMsDataRunPath, IList<object> idOrIndexList, IAnnotation annotation, string spectrumListFilters, bool closeIfOpen = false)
         {
+            var msDataRunPath = new OpenDataSourceDialog.MSDataRunPath(filepathOrMsDataRunPath);
             string filepath = msDataRunPath.ToString();
 
 			try
