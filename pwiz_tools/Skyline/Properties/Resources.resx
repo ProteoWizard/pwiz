@@ -10623,10 +10623,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
     <value>The document contains decoys that do not match the targets. Out of {0} decoys:</value>
   </data>
   <data name="SkylineWindow_ImportResults_Continue" xml:space="preserve">
-    <value>Continue</value>
+    <value>&amp;Continue</value>
   </data>
   <data name="SkylineWindow_ImportResults_Generate" xml:space="preserve">
-    <value>Generate</value>
+    <value>&amp;Generate</value>
   </data>
   <data name="SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target" xml:space="preserve">
     <value>1 decoy does not have a matching target</value>
