@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Linked peptide sequence:</value>
+    <value>Linked peptide &amp;sequence:</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -144,7 +144,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tbxPeptideSequence.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -169,22 +169,22 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tbxPeptideSequence.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 58</value>
+    <value>15, 89</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Crosslink attaches at residue number:</value>
+    <value>Crosslink attaches at residue &amp;number:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -196,16 +196,16 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="tbxAttachmentOrdinal.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 74</value>
+    <value>18, 105</value>
   </data>
   <data name="tbxAttachmentOrdinal.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="tbxAttachmentOrdinal.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;tbxAttachmentOrdinal.Name" xml:space="preserve">
     <value>tbxAttachmentOrdinal</value>
@@ -217,19 +217,19 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tbxAttachmentOrdinal.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="btnEditModifications.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 109</value>
+    <value>18, 133</value>
   </data>
   <data name="btnEditModifications.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 23</value>
   </data>
   <data name="btnEditModifications.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>5</value>
   </data>
   <data name="btnEditModifications.Text" xml:space="preserve">
-    <value>Edit Modifications...</value>
+    <value>Edit &amp;Modifications...</value>
   </data>
   <data name="&gt;&gt;btnEditModifications.Name" xml:space="preserve">
     <value>btnEditModifications</value>
@@ -241,7 +241,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnEditModifications.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -256,7 +256,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>7</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
@@ -271,7 +271,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -286,7 +286,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>6</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -301,7 +301,34 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
+  </data>
+  <data name="cbxLooplink.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbxLooplink.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 61</value>
+  </data>
+  <data name="cbxLooplink.Size" type="System.Drawing.Size, System.Drawing">
+    <value>69, 17</value>
+  </data>
+  <data name="cbxLooplink.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="cbxLooplink.Text" xml:space="preserve">
+    <value>&amp;Loop-link</value>
+  </data>
+  <data name="&gt;&gt;cbxLooplink.Name" xml:space="preserve">
+    <value>cbxLooplink</value>
+  </data>
+  <data name="&gt;&gt;cbxLooplink.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbxLooplink.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbxLooplink.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
