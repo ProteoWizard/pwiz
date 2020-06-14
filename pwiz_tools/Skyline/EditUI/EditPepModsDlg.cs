@@ -765,7 +765,7 @@ namespace pwiz.Skyline.EditUI
                 .FirstOrDefault(mod => mod.IndexAA == indexAA);
             LinkedPeptide linkedPeptide;
             _linkedPeptides.TryGetValue(indexAA, out linkedPeptide);
-            using (var dlg = new EditLinkedPeptideDlg(DocSettings, linkedPeptide, explicitMod?.Modification))
+            using (var dlg = new EditLinkedPeptideDlg(DocSettings, NodePeptide, linkedPeptide, explicitMod?.Modification))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -790,8 +790,16 @@ namespace pwiz.Skyline.EditUI
             _linkedPeptides.TryGetValue(indexAA, out linkedPeptide);
             if (linkedPeptide != null)
             {
-                string strTooltip = (linkedPeptide.IndexAa + 1) + @":" +
-                                    linkedPeptide.Peptide.Sequence;
+                string strTooltip;
+                if (linkedPeptide.Peptide != null)
+                {
+                    strTooltip = linkedPeptide.Ordinal + @":" +
+                                 linkedPeptide.Peptide.Sequence;
+                }
+                else
+                {
+                    strTooltip = linkedPeptide.Ordinal.ToString();
+                }
                 toolTip.SetToolTip(editLinkButton, strTooltip);
             }
             else
@@ -825,7 +833,8 @@ namespace pwiz.Skyline.EditUI
 
             if (!string.IsNullOrEmpty(staticMod.AAs))
             {
-                char aa = linkedPeptide.Peptide.Sequence[linkedPeptide.IndexAa];
+                string sequence = linkedPeptide.PeptideSequence ?? NodePeptide.Peptide.Sequence;
+                char aa = sequence[linkedPeptide.IndexAa];
                 if (!staticMod.AAs.Contains(aa))
                 {
                     return false;

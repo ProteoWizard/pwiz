@@ -47,6 +47,8 @@
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.groupBoxOptionalValues = new System.Windows.Forms.GroupBox();
+            this.comboBoxIonMobilityUnits = new System.Windows.Forms.ComboBox();
+            this.labelIonMobilityUnits = new System.Windows.Forms.Label();
             this.labelCCS = new System.Windows.Forms.Label();
             this.labelDeclusteringPotential = new System.Windows.Forms.Label();
             this.labelIonMobility = new System.Windows.Forms.Label();
@@ -58,8 +60,9 @@
             this.label1 = new System.Windows.Forms.Label();
             this.labelIsotopeLabelType = new System.Windows.Forms.Label();
             this.comboIsotopeLabelType = new System.Windows.Forms.ComboBox();
-            this.comboBoxIonMobilityUnits = new System.Windows.Forms.ComboBox();
-            this.labelIonMobilityUnits = new System.Windows.Forms.Label();
+            this.labelPrecursorCollisionEnergy = new System.Windows.Forms.Label();
+            this.textBoxPrecursorCollisionEnergy = new System.Windows.Forms.TextBox();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.groupBoxOptionalValues.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -164,6 +167,8 @@
             // 
             // groupBoxOptionalValues
             // 
+            this.groupBoxOptionalValues.Controls.Add(this.labelPrecursorCollisionEnergy);
+            this.groupBoxOptionalValues.Controls.Add(this.textBoxPrecursorCollisionEnergy);
             this.groupBoxOptionalValues.Controls.Add(this.comboBoxIonMobilityUnits);
             this.groupBoxOptionalValues.Controls.Add(this.labelIonMobilityUnits);
             this.groupBoxOptionalValues.Controls.Add(this.labelCCS);
@@ -187,6 +192,18 @@
             resources.ApplyResources(this.groupBoxOptionalValues, "groupBoxOptionalValues");
             this.groupBoxOptionalValues.Name = "groupBoxOptionalValues";
             this.groupBoxOptionalValues.TabStop = false;
+            // 
+            // comboBoxIonMobilityUnits
+            // 
+            resources.ApplyResources(this.comboBoxIonMobilityUnits, "comboBoxIonMobilityUnits");
+            this.comboBoxIonMobilityUnits.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxIonMobilityUnits.FormattingEnabled = true;
+            this.comboBoxIonMobilityUnits.Name = "comboBoxIonMobilityUnits";
+            // 
+            // labelIonMobilityUnits
+            // 
+            resources.ApplyResources(this.labelIonMobilityUnits, "labelIonMobilityUnits");
+            this.labelIonMobilityUnits.Name = "labelIonMobilityUnits";
             // 
             // labelCCS
             // 
@@ -246,17 +263,16 @@
             this.comboIsotopeLabelType.Name = "comboIsotopeLabelType";
             this.comboIsotopeLabelType.SelectedIndexChanged += new System.EventHandler(this.comboLabelType_SelectedIndexChanged);
             // 
-            // comboBoxIonMobilityUnits
+            // labelPrecursorCollisionEnergy
             // 
-            this.comboBoxIonMobilityUnits.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxIonMobilityUnits.FormattingEnabled = true;
-            resources.ApplyResources(this.comboBoxIonMobilityUnits, "comboBoxIonMobilityUnits");
-            this.comboBoxIonMobilityUnits.Name = "comboBoxIonMobilityUnits";
+            resources.ApplyResources(this.labelPrecursorCollisionEnergy, "labelPrecursorCollisionEnergy");
+            this.labelPrecursorCollisionEnergy.Name = "labelPrecursorCollisionEnergy";
             // 
-            // labelIonMobilityUnits
+            // textBoxPrecursorCollisionEnergy
             // 
-            resources.ApplyResources(this.labelIonMobilityUnits, "labelIonMobilityUnits");
-            this.labelIonMobilityUnits.Name = "labelIonMobilityUnits";
+            resources.ApplyResources(this.textBoxPrecursorCollisionEnergy, "textBoxPrecursorCollisionEnergy");
+            this.textBoxPrecursorCollisionEnergy.Name = "textBoxPrecursorCollisionEnergy";
+            this.toolTip1.SetToolTip(this.textBoxPrecursorCollisionEnergy, resources.GetString("textBoxPrecursorCollisionEnergy.ToolTip"));
             // 
             // EditCustomMoleculeDlg
             // 
@@ -277,6 +293,7 @@
             this.MinimizeBox = false;
             this.Name = "EditCustomMoleculeDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.groupBoxOptionalValues.ResumeLayout(false);
             this.groupBoxOptionalValues.PerformLayout();
             this.ResumeLayout(false);
@@ -316,5 +333,7 @@
         private System.Windows.Forms.TextBox textBoxCCS;
         private System.Windows.Forms.ComboBox comboBoxIonMobilityUnits;
         private System.Windows.Forms.Label labelIonMobilityUnits;
+        private System.Windows.Forms.Label labelPrecursorCollisionEnergy;
+        private System.Windows.Forms.TextBox textBoxPrecursorCollisionEnergy;
     }
 }

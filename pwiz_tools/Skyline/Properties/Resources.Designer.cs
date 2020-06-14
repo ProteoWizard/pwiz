@@ -26555,7 +26555,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Continue.
+        ///   Looks up a localized string similar to &amp;Continue.
         /// </summary>
         public static string SkylineWindow_ImportResults_Continue {
             get {
@@ -26583,7 +26583,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generate.
+        ///   Looks up a localized string similar to &amp;Generate.
         /// </summary>
         public static string SkylineWindow_ImportResults_Generate {
             get {

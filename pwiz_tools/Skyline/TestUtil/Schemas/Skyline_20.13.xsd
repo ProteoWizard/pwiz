@@ -606,6 +606,8 @@
           <xs:attribute name="summarization_method" type="xs:string"/>
           <xs:attribute name="confidence_level" type="xs:double"/>
           <xs:attribute name="per_protein" type="xs:boolean"/>
+          <xs:attribute name="use_zero_for_missing_peaks" type="xs:boolean"/>
+          <xs:attribute name="q_value_cutoff" type="xs:double"/>
         </xs:complexType>
       </xs:element>
       <xs:element name="list_data" minOccurs="0" maxOccurs="unbounded">
@@ -884,41 +886,7 @@
               </xs:sequence>
             </xs:complexType>
           </xs:element>
-          <xs:element name="explicit_modifications" minOccurs="0" maxOccurs="1">
-            <xs:complexType>
-              <xs:sequence>
-                <xs:element name="explicit_static_modifications" minOccurs="0"
-                    maxOccurs="1">
-                  <xs:complexType>
-                    <xs:sequence>
-                      <xs:element name="explicit_modification"
-                          type="modification_type" minOccurs="0"
-                          maxOccurs="unbounded"/>
-                    </xs:sequence>
-                  </xs:complexType>
-                </xs:element>
-                <xs:element name="explicit_heavy_modifications" minOccurs="0"
-                    maxOccurs="unbounded">
-                  <xs:complexType>
-                    <xs:sequence>
-                      <xs:element name="explicit_modification" minOccurs="0"
-                          maxOccurs="unbounded">
-                        <xs:complexType>
-                          <xs:complexContent>
-                            <xs:extension base="modification_type">
-                              <xs:attribute name="isotope_label"
-                              type="xs:string"/>
-                            </xs:extension>
-                          </xs:complexContent>
-                        </xs:complexType>
-                      </xs:element>
-                    </xs:sequence>
-                    <xs:attribute name="isotope_label" type="xs:string"/>
-                  </xs:complexType>
-                </xs:element>
-              </xs:sequence>
-            </xs:complexType>
-          </xs:element>
+          <xs:element name="explicit_modifications" type="explicit_modifications_type" minOccurs="0" maxOccurs="1"/>
           <xs:element minOccurs="0" name="implicit_modifications">
             <xs:complexType>
               <xs:sequence>
@@ -1036,6 +1004,63 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  <xs:complexType name="explicit_modifications_type">
+    <xs:sequence>
+      <xs:element name="explicit_static_modifications" minOccurs="0"
+          maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="explicit_modification"
+                type="modification_type" minOccurs="0"
+                maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="explicit_heavy_modifications" minOccurs="0"
+          maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="explicit_modification" minOccurs="0"
+                maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:complexContent>
+                  <xs:extension base="modification_type">
+                    <xs:attribute name="isotope_label"
+                    type="xs:string"/>
+                  </xs:extension>
+                </xs:complexContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="isotope_label" type="xs:string"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="transition_losses_type">
+    <xs:sequence>
+      <xs:element name="neutral_loss" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="modification_name" type="xs:string"/>
+          <xs:attribute name="loss_index" type="xs:positiveInteger"/>
+          <xs:attribute name="formula" type="xs:string"/>
+          <xs:attribute name="massdiff_monoisotopic" type="xs:double"/>
+          <xs:attribute name="massdiff_average" type="xs:double"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="linked_fragment_ion_type">
+    <xs:sequence>
+      <xs:element name="losses" type="transition_losses_type" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="linked_fragment_ion" type="linked_fragment_ion_type" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="fragment_type" type="fragment_type" use="optional"/>
+    <xs:attribute name="fragment_ordinal" />
+    <xs:attribute name="index_aa" type="xs:nonNegativeInteger" use="required"/>
+    <xs:attribute name="modification_name" type="xs:string" use="required"/>
+  </xs:complexType>
+
   <!-- ================================================================== -->
   <!-- BEGIN schema elements for TransitionGroupDocNode -->
   <!-- ================================================================== -->
@@ -1118,10 +1143,12 @@
         <!-- label can be "heavy", "light" or a user defined name -->
         <xs:attribute name="isotope_label" type="xs:string"/>
         <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
+        <xs:attribute name="explicit_collision_energy" type="xs:double"/> <!-- may itself be overridden at transition level -->
         <xs:attribute name="explicit_ion_mobility" type="xs:double"/>
         <xs:attribute name="explicit_ion_mobility_units" type="xs:string"/>
         <xs:attribute name="explicit_ccs_sqa" type="xs:double"/>
-       <xs:attribute name="explicit_compensation_voltage" type="xs:double"/>
+        <xs:attribute name="explicit_compensation_voltage" type="xs:double"/>
+        <!-- end values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
         <xs:attribute name="precursor_concentration" type="xs:double"/>
       </xs:extension>
     </xs:complexContent>
@@ -1225,7 +1252,7 @@
         <xs:attribute name="quantitative" type="xs:boolean" />
         <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
         <!-- these attributes were formerly at the precursor level (4.21 and earlier) but are really per-transition -->
-        <xs:attribute name="explicit_collision_energy" type="xs:double"/>
+        <xs:attribute name="explicit_collision_energy" type="xs:double"/> <!-- as of 20.13 there is also a precursor-level value for this, but this overrides -->
         <xs:attribute name="explicit_declustering_potential" type="xs:double"/>
         <xs:attribute name="explicit_ion_mobility_high_energy_offset" type="xs:double"/>
         <xs:attribute name="explicit_s_lens" type="xs:double"/>
@@ -1274,21 +1301,9 @@
     <xs:complexContent>
       <xs:extension base="general_transition_type">
         <xs:sequence>
-          <xs:element name="losses" minOccurs="0" maxOccurs="1">
-            <xs:complexType>
-              <xs:sequence>
-                <xs:element name="neutral_loss" minOccurs="0" maxOccurs="unbounded">
-                  <xs:complexType>
-                    <xs:attribute name="modification_name" type="xs:string"/>
-                    <xs:attribute name="loss_index" type="xs:positiveInteger"/>
-                    <xs:attribute name="formula" type="xs:string"/>
-                    <xs:attribute name="massdiff_monoisotopic" type="xs:double"/>
-                    <xs:attribute name="massdiff_average" type="xs:double"/>
-                  </xs:complexType>
-                </xs:element>
-              </xs:sequence>
-            </xs:complexType>
+          <xs:element name="losses" minOccurs="0" maxOccurs="1" type="transition_losses_type">
           </xs:element>
+          <xs:element name="linked_fragment_ion" minOccurs="0" maxOccurs="unbounded" type="linked_fragment_ion_type"/>
           <xs:element name="transition_lib_info" minOccurs="0" maxOccurs="1">
             <xs:complexType>
               <xs:attribute name="rank" type="xs:positiveInteger" use="required"/>
@@ -1341,6 +1356,7 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="orphaned_crosslink_ion" type="xs:boolean" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1601,6 +1617,17 @@
     </xs:simpleContent>
   </xs:complexType>
   <xs:complexType name="modification_type">
+    <xs:sequence>
+      <xs:element name="linked_peptide" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="explicit_modifications" type="explicit_modifications_type" minOccurs="0"/>
+          </xs:sequence>
+          <xs:attribute name="sequence" type="xs:string" />
+          <xs:attribute name="index_aa" type="xs:integer" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
     <xs:attribute name="index_aa" type="xs:nonNegativeInteger" use="required"/>
     <xs:attribute name="modification_name" type="xs:string" use="required"/>
     <xs:attribute name="mass_diff" type="xs:double" use="optional"/>
@@ -1676,6 +1703,15 @@
           <xs:attribute name="massdiff_average" type="xs:double"/>
           <xs:attribute name="inclusion" type="loss_inclusion_type"/>
           <xs:attribute name="charge" type="xs:integer" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="crosslinker" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="formula" />
+          <xs:attribute name="massdiff_monoisotopic" type="xs:double"/>
+          <xs:attribute name="massdiff_average" type="xs:double"/>
+          <xs:attribute name="aminoacid" type="aminoacid_csv_type"/>
+          <xs:attribute name="terminus" type="terminus_type"/>
         </xs:complexType>
       </xs:element>
     </xs:sequence>

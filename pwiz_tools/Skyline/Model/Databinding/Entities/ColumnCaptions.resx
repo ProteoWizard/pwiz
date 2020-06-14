@@ -819,6 +819,9 @@
   <data name="PrecursorConcentration">
     <value>Precursor Concentration</value>
   </data>
+  <data name="PrecursorExplicitCollisionEnergy">
+    <value>Precursor Explicit Collision Energy</value>
+  </data>
   <data name="PrecursorIonName">
     <value>Precursor Ion Name</value>
   </data>

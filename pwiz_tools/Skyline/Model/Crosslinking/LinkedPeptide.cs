@@ -43,6 +43,11 @@ namespace pwiz.Skyline.Model.Crosslinking
         public Peptide Peptide { get; private set; }
         public int IndexAa { get; private set; }
 
+        public int Ordinal
+        {
+            get { return IndexAa + 1; }
+        }
+
         [CanBeNull]
         public ExplicitMods ExplicitMods { get; private set; }
 
@@ -173,10 +178,10 @@ namespace pwiz.Skyline.Model.Crosslinking
             [CanBeNull] ExplicitMods mods, 
             SrmSettings settings, int maxFragmentationCount, bool useFilter, IEnumerable<ComplexFragmentIon> startingFragmentIons)
         {
-            var result = startingFragmentIons;
+            var result = FilterImpossibleCleavages(mods, startingFragmentIons);
             if (mods != null)
             {
-                foreach (var crosslinkMod in mods.Crosslinks)
+                foreach (var crosslinkMod in mods.LinkedCrossslinks)
                 {
                     result = crosslinkMod.Value.PermuteFragmentIons(settings, maxFragmentationCount, useFilter,
                         crosslinkMod.Key, result);
@@ -184,6 +189,48 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return result.Where(cfi => !cfi.IsEmptyOrphan);
+        }
+
+        /// <summary>
+        /// Remove ions where fragmentation is occurring between two ends of a looplink.
+        /// </summary>
+        public static IEnumerable<ComplexFragmentIon> FilterImpossibleCleavages(ExplicitMods mods,
+            IEnumerable<ComplexFragmentIon> startingFragmentIons)
+        {
+            if (mods == null)
+            {
+                return startingFragmentIons;
+            }
+            var looplinks = new List<Tuple<int, int>>();
+            foreach (var crosslinkMod in mods.Crosslinks)
+            {
+                if (crosslinkMod.Value.Peptide == null)
+                {
+                    int index1 = crosslinkMod.Key.IndexAa;
+                    int index2 = crosslinkMod.Value.IndexAa;
+                    if (index1 == index2)
+                    {
+                        continue;
+                    }
+                    looplinks.Add(Tuple.Create(Math.Min(index1, index2), Math.Max(index1, index2)));
+                }
+            }
+
+            if (!looplinks.Any())
+            {
+                return startingFragmentIons;
+            }
+
+            return startingFragmentIons.Where(cfi =>
+            {
+                if (cfi.Transition.IonType == IonType.precursor || cfi.IsOrphan)
+                {
+                    return true;
+                }
+
+                int cleavageOffset = cfi.Transition.CleavageOffset;
+                return !looplinks.Any(looplink => looplink.Item1 <= cleavageOffset && looplink.Item2 > cleavageOffset);
+            });
         }
 
         public ComplexFragmentIon MakeComplexFragmentIon(IsotopeLabelType labelType, ComplexFragmentIonName complexFragmentIonName)
@@ -220,14 +267,18 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
 
         /// <summary>
-        /// Returns the number of linked peptides in this tree (not including this linked peptide).
+        /// Returns the number of linked peptides in this tree (including this linked peptide, unless it is a looplink).
         /// </summary>
         public int CountDescendents()
         {
-            int result = 0;
+            if (Peptide == null)
+            {
+                return 0;
+            }
+            int result = 1;
             if (ExplicitMods != null)
             {
-                result += ExplicitMods.Crosslinks.Values.Sum(linkedPeptide => 1 + linkedPeptide.CountDescendents());
+                result += ExplicitMods.Crosslinks.Values.Sum(linkedPeptide => linkedPeptide.CountDescendents());
             }
 
             return result;
@@ -253,7 +304,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         [UsedImplicitly]
         public string PeptideSequence
         {
-            get { return Peptide.Sequence; }
+            get { return Peptide?.Sequence; }
         }
 
         [Track]

@@ -778,6 +778,7 @@ namespace pwiz.Skyline.Model.Serialization
             ProteinMetadata proteinMetadata = ReadProteinMetadataXML(reader, true); // read label_name and label_description
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
             bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
+            var proportionDecoysMatch = reader.GetNullableDoubleAttribute(ATTR.decoy_match_proportion);
 
             PeptideGroup group = new PeptideGroup(isDecoy);
 
@@ -806,7 +807,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
 
             return new PeptideGroupDocNode(group, annotations, proteinMetadata,
-                children ?? new PeptideDocNode[0], autoManageChildren);
+                children ?? new PeptideDocNode[0], autoManageChildren, proportionDecoysMatch);
         }
 
         /// <summary>
@@ -867,7 +868,13 @@ namespace pwiz.Skyline.Model.Serialization
             double? importedIonMobility = importedDriftTimeMsec ?? importedCompensationVoltage ?? reader.GetNullableDoubleAttribute(ATTR.explicit_ion_mobility);
             double? importedCCS = reader.GetNullableDoubleAttribute(ATTR.explicit_ccs_sqa);
             pre422ExplicitValues = formatVersion >= DocumentFormat.VERSION_4_22 ? null : ReadExplicitTransitionValuesAttributes(reader, formatVersion); // Formerly (pre-4.22) these per-transition values were serialized at peptide level
-            return ExplicitTransitionGroupValues.Create(importedIonMobility,importedIonMobilityUnits, importedCCS);
+            // CollisionEnergy was made per-transition in 4.22, we added a per-precursor override in 20.12
+            double? importedCollisionEnergy = pre422ExplicitValues?.CollisionEnergy ?? reader.GetNullableDoubleAttribute(ATTR.explicit_collision_energy);
+            if (pre422ExplicitValues != null)
+            {
+                pre422ExplicitValues = pre422ExplicitValues.ChangeCollisionEnergy(null); // As of 20.12 we're back to tracking this at precursor level (with per-transition overrides)
+            }
+            return ExplicitTransitionGroupValues.Create(importedCollisionEnergy, importedIonMobility, importedIonMobilityUnits, importedCCS);
         }
 
         /// <summary>
@@ -1120,9 +1127,13 @@ namespace pwiz.Skyline.Model.Serialization
                 return null;
             }
 
-            var sequence = reader.GetAttribute(ATTR.sequence);
             int indexAa = reader.GetIntAttribute(ATTR.index_aa);
-            var peptide = new Peptide(sequence);
+            var sequence = reader.GetAttribute(ATTR.sequence);
+            Peptide peptide = null;
+            if (!string.IsNullOrEmpty(sequence))
+            {
+                peptide = new Peptide(sequence);
+            }
             ExplicitMods explicitMods = null;
             if (reader.IsEmptyElement)
             {

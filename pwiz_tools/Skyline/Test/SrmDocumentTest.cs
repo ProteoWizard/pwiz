@@ -159,7 +159,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), fragmentAdduct), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);
             Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomMolecule);
             var nodeGroup = doc.MoleculeTransitionGroups.ElementAt(0);
-            Assert.AreEqual(4.704984, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.CollisionEnergy);
+            Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
+            Assert.AreEqual(null, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.CollisionEnergy); // Value is found at precursor level
             double expectedIonMobility = 2.34;
             double? expectedCV = imTypeIsDriftTime ? (double?) null : expectedIonMobility;
             Assert.AreEqual(expectedCV, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CompensationVoltage);
