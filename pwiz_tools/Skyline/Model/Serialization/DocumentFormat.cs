@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_20_1 = new DocumentFormat(20.1); // Release format
         public static readonly DocumentFormat VERSION_20_11 = new DocumentFormat(20.11);
         public static readonly DocumentFormat VERSION_20_12 = new DocumentFormat(20.12); // Crosslinked peptides
-        public static readonly DocumentFormat VERSION_20_13 = new DocumentFormat(20.13); // Moves ion mobility settings from PeptideSettings to TransitionSettings
+        public static readonly DocumentFormat VERSION_20_13 = new DocumentFormat(20.13); // Add decoy_match_proportion, moves ion mobility settings from PeptideSettings to TransitionSettings
         public static readonly DocumentFormat TRANSITION_SETTINGS_ION_MOBILITY = VERSION_20_13; // First version with ion mobility settings moved from PeptideSettings to TransitionSettings
         public static readonly DocumentFormat CURRENT = VERSION_20_13;
 

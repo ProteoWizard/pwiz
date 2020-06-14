@@ -115,6 +115,7 @@ namespace pwiz.Skyline.Model.Serialization
             WriteProteinMetadataXML(writer, node.ProteinMetadataOverrides, true); // write the protein metadata, skipping the name and description we already wrote
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
+            writer.WriteAttributeNullable(ATTR.decoy_match_proportion, node.ProportionDecoysMatch);
 
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
@@ -187,6 +188,8 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private void WriteExplicitTransitionGroupValuesAttributes(XmlWriter writer, ExplicitTransitionGroupValues importedAttributes)
         {
+            if (DocumentFormat < DocumentFormat.VERSION_4_22 || DocumentFormat >= DocumentFormat.VERSION_20_12) // Format supports per-precursor explicit CE?
+                writer.WriteAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
             writer.WriteAttributeNullable(ATTR.explicit_ion_mobility, importedAttributes.IonMobility);
             if (importedAttributes.IonMobility.HasValue)
                 writer.WriteAttribute(ATTR.explicit_ion_mobility_units, importedAttributes.IonMobilityUnits.ToString());
@@ -427,11 +430,14 @@ namespace pwiz.Skyline.Model.Serialization
         private void WriteLinkedPeptide(XmlWriter writer, LinkedPeptide linkedPeptide)
         {
             writer.WriteStartElement(EL.linked_peptide);
-            writer.WriteAttribute(ATTR.sequence, linkedPeptide.Peptide.Sequence);
             writer.WriteAttribute(ATTR.index_aa, linkedPeptide.IndexAa);
-            if (null != linkedPeptide.ExplicitMods)
+            if (linkedPeptide.Peptide != null)
             {
-                WriteExplicitMods(writer, linkedPeptide.Peptide.Sequence, linkedPeptide.ExplicitMods);
+                writer.WriteAttributeIfString(ATTR.sequence, linkedPeptide.Peptide.Sequence);
+                if (null != linkedPeptide.ExplicitMods)
+                {
+                    WriteExplicitMods(writer, linkedPeptide.Peptide.Sequence, linkedPeptide.ExplicitMods);
+                }
             }
             writer.WriteEndElement();
         }

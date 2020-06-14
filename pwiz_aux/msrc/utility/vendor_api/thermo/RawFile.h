@@ -443,6 +443,7 @@ class PWIZ_API_DECL RawFile
     // getDetectorType is obsolete?
     virtual double getIsolationWidth(int scanSegment, int scanEvent) const = 0;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel)const = 0;
+    virtual double calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyWithOffset) const = 0;
 
     virtual ErrorLogItem getErrorLogItem(long itemNumber) const = 0;
     virtual std::vector<std::string> getInstrumentMethods() const = 0;

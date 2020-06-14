@@ -10584,10 +10584,10 @@ Click 'Retry' to try building again with original spectrum files placed next to 
     <value>The document contains decoys that do not match the targets. Out of {0} decoys:</value>
   </data>
   <data name="SkylineWindow_ImportResults_Continue" xml:space="preserve">
-    <value>Continue</value>
+    <value>&amp;Continue</value>
   </data>
   <data name="SkylineWindow_ImportResults_Generate" xml:space="preserve">
-    <value>Generate</value>
+    <value>&amp;Generate</value>
   </data>
   <data name="SkylineWindow_ImportResults_1_decoy_does_not_have_a_matching_target" xml:space="preserve">
     <value>1 decoy does not have a matching target</value>
@@ -10803,6 +10803,9 @@ There might be something wrong with default web browser on this computer.</value
   <data name="FastaImporter_Import__0__proteins_and__1__peptides_added" xml:space="preserve">
     <value>{0} proteins and {1} peptides added</value>
   </data>
+  <data name="TransitionSettingsControl_GetTransitionSettings_Max_m_z__0__must_not_be_less_than_min_m_z__1__" xml:space="preserve">
+    <value>Max m/z {0} must not be less than min m/z {1}.</value>
+  </data>
   <data name="EditLink" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\EditLink.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -10824,9 +10827,52 @@ There might be something wrong with default web browser on this computer.</value
   <data name="CommandLine_AddDecoys_Decoys_discarded" xml:space="preserve">
     <value>Decoys discarded</value>
   </data>
+  <data name="ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_predictor_or_spectral_library__The_following_ion_mobility_values_are_missing_" xml:space="preserve">
+    <value>All targets must have an ion mobility value. These can be set explicitly or contained in an ion mobility predictor or spectral library. The following ion mobility values are missing:</value>
+  </data>
+  <data name="SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_" xml:space="preserve">
+    <value>Template file is not valid.</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
+    <value>Concurrent Accumulations</value>
+  </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Error_copying_template_file_" xml:space="preserve">
+    <value>Error copying template file.</value>
+  </data>
+  <data name="ExportMethodDlg_StrategyCheckChanged_Multiple_methods_is_not_yet_supported_for__0__" xml:space="preserve">
+    <value>Multiple methods is not yet supported for {0}.</value>
+  </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_" xml:space="preserve">
+    <value>Template is required for method export.</value>
+  </data>
+  <data name="ExportMethodDlg_btnGraph_Click_An_error_occurred_" xml:space="preserve">
+    <value>An error occurred.</value>
+  </data>
   <data name="CachedLibrary_WarnInvalidEntries_" xml:space="preserve">
     <value>Invalid entries were found in the library '{0}'.
 {1} of the {2} peptides or molecules were invalid, including:
 {3}</value>
+  </data>
+  <data name="CrosslinkSequenceParser_ParseCrosslinkLibraryKey_Invalid_peptide_sequence" xml:space="preserve">
+    <value>Invalid peptide sequence</value>
+  </data>
+  <data name="CrosslinkSequenceParser_ParseCrosslink_Unable_to_parse___0___as_a_number" xml:space="preserve">
+    <value>Unable to parse '{0}' as a number</value>
+  </data>
+  <data name="CrosslinkSequenceParser_Expected_Expected___0__" xml:space="preserve">
+    <value>Expected '{0}'</value>
+  </data>
+  <data name="ParseExceptionDetail_ToString__at_position__0_" xml:space="preserve">
+    <value>{0} at position {1}</value>
+    <comment>Examples: 
+Expected '-' at position 17
+Invalid peptide sequence at position 18
+</comment>
+  </data>
+  <data name="PasteDlg_ListPeptideSequences_The_structure_of_this_crosslinked_peptide_is_not_supported_by_Skyline" xml:space="preserve">
+    <value>The structure of this crosslinked peptide is not supported by Skyline</value>
+  </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___" xml:space="preserve">
+    <value>Getting scheduling...</value>
   </data>
 </root>

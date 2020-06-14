@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsSmallMolecule())
                     return null;
-                return Sequence.Length;
+                return Sequence.Replace(@"-", string.Empty).Length;
             }
         }
 
@@ -345,10 +345,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            var peptide = DocNode.Peptide;
-            return peptide.IsCustomMolecule
-                ? DocNode.CustomMolecule.ToString()
-                : peptide.Target.Sequence;
+            if (DocNode.Peptide.IsCustomMolecule)
+            {
+                return DocNode.CustomMolecule.ToString();
+            }
+
+            return DocNode.GetCrosslinkedSequence();
         }
 
         [InvariantDisplayName("PeptideDocumentLocation")]

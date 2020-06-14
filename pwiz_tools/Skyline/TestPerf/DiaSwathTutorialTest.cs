@@ -115,9 +115,9 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
-                TargetCounts = new[] { 13, 272, 292, 1751 },
-                FinalTargetCounts = new[] { 12, 272, 292, 1751 },
-                ScoringModelCoefficients = "0.9138|-0.7889|3.5694|-1.2988|-0.6596|0.8953|-0.3182|-0.0554",
+                TargetCounts = new[] { 13, 272, 292, 1752 },
+                FinalTargetCounts = new[] { 12, 272, 292, 1752 },
+                ScoringModelCoefficients = "0.7882|-0.7943|4.1296|-1.5888|-0.6563|0.9829|-0.1724|-0.0530",
                 MassErrorStats = new[]
                 {
                     new[] {2.9, 4.5},
@@ -128,7 +128,7 @@ namespace TestPerf
                     new[] {-0.4, 3.7},
                     new[] {1.1, 3.9},
                 },
-                DiffPeptideCounts = new[] { 143, 44, 31, 57 },
+                DiffPeptideCounts = new[] { 144, 44, 32, 57 },
                 UnpolishedProteins = 9,
             };
 
@@ -147,9 +147,9 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
-                TargetCounts = new[] { 4908, 38022, 39358, 235968 },
-                FinalTargetCounts = new[] { 2471, 27054, 27992, 167797 },
-                ScoringModelCoefficients = "0.4699|-0.8033|3.8888|-0.1751|-0.4008|0.6676|0.0206|-0.0714",
+                TargetCounts = new[] { 4908, 38022, 39357, 236142 },
+                FinalTargetCounts = new[] { 2471, 27054, 27992, 167952 },
+                ScoringModelCoefficients = "0.4355|-0.8038|3.9214|-0.2504|-0.4049|0.7040|0.0230|-0.0713",
                 MassErrorStats = new[]
                 {
                     new[] {2.7, 4.6},
@@ -160,8 +160,8 @@ namespace TestPerf
                     new[] {-0.4, 4},
                     new[] {1, 4.1},
                 },
-                DiffPeptideCounts = new[] { 13129, 8174, 2781, 2163 },
-                UnpolishedProteins = 2188,
+                DiffPeptideCounts = new[] { 13119, 8169, 2779, 2160 },
+                UnpolishedProteins = 2175,
                 PolishedProteins = 2465,
             };
 
@@ -204,16 +204,16 @@ namespace TestPerf
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
                 ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
-                TargetCounts = new[] { 13, 274, 334, 2002 },
-                FinalTargetCounts = new[] { 12, 274, 334, 2002 },
-                ScoringModelCoefficients = "0.3987|-0.8643|2.9375|0.5705|-0.0418|1.0304|0.0522|-0.0849",
+                TargetCounts = new[] { 13, 274, 334, 2004 },
+                FinalTargetCounts = new[] { 12, 274, 334, 2004 },
+                ScoringModelCoefficients = "0.2908|-0.7014|2.8523|0.9414|-0.0450|1.0464|0.1098|-0.1017",
                 MassErrorStats = new[]
                 {
-                    new[] {2.1, 3},
+                    new[] {2.1, 3.1},
                     new[] {1.5, 3.3},
                     new[] {2, 3.5},
                     new[] {2.2, 2.6},
-                    new[] {2.3, 3.2},
+                    new[] {2.2, 3.3},
                     new[] {2.5, 2.3},
                     new[] {2.1, 3.1},
                 },
@@ -237,9 +237,9 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
-                TargetCounts = new[] { 4065, 32056, 34987, 209629 },
-                FinalTargetCounts = new[] { 2081, 22732, 24788, 148493 },
-                ScoringModelCoefficients = "0.3045|-0.9020|3.3961|0.8504|-0.0433|0.8812|-0.0150|-0.0721",
+                TargetCounts = new[] { 4065, 32056, 34984, 209904 },
+                FinalTargetCounts = new[] { 2081, 22732, 24786, 148716 },
+                ScoringModelCoefficients = "0.2850|-0.9053|3.4232|0.8132|-0.0432|0.8881|-0.0244|-0.0709",
                 MassErrorStats = new[]
                 {
                     new[] {2.3, 3.5},
@@ -250,9 +250,9 @@ namespace TestPerf
                     new[] {2.5, 3.5},
                     new[] {2.3, 3.5},
                 },
-                DiffPeptideCounts = new[] { 10150, 6287, 2175, 1677 },
-                UnpolishedProteins = 1266,
-                PolishedProteins = 2036,
+                DiffPeptideCounts = new[] { 10101, 6256, 2168, 1666 },
+                UnpolishedProteins = 1236,
+                PolishedProteins = 2034,
             };
 
             if (!IsPauseForCoverShot)
@@ -438,6 +438,10 @@ namespace TestPerf
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
             RunUI(() =>
             {
+                importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
+                importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
+                importPeptideSearchDlg.TransitionSettingsControl.IonRangeFrom = TransitionFilter.StartFragmentFinder.MZ_PRECURSOR.Label;
+                importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo = TransitionFilter.EndFragmentFinder.IONS_3.Label;
                 importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = true;
                 importPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = new[]
                 {
@@ -451,10 +455,10 @@ namespace TestPerf
                 }
                 else
                 {
-                importPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes = new[]
-                {
-                    IonType.y, IonType.b    // Removes precursor
-                };
+                    importPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes = new[]
+                    {
+                        IonType.y, IonType.b    // Removes precursor
+                    };
                 }
                 // Verify other values shown in the tutorial
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.IonCount);

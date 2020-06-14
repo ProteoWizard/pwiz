@@ -289,6 +289,9 @@ blib-test-build peptideshaker-mzid : --unicode -o : output/MoTai_PeptideShaker.b
 # Test mzid format from MetaMorpheus and WIFF
 blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : metamorpheus.check : $(TEST_INPUTS_PATH)/metamorpheus.mzid ;
 
+# Test DiaNN specLib format
+blib-test-build diann-speclib : -o : output/diann-speclib.blib : diann-speclib.check : $(TEST_INPUTS_PATH)/diann-swath.speclib ;
+
 # Test waters csv format
 blib-test-build mse : --unicode -o : output/mse.blib : mse.check : $(TEST_INPUTS_PATH)/tiny_final_fragment.csv ;
 

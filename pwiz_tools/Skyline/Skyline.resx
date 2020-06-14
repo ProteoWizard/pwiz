@@ -2708,6 +2708,18 @@ first occurrence of any peptide.</value>
   <data name="toolStripSeparator44.Size" type="System.Drawing.Size, System.Drawing">
     <value>216, 6</value>
   </data>
+  <data name="closeChromatogramMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+F4</value>
+  </data>
+  <data name="closeChromatogramMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>219, 22</value>
+  </data>
+  <data name="closeChromatogramMenuItem.Text" xml:space="preserve">
+    <value>&amp;Close</value>
+  </data>
+  <data name="closeAllChromatogramsMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+Shift+F4</value>
+  </data>
   <data name="closeAllChromatogramsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>219, 22</value>
   </data>
@@ -5944,6 +5956,12 @@ first occurrence of any peptide.</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator44.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;closeChromatogramMenuItem.Name" xml:space="preserve">
+    <value>closeChromatogramMenuItem</value>
+  </data>
+  <data name="&gt;&gt;closeChromatogramMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;closeAllChromatogramsMenuItem.Name" xml:space="preserve">
     <value>closeAllChromatogramsMenuItem</value>

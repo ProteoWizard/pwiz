@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
@@ -141,6 +142,12 @@ namespace pwiz.Skyline.SettingsUI
                     return moleculeKey.SmallMoleculeLibraryAttributes.MoleculeName;
                 }
                 return moleculeKey.ToString();
+            }
+
+            var crosslinkKey = key as CrosslinkLibraryKey;
+            if (crosslinkKey != null)
+            {
+                return crosslinkKey.PeptideLibraryKeys.First().UnmodifiedSequence;
             }
             return key.ToString();
         }

@@ -35,13 +35,16 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public class SpectrumGraphItem : AbstractSpectrumGraphItem
     {
+        public PeptideDocNode PeptideDocNode { get; private set; }
         public TransitionGroupDocNode TransitionGroupNode { get; private set; }
         private TransitionDocNode TransitionNode { get; set; }
         public string LibraryName { get; private set; }
 
-        public SpectrumGraphItem(TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
-                                 LibraryRankedSpectrumInfo spectrumInfo, string libName) : base(spectrumInfo)
+        public SpectrumGraphItem(PeptideDocNode peptideDocNode,
+            TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
+            LibraryRankedSpectrumInfo spectrumInfo, string libName) : base(spectrumInfo)
         {
+            PeptideDocNode = peptideDocNode;
             TransitionGroupNode = transitionGroupNode;
             TransitionNode = transition;
             LibraryName = libName;
@@ -52,16 +55,27 @@ namespace pwiz.Skyline.Controls.Graphs
             return ((TransitionNode != null) && (predictedMz == TransitionNode.Mz));
         }
 
-        public static string GetTitle(TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
+        public static string GetTitle(PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
         {
             string libraryNamePrefix = string.Empty;
             //if (!string.IsNullOrEmpty(libraryNamePrefix))
             //    libraryNamePrefix += @" - ";
 
             TransitionGroup transitionGroup = transitionGroupDocNode.TransitionGroup;
-            string sequence = transitionGroup.Peptide.IsCustomMolecule
-                ? transitionGroupDocNode.CustomMolecule.DisplayName
-                : transitionGroup.Peptide.Target.Sequence;
+            string sequence;
+            if (transitionGroup.Peptide.IsCustomMolecule)
+            {
+                sequence = transitionGroupDocNode.CustomMolecule.DisplayName;
+            }
+            else if (peptideDocNode?.ExplicitMods != null && peptideDocNode.ExplicitMods.Crosslinks.Count != 0)
+            {
+                sequence = peptideDocNode.GetCrosslinkedSequence();
+            }
+            else
+            {
+                sequence = transitionGroup.Peptide.Target.Sequence;
+            }
+
             var charge = transitionGroup.PrecursorAdduct.ToString(); // Something like "2" or "-3" for protonation, or "[M+Na]" for small molecules
             if (transitionGroup.Peptide.IsCustomMolecule)
             {
@@ -76,7 +90,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override string Title
         {
-            get { return GetTitle(TransitionGroupNode, SpectrumInfo.LabelType); }
+            get { return GetTitle(PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType); }
         }
     }
     

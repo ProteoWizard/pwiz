@@ -320,7 +320,7 @@ If the Explicit Analyte Concentration is not specified then the concentration of
 to be the Analyte Concentration from the Replicate times the Concentration Multiplier of the Peptide or Molecule.</value>
   </data>
   <data name="ExplicitCollisionEnergy">
-    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</value>
+    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library or per-precursor explicit values.</value>
   </data>
   <data name="ExplicitCompensationVoltage">
     <value>The exact desired compensation voltage (ion mobility filter) to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</value>
@@ -838,6 +838,9 @@ Edit menu</value>
   </data>
   <data name="PrecursorConcentration">
     <value>The concentration at which this precursor was spiked into the sample. This is used for generating Isotopolog Response Curves.</value>
+  </data>
+  <data name="PrecursorExplicitCollisionEnergy" xml:space="preserve">
+    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values. May in turn be overridden by per-transition Explicit Collision Energy.</value>
   </data>
   <data name="PrecursorIonFormula">
     <value>The formula of the precursor ion.</value>

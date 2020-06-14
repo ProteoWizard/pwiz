@@ -36,6 +36,10 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.textPrimaryTransitionCount = new System.Windows.Forms.TextBox();
+            this.textBrukerTemplate = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.btnBrukerTemplateBrowse = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -77,12 +81,32 @@
             resources.ApplyResources(this.textPrimaryTransitionCount, "textPrimaryTransitionCount");
             this.textPrimaryTransitionCount.Name = "textPrimaryTransitionCount";
             // 
+            // textBrukerTemplate
+            // 
+            resources.ApplyResources(this.textBrukerTemplate, "textBrukerTemplate");
+            this.textBrukerTemplate.Name = "textBrukerTemplate";
+            // 
+            // label4
+            // 
+            resources.ApplyResources(this.label4, "label4");
+            this.label4.Name = "label4";
+            // 
+            // btnBrukerTemplateBrowse
+            // 
+            resources.ApplyResources(this.btnBrukerTemplateBrowse, "btnBrukerTemplateBrowse");
+            this.btnBrukerTemplateBrowse.Name = "btnBrukerTemplateBrowse";
+            this.btnBrukerTemplateBrowse.UseVisualStyleBackColor = true;
+            this.btnBrukerTemplateBrowse.Click += new System.EventHandler(this.btnBrukerTemplateBrowse_Click);
+            // 
             // SchedulingGraphPropertyDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.btnBrukerTemplateBrowse);
+            this.Controls.Add(this.textBrukerTemplate);
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.textPrimaryTransitionCount);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
@@ -95,6 +119,7 @@
             this.MinimizeBox = false;
             this.Name = "SchedulingGraphPropertyDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -109,5 +134,8 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textPrimaryTransitionCount;
+        private System.Windows.Forms.TextBox textBrukerTemplate;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button btnBrukerTemplateBrowse;
     }
 }

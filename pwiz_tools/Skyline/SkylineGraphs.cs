@@ -1641,6 +1641,8 @@ namespace pwiz.Skyline
             {
                 menu.DropDown.ResumeLayout();
             }
+
+            closeChromatogramMenuItem.Enabled = !string.IsNullOrEmpty(SelectedGraphChromName);
         }
 
         private class ShowChromHandler
@@ -3135,6 +3137,17 @@ namespace pwiz.Skyline
             foreach (var graphChromatogram in _listGraphChrom.ToList())
             {
                 graphChromatogram.Hide();
+            }
+        }
+
+        private void closeChromatogramMenuItem_Click(object sender, EventArgs e)
+        {
+            var graphChromatogram = _listGraphChrom.LastOrDefault(g => !g.IsHidden);
+            if (graphChromatogram != null)
+            {
+                graphChromatogram.Hide();
+                graphChromatogram = _listGraphChrom.LastOrDefault(g => !g.IsHidden);
+                graphChromatogram?.Activate();
             }
         }
 

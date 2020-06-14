@@ -602,7 +602,7 @@ namespace seems
         {
             string label = null;
             if( ShowXValues && ShowYValues )
-                label = String.Format( "{0]\n{1}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces), point.Y.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
+                label = String.Format( "{0}\n{1}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces), point.Y.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
             else if( ShowXValues )
                 label = String.Format( "{0}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
             else if( ShowYValues )

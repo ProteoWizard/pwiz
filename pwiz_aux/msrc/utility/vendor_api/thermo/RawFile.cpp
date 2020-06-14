@@ -121,6 +121,7 @@ class RawFileImpl : public RawFile
     virtual ActivationType getActivationType(long scanNumber) const;
     virtual double getIsolationWidth(int scanSegment, int scanEvent) const;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel) const;
+    virtual double calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyWithOffset) const;
 
     virtual ErrorLogItem getErrorLogItem(long itemNumber) const;
     virtual std::vector<std::string> getInstrumentMethods() const;
@@ -179,7 +180,14 @@ class RawFileImpl : public RawFile
     map<string, int> trailerExtraIndexByName;
     mutable map<int, map<int, double> > defaultIsolationWidthBySegmentAndMsLevel;
     mutable map<int, map<int, double> > isolationWidthBySegmentAndScanEvent;
-    map<string, double> isolationMzOffsetByScanDescription;
+
+    struct IsolationMzOffset
+    {
+        double offset;
+        bool reportedMassIsOffset;
+    };
+
+    map<string, IsolationMzOffset> isolationMzOffsetByScanDescription;
 
     void parseInstrumentMethod();
 };
@@ -229,6 +237,7 @@ class RawFileThreadImpl : public RawFile
     virtual ActivationType getActivationType(long scanNumber) const;
     virtual double getIsolationWidth(int scanSegment, int scanEvent) const;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel) const;
+    virtual double calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyOffset) const;
 
     virtual ErrorLogItem getErrorLogItem(long itemNumber) const;
     virtual std::vector<std::string> getInstrumentMethods() const;
@@ -1773,23 +1782,43 @@ double RawFileImpl::getPrecursorMass(long scanNumber, MSOrder msOrder) const
         double result = raw_->GetFilterForScanNumber(scanNumber)->GetMass((int) msOrder - 2);
         // raw_->GetFilterForScanNumber(scanNumber)->GetIsolationWidthOffset() ??
 #endif
-        if (!isolationMzOffsetByScanDescription.empty())
-        {
-            try
-            {
-                string scanDescription = getTrailerExtraValue(scanNumber, "Scan Description:");
-                auto findItr = isolationMzOffsetByScanDescription.find(scanDescription);
-                if (findItr != isolationMzOffsetByScanDescription.end())
-                    result += findItr->second;
-            }
-            catch (RawEgg&)
-            {
-            }
-        }
-
-        return result;
+        return calculateIsolationMzWithOffset(scanNumber, result);
     }
     CATCH_AND_FORWARD
+}
+
+double RawFileImpl::calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyWithOffset) const
+{
+    try
+    {
+        // if scan description is empty, scan can't be mapped back to instrument method, and thus reported mass is not known (could be either offset or original)
+        string scanDescription = getTrailerExtraValue(scanNumber, "Scan Description:");
+        if (bal::trim_copy(scanDescription).empty())
+        {
+            double monoMz = getTrailerExtraValueDouble(scanNumber, "Monoisotopic M/Z:");
+            if (monoMz > 0)
+            {
+                double offset = getTrailerExtraValueDouble(scanNumber, "MS2 Isolation Offset:");
+                double iw = getTrailerExtraValueDouble(scanNumber, "MS2 Isolation Width:");
+                if (iw - fabs(monoMz - isolationMzPossiblyWithOffset) < -fabs(offset)) // if true, reported mass is probably original
+                    isolationMzPossiblyWithOffset += offset;
+            }
+        }
+        else
+        {
+            if (isolationMzOffsetByScanDescription.empty())
+                return isolationMzPossiblyWithOffset;
+
+            auto findItr = isolationMzOffsetByScanDescription.find(scanDescription);
+            if (findItr != isolationMzOffsetByScanDescription.end() && !findItr->second.reportedMassIsOffset)
+                isolationMzPossiblyWithOffset += findItr->second.offset;
+        }
+    }
+    catch (RawEgg&)
+    {
+    }
+
+    return isolationMzPossiblyWithOffset;
 }
 
 
@@ -1862,6 +1891,7 @@ void RawFileImpl::parseInstrumentMethod()
     bool scanEventDetails = false;
     bool dataDependentSettings = false;
     double lastIsolationMzOffset = 0;
+    string lastReportedMassType = "Original"; // assume original for older instruments where reported mass is not given
 
 
     sregex scanSegmentRegex = sregex::compile("\\s*Segment (\\d+) Information\\s*");
@@ -1872,6 +1902,7 @@ void RawFileImpl::parseInstrumentMethod()
     sregex defaultIsolationWidthRegex = sregex::compile("\\s*MS(\\d+) Isolation Width:\\s*(\\S+)\\s*");
     sregex defaultIsolationWindowRegex = sregex::compile("\\s*Isolation Window \\(m/z\\) =\\s*(\\S+)\\s*");
     sregex isolationMzOffsetRegex = sregex::compile("\\s*Isolation m/z Offset =\\s*(\\S+)\\s*");
+    sregex reportedMassRegex = sregex::compile("\\s*Reported Mass =\\s*(\\S+) Mass\\s*");
     sregex scanDescriptionRegex = sregex::compile("\\s*Scan Description =\\s*(\\S+)\\s*");
 
     smatch what;
@@ -1963,11 +1994,18 @@ void RawFileImpl::parseInstrumentMethod()
             continue;
         }
 
+        if (regex_match(line, what, reportedMassRegex))
+        {
+            lastReportedMassType = what[1];
+            continue;
+        }
+
         if (regex_match(line, what, scanDescriptionRegex) && lastIsolationMzOffset != 0)
         {
             string scanDescription = what[1];
-            isolationMzOffsetByScanDescription[scanDescription] = lastIsolationMzOffset;
+            isolationMzOffsetByScanDescription[scanDescription] = IsolationMzOffset{ lastIsolationMzOffset, lastReportedMassType == "Offset" };
             lastIsolationMzOffset = 0;
+            lastReportedMassType = "Original";
             continue;
         }
 
@@ -2640,23 +2678,14 @@ double RawFileThreadImpl::getPrecursorMass(long scanNumber, MSOrder msOrder) con
         double result = raw_->GetFilterForScanNumber(scanNumber)->GetMass((int)msOrder - 2);
         // raw_->GetFilterForScanNumber(scanNumber)->GetIsolationWidthOffset() ??
 
-        if (!rawFile_->isolationMzOffsetByScanDescription.empty())
-        {
-            try
-            {
-                string scanDescription = getTrailerExtraValue(scanNumber, "Scan Description:");
-                auto findItr = rawFile_->isolationMzOffsetByScanDescription.find(scanDescription);
-                if (findItr != rawFile_->isolationMzOffsetByScanDescription.end())
-                    result += findItr->second;
-            }
-            catch (RawEgg&)
-            {
-            }
-        }
-
-        return result;
+        return calculateIsolationMzWithOffset(scanNumber, result);
     }
     CATCH_AND_FORWARD
+}
+
+double RawFileThreadImpl::calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyWithOffset) const
+{
+    return rawFile_->calculateIsolationMzWithOffset(scanNumber, isolationMzPossiblyWithOffset);
 }
 
 

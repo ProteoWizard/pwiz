@@ -32,6 +32,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -115,7 +116,8 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 17;
+        private const int FORMAT_VERSION_CACHE = 18;
+        // V18 crosslinks
         // V17 add ID file (alongside already-cached spectrum source file)
         // V16 scores and score types
         // V15 add score to peak boundaries
@@ -761,8 +763,13 @@ namespace pwiz.Skyline.Model.Lib
                         LibKey key;
                         if (isProteomic)
                         {
-                            var peptideLibraryKey = new PeptideLibraryKey(sequence, charge);
-                            key = new LibKey(peptideLibraryKey);
+                            LibraryKey libraryKey =
+                                CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(sequence, charge);
+                            if (libraryKey == null)
+                            {
+                                libraryKey = new PeptideLibraryKey(sequence, charge);
+                            }
+                            key = new LibKey(libraryKey);
                         }
                         else
                         {

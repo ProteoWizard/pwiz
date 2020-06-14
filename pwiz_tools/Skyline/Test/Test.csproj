@@ -148,6 +148,7 @@
     <Compile Include="CommandLineMProphetTest.cs" />
     <Compile Include="CreateTextSequencesTest.cs" />
     <Compile Include="CrosslinkModTest.cs" />
+    <Compile Include="CrosslinkSequenceParserTest.cs" />
     <Compile Include="CustomMoleculeTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />

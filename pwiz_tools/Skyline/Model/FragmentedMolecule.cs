@@ -497,10 +497,11 @@ namespace pwiz.Skyline.Model
 
             public MassDistribution GetMassDistribution(Molecule molecule, double massShift, int charge)
             {
-                var massDistribution = new MassDistribution(MassResolution, MinAbundance);
+                var emptyMassDistribution = new MassDistribution(MassResolution, MinAbundance);
+                var massDistribution = emptyMassDistribution;
                 foreach (var entry in molecule)
                 {
-                    massDistribution = massDistribution.Add(IsotopeAbundances[entry.Key].Multiply(entry.Value));
+                    massDistribution = massDistribution.Add(emptyMassDistribution.Add(IsotopeAbundances[entry.Key]).Multiply(entry.Value));
                 }
                 if (charge != 0 || massShift != 0)
                 {

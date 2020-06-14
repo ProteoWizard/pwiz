@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
         const double testRTWindow = 4.56;
 
 
-        public static readonly ExplicitTransitionGroupValues TESTVALUES_GROUP = ExplicitTransitionGroupValues.Create(2.34, eIonMobilityUnits.drift_time_msec, 345.6); // Using this helps catch untested functionality as we add members
+        public static readonly ExplicitTransitionGroupValues TESTVALUES_GROUP = ExplicitTransitionGroupValues.Create(1.234, 2.34, eIonMobilityUnits.drift_time_msec, 345.6); // Using this helps catch untested functionality as we add members
         public static readonly ExplicitTransitionValues TESTVALUES_TRAN =  ExplicitTransitionValues.Create(1.23, -.345, 5.67, 6.78, 7.89);
 
         protected override void DoTest()
@@ -261,6 +261,7 @@ namespace pwiz.SkylineTestFunctional
             var editMoleculeDlgA = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
             RunUI(() =>
             {
+                editMoleculeDlgA.PrecursorCollisionEnergy = TESTVALUES_GROUP.CollisionEnergy.Value;
                 // Test the "set" part of "Issue 371: Small molecules: need to be able to import and/or set CE, RT and DT for individual precursors and products"
                 editMoleculeDlgA.IonMobility = TESTVALUES_GROUP.IonMobility.Value;
                 editMoleculeDlgA.IonMobilityUnits = TESTVALUES_GROUP.IonMobilityUnits;

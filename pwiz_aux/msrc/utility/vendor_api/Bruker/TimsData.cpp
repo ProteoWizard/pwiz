@@ -298,7 +298,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
     bool isDdaPasef = db.has_table("PasefFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM PasefFrameMsMsInfo").begin()->get<int>(0) > 0;
     bool isDiaPasef = !isDdaPasef && db.has_table("DiaFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM DiaFrameMsMsInfo").begin()->get<int>(0) > 0;
-    hasPASEFData_ = isDdaPasef | isDiaPasef;
+    bool isPrmPasef = !isDdaPasef && !isDiaPasef && db.has_table("PrmFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM PrmFrameMsMsInfo").begin()->get<int>(0) > 0;
+    hasPASEFData_ = isDdaPasef | isDiaPasef | isPrmPasef;
 
     string pasefIsolationMzFilter;
     if (hasPASEFData_ && !isolationMzFilter_.empty())
@@ -352,7 +353,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 info.intensity = row.get<double>(++idx);
             }
         }
-        else // DiaPasef
+        else if (isDiaPasef)
         {
             string querySql = "SELECT Frame, MIN(ScanNumBegin), MAX(ScanNumEnd), IsolationMz, IsolationWidth, AVG(CollisionEnergy), f.WindowGroup "
                               "FROM DiaFrameMsMsInfo f "
@@ -437,6 +438,40 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
                 frame->windowGroup_ = windowGroup; 
                 frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
+            }
+        }
+        else // PrmPasef
+        {
+            string querySql = "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, MonoisotopicMz, Charge, Target "
+                              "FROM PrmFrameMsMsInfo f "
+                              "JOIN PrmTargets t ON t.Id=f.Target " +
+                              pasefIsolationMzFilter +
+                              "ORDER BY Frame, ScanNumBegin";
+            sqlite::query q(db, querySql.c_str());
+            for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
+            {
+                sqlite::query::rows row = *itr;
+                int idx = -1;
+                int64_t frameId = row.get<sqlite3_int64>(++idx);
+
+                auto findItr = frames_.find(frameId);
+                if (findItr == frames_.end()) // numPeaks == 0, but sometimes still shows up in PasefFrameMsMsInfo!?
+                    continue;
+                auto& frame = findItr->second;
+
+                frame->pasef_precursor_info_.emplace_back(new PasefPrecursorInfo);
+                PasefPrecursorInfo& info = *frame->pasef_precursor_info_.back();
+
+                info.scanBegin = row.get<int>(++idx);
+                info.scanEnd = row.get<int>(++idx) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
+
+                info.isolationMz = row.get<double>(++idx);
+                info.isolationWidth = row.get<double>(++idx);
+                info.collisionEnergy = row.get<double>(++idx);
+                info.monoisotopicMz = row.get<double>(++idx);
+                info.charge = row.get<int>(++idx);
+                info.avgScanNumber = 0;
+                info.intensity = 0;
             }
         }
     }
@@ -657,6 +692,7 @@ TimsFrame::TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
         case MsMsType::MRM: msLevel_ = 2; break; // MRM
         case MsMsType::DDA_PASEF: msLevel_ = 2; break; // PASEF
         case MsMsType::DIA_PASEF: msLevel_ = 2; break; // DIA
+        case MsMsType::PRM_PASEF: msLevel_ = 2; break; // PRM
         default: throw runtime_error("Unhandled msmsType: " + lexical_cast<string>((int) msmsType_));
     }
 }
