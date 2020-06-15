@@ -3522,6 +3522,12 @@ namespace pwiz.Skyline.Model
 
     public class WatersMassListExporter : AbstractMassListExporter
     {
+        // Hack to workaround limitation of 32 transitions per function
+        protected readonly Dictionary<string, int> _compoundCounts = new Dictionary<string, int>();
+        protected const int MAX_COMPOUND_NAME = 32;
+
+        protected bool USE_COMPOUND_COUNT_WORKAROUND { get { return true; } }
+
         public WatersMassListExporter(SrmDocument document)
             : this(document, null)
         {
@@ -3596,6 +3602,7 @@ namespace pwiz.Skyline.Model
             // and this allows for 512 peptide charge states and not just 512 precursors.
 //            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
 //                nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods));
+
             var compound = GetCompound(nodePep, nodeTranGroup);
             compound += '.';
             compound += nodeTranGroup.PrecursorAdduct.AsFormulaOrInt();
@@ -3604,7 +3611,22 @@ namespace pwiz.Skyline.Model
                 compound += '.';
                 compound += step.ToString(CultureInfo);
             }
+
+            if (USE_COMPOUND_COUNT_WORKAROUND)
+            {
+                if (!_compoundCounts.ContainsKey(compound))
+                {
+                    _compoundCounts[compound] = 0;
+                }
+                else
+                {
+                    int compoundStep = ++_compoundCounts[compound] / MAX_COMPOUND_NAME + 1;
+                    if (compoundStep > 1)
+                        compound += '.' + compoundStep.ToString(CultureInfo);
+                }
+            }
             writer.WriteDsvField(compound, FieldSeparator, FieldSeparatorReplacement);
+
             writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
