@@ -160,6 +160,10 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             mzAcqRangeLower = lexical_cast<double>(value);
         else if (key == "MzAcqRangeUpper")
             mzAcqRangeUpper = lexical_cast<double>(value);
+        else if (key == "OneOverK0AcqRangeLower")
+            oneOverK0AcqRangeLower_ = lexical_cast<double>(value);
+        else if (key == "OneOverK0AcqRangeUpper")
+            oneOverK0AcqRangeUpper_ = lexical_cast<double>(value);
     }
 
     // get frame count
@@ -629,6 +633,9 @@ size_t TimsDataImpl::getLCSourceCount() const { return 0; }
 size_t TimsDataImpl::getLCSpectrumCount(int source) const { return 0; }
 LCSpectrumSourcePtr TimsDataImpl::getLCSource(int source) const { return 0; }
 LCSpectrumPtr TimsDataImpl::getLCSpectrum(int source, int scan) const { return LCSpectrumPtr(); }
+double TimsDataImpl::getOneOverK0AcqRangeLower() const { return oneOverK0AcqRangeLower_; }
+double TimsDataImpl::getOneOverK0AcqRangeUpper() const { return oneOverK0AcqRangeUpper_; }
+
 
 ChromatogramPtr TimsDataImpl::getTIC(bool ms1Only) const { return ms1Only ? ticMs1_ : tic_; }
 ChromatogramPtr TimsDataImpl::getBPC(bool ms1Only) const { return ms1Only ? bpcMs1_ : bpc_; }

@@ -52,6 +52,9 @@ class PWIZ_API_DECL SpectrumList_IonMobility : public msdata::SpectrumListWrappe
     /// returns true if file in question will return ion mobility in 3-array format
     virtual bool hasCombinedIonMobility() const;
 
+    // returns true if file has ion mobility and its measurement range is readily knowable. Sets the reference values if so.
+    virtual bool getIonMobilityRange(double& imLow, double &imHigh);
+
     /// returns collisional cross-section associated with the ion mobility (units depend on IonMobilityEquipment)
     virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const;
 

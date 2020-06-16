@@ -139,6 +139,14 @@ PWIZ_API_DECL bool SpectrumList_IonMobility::hasCombinedIonMobility() const
     return sl_->hasCombinedIonMobility();
 }
 
+// returns true if file has ion mobility and its measurement range is readily knowable. Sets the reference values if so.
+PWIZ_API_DECL bool SpectrumList_IonMobility::getIonMobilityRange(double& imLow, double &imHigh)
+{
+    if (sl_ == nullptr)
+        return false;
+    return sl_->getIonMobilityRange(imLow, imHigh);
+}
+
 PWIZ_API_DECL double SpectrumList_IonMobility::ionMobilityToCCS(double ionMobility, double mz, int charge) const
 {
     switch (equipment_)

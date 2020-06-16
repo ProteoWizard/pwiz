@@ -576,11 +576,6 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        public double? GetMaxIonMobility()
-        {
-            return GetMaxIonMobilityInList();
-        }
-
         public bool HasCombinedIonMobilitySpectra => SpectrumList != null && IonMobilityUnits != eIonMobilityUnits.none &&  _ionMobilitySpectrumList != null && _ionMobilitySpectrumList.hasCombinedIonMobility();
 
         /// <summary>
@@ -1032,13 +1027,28 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private double? GetMaxIonMobilityInList()
+        public bool GetInstrumentIonMobilityRange(out double? minIonMobility, out double? maxIonMobility)
         {
-            if (IonMobilitySpectrumList == null || IonMobilitySpectrumList.size() == 0)
-                return null;
+            minIonMobility = null;
+            maxIonMobility = null;
 
+            if (IonMobilitySpectrumList == null || IonMobilitySpectrumList.size() == 0)
+            {
+                return false; // This isn't ion mobility data
+            }
+
+            // Try to get from metadata (as of June 2020 this only works for Bruker TDF)
+            double low = 0, high = 0;
+            if (_ionMobilitySpectrumList.getIonMobilityRange(ref low, ref high))
+            {
+                minIonMobility = low;
+                maxIonMobility = high;
+                return true;
+            }
+
+            double? scanTime = null;
             // Assume that if any spectra have ion mobility values, all do, and all are same range
-            double? maxIonMobility = null;
+            // (bad assumption for Bruker PASEF, but we have metadata for that and won't hit this logic)
             for (var i = 0; i < IonMobilitySpectrumList.size(); i++)
             {
                 using (var spectrum = IonMobilitySpectrumList.spectrum(i, true))
@@ -1052,27 +1062,36 @@ namespace pwiz.ProteowizardWrapper
                         if (i < 20 || IsWatersLockmassSpectrum(GetSpectrum(spectrum, i)))
                             continue;  // In SONAR data, lockmass scan without IM info doesn't mean there's no IM info
                         if (!maxIonMobility.HasValue)
-                            return null; 
+                            return false; 
                     }
+
                     if (!maxIonMobility.HasValue)
                     {
                         maxIonMobility = ionMobility.Mobility;
                         if (ionMobilities != null)
                         {
-                            break; // 3-array representation, we've seen the range in one go
+                            // 3-array representation, we've seen the range in one go
+                            minIonMobility = IonMobilityValue.GetIonMobilityValue(ionMobilities.Min(), IonMobilityUnits).Mobility;
+                            break; 
                         }
+                        minIonMobility = ionMobility.Mobility;
                     }
-                    else if (Math.Abs(ionMobility.Mobility??0) < Math.Abs(maxIonMobility.Value))
+                    if (!scanTime.HasValue)
                     {
-                        break;  // We've cycled 
+                        scanTime = GetStartTime(spectrum);
+                    }
+                    else if (scanTime != GetStartTime(spectrum))
+                    {
+                        break; // We have cycled, seen all the IM values
                     }
                     else
                     {
-                        maxIonMobility = ionMobility.Mobility;
+                        minIonMobility = Math.Min(ionMobility.Mobility.Value, minIonMobility.Value);
+                        maxIonMobility = Math.Max(ionMobility.Mobility.Value, maxIonMobility.Value);
                     }
                 }
             }
-            return maxIonMobility;
+            return maxIonMobility.HasValue;
         }
 
         /// <summary>
@@ -1644,8 +1663,7 @@ namespace pwiz.ProteowizardWrapper
         {
             unchecked
             {
-                int result = 0;
-                result = (result * 397) ^ (Model != null ? Model.GetHashCode() : 0);
+                int result = (Model != null ? Model.GetHashCode() : 0);
                 result = (result * 397) ^ (Ionization != null ? Ionization.GetHashCode() : 0);
                 result = (result * 397) ^ (Analyzer != null ? Analyzer.GetHashCode() : 0);
                 result = (result * 397) ^ (Detector != null ? Detector.GetHashCode() : 0);

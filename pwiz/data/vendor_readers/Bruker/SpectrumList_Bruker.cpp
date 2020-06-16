@@ -731,6 +731,18 @@ PWIZ_API_DECL bool SpectrumList_Bruker::hasPASEF() const
     return compassDataPtr_->hasPASEFData();
 }
 
+PWIZ_API_DECL bool SpectrumList_Bruker::getIonMobilityRange(double& imLow, double& imHigh) const
+{
+    if (format_ != Reader_Bruker_Format_TDF)
+    {
+        return false;
+    }
+    imLow = compassDataPtr_->getOneOverK0AcqRangeLower();
+    imHigh = compassDataPtr_->getOneOverK0AcqRangeUpper();
+    return true;
+}
+
+
 PWIZ_API_DECL bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const
 {
     return format_ == Reader_Bruker_Format_TDF;
@@ -793,6 +805,7 @@ SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, cons
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 bool SpectrumList_Bruker::hasIonMobility() const { return false; }
 bool SpectrumList_Bruker::hasCombinedIonMobility() const { return false; }
+bool SpectrumList_Bruker::getIonMobilityRange(double& imLow, double &imHigh) const { return false; }
 bool SpectrumList_Bruker::hasPASEF() const { return false; }
 bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const { return false; }
 double SpectrumList_Bruker::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}

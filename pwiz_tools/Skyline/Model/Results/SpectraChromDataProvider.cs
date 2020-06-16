@@ -43,7 +43,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly IRetentionTimePredictor _retentionTimePredictor;
         private List<string> _scanIdList = new List<string>();
         private readonly bool _isProcessedScans;
-        private double? _maxIonMobilityValue;
+        private double? _minIonMobilityInstrumentRange;
+        private double? _maxIonMobilityInstrumentRange;
         private bool _isSingleMzMatch;
         private bool _sourceHasPositivePolarityData;
         private bool _sourceHasNegativePolarityData;
@@ -113,13 +114,12 @@ namespace pwiz.Skyline.Model.Results
 
             UpdatePercentComplete();
 
-            if (NeedMaxIonMobilityValue(dataFile))
-                _maxIonMobilityValue = dataFile.GetMaxIonMobility();
+            dataFile.GetInstrumentIonMobilityRange(out _minIonMobilityInstrumentRange, out _maxIonMobilityInstrumentRange);
 
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);
             _filter = new SpectrumFilter(_document, FileInfo.FilePath, new DataFileInstrumentInfo(dataFile),
-                _maxIonMobilityValue, _retentionTimePredictor, firstPass, _globalChromatogramExtractor);
+                _minIonMobilityInstrumentRange, _maxIonMobilityInstrumentRange, _retentionTimePredictor, firstPass, _globalChromatogramExtractor);
 
             if (!_isSrm && (_filter.EnabledMs || _filter.EnabledMsMs))
             {
@@ -215,7 +215,7 @@ namespace pwiz.Skyline.Model.Results
             var dataFile = _spectra.Detach();
 
             // Start the second pass
-            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _maxIonMobilityValue, _retentionTimePredictor, false, _globalChromatogramExtractor);
+            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _minIonMobilityInstrumentRange, _maxIonMobilityInstrumentRange, _retentionTimePredictor, false, _globalChromatogramExtractor);
             _spectra = null;
             _isSrm = false;
 

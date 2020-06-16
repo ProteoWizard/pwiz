@@ -481,6 +481,21 @@ bool SpectrumList_IonMobility::hasCombinedIonMobility()
     try { return base_->hasCombinedIonMobility(); } CATCH_AND_FORWARD
 }
 
+bool SpectrumList_IonMobility::getIonMobilityRange(double% imLow, double% imHigh)
+{
+    try
+    {
+        double low, high;
+        if (base_->getIonMobilityRange(low, high))
+        {
+            imLow = low;
+            imHigh = high;
+            return true;
+        }
+        return false;
+    } CATCH_AND_FORWARD
+}
+
 bool SpectrumList_IonMobility::canConvertIonMobilityAndCCS(IonMobilityUnits units)
 {
     try { return base_->canConvertIonMobilityAndCCS(static_cast<b::SpectrumList_IonMobility::IonMobilityUnits>(units)); } CATCH_AND_FORWARD

@@ -331,6 +331,9 @@ struct PWIZ_API_DECL CompassData
     virtual InstrumentSource getInstrumentSource() const = 0;
     virtual std::string getAcquisitionSoftware() const = 0;
     virtual std::string getAcquisitionSoftwareVersion() const = 0;
+    virtual double getOneOverK0AcqRangeLower() const = 0;
+    virtual double getOneOverK0AcqRangeUpper() const = 0;
+
 };
 
 typedef CompassData::Ptr CompassDataPtr;

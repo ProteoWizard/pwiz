@@ -76,6 +76,7 @@ class PWIZ_API_DECL SpectrumListIonMobilityBase : public SpectrumListBase
     public:
     virtual bool hasIonMobility() const = 0;
     virtual bool hasCombinedIonMobility() const = 0; // Returns true if IM data is returned in 3-array format
+    virtual bool getIonMobilityRange(double& imLow, double &imHigh) const = 0; // Returns false if ion mobility range metadata is not available
     // CONSIDER: should this be in the interface? virtual bool hasPASEF() const = 0;
     virtual bool canConvertIonMobilityAndCCS() const = 0;
     virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const = 0;

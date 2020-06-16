@@ -56,6 +56,7 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListIonMobilityBase
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     virtual bool hasIonMobility() const;
+    virtual bool getIonMobilityRange(double& imLow, double& imHigh) const;
     virtual bool hasPASEF() const;
     virtual bool canConvertIonMobilityAndCCS() const;
     virtual bool hasCombinedIonMobility() const;

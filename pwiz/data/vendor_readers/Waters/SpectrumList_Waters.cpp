@@ -353,6 +353,12 @@ PWIZ_API_DECL bool SpectrumList_Waters::hasCombinedIonMobility() const
     return rawdata_->HasIonMobility() && config_.combineIonMobilitySpectra;
 }
 
+PWIZ_API_DECL bool SpectrumList_Waters::getIonMobilityRange(double& imLow, double &imHigh) const
+{
+    return false; // This is not metadata we have at hand
+}
+
+
 PWIZ_API_DECL bool SpectrumList_Waters::canConvertIonMobilityAndCCS() const
 {
     return rawdata_->HasCcsCalibration();
@@ -639,6 +645,7 @@ const SpectrumIdentity& SpectrumList_Waters::spectrumIdentity(size_t index) cons
 size_t SpectrumList_Waters::find(const std::string& id) const {return 0;}
 bool SpectrumList_Waters::hasIonMobility() const {return false;}
 bool SpectrumList_Waters::hasCombinedIonMobility() const {return false;}
+bool SpectrumList_Waters::getIonMobilityRange(double& imLow, double &imHigh) const { return false; }
 bool SpectrumList_Waters::canConvertIonMobilityAndCCS() const {return false;}
 double SpectrumList_Waters::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}
 double SpectrumList_Waters::ccsToIonMobility(double ccs, double mz, int charge) const {return 0;}
