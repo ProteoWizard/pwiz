@@ -1038,12 +1038,16 @@ namespace pwiz.ProteowizardWrapper
             }
 
             // Try to get from metadata (as of June 2020 this only works for Bruker TDF)
-            double low = 0, high = 0;
-            if (_ionMobilitySpectrumList.getIonMobilityRange(ref low, ref high))
+            foreach (var ic in _msDataFile.instrumentConfigurationList)
             {
-                minIonMobility = low;
-                maxIonMobility = high;
-                return true;
+                var paramMinIM = ic.userParam(@"MS_instrument_ion_mobility_range_min");
+                if (!paramMinIM.empty())
+                {
+                    var paramMaxIM = ic.userParam(@"MS_instrument_ion_mobility_range_max");
+                    minIonMobility = paramMinIM.value;
+                    maxIonMobility = paramMaxIM.value;
+                    return true;
+                }
             }
 
             double? scanTime = null;

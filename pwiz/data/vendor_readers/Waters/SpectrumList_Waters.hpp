@@ -70,7 +70,6 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
 
     virtual bool hasIonMobility() const;
     virtual bool hasCombinedIonMobility() const;
-    virtual bool getIonMobilityRange(double& imLow, double &imHigh) const;
     virtual bool canConvertIonMobilityAndCCS() const;
     virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const;
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;

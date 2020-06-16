@@ -67,7 +67,6 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListIonMobilityBase
     virtual double ionMobilityToCCS(double driftTime, double mz, int charge) const;
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
     virtual bool hasCombinedIonMobility() const;
-    virtual bool getIonMobilityRange(double& imLow, double& imHigh) const;
 
 #ifdef PWIZ_READER_AGILENT
     SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile, const Reader::Config& config);

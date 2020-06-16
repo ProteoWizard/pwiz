@@ -273,6 +273,16 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
             break; // unknown configuration
     }
 
+    // Report ion mobility measurement range if any
+    double imRangeLow = rawfile->getOneOverK0AcqRangeLower();
+    double imRangeHigh = rawfile->getOneOverK0AcqRangeUpper();
+    if (imRangeLow != imRangeHigh)
+    {
+        configurations.back().userParams.push_back(UserParam("MS_instrument_ion_mobility_range_min", lexical_cast<string>(imRangeLow)));
+        configurations.back().userParams.push_back(UserParam("MS_instrument_ion_mobility_range_max", lexical_cast<string>(imRangeHigh)));
+    }
+
+
     return configurations;
 }
 

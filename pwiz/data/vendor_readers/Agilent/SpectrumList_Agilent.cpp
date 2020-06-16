@@ -552,7 +552,6 @@ PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Agilent::spectrum3d(dou
 PWIZ_API_DECL bool SpectrumList_Agilent::hasIonMobility() const { return rawfile_->hasIonMobilityData(); }
 PWIZ_API_DECL bool SpectrumList_Agilent::hasCombinedIonMobility() const { return rawfile_->hasIonMobilityData() && config_.combineIonMobilitySpectra; }
 PWIZ_API_DECL bool SpectrumList_Agilent::canConvertIonMobilityAndCCS() const { return rawfile_->canConvertDriftTimeAndCCS(); };
-PWIZ_API_DECL bool SpectrumList_Agilent::getIonMobilityRange(double& imLow, double &imHigh) const { return false; } // This is not metadata we have at hand
 PWIZ_API_DECL double SpectrumList_Agilent::ionMobilityToCCS(double driftTime, double mz, int charge) const { return rawfile_->driftTimeToCCS(driftTime, mz, charge); }
 PWIZ_API_DECL double SpectrumList_Agilent::ccsToIonMobility(double ccs, double mz, int charge) const { return rawfile_->ccsToDriftTime(ccs, mz, charge); }
 
