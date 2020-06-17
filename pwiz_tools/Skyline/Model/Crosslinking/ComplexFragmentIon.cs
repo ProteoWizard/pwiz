@@ -305,16 +305,6 @@ namespace pwiz.Skyline.Model.Crosslinking
             return Children.Count.CompareTo(other.Children.Count);
         }
 
-        public double TotalLossMass
-        {
-            get
-            {
-                double totalLoss = TransitionLosses == null ? 0 : TransitionLosses.Mass;
-                totalLoss += Children.Values.Sum(child => child.TotalLossMass);
-                return totalLoss;
-            }
-        }
-
         /// <summary>
         /// Returns the text that should be displayed for this in the Targets tree.
         /// </summary>
