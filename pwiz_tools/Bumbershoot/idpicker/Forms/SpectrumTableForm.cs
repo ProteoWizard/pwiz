@@ -260,9 +260,9 @@ namespace IDPicker.Forms
 
             public static NHibernate.IQuery GetQuery(NHibernate.ISession session, DataFilter dataFilter)
             {
-                if (dataFilter.Spectrum?.Count == 1 ||
-                    dataFilter.Peptide?.Count == 1 ||
-                    dataFilter.DistinctMatchKey?.Count == 1)
+                if (dataFilter.Spectrum?.Any() == true ||
+                    dataFilter.Peptide?.Any() == true ||
+                    dataFilter.DistinctMatchKey?.Any() == true)
                 {
                     var basicFilter = new DataFilter(dataFilter)
                     {
@@ -309,7 +309,9 @@ namespace IDPicker.Forms
 
             public static int GetQueryCount(NHibernate.ISession session, DataFilter dataFilter)
             {
-                if (dataFilter.Spectrum != null && dataFilter.Spectrum.Count == 1)
+                if (dataFilter.Spectrum?.Any() == true ||
+                    dataFilter.Peptide?.Any() == true ||
+                    dataFilter.DistinctMatchKey?.Any() == true)
                 {
                     dataFilter = new DataFilter(dataFilter)
                     {
@@ -317,7 +319,10 @@ namespace IDPicker.Forms
                         Modifications = null,
                         ModifiedSite = null,
                         Cluster = null,
-                        Protein = null
+                        Protein = null,
+                        ProteinGroup = null,
+                        Gene = null,
+                        GeneGroup = null
                     };
                 }
 

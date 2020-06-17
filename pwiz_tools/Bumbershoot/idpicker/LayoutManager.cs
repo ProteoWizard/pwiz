@@ -402,9 +402,16 @@ namespace IDPicker
 
                 if (!String.IsNullOrEmpty(items[2]))
                 {
-                    var userType = new FormPropertiesUserType();
-                    newLayout.FormProperties = userType.Assemble(items[2], null) as Dictionary<string, FormProperty>;
-                    newLayout.HasCustomColumnSettings = true;
+                    try
+                    {
+                        var userType = new FormPropertiesUserType();
+                        newLayout.FormProperties = (userType.Assemble(items[2], null) ?? new Dictionary<string, FormProperty>()) as Dictionary<string, FormProperty>;
+                        newLayout.HasCustomColumnSettings = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        Program.HandleException(ex);
+                    }
                 }
 
                 _userLayoutList.Add(newLayout);
