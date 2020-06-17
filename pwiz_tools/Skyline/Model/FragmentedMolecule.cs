@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -154,16 +155,26 @@ namespace pwiz.Skyline.Model
             {
                 return;
             }
+
+            ModifiedSequence fragmentSequence;
             if (FragmentIonType == IonType.precursor)
             {
                 FragmentOrdinal = UnmodifiedSequence.Length;
+                fragmentSequence = ModifiedSequence;
+            }
+            else
+            {
+                FragmentOrdinal = Math.Max(1, Math.Min(UnmodifiedSequence.Length, FragmentOrdinal));
+                fragmentSequence = GetFragmentSequence(ModifiedSequence, FragmentIonType, FragmentOrdinal);
+            }
+
+            if (FragmentIonType == IonType.precursor && FragmentLosses.Count == 0)
+            {
                 FragmentFormula = SetCharge(precursorNeutralFormula, FragmentCharge);
                 FragmentMassShift = PrecursorMassShift;
             }
             else
             {
-                FragmentOrdinal = Math.Max(1, Math.Min(UnmodifiedSequence.Length, FragmentOrdinal));
-                ModifiedSequence fragmentSequence = GetFragmentSequence(ModifiedSequence, FragmentIonType, FragmentOrdinal);
                 double fragmentMassShift;
                 FragmentFormula = GetSequenceFormula(fragmentSequence, FragmentMassType, out fragmentMassShift);
                 FragmentFormula = AddFragmentLosses(FragmentFormula, FragmentLosses, FragmentMassType, ref fragmentMassShift);

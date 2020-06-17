@@ -676,7 +676,7 @@ namespace pwiz.Skyline.Model
                     var linkedPeptide = mods.GetLinkedPeptide(modificationSite);
                     var childName = ComplexFragmentIonName.FromLinkedIonProto(linkedIon);
                     complexFragmentIon = complexFragmentIon.AddChild(modificationSite,
-                        linkedPeptide.MakeComplexFragmentIon(group.LabelType, childName));
+                        linkedPeptide.MakeComplexFragmentIon(settings, group.LabelType, childName));
                 }
                 transitionDocNode = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, annotations, transitionQuantInfo, explicitTransitionValues, results);
             }

@@ -1,5 +1,6 @@
 ﻿syntax = "proto3";
 option csharp_namespace = "pwiz.Skyline.Model.Serialization";
+option java_package = "org.labkey.targetedms.parser.proto";
 message SkylineDocumentProto {
 	enum UserSet {
 		USER_SET_FALSE = 0;

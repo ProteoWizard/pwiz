@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 foreach (var loss in TransitionLosses.Losses)
                 {
-                    name = name.AddLoss(null, loss.ToString());
+                    name = name.AddLoss(loss.PrecursorMod.Name, loss.LossIndex);
                 }
             }
 
@@ -289,6 +289,16 @@ namespace pwiz.Skyline.Model.Crosslinking
             return Children.Count.CompareTo(other.Children.Count);
         }
 
+        public double TotalLossMass
+        {
+            get
+            {
+                double totalLoss = TransitionLosses == null ? 0 : TransitionLosses.Mass;
+                totalLoss += Children.Values.Sum(child => child.TotalLossMass);
+                return totalLoss;
+            }
+        }
+
         /// <summary>
         /// Returns the text that should be displayed for this in the Targets tree.
         /// </summary>
@@ -337,6 +347,12 @@ namespace pwiz.Skyline.Model.Crosslinking
                         stringBuilder.Append(child.Transition.IonType);
                         stringBuilder.Append(child.Transition.Ordinal);
                     }
+                }
+
+                double totalLoss = TotalLossMass;
+                if (totalLoss != 0)
+                {
+                    stringBuilder.Append(@" -" + Math.Round(totalLoss, 1));
                 }
 
                 stringBuilder.Append(@"]");

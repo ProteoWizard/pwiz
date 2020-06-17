@@ -395,7 +395,7 @@ namespace pwiz.Skyline.Model.Serialization
                             {
                                 foreach (var loss in losses.Losses)
                                 {
-                                    // TODO
+                                    linkedIon = linkedIon.AddLoss(loss.PrecursorMod.Name, loss.LossIndex);
                                 }
                             }
                         }
@@ -1491,7 +1491,7 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     var linkedPeptide = mods.GetLinkedPeptide(linkedIon.Key);
                     complexFragmentIon = complexFragmentIon.AddChild(linkedIon.Key,
-                        linkedPeptide.MakeComplexFragmentIon(group.LabelType, linkedIon.Value));
+                        linkedPeptide.MakeComplexFragmentIon(Settings, group.LabelType, linkedIon.Value));
                 }
 
                 node = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, info.Annotations,
