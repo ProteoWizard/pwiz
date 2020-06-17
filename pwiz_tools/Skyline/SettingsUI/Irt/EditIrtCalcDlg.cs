@@ -95,8 +95,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 _originalPeptides?.Select(p=>p.Target));
             _gridViewStandardDriver.SetTargetResolver(targetResolver);
             _gridViewLibraryDriver.SetTargetResolver(targetResolver);
-            columnStandardSequence.SetSmallMoleculesColumnManagementProvider(_gridViewStandardDriver); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
-            columnLibrarySequence.SetSmallMoleculesColumnManagementProvider(_gridViewLibraryDriver); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
+            columnStandardSequence.SetSmallMoleculesColumnManagementProvider(_gridViewStandardDriver.SmallMoleculeColumnsManager); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
+            columnLibrarySequence.SetSmallMoleculesColumnManagementProvider(_gridViewLibraryDriver.SmallMoleculeColumnsManager); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
         }
 
         private void OnLoad(object sender, EventArgs e)

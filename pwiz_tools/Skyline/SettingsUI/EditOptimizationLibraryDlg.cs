@@ -68,7 +68,7 @@ namespace pwiz.Skyline.SettingsUI
 
             _gridViewLibraryDriver = new LibraryGridViewDriver(gridViewLibrary, bindingSourceLibrary,
                                                                new SortableBindingList<DbOptimization>(), this, document, targetResolver);
-            columnSequence.SetSmallMoleculesColumnManagementProvider(_gridViewLibraryDriver); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
+            columnSequence.SetSmallMoleculesColumnManagementProvider(_gridViewLibraryDriver.SmallMoleculeColumnsManager); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
 
 
             if (lib != null)

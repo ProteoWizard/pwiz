@@ -28,17 +28,6 @@ namespace pwiz.Skyline.Controls
 {
 
     /// <summary>
-    /// Interface which guarantees automatic management of small molecule details in
-    /// data grids originally designed for peptides
-    /// </summary>
-    public interface ISmallMoleculeColumnsManagementProvider
-    {
-        TargetResolver TargetResolver { get; }
-        SmallMoleculeColumnsManager SmallMoleculeColumnsManager { get; }
-    }
-
-
-    /// <summary>
     /// Handles updating small molecule detail columns when target is set
     /// </summary>
     public class SmallMoleculeColumnsManager
@@ -47,26 +36,14 @@ namespace pwiz.Skyline.Controls
         /// Examines all targets in the targetResolver's document to see what kind of detail columns are needed
         /// </summary>
         /// <param name="gridView">The data grid to be given additional small molecule detail columns</param>
-        /// <param name="targetResolver">Used as a source of targets to examine to see which details (KEGG, InChI etc) are needed. If null, assume all details are needed.</param>
+        /// <param name="targetResolver">Used as a source of targets to examine to see which details (KEGG, InChI etc) are needed. If none, assume all details are needed.</param>
         /// <param name="modeUI">Current UI display type, helps decide what to do when no targets are provided</param>
         /// <param name="readOnly">When true, small molecule detail columns are not editable</param>
         /// <param name="insertColumnsAt">Where to insert the new columns. Default is to the right of existing columns.</param>
-        public SmallMoleculeColumnsManager(DataGridView gridView, TargetResolver targetResolver, SrmDocument.DOCUMENT_TYPE modeUI, bool readOnly, int insertColumnsAt = -1) :
-            this(gridView, targetResolver.AvailableTargets, modeUI, readOnly, insertColumnsAt)
-        {
-        }
-
-        /// <summary>
-        /// Examines listed targets to see what kind of detail columns are needed (i.e. do any targets have KEGG IDs, InChiKeys etc)
-        /// </summary>
-        /// <param name="gridView">The data grid to be given additional small molecule detail columns</param>
-        /// <param name="targets">Targets to examine to see which details (KEGG, InChI etc) are needed. If null, assume all details are needed.</param>
-        /// <param name="modeUI">Current UI display type, helps decide what to do when no targets are provided</param>
-        /// <param name="readOnly">When true, small molecule detail columns are not editable</param>
-        /// <param name="insertColumnsAt">Where to insert the new columns. Default is to the right of existing columns.</param>
-        public SmallMoleculeColumnsManager(DataGridView gridView, IEnumerable<Target> targets, SrmDocument.DOCUMENT_TYPE modeUI, bool readOnly, int insertColumnsAt = -1)
+        public SmallMoleculeColumnsManager(DataGridView gridView, TargetResolver targetResolver, SrmDocument.DOCUMENT_TYPE modeUI, bool readOnly, int insertColumnsAt = -1)
         {
             DataGridView = gridView;
+            TargetResolver = targetResolver;
             ModeUI = modeUI;
             InsertColumnsAt = insertColumnsAt;
             ReadOnly = readOnly;
@@ -75,6 +52,8 @@ namespace pwiz.Skyline.Controls
                 InsertColumnsAt = gridView.Columns.Count; // Just add detail columns to the right of everything else
             }
             var smallMoleculeLibraryAttributes = new List<SmallMoleculeLibraryAttributes>();
+
+            var targets = targetResolver.AvailableTargets;
 
             if (targets != null)
             {
@@ -131,7 +110,7 @@ namespace pwiz.Skyline.Controls
 
         public SmallMoleculeColumnsManager ChangeTargetResolver(TargetResolver targetResolver)
         {
-            return new SmallMoleculeColumnsManager(DataGridView, targetResolver.AvailableTargets, ModeUI, ReadOnly, InsertColumnsAt);
+            return new SmallMoleculeColumnsManager(DataGridView, targetResolver, ModeUI, ReadOnly, InsertColumnsAt);
         }
 
         /// <summary>
@@ -202,6 +181,7 @@ namespace pwiz.Skyline.Controls
 
         private DataGridView DataGridView { get; }
         private int? FormulaColumnIndex { get; } // Always leftmost of inserted detail columns
+        public TargetResolver TargetResolver { get; private set; }
         private int InsertColumnsAt;
         private bool ReadOnly;
         private SrmDocument.DOCUMENT_TYPE ModeUI;

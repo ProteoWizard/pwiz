@@ -32,7 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.SettingsUI
 {
 
-    public abstract class PeptideGridViewDriver<TItem> : SimpleGridViewDriver<TItem>, ISmallMoleculeColumnsManagementProvider
+    public abstract class PeptideGridViewDriver<TItem> : SimpleGridViewDriver<TItem>
         where TItem : IPeptideData
 
     {
@@ -44,23 +44,23 @@ namespace pwiz.Skyline.SettingsUI
         {
             GridView.CellValidating += gridView_CellValidating;
             GridView.RowValidating += gridView_RowValidating;
-            TargetResolver = targetResolver ?? TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI, items?.Select(p => p.Target));
-            SmallMoleculeColumnsManager = new SmallMoleculeColumnsManager(gridView, TargetResolver, modeUI, true);
-            // Find any TargetColumns and have them use us as small molecule column management provider
+            SmallMoleculeColumnsManager = new SmallMoleculeColumnsManager(gridView,
+                targetResolver ?? TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI, items?.Select(p => p.Target)), 
+                modeUI, true);
+            // Find any TargetColumns and have them use same small molecule column manager
             foreach (var col in this.GridView.Columns)
             {
-                (col as TargetColumn)?.SetSmallMoleculesColumnManagementProvider(this); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
+                (col as TargetColumn)?.SetSmallMoleculesColumnManagementProvider(SmallMoleculeColumnsManager); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
             }
         }
 
         protected bool AllowNegativeTime { get; set; }
 
-        public TargetResolver TargetResolver { get; private set; }
+        public TargetResolver TargetResolver { get { return SmallMoleculeColumnsManager.TargetResolver; } }
         public SmallMoleculeColumnsManager SmallMoleculeColumnsManager { get; private set;  }
 
         public void SetTargetResolver(TargetResolver targetResolver)
         {
-            TargetResolver = targetResolver;
             SmallMoleculeColumnsManager = SmallMoleculeColumnsManager.ChangeTargetResolver(targetResolver);
         }
 

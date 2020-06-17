@@ -40,17 +40,15 @@ namespace pwiz.Skyline.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public TargetResolver TargetResolver { get { return _smallMoleculeColumnsManagementProvider.TargetResolver; } }
+        public TargetResolver TargetResolver { get { return SmallMoleculeColumnsManager.TargetResolver; } }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public SmallMoleculeColumnsManager SmallMoleculeColumnsManager { get { return _smallMoleculeColumnsManagementProvider.SmallMoleculeColumnsManager; } }
+        public SmallMoleculeColumnsManager SmallMoleculeColumnsManager { get; private set; }
 
-        private ISmallMoleculeColumnsManagementProvider _smallMoleculeColumnsManagementProvider;
-
-        public void SetSmallMoleculesColumnManagementProvider(ISmallMoleculeColumnsManagementProvider gridViewDriver)
+        public void SetSmallMoleculesColumnManagementProvider(SmallMoleculeColumnsManager gridViewDriver)
         {
-            _smallMoleculeColumnsManagementProvider = gridViewDriver;
+            SmallMoleculeColumnsManager = gridViewDriver;
         }
 
         public Target TryResolveTarget(string targetName, DataGridViewCellCollection cells, int rowIndex, out string errorMessage)

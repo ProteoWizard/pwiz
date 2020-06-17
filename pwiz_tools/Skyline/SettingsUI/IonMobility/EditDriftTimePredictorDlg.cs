@@ -76,7 +76,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             _driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes, ModeUI);
 
-            MeasuredDriftTimeSequence.SetSmallMoleculesColumnManagementProvider(_driftTable); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
+            MeasuredDriftTimeSequence.SetSmallMoleculesColumnManagementProvider(_driftTable.SmallMoleculeColumnsManager); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
 
             // TODO: ion mobility libraries are more complex than initially thought - leave these conversions to the mass spec vendors for now
             labelIonMobilityLibrary.Visible = comboLibrary.Visible = false;
@@ -516,18 +516,17 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         }
     }
 
-    public class MeasuredDriftTimeTable : ISmallMoleculeColumnsManagementProvider
+    public class MeasuredDriftTimeTable
     {
         private readonly DataGridView _gridMeasuredDriftTimePeptides;
-        public TargetResolver TargetResolver { get; }
         public SmallMoleculeColumnsManager SmallMoleculeColumnsManager { get; }
 
         public MeasuredDriftTimeTable(DataGridView gridMeasuredDriftTimePeptides, SrmDocument.DOCUMENT_TYPE modeUI)
         {
             _gridMeasuredDriftTimePeptides = gridMeasuredDriftTimePeptides;
-            TargetResolver =  TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
+            var targetResolver =  TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
             SmallMoleculeColumnsManager =
-                new SmallMoleculeColumnsManager(gridMeasuredDriftTimePeptides, TargetResolver, modeUI, true);
+                new SmallMoleculeColumnsManager(gridMeasuredDriftTimePeptides, targetResolver, modeUI, true);
         }
 
         public Dictionary<LibKey, IonMobilityAndCCS> GetTableMeasuredIonMobility(bool useHighEnergyOffsets, eIonMobilityUnits units)
@@ -551,7 +550,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 // OK, we have a non-empty "sequence" string, but is that actually a peptide or a molecule?
                 // See if there's anything in the document whose text representation matches what's in the list
                
-                var target = TargetResolver.TryResolveTarget(seq, out _) ?? SmallMoleculeColumnsManager.TryGetSmallMoleculeTargetFromDetails(seq, row.Cells, rowNumber++, out _);
+                var target = SmallMoleculeColumnsManager.TargetResolver.TryResolveTarget(seq, out _) ?? SmallMoleculeColumnsManager.TryGetSmallMoleculeTargetFromDetails(seq, row.Cells, rowNumber++, out _);
                 if (target == null || target.IsEmpty)
                     return null;
 
