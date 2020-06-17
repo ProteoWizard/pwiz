@@ -49,6 +49,8 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications;
             });
             var editModListDlg = ShowEditStaticModsDlg(peptideSettingsUi);
+            // Define a crosslinker which is a water loss. In this way, two peptides can be joined end to end
+            // and will have the same chemical formula as a single concatenated peptide
             RunDlg<EditStaticModDlg>(editModListDlg.AddItem, editStaticModDlg=> {
                 {
                     editStaticModDlg.Modification = new StaticMod(crosslinkerName, null, null, "-H2O");
@@ -71,6 +73,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
             RunDlg<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg, pasteDlg =>
             {
+                // Insert two peptides which are equivalent to each other.
+                // The first peptide is composed of two short peptides concatenated with the hydrolysis crosslinker.
                 SetClipboardText(@"AMNFS[Phospho (ST)]GSPGAV-STSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR-[Hydrolysis@11,1]
 AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
                 pasteDlg.PastePeptides();
