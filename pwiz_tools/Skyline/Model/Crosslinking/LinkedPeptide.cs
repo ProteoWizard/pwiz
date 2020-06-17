@@ -250,15 +250,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                     0, Adduct.SINGLY_PROTONATED);
             }
 
-            var losses = new List<TransitionLoss>();
-            foreach (var lossTuple in complexFragmentIonName.Losses)
-            {
-                losses.Add(MakeTransitionLoss(settings, lossTuple.Item1, lossTuple.Item2));
-            }
-
-            TransitionLosses transitionLosses =
-                losses.Count == 0 ? null : new TransitionLosses(losses, settings.TransitionSettings.Prediction.FragmentMassType);
-            var result = new ComplexFragmentIon(transition, transitionLosses, CrosslinkStructure, complexFragmentIonName.IsOrphan);
+            var result = new ComplexFragmentIon(transition, null, CrosslinkStructure, complexFragmentIonName.IsOrphan);
             if (ExplicitMods != null)
             {
                 foreach (var child in complexFragmentIonName.Children)

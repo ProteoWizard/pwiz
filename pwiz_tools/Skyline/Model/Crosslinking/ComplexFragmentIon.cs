@@ -89,6 +89,11 @@ namespace pwiz.Skyline.Model.Crosslinking
             return ChangeProp(ImClone(this), im => im.CrosslinkStructure = crosslinkStructure);
         }
 
+        public ComplexFragmentIon ChangeLosses(TransitionLosses transitionLosses)
+        {
+            return ChangeProp(ImClone(this), im => im.TransitionLosses = transitionLosses);
+        }
+
         public IsotopeLabelType LabelType
         {
             get { return Transition.Group.LabelType; }
@@ -106,10 +111,29 @@ namespace pwiz.Skyline.Model.Crosslinking
                 throw new InvalidOperationException(string.Format(@"{0} cannot be a child fragment ion transition.", child.Transition));
             }
 
-            return ChangeProp(ImClone(this), im => im.Children =
-                ImmutableSortedList.FromValues(Children.Append(
-                    new KeyValuePair<ModificationSite, ComplexFragmentIon>(
-                        modificationSite, child))));
+            var newLosses = TransitionLosses;
+            if (child.TransitionLosses != null)
+            {
+                if (newLosses == null)
+                {
+                    newLosses = child.TransitionLosses;
+                }
+                else
+                {
+                    newLosses = new TransitionLosses(newLosses.Losses.Concat(child.TransitionLosses.Losses).ToList(), newLosses.MassType);
+                }
+
+                child = child.ChangeLosses(null);
+            }
+
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.Children =
+                    ImmutableSortedList.FromValues(Children.Append(
+                        new KeyValuePair<ModificationSite, ComplexFragmentIon>(
+                            modificationSite, child)));
+                im.TransitionLosses = newLosses;
+            });
         }
 
         public ComplexFragmentIon ChangeMassIndex(int massIndex)
@@ -202,14 +226,6 @@ namespace pwiz.Skyline.Model.Crosslinking
                 name = name.AddChild(child.Key, child.Value.GetName());
             }
 
-            if (null != TransitionLosses)
-            {
-                foreach (var loss in TransitionLosses.Losses)
-                {
-                    name = name.AddLoss(loss.PrecursorMod.Name, loss.LossIndex);
-                }
-            }
-
             return name;
         }
 
@@ -246,14 +262,14 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public int CompareTo(ComplexFragmentIon other)
         {
-            if (0 == GetFragmentationEventCount())
+            if (IsIonTypePrecursor)
             {
-                if (0 != other.GetFragmentationEventCount())
+                if (!other.IsIonTypePrecursor)
                 {
                     return -1;
                 }
             }
-            else if (0 == other.GetFragmentationEventCount())
+            else if (other.IsIonTypePrecursor)
             {
                 return 1;
             }
@@ -306,7 +322,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             if (IsIonTypePrecursor)
             {
-                return IonTypeExtension.GetLocalizedString(IonType.precursor);
+                return IonTypeExtension.GetLocalizedString(IonType.precursor) + GetTransitionLossesText();
             }
             StringBuilder stringBuilder = new StringBuilder();
             // Simple case of two peptides linked together
@@ -349,11 +365,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                     }
                 }
 
-                double totalLoss = TotalLossMass;
-                if (totalLoss != 0)
-                {
-                    stringBuilder.Append(@" -" + Math.Round(totalLoss, 1));
-                }
+                stringBuilder.Append(GetTransitionLossesText());
 
                 stringBuilder.Append(@"]");
                 if (includeResidues)
@@ -379,6 +391,16 @@ namespace pwiz.Skyline.Model.Crosslinking
         public string GetTargetsTreeLabel()
         {
             return GetLabel(true) + Transition.GetMassIndexText(Transition.MassIndex);
+        }
+
+        private string GetTransitionLossesText()
+        {
+            if (TransitionLosses == null)
+            {
+                return string.Empty;
+            }
+
+            return @" -" + Math.Round(TransitionLosses.Mass, 1);
         }
     }
 }

@@ -388,21 +388,14 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     while (reader.IsStartElement())
                     {
-                        if (reader.IsStartElement(EL.losses))
-                        {
-                            var losses = ReadTransitionLosses(reader);
-                            if (losses != null)
-                            {
-                                foreach (var loss in losses.Losses)
-                                {
-                                    linkedIon = linkedIon.AddLoss(loss.PrecursorMod.Name, loss.LossIndex);
-                                }
-                            }
-                        }
-                        else if (reader.IsStartElement(EL.linked_fragment_ion))
+                        if (reader.IsStartElement(EL.linked_fragment_ion))
                         {
                             var child = ReadLinkedFragmentIon(reader);
                             linkedIon = linkedIon.AddChild(child.Key, child.Value);
+                        }
+                        else
+                        {
+                            throw new InvalidDataException();
                         }
                     }
                     reader.ReadEndElement();

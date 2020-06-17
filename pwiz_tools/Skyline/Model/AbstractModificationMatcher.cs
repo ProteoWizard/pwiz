@@ -812,6 +812,7 @@ namespace pwiz.Skyline.Model
                 var aaModKey = new AAModKey()
                 {
                     AA = peptide.Sequence[mod.Key],
+                    AppearsToBeSpecificMod = true
                 };
                 MassModification massModification = MassModification.Parse(mod.Value);
                 if (massModification != null)

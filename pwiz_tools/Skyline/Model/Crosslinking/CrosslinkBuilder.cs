@@ -229,8 +229,10 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             var allTransitions =
                 RemoveUnmeasurable(precursorMz,
-                    RemoveDuplicates(
-                        GetAllComplexTransitions(transitionGroup, isotopeDist, simpleTransitions, useFilter))).ToList();
+                        RemoveDuplicates(
+                            GetAllComplexTransitions(transitionGroup, isotopeDist, simpleTransitions, useFilter)))
+                    .OrderBy(tran => tran.ComplexFragmentIon)
+                    .ToList();
             
             IList<TransitionDocNode> ms2transitions;
             IList<TransitionDocNode> ms1transitions;
@@ -272,18 +274,25 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             var startingFragmentIons = new List<ComplexFragmentIon>();
             var productAdducts = Settings.TransitionSettings.Filter.PeptideProductCharges.ToHashSet();
+            var precursorLosses = new HashSet<TransitionLosses>();
 
             foreach (var simpleTransition in simpleTransitions)
             {
                 var startingFragmentIon = simpleTransition.ComplexFragmentIon
                     .ChangeCrosslinkStructure(ExplicitMods.Crosslinks);
                 startingFragmentIons.Add(startingFragmentIon);
+                if (startingFragmentIon.IsIonTypePrecursor)
+                {
+                    precursorLosses.Add(startingFragmentIon.TransitionLosses);
+                }
             }
 
+            bool excludePrecursors = false;
             IEnumerable<Adduct> allProductAdducts;
             if (useFilter)
             {
                 allProductAdducts = Settings.TransitionSettings.Filter.PeptideProductCharges;
+                excludePrecursors = !Settings.TransitionSettings.Filter.PeptideIonTypes.Contains(IonType.precursor);
             }
             else
             {
@@ -296,23 +305,40 @@ namespace pwiz.Skyline.Model.Crosslinking
             // Add ions representing the precursor waiting to be joined with a crosslinked peptide
             foreach (var productAdduct in allProductAdducts.Distinct())
             {
-                if (productAdduct.IsValidProductAdduct(transitionGroup.PrecursorAdduct, null))
+                foreach (var transitionLosses in precursorLosses)
                 {
-                    var precursorTransition = new Transition(transitionGroup, IonType.precursor,
-                        Peptide.Sequence.Length - 1, 0, productAdduct);
+                    if (productAdduct.IsValidProductAdduct(transitionGroup.PrecursorAdduct, null))
+                    {
+                        var precursorTransition = new Transition(transitionGroup, IonType.precursor,
+                            Peptide.Sequence.Length - 1, 0, productAdduct);
 
-                    startingFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, ExplicitMods.Crosslinks, true));
-                    startingFragmentIons.Add(new ComplexFragmentIon(precursorTransition, null, ExplicitMods.Crosslinks));
+                        startingFragmentIons.Add(new ComplexFragmentIon(precursorTransition, transitionLosses, ExplicitMods.Crosslinks, true));
+                        startingFragmentIons.Add(new ComplexFragmentIon(precursorTransition, transitionLosses, ExplicitMods.Crosslinks));
+                    }
                 }
             }
 
             foreach (var complexFragmentIon in LinkedPeptide.PermuteComplexFragmentIons(ExplicitMods, Settings,
                 Settings.PeptideSettings.Modifications.MaxNeutralLosses, useFilter, startingFragmentIons.Distinct()).Distinct())
             {
-                bool isMs1 = complexFragmentIon.IsMs1;
-                if (isMs1)
+                bool isPrecursor = complexFragmentIon.IsIonTypePrecursor;
+                if (isPrecursor)
                 {
-                    if (!transitionGroup.PrecursorAdduct.Equals(complexFragmentIon.Transition.Adduct))
+                    if (excludePrecursors)
+                    {
+                        continue;
+                    }
+                    var expectedCharge = transitionGroup.PrecursorAdduct.AdductCharge;
+                    if (complexFragmentIon.TransitionLosses != null)
+                    {
+                        if (complexFragmentIon.Transition.MassIndex != 0)
+                        {
+                            continue;
+                        }
+                        expectedCharge -= complexFragmentIon.TransitionLosses.TotalCharge;
+                    }
+
+                    if (expectedCharge != complexFragmentIon.Transition.Adduct.AdductCharge)
                     {
                         continue;
                     }
