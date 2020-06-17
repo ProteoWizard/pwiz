@@ -155,7 +155,6 @@ message SkylineDocumentProto {
 		int32 modificationIndex = 3;
 		string modificationName = 4;
 		repeated LinkedIon children = 5;
-		repeated TransitionLoss losses = 6;
 		bool orphan = 7;
 	}
 }
