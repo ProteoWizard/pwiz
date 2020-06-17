@@ -18,14 +18,12 @@
  */
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
@@ -266,26 +264,6 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return result;
-        }
-
-        private TransitionLoss MakeTransitionLoss(SrmSettings settings, string modificationName, int lossIndex)
-        {
-            var staticMods = settings.PeptideSettings.Modifications.StaticModifications;
-            StaticMod modLoss = staticMods.FirstOrDefault(mod => Equals(modificationName, mod.Name));
-            if (modLoss == null)
-            {
-                throw new InvalidDataException(
-                    string.Format(Resources.TransitionInfo_ReadTransitionLosses_No_modification_named__0__was_found_in_this_document,
-                        modificationName));
-            }
-
-            if (!modLoss.HasLoss || lossIndex < 0 || lossIndex >= modLoss.Losses.Count)
-            {
-                throw new InvalidDataException(
-                    string.Format(Resources.TransitionInfo_ReadTransitionLosses_Invalid_loss_index__0__for_modification__1__,
-                        lossIndex, modificationName));
-            }
-            return new TransitionLoss(modLoss, modLoss.Losses[lossIndex], settings.TransitionSettings.Prediction.FragmentMassType);
         }
 
         /// <summary>

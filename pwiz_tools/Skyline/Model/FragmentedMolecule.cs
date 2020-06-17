@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
