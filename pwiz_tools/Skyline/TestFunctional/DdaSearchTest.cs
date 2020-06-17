@@ -1,8 +1,8 @@
 ﻿/*
- * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
+ * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2013 University of Washington - Seattle, WA
+ * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,14 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -53,35 +44,21 @@ namespace pwiz.SkylineTestFunctional
             return TestFilesDir.GetTestPath(path);
         }
 
-        /*private const string MODS_BASE_NAME = "mods";
-        private const string MODLESS_BASE_NAME = "modless";
-
-        private IEnumerable<string> SearchFilesModless
-        {
-            get { yield return GetTestPath(MODLESS_BASE_NAME + BiblioSpecLiteBuilder.EXT_PRIDE_XML); }
-        }*/
-
         private IEnumerable<string> SearchFiles
         {
-            get { return new [] {GetTestPath("Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_02.mz5"), GetTestPath("Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_03.mz5")}; }
+            get
+            {
+                return new[]
+                {
+                    GetTestPath("Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_02.mz5"),
+                    GetTestPath("Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_03.mz5")
+                };
+            }
         }
 
         protected override void DoTest()
         {
             TestAmandaSearch();
-        }
-
-        private class EmptyProteinGroupSetter : IDisposable
-        {
-            public EmptyProteinGroupSetter(int emptyCount)
-            {
-                FastaImporter.TestMaxEmptyPeptideGroupCount = emptyCount;
-            }
-
-            public void Dispose()
-            {
-                FastaImporter.TestMaxEmptyPeptideGroupCount = null;
-            }
         }
 
         /// <summary>
@@ -97,7 +74,6 @@ namespace pwiz.SkylineTestFunctional
             // We're on the "Build Spectral Library" page of the wizard.
             // Add the test xml file to the search files list and try to 
             // build the document library.
-            SrmDocument doc = SkylineWindow.Document;
 
             RunUI(() =>
             {
@@ -107,18 +83,19 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-            //WaitForDocumentChange(doc);
 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the test results files are in the same directory as the 
             // document file, so all the files should be found, and we should
             // just be able to move to the next page.
             // TODO: DDA searches should not look for result files (for DDA, the result files are the same as the search input, and for DIA, I'm not sure yet)
-            /*RunUI(() =>
+            /*
+            RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });*/
+            });
+            */
 
             // We're on the "Match Modifications" page. Select C57 and M16
             RunUI(() =>
@@ -127,9 +104,6 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.MatchModificationsControl.ChangeAll(true);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-            //WaitForDocumentChange(doc);
-
-            //PauseTest();
 
             // We're on the MS1 full scan settings page.
             RunUI(() =>
@@ -137,7 +111,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-            //WaitForDocumentChange(doc);
 
             // We're on the "Import FASTA" page.
             RunUI(() =>
@@ -183,10 +156,6 @@ namespace pwiz.SkylineTestFunctional
                 emptyProteinsDlg.OkDialog();
             });
 
-
-            //RunUI(importPeptideSearchDlg.CancelDialog);
-
-            //WaitForClosedForm(importPeptideSearchDlg);
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
         }
@@ -205,7 +174,8 @@ namespace pwiz.SkylineTestFunctional
         private void PrepareDocument(string documentFile)
         {
             RunUI(SkylineWindow.NewDocument);
-            RunUI(() => SkylineWindow.ModifyDocument("Set default settings", doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
+            RunUI(() => SkylineWindow.ModifyDocument("Set default settings", 
+                doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(documentFile)));
         }
     }
