@@ -668,10 +668,15 @@ namespace pwiz.Skyline.Model
             var newMods = new ExplicitMods(mainPeptide.Peptide, staticMods,
                 mainPeptide.ExplicitMods?.GetHeavyModifications());
             var crosslinkedPeptide = mainPeptide.ChangeExplicitMods(newMods).ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL);
-            nodeGroupMatched = new TransitionGroupDocNode(new TransitionGroup(mainPeptide.Peptide, crosslinkLibraryKey.Adduct, IsotopeLabelType.light),
-                Annotations.EMPTY, 
-                Settings, newMods, null, ExplicitTransitionGroupValues.EMPTY, null, null, true);
-            crosslinkedPeptide = (PeptideDocNode) crosslinkedPeptide.ChangeChildren(new DocNode[] {nodeGroupMatched});
+            if (!crosslinkLibraryKey.Adduct.IsEmpty)
+            {
+                nodeGroupMatched = new TransitionGroupDocNode(
+                    new TransitionGroup(mainPeptide.Peptide, crosslinkLibraryKey.Adduct, IsotopeLabelType.light),
+                    Annotations.EMPTY,
+                    Settings, newMods, null, ExplicitTransitionGroupValues.EMPTY, null, null, true);
+                crosslinkedPeptide = (PeptideDocNode)crosslinkedPeptide.ChangeChildren(new DocNode[] { nodeGroupMatched });
+            }
+
             return crosslinkedPeptide;
         }
 
@@ -812,6 +817,7 @@ namespace pwiz.Skyline.Model
                 var aaModKey = new AAModKey()
                 {
                     AA = peptide.Sequence[mod.Key],
+                    AppearsToBeSpecificMod = true
                 };
                 MassModification massModification = MassModification.Parse(mod.Value);
                 if (massModification != null)
