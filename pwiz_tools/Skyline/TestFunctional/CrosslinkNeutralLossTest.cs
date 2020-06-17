@@ -82,7 +82,7 @@ AMNFS[Phospho (ST)]GSPGAVSTSPT[Phospho (ST)]QSFM[Oxidation (M)]NTLPR");
                     Transition.GetChargeIndicator(tran.Transition.Adduct))
                 .ToList();
             Assert.AreEqual(crosslinkedPrecursor.TransitionCount, crosslinkedTransitionNames.Count);
-            PauseTest();
+
             foreach (var transitionDocNode in flatPrecursor.Transitions)
             {
                 // AMNFSGSPGAV(11)-STSPTQSFMNTLPR(14)

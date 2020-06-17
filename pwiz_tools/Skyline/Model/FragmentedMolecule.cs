@@ -366,30 +366,21 @@ namespace pwiz.Skyline.Model
         public static Molecule AddFragmentLosses(Molecule molecule, IList<FragmentLoss> fragmentLosses, 
             MassType massType, ref double unexplainedMass)
         {
+            MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(molecule, unexplainedMass, unexplainedMass);
             foreach (var fragmentLoss in fragmentLosses)
             {
-                if (string.IsNullOrEmpty(fragmentLoss.Formula))
-                {
-                    unexplainedMass += massType.IsMonoisotopic() ? fragmentLoss.MonoisotopicMass : fragmentLoss.AverageMass;
-                    continue;
-                }
-                Molecule lossFormula;
-                int ichMinus = fragmentLoss.Formula.IndexOf('-');
-                if (ichMinus < 0)
-                {
-                    lossFormula = Molecule.Parse(fragmentLoss.Formula);
-                }
-                else
-                {
-                    lossFormula = Molecule.Parse(fragmentLoss.Formula.Substring(0, ichMinus));
-                    lossFormula = lossFormula.Difference(Molecule.Parse(fragmentLoss.Formula.Substring(ichMinus + 1)));
-                }
-                foreach (var entry in lossFormula)
-                {
-                    molecule = molecule.SetElementCount(entry.Key, molecule.GetElementCount(entry.Key) - entry.Value);
-                }
+                moleculeMassOffset = moleculeMassOffset.Minus(ToMoleculeMassOffset(fragmentLoss));
             }
-            return molecule;
+
+            if (massType.IsMonoisotopic())
+            {
+                unexplainedMass = moleculeMassOffset.MonoMassOffset;
+            }
+            else
+            {
+                unexplainedMass = moleculeMassOffset.AverageMassOffset;
+            }
+            return moleculeMassOffset.Molecule;
         }
 
         public static FragmentedMolecule GetFragmentedMolecule(SrmSettings settings, PeptideDocNode peptideDocNode,
@@ -584,6 +575,26 @@ namespace pwiz.Skyline.Model
                     return hashCode;
                 }
             }
+        }
+
+        public static MoleculeMassOffset ToMoleculeMassOffset(FragmentLoss fragmentLoss)
+        {
+            if (string.IsNullOrEmpty(fragmentLoss.Formula))
+            {
+                return new MoleculeMassOffset(Molecule.Empty, fragmentLoss.MonoisotopicMass, fragmentLoss.AverageMass);
+            }
+            Molecule lossFormula;
+            int ichMinus = fragmentLoss.Formula.IndexOf('-');
+            if (ichMinus < 0)
+            {
+                lossFormula = Molecule.Parse(fragmentLoss.Formula);
+            }
+            else
+            {
+                lossFormula = Molecule.Parse(fragmentLoss.Formula.Substring(0, ichMinus));
+                lossFormula = lossFormula.Difference(Molecule.Parse(fragmentLoss.Formula.Substring(ichMinus + 1)));
+            }
+            return new MoleculeMassOffset(lossFormula, 0, 0);
         }
     }
 }
