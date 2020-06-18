@@ -832,7 +832,7 @@ namespace pwiz.Skyline.Model.Lib
 
 
                     // Read until name line
-                    if (!line.StartsWith(NAME, true, CultureInfo.InvariantCulture)) // Accept Name:, NAME:, nAmE: etc
+                    if (!line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Accept Name:, NAME:, nAmE: etc
                         continue;
                     Match match = REGEX_NAME.Match(line);
                     var isPeptide = true;
@@ -873,7 +873,7 @@ namespace pwiz.Skyline.Model.Lib
                             break;
                         }
 
-                        if (line.StartsWith(SYNON, true, CultureInfo.InvariantCulture)) // Case insensitive
+                        if (line.StartsWith(SYNON, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
                         {
                             isPeptide = false;
                         }
@@ -962,7 +962,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
 
                         // For peptides, a lot of useful info is jammed into the COMMENT line and must be further picked apart
-                        if (line.StartsWith(COMMENT, true, CultureInfo.InvariantCulture)) // Case insensitive
+                        if (line.StartsWith(COMMENT, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
                         {
                             match = REGEX_MODS.Match(line);
                             if (match.Success)
@@ -985,9 +985,9 @@ namespace pwiz.Skyline.Model.Lib
                                 irt = GetRetentionTime(match.Groups[1].Value, false);
                         }
 
-                        if (line.StartsWith(@"_EOF_", true, CultureInfo.InvariantCulture)) // Case insensitive
+                        if (line.StartsWith(@"_EOF_", StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
                             ThrowIOException(lineCount, Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
-                        else if (line.StartsWith(NAME, true, CultureInfo.InvariantCulture)) // Case insensitive
+                        else if (line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
                             break;
                     }
 
