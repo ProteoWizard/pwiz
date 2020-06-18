@@ -18298,6 +18298,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not read precursor mz value &quot;{0}&quot;.
+        /// </summary>
+        public static string NistLibraryBase_CreateCache_Could_not_read_precursor_mz_value___0__ {
+            get {
+                return ResourceManager.GetString("NistLibraryBase_CreateCache_Could_not_read_precursor_mz_value___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid format at peak {0} for {1}..
         /// </summary>
         public static string NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__ {
@@ -18325,7 +18334,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Peak count for MS/MS spectrum excedes maximum {0}..
+        ///   Looks up a localized string similar to Peak count for MS/MS spectrum exceeds maximum {0}..
         /// </summary>
         public static string NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__ {
             get {
