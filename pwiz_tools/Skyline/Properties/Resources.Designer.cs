@@ -18298,11 +18298,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not read precursor mz value &quot;{0}&quot;.
+        ///   Looks up a localized string similar to Could not read the precursor m/z value &quot;{0}&quot;.
         /// </summary>
-        public static string NistLibraryBase_CreateCache_Could_not_read_precursor_mz_value___0__ {
+        public static string NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__ {
             get {
-                return ResourceManager.GetString("NistLibraryBase_CreateCache_Could_not_read_precursor_mz_value___0__", resourceCulture);
+                return ResourceManager.GetString("NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__", resourceCulture);
             }
         }
         

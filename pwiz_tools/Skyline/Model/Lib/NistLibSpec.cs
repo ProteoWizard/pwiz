@@ -946,7 +946,7 @@ namespace pwiz.Skyline.Model.Lib
                                 }
                                 catch
                                 {
-                                    ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_precursor_mz_value___0__, line) );
+                                    ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__ , line) );
                                 }
                                 continue;
                             }
@@ -999,14 +999,10 @@ namespace pwiz.Skyline.Model.Lib
                             // In MoNA LipidBlast we've seen "[C11H22NO4]+" associated with adduct [M]+
                             formula = formula.Substring(1).Split(']')[0];
                         }
-                        // In MoNA Fiehn-HILIC we see "C7H9N2O+" associated with adduct [M]+
-                        else if (formula.Contains(@"+"))
+                        // In MoNA Fiehn-HILIC we see "C7H9N2O+" associated with adduct [M]+ or "C7H9N2O-" with [M]-
+                        else
                         {
-                            formula = formula.Split('+')[0];
-                        }
-                        else if (formula.Contains(@"-"))
-                        {
-                            formula = formula.Split('-')[0];
+                            formula = formula.Split('+', '-')[0];
                         }
                     }
 
