@@ -118,8 +118,8 @@
                   </xs:element>
                   <xs:element minOccurs="0" maxOccurs="unbounded" name="measured_dt">
                     <xs:complexType>
-                      <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
-                      <xs:attribute name="charge" type="xs:nonNegativeInteger" use="required"/>
+                      <xs:attribute name="modified_sequence" type="xs:string" use="required"/>  <!-- for non-proteomics data this will actually be InChiKey or other ID -->
+                      <xs:attribute name="charge" type="xs:string" use="required"/> <!-- may be an adduct or a simple integer for protonated charge -->
                       <xs:attribute name="drift_time" type="xs:double" use="required"/>
                       <xs:attribute name="high_energy_drift_time_offset" type="xs:double" use="optional"/>
                       <xs:attribute name="ccs" type="xs:double" use="optional"/>
@@ -397,9 +397,14 @@
               </xs:complexType>
             </xs:element>
           </xs:sequence>
+          <!-- For peptides, integer charges imply protonation -->
           <xs:attribute name="precursor_charges" type="xs:string"/>
           <xs:attribute name="product_charges" type="xs:string"/>
+          <!-- For small molecules, we have the more general adduct scheme for ionization -->
+          <xs:attribute name="precursor_adducts" type="xs:string"/>
+          <xs:attribute name="product_adducts" type="xs:string"/>
           <xs:attribute name="fragment_types" type="xs:string"/>
+          <xs:attribute name="small_molecule_fragment_types" type="xs:string"/>
           <xs:attribute name="fragment_range_first" type="xs:string"/>
           <xs:attribute name="fragment_range_last" type="xs:string"/>
           <xs:attribute name="precursor_mz_window" type="xs:double"/>
@@ -410,6 +415,7 @@
       <xs:element name="transition_libraries">
         <xs:complexType>
           <xs:attribute name="ion_match_tolerance" type="xs:double" use="required"/>
+          <xs:attribute name="min_ion_count" type="xs:nonNegativeInteger"/>
           <xs:attribute name="ion_count" type="xs:positiveInteger" use="required"/>
           <xs:attribute name="pick_from" type="transition_library_pick_type"
               use="required"/>
@@ -587,11 +593,11 @@
       </xs:element>
       <xs:element name="views" minOccurs="0">
         <xs:complexType>
-          <xs:sequence>
-            <xs:element name="view" minOccurs="0" maxOccurs="unbounded">
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="view">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element name="column" minOccurs ="0" maxOccurs="unbounded">
+                <xs:element name="column" minOccurs ="0" maxOccurs="unbounded">
                     <xs:complexType>
                       <xs:attribute name="name" type="xs:string"/>
                       <xs:attribute name="caption" type="xs:string" />
@@ -615,7 +621,74 @@
                 <xs:attribute name="sublist" type="xs:string" />
               </xs:complexType>
             </xs:element>
-          </xs:sequence>
+            <xs:element name="layouts">
+              <xs:complexType>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                  <xs:element name="layout">
+                    <xs:complexType>
+                      <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:element name="columnFormat">
+                          <xs:complexType>
+                            <xs:attribute name="column" type="xs:string"/>
+                            <xs:attribute name="width" type="xs:int"/>
+                            <xs:attribute name="format" type="xs:string"/>
+                          </xs:complexType>
+                        </xs:element>
+                        <xs:element name="pivot">
+                          <xs:complexType>
+                            <xs:sequence>
+                              <xs:element name="rowHeader" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                  <xs:attribute name="sourceColumn" type="xs:string"/>
+                                  <xs:attribute name="caption" type="xs:string"/>
+                                </xs:complexType>
+                              </xs:element>
+                              <xs:element name="columnHeader" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                  <xs:attribute name="sourceColumn" type="xs:string"/>
+                                </xs:complexType>
+                              </xs:element>
+                              <xs:element name="value" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                  <xs:attribute name="sourceColumn" type="xs:string"/>
+                                  <xs:attribute name="caption" type="xs:string"/>
+                                  <xs:attribute name="op" type="xs:string"/>
+                                </xs:complexType>
+                              </xs:element>
+                            </xs:sequence>
+                          </xs:complexType>
+                        </xs:element>
+                        <xs:element name="rowFilter">
+                          <xs:complexType>
+                            <xs:sequence>
+                              <xs:element name="columnFilter" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                  <xs:attribute name="column" type="xs:string"/>
+                                  <xs:attribute name="opname" type="xs:string"/>
+                                  <xs:attribute name="operand" type="xs:string"/>
+                                </xs:complexType>
+                              </xs:element>
+                              <xs:element name="columnSort" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                  <xs:attribute name="column" type="xs:string"/>
+                                  <xs:attribute name="direction" type="xs:string"/>
+                                </xs:complexType>
+                              </xs:element>
+                            </xs:sequence>
+                            <xs:attribute name="text" type="xs:string"/>
+                            <xs:attribute name="caseSensitive" type="xs:boolean"/>
+                          </xs:complexType>
+                        </xs:element>
+                      </xs:choice>
+                      <xs:attribute name="name" type="xs:string"/>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:choice>
+                <xs:attribute name="viewName" type="xs:string"/>
+                <xs:attribute name="defaultLayout" type="xs:string"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:choice>
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -731,12 +804,14 @@
           <xs:element name="precursor" type="non_proteomic_transition_group_type" minOccurs="0"
               maxOccurs="unbounded"/>
         </xs:sequence>
-        <!-- "formula" was the obsolete form from when we assumed we had to add a hydrogen for ionizaion.  The modern form requires the molecular formula of the actual ion. -->
-        <!-- Must be a chemical formula, and may contain an adduct description eg "C12H34[M+K]" -->
-        <xs:attribute name="ion_formula" type="xs:string" use="optional"/>
-        <xs:attribute name="mass_monoisotopic" type="xs:double" use="required"/>
-        <xs:attribute name="mass_average" type="xs:double" use="required"/>
+        <!-- Use neutral_formula for non-ionized molecules - must be a chemical formula, and may NOT contain an adduct description -->
+        <xs:attribute name="neutral_formula" type="xs:string" use="optional"/>
+        <!-- Where Skyline says "mass" it typically means "massH", because of its proteomics roots.  Starting with 3.62 we use neutral_mass_* to distinguish them. -->
+        <xs:attribute name="neutral_mass_monoisotopic" type="xs:double" use="required"/>
+        <xs:attribute name="neutral_mass_average" type="xs:double" use="required"/>
         <xs:attribute name="custom_ion_name" type="xs:string" use="optional"/>
+        <!--Any or all of InChiKey, CAS, HMDB etc tab separated -->
+        <xs:attribute name="id" type="xs:string" use="optional"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1009,8 +1084,11 @@
         <!-- Must be a chemical formula, and may contain an adduct description eg "C12H34[M+K]" -->
         <xs:attribute name="ion_formula" type="xs:string" use="optional"/>
         <xs:attribute name="custom_ion_name" type="xs:string" use="optional"/>
-        <xs:attribute name="mass_monoisotopic" type="xs:double" use="required"/>
-        <xs:attribute name="mass_average" type ="xs:double" use="required"/>
+        <!-- Where Skyline says "mass" it typically means "massH", because of its proteomics roots.  Starting with 3.62 we use neutral_mass_* to distinguish them. -->
+        <xs:attribute name="neutral_mass_monoisotopic" type="xs:double" use="required"/>
+        <xs:attribute name="neutral_mass_average" type="xs:double" use="required"/>
+        <!--Any or all of InChiKey, CAS, HMDB etc tab separated -->
+        <xs:attribute name="id" type="xs:string" use="optional"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1089,7 +1167,6 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="quantitative" type="xs:boolean" default="true"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1098,9 +1175,16 @@
     <xs:complexContent>
       <xs:extension base="general_transition_type">
         <xs:sequence>
-          <!-- strictly speaking this should be in general_transition_type, 
+          <!-- strictly speaking these elements should be in general_transition_type,
+            rather than duplicated in proteomic_transition_type and non_proteomic_transition_type 
             but that would require a change of order for element read/write in
             traditional Skyline peptide documents -->
+          <xs:element name="transition_lib_info" minOccurs="0" maxOccurs="1">
+            <xs:complexType>
+              <xs:attribute name="rank" type="xs:positiveInteger" use="required"/>
+              <xs:attribute name="intensity" type="xs:double" use="required"/>
+            </xs:complexType>
+          </xs:element>
           <xs:element name="transition_results" minOccurs="0" maxOccurs="1">
             <xs:complexType>
               <xs:sequence>
@@ -1114,8 +1198,11 @@
         <!-- Must be a chemical formula, and may contain an adduct description eg "C12H34[M+K]" -->
         <xs:attribute name="ion_formula" type="xs:string"/>
         <xs:attribute name="custom_ion_name" type="xs:string"/>
-        <xs:attribute name="mass_monoisotopic" type="xs:double" use="required"/>
-        <xs:attribute name="mass_average" type ="xs:double" use="required"/>
+        <!-- Where Skyline says "mass" it typically means "massH", because of its proteomics roots.  Starting with 3.62 we use neutral_mass_* to distinguish them. -->
+        <xs:attribute name="neutral_mass_monoisotopic" type="xs:double" use="required"/>
+        <xs:attribute name="neutral_mass_average" type="xs:double" use="required"/>
+        <!--Any or all of InChiKey, CAS, HMDB etc tab separated -->
+        <xs:attribute name="id" type="xs:string" use="optional"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1486,6 +1573,20 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attribute name="label_37Cl" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation>
+          This attribute is used only for isotope modifications.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="label_81Br" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation>
+          This attribute is used only for isotope modifications.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>    
     <xs:attribute name="relative_rt" type="relative_rt_type">
       <xs:annotation>
         <xs:documentation>
