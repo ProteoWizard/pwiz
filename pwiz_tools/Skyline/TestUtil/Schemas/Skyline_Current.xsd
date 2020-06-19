@@ -539,6 +539,7 @@
                 <xs:attribute name="acquired_time" type="xs:dateTime"/>
                 <xs:attribute name="modified_time" type="xs:dateTime"/>
                 <xs:attribute name="explicit_global_standard_area" type="xs:double"/>
+                <xs:attribute name="tic_area" type="xs:double" />
               </xs:complexType>
             </xs:element>
             <xs:element name="annotation" type="annotation_type" minOccurs="0" maxOccurs="unbounded"/>
@@ -997,10 +998,11 @@
   <xs:complexType name ="non_proteomic_transition_group_type">
     <xs:complexContent>
       <xs:extension base="general_transition_group_type">
-        <xs:sequence>
+        <xs:choice>
+          <xs:element name="transition_data" type="xs:base64Binary" />
           <xs:element name="transition" type="non_proteomic_transition_type" minOccurs="0"
               maxOccurs="unbounded"/>
-        </xs:sequence>
+        </xs:choice>
         <!-- for custom molecules, changes in charge or label mean a change in ion formula -->
         <!-- Must be a chemical formula, and may contain an adduct description eg "C12H34[M+K]" -->
         <xs:attribute name="ion_formula" type="xs:string" use="optional"/>
@@ -1014,10 +1016,11 @@
   <xs:complexType name="transition_group_type">
     <xs:complexContent>
       <xs:extension base="general_transition_group_type">
-        <xs:sequence>
+        <xs:choice>
+          <xs:element name="transition_data" type="xs:base64Binary" />
           <xs:element name="transition" type="proteomic_transition_type" minOccurs="0"
               maxOccurs="unbounded"/>
-        </xs:sequence>
+        </xs:choice>
         <xs:attribute name="calc_neutral_mass" type="xs:double" use="required"/>
         <xs:attribute name="decoy_mass_shift" type="xs:double"/>
         <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
