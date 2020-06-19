@@ -352,6 +352,9 @@
           <xs:attribute name="normalization" type="xs:string" />
           <xs:attribute name="units" type="xs:string" />
           <xs:attribute name="ms_level" type="xs:integer" />
+          <xs:attribute name="lod_calculation" type="xs:string" />
+          <xs:attribute name="max_loq_bias" type="xs:double" />
+          <xs:attribute name="max_loq_cv" type="xs:double" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -562,6 +565,7 @@
           <xs:attribute name="sample_type" type="xs:string" />
           <xs:attribute name="analyte_concentration" type="xs:double" />
           <xs:attribute name="has_midas_spectra" type="xs:boolean" />
+          <xs:attribute name="sample_dilution_factor" type="xs:double"/>
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -1185,6 +1189,7 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="quantitative" type="xs:boolean" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1517,10 +1522,12 @@
   <xs:complexType name="lib_spec_type">
     <xs:attribute name="name" use="required"/>
     <xs:attribute name="file_path" use="required"/>
+    <xs:attribute name="use_explicit_peak_bounds" type="xs:boolean"/>
   </xs:complexType>
   <xs:complexType name="lib_type">
     <xs:attribute name="name" type="xs:string"/>
     <xs:attribute name="file_name_hint" type="xs:string"/>
+    <xs:attribute name="use_explicit_peak_bounds" type="xs:boolean"/>
   </xs:complexType>
   <xs:complexType name="spectrum_header_info_type">
     <xs:attribute name="library_name"/>
