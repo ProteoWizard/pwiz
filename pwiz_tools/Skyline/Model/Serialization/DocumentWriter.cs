@@ -498,10 +498,18 @@ namespace pwiz.Skyline.Model.Serialization
             if (!isCustomIon)
             {
                 // modified sequence
-                var calcPre = Settings.GetPrecursorCalc(node.TransitionGroup.LabelType, nodePep.ExplicitMods);
-                var seq = node.TransitionGroup.Peptide.Target;
-                writer.WriteAttribute(ATTR.modified_sequence, calcPre.GetModifiedSequence(seq,
-                    false)); // formatNarrow = false; We want InvariantCulture, not the local format
+                if (nodePep.ExplicitMods != null && nodePep.ExplicitMods.HasCrosslinks)
+                {
+                    writer.WriteAttribute(ATTR.modified_sequence, 
+                        Settings.GetCrosslinkModifiedSequence(nodePep.Target, node.TransitionGroup.LabelType, nodePep.ExplicitMods, false));
+                }
+                else
+                {
+                    var calcPre = Settings.GetPrecursorCalc(node.TransitionGroup.LabelType, nodePep.ExplicitMods);
+                    var seq = node.TransitionGroup.Peptide.Target;
+                    writer.WriteAttribute(ATTR.modified_sequence, calcPre.GetModifiedSequence(seq,
+                        false)); // formatNarrow = false; We want InvariantCulture, not the local format
+                }
                 Assume.IsTrue(group.PrecursorAdduct.IsProteomic);
             }
             else
