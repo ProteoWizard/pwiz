@@ -115,6 +115,7 @@
                       <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
                       <xs:attribute name="charge" type="xs:nonNegativeInteger" use="required"/>
                       <xs:attribute name="drift_time" type="xs:double" use="required"/>
+                      <xs:attribute name="high_energy_drift_time_offset" type="xs:double" use="optional"/>
                     </xs:complexType>
                   </xs:element>
                 </xs:sequence>
