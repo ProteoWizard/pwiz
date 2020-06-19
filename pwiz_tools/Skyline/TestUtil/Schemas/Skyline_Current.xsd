@@ -242,6 +242,17 @@
                 </xs:complexContent>
               </xs:complexType>
             </xs:element>
+            <xs:element name="chromatogram_library">
+              <xs:complexType>
+                <xs:complexContent>
+                  <xs:extension base="lib_type">
+                    <xs:attribute name="name" type="xs:string"/>
+                    <xs:attribute name="panorama_server" type="xs:string"/>
+                    <xs:attribute name="revision" type="xs:integer"/>
+                  </xs:extension>
+                </xs:complexContent>
+              </xs:complexType>
+            </xs:element>
           </xs:choice>
           <xs:attribute name="pick" type="peptide_pick_type" use="required"/>
           <xs:attribute name="rank_type" type="peptide_rank_type"/>
@@ -295,11 +306,20 @@
           </xs:attribute>
         </xs:complexType>
       </xs:element>
+      <xs:element name="peptide_integration" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:any minOccurs="1" maxOccurs="1" processContents="skip"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="quantification" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:attribute name="weighting" type="xs:string"/>
           <xs:attribute name="fit" type="xs:string" />
           <xs:attribute name="normalization" type="xs:string" />
+          <xs:attribute name="units" type="xs:string" />
+          <xs:attribute name="ms_level" type="xs:integer" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -317,6 +337,12 @@
                 type="predict_collision_energy_type" minOccurs="0"/>
             <xs:element name="predict_declustering_potential"
                 type="predict_declustering_potential_type" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="optimized_library" minOccurs="0">
+              <xs:complexType>
+                <xs:attribute name="name" type="xs:string"/>
+                <xs:attribute name="database_path" type="xs:string" />
+              </xs:complexType>
+            </xs:element>
             <xs:element name="predict_compensation_voltage"
                 type="predict_compensation_voltage_type" minOccurs="0" maxOccurs="1"/>
           </xs:sequence>
@@ -375,6 +401,7 @@
           <xs:attribute name="min_time" type="xs:nonNegativeInteger"/>
           <xs:attribute name="max_time" type="xs:nonNegativeInteger"/>
           <xs:attribute name="max_transitions" type="xs:nonNegativeInteger"/>
+          <xs:attribute name="max_inclusions" type="xs:integer"/>
         </xs:complexType>
       </xs:element>
       <xs:element name="transition_full_scan" minOccurs="0" maxOccurs="1">
@@ -407,6 +434,7 @@
                       <xs:attribute name="margin_left" type="xs:double"/>
                       <xs:attribute name="margin_right" type="xs:double"/>
                       <xs:attribute name="margin" type="xs:double"/>
+                      <xs:attribute name="ce_range" type="xs:double"/>
                     </xs:complexType>
                   </xs:element>
                 </xs:sequence>
@@ -484,8 +512,11 @@
                 <xs:attribute name="modified_time" type="xs:dateTime"/>
               </xs:complexType>
             </xs:element>
+            <xs:element name="annotation" type="annotation_type" minOccurs="0" maxOccurs="unbounded"/>
           </xs:sequence>
           <xs:attribute name="name" type="xs:string" use="required"/>
+          <xs:attribute name="sample_type" type="xs:string" />
+          <xs:attribute name="analyte_concentration" type="xs:double" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -505,6 +536,55 @@
           <xs:attribute name="type" type="data_settings_annotation_type"/>
         </xs:complexType>
       </xs:element>
+      <xs:element name="group_comparison" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="name" type="xs:string"/>
+          <xs:attribute name="control_annotation" type="xs:string"/>
+          <xs:attribute name="control_value" type="xs:string"/>
+          <xs:attribute name="case_value" type="xs:string"/>
+          <xs:attribute name="identity_annotation" type="xs:string"/>
+          <xs:attribute name="avg_tech_replicates" type="xs:boolean"/>
+          <xs:attribute name="sum_transitions" type="xs:boolean"/>
+          <xs:attribute name="normalization_method" type="xs:string"/>
+          <xs:attribute name="include_interaction_transitions" type="xs:boolean"/>
+          <xs:attribute name="summarization_method" type="xs:string"/>
+          <xs:attribute name="confidence_level" type="xs:double"/>
+          <xs:attribute name="per_protein" type="xs:boolean"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="views" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="view" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="column" minOccurs ="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:attribute name="name" type="xs:string"/>
+                      <xs:attribute name="caption" type="xs:string" />
+                      <xs:attribute name="format" type="xs:string" />
+                      <xs:attribute name="hidden" type="xs:string" />
+                      <xs:attribute name="sortindex" type="xs:string" />
+                      <xs:attribute name="sortdirection" type="xs:string" />
+                      <xs:attribute name="total" type="xs:string" />
+                    </xs:complexType>
+                  </xs:element>
+                  <xs:element name="filter" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:attribute name="column" type="xs:string"/>
+                      <xs:attribute name="opname" type="xs:string"/>
+                      <xs:attribute name="operand" type="xs:string"/>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="name" type="xs:string" />
+                <xs:attribute name="rowsource" type="xs:string"/>
+                <xs:attribute name="sublist" type="xs:string" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="doc_rt_alignments_type">
@@ -515,7 +595,7 @@
           <xs:attribute name="library" type="xs:string" use="required" />
         </xs:complexType>
       </xs:element>
-      <xs:element name="file_rt_alignments" maxOccurs="1" minOccurs="0">
+      <xs:element name="file_rt_alignments" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="rt_alignment" minOccurs="0" maxOccurs="unbounded">
@@ -526,6 +606,7 @@
               </xs:complexType>
             </xs:element>
           </xs:sequence>
+          <xs:attribute name="name" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -766,7 +847,7 @@
         <xs:attribute name="sequence" type="sequence_type" use="required"/>
         <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
         <xs:attribute name="lookup_sequence" type="xs:string"/>
-        <xs:attribute name="start" type="xs:positiveInteger"/>
+        <xs:attribute name="start" type="xs:nonNegativeInteger"/>
         <xs:attribute name="end" type="xs:positiveInteger"/>
         <xs:attribute name="prev_aa" type="prev_next_amino_acid_type"/>
         <xs:attribute name="next_aa" type="prev_next_amino_acid_type"/>
@@ -801,6 +882,15 @@
                 <xs:extension base="spectrum_header_info_type">
                   <xs:attribute name="count_measured" type="xs:nonNegativeInteger"
                       use="required"/>
+                </xs:extension>
+              </xs:complexContent>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="chromatogram_library_spectrum_header_info" minOccurs="0" maxOccurs="unbounded">
+            <xs:complexType>
+              <xs:complexContent>
+                <xs:extension base="spectrum_header_info_type">
+                  <xs:attribute name="peak_area" type="xs:double" />
                 </xs:extension>
               </xs:complexContent>
             </xs:complexType>
@@ -1109,10 +1199,13 @@
       <xs:enumeration value="text"/>
       <xs:enumeration value="true_false"/>
       <xs:enumeration value="value_list"/>
+      <xs:enumeration value="number"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="annotation_target_type">
     <xs:restriction base="xs:string">
+<!--      
+      Annotation targets are comma separated lists of the following:
       <xs:enumeration value="none"/>
       <xs:enumeration value="protein"/>
       <xs:enumeration value="peptide"/>
@@ -1120,7 +1213,7 @@
       <xs:enumeration value="transition"/>
       <xs:enumeration value="precursor_result"/>
       <xs:enumeration value="transition_result"/>
-      <xs:enumeration value="result_file"/>
+      <xs:enumeration value="replicate"/>-->
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="optimize_method_type_type">
@@ -1135,7 +1228,8 @@
       <xs:enumeration value="TRUE"/>
       <xs:enumeration value="FALSE"/>
       <xs:enumeration value="IMPORTED"/>
-      <xs:enumeration value="REINTEGRATE"/>
+      <xs:enumeration value="REINTEGRATED"/>
+      <xs:enumeration value="MATCHED"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="mass_type_type">
@@ -1283,14 +1377,14 @@
     <xs:attribute name="websearch_status" type="xs:string"/>
   </xs:attributeGroup>
   <xs:complexType name="protein_description_type">
-    <xs:attribute name="name" type="xs:string" use="required"/>
-    <xs:attribute name="description" type="xs:string" use="required"/>
+    <xs:attribute name="name" type="xs:string" use="optional"/>
+    <xs:attribute name="description" type="xs:string" use="optional"/>
     <xs:attributeGroup ref="protein_details_type"/>
   </xs:complexType>
   <xs:complexType name="note_type">
     <xs:simpleContent>
       <xs:extension base="xs:string">
-        <xs:attribute name="category" type="xs:positiveInteger"/>
+        <xs:attribute name="category" type="xs:integer"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -1351,6 +1445,7 @@
     <xs:attribute name="massdiff_average" type="xs:double"/>
     <xs:attribute name="explicit_decl" type="xs:boolean"/>
     <xs:attribute name="unimod_id" type="xs:positiveInteger"/>
+    <xs:attribute name="short_name" type="xs:string" />
   </xs:complexType>
   <!-- Structural Modification Type-->
   <xs:complexType name="structural_modification_type">
@@ -1443,6 +1538,7 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="predicted_retention_time" type="xs:double"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1463,7 +1559,7 @@
         <xs:attribute name="height" type="xs:double"/>
         <xs:attribute name="mass_error_ppm" type="xs:double"/>
         <xs:attribute name="truncated" type="xs:integer"/>
-        <xs:attribute name="identified" type="xs:boolean"/>
+        <xs:attribute name="identified" type="peak_identified_type"/>
         <xs:attribute name="library_dotp" type="xs:float"/>
         <xs:attribute name="isotope_dotp" type="xs:float"/>
         <xs:attribute name="user_set" type="user_set" use="optional"/>
@@ -1489,7 +1585,7 @@
         <xs:attribute name="height" type="xs:double"/>
         <xs:attribute name="mass_error_ppm" type="xs:double"/>
         <xs:attribute name="truncated" type="xs:boolean"/>
-        <xs:attribute name="identified" type="xs:boolean"/>
+        <xs:attribute name="identified" type="peak_identified_type"/>
         <xs:attribute name="rank" type="xs:integer"/>
         <xs:attribute name="user_set" type="user_set" use="optional"/>
       </xs:extension>
@@ -1508,4 +1604,11 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  <xs:simpleType name="peak_identified_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="true" />
+      <xs:enumeration value="false" />
+      <xs:enumeration value="aligned" />
+    </xs:restriction>
+  </xs:simpleType>
 </xs:schema>
