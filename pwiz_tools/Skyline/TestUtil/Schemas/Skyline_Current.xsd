@@ -207,6 +207,8 @@
             <xs:element name="nist_lib_spec" type="lib_spec_type"/>
             <xs:element name="spectrast_lib_spec" type="lib_spec_type"/>
             <xs:element name="midas_lib_spec" type="lib_spec_type"/>
+            <xs:element name="elib_spec" type="lib_spec_type" />
+            <xs:element name="elib_library" type="lib_type"/>
             <xs:element name="bibliospec_library">
               <xs:complexType>
                 <xs:complexContent>
@@ -1087,6 +1089,7 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="quantitative" type="xs:boolean" default="true"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
