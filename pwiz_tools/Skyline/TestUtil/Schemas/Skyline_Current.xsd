@@ -29,9 +29,10 @@
                 maxOccurs="1"/>
             <xs:element name="transition_settings" type="transition_settings_type" minOccurs="1"
                 maxOccurs="1"/>
+            <xs:element name="data_settings" type="data_settings_type" minOccurs="1" maxOccurs="1"/>
             <xs:element name="measured_results" type="measured_results_type" minOccurs="0"
                 maxOccurs="1"/>
-            <xs:element name="data_settings" type="data_settings_type" minOccurs="1" maxOccurs="1"/>
+          <xs:element name="doc_rt_alignments" type="doc_rt_alignments_type" minOccurs="0" maxOccurs="1" />
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="required"/>
     </xs:complexType>
@@ -421,6 +422,29 @@
                     <xs:attribute name="targets" type="annotation_target_type"/>
                     <xs:attribute name="type" type="data_settings_annotation_type"/>
                 </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="doc_rt_alignments_type">
+        <xs:sequence>
+            <xs:element name="rt_source" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                    <xs:attribute name="name" type="xs:string" use="required" />
+                    <xs:attribute name="library" type="xs:string" use="required" />
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="file_rt_alignments">
+                <xs:complexType>
+                    <xs:sequence>
+                      <xs:element name="rt_alignment" minOccurs="0" maxOccurs="unbounded">
+                          <xs:complexType>
+                              <xs:attribute name="name" type="xs:string" use="required" />
+                              <xs:attribute name="slope" type="xs:double" use="required" />
+                              <xs:attribute name="intercept" type="xs:double" use="required" />
+                          </xs:complexType>
+                      </xs:element>
+                  </xs:sequence>
+              </xs:complexType>
             </xs:element>
         </xs:sequence>
     </xs:complexType>
