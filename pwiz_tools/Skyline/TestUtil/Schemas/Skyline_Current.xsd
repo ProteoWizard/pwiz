@@ -15,6 +15,7 @@
                 maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attribute name="format_version" type="xs:string" use="required"/>
+        <xs:attribute name="software_version" type="xs:string" use="required"/>
     </xs:complexType>
     <xs:element name="srm_settings" type="srm_settings_type"> </xs:element>
     <!-- ================================================================== -->
@@ -584,9 +585,10 @@
                     <xs:element name="precursor" type="transition_group_type" minOccurs="0"
                         maxOccurs="unbounded"/>
                 </xs:sequence>
+                <xs:attribute name="sequence" type="sequence_type" use="required"/>
+                <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
                 <xs:attribute name="start" type="xs:positiveInteger"/>
                 <xs:attribute name="end" type="xs:positiveInteger"/>
-                <xs:attribute name="sequence" type="sequence_type" use="required"/>
                 <xs:attribute name="prev_aa" type="amino_acid_type"/>
                 <xs:attribute name="next_aa" type="amino_acid_type"/>
                 <xs:attribute name="decoy" type="xs:boolean"/>
@@ -844,6 +846,14 @@
             <xs:enumeration value="Precursor"/>
             <xs:enumeration value="Transition"/>
         </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="user_set">
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="TRUE"/>
+        <xs:enumeration value="FALSE"/>
+        <xs:enumeration value="IMPORTED"/>
+        <xs:enumeration value="REINTEGRATE"/>
+      </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="mass_type_type">
         <xs:restriction base="xs:string">
@@ -1125,10 +1135,13 @@
                 <xs:attribute name="fwhm" type="xs:double"/>
                 <xs:attribute name="area" type="xs:double"/>
                 <xs:attribute name="background" type="xs:double"/>
+                <xs:attribute name="height" type="xs:double"/>
+                <xs:attribute name="mass_error_ppm" type="xs:double"/>
                 <xs:attribute name="truncated" type="xs:integer"/>
                 <xs:attribute name="identified" type="xs:boolean"/>
-                <xs:attribute name="library_dtop" type="xs:float"/>
-                <xs:attribute name="isotope_dtop" type="xs:float"/>
+                <xs:attribute name="library_dotp" type="xs:float"/>
+                <xs:attribute name="isotope_dotp" type="xs:float"/>
+                <xs:attribute name="user_set" type="user_set" use="optional"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -1144,15 +1157,16 @@
                 <xs:attribute name="retention_time" type="xs:double"/>
                 <xs:attribute name="start_time" type="xs:double"/>
                 <xs:attribute name="end_time" type="xs:double"/>
+                <xs:attribute name="fwhm" type="xs:double"/>
+                <xs:attribute name="fwhm_degenerate" type="xs:boolean"/>
                 <xs:attribute name="area" type="xs:double"/>
                 <xs:attribute name="background" type="xs:double"/>
                 <xs:attribute name="height" type="xs:double"/>
-                <xs:attribute name="fwhm" type="xs:double"/>
-                <xs:attribute name="fwhm_degenerate" type="xs:boolean"/>
+                <xs:attribute name="mass_error_ppm" type="xs:double"/>
                 <xs:attribute name="truncated" type="xs:boolean"/>
                 <xs:attribute name="identified" type="xs:boolean"/>
                 <xs:attribute name="rank" type="xs:positiveInteger"/>
-                <xs:attribute name="user_set" type="xs:boolean" use="optional"/>
+                <xs:attribute name="user_set" type="user_set" use="optional"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
