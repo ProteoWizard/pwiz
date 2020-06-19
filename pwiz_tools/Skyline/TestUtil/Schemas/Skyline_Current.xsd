@@ -13,6 +13,7 @@
         <xs:element name="protein" type="protein_type" />
         <xs:element name="peptide_list" type="peptide_list_type" />
       </xs:choice>
+      <xs:element name="audit_log" type="audit_log_type" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
     <xs:attribute name="format_version" type="xs:string" use="required"/>
     <xs:attribute name="software_version" type="xs:string" use="required"/>
@@ -118,8 +119,10 @@
                   </xs:element>
                   <xs:element minOccurs="0" maxOccurs="unbounded" name="measured_dt">
                     <xs:complexType>
-                      <xs:attribute name="modified_sequence" type="xs:string" use="required"/>  <!-- for non-proteomics data this will actually be InChiKey or other ID -->
-                      <xs:attribute name="charge" type="xs:string" use="required"/> <!-- may be an adduct or a simple integer for protonated charge -->
+                      <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
+                      <!-- for non-proteomics data this will actually be InChiKey or other ID -->
+                      <xs:attribute name="charge" type="xs:string" use="required"/>
+                      <!-- may be an adduct or a simple integer for protonated charge -->
                       <!--  Drift time info is supported, but the more general ion_mobility_ family of attributes is preferred. -->
                       <xs:attribute name="drift_time" type="xs:double" use="optional"/>
                       <xs:attribute name="high_energy_drift_time_offset" type="xs:double" use="optional"/>
@@ -164,15 +167,15 @@
             <xs:annotation>
               <xs:documentation>
                 When spectral_library_drift_times_peak_width_calc_type is set to resolving_power, ion mobility (drift time, inverse reduced ion mobility, etc.) matching tolerance for spectral library ion mobility is calculated as:
-                    For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is W = 2T/R
+                For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is W = 2T/R
                 When spectral_library_drift_times_peak_width_calc_type is set to linear_range, ion mobility matching tolerance is calculated as:
-                    For peak width at drift time zero "Wdt0" and peak width at drift time max "WdtMax" and max drift time "dtMax" at drift time "T", the width "W" of the drift time matching window centered at T is W = Wdt0 + (WdtMax-Wdt0)*T/dtMax
+                For peak width at drift time zero "Wdt0" and peak width at drift time max "WdtMax" and max drift time "dtMax" at drift time "T", the width "W" of the drift time matching window centered at T is W = Wdt0 + (WdtMax-Wdt0)*T/dtMax
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute name="spectral_library_drift_times_resolving_power" type="xs:double" default="0.0"/>
           <xs:attribute name="spectral_library_drift_times_width_at_dt_zero" type="xs:double" default="0.0"/>
-          <xs:attribute name="spectral_library_drift_times_width_at_dt_max" type="xs:double" default="0.0"/>          
+          <xs:attribute name="spectral_library_drift_times_width_at_dt_max" type="xs:double" default="0.0"/>
 
         </xs:complexType>
       </xs:element>
@@ -200,7 +203,7 @@
           <xs:attribute name="min_length" type="xs:positiveInteger" use="required"/>
           <xs:attribute name="max_length" type="xs:positiveInteger" use="required"/>
           <xs:attribute name="auto_select" type="xs:boolean"/>
-          <xs:attribute name="unique_by" type="peptide_uniqueness_constraint_type"/>          
+          <xs:attribute name="unique_by" type="peptide_uniqueness_constraint_type"/>
         </xs:complexType>
       </xs:element>
       <xs:element name="peptide_libraries">
@@ -556,7 +559,7 @@
                 <xs:attribute name="modified_time" type="xs:dateTime"/>
                 <xs:attribute name="explicit_global_standard_area" type="xs:double"/>
                 <xs:attribute name="tic_area" type="xs:double" />
-                <xs:attribute name="ion_mobility_type" type="xs:string" use="optional"/>                
+                <xs:attribute name="ion_mobility_type" type="xs:string" use="optional"/>
               </xs:complexType>
             </xs:element>
             <xs:element name="annotation" type="annotation_type" minOccurs="0" maxOccurs="unbounded"/>
@@ -695,7 +698,7 @@
                                   <xs:attribute name="direction" type="xs:string"/>
                                 </xs:complexType>
                               </xs:element>
-          </xs:sequence>
+                            </xs:sequence>
                             <xs:attribute name="text" type="xs:string"/>
                             <xs:attribute name="caseSensitive" type="xs:boolean"/>
                           </xs:complexType>
@@ -798,8 +801,10 @@
         <xs:attribute name="predicted_retention_time" type="xs:double"/>
         <xs:attribute name="avg_measured_retention_time" type="xs:double"/>
         <xs:attribute name="standard_type" type="xs:string"/>
-        <xs:attribute name="explicit_retention_time" type="xs:double"/>  <!-- optional RT override value from transition list import -->
-        <xs:attribute name="explicit_retention_time_window" type="xs:double"/>  <!-- optional RT override value from transition list import -->
+        <xs:attribute name="explicit_retention_time" type="xs:double"/>
+        <!-- optional RT override value from transition list import -->
+        <xs:attribute name="explicit_retention_time_window" type="xs:double"/>
+        <!-- optional RT override value from transition list import -->
         <xs:attribute name="concentration_multiplier" type="xs:double" />
         <xs:attribute name="internal_standard_concentration" type="xs:double" />
         <xs:attribute name="normalization_method" type="xs:string" />
@@ -1357,7 +1362,7 @@
   </xs:simpleType>
   <xs:simpleType name="annotation_target_type">
     <xs:restriction base="xs:string">
-<!--      
+      <!--      
       Annotation targets are comma separated lists of the following:
       <xs:enumeration value="none"/>
       <xs:enumeration value="protein"/>
@@ -1611,7 +1616,7 @@
           This attribute is used only for isotope modifications.
         </xs:documentation>
       </xs:annotation>
-    </xs:attribute>    
+    </xs:attribute>
     <xs:attribute name="relative_rt" type="relative_rt_type">
       <xs:annotation>
         <xs:documentation>
@@ -1816,4 +1821,29 @@
       <xs:enumeration value="aligned" />
     </xs:restriction>
   </xs:simpleType>
+  <xs:complexType name="audit_log_type">
+    <xs:sequence>
+      <xs:element name="audit_log_entry" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="reason" type="xs:string" minOccurs="0" maxOccurs="1" />
+            <xs:element name="message" minOccurs="3" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="reason" type="xs:string" minOccurs="0" maxOccurs="1" />
+                  <xs:element name="name" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
+                </xs:sequence>
+                <xs:attribute name="type" type="xs:string" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="format_version" type="xs:double" />
+          <xs:attribute name="time_stamp" type="xs:string" />
+          <xs:attribute name="user" type="xs:string" />
+          <xs:attribute name="no_log_entry" type="xs:boolean" />
+          <xs:attribute name="count_type" type="xs:string" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
 </xs:schema>
