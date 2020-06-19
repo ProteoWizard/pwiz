@@ -576,6 +576,11 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        public double? GetMaxIonMobility()
+        {
+            return GetMaxIonMobilityInList();
+        }
+
         public bool HasCombinedIonMobilitySpectra => SpectrumList != null && IonMobilityUnits != eIonMobilityUnits.none &&  _ionMobilitySpectrumList != null && _ionMobilitySpectrumList.hasCombinedIonMobility();
 
         /// <summary>
@@ -926,6 +931,19 @@ namespace pwiz.ProteowizardWrapper
                 var param = spectrum.scanList.scans[0].userParam(@"windowGroup"); // For Bruker diaPASEF
                 msDataSpectrum.WindowGroup = param.empty() ? 0 : int.Parse(param.value);
             }
+
+            if (expectIonMobilityValue)
+            {
+                // Note the range actually measured (for zero vs missing value determination)
+                var param = spectrum.userParam(@"ion mobility lower limit");
+                if (!param.empty())
+                {
+                    msDataSpectrum.IonMobilityMeasurementRangeLow = param.value;
+                    param = spectrum.userParam(@"ion mobility upper limit");
+                    msDataSpectrum.IonMobilityMeasurementRangeHigh = param.value;
+                }
+
+            }
             if (spectrum.binaryDataArrays.Count <= 1)
             {
                 msDataSpectrum.Mzs = new double[0];
@@ -1027,32 +1045,13 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        public bool GetInstrumentIonMobilityRange(out double? minIonMobility, out double? maxIonMobility)
+        private double? GetMaxIonMobilityInList()
         {
-            minIonMobility = null;
-            maxIonMobility = null;
-
             if (IonMobilitySpectrumList == null || IonMobilitySpectrumList.size() == 0)
-            {
-                return false; // This isn't ion mobility data
-            }
+                return null;
 
-            // Try to get from metadata (as of June 2020 this only works for Bruker TDF)
-            foreach (var ic in _msDataFile.instrumentConfigurationList)
-            {
-                var paramMinIM = ic.userParam(@"MS_instrument_ion_mobility_range_min");
-                if (!paramMinIM.empty())
-                {
-                    var paramMaxIM = ic.userParam(@"MS_instrument_ion_mobility_range_max");
-                    minIonMobility = paramMinIM.value;
-                    maxIonMobility = paramMaxIM.value;
-                    return true;
-                }
-            }
-
-            double? scanTime = null;
             // Assume that if any spectra have ion mobility values, all do, and all are same range
-            // (bad assumption for Bruker PASEF, but we have metadata for that and won't hit this logic)
+            double? maxIonMobility = null;
             for (var i = 0; i < IonMobilitySpectrumList.size(); i++)
             {
                 using (var spectrum = IonMobilitySpectrumList.spectrum(i, true))
@@ -1066,7 +1065,7 @@ namespace pwiz.ProteowizardWrapper
                         if (i < 20 || IsWatersLockmassSpectrum(GetSpectrum(spectrum, i)))
                             continue;  // In SONAR data, lockmass scan without IM info doesn't mean there's no IM info
                         if (!maxIonMobility.HasValue)
-                            return false; 
+                            return null; 
                     }
 
                     if (!maxIonMobility.HasValue)
@@ -1074,28 +1073,20 @@ namespace pwiz.ProteowizardWrapper
                         maxIonMobility = ionMobility.Mobility;
                         if (ionMobilities != null)
                         {
-                            // 3-array representation, we've seen the range in one go
-                            minIonMobility = IonMobilityValue.GetIonMobilityValue(ionMobilities.Min(), IonMobilityUnits).Mobility;
-                            break; 
+                            break; // 3-array representation, we've seen the range in one go
                         }
-                        minIonMobility = ionMobility.Mobility;
                     }
-                    if (!scanTime.HasValue)
+                    else if (Math.Abs(ionMobility.Mobility??0) < Math.Abs(maxIonMobility.Value))
                     {
-                        scanTime = GetStartTime(spectrum);
-                    }
-                    else if (scanTime != GetStartTime(spectrum))
-                    {
-                        break; // We have cycled, seen all the IM values
+                        break;  // We've cycled 
                     }
                     else
                     {
-                        minIonMobility = Math.Min(ionMobility.Mobility.Value, minIonMobility.Value);
-                        maxIonMobility = Math.Max(ionMobility.Mobility.Value, maxIonMobility.Value);
+                        maxIonMobility = ionMobility.Mobility;
                     }
                 }
             }
-            return maxIonMobility.HasValue;
+            return maxIonMobility;
         }
 
         /// <summary>
@@ -1554,6 +1545,7 @@ namespace pwiz.ProteowizardWrapper
     public sealed class MsDataSpectrum
     {
         private IonMobilityValue _ionMobility;
+        private double? _ionMobilityMeasurementRangeLow, _ionMobilityMeasurementRangeHigh; // The range actually measured (for zero vs missing value determination)
         public string Id { get; set; }
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any
@@ -1566,6 +1558,20 @@ namespace pwiz.ProteowizardWrapper
         {
             get { return _ionMobility ?? IonMobilityValue.EMPTY; }
             set { _ionMobility = value; }
+        }
+
+        /// <summary>
+        /// The range of ion mobilities that were scanned (for zero vs missing value determination)
+        /// </summary>
+        public double? IonMobilityMeasurementRangeLow
+        {
+            get { return _ionMobilityMeasurementRangeLow; }
+            set { _ionMobilityMeasurementRangeLow = value; }
+        }
+        public double? IonMobilityMeasurementRangeHigh
+        {
+            get { return _ionMobilityMeasurementRangeHigh; }
+            set { _ionMobilityMeasurementRangeHigh = value; }
         }
 
         public ImmutableList<MsPrecursor> GetPrecursorsByMsLevel(int level)

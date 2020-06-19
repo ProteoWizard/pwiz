@@ -159,6 +159,7 @@ public:
 
     virtual bool isIonMobilitySpectrum() const { return oneOverK0() > 0; }
     virtual double oneOverK0() const;
+    virtual std::pair<double, double> getIonMobilityRange() const; // Gets the measured IM range
 
     void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const;
     size_t getCombinedSpectrumDataSize() const;
@@ -292,8 +293,6 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     virtual InstrumentSource getInstrumentSource() const;
     virtual std::string getAcquisitionSoftware() const;
     virtual std::string getAcquisitionSoftwareVersion() const;
-    virtual double getOneOverK0AcqRangeLower() const;
-    virtual double getOneOverK0AcqRangeUpper() const;
 
     private:
     std::string tdfFilepath_;
@@ -309,7 +308,6 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     std::string operatorName_;
     bool combineSpectra_;
     bool hasPASEFData_;
-    double oneOverK0AcqRangeLower_, oneOverK0AcqRangeUpper_;
     int preferOnlyMsLevel_; // when nonzero, caller only wants spectra at this ms level
     bool allowMsMsWithoutPrecursor_; // when false, PASEF MS2 specta without precursor info will be excluded
     vector<chemistry::MzMobilityWindow> isolationMzFilter_; // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated

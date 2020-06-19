@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.Results
         public bool HasRangeRT { get; private set; }
 
         public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo, 
-            double? minInstrumentIonMobilityRange = null, double? maxInstrumentIonMobilityRange = null,
+            double? maxObservedIonMobilityValue = null,
             IRetentionTimePredictor retentionTimePredictor = null, bool firstPass = false, GlobalChromatogramExtractor gce = null)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model.Results
                 ? document.Settings.GetIonMobilities(moleculesThisPass.SelectMany(
                     node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(document.Settings, node))).ToArray(), msDataFileUri)
                 : null;
-            var ionMobilityMax = maxInstrumentIonMobilityRange ?? 0;
+            var ionMobilityMax = maxObservedIonMobilityValue ?? 0;
 
             // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't reliably share times with any ion mobility scheme
             if (instrumentInfo != null && instrumentInfo.IonMobilityUnits != eIonMobilityUnits.none)
@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Model.Results
                         {
                             var key = TIC_KEY;
                             dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                                _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter, null, null));
+                                _instrument.MinTime, _instrument.MaxTime, _isHighAccMsFilter, _isHighAccProductFilter));
                             /*
                              Leaving this here in case we ever decide to fall back to our own BPC extraction in cases where data
                              file doesn't have them ready to go, as in mzXML
@@ -279,8 +279,7 @@ namespace pwiz.Skyline.Model.Results
                         if (!dictPrecursorMzToFilter.TryGetValue(key, out filter))
                         {
                             filter = new SpectrumFilterPair(key, nodePep.Color, dictPrecursorMzToFilter.Count, minTime, maxTime,
-                                _isHighAccMsFilter, _isHighAccProductFilter, 
-                                minInstrumentIonMobilityRange, maxInstrumentIonMobilityRange);
+                                _isHighAccMsFilter, _isHighAccProductFilter);
                             if (_instrument.TriggeredAcquisition)
                             {
                                 filter.ScanDescriptionFilter =

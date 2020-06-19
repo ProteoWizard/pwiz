@@ -213,6 +213,7 @@ struct PWIZ_API_DECL MSSpectrum
 
     virtual bool isIonMobilitySpectrum() const { return false; }
     virtual double oneOverK0() const { return 0.0; }
+    virtual std::pair<double, double> getIonMobilityRange() const { return std::pair<double, double>(0, 0); }
 	virtual int getWindowGroup() const { return 0; } // for diaPASEF data
 
     virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const { }
@@ -331,9 +332,6 @@ struct PWIZ_API_DECL CompassData
     virtual InstrumentSource getInstrumentSource() const = 0;
     virtual std::string getAcquisitionSoftware() const = 0;
     virtual std::string getAcquisitionSoftwareVersion() const = 0;
-    virtual double getOneOverK0AcqRangeLower() const = 0;
-    virtual double getOneOverK0AcqRangeUpper() const = 0;
-
 };
 
 typedef CompassData::Ptr CompassDataPtr;

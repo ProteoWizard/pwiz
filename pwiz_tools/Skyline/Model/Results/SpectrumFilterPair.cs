@@ -36,10 +36,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _filterByTime;
         private readonly double _maxTime;
         private readonly double _minTime;
-        private readonly double? _minInstrumentRangeIM; // For distinguishing missing values from zero values:
-        private readonly double? _maxInstrumentRangeIM; // IM measurements outside the instrument range are missing values
         public SpectrumFilterPair(PrecursorTextId precursorTextId, Color peptideColor, int id, double? minTime, double? maxTime,
-            bool highAccQ1, bool highAccQ3, double? minInstrumentRangeIM, double? maxInstrumentRangeIM)
+            bool highAccQ1, bool highAccQ3)
         {
             Id = id;
             ModifiedSequence = precursorTextId.Target;
@@ -61,8 +59,6 @@ namespace pwiz.Skyline.Model.Results
             IonMobilityInfo = precursorTextId.IonMobility;
             MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
-            _minInstrumentRangeIM = minInstrumentRangeIM;
-            _maxInstrumentRangeIM = maxInstrumentRangeIM;
             HighAccQ1 = highAccQ1;
             HighAccQ3 = highAccQ3;
 
@@ -184,7 +180,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // No ion mobility match - record a zero intensity unless IM value is outside the
                 // machine's measured range, or if this is a polarity mismatch
-                if (!IsOutsideInstrumentRangeIM(MinIonMobilityValue, MaxIonMobilityValue) && 
+                if (!IsOutsideSpectraRangeIM(spectra, MinIonMobilityValue, MaxIonMobilityValue) && 
                     spectra.Any(s => Equals(s.NegativeCharge, Q1.IsNegative)))
                 {
                     spectrumCount++; // Our flag to process this as zero rather than null
@@ -471,13 +467,15 @@ namespace pwiz.Skyline.Model.Results
             return Ms1ProductFilters.Any(filter => 0 == filter.TargetMz.CompareTolerant(precursorMz, filter.FilterWidth));
         }
 
-        public bool IsOutsideInstrumentRangeIM(double? minIonMobilityValue, double? maxIonMobilityValue)
+        public bool IsOutsideSpectraRangeIM(MsDataSpectrum[] spectra, double? minIonMobilityValue, double? maxIonMobilityValue)
         {
             // For distinguishing zero IM values from not-measured IM values
             return minIonMobilityValue.HasValue && maxIonMobilityValue.HasValue &&
-                   _minInstrumentRangeIM.HasValue && _maxInstrumentRangeIM.HasValue &&
-                   (minIonMobilityValue.Value > _maxInstrumentRangeIM.Value ||
-                    maxIonMobilityValue.Value < _minInstrumentRangeIM.Value);
+                   spectra.All(s =>
+                       (s.IonMobilityMeasurementRangeLow.HasValue &&
+                        s.IonMobilityMeasurementRangeLow > maxIonMobilityValue) ||
+                       (s.IonMobilityMeasurementRangeHigh.HasValue &&
+                        s.IonMobilityMeasurementRangeHigh < minIonMobilityValue));
         }
 
     }

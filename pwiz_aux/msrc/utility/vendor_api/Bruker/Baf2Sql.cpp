@@ -239,9 +239,6 @@ std::string Baf2SqlImpl::getInstrumentSerialNumber() const { return serialNumber
 InstrumentSource Baf2SqlImpl::getInstrumentSource() const { return instrumentSource_; }
 std::string Baf2SqlImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }
 std::string Baf2SqlImpl::getAcquisitionSoftwareVersion() const { return acquisitionSoftwareVersion_; }
-double Baf2SqlImpl::getOneOverK0AcqRangeLower() const { return -1; } // No ion mobility in this file format
-double Baf2SqlImpl::getOneOverK0AcqRangeUpper() const { return -1; } // No ion mobility in this file format
-
 
 
 Baf2SqlSpectrum::Baf2SqlSpectrum(BinaryStoragePtr storage, int index,
