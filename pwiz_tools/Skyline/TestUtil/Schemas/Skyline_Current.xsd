@@ -467,6 +467,7 @@
                 <xs:attribute name="precursor_filter" type="xs:double"/>
                 <xs:attribute name="precursor_left_filter" type="xs:double"/>
                 <xs:attribute name="precursor_right_filter" type="xs:double"/>
+                <xs:attribute name="precursor_filter_margin" type="xs:double"/>
                 <xs:attribute name="special_handling" type="xs:string"/>
                 <xs:attribute name="windows_per_scan" type="xs:nonNegativeInteger"/>
               </xs:complexType>
@@ -484,6 +485,7 @@
           <xs:attribute name="precursor_mass_analyzer" type="full_scan_mass_analyzer_type"/>
           <xs:attribute name="precursor_res" type="xs:double"/>
           <xs:attribute name="precursor_res_mz" type="xs:double"/>
+          <xs:attribute name="selective_extraction" type="xs:boolean"/>
           <xs:attribute name="scheduled_filter" type="xs:boolean"/>
           <xs:attribute name="retention_time_filter_type" type="retention_time_filtering_type"/>
           <xs:attribute name="retention_time_filter_length" type="xs:double"/>
@@ -1629,6 +1631,7 @@
         <xs:attribute name="truncated" type="xs:boolean"/>
         <xs:attribute name="identified" type="peak_identified_type"/>
         <xs:attribute name="rank" type="xs:integer"/>
+        <xs:attribute name="rank_by_level" type="xs:integer"/>
         <xs:attribute name="user_set" type="user_set" use="optional"/>
       </xs:extension>
     </xs:complexContent>
