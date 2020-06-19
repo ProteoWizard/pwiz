@@ -386,7 +386,7 @@
                 </xs:sequence>
                 <xs:attribute name="name" type="xs:string" use="required"/>
               </xs:complexType>
-            </xs:element>            
+            </xs:element>
             <xs:element name="isolation_scheme" minOccurs="0" maxOccurs="1">
               <xs:complexType>
                 <xs:sequence>
@@ -530,8 +530,8 @@
       <xs:extension base="doc_parent_node_type">
         <xs:sequence>
           <xs:choice minOccurs="0"  maxOccurs="unbounded">
-          <xs:element name="peptide" type="peptide_type"/>
-          <xs:element name="molecule" type="non_proteomic_molecule_type"/>  
+            <xs:element name="peptide" type="peptide_type"/>
+            <xs:element name="molecule" type="non_proteomic_molecule_type"/>
           </xs:choice>
         </xs:sequence>
         <xs:attribute name="label_description" type="xs:string"/>
@@ -580,7 +580,7 @@
         <xs:attribute name="explicit_retention_time" type="xs:double"/>  <!-- optional RT override value from transition list import -->
         <xs:attribute name="explicit_retention_time_window" type="xs:double"/>  <!-- optional RT override value from transition list import -->
       </xs:extension>
-    </xs:complexContent>      
+    </xs:complexContent>
   </xs:complexType>
 
   <xs:complexType name="non_proteomic_molecule_type">
@@ -597,9 +597,9 @@
                     minOccurs="1" maxOccurs="unbounded"/>
               </xs:sequence>
             </xs:complexType>
-          </xs:element>          
+          </xs:element>
           <xs:element name="precursor" type="non_proteomic_transition_group_type" minOccurs="0"
-              maxOccurs="unbounded"/>  
+              maxOccurs="unbounded"/>
         </xs:sequence>
         <!-- "formula" was the obsolete form from when we assumed we had to add a hydrogen for ionizaion.  The modern form requires the molecular formula of the actual ion. -->
         <xs:attribute name="ion_formula" type="xs:string" use="optional"/>
@@ -607,9 +607,9 @@
         <xs:attribute name="mass_average" type="xs:double" use="required"/>
         <xs:attribute name="custom_ion_name" type="xs:string" use="optional"/>
       </xs:extension>
-    </xs:complexContent>      
+    </xs:complexContent>
   </xs:complexType>
- 
+
   <xs:complexType name="peptide_type">
     <xs:complexContent>
       <xs:extension base="general_molecule_type">
@@ -781,43 +781,6 @@
     <xs:complexContent>
       <xs:extension base = "doc_parent_node_type">
         <xs:sequence>
-          <xs:element name="precursor_results" minOccurs="0" maxOccurs="1">
-            <xs:complexType>
-              <xs:sequence>
-                <xs:element name="precursor_peak" type="precursor_peak_type"
-                    minOccurs="1" maxOccurs="unbounded"/>
-              </xs:sequence>
-            </xs:complexType>
-          </xs:element>          
-        </xs:sequence>
-        <xs:attribute name="charge" type="xs:integer" use="required"/>
-        <xs:attribute name="precursor_mz" type="xs:double" use="required"/>
-        <xs:attribute name="collision_energy" type="xs:double"/>
-        <xs:attribute name="declustering_potential" type="xs:double"/>
-        <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
-        <xs:attribute name="explicit_collision_energy" type="xs:double"/>
-        <xs:attribute name="explicit_declustering_potential" type="xs:double"/>
-        <xs:attribute name="explicit_drift_time_msec" type="xs:double"/>
-        <xs:attribute name="explicit_drift_time_high_energy_offset_msec" type="xs:double"/>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-
-  <xs:complexType name ="non_proteomic_transition_group_type">
-    <xs:complexContent>
-      <xs:extension base="general_transition_group_type">
-        <xs:sequence>
-          <xs:element name="transition" type="non_proteomic_transition_type" minOccurs="0"
-              maxOccurs="unbounded"/>  
-        </xs:sequence>
-      </xs:extension>  
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:complexType name="transition_group_type">
-    <xs:complexContent>
-      <xs:extension base="general_transition_group_type">
-        <xs:sequence>
           <xs:element name="bibliospec_spectrum_info" minOccurs="0" maxOccurs="unbounded">
             <xs:complexType>
               <xs:complexContent>
@@ -865,11 +828,48 @@
               </xs:complexContent>
             </xs:complexType>
           </xs:element>
+          <xs:element name="precursor_results" minOccurs="0" maxOccurs="1">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="precursor_peak" type="precursor_peak_type"
+                    minOccurs="1" maxOccurs="unbounded"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+        <xs:attribute name="charge" type="xs:integer" use="required"/>
+        <xs:attribute name="precursor_mz" type="xs:double" use="required"/>
+        <xs:attribute name="collision_energy" type="xs:double"/>
+        <xs:attribute name="declustering_potential" type="xs:double"/>
+        <!-- label can be "heavy", "light" or a user defined name -->
+        <xs:attribute name="isotope_label" type="xs:string"/>
+        <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
+        <xs:attribute name="explicit_collision_energy" type="xs:double"/>
+        <xs:attribute name="explicit_declustering_potential" type="xs:double"/>
+        <xs:attribute name="explicit_drift_time_msec" type="xs:double"/>
+        <xs:attribute name="explicit_drift_time_high_energy_offset_msec" type="xs:double"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name ="non_proteomic_transition_group_type">
+    <xs:complexContent>
+      <xs:extension base="general_transition_group_type">
+        <xs:sequence>
+          <xs:element name="transition" type="non_proteomic_transition_type" minOccurs="0"
+              maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="transition_group_type">
+    <xs:complexContent>
+      <xs:extension base="general_transition_group_type">
+        <xs:sequence>
           <xs:element name="transition" type="proteomic_transition_type" minOccurs="0"
               maxOccurs="unbounded"/>
         </xs:sequence>
-        <!-- label can be "heavy", "light" or a user defined name -->
-        <xs:attribute name="isotope_label" type="xs:string"/>
         <xs:attribute name="calc_neutral_mass" type="xs:double" use="required"/>
         <xs:attribute name="decoy_mass_shift" type="xs:double"/>
         <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
@@ -964,7 +964,7 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
-  
+
   <xs:complexType name="proteomic_transition_type">
     <xs:complexContent>
       <xs:extension base="general_transition_type">
@@ -999,7 +999,7 @@
             </xs:complexType>
           </xs:element>
         </xs:sequence>
-        
+
         <xs:attribute name="fragment_ordinal" type="xs:positiveInteger">
           <xs:annotation>
             <xs:documentation>
@@ -1459,7 +1459,7 @@
         <xs:attribute name="mass_error_ppm" type="xs:double"/>
         <xs:attribute name="truncated" type="xs:boolean"/>
         <xs:attribute name="identified" type="xs:boolean"/>
-        <xs:attribute name="rank" type="xs:positiveInteger"/>
+        <xs:attribute name="rank" type="xs:integer"/>
         <xs:attribute name="user_set" type="user_set" use="optional"/>
       </xs:extension>
     </xs:complexContent>
