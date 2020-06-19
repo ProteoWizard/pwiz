@@ -192,6 +192,7 @@
             <xs:element name="hunter_lib_spec" type="lib_spec_type"/>
             <xs:element name="nist_lib_spec" type="lib_spec_type"/>
             <xs:element name="spectrast_lib_spec" type="lib_spec_type"/>
+            <xs:element name="midas_lib_spec" type="lib_spec_type"/>
             <xs:element name="bibliospec_library">
               <xs:complexType>
                 <xs:complexContent>
@@ -234,6 +235,16 @@
               </xs:complexType>
             </xs:element>
             <xs:element name="spectrast_library">
+              <xs:complexType>
+                <xs:complexContent>
+                  <xs:extension base="lib_type">
+                    <xs:attribute name="id" type="xs:string"/>
+                    <xs:attribute name="revision" type="xs:string"/>
+                  </xs:extension>
+                </xs:complexContent>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="midas_library">
               <xs:complexType>
                 <xs:complexContent>
                   <xs:extension base="lib_type">
@@ -517,6 +528,7 @@
           <xs:attribute name="name" type="xs:string" use="required"/>
           <xs:attribute name="sample_type" type="xs:string" />
           <xs:attribute name="analyte_concentration" type="xs:double" />
+          <xs:attribute name="has_midas_spectra" type="xs:boolean" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>
