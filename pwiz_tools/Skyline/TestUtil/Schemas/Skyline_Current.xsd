@@ -295,6 +295,13 @@
           </xs:attribute>
         </xs:complexType>
       </xs:element>
+      <xs:element name="quantification" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:attribute name="weighting" type="xs:string"/>
+          <xs:attribute name="fit" type="xs:string" />
+          <xs:attribute name="normalization" type="xs:string" />
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
   <!-- Transition Settings -->
@@ -775,6 +782,9 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="stock_concentration" type="xs:double" />
+        <xs:attribute name="internal_standard_concentration" type="xs:double" />
+        <xs:attribute name="concentration_units" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -852,6 +862,9 @@
         <xs:attribute name="explicit_declustering_potential" type="xs:double"/>
         <xs:attribute name="explicit_drift_time_msec" type="xs:double"/>
         <xs:attribute name="explicit_drift_time_high_energy_offset_msec" type="xs:double"/>
+        <xs:attribute name="s_lens" type="xs:double"/>
+        <xs:attribute name="cone_voltage" type="xs:double"/>
+        <xs:attribute name="explicit_compensation_voltage" type="xs:double"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -863,6 +876,11 @@
           <xs:element name="transition" type="non_proteomic_transition_type" minOccurs="0"
               maxOccurs="unbounded"/>
         </xs:sequence>
+        <!-- for custom molecules, changes in charge or label mean a change in ion formula -->
+        <xs:attribute name="ion_formula" type="xs:string" use="optional"/>
+        <xs:attribute name="custom_ion_name" type="xs:string" use="optional"/>
+        <xs:attribute name="mass_monoisotopic" type="xs:double" use="required"/>
+        <xs:attribute name="mass_average" type ="xs:double" use="required"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1083,6 +1101,7 @@
       <xs:enumeration value="tof"/>
       <xs:enumeration value="orbitrap"/>
       <xs:enumeration value="ft_icr"/>
+      <xs:enumeration value="centroided"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="data_settings_annotation_type">
