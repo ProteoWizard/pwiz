@@ -8,11 +8,11 @@
             <xs:documentation>Main container for the Skyline document</xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element name="settings_summary" type="settings_summary_type" minOccurs="1"
-                maxOccurs="1"/>
-            <xs:element name="protein" type="protein_type" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element name="peptide_list" type="peptide_list_type" minOccurs="0"
-                maxOccurs="unbounded"/>
+            <xs:element name="settings_summary" type="settings_summary_type" minOccurs="1" maxOccurs="1"/>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+              <xs:element name="protein" type="protein_type" />
+              <xs:element name="peptide_list" type="peptide_list_type" />
+            </xs:choice>
         </xs:sequence>
         <xs:attribute name="format_version" type="xs:string" use="required"/>
         <xs:attribute name="software_version" type="xs:string" use="required"/>
@@ -105,7 +105,7 @@
                     <xs:attribute name="measured_rt_window" type="xs:double">
                         <xs:annotation>
                             <xs:documentation>
-                                Time window in minutes around a meadured peak center (i.e. (start + end)/e) used in scheduling future peptide measurements.
+                                Time window in minutes around a measured peak center (i.e. (start + end)/e) used in scheduling future peptide measurements.
                             </xs:documentation>
                         </xs:annotation>
                     </xs:attribute>
@@ -138,70 +138,64 @@
             </xs:element>
             <xs:element name="peptide_libraries">
                 <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name="bibliospec_lib_spec" type="lib_spec_type" minOccurs="0"
-                            maxOccurs="unbounded"/>
-                        <xs:element name="bibliospec_lite_spec" type="lib_spec_type" minOccurs="0"
-                            maxOccurs="unbounded"/>
-                        <xs:element name="hunter_lib_spec" type="lib_spec_type" minOccurs="0"
-                            maxOccurs="unbounded"/>
-                        <xs:element name="nist_lib_spec" type="lib_spec_type" minOccurs="0"
-                            maxOccurs="unbounded"/>
-                        <xs:element name="spectrast_lib_spec" type="lib_spec_type" minOccurs="0"
-                            maxOccurs="unbounded"/>
-                        <xs:element name="bibliospec_library" minOccurs="0" maxOccurs="unbounded">
-                            <xs:complexType>
-                                <xs:complexContent>
-                                    <xs:extension base="lib_type">
-                                        <xs:attribute name="revision" type="xs:double"
-                                            use="required"/>
-                                    </xs:extension>
-                                </xs:complexContent>
-                            </xs:complexType>
-                        </xs:element>
-                        <xs:element name="bibliospec_lite_library" minOccurs="0"
-                            maxOccurs="unbounded">
-                            <xs:complexType>
-                                <xs:complexContent>
-                                    <xs:extension base="lib_type">
-                                        <xs:attribute name="revision" type="xs:nonNegativeInteger"
-                                            use="required"/>
-                                        <xs:attribute name="lsid" type="xs:string" use="required"/>
-                                    </xs:extension>
-                                </xs:complexContent>
-                            </xs:complexType>
-                        </xs:element>
-                        <xs:element name="hunter_library" minOccurs="0" maxOccurs="unbounded">
-                            <xs:complexType>
-                                <xs:complexContent>
-                                    <xs:extension base="lib_type">
-                                        <xs:attribute name="id" type="xs:string"/>
-                                        <xs:attribute name="revision" type="xs:string"/>
-                                    </xs:extension>
-                                </xs:complexContent>
-                            </xs:complexType>
-                        </xs:element>
-                        <xs:element name="nist_library" minOccurs="0" maxOccurs="unbounded">
-                            <xs:complexType>
-                                <xs:complexContent>
-                                    <xs:extension base="lib_type">
-                                        <xs:attribute name="id" type="xs:string"/>
-                                        <xs:attribute name="revision" type="xs:string"/>
-                                    </xs:extension>
-                                </xs:complexContent>
-                            </xs:complexType>
-                        </xs:element>
-                        <xs:element name="spectrast_library" minOccurs="0" maxOccurs="unbounded">
-                            <xs:complexType>
-                                <xs:complexContent>
-                                    <xs:extension base="lib_type">
-                                        <xs:attribute name="id" type="xs:string"/>
-                                        <xs:attribute name="revision" type="xs:string"/>
-                                    </xs:extension>
-                                </xs:complexContent>
-                            </xs:complexType>
-                        </xs:element>
-                    </xs:sequence>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                      <xs:element name="bibliospec_lib_spec" type="lib_spec_type" />
+                      <xs:element name="bibliospec_lite_spec" type="lib_spec_type"/>
+                      <xs:element name="hunter_lib_spec" type="lib_spec_type"/>
+                      <xs:element name="nist_lib_spec" type="lib_spec_type"/>
+                      <xs:element name="spectrast_lib_spec" type="lib_spec_type"/>
+                      <xs:element name="bibliospec_library">
+                        <xs:complexType>
+                          <xs:complexContent>
+                            <xs:extension base="lib_type">
+                              <xs:attribute name="revision" type="xs:double"
+                                  use="required"/>
+                            </xs:extension>
+                          </xs:complexContent>
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element name="bibliospec_lite_library">
+                        <xs:complexType>
+                          <xs:complexContent>
+                            <xs:extension base="lib_type">
+                              <xs:attribute name="revision" type="xs:nonNegativeInteger"
+                                  use="required"/>
+                              <xs:attribute name="lsid" type="xs:string" use="required"/>
+                            </xs:extension>
+                          </xs:complexContent>
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element name="hunter_library">
+                        <xs:complexType>
+                          <xs:complexContent>
+                            <xs:extension base="lib_type">
+                              <xs:attribute name="id" type="xs:string"/>
+                              <xs:attribute name="revision" type="xs:string"/>
+                            </xs:extension>
+                          </xs:complexContent>
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element name="nist_library">
+                        <xs:complexType>
+                          <xs:complexContent>
+                            <xs:extension base="lib_type">
+                              <xs:attribute name="id" type="xs:string"/>
+                              <xs:attribute name="revision" type="xs:string"/>
+                            </xs:extension>
+                          </xs:complexContent>
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element name="spectrast_library">
+                        <xs:complexType>
+                          <xs:complexContent>
+                            <xs:extension base="lib_type">
+                              <xs:attribute name="id" type="xs:string"/>
+                              <xs:attribute name="revision" type="xs:string"/>
+                            </xs:extension>
+                          </xs:complexContent>
+                        </xs:complexType>
+                      </xs:element>
+                    </xs:choice>
                     <xs:attribute name="pick" type="peptide_pick_type" use="required"/>
                     <xs:attribute name="rank_type" type="peptide_rank_type"/>
                     <xs:attribute name="peptide_count" type="xs:nonNegativeInteger">
@@ -211,6 +205,7 @@
                             </xs:documentation>
                         </xs:annotation>
                     </xs:attribute>
+                    <xs:attribute name="document_library" type="xs:boolean"/>
                 </xs:complexType>
             </xs:element>
             <xs:element name="peptide_modifications">
@@ -231,9 +226,9 @@
                         </xs:element>
                         <xs:element name="heavy_modifications" minOccurs="0" maxOccurs="unbounded">
                             <xs:complexType>
-                                <xs:sequence>
-                                    <xs:element name="static_modification"
-                                        type="isotope_modification_type" maxOccurs="unbounded"/>
+                                <xs:sequence minOccurs="0">
+                                  <xs:element name="static_modification"
+                                      type="isotope_modification_type" maxOccurs="unbounded"/>
                                 </xs:sequence>
                                 <xs:attribute name="isotope_label" type="xs:string"/>
                             </xs:complexType>
@@ -326,26 +321,49 @@
             <xs:element name="transition_full_scan" minOccurs="0" maxOccurs="1">
                 <xs:complexType>
                     <xs:sequence>
-                        <xs:element name="isotope_enrichments" minOccurs="0" maxOccurs="1">
-                            <xs:complexType>
-                                <xs:sequence>
-                                    <xs:element name="atom_percent_enrichment">
+                      <xs:element name="isolation_scheme" minOccurs="0" maxOccurs="1">
+                        <xs:complexType>
+                          <xs:sequence>
+                             <xs:element name="isolation_window" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                   <xs:attribute name="start" type="xs:double" use="required"/>
+                                   <xs:attribute name="end" type="xs:double" use="required"/>
+                                   <xs:attribute name="target" type="xs:double"/>
+                                   <xs:attribute name="margin_left" type="xs:double"/>
+                                   <xs:attribute name="margin_right" type="xs:double"/>
+                                   <xs:attribute name="margin" type="xs:double"/>
+                                </xs:complexType>
+                             </xs:element>
+                          </xs:sequence>
+                          <xs:attribute name="name" type="xs:string" use="required"/>
+                          <xs:attribute name="precursor_filter" type="xs:double"/>
+                          <xs:attribute name="precursor_left_filter" type="xs:double"/>
+                          <xs:attribute name="precursor_right_filter" type="xs:double"/>
+                          <xs:attribute name="special_handling" type="xs:string"/>
+                          <xs:attribute name="windows_per_scan" type="xs:nonNegativeInteger"/>
+                        </xs:complexType>
+                      </xs:element>
+                      <xs:element name="isotope_enrichments" minOccurs="0" maxOccurs="1">
+                          <xs:complexType>
+                              <xs:sequence>
+                                    <xs:element name="atom_percent_enrichment" minOccurs="0" maxOccurs="unbounded">
                                         <xs:complexType>
                                             <xs:simpleContent>
                                                 <xs:extension base="xs:double">
-                                                  <xs:attribute name="symbol" type="xs:string"
-                                                  use="required"/>
+                                                  <xs:attribute name="symbol" type="heavy_isotope_symbol_type" use="required"/>
                                                 </xs:extension>
                                             </xs:simpleContent>
-                                        </xs:complexType>
-                                    </xs:element>
-                                </xs:sequence>
+                                       </xs:complexType>
+                                   </xs:element>
+                              </xs:sequence>
+                              <xs:attribute name="name" type="xs:string" use="required"/>
                             </xs:complexType>
                         </xs:element>
                     </xs:sequence>
                     <xs:attribute name="precursor_filter" type="xs:double"/>
                     <xs:attribute name="precursor_left_filter" type="xs:double"/>
                     <xs:attribute name="precursor_right_filter" type="xs:double"/>
+                    <xs:attribute name="acquisition_method" type="full_scan_acquisition_method_type"/>
                     <xs:attribute name="product_mass_analyzer" type="full_scan_mass_analyzer_type"/>
                     <xs:attribute name="product_res" type="xs:double"/>
                     <xs:attribute name="product_res_mz" type="xs:double"/>
@@ -355,6 +373,8 @@
                     <xs:attribute name="precursor_res" type="xs:double"/>
                     <xs:attribute name="precursor_res_mz" type="xs:double"/>
                     <xs:attribute name="scheduled_filter" type="xs:boolean"/>
+                    <xs:attribute name="retention_time_filter_type" type="retention_time_filtering_type"/>
+                    <xs:attribute name="retention_time_filter_length" type="xs:double"/>
                 </xs:complexType>
             </xs:element>
         </xs:sequence>
@@ -459,11 +479,12 @@
         <xs:complexContent>
             <xs:extension base="doc_parent_node_type">
                 <xs:sequence>
-                    <xs:element name="peptide" type="peptide_type" minOccurs="1"
+                    <xs:element name="peptide" type="peptide_type" minOccurs="0"
                         maxOccurs="unbounded"/>
                 </xs:sequence>
                 <xs:attribute name="label_description" type="xs:string"/>
-                <xs:attribute name="label_name" type="xs:string" use="required"/>
+                <xs:attribute name="label_name" type="xs:string"/>
+                <xs:attribute name="decoy" type="xs:boolean"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -474,18 +495,22 @@
                     <xs:element name="alternatives" minOccurs="0" maxOccurs="1">
                         <xs:complexType>
                             <xs:sequence>
-                                <xs:element name="alternative_protein" type="name_description_type"
+                                <xs:element name="alternative_protein" type="protein_description_type"
                                     minOccurs="1" maxOccurs="unbounded"/>
                             </xs:sequence>
                         </xs:complexType>
                     </xs:element>
                     <xs:element name="sequence" type="xs:string" minOccurs="1" maxOccurs="1"/>
-                    <xs:element name="peptide" type="peptide_type" minOccurs="1"
-                        maxOccurs="unbounded"/>
+                    <xs:element name="peptide" type="peptide_type" minOccurs="0" maxOccurs="unbounded"/>
                 </xs:sequence>
+                <!-- name and description for the identity object -->
                 <xs:attribute name="name" type="xs:string" use="required"/>
                 <xs:attribute name="description" type="xs:string"/>
-                <xs:attribute name="decoy" type="xs:boolean"/>
+                <!-- user override for name and description, for example as updated in web search  -->
+                <xs:attribute name="label_name" type="xs:string"/>
+                <xs:attribute name="label_description" type="xs:string"/>
+                <!-- protein details that may be derived from identity object's name and description -->
+                <xs:attributeGroup ref="protein_details_type"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -589,8 +614,8 @@
                 <xs:attribute name="modified_sequence" type="xs:string" use="required"/>
                 <xs:attribute name="start" type="xs:positiveInteger"/>
                 <xs:attribute name="end" type="xs:positiveInteger"/>
-                <xs:attribute name="prev_aa" type="amino_acid_type"/>
-                <xs:attribute name="next_aa" type="amino_acid_type"/>
+                <xs:attribute name="prev_aa" type="prev_next_amino_acid_type"/>
+                <xs:attribute name="next_aa" type="prev_next_amino_acid_type"/>
                 <xs:attribute name="decoy" type="xs:boolean"/>
                 <xs:attribute name="calc_neutral_pep_mass" type="xs:double" use="required"/>
                 <xs:attribute name="num_missed_cleavages" type="xs:nonNegativeInteger"
@@ -603,6 +628,7 @@
                         </xs:documentation>
                     </xs:annotation>
                 </xs:attribute>
+                <xs:attribute name="rt_calculator_score" type="xs:double"/>
                 <xs:attribute name="predicted_retention_time" type="xs:double"/>
                 <xs:attribute name="avg_measured_retention_time" type="xs:double"/>
             </xs:extension>
@@ -695,7 +721,7 @@
                     <xs:element name="losses" minOccurs="0" maxOccurs="1">
                         <xs:complexType>
                             <xs:sequence>
-                                <xs:element name="neutral_loss">
+                                <xs:element name="neutral_loss" minOccurs="0" maxOccurs="unbounded">
                                     <xs:complexType>
                                         <xs:attribute name="modification_name" type="xs:string"/>
                                         <xs:attribute name="loss_index" type="xs:positiveInteger"/>
@@ -812,6 +838,30 @@
             <xs:enumeration value="Percent"/>
         </xs:restriction>
     </xs:simpleType>
+    <xs:simpleType name="full_scan_acquisition_method_type">
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="none"/>
+        <xs:enumeration value="Targeted"/>
+        <xs:enumeration value="DIA"/>
+      </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="retention_time_filtering_type">
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="none"/>
+        <xs:enumeration value="scheduling_windows"/>
+        <xs:enumeration value="ms2_ids"/>
+      </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="atomic_symbol_type">
+      <xs:restriction base="xs:string">
+        <xs:pattern value="H|H'|C|C'|N|N'|O|O&quot;|O'|P|S|Se|Li|F|Na|Cl|K|Ca|Fe|Ni|Cu|Zn|Br|Mo|Ag|I|Au|Hg|B|As|Cd|Cr|Co|Mn|Mg"/>
+      </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="heavy_isotope_symbol_type">
+      <xs:restriction base="xs:string">
+        <xs:pattern value="H'|C'|N'|O&quot;|O'"/>
+      </xs:restriction>
+    </xs:simpleType>
     <xs:simpleType name="full_scan_mass_analyzer_type">
         <xs:restriction base="xs:string">
             <xs:enumeration value="none"/>
@@ -915,6 +965,8 @@
         <xs:restriction base="xs:string">
             <xs:enumeration value="Picked intensity"/>
             <xs:enumeration value="Spectrum count"/>
+            <xs:enumeration value="Expect"/>  <!-- used with hunter lib -->
+            <xs:enumeration value="TFRatio"/> <!-- used with NIST lib -->
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="transition_library_pick_type">
@@ -931,10 +983,15 @@
             <xs:enumeration value="C"/>
         </xs:restriction>
     </xs:simpleType>
-    <xs:simpleType name="amino_acid_type">
+    <xs:simpleType name="prev_next_amino_acid_type">
         <xs:restriction base="xs:string">
-            <xs:pattern value="[a-zA-Z]"/>
+            <xs:pattern value="[a-zA-Z\-]"/>
         </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="aminoacid_csv_type">
+      <xs:restriction base="xs:string">
+        <xs:pattern value="(([a-zA-Z][ ]*,[ ]*)*)[a-zA-Z]"/>
+      </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="sequence_type">
         <xs:restriction base="xs:string">
@@ -969,9 +1026,18 @@
     <xs:complexType name="spectrum_header_info_type">
         <xs:attribute name="library_name"/>
     </xs:complexType>
-    <xs:complexType name="name_description_type">
+    <!-- protein details that may be derived from identity object's name and description -->
+    <xs:attributeGroup name="protein_details_type">
+      <xs:attribute name="accession" type="xs:string"/>
+      <xs:attribute name="preferred_name" type="xs:string"/>
+      <xs:attribute name="gene" type="xs:string"/>
+      <xs:attribute name="species" type="xs:string"/>
+      <xs:attribute name="websearch_status" type="xs:string"/>
+    </xs:attributeGroup>
+    <xs:complexType name="protein_description_type">
         <xs:attribute name="name" type="xs:string" use="required"/>
         <xs:attribute name="description" type="xs:string" use="required"/>
+        <xs:attributeGroup ref="protein_details_type"/>
     </xs:complexType>
     <xs:complexType name="note_type">
         <xs:simpleContent>
@@ -995,7 +1061,7 @@
     <!-- Isotope Modification Type-->
     <xs:complexType name="isotope_modification_type">
         <xs:attribute name="name" type="xs:string" use="required"/>
-        <xs:attribute name="aminoacid" type="sequence_type"/>
+        <xs:attribute name="aminoacid" type="aminoacid_csv_type"/>
         <xs:attribute name="terminus" type="terminus_type"/>
         <xs:attribute name="formula" type="xs:string"/>
         <xs:attribute name="label_13C" type="xs:boolean">
@@ -1050,7 +1116,8 @@
             </xs:element>
         </xs:sequence>
         <xs:attribute name="name" type="xs:string" use="required"/>
-        <xs:attribute name="aminoacid" type="sequence_type"/>
+        <xs:attribute name="short_name" type="xs:string"/>
+        <xs:attribute name="aminoacid" type="aminoacid_csv_type"/>
         <xs:attribute name="terminus" type="terminus_type"/>
         <xs:attribute name="variable" type="xs:boolean" use="optional">
             <xs:annotation>
@@ -1126,7 +1193,7 @@
             <xs:extension base="peptide_result_type">
                 <xs:sequence>
                     <xs:element name="note" type="note_type" minOccurs="0" maxOccurs="1"/>
-                    <xs:element name="annotation" type="amino_acid_type" minOccurs="0"
+                    <xs:element name="annotation" type="annotation_type" minOccurs="0"
                         maxOccurs="unbounded"/>
                 </xs:sequence>
                 <xs:attribute name="step" type="xs:int"/>
@@ -1150,7 +1217,7 @@
             <xs:extension base="measured_result_type">
                 <xs:sequence>
                     <xs:element name="note" type="note_type" minOccurs="0" maxOccurs="1"/>
-                    <xs:element name="annotation" type="amino_acid_type" minOccurs="0"
+                    <xs:element name="annotation" type="annotation_type" minOccurs="0"
                         maxOccurs="unbounded"/>
                 </xs:sequence>
                 <xs:attribute name="step" type="xs:int"/>
@@ -1173,8 +1240,7 @@
     <xs:complexType name="doc_node_type">
         <xs:sequence>
             <xs:element name="note" type="note_type" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="annotation" type="annotation_type" minOccurs="0" maxOccurs="unbounded"
-            />
+            <xs:element name="annotation" type="annotation_type" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="doc_parent_node_type">
