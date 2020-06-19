@@ -38,6 +38,12 @@
     <xs:attribute name="name" type="xs:string" use="required"/>
   </xs:complexType>
   <!-- Peptide Settings -->
+  <xs:simpleType name="drift_time_peak_width_calc_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="resolving_power" />
+      <xs:enumeration value="linear_range" />
+    </xs:restriction>
+  </xs:simpleType>
   <xs:complexType name="peptide_settings_type">
     <xs:annotation>
       <xs:documentation>Container for peptide settings information</xs:documentation>
@@ -120,7 +126,10 @@
                   </xs:element>
                 </xs:sequence>
                 <xs:attribute name="name" type="xs:string" use="required"/>
-                <xs:attribute name="resolving_power" type="xs:double" use="required"/>
+                <xs:attribute name="peak_width_calc_type" type="drift_time_peak_width_calc_type" default="resolving_power"/>
+                <xs:attribute name="resolving_power" type="xs:double" default="0.0"/>
+                <xs:attribute name="width_at_dt_zero" type="xs:double" default="0.0"/>
+                <xs:attribute name="width_at_dt_max" type="xs:double" default="0.0"/>
               </xs:complexType>
             </xs:element>
           </xs:sequence>
@@ -145,15 +154,19 @@
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
-          <xs:attribute name="spectral_library_drift_times_resolving_power" type="xs:double">
+          <xs:attribute name="spectral_library_drift_times_peak_width_calc_type" type="drift_time_peak_width_calc_type" default="resolving_power">
             <xs:annotation>
               <xs:documentation>
-                Determines drift time matching tolerance(drift times are measured in milliseconds) for spectral library drift time usage:
-                For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is
-                W = 2T/R
+                When spectral_library_drift_times_peak_width_calc_type is set to resolving_power, drift time matching tolerance(drift times are measured in milliseconds) for spectral library drift time is calculated as:
+                    For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is W = 2T/R
+                When spectral_library_drift_times_peak_width_calc_type is set to linear_range, drift time matching tolerance is calculated as:
+                    For peak width at drift time zero "Wdt0" and peak width at drift time max "WdtMax" and max drift time "dtMax" at drift time "T", the width "W" of the drift time matching window centered at T is W = Wdt0 + (WdtMax-Wdt0)*T/dtMax
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="spectral_library_drift_times_resolving_power" type="xs:double" default="0.0"/>
+          <xs:attribute name="spectral_library_drift_times_width_at_dt_zero" type="xs:double" default="0.0"/>
+          <xs:attribute name="spectral_library_drift_times_width_at_dt_max" type="xs:double" default="0.0"/>          
 
         </xs:complexType>
       </xs:element>
@@ -522,6 +535,7 @@
                 <xs:attribute name="sample_name" type="xs:string" use="required"/>
                 <xs:attribute name="acquired_time" type="xs:dateTime"/>
                 <xs:attribute name="modified_time" type="xs:dateTime"/>
+                <xs:attribute name="explicit_global_standard_area" type="xs:double"/>
               </xs:complexType>
             </xs:element>
             <xs:element name="annotation" type="annotation_type" minOccurs="0" maxOccurs="unbounded"/>
@@ -686,6 +700,9 @@
         <xs:attribute name="standard_type" type="xs:string"/>
         <xs:attribute name="explicit_retention_time" type="xs:double"/>  <!-- optional RT override value from transition list import -->
         <xs:attribute name="explicit_retention_time_window" type="xs:double"/>  <!-- optional RT override value from transition list import -->
+        <xs:attribute name="concentration_multiplier" type="xs:double" />
+        <xs:attribute name="internal_standard_concentration" type="xs:double" />
+        <xs:attribute name="normalization_method" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -879,9 +896,6 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="stock_concentration" type="xs:double" />
-        <xs:attribute name="internal_standard_concentration" type="xs:double" />
-        <xs:attribute name="concentration_units" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
