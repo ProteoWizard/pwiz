@@ -55,6 +55,13 @@ namespace pwiz.Common.Chemistry
             return new MoleculeMassOffset(newMolecule, MonoMassOffset + moleculeMassOffset.MonoMassOffset, AverageMassOffset + moleculeMassOffset.AverageMassOffset);
         }
 
+        public MoleculeMassOffset Minus(MoleculeMassOffset moleculeMassOffset)
+        {
+            var newMolecule = MoleculeFromEntries(Molecule.Concat(
+                moleculeMassOffset.Molecule.Select(entry => new KeyValuePair<string, int>(entry.Key, -entry.Value))));
+            return new MoleculeMassOffset(newMolecule, MonoMassOffset - moleculeMassOffset.MonoMassOffset, AverageMassOffset - moleculeMassOffset.AverageMassOffset);
+        }
+
         public override string ToString()
         {
             return ToString(null, CultureInfo.CurrentCulture);

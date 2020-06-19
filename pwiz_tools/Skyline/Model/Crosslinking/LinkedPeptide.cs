@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             });
         }
 
-        public ComplexFragmentIon MakeComplexFragmentIon(IsotopeLabelType labelType, ComplexFragmentIonName complexFragmentIonName)
+        public ComplexFragmentIon MakeComplexFragmentIon(SrmSettings settings, IsotopeLabelType labelType, ComplexFragmentIonName complexFragmentIonName)
         {
             var transitionGroup = GetTransitionGroup(labelType, Adduct.SINGLY_PROTONATED);
             Transition transition;
@@ -247,7 +247,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                     Transition.OrdinalToOffset(complexFragmentIonName.IonType, complexFragmentIonName.Ordinal, Peptide.Length), 
                     0, Adduct.SINGLY_PROTONATED);
             }
-            // TODO: losses
+
             var result = new ComplexFragmentIon(transition, null, CrosslinkStructure, complexFragmentIonName.IsOrphan);
             if (ExplicitMods != null)
             {
@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                         throw new InvalidOperationException(@"No crosslink at " + child.Item1);
                     }
                     result = result.AddChild(child.Item1,
-                        linkedPeptide.MakeComplexFragmentIon(labelType, child.Item2));
+                        linkedPeptide.MakeComplexFragmentIon(settings, labelType, child.Item2));
                 }
             }
 

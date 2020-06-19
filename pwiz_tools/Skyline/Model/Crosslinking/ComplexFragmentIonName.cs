@@ -50,13 +50,11 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         private ComplexFragmentIonName()
         {
-            Losses = ImmutableList<Tuple<ModificationSite, string>>.EMPTY;
             Children = ImmutableList<Tuple<ModificationSite, ComplexFragmentIonName>>.EMPTY;
         }
 
         public IonType IonType { get; private set; }
         public int Ordinal { get; private set; }
-        public ImmutableList<Tuple<ModificationSite, string>> Losses { get; private set; }
         public ImmutableList<Tuple<ModificationSite, ComplexFragmentIonName>> Children { get; private set; }
         public bool IsOrphan
         {
@@ -83,25 +81,9 @@ namespace pwiz.Skyline.Model.Crosslinking
                 im => { im.Children = ToChildList(Children.Append(Tuple.Create(modificationSite, child))); });
         }
 
-        public ComplexFragmentIonName AddLoss(ModificationSite modificationSite, string loss)
-        {
-            if (IsOrphan)
-            {
-                throw new InvalidOperationException();
-            }
-
-            return ChangeProp(ImClone(this),
-                im =>
-                {
-                    im.Losses = ImmutableList.ValueOf(im.Losses.Append(Tuple.Create(modificationSite, loss))
-                        .OrderBy(tuple => tuple));
-                });
-        }
-
         protected bool Equals(ComplexFragmentIonName other)
         {
-            return IonType == other.IonType && Ordinal == other.Ordinal && Losses.Equals(other.Losses) &&
-                   Children.Equals(other.Children) && IsOrphan == other.IsOrphan;
+            return IonType == other.IonType && Ordinal == other.Ordinal && Children.Equals(other.Children) && IsOrphan == other.IsOrphan;
         }
 
         public override bool Equals(object obj)
@@ -118,7 +100,6 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 var hashCode = (int) IonType;
                 hashCode = (hashCode * 397) ^ Ordinal;
-                hashCode = (hashCode * 397) ^ Losses.GetHashCode();
                 hashCode = (hashCode * 397) ^ Children.GetHashCode();
                 hashCode = (hashCode * 397) ^ IsOrphan.GetHashCode();
                 return hashCode;
@@ -144,11 +125,6 @@ namespace pwiz.Skyline.Model.Crosslinking
                     stringBuilder.Append(IonType);
                     stringBuilder.Append(Ordinal);
                 }
-            }
-
-            foreach (var loss in Losses)
-            {
-                stringBuilder.Append($@"({loss.Item1}[{loss.Item2}])");
             }
 
             if (Children.Count == 1 && Children[0].Item1 == null)
