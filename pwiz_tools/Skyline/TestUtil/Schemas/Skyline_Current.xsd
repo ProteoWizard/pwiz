@@ -327,6 +327,8 @@
                 <xs:attribute name="formula" type="xs:string"/>
                 <xs:attribute name="mass_monoisotopic" type="xs:double"/>
                 <xs:attribute name="mass_average" type="xs:double"/>
+                <xs:attribute name="charges" type="xs:string"/>
+                <xs:attribute name="optional" type="xs:boolean"/>
               </xs:complexType>
             </xs:element>
           </xs:sequence>
@@ -529,6 +531,7 @@
         </xs:sequence>
         <xs:attribute name="label_description" type="xs:string"/>
         <xs:attribute name="label_name" type="xs:string"/>
+        <xs:attributeGroup ref ="protein_details_type"/>
         <xs:attribute name="decoy" type="xs:boolean"/>
       </xs:extension>
     </xs:complexContent>
@@ -794,7 +797,7 @@
           </xs:element>
           <xs:element name="precursor_mz" type="xs:double"> </xs:element>
           <xs:element name="product_mz" type="xs:double"/>
-          <xs:element name="collision_energy" type="xs:double">
+          <xs:element name="collision_energy" type="xs:double" minOccurs="0" maxOccurs="1">
             <xs:annotation>
               <xs:documentation>
                 This can be the best value based on measured results, or the value calculated from a linear regression.
@@ -809,7 +812,14 @@
             </xs:annotation>
           </xs:element>
         </xs:sequence>
-        <xs:attribute name="fragment_type" type="fragment_type" use="required">
+        <xs:attribute name="measured_ion_name" type ="xs:string">
+          <xs:annotation>
+            <xs:documentation>
+              The name of the measured ion that this transition uses (Only for reporter ions and other non proteomic transitions)
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="fragment_type" type="fragment_type">
           <xs:annotation>
             <xs:documentation>
               One of "precursor", "a", "b", "c", "x", "y", "z"
