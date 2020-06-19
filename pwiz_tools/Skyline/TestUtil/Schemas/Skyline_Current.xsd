@@ -576,17 +576,7 @@
   <!-- Data Settings -->
   <xs:complexType name="data_settings_type">
     <xs:sequence>
-      <xs:element name="annotation" maxOccurs="unbounded" minOccurs="0">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="value" type="xs:string" minOccurs="0"
-                maxOccurs="unbounded"/>
-          </xs:sequence>
-          <xs:attribute name="name" type="xs:string" use="required"/>
-          <xs:attribute name="targets" type="annotation_target_type"/>
-          <xs:attribute name="type" type="data_settings_annotation_type"/>
-        </xs:complexType>
-      </xs:element>
+      <xs:element name="annotation" maxOccurs="unbounded" minOccurs="0" type="annotation_def_type" />
       <xs:element name="group_comparison" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
           <xs:sequence>
@@ -612,6 +602,23 @@
           <xs:attribute name="summarization_method" type="xs:string"/>
           <xs:attribute name="confidence_level" type="xs:double"/>
           <xs:attribute name="per_protein" type="xs:boolean"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="list_data" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="list_def">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="annotation" minOccurs="0" maxOccurs="unbounded" type="annotation_def_type" />
+                </xs:sequence>
+                <xs:attribute name="name" type="xs:string" />
+                <xs:attribute name="display_property" type="xs:string" />
+                <xs:attribute name="id_property" type="xs:string" />
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="column" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="views" minOccurs="0">
@@ -718,6 +725,16 @@
     <xs:attribute name="document_guid" type="xs:string" use="optional"/>
     <xs:attribute name="audit_logging" type="xs:boolean" use="optional"/>
     <xs:attribute name="panorama_publish_uri" type="xs:string" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="annotation_def_type">
+    <xs:sequence>
+      <xs:element name="value" type="xs:string" minOccurs="0"
+                  maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="targets" type="annotation_target_type"/>
+    <xs:attribute name="type" type="data_settings_annotation_type"/>
+    <xs:attribute name="lookup" type="xs:string"/>
   </xs:complexType>
   <xs:complexType name="doc_rt_alignments_type">
     <xs:sequence>
@@ -1324,6 +1341,7 @@
       <xs:enumeration value="none"/>
       <xs:enumeration value="Targeted"/>
       <xs:enumeration value="DIA"/>
+      <xs:enumeration value="DDA"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="retention_time_filtering_type">
@@ -1335,12 +1353,12 @@
   </xs:simpleType>
   <xs:simpleType name="atomic_symbol_type">
     <xs:restriction base="xs:string">
-      <xs:pattern value="H|H'|C|C'|N|N'|O|O&quot;|O'|P|P'|S|S'|S&quot;|Se|Li|F|Na|Cl|Cl'|K|Ca|Fe|Ni|Cu|Zn|Br|Br'|Mo|Ag|I|Au|Hg|B|As|Cd|Cr|Co|Mn|Mg"/>
+      <xs:pattern value="H|H'|H&quot;|D|T|C|C'|C&quot;|N|N'|O|O&quot;|O'|P|P'|S|S'|S&quot;|Se|Li|F|Na|Cl|Cl'|K|Ca|Fe|Ni|Cu|Zn|Br|Br'|Mo|Ag|I|Au|Hg|B|As|Cd|Cr|Co|Mn|Mg"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="heavy_isotope_symbol_type">
     <xs:restriction base="xs:string">
-      <xs:pattern value="H'|C'|N'|O&quot;|O'|Cl'|Br'|P'|S'|S&quot;"/>
+      <xs:pattern value="H'|H&quot;|D|T|C'|C&quot;|N'|O&quot;|O'|Cl'|Br'|P'|S'|S&quot;"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="full_scan_mass_analyzer_type">
