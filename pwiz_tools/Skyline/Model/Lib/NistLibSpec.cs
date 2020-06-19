@@ -763,30 +763,33 @@ namespace pwiz.Skyline.Model.Lib
         
 // ReSharper disable LocalizableElement
         private static readonly string NAME = "Name:";
-        private static readonly Regex REGEX_NAME = new Regex(@"^Name: ([A-Z()\[\]0-9]+)/(\d)"); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
-        private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^Num ?[pP]eaks: (\d+)");  // NIST uses "Num peaks" and SpectraST "NumPeaks"
+        private static readonly RegexOptions NOCASE = RegexOptions.IgnoreCase;
+        private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name): ([A-Z()\[\]0-9]+)/(\d)"); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
+        private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^Num ?Peaks: (\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks"
         private static readonly string COMMENT = "Comment: ";
-        private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ");
-        private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ");
-        private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)"); // In a comment
-        private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*: ([^ ]+)"); // On its own line
-        private static readonly Regex REGEX_IRT = new Regex(@" iRT=([^ ,]+)");
-        private static readonly Regex REGEX_RI = new Regex(@"^Retention_index: ([^ ]+)"); // Retention Index for GC
-        private static readonly Regex REGEX_RI_LINE = new Regex(@"^(?:Synon:.* )?RI: ([^ ]+)"); // Retention Index for GC
-        private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)");  // Observer spectrum count
+        private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ", NOCASE);
+        private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ", NOCASE);
+        private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)", NOCASE); // In a comment
+        private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*: ([^ ]+)", NOCASE); // On its own line
+        private static readonly Regex REGEX_IRT = new Regex(@" iRT=([^ ,]+)", NOCASE);
+        private static readonly Regex REGEX_RI = new Regex(@"^Retention_index: ([^ ]+)", NOCASE); // Retention Index for GC
+        private static readonly Regex REGEX_RI_LINE = new Regex(@"^(?:Synon:.* )?RI: ([^ ]+)", NOCASE); // Retention Index for GC
+        private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)", NOCASE);  // Observer spectrum count
         private static readonly char[] MAJOR_SEP = {'/'};
         private static readonly char[] MINOR_SEP = {','};
         // Small molecule items
-        private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name: (.*)"); // small molecule names can be anything
+        private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name: (.*)", NOCASE); // small molecule names can be anything
         private static readonly string SYNON = "Synon: ";
-        private static readonly Regex REGEX_INCHIKEY = new Regex(@"^(?:Synon:.* )?InChIKey: (.*)");
-        private static readonly Regex REGEX_INCHI = new Regex(@"^(?:Synon:.* )?InChI: (?:InChI\=)?(.*)");
-        private static readonly Regex REGEX_FORMULA = new Regex(@"^Formula: (.*)");
-        private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS#?: (\d+-\d+-\d)"); // CONSIDER(bspratt): capture NIST# as well?
-        private static readonly Regex REGEX_KEGG = new Regex(@"^(?:Synon:.* )?KEGG: (.*)");
-        private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type: (.*)");
-        private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^PrecursorMz: ([^ ]+)");
-        private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode: (.*)");
+        private static readonly Regex REGEX_INCHIKEY = new Regex(@"^(?:Synon:.* )?InChIKey: (.*)", NOCASE);
+        private static readonly Regex REGEX_INCHI = new Regex(@"^(?:Synon:.* )?InChI: (?:InChI\=)?(.*)", NOCASE);
+        private static readonly Regex REGEX_FORMULA = new Regex(@"^Formula: (.*)", NOCASE);
+        private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS#?: (\d+-\d+-\d)", NOCASE); // CONSIDER(bspratt): capture NIST# as well?
+        private static readonly Regex REGEX_KEGG = new Regex(@"^(?:Synon:.* )?KEGG: (.*)", NOCASE);
+        private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type: (.*)", NOCASE);
+        // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
+        // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
+        private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^PrecursorMz: ([^ ,]+)", NOCASE); 
+        private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode: (.*)", NOCASE);
 
         // ReSharper restore LocalizableElement
         private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent, out string warning)
@@ -829,7 +832,7 @@ namespace pwiz.Skyline.Model.Lib
 
 
                     // Read until name line
-                    if (!line.StartsWith(NAME))
+                    if (!line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Accept Name:, NAME:, nAmE: etc
                         continue;
                     Match match = REGEX_NAME.Match(line);
                     var isPeptide = true;
@@ -849,7 +852,7 @@ namespace pwiz.Skyline.Model.Lib
                     var otherKeys = new Dictionary<string, string>();
                     string inChiKey = null;
 
-                    int numPeaks = 0;
+                    int numPeaksDeclared = 0;
                     float tfRatio = 1000;
                     double? rt = null, irt = null;
                     int copies = 1;
@@ -866,11 +869,11 @@ namespace pwiz.Skyline.Model.Lib
                         match = REGEX_NUM_PEAKS.Match(line);
                         if (match.Success)
                         {
-                            numPeaks = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                            numPeaksDeclared = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
                             break;
                         }
 
-                        if (line.StartsWith(SYNON))
+                        if (line.StartsWith(SYNON, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
                         {
                             isPeptide = false;
                         }
@@ -937,7 +940,14 @@ namespace pwiz.Skyline.Model.Lib
                             match = REGEX_PRECURSORMZ.Match(line);
                             if (match.Success)
                             {
-                                precursorMz = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                                try
+                                {
+                                    precursorMz = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                                }
+                                catch
+                                {
+                                    ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__ , line) );
+                                }
                                 continue;
                             }
                             match = REGEX_IONMODE.Match(line);
@@ -952,7 +962,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
 
                         // For peptides, a lot of useful info is jammed into the COMMENT line and must be further picked apart
-                        if (line.StartsWith(COMMENT))
+                        if (line.StartsWith(COMMENT, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
                         {
                             match = REGEX_MODS.Match(line);
                             if (match.Success)
@@ -975,16 +985,25 @@ namespace pwiz.Skyline.Model.Lib
                                 irt = GetRetentionTime(match.Groups[1].Value, false);
                         }
 
-                        if (line.StartsWith(@"_EOF_"))
+                        if (line.StartsWith(@"_EOF_", StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
                             ThrowIOException(lineCount, Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
-                        else if (line.StartsWith(@"Name:"))
+                        else if (line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
                             break;
                     }
 
-                    // Watch for strange formula specification as seen in MONA LipidBlast, e.g. "[C11H22NO4]+" seen with adduct [M]+
-                    if (formula != null && formula.StartsWith(@"["))
+                    if (formula != null)
                     {
-                        formula = formula.Substring(1).Split(']')[0];
+                        // Watch for strange formula specification as seen in MoNA
+                        if (formula.StartsWith(@"["))
+                        {
+                            // In MoNA LipidBlast we've seen "[C11H22NO4]+" associated with adduct [M]+
+                            formula = formula.Substring(1).Split(']')[0];
+                        }
+                        // In MoNA Fiehn-HILIC we see "C7H9N2O+" associated with adduct [M]+ or "C7H9N2O-" with [M]-
+                        else
+                        {
+                            formula = formula.Split('+', '-')[0];
+                        }
                     }
 
                     // Try to infer adduct if none given
@@ -1010,16 +1029,15 @@ namespace pwiz.Skyline.Model.Lib
                     if (charge == 0 && adduct.IsEmpty)
                         continue; // In the end, couldn't understand this as a peptide nor as a small molecule - ignore. CONSIDER(bspratt): throw an error? Historical behavior is to be silent.
 
-                    if (numPeaks == 0)
+                    if (numPeaksDeclared == 0)
                         ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_No_peaks_found_for_peptide__0__, sequence));
-                    if (numPeaks > ushort.MaxValue)
-                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__, ushort.MaxValue));
 
                     double totalIntensity = 0;
                     var annotations = isPeptide ? null : new List<List<SpectrumPeakAnnotation>>(); // List of lists, as each peak may have multiple annotations
-                    int mzBytes = sizeof(float)*numPeaks;
+                    int mzBytes = sizeof(float)*numPeaksDeclared;
                     byte[] peaks = new byte[mzBytes*2];
-                    for (int i = 0; i < numPeaks; i++)
+                    int numNonZeroPeaks = 0;
+                    for (var i = 0; i < numPeaksDeclared; i++)
                     {
                         var linePeaks = reader.ReadLine();
                         if (linePeaks == null)
@@ -1079,26 +1097,42 @@ namespace pwiz.Skyline.Model.Lib
                             string mzField = linePeak.Substring(0, iSeperator1++);
                             string intensityField = linePeak.Substring(iSeperator1, iSeperator2 - iSeperator1);
 
-                            int offset = i*4;
                             if (!TryParseFloatUncertainCulture(mzField, out var mz))
                             {
                                 ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
                             }
-                            Array.Copy(BitConverter.GetBytes(mz), 0, peaks, offset, 4);
                             if (!TryParseFloatUncertainCulture(intensityField, out var intensity))
                             {
                                 ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
                             }
-                            Array.Copy(BitConverter.GetBytes(intensity), 0, peaks, mzBytes + offset, 4);
-                            totalIntensity += intensity;
-                            if (!isPeptide)
+                            if (intensity != 0)
                             {
-                                ParseFragmentAnnotation(iSeperator2, annotations, i, linePeak, adduct, charge, mz);
+                                var offset = numNonZeroPeaks * 4;
+                                Array.Copy(BitConverter.GetBytes(mz), 0, peaks, offset, 4);
+                                Array.Copy(BitConverter.GetBytes(intensity), 0, peaks, mzBytes + offset, 4);
+                                numNonZeroPeaks++;
+                                totalIntensity += intensity;
+                                if (!isPeptide)
+                                {
+                                    ParseFragmentAnnotation(iSeperator2, annotations, i, linePeak, adduct, charge, mz);
+                                }
                             }
 
                             iSeperator1 = -1; // Next line, if any
                         }
                     }
+
+                    if (numNonZeroPeaks > ushort.MaxValue)
+                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__, ushort.MaxValue));
+
+                    if (numNonZeroPeaks < numPeaksDeclared)
+                    {
+                        // Move the intensities down to where the mzs actually stopped, then trim the excess
+                        Array.Copy(peaks, sizeof(float) * numPeaksDeclared, peaks, sizeof(float) * numNonZeroPeaks, sizeof(float) * numNonZeroPeaks);
+                        Array.Resize(ref peaks, sizeof(float) * numNonZeroPeaks * 2);
+                    }
+
+
                     // Peak list compression turns out to have a 4x impact on time to
                     // create the cache.  Using zero below turns it off, or 1 to turn
                     // it on, and take the performance hit for 40% less disk use, though
@@ -1117,7 +1151,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, otherKeys), adduct);
                     var info = new NistSpectrumInfo(key, tfRatio, rt, irt, Convert.ToSingle(totalIntensity),
-                        (ushort) copies, (ushort) numPeaks, lenCompressed, lenAnnotations, location);
+                        (ushort) copies, (ushort) numNonZeroPeaks, lenCompressed, lenAnnotations, location);
                     if (!isPeptide)
                     {
                         // Keep an eye out for ambiguous keys, probably due to library containing multiple machine types etc
