@@ -120,9 +120,13 @@
                     <xs:complexType>
                       <xs:attribute name="modified_sequence" type="xs:string" use="required"/>  <!-- for non-proteomics data this will actually be InChiKey or other ID -->
                       <xs:attribute name="charge" type="xs:string" use="required"/> <!-- may be an adduct or a simple integer for protonated charge -->
-                      <xs:attribute name="drift_time" type="xs:double" use="required"/>
+                      <!--  Drift time info is supported, but the more general ion_mobility_ family of attributes is preferred. -->
+                      <xs:attribute name="drift_time" type="xs:double" use="optional"/>
                       <xs:attribute name="high_energy_drift_time_offset" type="xs:double" use="optional"/>
                       <xs:attribute name="ccs" type="xs:double" use="optional"/>
+                      <xs:attribute name="ion_mobility" type="xs:double" use="optional"/>
+                      <xs:attribute name="high_energy_ion_mobility_offset" type="xs:double" use="optional"/>
+                      <xs:attribute name="ion_mobility_units" type="xs:string" use="optional"/>
                     </xs:complexType>
                   </xs:element>
                 </xs:sequence>
@@ -151,16 +155,17 @@
           <xs:attribute name="use_spectral_library_drift_times" type="xs:boolean">
             <xs:annotation>
               <xs:documentation>
-                If true, drift times found in spectral libraries will be used in chromatogram extraction.  Defaults to false.
+                If true, ion mobility (drift time, inverse reduced ion mobility, etc.) values found in spectral libraries will be used in chromatogram extraction.  Defaults to false.
+                N.B. The use of the term drift time in the spectral library context is historical - other ion mobility types are supported so this should be understood as ion mobility in the general sense.
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute name="spectral_library_drift_times_peak_width_calc_type" type="drift_time_peak_width_calc_type" default="resolving_power">
             <xs:annotation>
               <xs:documentation>
-                When spectral_library_drift_times_peak_width_calc_type is set to resolving_power, drift time matching tolerance(drift times are measured in milliseconds) for spectral library drift time is calculated as:
+                When spectral_library_drift_times_peak_width_calc_type is set to resolving_power, ion mobility (drift time, inverse reduced ion mobility, etc.) matching tolerance for spectral library ion mobility is calculated as:
                     For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is W = 2T/R
-                When spectral_library_drift_times_peak_width_calc_type is set to linear_range, drift time matching tolerance is calculated as:
+                When spectral_library_drift_times_peak_width_calc_type is set to linear_range, ion mobility matching tolerance is calculated as:
                     For peak width at drift time zero "Wdt0" and peak width at drift time max "WdtMax" and max drift time "dtMax" at drift time "T", the width "W" of the drift time matching window centered at T is W = Wdt0 + (WdtMax-Wdt0)*T/dtMax
               </xs:documentation>
             </xs:annotation>
@@ -548,6 +553,7 @@
                 <xs:attribute name="modified_time" type="xs:dateTime"/>
                 <xs:attribute name="explicit_global_standard_area" type="xs:double"/>
                 <xs:attribute name="tic_area" type="xs:double" />
+                <xs:attribute name="ion_mobility_type" type="xs:string" use="optional"/>                
               </xs:complexType>
             </xs:element>
             <xs:element name="annotation" type="annotation_type" minOccurs="0" maxOccurs="unbounded"/>
@@ -577,6 +583,17 @@
       </xs:element>
       <xs:element name="group_comparison" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
+          <xs:sequence>
+            <xs:element name="format_detail" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="color" type="xs:string"/>
+                <xs:attribute name="expr" type="xs:string"/>
+                <xs:attribute name="labeled" type="xs:boolean"/>
+                <xs:attribute name="symbol_type" type="xs:string"/>
+                <xs:attribute name="point_size" type="xs:string"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
           <xs:attribute name="name" type="xs:string"/>
           <xs:attribute name="control_annotation" type="xs:string"/>
           <xs:attribute name="control_value" type="xs:string"/>
@@ -597,7 +614,7 @@
             <xs:element name="view">
               <xs:complexType>
                 <xs:sequence>
-                <xs:element name="column" minOccurs ="0" maxOccurs="unbounded">
+                  <xs:element name="column" minOccurs ="0" maxOccurs="unbounded">
                     <xs:complexType>
                       <xs:attribute name="name" type="xs:string"/>
                       <xs:attribute name="caption" type="xs:string" />
@@ -674,7 +691,7 @@
                                   <xs:attribute name="direction" type="xs:string"/>
                                 </xs:complexType>
                               </xs:element>
-                            </xs:sequence>
+          </xs:sequence>
                             <xs:attribute name="text" type="xs:string"/>
                             <xs:attribute name="caseSensitive" type="xs:boolean"/>
                           </xs:complexType>
@@ -1062,8 +1079,9 @@
         <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
         <xs:attribute name="explicit_collision_energy" type="xs:double"/>
         <xs:attribute name="explicit_declustering_potential" type="xs:double"/>
-        <xs:attribute name="explicit_drift_time_msec" type="xs:double"/>
-        <xs:attribute name="explicit_drift_time_high_energy_offset_msec" type="xs:double"/>
+        <xs:attribute name="explicit_ion_mobility" type="xs:double"/>
+        <xs:attribute name="explicit_ion_mobility_units" type="xs:string"/>
+        <xs:attribute name="explicit_ion_mobility_high_energy_offset" type="xs:double"/>
         <xs:attribute name="explicit_ccs_sqa" type="xs:double"/>
         <xs:attribute name="explicit_s_lens" type="xs:double"/>
         <xs:attribute name="explicit_cone_voltage" type="xs:double"/>
@@ -1306,12 +1324,12 @@
   </xs:simpleType>
   <xs:simpleType name="atomic_symbol_type">
     <xs:restriction base="xs:string">
-      <xs:pattern value="H|H'|C|C'|N|N'|O|O&quot;|O'|P|S|Se|Li|F|Na|Cl|Cl'|K|Ca|Fe|Ni|Cu|Zn|Br|Br'|Mo|Ag|I|Au|Hg|B|As|Cd|Cr|Co|Mn|Mg"/>
+      <xs:pattern value="H|H'|C|C'|N|N'|O|O&quot;|O'|P|P'|S|S'|S&quot;|Se|Li|F|Na|Cl|Cl'|K|Ca|Fe|Ni|Cu|Zn|Br|Br'|Mo|Ag|I|Au|Hg|B|As|Cd|Cr|Co|Mn|Mg"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="heavy_isotope_symbol_type">
     <xs:restriction base="xs:string">
-      <xs:pattern value="H'|C'|N'|O&quot;|O'|Cl'|Br'"/>
+      <xs:pattern value="H'|C'|N'|O&quot;|O'|Cl'|Br'|P'|S'|S&quot;"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="full_scan_mass_analyzer_type">
@@ -1692,6 +1710,13 @@
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="predicted_retention_time" type="xs:double"/>
+        <xs:attribute name="exclude_from_calibration" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>
+              When true, the sample file is not to be used in calibration calculations.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1707,9 +1732,14 @@
         <xs:attribute name="start_time" type="xs:double"/>
         <xs:attribute name="end_time" type="xs:double"/>
         <xs:attribute name="ccs" type="xs:double" use="optional"/>
+        <!--  Drift time info is supported, but the more general ion_mobility_ family of attributes is preferred. -->
         <xs:attribute name="drift_time_ms1" type="xs:double" use="optional"/>
         <xs:attribute name="drift_time_fragment" type="xs:double" use="optional"/>
         <xs:attribute name="drift_time_window" type="xs:double" use="optional"/>
+        <xs:attribute name="ion_mobility_ms1" type="xs:double" use="optional"/>
+        <xs:attribute name="ion_mobility_fragment" type="xs:double" use="optional"/>
+        <xs:attribute name="ion_mobility_window" type="xs:double" use="optional"/>
+        <xs:attribute name="ion_mobility_type" type="xs:string" use="optional"/>
         <xs:attribute name="fwhm" type="xs:double"/>
         <xs:attribute name="area" type="xs:double"/>
         <xs:attribute name="background" type="xs:double"/>
@@ -1737,8 +1767,13 @@
         <xs:attribute name="retention_time" type="xs:double"/>
         <xs:attribute name="start_time" type="xs:double"/>
         <xs:attribute name="end_time" type="xs:double"/>
+        <xs:attribute name="ccs" type="xs:double" use="optional"/>
+        <!--  Drift time info is supported, but the more general ion_mobility_ family of attributes is preferred. -->
         <xs:attribute name="drift_time" type="xs:double" use="optional"/>
         <xs:attribute name="drift_time_window" type="xs:double" use="optional"/>
+        <xs:attribute name="ion_mobility" type="xs:double" use="optional"/>
+        <xs:attribute name="ion_mobility_window" type="xs:double" use="optional"/>
+        <xs:attribute name="ion_mobility_type" type="xs:string" use="optional"/>
         <xs:attribute name="fwhm" type="xs:double"/>
         <xs:attribute name="fwhm_degenerate" type="xs:boolean"/>
         <xs:attribute name="area" type="xs:double"/>
