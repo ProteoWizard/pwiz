@@ -649,6 +649,7 @@
                 <xs:attribute name="name" type="xs:string" />
                 <xs:attribute name="rowsource" type="xs:string"/>
                 <xs:attribute name="sublist" type="xs:string" />
+                <xs:attribute name="uimode" type="xs:string" />
               </xs:complexType>
             </xs:element>
             <xs:element name="layouts">
@@ -1103,15 +1104,10 @@
         <!-- label can be "heavy", "light" or a user defined name -->
         <xs:attribute name="isotope_label" type="xs:string"/>
         <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
-        <xs:attribute name="explicit_collision_energy" type="xs:double"/>
-        <xs:attribute name="explicit_declustering_potential" type="xs:double"/>
         <xs:attribute name="explicit_ion_mobility" type="xs:double"/>
         <xs:attribute name="explicit_ion_mobility_units" type="xs:string"/>
-        <xs:attribute name="explicit_ion_mobility_high_energy_offset" type="xs:double"/>
         <xs:attribute name="explicit_ccs_sqa" type="xs:double"/>
-        <xs:attribute name="explicit_s_lens" type="xs:double"/>
-        <xs:attribute name="explicit_cone_voltage" type="xs:double"/>
-        <xs:attribute name="explicit_compensation_voltage" type="xs:double"/>
+       <xs:attribute name="explicit_compensation_voltage" type="xs:double"/>
         <xs:attribute name="precursor_concentration" type="xs:double"/>
       </xs:extension>
     </xs:complexContent>
@@ -1213,6 +1209,13 @@
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="quantitative" type="xs:boolean" />
+        <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
+        <!-- these attributes were formerly at the precursor level (4.21 and earlier) but are really per-transition -->
+        <xs:attribute name="explicit_collision_energy" type="xs:double"/>
+        <xs:attribute name="explicit_declustering_potential" type="xs:double"/>
+        <xs:attribute name="explicit_ion_mobility_high_energy_offset" type="xs:double"/>
+        <xs:attribute name="explicit_s_lens" type="xs:double"/>
+        <xs:attribute name="explicit_cone_voltage" type="xs:double"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
