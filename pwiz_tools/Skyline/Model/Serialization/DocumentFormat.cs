@@ -22,6 +22,15 @@ using System.Globalization;
 
 namespace pwiz.Skyline.Model.Serialization
 {
+    /// <summary>
+    /// Constants listing version numbers which identify times when changes were made to the way
+    /// that Skyline saves documents in the .sky file.
+    /// The current schema is described in a file called "Skyline_Current.xsd".
+    /// The current version number should be changed if you make a change to "Skyline_Current.xsd", and there
+    /// is already a released build of Skyline-Daily that is using the current version.
+    /// When changing the current version number, you should copy "Skyline_Current.xsd" to "Skyline_###.xsd" representing
+    /// the old version number.
+    /// </summary>
     public struct DocumentFormat : IComparable<DocumentFormat>
     {
         public static readonly DocumentFormat VERSION_0_1 = new DocumentFormat(0.1);
