@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.V01;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using pwiz.SkylineTestUtil.Schemas;
 
 namespace pwiz.SkylineTest
 {
@@ -1546,5 +1547,17 @@ namespace pwiz.SkylineTest
         "    </molecule>\n" +
         "  </peptide_list>\n" +
         "</srm_settings>";
+
+        [TestMethod]
+        public void TestDocumentSchemaDocuments()
+        {
+            foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
+            {
+                var schemaFileName =
+                    SchemaDocuments.GetSkylineSchemaResourceName(skylineVersion.SrmDocumentVersion.ToString());
+                var resourceStream = typeof(SchemaDocuments).Assembly.GetManifestResourceStream(schemaFileName);
+                Assert.IsNotNull(resourceStream, "Unable to find schema document {0} for Skyline Version {1}", schemaFileName, skylineVersion);
+            }
+        }
     }
 }
