@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineTestUtil.Schemas;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -448,7 +449,7 @@ namespace pwiz.SkylineTestUtil
                             throw new OutOfMemoryException("Strangely large non-document object", x.InnerException);
                         }
                         var assembly = Assembly.GetAssembly(typeof(AssertEx));
-                        var xsdName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION);
+                        var xsdName = SchemaDocuments.GetSkylineSchemaResourceName(SrmDocument.FORMAT_VERSION.ToString());
                         var schemaStream = assembly.GetManifestResourceStream(xsdName);
                         IsNotNull(schemaStream, string.Format("Schema {0} not found in TestUtil assembly", xsdName));
                         // ReSharper disable once AssignNullToNotNullAttribute
@@ -537,7 +538,7 @@ namespace pwiz.SkylineTestUtil
             string schemaVer = xmlText.Substring(verStart, xmlText.Substring(verStart).IndexOf("\"", StringComparison.Ordinal));
             // ReSharper restore LocalizableElement
 
-            ValidatesAgainstSchema(xmlText, "Skyline_" + schemaVer);
+            ValidatesAgainstSchema(xmlText, SchemaDocuments.GetSkylineSchemaResourceName(schemaVer));
         }
 
         [Localizable(false)]
@@ -562,16 +563,15 @@ namespace pwiz.SkylineTestUtil
                 version = "4.21";
             }
 
-            ValidatesAgainstSchema(xmlText, "AuditLog.Skyl_" + version);
+            ValidatesAgainstSchema(xmlText, SchemaDocuments.GetAuditLogSchemaResourceName(version));
         }
 
 
-        public static void ValidatesAgainstSchema(string xmlText, string xsdName)
+        public static void ValidatesAgainstSchema(string xmlText, string xsdResourceName)
         {
             var assembly = Assembly.GetAssembly(typeof(AssertEx));
-            var schemaFileName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, @".Schemas.{0}.xsd", xsdName);
-            var schemaFile = assembly.GetManifestResourceStream(schemaFileName);
-            IsNotNull(schemaFile, "could not locate a schema file called " + schemaFileName);
+            var schemaFile = assembly.GetManifestResourceStream(xsdResourceName);
+            IsNotNull(schemaFile, "could not locate a schema file called " + xsdResourceName);
             // ReSharper disable once AssignNullToNotNullAttribute
             using (var schemaReader = new XmlTextReader(schemaFile))
             {
