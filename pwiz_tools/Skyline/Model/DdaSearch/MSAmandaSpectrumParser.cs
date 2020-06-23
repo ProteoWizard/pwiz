@@ -8,7 +8,7 @@ using MSAmanda.InOutput.Input;
 using MSAmanda.Utils;
 using pwiz.ProteowizardWrapper;
 
-namespace pwiz.Skyline.Model.MSAmanda
+namespace pwiz.Skyline.Model.DdaSearch
 {
     public class MSAmandaSpectrumParser : IParserInput
     {

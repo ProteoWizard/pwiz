@@ -499,10 +499,10 @@
     <Compile Include="Model\Lists\ListExceptionDetail.cs" />
     <Compile Include="Model\MassModification.cs" />
     <Compile Include="Model\DisplayModificationOption.cs" />
-    <Compile Include="Model\MSAmanda\MSAmandaSearchSettings.cs" />
-    <Compile Include="Model\MSAmanda\MSAmandaSearchWrapper.cs" />
-    <Compile Include="Model\MSAmanda\MSAmandaSpectrumParser.cs" />
-    <Compile Include="Model\MsgfPlusSearchEngine.cs" />
+    <Compile Include="Model\DdaSearch\MSAmandaSearchSettings.cs" />
+    <Compile Include="Model\DdaSearch\MSAmandaSearchWrapper.cs" />
+    <Compile Include="Model\DdaSearch\MSAmandaSpectrumParser.cs" />
+    <Compile Include="Model\DdaSearch\MsgfPlusSearchEngine.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
     <Compile Include="Model\Prosit\Config\PrositConfig.cs" />
     <Compile Include="Model\Prosit\Models\PrositIntensityModel.cs" />
@@ -611,16 +611,16 @@
     <Compile Include="SettingsUI\Irt\UseCurrentCalculatorDlg.Designer.cs">
       <DependentUpon>UseCurrentCalculatorDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\SearchSettingsControl.cs">
+    <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="SettingsUI\SearchSettingsControl.Designer.cs">
+    <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.Designer.cs">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="ToolsUI\DDASearchControl.cs">
+    <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ToolsUI\DDASearchControl.Designer.cs">
+    <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\UiModes.cs" />
@@ -3519,7 +3519,7 @@
     <EmbeddedResource Include="SettingsUI\SaveSettingsDlg.zh-CHS.resx">
       <DependentUpon>SaveSettingsDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\SearchSettingsControl.resx">
+    <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.resx">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\StartPageSettingsUI.ja.resx">
@@ -3736,7 +3736,7 @@
       <DependentUpon>CreateMatchExpressionDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\DDASearchControl.resx">
+    <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.resx">
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.ja.resx">

@@ -1,25 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using NHibernate.Mapping.ByCode;
 using pwiz.Common.Chemistry;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class SearchSettingsControl : UserControl
     {

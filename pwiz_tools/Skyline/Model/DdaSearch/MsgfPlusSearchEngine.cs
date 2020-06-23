@@ -13,7 +13,7 @@ using pwiz.Skyline.Util;
 using System.IO;
 using pwiz.Common.SystemUtil;
 
-namespace pwiz.Skyline.Model
+namespace pwiz.Skyline.Model.DdaSearch
 {
     public class MsgfPlusSearchEngine : AbstractDdaSearchEngine
     {

@@ -1,20 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using MSAmanda.Core;
 using MSAmanda.Utils;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.ToolsUI
+namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class DDASearchControl : UserControl
     {

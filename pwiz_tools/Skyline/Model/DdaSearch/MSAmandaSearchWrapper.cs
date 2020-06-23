@@ -18,7 +18,7 @@ using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
 using OperationCanceledException = System.OperationCanceledException;
 using Thread = System.Threading.Thread;
 
-namespace pwiz.Skyline.Model.MSAmanda
+namespace pwiz.Skyline.Model.DdaSearch
 {
     public class MSAmandaSearchWrapper : AbstractDdaSearchEngine
     {

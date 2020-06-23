@@ -51,7 +51,7 @@
     <DeploymentItem filename="BlibBuild.exe" />
     <DeploymentItem filename="BlibFilter.exe" />
     <DeploymentItem filename="Instruments.xml" />
-    <DeploymentItem filename="Enzymes.xml" />
+    <DeploymentItem filename="enzymes.xml" />
     <DeploymentItem filename="percolator\percolator.exe" outputDirectory="percolator" />
     <DeploymentItem filename="percolator\qvality.exe" outputDirectory="percolator" />
     <DeploymentItem filename="..\Shared\Lib\Microsoft.VC140.CRT\x64\vcomp140.dll" outputDirectory="percolator" />

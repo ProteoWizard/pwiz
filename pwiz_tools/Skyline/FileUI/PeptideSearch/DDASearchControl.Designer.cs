@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.ToolsUI
+﻿namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     partial class DDASearchControl
     {
