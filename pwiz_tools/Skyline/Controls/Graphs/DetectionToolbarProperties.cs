@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Globalization;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Properties;
 using Settings = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.Settings;
 using IntLabeledValue = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.IntLabeledValue;
 
@@ -18,7 +12,6 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class DetectionToolbarProperties : FormEx
     {
         private readonly GraphSummary _graphSummary;
-        private DetectionsPlotPane.Settings _settings;
 
         public DetectionToolbarProperties(GraphSummary graphSummary)
         {
@@ -91,7 +84,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void tbAtLeastN_ValueChanged(object sender, EventArgs e)
         {
-            gbAtLeastN.Text = String.Format("At least {0} replicates", tbAtLeastN.Value);
+            gbAtLeastN.Text = String.Format(CultureInfo.CurrentCulture,
+                Resources.DetectionToolbarProperties_AtLeastNReplicates, tbAtLeastN.Value);
         }
     }
 }

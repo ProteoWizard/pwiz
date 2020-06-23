@@ -10878,4 +10878,49 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlot_YScale_Thousand" xml:space="preserve">
     <value>Thousands</value>
   </data>
+  <data name="SkylineWindow_CreateGraphDetections_Counts" xml:space="preserve">
+    <value>Detection Counts</value>
+  </data>
+  <data name="DetectionToolbarProperties_AtLeastNReplicates" xml:space="preserve">
+    <value>At least {0} replicates</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_Replicate" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_Count" xml:space="preserve">
+    <value>{0} Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_CumulativeCount" xml:space="preserve">
+    <value>Cumulative Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_AllCount" xml:space="preserve">
+    <value>All Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_QMedian" xml:space="preserve">
+    <value>-log10 of Q-Value Median</value>
+  </data>
+  <data name="DetectionPlotPane_XAxis_Name" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
+  <data name="DetectionPlotPane_YAxis_Name" xml:space="preserve">
+    <value>Detections</value>
+  </data>
+  <data name="DetectionPlotPane_CumulativeLine_Name" xml:space="preserve">
+    <value>cumulative</value>
+  </data>
+  <data name="DetectionPlotPane_AllRunsLine_Name" xml:space="preserve">
+    <value>all runs</value>
+  </data>
+  <data name="DetectionPlotPane_AtLeastLine_Name" xml:space="preserve">
+    <value>at least {0} (of {1}) - {2:F1}</value>
+  </data>
+  <data name="DetectionPlotPane_Label_Mean" xml:space="preserve">
+    <value>  Mean: {0:F1}</value>
+  </data>
+  <data name="DetectionPlotPane_Label_Stddev" xml:space="preserve">
+    <value>  Stddev:{1:F1}</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlot_Label" xml:space="preserve">
+    <value>No valid data for this plot.</value>
+  </data>
 </root>

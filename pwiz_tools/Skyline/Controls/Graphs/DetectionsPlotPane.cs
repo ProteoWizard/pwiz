@@ -20,35 +20,22 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public interface IDetectionsPlotInfo    // CONSIDER: Base class instead?
-    {
-        int Items { get; }
-        DetectionPlotData CurrentData { get; }
-    }
 
-    /***
-     * TODO:
-     *  - read settings from toolbar and update the plot on change
-     *  - implement peptide-level statistics
-     *  - show selected protein counts on the graph
-     *  - show horizontal lines
-     *  - implement OnDocumentUpdate
-     *  - implement context menu
-     */
-
-    public class DetectionsPlotPane : SummaryReplicateGraphPane, IDisposable, IDetectionsPlotInfo    // CONSIDER: Base class instead?
+    public class DetectionsPlotPane : SummaryReplicateGraphPane, IDisposable, ITipDisplayer    // CONSIDER: Base class instead?
 
     {
         public class IntLabeledValue : LabeledValues<int>
@@ -144,7 +131,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public static readonly YScaleFactorType ONE = new YScaleFactorType(1, () => Resources.DetectionPlot_YScale_One);
             public static readonly YScaleFactorType HUNDRED = new YScaleFactorType(100, () => Resources.DetectionPlot_YScale_Hundred);
-            public static readonly YScaleFactorType THOUSAND = new YScaleFactorType(100, () => Resources.DetectionPlot_YScale_Thousand);
+            public static readonly YScaleFactorType THOUSAND = new YScaleFactorType(1000, () => Resources.DetectionPlot_YScale_Thousand);
 
             public static IEnumerable<YScaleFactorType> GetValues()
             {
@@ -164,90 +151,213 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public static float QValueCutoff
             {
-                get { return pwiz.Skyline.Properties.Settings.Default.DetectionsQValueCutoff; }
-                set { pwiz.Skyline.Properties.Settings.Default.DetectionsQValueCutoff = value; }
+                get => pwiz.Skyline.Properties.Settings.Default.DetectionsQValueCutoff; 
+                set => pwiz.Skyline.Properties.Settings.Default.DetectionsQValueCutoff = value; 
             }
 
             public static TargetType TargetType
             {
-                get
-                {
-                    return IntLabeledValue.GetFromString<TargetType>(
+                get => IntLabeledValue.GetFromString<TargetType>(
                         pwiz.Skyline.Properties.Settings.Default.DetectionsTargetType);
-                }
-                set { pwiz.Skyline.Properties.Settings.Default.DetectionsTargetType = value.ToString(); }
+                set => pwiz.Skyline.Properties.Settings.Default.DetectionsTargetType = value.ToString(); 
             }
             public static YScaleFactorType YScaleFactor
             {
-                get
-                {
-                    return IntLabeledValue.GetFromString<YScaleFactorType>(
+                get => IntLabeledValue.GetFromString<YScaleFactorType>(
                         pwiz.Skyline.Properties.Settings.Default.DetectionsYScaleFactor);
-                }
-                set { pwiz.Skyline.Properties.Settings.Default.DetectionsYScaleFactor = value.ToString(); }
+                set => pwiz.Skyline.Properties.Settings.Default.DetectionsYScaleFactor = value.ToString(); 
             }
 
             public static int RepCount
             {
-                get { return pwiz.Skyline.Properties.Settings.Default.DetectionsRepCount; }
-                set { pwiz.Skyline.Properties.Settings.Default.DetectionsRepCount = value; }
+                get => pwiz.Skyline.Properties.Settings.Default.DetectionsRepCount; 
+                set => pwiz.Skyline.Properties.Settings.Default.DetectionsRepCount = value; 
             }
 
             public static float FontSize
             {
-                get { return pwiz.Skyline.Properties.Settings.Default.AreaFontSize; }
-                set { pwiz.Skyline.Properties.Settings.Default.AreaFontSize = value; }
+                get => pwiz.Skyline.Properties.Settings.Default.AreaFontSize; 
+                set => pwiz.Skyline.Properties.Settings.Default.AreaFontSize = value; 
             }
 
             public static bool ShowAtLeastN
             {
-                get { return pwiz.Skyline.Properties.Settings.Default.DetectionsShowAtLeastN; }
-                set { pwiz.Skyline.Properties.Settings.Default.DetectionsShowAtLeastN = value; }
+                get => pwiz.Skyline.Properties.Settings.Default.DetectionsShowAtLeastN; 
+                set => pwiz.Skyline.Properties.Settings.Default.DetectionsShowAtLeastN = value; 
             }
 
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             public static bool ShowSelection
             {
-                get { return pwiz.Skyline.Properties.Settings.Default.DetectionsShowSelection; }
-                set { pwiz.Skyline.Properties.Settings.Default.DetectionsShowSelection = value; }
+                get => pwiz.Skyline.Properties.Settings.Default.DetectionsShowSelection;
+                set => pwiz.Skyline.Properties.Settings.Default.DetectionsShowSelection = value;
             }
 
             public static bool ShowMean
             {
-                get { return pwiz.Skyline.Properties.Settings.Default.DetectionsShowMean; }
-                set { pwiz.Skyline.Properties.Settings.Default.DetectionsShowMean = value; }
+                get => pwiz.Skyline.Properties.Settings.Default.DetectionsShowMean; 
+                set => pwiz.Skyline.Properties.Settings.Default.DetectionsShowMean = value; 
+            }
+            public static bool ShowLegend
+            {
+                get => pwiz.Skyline.Properties.Settings.Default.DetectionsShowLegend; 
+                set => pwiz.Skyline.Properties.Settings.Default.DetectionsShowLegend = value; 
+            }
+        }
+
+        public class ToolTip : ITipProvider, IDisposable
+        {
+
+            private DetectionsPlotPane _parent;
+            // ReSharper disable once RedundantDefaultMemberInitializer
+            private bool _isVisible = false;
+            private UserPoint _basePoint;
+            private NodeTip _tip;
+            private TableDesc _table;
+            private readonly RenderTools _rt = new RenderTools();
+
+            //Location is in user coordinates. 
+            public int ReplicateIndex { get; private set; }
+
+            public ToolTip(DetectionsPlotPane parent)
+            {
+                _parent = parent;
             }
 
+            public ITipProvider TipProvider { get { return this;} }
+
+            bool ITipProvider.HasTip => true;
+
+            Size ITipProvider.RenderTip(Graphics g, Size sizeMax, bool draw)
+            {
+                var size = _table.CalcDimensions(g);
+                if (draw)
+                    _table.Draw(g);
+                return new Size((int)size.Width + 2, (int)size.Height + 2);
+            }
+
+
+            public void Draw(int dataIndex, Point cursorPos)
+            {
+                if(_isVisible && ReplicateIndex != dataIndex) Hide();
+                if (_isVisible && ReplicateIndex == dataIndex) return;
+
+                ReplicateIndex = dataIndex;
+                DetectionPlotData.DataSet targetData = _parent._detectionData.GetData(Settings.TargetType);
+                float yScale = Settings.YScaleFactor.Value;
+                _basePoint = new UserPoint(dataIndex + 1, targetData.TargetsCount.ToList()[ReplicateIndex] / yScale, _parent);
+
+                _table = new TableDesc();
+                _table.AddDetailRow(Resources.DetectionPlotPane_Tooltip_Replicate, 
+                    _parent._detectionData.ReplicateNames[ReplicateIndex], _rt);
+                _table.AddDetailRow( String.Format(Resources.DetectionPlotPane_Tooltip_Count, Settings.TargetType.Label), 
+                    targetData.TargetsCount[ReplicateIndex].ToString(CultureInfo.CurrentCulture), _rt);
+                _table.AddDetailRow(Resources.DetectionPlotPane_Tooltip_CumulativeCount,
+                    targetData.TargetsCumulative[ReplicateIndex].ToString(CultureInfo.CurrentCulture), _rt);
+                _table.AddDetailRow(Resources.DetectionPlotPane_Tooltip_AllCount,
+                    targetData.TargetsAll[ReplicateIndex].ToString(CultureInfo.CurrentCulture), _rt);
+                var qString = @"-Inf";
+                if (targetData.QMedians[ReplicateIndex] > 0)
+                    qString = (-Math.Log10(targetData.QMedians[ReplicateIndex])).ToString(@"F1",
+                        CultureInfo.CurrentCulture);
+                _table.AddDetailRow(Resources.DetectionPlotPane_Tooltip_QMedian, qString, _rt);
+
+                using (var g = _parent.GraphSummary.GraphControl.CreateGraphics())
+                {
+                    var size = _table.CalcDimensions(g);
+                    var offset = new Size(0, -(int)(1.3 * size.Height));
+                    if (_tip == null)
+                        _tip = new NodeTip(_parent);
+                    _tip.SetTipProvider(TipProvider, new Rectangle(_basePoint.Screen(offset), new Size()), cursorPos);
+                }
+                _isVisible = true;
+            }
+
+            public void Hide()
+            {
+                if (_isVisible)
+                {
+                    if (_tip != null)
+                        _tip.HideTip();
+                    _isVisible = false;
+                }
+            }
+
+            public void Dispose()
+            {
+                _rt.Dispose();
+            }
+
+            private class UserPoint
+            {
+                private GraphPane _graph;
+                public int X { get; private set; }
+                public float Y { get; private set; }
+
+                public UserPoint(int x, float y, GraphPane graph)
+                {
+                    X = x;
+                    Y = y;
+                    _graph = graph;
+                }
+
+                public PointF User()
+                {
+                    return new PointF(X, Y);
+                }
+
+                public Point Screen()
+                {
+                    return new Point(
+                        (int)_graph.XAxis.Scale.Transform(X),
+                        (int)_graph.YAxis.Scale.Transform(Y));
+                }
+                public Point Screen(Size OffsetScreen)
+                {
+                    return new Point(
+                        (int)(_graph.XAxis.Scale.Transform(X) + OffsetScreen.Width),
+                        (int)(_graph.YAxis.Scale.Transform(Y) + OffsetScreen.Height));
+                }
+
+                public PointF PF()
+                {
+                    return new PointF(
+                        _graph.XAxis.Scale.Transform(X) / _graph.Rect.Width,
+                        _graph.YAxis.Scale.Transform(Y) / _graph.Rect.Height);
+                }
+                public PointD PF(SizeF OffsetPF)
+                {
+                    return new PointD(
+                        _graph.XAxis.Scale.Transform(X) / _graph.Rect.Width + OffsetPF.Width,
+                        _graph.YAxis.Scale.Transform(Y) / _graph.Rect.Height + OffsetPF.Height);
+                }
+            }
         }
 
         private DetectionPlotData _detectionData = DetectionPlotData.INVALID;
         public int MaxRepCount { get; private set; }
 
-        public static int DefaultMaxRepCount => 20;
-
-        private readonly List<StickItem> _stickItems;
+        private ToolTip _toolTip;
 
         public DetectionsPlotPane(GraphSummary graphSummary) : base(graphSummary)
         {
             MaxRepCount = graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
 
-            Settings.RepCount = (int) MaxRepCount / 2;
+            Settings.RepCount = MaxRepCount / 2;
             if (GraphSummary.Toolbar is DetectionsToolbar toolbar)
                 toolbar.UpdateUI();
 
-            _stickItems = new List<StickItem>(2);
             if (GraphSummary.DocumentUIContainer.DocumentUI.Settings.HasResults)
             {
-                _detectionData = new DetectionPlotData(graphSummary.DocumentUIContainer.DocumentUI);
+                _detectionData = DetectionPlotData.DataCache.Get(graphSummary.DocumentUIContainer.DocumentUI);
             }
             XAxis.Type = AxisType.Text;
-            XAxis.Title.Text = "Replicate";
+            XAxis.Title.Text = Resources.DetectionPlotPane_XAxis_Name;
 
             XAxis.Scale.Min = YAxis.Scale.Min = 0;
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
-
+            _toolTip = new ToolTip(this);
         }
-
-        public int Items { get; }
 
         public override bool HasToolbar { get { return true; } }
 
@@ -267,15 +377,20 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 object nearestObject;
                 int index;
+                DetectionPlotData.DataSet targetData = _detectionData.GetData(Settings.TargetType);
                 if (FindNearestObject(e.Location, g, out nearestObject, out index) && nearestObject is BarItem)
                 {
-                    //_selectedData = (CVData)((BarItem)nearestObject).Points[index].Tag;
+                    _toolTip.Draw(index, e.Location);
+
                     sender.Cursor = Cursors.Hand;
                     return true;
                 }
                 else
                 {
-                    //_selectedData = null;
+                    if (_toolTip != null)
+                    {
+                        _toolTip.Hide();
+                    }
                     sender.Cursor = Cursors.Cross;
                     return base.HandleMouseMoveEvent(sender, e);
                 }
@@ -289,31 +404,29 @@ namespace pwiz.Skyline.Controls.Graphs
             //    HistogramHelper.CreateAndShowFindResults((ZedGraphControl) sender, GraphSummary, _document, _selectedData);
             //    _selectedData = null;
             //}
+            if (sender is Control ctx)
+            {
+                object nearestObject;
+                int index;
+                DetectionPlotData.DataSet targetData = _detectionData.GetData(Settings.TargetType);
+                using (var g = ctx.CreateGraphics())
+                {
+                    if (FindNearestObject(e.Location, g, out nearestObject, out index) && nearestObject is BarItem)
+                    {
+                        ChangeSelectedIndex(index);
+
+                        //                var selectedTreeNode = GraphSummary.StateProvider.SelectedNodes.OfType<SrmTreeNode>().FirstOrDefault();
+                    }
+                }
+            }
         }
 
         public override void Draw(Graphics g)
         {
-            GraphObjList.Clear();
-
-            YAxis.Scale.Min = 0.0;
-
             AxisChange(g);
             AddLabels(g);
 
             base.Draw(g);
-
-            if (Settings.ShowAtLeastN)
-            {
-                DetectionPlotData.DataSet targetData = _detectionData.GetData(Settings.TargetType);
-                float yScale = (float)Settings.YScaleFactor.Value;
-                double lineY = targetData.getCountForMinReplicates(Settings.RepCount) / yScale;
-                
-                var lineYDevice = YAxis.Scale.Transform(lineY);
-                using (var pen = new Pen(Color.Blue, 1){DashStyle = DashStyle.DashDot})
-                {
-                    g.DrawLine(pen, Chart.Rect.Left, lineYDevice, Chart.Rect.Right, lineYDevice);
-                }
-            }
         } 
 
         private double PaneHeightToYValue(double height)
@@ -332,41 +445,47 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             if (GraphSummary.Toolbar is DetectionsToolbar toolbar)
             {
-                var oldCutoff = Settings.QValueCutoff;
-                if(Settings.QValueCutoff != oldCutoff)
-                    _detectionData = new DetectionPlotData(GraphSummary.DocumentUIContainer.DocumentUI);
+                _detectionData = DetectionPlotData.DataCache.Get(GraphSummary.DocumentUIContainer.DocumentUI);
             }
             else
                 return;
 
             BarSettings.Type = BarType.SortedOverlay;
-            BarSettings.MinClusterGap = 0.15f;
+            BarSettings.MinClusterGap = 0.3f;
 
             GraphObjList.Clear();
             CurveList.Clear();
-            _stickItems.Clear();
+            Legend.IsVisible = Settings.ShowLegend;
 
+            var emptySymbol = new Symbol(SymbolType.None, Color.Transparent);
             DetectionPlotData.DataSet targetData = _detectionData.GetData(Settings.TargetType);
             //draw bars
-            float yScale = (float) Settings.YScaleFactor.Value;
-            var counts = targetData.TargetsCount.ToList();
+            float yScale = Settings.YScaleFactor.Value;
+            var counts = targetData.TargetsCount;
             var countPoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)
                 .Select(i => new PointPair(i, counts[i]/yScale)).ToList());
             CurveList.Insert(0, MakeBarItem(countPoints, Color.FromArgb(180, 220, 255)));
             //draw cumulative curve
-            counts = targetData.TargetsCumulative.ToList();
+            counts = targetData.TargetsCumulative;
             var cumulativePoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)
                 .Select(i => new PointPair(i, counts[i] / yScale)).ToList());
-            CurveList.Insert(1, new LineItem("cumulative", cumulativePoints, 
-                    Color.Coral,
-                    SymbolType.Circle));
+            CurveList.Insert(1, 
+                new LineItem(Resources.DetectionPlotPane_CumulativeLine_Name)
+                {  Points = cumulativePoints,
+                   Symbol = emptySymbol,
+                   Line = new Line() { Color = Color.Coral, Width = 2}
+
+                });
             //draw inclusive curve
-            counts = targetData.TargetsAll.ToList();
+            counts = targetData.TargetsAll;
             var allPoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)
                 .Select(i => new PointPair(i, counts[i] / yScale)).ToList());
-            CurveList.Insert(2, new LineItem("all runs", allPoints,
-                Color.Black,
-                SymbolType.Circle));
+            CurveList.Insert(2, 
+                new LineItem(Resources.DetectionPlotPane_AllRunsLine_Name)
+                    { Symbol = emptySymbol,
+                      Points = allPoints,
+                      Line = new Line() { Color = Color.Black, Width = 2}
+                    });
 
             //axes formatting
             var fontHeight = GraphSummary.CreateFontSpec(Color.Black).GetHeight(CalcScaleFactor());
@@ -375,23 +494,65 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.Max = _detectionData.ReplicateCount + 1;
             XAxis.Scale.TextLabels = _detectionData.ReplicateNames.ToArray();
 
-            YAxis.Scale.Max = _detectionData.GetData(Settings.TargetType).MaxCount/yScale * 1.05;
+            YAxis.Scale.Max = _detectionData.GetData(Settings.TargetType).MaxCount/yScale * 1.15;
+            YAxis.Title.Text = Resources.DetectionPlotPane_YAxis_Name;
             if (Settings.YScaleFactor != YScaleFactorType.ONE)
-                YAxis.Title.Text = $"Detections ({Settings.YScaleFactor.ToString()})";
-            else
-                YAxis.Title.Text = "Detections";
+                YAxis.Title.Text += @" " + Settings.YScaleFactor.Value.ToString(CultureInfo.CurrentCulture);
 
             if (Settings.ShowAtLeastN)
             {
+                double lineY = targetData.getCountForMinReplicates(Settings.RepCount);
+                var atLeastLine = new Line() {Width = 1, Color = Color.Blue, Style = DashStyle.Dash};
+                var dummyPoints = new PointPairList( new[] {new PointPair(0, 0)} );
+                var line = new LineObj(Color.Blue, 0, lineY / yScale, XAxis.Scale.Max, lineY / yScale)
+                {
+                    IsClippedToChartRect = true,
+                    Line = atLeastLine
+                };
+                GraphObjList.Add(line);
+
                 //This is a placeholder to make sure the line shows in the legend.
-                //Actual drawing happens in the Draw method because ZedGraph doesn't allow
-                // to draw end to end line for an ordinal axis
-                var linePoints = new PointPairList( new[] {new PointPair(0, 0)} );
-                var line = new LineItem(
-                        string.Format("at least {0}", Settings.RepCount),
-                        linePoints, Color.Blue, SymbolType.None)
-                    {Line = {Style = DashStyle.DashDot}};
-                CurveList.Insert(3, line);
+                CurveList.Insert(3,
+                    new LineItem(String.Format(CultureInfo.CurrentCulture, 
+                        Resources.DetectionPlotPane_AtLeastLine_Name, 
+                        Settings.RepCount, _detectionData.ReplicateCount, lineY))
+                    {
+                        Symbol = emptySymbol,
+                        Points = dummyPoints,
+                        Line = atLeastLine
+                    });
+            }
+
+            if (Settings.ShowSelection)
+            {
+                var selectedIndex = GraphSummary.StateProvider.SelectedResultsIndex;
+                var lineLength = targetData.TargetsCount[selectedIndex] / yScale + YAxis.Scale.Max * 0.05;
+                GraphObjList.Add(
+                    new LineObj(Color.Black, selectedIndex + 1, 0, selectedIndex + 1, lineLength)
+                    {
+                        IsClippedToChartRect = true,
+                        Line = new Line() { Width = 1, Color = Color.Black, Style = DashStyle.Dash }
+                    });
+            }
+
+            if (Settings.ShowMean)
+            {
+                var stats = new Statistics(targetData.TargetsCount.Select((x) => (double)x));
+                var labelText = String.Format(CultureInfo.CurrentCulture, 
+                    TextUtil.LineSeparate(new[]
+                        {
+                            Resources.DetectionPlotPane_Label_Mean ,
+                            Resources.DetectionPlotPane_Label_Stddev
+                        }
+                        ), 
+                    stats.Mean(), stats.StdDev());
+                GraphObjList.Add(new TextObj(labelText, 0.1, YAxis.Scale.Max,
+                    CoordType.AxisXYScale, AlignH.Left, AlignV.Top)
+                {
+                    IsClippedToChartRect = true,
+                    ZOrder = ZOrder.E_BehindCurves,
+                    FontSpec = GraphSummary.CreateFontSpec(Color.Black),
+                });
             }
         }
 
@@ -406,7 +567,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void AddLabels(Graphics g)
         {
             if (!_detectionData.IsValid)
-                Title.Text = "No valid data for this plot.";
+                Title.Text = Resources.DetectionPlotPane_EmptyPlot_Label;
             else
                 Title.Text = string.Empty;
         }
@@ -416,15 +577,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return new StickItem(null,
                 new[] { fromX, fromY },
                 new[] { toX, toY }, color, 2.0f) { Line = { Style = DashStyle.Dash } };
-        }
-
-        private TextObj AddLabel(string text, double x, double y, Color color)
-        {
-            return new TextObj(text, x, y, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
-            {
-                FontSpec = GraphSummary.CreateFontSpec(color),
-                IsClippedToChartRect = true
-            };
         }
 
         protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
@@ -437,6 +589,16 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         protected override int SelectedIndex => throw new NotImplementedException();
+
+        Rectangle ITipDisplayer.RectToScreen(Rectangle r)
+        {
+            return GraphSummary.GraphControl.RectangleToScreen(r);
+        }
+
+        Rectangle ITipDisplayer.ScreenRect { get { return Screen.GetBounds(GraphSummary.GraphControl); } }
+
+        bool ITipDisplayer.AllowDisplayTip => true;
+
 
         #region Functional Test Support
 

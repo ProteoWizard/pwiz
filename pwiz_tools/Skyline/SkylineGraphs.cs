@@ -3388,6 +3388,9 @@ namespace pwiz.Skyline
                 BuildAreaGraphMenu(controller.GraphSummary, menuStrip, mousePt);
             else if (controller is MassErrorGraphController)
                 BuildMassErrorGraphMenu(controller.GraphSummary, menuStrip);
+            else if (controller is DetectionsGraphController)
+                BuildDetectionsGraphMenu(controller.GraphSummary, menuStrip);
+
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
@@ -5368,6 +5371,7 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
             UpdatePeakAreaGraph();    
             UpdateMassErrorGraph();
+            UpdateDetectionsGraph();
         }
 
         #endregion
@@ -5868,7 +5872,7 @@ namespace pwiz.Skyline
         public void UpdateUIGraphDetection(bool visible)
         {
             var list = Settings.Default.DetectionGraphTypes.ToArray();
-            ShowGraphMassError(visible);
+            ShowGraphDetection(visible);
             if (!visible)
             {
                 Settings.Default.DetectionGraphTypes.Clear();
@@ -5951,7 +5955,150 @@ namespace pwiz.Skyline
             _listGraphDetections.ForEach(g => g.UpdateUI());
         }
 
+        private void BuildDetectionsGraphMenu(GraphSummary graph, ToolStrip menuStrip)
+        {
+            // Store original menuitems in an array, and insert a separator
+            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
+            int iUnzoom = -1;
+            for (int i = 0; i < items.Length; i++)
+            {
+                items[i] = menuStrip.Items[i];
+                string tag = (string)items[i].Tag;
+                if (tag == @"unzoom")
+                    iUnzoom = i;
+            }
 
+            if (iUnzoom != -1)
+                menuStrip.Items.Insert(iUnzoom, detectionsToolStripSeparator1); 
+
+            // Insert skyline specific menus
+            var set = Settings.Default;
+            int iInsert = 0;
+            var graphType = graph.Type;
+
+            menuStrip.Items.Insert(iInsert++, detectionsGraphTypeToolStripMenuItem);
+            menuStrip.Items.Insert(iInsert++, detectionsTargetToolStripMenuItem);
+
+            menuStrip.Items.Insert(iInsert++, detectionsToolStripSeparator2);
+            menuStrip.Items.Insert(iInsert++, detectionsShowToolStripMenuItem);
+            menuStrip.Items.Insert(iInsert++, detectionsYScaleToolStripMenuItem);
+            menuStrip.Items.Insert(iInsert++, detectionsPropertiesToolStripMenuItem);
+            detectionsPropertiesToolStripMenuItem.Tag = graph;
+            menuStrip.Items.Insert(iInsert++, detectionsToolStripSeparator3);
+
+            // Remove some ZedGraph menu items not of interest
+            foreach (var item in items)
+            {
+                string tag = (string)item.Tag;
+                if (tag == @"set_default" || tag == @"show_val")
+                    menuStrip.Items.Remove(item);
+            }
+
+            //Update menu according to the current settings
+            detectionsShowMeanToolStripMenuItem.Checked = DetectionsPlotPane.Settings.ShowMean;
+            detectionsShowSelectionToolStripMenuItem.Checked = DetectionsPlotPane.Settings.ShowSelection;
+            detectionsShowLegendToolStripMenuItem.Checked = DetectionsPlotPane.Settings.ShowLegend;
+            detectionsShowAtLeastNToolStripMenuItem.Checked = DetectionsPlotPane.Settings.ShowAtLeastN;
+
+            foreach (var item in new[]
+            {
+                detectionsYScaleOneToolStripMenuItem,
+                detectionsYScaleHundredToolStripMenuItem,
+                detectionsYScaleThousandToolStripMenuItem
+            })
+                item.Checked = ((int)item.Tag) == DetectionsPlotPane.Settings.YScaleFactor.Value;
+
+
+            foreach (var item in new[]
+            {
+                detectionsTargetPrecursorToolStripMenuItem,
+                detectionsTargetPeptideToolStripMenuItem
+            })
+                item.Checked = ((int)item.Tag) == DetectionsPlotPane.Settings.TargetType.Value;
+        }
+
+        private void detectionsPropertiesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem item)
+            {
+                if (item.Tag is GraphSummary graph)
+                    ShowDetectionsPropertyDlg(graph);
+            }
+        }
+
+        public void ShowDetectionsPropertyDlg(GraphSummary graph)
+        {
+            using (var dlg = new DetectionToolbarProperties(graph))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    UpdateSummaryGraphs();
+                }
+            }
+        }
+
+        private void detectionsYScaleOneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DetectionsPlotPane.Settings.YScaleFactor = DetectionsPlotPane.YScaleFactorType.ONE;
+            UpdateDetectionsGraph();
+        }
+
+        private void detectionsYScaleHundredToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DetectionsPlotPane.Settings.YScaleFactor = DetectionsPlotPane.YScaleFactorType.HUNDRED;
+            UpdateDetectionsGraph();
+        }
+
+        private void detectionsYScaleThousandToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DetectionsPlotPane.Settings.YScaleFactor = DetectionsPlotPane.YScaleFactorType.THOUSAND;
+            UpdateDetectionsGraph();
+        }
+
+        private void detectionsShowSelectionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DetectionsPlotPane.Settings.ShowSelection = !DetectionsPlotPane.Settings.ShowSelection;
+            UpdateDetectionsGraph();
+        }
+
+        private void detectionsShowLegendToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DetectionsPlotPane.Settings.ShowLegend = !DetectionsPlotPane.Settings.ShowLegend;
+            UpdateDetectionsGraph();
+        }
+
+        private void detectionsShowMeanToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DetectionsPlotPane.Settings.ShowMean = !DetectionsPlotPane.Settings.ShowMean;
+            UpdateDetectionsGraph();
+        }
+
+        private void detectionsShowAtLeastNToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DetectionsPlotPane.Settings.ShowAtLeastN = !DetectionsPlotPane.Settings.ShowAtLeastN;
+            UpdateDetectionsGraph();
+        }
+        private void detectionsTargetPrecursorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DetectionsPlotPane.Settings.TargetType = DetectionsPlotPane.TargetType.PRECURSOR;
+            UpdateDetectionsGraph();
+        }
+        private void detectionsTargetPeptideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DetectionsPlotPane.Settings.TargetType = DetectionsPlotPane.TargetType.PEPTIDE;
+            detectionsTargetPrecursorToolStripMenuItem.Checked = false;
+            detectionsTargetPeptideToolStripMenuItem.Checked = true;
+            UpdateDetectionsGraph();
+        }
+
+        private void detectionsGraphTypeReplicateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void detectionsGraphTypeHistogramToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
         #endregion
 
         #region Results Grid

@@ -14,7 +14,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private GraphSummary.IControllerSplit _controllerInterface;
         public DetectionsGraphController()
         {
-            _controllerInterface = this as GraphSummary.IControllerSplit;
+            _controllerInterface = this;
         }
 
         public static GraphTypeSummary GraphType
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         string GraphSummary.IController.Text
         {
-            get { return "Detection Counts"; }
+            get { return Resources.SkylineWindow_CreateGraphDetections_Counts; }
         }
 
         SummaryGraphPane GraphSummary.IControllerSplit.CreatePeptidePane(PaneKey key)
@@ -85,6 +85,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         void GraphSummary.IController.OnResultsIndexChanged()
         {
+            if (_controllerInterface.GraphSummary.GraphPanes.OfType<DetectionsPlotPane>().Any())
+                _controllerInterface.GraphSummary.UpdateUI();
         }
 
         void GraphSummary.IController.OnUpdateGraph()

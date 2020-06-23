@@ -3073,5 +3073,19 @@ namespace pwiz.Skyline.Properties {
                 this["DetectionsShowMean"] = value;
             }
         }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("true")]
+        public bool DetectionsShowLegend
+        {
+            get
+            {
+                return ((bool)(this["DetectionsShowLegend"]));
+            }
+            set
+            {
+                this["DetectionsShowLegend"] = value;
+            }
+        }
     }
 }

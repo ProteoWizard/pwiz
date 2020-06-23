@@ -4921,6 +4921,7 @@ namespace pwiz.Skyline
             SetResultIndexOnGraphs(_listGraphRetentionTime, true);
             SetResultIndexOnGraphs(_listGraphPeakArea, false);
             SetResultIndexOnGraphs(_listGraphMassError, false);
+            SetResultIndexOnGraphs(_listGraphDetections, false);
 
             var liveResultsGrid = (LiveResultsGrid)_resultsGridForm;
             if (null != liveResultsGrid)
@@ -5865,6 +5866,8 @@ namespace pwiz.Skyline
             ShowSequenceTreeForm(true, true);
             UpdateGraphPanes();
         }
+
+
     }
 }
 

@@ -1,11 +1,7 @@
 ﻿using pwiz.Skyline.Model;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Util;
 using Settings = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.Settings;
@@ -17,7 +13,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private List<QData> _precursorData;
         private List<QData> _peptideData;
-        private bool _isValid = false;
+        private bool _isValid;
         private Dictionary<DetectionsPlotPane.TargetType, DataSet> _data = new Dictionary<DetectionsPlotPane.TargetType, DataSet>();
 
         public float QValueCutoff { get; private set; }
@@ -96,23 +92,28 @@ namespace pwiz.Skyline.Controls.Graphs
             _isValid = true;
         }
 
-    public void Dispose()
+        public void Dispose()
         {
             _precursorData.Clear();
             _peptideData.Clear();
         }
         public class DataSet
         {
-            private List<int> _count;
-            private List<int> _cumulative;
-            private List<int> _all;
+            private readonly IEnumerable<int> _count;
+            private IEnumerable<int> _cumulative;
+            private IEnumerable<int> _all;
+            private readonly IEnumerable<int> _histogram;
+            private IEnumerable<float> _qMedians;
             private List<QData> _data;
             private float _qValueCutoff;
 
 
-            public IEnumerable<int> TargetsCount => _count;
-            public IEnumerable<int> TargetsCumulative => _cumulative;
-            public IEnumerable<int> TargetsAll => _all;
+            public List<int> TargetsCount => new List<int>(_count); 
+            public List<int> TargetsCumulative => new List<int>(_cumulative);
+            public List<int> TargetsAll => new List<int>(_all);
+            public List<float> QMedians => new List<float>(_qMedians);
+            public List<int> Histogram => new List<int>(_histogram);
+
 
             public double MaxCount
             {
@@ -124,11 +125,26 @@ namespace pwiz.Skyline.Controls.Graphs
                 _data = data;
                 _qValueCutoff = qValueCutoff;
                 _count = Enumerable.Range(0, replicateCount)
-                    .Select(i => data.Count(t => t.QValues[i] < qValueCutoff)).ToList();
+                    .Select(i => data.Count(t => t.QValues[i] < qValueCutoff));
+
+                _qMedians = Enumerable.Range(0, replicateCount)
+                    .Select(i =>
+                    {
+                        var qStats = new Statistics(data.Select(t => (double)t.QValues[i]));
+                        return (float)qStats.Median();
+                    });
+                
                 _cumulative = Enumerable.Range(0, replicateCount)
-                    .Select(i => data.Count(t => t.MinQValues[i] < qValueCutoff)).ToList();
+                    .Select(i => data.Count(t => t.MinQValues[i] < qValueCutoff));
                 _all = Enumerable.Range(0, replicateCount)
-                    .Select(i => data.Count(t => t.MaxQValues[i] < qValueCutoff)).ToList();
+                    .Select(i => data.Count(t => t.MaxQValues[i] < qValueCutoff));
+
+                _histogram = data.Select(t => t.QValues.Count(f => f < qValueCutoff)) //Count replicates for each target
+                    .GroupBy(f => f, f => 1,
+                        (f, c) => new
+                            {replicateNum = f, histCount = c.Sum()}) //Group targets by the number of replicates
+                    .OrderBy(e => e.replicateNum)    //Make sure the final list is ordered by the replicate count
+                    .Select(e => e.histCount);
             }
 
             /// <summary>
@@ -163,12 +179,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         //if this and all previous values are NaN
                         if (float.IsNaN(qValues[i]))
-                            if (runningNaN) continue;
-                            else
+                        {
+                            if (!runningNaN)
                             {
                                 mins[i] = mins[i - 1];
                                 maxes[i] = maxes[i - 1];
                             }
+                        }
                         else
                         {
                             if (runningNaN)
@@ -192,6 +209,33 @@ namespace pwiz.Skyline.Controls.Graphs
             public ImmutableList<float> QValues { get; private set; }
             public ImmutableList<float> MinQValues { get; private set; }
             public ImmutableList<float> MaxQValues { get; private set; }
+
+        }
+
+        public static class DataCache
+        {
+            private static DetectionPlotData _cachedData;
+            private static float _qValue;
+            private static SrmDocument _document;
+
+            public static DetectionPlotData Get(SrmDocument doc)
+            {
+                if (!IsValidFor(doc))
+                {
+                    _cachedData = new DetectionPlotData(doc);
+                    _qValue = Settings.QValueCutoff;
+                    _document = doc;
+                }
+
+                return _cachedData;
+            }
+
+            private static bool IsValidFor(SrmDocument document)
+            {
+                return _cachedData != null && _document != null  &&
+                       ReferenceEquals(_document.Children, document.Children) &&
+                       Settings.QValueCutoff == _qValue;
+            }
 
         }
     }

@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-namespace pwiz.Skyline.Controls.Graphs
+﻿namespace pwiz.Skyline.Controls.Graphs
 {
     partial class DetectionsToolbar
     {
