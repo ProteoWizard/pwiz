@@ -388,21 +388,14 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     while (reader.IsStartElement())
                     {
-                        if (reader.IsStartElement(EL.losses))
-                        {
-                            var losses = ReadTransitionLosses(reader);
-                            if (losses != null)
-                            {
-                                foreach (var loss in losses.Losses)
-                                {
-                                    // TODO
-                                }
-                            }
-                        }
-                        else if (reader.IsStartElement(EL.linked_fragment_ion))
+                        if (reader.IsStartElement(EL.linked_fragment_ion))
                         {
                             var child = ReadLinkedFragmentIon(reader);
                             linkedIon = linkedIon.AddChild(child.Key, child.Value);
+                        }
+                        else
+                        {
+                            throw new InvalidDataException();
                         }
                     }
                     reader.ReadEndElement();
@@ -1491,7 +1484,7 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     var linkedPeptide = mods.GetLinkedPeptide(linkedIon.Key);
                     complexFragmentIon = complexFragmentIon.AddChild(linkedIon.Key,
-                        linkedPeptide.MakeComplexFragmentIon(group.LabelType, linkedIon.Value));
+                        linkedPeptide.MakeComplexFragmentIon(Settings, group.LabelType, linkedIon.Value));
                 }
 
                 node = crosslinkBuilder.MakeTransitionDocNode(complexFragmentIon, isotopeDist, info.Annotations,
