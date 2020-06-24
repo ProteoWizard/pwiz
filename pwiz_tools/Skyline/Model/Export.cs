@@ -3600,11 +3600,6 @@ namespace pwiz.Skyline.Model
             var compound = GetCompound(nodePep, nodeTranGroup);
             compound += '.';
             compound += nodeTranGroup.PrecursorAdduct.AsFormulaOrInt();
-            if (step != 0)
-            {
-                compound += '.';
-                compound += step.ToString(CultureInfo);
-            }
 
             if (USE_COMPOUND_COUNT_WORKAROUND)
             {
@@ -3619,6 +3614,13 @@ namespace pwiz.Skyline.Model
                         compound += '.' + compoundStep.ToString(CultureInfo);
                 }
             }
+
+            if (step != 0)
+            {
+                compound += '.';
+                compound += step.ToString(CultureInfo);
+            }
+
             writer.WriteDsvField(compound, FieldSeparator, FieldSeparatorReplacement);
 
             writer.Write(FieldSeparator);
