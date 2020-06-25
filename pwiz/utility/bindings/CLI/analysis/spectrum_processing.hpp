@@ -390,6 +390,11 @@ public ref class SpectrumList_PeakPicker : public msdata::SpectrumList
                             System::Collections::Generic::IEnumerable<int>^ msLevelsToPeakPick);
 
     static bool accept(msdata::SpectrumList^ inner);
+
+    /// <summary>
+    /// returns true iff the given file supports vendor peak picking
+    /// </summary>
+    static bool supportsVendorPeakPicking(System::String^ rawpath);
 };
 
 

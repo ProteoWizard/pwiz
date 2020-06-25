@@ -37,12 +37,14 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class BuildPeptideSearchLibraryControl : UserControl
     {
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
+        private MsDataFileUri[] _ddaSearchDataSources;
 
         public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager)
         {
@@ -226,6 +228,34 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        public MsDataFileUri[] DdaSearchDataSources
+        {
+            get => _ddaSearchDataSources;
+            private set
+            {
+                // Set new value
+                _ddaSearchDataSources = value;
+
+                // Always show sorted list of files
+                Array.Sort(_ddaSearchDataSources);
+
+                // Calculate the common root directory
+                string dirInputRoot = PathEx.GetCommonRoot(_ddaSearchDataSources);
+
+                // Populate the input files list
+                listSearchFiles.BeginUpdate();
+                listSearchFiles.Items.Clear();
+                foreach (var fileName in _ddaSearchDataSources)
+                {
+                    listSearchFiles.Items.Add(PathEx.RemovePrefix(fileName, dirInputRoot));
+                }
+
+                listSearchFiles.EndUpdate();
+
+                FireInputFilesChanged();
+            }
+        }
+
         private void btnRemFile_Click(object sender, EventArgs e)
         {
             RemoveFiles();
@@ -255,14 +285,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (PerformDDASearch)
             {
                 // exclude UNIFI from source types
-                var sourceTypes = MsDataFileImpl.GetFileExtensionsByType().Where(o => o.Value.Count > 0).OrderBy(o => o.Key).ToList();
-                var allExtensions = sourceTypes.SelectMany(o => o.Value);
+                /*var sourceTypes = MsDataFileImpl.GetFileExtensionsByType().Where(o => o.Value.Count > 0).OrderBy(o => o.Key).ToList();
+                var allExtensions = sourceTypes.SelectMany(o => o.Value.Select(ext => $@"*{ext}")).Distinct();
 
                 // create Filter string as a series of "|<type> (<exts>)|<exts>"
                 var filter = new StringBuilder();
-                filter.Append("|Any spectra format|" + String.Join(";", allExtensions));
+                filter.Append(@"|Any spectra format|" + String.Join(@";", allExtensions));
                 foreach (var typeExtsPair in sourceTypes)
-                    filter.AppendFormat("|{0} ({1})|{1}", typeExtsPair.Key, String.Join(";", typeExtsPair.Value));
+                    filter.AppendFormat(@"|{0} (*{1})|*{1}", typeExtsPair.Key, String.Join(@";*", typeExtsPair.Value));
 
                 using (OpenFileDialog dlg = new OpenFileDialog
                 {
@@ -279,7 +309,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         //AddSpectraFilesToSearchEngine(dlg.FileNames);
                         AddSearchFiles(dlg.FileNames);
                     }
+                }*/
+
+                MsDataFileUri[] dataSources;
+                using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
+                {
+                    Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search,
+                    InitialDirectory = new MsDataFilePath(DocumentContainer.DocumentFilePath)
+                })
+                {
+                    // Use saved source type, if there is one.
+                    string sourceType = Settings.Default.SrmResultsSourceType;
+                    if (!string.IsNullOrEmpty(sourceType))
+                        dlg.SourceTypeName = sourceType;
+
+                    if (dlg.ShowDialog(this) != DialogResult.OK)
+                        return;
+
+                    dataSources = dlg.DataSources;
                 }
+
+                if (dataSources == null || dataSources.Length == 0)
+                {
+                    MessageDlg.Show(this, Resources.ImportResultsDlg_GetDataSourcePathsFile_No_results_files_chosen);
+                    return;
+                }
+
+                DdaSearchDataSources = dataSources;
             }
             else
             {
@@ -318,7 +374,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             else if (PerformDDASearch)
             {
                 return PresetNecessarySettingsWithoutLibrary(e);
-            } else 
+            }
+            else 
             {
                 return BuildPeptideSearchLibrary(e);
             }
@@ -326,15 +383,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private bool PresetNecessarySettingsWithoutLibrary(CancelEventArgs cancelEventArgs)
         {
-            //ImportPeptideSearch.DocLib = new EmptyLibraryForDDASearch();
             foreach (string rawFile in ImportPeptideSearch.SearchFilenames)
             {
+                // TODO: MCC fix this to not use hardcoded extension
                 if (!Path.GetExtension(rawFile).ToUpper().Equals(".MGF"))
                     ImportPeptideSearch.SpectrumSourceFiles.Add(rawFile, new ImportPeptideSearch.FoundResultsFilePossibilities(rawFile){ExactMatch = rawFile});
                 else
                     ImportPeptideSearch.SpectrumSourceFiles.Add(rawFile, new ImportPeptideSearch.FoundResultsFilePossibilities(rawFile));
-                //ImportPeptideSearch.Document = new SrmDocument();
-                //ImportPeptideSearch.DocLib.
             }
 
             return true;

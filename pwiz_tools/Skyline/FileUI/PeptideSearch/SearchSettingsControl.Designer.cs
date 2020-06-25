@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SearchSettingsControl));
             this.cbMS1TolUnit = new System.Windows.Forms.ComboBox();
             this.lblMs1Tolerance = new System.Windows.Forms.Label();
             this.txtMS1Tolerance = new System.Windows.Forms.TextBox();
@@ -51,138 +52,90 @@
             // 
             this.cbMS1TolUnit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbMS1TolUnit.FormattingEnabled = true;
-            this.cbMS1TolUnit.Location = new System.Drawing.Point(153, 70);
+            resources.ApplyResources(this.cbMS1TolUnit, "cbMS1TolUnit");
             this.cbMS1TolUnit.Name = "cbMS1TolUnit";
-            this.cbMS1TolUnit.Size = new System.Drawing.Size(70, 21);
-            this.cbMS1TolUnit.TabIndex = 2;
             // 
             // lblMs1Tolerance
             // 
-            this.lblMs1Tolerance.AutoSize = true;
-            this.lblMs1Tolerance.Location = new System.Drawing.Point(13, 53);
+            resources.ApplyResources(this.lblMs1Tolerance, "lblMs1Tolerance");
             this.lblMs1Tolerance.Name = "lblMs1Tolerance";
-            this.lblMs1Tolerance.Size = new System.Drawing.Size(79, 13);
-            this.lblMs1Tolerance.TabIndex = 9;
-            this.lblMs1Tolerance.Text = "MS1 tolerance:";
             // 
             // txtMS1Tolerance
             // 
-            this.txtMS1Tolerance.Location = new System.Drawing.Point(13, 70);
+            resources.ApplyResources(this.txtMS1Tolerance, "txtMS1Tolerance");
             this.txtMS1Tolerance.Name = "txtMS1Tolerance";
-            this.txtMS1Tolerance.Size = new System.Drawing.Size(121, 20);
-            this.txtMS1Tolerance.TabIndex = 1;
             // 
             // txtMS2Tolerance
             // 
-            this.txtMS2Tolerance.Location = new System.Drawing.Point(13, 110);
+            resources.ApplyResources(this.txtMS2Tolerance, "txtMS2Tolerance");
             this.txtMS2Tolerance.Name = "txtMS2Tolerance";
-            this.txtMS2Tolerance.Size = new System.Drawing.Size(121, 20);
-            this.txtMS2Tolerance.TabIndex = 3;
             // 
             // lblMs2Tolerance
             // 
-            this.lblMs2Tolerance.AutoSize = true;
-            this.lblMs2Tolerance.Location = new System.Drawing.Point(13, 94);
+            resources.ApplyResources(this.lblMs2Tolerance, "lblMs2Tolerance");
             this.lblMs2Tolerance.Name = "lblMs2Tolerance";
-            this.lblMs2Tolerance.Size = new System.Drawing.Size(79, 13);
-            this.lblMs2Tolerance.TabIndex = 12;
-            this.lblMs2Tolerance.Text = "MS2 tolerance:";
             // 
             // cbMS2TolUnit
             // 
             this.cbMS2TolUnit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbMS2TolUnit.FormattingEnabled = true;
-            this.cbMS2TolUnit.Location = new System.Drawing.Point(153, 110);
+            resources.ApplyResources(this.cbMS2TolUnit, "cbMS2TolUnit");
             this.cbMS2TolUnit.Name = "cbMS2TolUnit";
-            this.cbMS2TolUnit.Size = new System.Drawing.Size(70, 21);
-            this.cbMS2TolUnit.TabIndex = 4;
             // 
             // lblFragmentIons
             // 
-            this.lblFragmentIons.AutoSize = true;
-            this.lblFragmentIons.Location = new System.Drawing.Point(13, 138);
+            resources.ApplyResources(this.lblFragmentIons, "lblFragmentIons");
             this.lblFragmentIons.Name = "lblFragmentIons";
-            this.lblFragmentIons.Size = new System.Drawing.Size(76, 13);
-            this.lblFragmentIons.TabIndex = 14;
-            this.lblFragmentIons.Text = "Fragment ions:";
             // 
             // cbFragmentIons
             // 
             this.cbFragmentIons.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbFragmentIons.FormattingEnabled = true;
-            this.cbFragmentIons.Location = new System.Drawing.Point(13, 154);
+            resources.ApplyResources(this.cbFragmentIons, "cbFragmentIons");
             this.cbFragmentIons.Name = "cbFragmentIons";
-            this.cbFragmentIons.Size = new System.Drawing.Size(121, 21);
-            this.cbFragmentIons.TabIndex = 5;
             // 
             // btnAdditionalSettings
             // 
-            this.btnAdditionalSettings.Enabled = false;
-            this.btnAdditionalSettings.Location = new System.Drawing.Point(13, 399);
+            resources.ApplyResources(this.btnAdditionalSettings, "btnAdditionalSettings");
             this.btnAdditionalSettings.Name = "btnAdditionalSettings";
-            this.btnAdditionalSettings.Size = new System.Drawing.Size(107, 23);
-            this.btnAdditionalSettings.TabIndex = 7;
-            this.btnAdditionalSettings.Text = "A&dditional Settings";
             this.btnAdditionalSettings.UseVisualStyleBackColor = true;
             // 
             // lblSearchEngineName
             // 
-            this.lblSearchEngineName.AutoSize = true;
-            this.lblSearchEngineName.Location = new System.Drawing.Point(3, 0);
-            this.lblSearchEngineName.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
+            resources.ApplyResources(this.lblSearchEngineName, "lblSearchEngineName");
             this.lblSearchEngineName.Name = "lblSearchEngineName";
-            this.lblSearchEngineName.Size = new System.Drawing.Size(0, 13);
-            this.lblSearchEngineName.TabIndex = 20;
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(3, 0);
-            this.label2.Margin = new System.Windows.Forms.Padding(0, 0, 3, 0);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(81, 13);
-            this.label2.TabIndex = 21;
-            this.label2.Text = "search settings:";
             // 
             // pBLogo
             // 
-            this.pBLogo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.pBLogo.Location = new System.Drawing.Point(323, 4);
+            resources.ApplyResources(this.pBLogo, "pBLogo");
             this.pBLogo.Name = "pBLogo";
-            this.pBLogo.Size = new System.Drawing.Size(55, 50);
-            this.pBLogo.TabIndex = 22;
             this.pBLogo.TabStop = false;
             // 
             // flowLayoutPanel1
             // 
             this.flowLayoutPanel1.Controls.Add(this.lblSearchEngineName);
             this.flowLayoutPanel1.Controls.Add(this.label2);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 4);
+            resources.ApplyResources(this.flowLayoutPanel1, "flowLayoutPanel1");
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(200, 29);
-            this.flowLayoutPanel1.TabIndex = 25;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(153, 53);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(29, 13);
-            this.label1.TabIndex = 26;
-            this.label1.Text = "Unit:";
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(153, 94);
+            resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(29, 13);
-            this.label3.TabIndex = 27;
-            this.label3.Text = "Unit:";
             // 
             // SearchSettingsControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);
@@ -198,7 +151,6 @@
             this.Controls.Add(this.lblMs1Tolerance);
             this.Controls.Add(this.cbMS1TolUnit);
             this.Name = "SearchSettingsControl";
-            this.Size = new System.Drawing.Size(381, 425);
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).EndInit();
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();

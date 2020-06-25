@@ -34,6 +34,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void UpdateSearchEngineProgress(string message)
         {
             txtSearchProgress.Text += message + "\r\n";
+            txtSearchProgress.ScrollToCaret();
         }
 
 

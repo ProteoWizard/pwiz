@@ -32,7 +32,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.MSAmanda;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -430,12 +430,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         // the rest of the wizard pages.
                         ShowEarlyFinish(false);
                         
-                        if (BuildPepSearchLibControl.PerformDDASearch) {
+                        if (BuildPepSearchLibControl.PerformDDASearch)
+                        {
                             lblFasta.Text = Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__required_;
                             _pagesToSkip.Add(Pages.chromatograms_page);
-                        } else if (FastaOptional)
+                        }
+                        else if (FastaOptional)
+                        {
                             lblFasta.Text = Resources.ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_;
-                        
+                        }
+
                         // The next page is going to be the chromatograms page.
                         var oldImportResultsControl = (ImportResultsControl) ImportResultsControl;
 

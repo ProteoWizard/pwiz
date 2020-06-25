@@ -65,6 +65,11 @@ namespace pwiz.ProteowizardWrapper
                 yield return typeExtsPair;
         }
 
+        public static bool SupportsVendorPeakPicking(string path)
+        {
+            return SpectrumList_PeakPicker.supportsVendorPeakPicking(path);
+        }
+
         // By default this creates dummy non-functional performance timers.
         // Place "MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false;" in 
         // the calling code to enable performance measurement.

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -20,6 +21,7 @@ using Thread = System.Threading.Thread;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
+    [Localizable(true)]
     public class MSAmandaSearchWrapper : AbstractDdaSearchEngine
     {
         //public string[] FastaFiles { get; set; } = new string[0];
@@ -33,8 +35,6 @@ namespace pwiz.Skyline.Model.DdaSearch
         private MSAmandaSpectrumParser amandaInputParser;
 
         public override event NotificationEventHandler SearchProgressChanged;
-
-
 
         private const string UNIMOD_FILENAME = "Unimod.xml";
         private const string ENZYME_FILENAME = "enzymes.xml";
@@ -69,12 +69,15 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             using (var d = new CurrentDirectorySetter(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)))
             {
-                if (!AvailableSettings.ParseEnzymeFile(ENZYME_FILENAME, "", AvailableSettings.AllEnzymes)) throw new Exception($"enzymes file '{ENZYME_FILENAME}' not found");
-                if (!AvailableSettings.ParseUnimodFile(UNIMOD_FILENAME, AvailableSettings.AllModifications)) throw new Exception($"unimod file '{UNIMOD_FILENAME}' not found");
-                if (!AvailableSettings.ParseOboFiles()) throw new Exception($"obo files (psi-ms.obo and unimod.obo) not found");
-                if (!AvailableSettings.ReadInstrumentsFile(INSTRUMENTS_FILENAME)) throw new Exception($"instruments file '{INSTRUMENTS_FILENAME}' not found");
+                if (!AvailableSettings.ParseEnzymeFile(ENZYME_FILENAME, "", AvailableSettings.AllEnzymes))
+                    throw new Exception($"enzymes file '{ENZYME_FILENAME}' not found");
+                if (!AvailableSettings.ParseUnimodFile(UNIMOD_FILENAME, AvailableSettings.AllModifications))
+                    throw new Exception($"unimod file '{UNIMOD_FILENAME}' not found");
+                if (!AvailableSettings.ParseOboFiles())
+                    throw new Exception("obo files (psi-ms.obo and unimod.obo) not found");
+                if (!AvailableSettings.ReadInstrumentsFile(INSTRUMENTS_FILENAME))
+                    throw new Exception($"instruments file '{INSTRUMENTS_FILENAME}' not found");
             }
-
         }
 
         private void Helper_SearchProgressChanged(string message)
@@ -247,7 +250,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
             catch (OperationCanceledException)
             {
-                helper.WriteMessage("Search is being canceled", true);
+                helper.WriteMessage("Canceling search", true);
                 success = false;
             }
             catch (Exception ex)

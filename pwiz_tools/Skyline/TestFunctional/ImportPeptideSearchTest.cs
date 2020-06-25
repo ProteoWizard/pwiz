@@ -151,8 +151,6 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreSame(doc, SkylineWindow.Document);    // Wizard should not change the document here
 
-            //PauseTest();
-
             // Click Next
             RunUI(() =>
             {

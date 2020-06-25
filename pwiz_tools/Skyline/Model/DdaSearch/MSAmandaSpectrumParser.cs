@@ -24,17 +24,9 @@ namespace pwiz.Skyline.Model.DdaSearch
         public MSAmandaSpectrumParser(string file, List<int> charges, bool mono)
         {
             consideredCharges = charges;
-            if (file.EndsWith(".raw"))
-            {
-                spectrumFileReader = new MsDataFileImpl(file, requireVendorCentroidedMS2: true,
-                    ignoreZeroIntensityPoints: true, trimNativeId: false);
-            }
-            else
-            {
-                spectrumFileReader = new MsDataFileImpl(file, requireVendorCentroidedMS2: false,
-                    ignoreZeroIntensityPoints: true, trimNativeId: false);
-            }
-
+            spectrumFileReader = new MsDataFileImpl(file,
+                requireVendorCentroidedMS2: MsDataFileImpl.SupportsVendorPeakPicking(file),
+                ignoreZeroIntensityPoints: true, trimNativeId: false);
             useMonoIsotopicMass = mono;
             rawFileName = file;
             SpectTitleMap = new Dictionary<int, string>();
@@ -104,7 +96,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             Spectrum amandaSpectrum = new Spectrum() { RT = spectrum.RetentionTime.Value, SpectrumId = index };
             amandaSpectrum.FragmentsPeaks = GetFragmentPeaks(spectrum.Mzs, spectrum.Intensities);
-      amandaSpectrum.ScanNumber = spectrum.Index;
+            amandaSpectrum.ScanNumber = spectrum.Index;
             if (spectrum.Precursors[0].ChargeState.HasValue && spectrum.Precursors[0].PrecursorMz.HasValue)
                 amandaSpectrum.Precursor.SetMassCharge(spectrum.Precursors[0].PrecursorMz.Value, spectrum.Precursors[0].ChargeState.Value, true);
             //SpectTitleMap.Add(index, spectrum.Id);
