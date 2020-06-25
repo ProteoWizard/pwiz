@@ -485,7 +485,7 @@ void ExperimentImpl::initializeBPC() const
 
         basePeakMZs_.resize(cycleTimes_.size());        
         basePeakIntensities_.resize(cycleTimes_.size());
-        if (numCycles != cycleTimes.size())
+        if (numCycles != cycleTimes_.size())
         {
             basePeakMZs_[cycleTimes_.size() - 1] = 0;
             basePeakIntensities_[cycleTimes_.size() - 1] = 0;
