@@ -150,11 +150,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             _outputParameters = new OutputParameters();
             _outputParameters.FastaFiles = FastaFileNames.ToList();
             _outputParameters.DBFile = FastaFileNames[0];
-            //_outputParameters.IsMzOutput = true;
             //2 == mzid
             _outputParameters.SetOutputFileFormat(2);
             _outputParameters.IsPercolatorOutput = true;
-            //_outputParameters.SpectraFiles = SpectrumFileNames.ToList();
             _outputParameters.SpectraFiles = new List<string>() { spectrumFileName};
             Settings.GenerateDecoyDb = true;
             Settings.ConsideredCharges.Clear();
@@ -164,60 +162,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             Settings.ReportBothBestHitsForTD = false;
             mzID.Settings = Settings;
             SearchEngine = new MSAmandaSearch(helper, _baseDir, _outputParameters, Settings, token);
-            //OutputMzid mzid = new OutputMzid();
             SearchEngine.InitializeOutputMZ(mzID);
-
-            //List<FastaDBFile> fastaFiles = GetFastaFileList();
-            //var folderForMappings = Path.Combine(_baseDir, AmandaMap);
-            //// creates dir if not existing
-            //Directory.CreateDirectory(folderForMappings);
-            //mzID = new OutputMzid(folderForMappings);
-
-            //SearchEngine = new MSAmandaEngine(AMANDA_DB_DIRECTORY, AMANDA_SCRATCH_DIRECTORY, CORE_USE_PERCENTAGE, MAX_NUMBER_PROTEINS, fastaFiles, );
-            //amandaSearchEngine = new MSAmandaEngine(AMANDA_DB_DIRECTORY, AMANDA_SCRATCH_DIRECTORY, CORE_USE_PERCENTAGE, MAX_NUMBER_PROTEINS, 
-            //    GetFastaFileList(), Settings.ChemicalData.CurrentInstrumentSetting,Settings.MyEnzyme, true, Settings.Ms1Tolerance, 
-            //    Settings.Ms2Tolerance, Settings.SelectedModifications, Settings.MissedCleavages);
-
-            ////// set searchagainstdecoy
-            ////_searchAgainstDecoy = _settings.GenerateDecoyDb;
-            //// save fasta with numbers in own folder                        
-            //GenerateMappings();
-            //// Generate Directories for SearchEngine
-            //GenerateDirectoriesForSearchEngine();
         }
-
-        //private void GenerateMappings()
-        //{
-        //    var folderForMappings = Path.Combine(_baseDir, AmandaMap);
-        //    //if (!_settings.FolderName.ToUpper().Equals("DEFAULT"))
-        //    //{
-        //    //    folderForMappings = Path.Combine(_settings.FolderName, MsAmanda2Foldername, AmandaMap);
-        //    //}
-
-        //    // creates dir if not existing
-        //    Directory.CreateDirectory(folderForMappings);
-        //    // for normal search
-        //    // get correct filenames            
-        //    _mappedFastaFile = _helper.GetFastaMapFileName(folderForMappings, _outputParameters.DBFile);
-        //    // mappingfile, internal ids to geneidentifiers
-        //    _mappingFile = _helper.GetFastaMappingFileName(folderForMappings, _outputParameters.DBFile);
-        //    // check if files exist and are generated before last changedate from dbFileName
-        //    _helper.CheckForMappingFile(_outputParameters.DBFile, _mappedFastaFile, _mappingFile, _outputMzid);
-
-        //    // for decoy search
-        //    // IDs with REV_
-        //    // filenames with _map_decoy   
-        //    if (_settings.PerformDecoySearch)
-        //    {
-        //        _decoyMappedFastaFile = _helper.GetFastaMapFileName(folderForMappings, _outputParameters.DBFile, true);
-        //        // mappingfile, internal ids to geneidentifiers
-        //        _decoyMappingFile = _helper.GetFastaMappingFileName(folderForMappings, _outputParameters.DBFile, true);
-        //        // check if files exist and are generated before last changedate from dbFileName
-        //        _helper.CheckForMappingFile(_outputParameters.DBFile, _decoyMappedFastaFile, _decoyMappingFile,
-        //            _outputMzid, true);
-        //    }
-        //}
-
+    
         private bool success = true;
         public override bool Run(CancellationTokenSource tokenSource)
         {
@@ -238,8 +185,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                             SearchEngine.SetInputParser(amandaInputParser);
 
                             SearchEngine.PerformSearch(_outputParameters.DBFile);
-                            //Dictionary<int, SpectrumMatchesCollection> result = amandaSearchEngine.PerformSearch(spectra);
-                            //WriteResults(result);
                         }
                         finally
                         {
