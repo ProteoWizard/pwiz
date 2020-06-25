@@ -10875,4 +10875,46 @@ Invalid peptide sequence at position 18
   <data name="MatchModificationsControl_ModificationLabelText_DDA_Search" xml:space="preserve">
     <value>Specify all modifications you want to include in the search:</value>
   </data>
+  <data name="DDASearchControl_SearchProgress_Search_canceled" xml:space="preserve">
+    <value>Search canceled.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_done" xml:space="preserve">
+    <value>Search done.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_failed" xml:space="preserve">
+    <value>Search failed.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Starting_search" xml:space="preserve">
+    <value>Starting search...</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found" xml:space="preserve">
+    <value>Enzymes file {0} not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found" xml:space="preserve">
+    <value>Instruments file {0} not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found" xml:space="preserve">
+    <value>Obo files (psi-ms.obo and unimod.obo) not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found" xml:space="preserve">
+    <value>Unimod file {0} not found</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox" xml:space="preserve">
+    <value>fragmentIons value not found in ComboBox items</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
+    <value>Fragment ions must be selected</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect" xml:space="preserve">
+    <value>MS1 Tolerance incorrect</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect" xml:space="preserve">
+    <value>MS2 Tolerance incorrect</value>
+  </data>
+  <data name="DdaSearch_Search_failed__0" xml:space="preserve">
+    <value>Search failed: {0}</value>
+  </data>
+  <data name="DdaSearch_Search_is_canceled" xml:space="preserve">
+    <value>Search is being canceled.</value>
+  </data>
 </root>

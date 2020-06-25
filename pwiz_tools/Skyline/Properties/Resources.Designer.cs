@@ -8021,6 +8021,132 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enzymes file {0} not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instruments file {0} not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Obo files (psi-ms.obo and unimod.obo) not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unimod file {0} not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search failed: {0}.
+        /// </summary>
+        public static string DdaSearch_Search_failed__0 {
+            get {
+                return ResourceManager.GetString("DdaSearch_Search_failed__0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search is being canceled..
+        /// </summary>
+        public static string DdaSearch_Search_is_canceled {
+            get {
+                return ResourceManager.GetString("DdaSearch_Search_is_canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment ions must be selected.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to fragmentIons value not found in ComboBox items.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS1 Tolerance incorrect.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS2 Tolerance incorrect.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search canceled..
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Search_canceled {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Search_canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search done..
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Search_done {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Search_done", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search failed..
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Search_failed {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Search_failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting search....
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Starting_search {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Starting_search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Declustering Potential Regressions:.
         /// </summary>
         public static string DeclusterPotentialList_Label_Declustering_Potential_Regressions {

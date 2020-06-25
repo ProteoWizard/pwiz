@@ -65,15 +65,8 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_MZTAB_TXT,
             BiblioSpecLiteBuilder.EXT_OPEN_SWATH,
             BiblioSpecLiteBuilder.EXT_SPECLIB,
-       };
-
-         public static readonly string[] SEARCH_FILE_EXTS =
-        {
-            //TODO check if there are known raw file extensions
-            ".mgf",
-            ".mzml",
-            ".raw"
         };
+    
         private string[] _inputFileNames = new string[0];
         private string _dirInputRoot = string.Empty;
 

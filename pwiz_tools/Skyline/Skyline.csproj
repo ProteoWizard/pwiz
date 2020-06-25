@@ -391,6 +391,18 @@
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
+      <DependentUpon>DDASearchControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.Designer.cs">
+      <DependentUpon>SearchSettingsControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\AbstractDdaSearchEngine.cs" />
     <Compile Include="Model\AreaCVRefinementData.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
@@ -2380,6 +2392,9 @@
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.resx">
+      <DependentUpon>DDASearchControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.ja.resx">
       <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -2388,6 +2403,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.zh-CHS.resx">
       <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.resx">
+      <DependentUpon>SearchSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.ja.resx">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
