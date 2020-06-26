@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using MSAmanda.InOutput.Input;
@@ -12,13 +14,59 @@ namespace pwiz.Skyline.Model.DdaSearch
 {
     public class MSAmandaSpectrumParser : IParserInput
     {
+        public class MSDataRunPath
+        {
+            public MSDataRunPath(string filepathPossiblyWithRunIndexSuffix)
+            {
+                var match = Regex.Match(filepathPossiblyWithRunIndexSuffix, @"(.+):(\d+)");
+                if (match.Success)
+                {
+                    Filepath = match.Groups[1].Value;
+                    RunIndex = int.Parse(match.Groups[2].Value);
+                }
+                else
+                {
+                    Filepath = filepathPossiblyWithRunIndexSuffix;
+                    RunIndex = 0;
+                }
+            }
+
+            public MSDataRunPath(string filepath, int runIndex)
+            {
+                Filepath = filepath;
+                RunIndex = runIndex;
+            }
+
+            public string Filepath { get; }
+            public int RunIndex { get; }
+
+            public static bool operator ==(MSDataRunPath lhs, MSDataRunPath rhs)
+            {
+                return lhs.Filepath == rhs.Filepath && lhs.RunIndex == rhs.RunIndex;
+            }
+
+            public static bool operator !=(MSDataRunPath lhs, MSDataRunPath rhs)
+            {
+                return !(lhs == rhs);
+            }
+
+            public override int GetHashCode()
+            {
+                return Filepath.GetHashCode() ^ RunIndex.GetHashCode();
+            }
+
+            public override string ToString()
+            {
+                return $"{Filepath}:{RunIndex}";
+            }
+        }
 
         private MsDataFileImpl spectrumFileReader;
         private int specId = 0;
         private int amandaId = 0;
         private List<int> consideredCharges;
         private bool useMonoIsotopicMass;
-        private string rawFileName; 
+        private MSDataRunPath msdataRunPath;
         public Dictionary<int, string> SpectTitleMap { get; }
 
         public MSAmandaSpectrumParser(string file, List<int> charges, bool mono)
@@ -28,7 +76,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                 requireVendorCentroidedMS2: MsDataFileImpl.SupportsVendorPeakPicking(file),
                 ignoreZeroIntensityPoints: true, trimNativeId: false);
             useMonoIsotopicMass = mono;
-            rawFileName = file;
+
+            msdataRunPath = new MSDataRunPath(file);
             SpectTitleMap = new Dictionary<int, string>();
         }
         public void Dispose()
@@ -116,9 +165,9 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public int GetTotalNumberOfSpectra(string spectraFile)
         {
-            if (rawFileName != spectraFile)
+            if (new MSDataRunPath(spectraFile) != msdataRunPath)
                 return 0;
-            MsDataFileImpl filereader = new MsDataFileImpl(spectraFile, preferOnlyMsLevel:2);
+            MsDataFileImpl filereader = new MsDataFileImpl(msdataRunPath.Filepath, msdataRunPath.RunIndex, preferOnlyMsLevel: 2);
             return filereader.SpectrumCount;
         }
     }

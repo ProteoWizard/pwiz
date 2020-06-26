@@ -19,11 +19,13 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
@@ -79,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
-                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles);
+                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => new MsDataFilePath(o)).ToArray();
                 Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });

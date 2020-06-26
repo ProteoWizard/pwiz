@@ -595,7 +595,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     bool valid = SearchSettingsControl.SaveAllSettings();
                     if (!valid) return;
                     ImportPeptideSearch.SearchEngine.SetEnzyme(Document.Settings.PeptideSettings.Enzyme, Document.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages);
-                    ImportPeptideSearch.SearchEngine.SetSpectrumFiles(ImportPeptideSearch.SearchFilenames);
+                    ImportPeptideSearch.SearchEngine.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
                     ImportPeptideSearch.SearchEngine.SetFastaFiles(ImportFastaControl.FastaFile);
                     SearchControl.OnSearchFinished += SearchControl_OnSearchFinished;
                     btnNext.Enabled = false;
@@ -608,28 +608,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                             //todo check if search was correct
                     var eCancel2 = new CancelEventArgs();
                     //change search files to result files
-                    for (int i = 0; i < BuildPepSearchLibControl.SearchFilenames.Length; ++i) { 
-                      var origName = BuildPepSearchLibControl.SearchFilenames[i];
-                
-                      var outFilePath = Path.GetFileNameWithoutExtension(origName) + ".mzid";
-                      BuildPepSearchLibControl.SearchFilenames[i] = Path.Combine(Path.GetDirectoryName(BuildPepSearchLibControl.SearchFilenames[i]), outFilePath);
-                      BuildPepSearchLibControl.PerformDDASearch = false;
-                      ImportPeptideSearch.SearchFilenames[i] = BuildPepSearchLibControl.SearchFilenames[i];
-                      ImportPeptideSearch.SpectrumSourceFiles.Clear();
-                      ImportPeptideSearch.SpectrumSourceFiles.Add(BuildPepSearchLibControl.SearchFilenames[i], new ImportPeptideSearch.FoundResultsFilePossibilities(origName) { ExactMatch = origName });
+                    BuildPepSearchLibControl.PerformDDASearch = false;
+                    ImportPeptideSearch.SearchFilenames = new string[BuildPepSearchLibControl.DdaSearchDataSources.Length];
+                    for(int i=0; i < BuildPepSearchLibControl.DdaSearchDataSources.Length; ++i)
+                    {
+                        var ddaSource = BuildPepSearchLibControl.DdaSearchDataSources[i];
+                        var outFilePath = ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(ddaSource);
+                        ImportPeptideSearch.SearchFilenames[i] = outFilePath;
+                        ImportPeptideSearch.SpectrumSourceFiles.Clear();
+                        ImportPeptideSearch.SpectrumSourceFiles.Add(outFilePath, new ImportPeptideSearch.FoundResultsFilePossibilities(ddaSource.GetFileName()) {ExactMatch = ddaSource.GetFileName()});
                     }
-                    if (!BuildPeptideSearchLibrary(eCancel2)) {
-                      // Page shows error
-                      if (eCancel2.Cancel)
-                        return;
-                      CloseWizard(DialogResult.Cancel);
+                    BuildPepSearchLibControl.AddSearchFiles(ImportPeptideSearch.SearchFilenames);
+
+                    if (!BuildPeptideSearchLibrary(eCancel2))
+                    {
+                        // Page shows error
+                        if (eCancel2.Cancel)
+                            return;
+                        CloseWizard(DialogResult.Cancel);
                     }
                     //todo ask for modifications 
 
                     //fasta file necessary
                     //load proteins after search
                     if (!ImportFastaControl.ImportFasta(ImportPeptideSearch.IrtStandard))
-                      return;
+                        return;
 
                     WizardFinish();
                     return;

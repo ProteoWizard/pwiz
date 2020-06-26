@@ -173,15 +173,15 @@ namespace pwiz.Skyline.Model.DdaSearch
                 using (var c = new CurrentCultureSetter(CultureInfo.InvariantCulture))
                 {
                     List<Spectrum> spectra = new List<Spectrum>();
-                    foreach (string rawFileName in SpectrumFileNames)
+                    foreach (var rawFileName in SpectrumFileNames)
                     {
                         tokenSource.Token.ThrowIfCancellationRequested();
 
                         try
                         {
-                            InitializeEngine(tokenSource, rawFileName);
+                            InitializeEngine(tokenSource, rawFileName.GetSampleLocator());
 
-                            amandaInputParser = new MSAmandaSpectrumParser(rawFileName, Settings.ConsideredCharges, true);
+                            amandaInputParser = new MSAmandaSpectrumParser(rawFileName.GetSampleLocator(), Settings.ConsideredCharges, true);
                             SearchEngine.SetInputParser(amandaInputParser);
 
                             SearchEngine.PerformSearch(_outputParameters.DBFile);

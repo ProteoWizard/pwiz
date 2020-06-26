@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model
 {
@@ -15,7 +17,7 @@ namespace pwiz.Skyline.Model
         public abstract string[] FragmentIons { get; }
         public abstract string EngineName { get; }
         public abstract Bitmap SearchEngineLogo { get; }
-        protected string[] SpectrumFileNames { get; set; }
+        protected MsDataFileUri[] SpectrumFileNames { get; set; }
         protected string[] FastaFileNames { get; set; }
 
         public abstract void SetPrecursorMassTolerance(MzTolerance mzTolerance);
@@ -28,17 +30,24 @@ namespace pwiz.Skyline.Model
 
         public class MessageEventArgs : EventArgs
         {
-
             public string Message { get; set; }
         }
 
         public abstract bool Run(CancellationTokenSource cancelToken);
 
-        public void SetSpectrumFiles(string[] searchFilenames)
+        public void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
         {
             SpectrumFileNames = searchFilenames;
         }
 
+        /// <summary>
+        /// Returns the search result (e.g. pepXML, mzIdentML) filenpath corresponding with the given searchFilepath.
+        /// </summary>
+        /// <param name="searchFilepath">The raw data filepath (e.g. RAW, WIFF, mzML)</param>
+        public string GetSearchResultFilepath(MsDataFileUri searchFilepath)
+        {
+            return Path.ChangeExtension(searchFilepath.GetFilePath(), @".mzid");
+        }
 
         public void SetFastaFiles(string fastFile)
         {
@@ -47,6 +56,5 @@ namespace pwiz.Skyline.Model
         }
 
         public abstract void SaveModifications(IList<StaticMod> modifications);
-
     }
 }

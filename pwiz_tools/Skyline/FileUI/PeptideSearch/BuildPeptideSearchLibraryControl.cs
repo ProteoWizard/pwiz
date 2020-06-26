@@ -29,6 +29,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -231,7 +232,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public MsDataFileUri[] DdaSearchDataSources
         {
             get => _ddaSearchDataSources;
-            private set
+            set
             {
                 // Set new value
                 _ddaSearchDataSources = value;
@@ -240,14 +241,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 Array.Sort(_ddaSearchDataSources);
 
                 // Calculate the common root directory
-                string dirInputRoot = PathEx.GetCommonRoot(_ddaSearchDataSources);
+                string dirInputRoot = PathEx.GetCommonRoot(_ddaSearchDataSources.Select(o => o.GetFilePath()));
 
                 // Populate the input files list
                 listSearchFiles.BeginUpdate();
                 listSearchFiles.Items.Clear();
-                foreach (var fileName in _ddaSearchDataSources)
+                foreach (var uri in _ddaSearchDataSources)
                 {
-                    listSearchFiles.Items.Add(PathEx.RemovePrefix(fileName, dirInputRoot));
+                    string fileAndSampleLocator = uri.GetFilePath();
+                    if (uri.GetSampleIndex() > 0)
+                        fileAndSampleLocator += $@":{uri.GetSampleIndex()}";
+                    listSearchFiles.Items.Add(PathEx.RemovePrefix(fileAndSampleLocator, dirInputRoot));
                 }
 
                 listSearchFiles.EndUpdate();
@@ -263,14 +267,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void RemoveFiles()
         {
+            IList listSearchFilenames = PerformDDASearch ? (IList) _ddaSearchDataSources.ToList() : SearchFilenames.ToList();
             var selectedIndices = listSearchFiles.SelectedIndices;
-            var listSearchFilenames = SearchFilenames.ToList();
             for (int i = selectedIndices.Count - 1; i >= 0; i--)
             {
                 listSearchFiles.Items.RemoveAt(i);
                 listSearchFilenames.RemoveAt(i);
             }
-            SearchFilenames = listSearchFilenames.ToArray();
+
+            if (PerformDDASearch)
+                _ddaSearchDataSources = listSearchFilenames.Cast<MsDataFileUri>().ToArray();
+            else
+                SearchFilenames = listSearchFilenames.Cast<string>().ToArray();
 
             FireInputFilesChanged();
         }
@@ -284,44 +292,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             if (PerformDDASearch)
             {
-                // exclude UNIFI from source types
-                /*var sourceTypes = MsDataFileImpl.GetFileExtensionsByType().Where(o => o.Value.Count > 0).OrderBy(o => o.Key).ToList();
-                var allExtensions = sourceTypes.SelectMany(o => o.Value.Select(ext => $@"*{ext}")).Distinct();
-
-                // create Filter string as a series of "|<type> (<exts>)|<exts>"
-                var filter = new StringBuilder();
-                filter.Append(@"|Any spectra format|" + String.Join(@";", allExtensions));
-                foreach (var typeExtsPair in sourceTypes)
-                    filter.AppendFormat(@"|{0} (*{1})|*{1}", typeExtsPair.Key, String.Join(@";*", typeExtsPair.Value));
-
-                using (OpenFileDialog dlg = new OpenFileDialog
-                {
-                    //todo add resources here
-                    Title = "Add spectra files to analyze",
-                    InitialDirectory = Path.GetDirectoryName(DocumentContainer.DocumentFilePath),
-                    CheckPathExists = true,
-                    Multiselect = true,
-                    Filter = filter.ToString()
-                })
-                {
-                    if (dlg.ShowDialog(WizardForm) == DialogResult.OK)
-                    {
-                        //AddSpectraFilesToSearchEngine(dlg.FileNames);
-                        AddSearchFiles(dlg.FileNames);
-                    }
-                }*/
-
                 MsDataFileUri[] dataSources;
                 using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
                 {
                     Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search,
-                    InitialDirectory = new MsDataFilePath(DocumentContainer.DocumentFilePath)
+                    InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath)),
                 })
                 {
                     // Use saved source type, if there is one.
-                    string sourceType = Settings.Default.SrmResultsSourceType;
-                    if (!string.IsNullOrEmpty(sourceType))
-                        dlg.SourceTypeName = sourceType;
+                    //string sourceType = Settings.Default.SrmResultsSourceType;
+                    //if (!string.IsNullOrEmpty(sourceType))
+                    //    dlg.SourceTypeName = sourceType;
 
                     if (dlg.ShowDialog(this) != DialogResult.OK)
                         return;
@@ -339,14 +320,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             else
             {
-
-            string[] addFiles = BuildLibraryDlg.ShowAddFile(WizardForm, Path.GetDirectoryName(DocumentContainer.DocumentFilePath));
-            if (addFiles != null)
-            {
-                AddSearchFiles(addFiles);
+                string[] addFiles = BuildLibraryDlg.ShowAddFile(WizardForm, Path.GetDirectoryName(DocumentContainer.DocumentFilePath));
+                if (addFiles != null)
+                {
+                    AddSearchFiles(addFiles);
+                }
             }
         }
-      }
 
         public void AddSearchFiles(IEnumerable<string> fileNames)
         {
