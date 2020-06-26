@@ -1055,8 +1055,6 @@ void embedScanTime(const string& idpDbFilepath,
 }
 
 
-namespace {
-
 int channelsByQuantitationMethod(QuantitationMethod method)
 {
     switch (method.value())
@@ -1071,8 +1069,6 @@ int channelsByQuantitationMethod(QuantitationMethod method)
         default: throw runtime_error("[channelsByQuantitationMethod] unhandled QuantitationMethod");
     }
 }
-
-} // namespace
 
 
 void embedIsobaricSampleMapping(const string& idpDbFilepath, const map<string, vector<string> >& isobaricSampleMap)
