@@ -51,7 +51,8 @@ ProteinPilotReader::ProteinPilotReader(
   probCutOff_(getScoreThreshold(PROT_PILOT)),
   skipMods_(true),
   skipNTermMods_(false),
-  skipCTermMods_(false)
+  skipCTermMods_(false),
+  lastFilePosition_(0)
 {
     this->setFileName(xmlFileName); // this is done for the saxhandler
     curPSM_ = NULL;
@@ -61,6 +62,8 @@ ProteinPilotReader::ProteinPilotReader(
     // point to self as spec reader
     delete specReader_;
     specReader_ = this;
+
+    initReadAddProgress();
 }
 
 ProteinPilotReader::~ProteinPilotReader()
@@ -80,8 +83,12 @@ bool ProteinPilotReader::parseFile()
 {
     string filename = getFileName();
     setSpecFileName(filename.c_str());
-    Verbosity::debug("ProteinPilotReader is parsing %s.", filename.c_str());
+    int filesize = bfs::file_size(filename) / 1000ull;
+    readSpecProgress_ = new ProgressIndicator(filesize);
+
+    Verbosity::debug("ProteinPilotReader is parsing %s (%d kb).", filename.c_str(), filesize);
     bool success = parse();
+    Verbosity::debug("ProteinPilotReader finished parsing %s.", filename.c_str());
 
     if( ! success ){
         return success;
@@ -184,6 +191,12 @@ void ProteinPilotReader::endElement(const XML_Char* name)
         //cerr << "ending spectrum" << endl;
         saveMatch();
         state_ = ROOT_STATE;
+
+        int position = getCurrentByteIndex() / 1000ull;
+        int progress = position - lastFilePosition_;
+        lastFilePosition_ = position;
+        readSpecProgress_->add(progress);
+
     } else if (isElement("MATCH", name)) {
         //cerr << "ending match" << endl;
         state_ = SPECTRUM_STATE;
@@ -200,6 +213,7 @@ void ProteinPilotReader::parseSearchID(const XML_Char** attr){
 
 void ProteinPilotReader::parseSpectrumFilename(const XML_Char** attr){
     string filename = getRequiredAttrValue("originalfilename", attr);
+
     searchIdFileMap_[curSearchID_] = filename;
 }
 
@@ -261,6 +275,8 @@ void ProteinPilotReader::parseMatchElement(const XML_Char** attr)
     skipMods_ = false;
     skipNTermMods_ = ( strcmp(getAttrValue("nt", attr), "") == 0) ;
     skipCTermMods_ = ( strcmp(getAttrValue("ct", attr), "") == 0) ;
+    
+    // Verbosity::debug("Parsed spectrum %s match %s", curPSM_->specName.c_str(), curPSM_->unmodSeq.c_str());
 }
 
 void ProteinPilotReader::saveMatch(){

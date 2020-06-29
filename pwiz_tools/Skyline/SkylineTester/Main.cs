@@ -72,7 +72,7 @@ namespace SkylineTester
             AcceptButton = null;
 
             // Update elapsed time display.
-            _runStartTime = DateTime.Now;
+            ResetElapsedTime();
             commandShell.RunStartTime = _runStartTime;
             if (_runTimer != null)
             {
@@ -82,7 +82,7 @@ namespace SkylineTester
             _runTimer = new Timer { Interval = 1000 };
             _runTimer.Tick += (s, a) =>
             {
-                var elapsedTime = DateTime.Now - _runStartTime;
+                var elapsedTime = RunElapsedTime;
                 statusRunTime.Text = "{0}:{1:D2}:{2:D2}".With(elapsedTime.Hours, elapsedTime.Minutes, elapsedTime.Seconds);
             };
             _runTimer.Start();
@@ -123,12 +123,12 @@ namespace SkylineTester
 
         public TimeSpan RunElapsedTime
         {
-            get { return DateTime.Now - _runStartTime; }
+            get { return DateTime.UtcNow - _runStartTime; }  // Use UtcNow to avoid hiccups with tests running during DST changeover
         }
 
         public void ResetElapsedTime()
         {
-            _runStartTime = DateTime.Now;
+            _runStartTime = DateTime.UtcNow; // Use UtcNow to avoid hiccups with tests running during DST changeover
         }
 
         public void StopByTimer()
@@ -256,7 +256,7 @@ namespace SkylineTester
             if (repeatCount > 1 && args.Contains("test=\"@"))
             {
                 // Pick apart a string like to get at the filename for the list of tests
-                // offscreen=True loop=1 testsmallmolecules=on repeat=100 language=en-US,fr-FR perftests=on test=\"@I:\\Dev\\bg_trunk\\pwiz_tools\\Skyline\\SkylineTester test list.txt\"
+                // offscreen=True loop=1 repeat=100 language=en-US,fr-FR perftests=on test=\"@I:\\Dev\\bg_trunk\\pwiz_tools\\Skyline\\SkylineTester test list.txt\"
                 var argparts = args.Split(new[] { "test=\"@" }, StringSplitOptions.None);
                 var newArgs = argparts[0] + argparts[1].Split('\"')[1];
                 var tests = File.ReadAllLines(argparts[1].Split('\"')[0]);

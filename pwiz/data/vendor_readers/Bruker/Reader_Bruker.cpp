@@ -192,7 +192,13 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
 
     initializeInstrumentConfigurationPtrs(msd, compassDataPtr, acquisitionSoftware);
     if (!msd.instrumentConfigurationPtrs.empty())
+    {
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
+
+        auto serialNumber = compassDataPtr->getInstrumentSerialNumber();
+        if (!serialNumber.empty())
+            msd.run.defaultInstrumentConfigurationPtr->set(MS_instrument_serial_number, serialNumber);
+    }
 
     msd.run.id = msd.id;
     msd.run.startTimeStamp = encode_xml_datetime(compassDataPtr->getAnalysisDateTime());
@@ -216,7 +222,7 @@ void Reader_Bruker::read(const string& filename,
 
     Reader_Bruker_Format format = Bruker::format(filename);
     if (format == Reader_Bruker_Format_Unknown)
-        throw ReaderFail("[Reader_Bruker::read] Path given is not a recognized Bruker format");
+        throw ReaderFail("[Reader_Bruker::read] Path given ('" + filename + "') is not a recognized Bruker format");
 
 
     // trim filename from end of source path if necessary (it's not valid to pass to CompassXtract)
@@ -224,10 +230,11 @@ void Reader_Bruker::read(const string& filename,
     if (bfs::is_regular_file(rootpath))
         rootpath = rootpath.branch_path();
 
-    CompassDataPtr compassDataPtr(CompassData::create(rootpath.string(), config.combineIonMobilitySpectra, format, config.preferOnlyMsLevel, config.allowMsMsWithoutPrecursor));
+    CompassDataPtr compassDataPtr(CompassData::create(rootpath.string(), config.combineIonMobilitySpectra, format, 
+        config.preferOnlyMsLevel, config.allowMsMsWithoutPrecursor, config.isolationMzAndMobilityFilter));
 
     SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassDataPtr, config);
-    ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassDataPtr);
+    ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassDataPtr, config);
     result.run.spectrumListPtr = SpectrumListPtr(sl);
     result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 

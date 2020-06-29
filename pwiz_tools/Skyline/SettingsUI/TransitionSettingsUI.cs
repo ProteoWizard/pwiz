@@ -181,12 +181,13 @@ namespace pwiz.Skyline.SettingsUI
             cbExclusionUseDIAWindow.Location = new Point(cbExclusionUseDIAWindow.Location.X, cbExclusionUseDIAWindow.Location.Y - pixelShift);
 
             // Declare list of controls that are inherently proteomic and should not receive the "peptide"->"molecule" treatment in small molecule UI mode
-            if (GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic)
+            if (ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic)
                 tabControlPeptidesSmallMols.SelectedIndex = 0;
-            else if (GetModeUIHelper().ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            else if (ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
                 tabControlPeptidesSmallMols.SelectedIndex = 1;
 
             DoIsolationSchemeChanged();
+            cbxTriggeredAcquisition.Checked = Instrument.TriggeredAcquisition;
         }
 
         /// <summary>
@@ -534,7 +535,8 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             TransitionInstrument instrument = new TransitionInstrument(minMz,
-                maxMz, isDynamicMin, mzMatchTolerance, maxTrans, maxInclusions, minTime, maxTime);
+                    maxMz, isDynamicMin, mzMatchTolerance, maxTrans, maxInclusions, minTime, maxTime)
+                .ChangeTriggeredAcquisition(cbxTriggeredAcquisition.Checked);
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
             // Validate and store full-scan settings
@@ -1035,6 +1037,11 @@ namespace pwiz.Skyline.SettingsUI
             FullScanSettingsControl.AddIsolationScheme();
         }
 
+        public void EditCurrentIsolationScheme()
+        {
+            FullScanSettingsControl.EditCurrentIsolationScheme();
+        }
+
         public void EditIsolationScheme()
         {
             FullScanSettingsControl.EditIsolationScheme();
@@ -1247,5 +1254,10 @@ namespace pwiz.Skyline.SettingsUI
                 textSmallMoleculeIonTypes.Text = TransitionFilter.ToStringSmallMoleculeIonTypes(smallMolIons, true);
         }
 
+        public bool TriggeredAcquisition
+        {
+            get { return cbxTriggeredAcquisition.Checked; }
+            set { cbxTriggeredAcquisition.Checked = value; }
+        }
     }
 }

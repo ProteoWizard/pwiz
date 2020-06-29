@@ -56,11 +56,13 @@ namespace pwiz.SkylineTestTutorial
     public class GroupedStudies1TutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
-        [Timeout(int.MaxValue)] // This can take a long time when checking code coverage
+        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestGroupedStudies1Tutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "GroupedStudies";
 
             ForceMzml = true;   // Mzml is faster for this test.
 
@@ -1025,7 +1027,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => FormEx.GetParentForm(documentGrid).Size = new Size(591, 296));
 
                 var pathMissingData = PropertyPath.Parse("Peptide").Property(_missingDataName);
-                WaitForConditionUI(() => (documentGrid.RowCount > 0 &&
+                WaitForConditionUI(() => (documentGrid.IsComplete && documentGrid.RowCount > 0 &&
                     documentGrid.FindColumn(pathMissingData) != null)); // Let it initialize
 
                 var pathCountTruncated = PropertyPath.Parse("Results!*.Value.CountTruncated");
@@ -1035,6 +1037,7 @@ namespace pwiz.SkylineTestTutorial
                     documentGrid.DataGridView.Sort(columnCountTruncated,
                         ListSortDirection.Descending);                    
                 });
+                WaitForConditionUI(() => documentGrid.IsComplete);
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid with MissingData field", 55);
 
@@ -1064,10 +1067,13 @@ namespace pwiz.SkylineTestTutorial
                     gridView.CurrentCell = gridView.Rows[0].Cells[columnSubjectId.Index];
                     gridView.SendPaste();
 
+                    var columnCountTruncated = documentGrid.FindColumn(pathCountTruncated);
                     for (int i = 0; i < expectedRows; i++)
                     {
                         var value = gridView.Rows[i].Cells[columnSubjectId.Index].Value;
                         Assert.IsTrue((bool)value);
+                        var valueTruncated = gridView.Rows[i].Cells[columnCountTruncated.Index].Value;
+                        Assert.AreNotEqual(0, (int)valueTruncated);
                     }
 
                     documentGrid.Close();
@@ -1236,44 +1242,6 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("NLGVVVAPHALR mean peak area ratio to global standard by condition", 62);
         }
 
-        private void AddReplicateAnnotation(DocumentSettingsDlg documentSettingsDlg,
-                                            string annotationName,
-                                            AnnotationDef.AnnotationType annotationType,
-                                            IList<string> annotationValues,
-                                            int pausePage)
-        {
-            AddAnnotation(documentSettingsDlg, annotationName, annotationType, annotationValues,                
-                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate),
-                    pausePage);
-        }
-
-        private void AddAnnotation(DocumentSettingsDlg documentSettingsDlg,
-                                            string annotationName,
-                                            AnnotationDef.AnnotationType annotationType,
-                                            IList<string> annotationValues,
-                                            AnnotationDef.AnnotationTargetSet annotationTargets,
-                                            int pausePage)
-        {
-            var annotationsListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>
-                (documentSettingsDlg.EditAnnotationList);
-            RunUI(annotationsListDlg.SelectLastItem);
-            var annotationDefDlg = ShowDialog<DefineAnnotationDlg>(annotationsListDlg.AddItem);
-
-            RunUI(() =>
-            {
-                annotationDefDlg.AnnotationName = annotationName;
-                annotationDefDlg.AnnotationType = annotationType;
-                if (annotationValues != null)
-                annotationDefDlg.Items = annotationValues;
-                annotationDefDlg.AnnotationTargets = annotationTargets;
-            });
-
-            PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName, pausePage);
-
-            OkDialog(annotationDefDlg, annotationDefDlg.OkDialog);
-            OkDialog(annotationsListDlg, annotationsListDlg.OkDialog);
-        }
-
         private static int SelectPeptidesUpUntil(string sequence)
         {
             bool peptideIfsSelected = false;
@@ -1387,17 +1355,18 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(idendityAnnotation, groupComparison.IdentityAnnotation);
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete &&
-                foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult")) != null);
+            var foldChangeGridControl = foldChangeGrid.DataboundGridControl;
+            WaitForConditionUI(() => foldChangeGridControl.IsComplete &&
+                foldChangeGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult")) != null);
             RunUI(() =>
             {
                 var foldChangeResultColumn =
-                    foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
-                foldChangeGrid.DataboundGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
+                    foldChangeGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                foldChangeGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
             });
-            WaitForConditionUI(() => 0 != foldChangeGrid.DataboundGridControl.RowCount,
+            WaitForConditionUI(() => 0 != foldChangeGridControl.RowCount,
                 "0 != foldChangeGrid.DataboundGridControl.RowCount");
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete,
+            WaitForConditionUI(() => foldChangeGridControl.IsComplete,
                 "foldChangeGrid.DataboundGridControl.IsComplete");
             PauseForScreenShot<FoldChangeGrid>("Healthy v. Diseased:Grid", 65);
             RunUI(() =>
@@ -1405,11 +1374,14 @@ namespace pwiz.SkylineTestTutorial
                 foldChangeGrid.ShowGraph();
             });
             PauseForScreenShot<FoldChangeBarGraph>("Healthy v Diseased:Graph", 66);
-            var foldChangeGraph = FindOpenForm<FoldChangeBarGraph>();
-            RunUI(() =>
+            if (IsPauseForCoverShot)
             {
-                foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating);
-            });
+                RestoreCoverViewOnScreen();
+                foldChangeGrid = WaitForOpenForm<FoldChangeGrid>();
+            }
+            var foldChangeGraph = WaitForOpenForm<FoldChangeBarGraph>();
+            if (!IsPauseForCoverShot)
+                RunUI(() => foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating));
             RunUI(() =>
             {
                 var foldChangeResultColumn =
@@ -1438,6 +1410,37 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => 11 == foldChangeGrid.DataboundGridControl.RowCount);
             RunUI(() => Assert.AreEqual(11, foldChangeGrid.DataboundGridControl.RowCount));
             PauseForScreenShot<FoldChangeBarGraph>("Right click on the graph and choose Copy", 67);
+
+            if (IsPauseForCoverShot)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    SkylineWindow.ShowPeakAreaLegend(false);
+                    SkylineWindow.ShowChromatogramLegends(false);
+                    SkylineWindow.ShowAllTransitions();
+                    SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                    SkylineWindow.GroupByReplicateValue(null);
+                });
+                RunUI(SkylineWindow.AutoZoomBestPeak);
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
+                WaitForGraphs();
+                RunUI(() =>
+                {
+                    ZoomYAxis(foldChangeGraph.ZedGraphControl, -6, 6);
+                    var gcFloatingWindow = foldChangeGraph.Parent.Parent;
+                    gcFloatingWindow.Top = SkylineWindow.Top + 5;
+                    gcFloatingWindow.Height = SkylineWindow.Height - 10;
+                    gcFloatingWindow.Left = SkylineWindow.Right - gcFloatingWindow.Width - 5;
+                });
+                PauseForCoverShot();
+                return;
+            }
+
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             var settingsForm = ShowDialog<EditGroupComparisonDlg>(foldChangeGrid.ShowChangeSettings);
             RunUI(() => settingsForm.ComboIdentityAnnotation.SelectedIndex = 0);
@@ -1469,6 +1472,7 @@ namespace pwiz.SkylineTestTutorial
             }
             WaitForConditionUI(() => 92 == foldChangeGrid.DataboundGridControl.RowCount);
             PauseForScreenShot<FoldChangeBarGraph>("Copy the graph", 68);
+
             RunUI(() =>
             {
                 foldChangeGrid.DataboundGridControl.DataGridView.SelectAll();
@@ -1495,7 +1499,7 @@ namespace pwiz.SkylineTestTutorial
             // Apply to all
             RunUI(() =>
             {
-                PeakMatcherTestUtil.SelectAndApplyPeak("GILAADESVGSMAK", null, "D_103_REP1", false, 19.0987);
+                PeakMatcherTestUtil.SelectAndApplyPeak("GILAADESVGSMAK", null, "D_103_REP1", false, false, 19.0987);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
                     19.09872, 18.53870, 18.38107, 18.98798, 18.80227, 18.76315,
                     19.10433, 19.03328, 18.83977, 19.10928, 18.65008, 18.45997,
@@ -1504,7 +1508,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(() =>
             {
-                PeakMatcherTestUtil.SelectAndApplyPeak("LNDGSQITFEK", null, "D_138_REP1", false, 23.5299);
+                PeakMatcherTestUtil.SelectAndApplyPeak("LNDGSQITFEK", null, "D_138_REP1", false, false, 23.5299);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
                     23.45410, 22.77782, 23.11210, 23.19398, 22.88790, 23.00840,
                     23.52992, 23.57400, 23.19233, 23.45998, 22.81207, 22.81960,
@@ -1514,7 +1518,7 @@ namespace pwiz.SkylineTestTutorial
             // Apply to subsequent
             RunUI(() =>
             {
-                PeakMatcherTestUtil.SelectAndApplyPeak("DLTGFPQGADQR", null, "H_159_REP2", true, 24.7955);
+                PeakMatcherTestUtil.SelectAndApplyPeak("DLTGFPQGADQR", null, "H_159_REP2", true, false, 24.7955);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
                     24.02537, 23.31307, 24.60460, 23.61628, 23.12335, 25.40152,
                     23.99268, 23.95832, 25.69842, 24.07185, 23.27097, 25.12858,
@@ -1523,7 +1527,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(() =>
             {
-                PeakMatcherTestUtil.SelectAndApplyPeak("GATYAFSGSHYWR", null, "D_103_REP3", true, 16.4223);
+                PeakMatcherTestUtil.SelectAndApplyPeak("GATYAFSGSHYWR", null, "D_103_REP3", true, false, 16.4223);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
                     17.38182, 17.08060, 16.42228, 17.19397, 17.21502, 16.66367,
                     17.23210, 17.45838, 16.66472, 17.39735, 17.00417, 16.43715,
@@ -1535,7 +1539,7 @@ namespace pwiz.SkylineTestTutorial
             // with two small (sometimes non-existent) peaks on either side
             RunUI(() =>
             {
-                PeakMatcherTestUtil.SelectAndApplyPeak("LGGEEVSVAC[+57.0]K", null, "H_148_REP1", false, 13.1616);
+                PeakMatcherTestUtil.SelectAndApplyPeak("LGGEEVSVAC[+57.0]K", null, "H_148_REP1", false, false, 13.1616);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
                     13.16143, 13.12685, 13.12692, 13.09358, 13.16153, 13.16042,
                     13.12773, 13.26173, 13.19442, 13.12825, 13.09322, 13.12713,
@@ -1544,7 +1548,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(() =>
             {
-                PeakMatcherTestUtil.SelectAndApplyPeak("LGGEEVSVAC[+57.0]K", null, "H_148_REP1", false, 13.4631);
+                PeakMatcherTestUtil.SelectAndApplyPeak("LGGEEVSVAC[+57.0]K", null, "H_148_REP1", false, false, 13.4631);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
                     13.46293, 13.39485, 13.39492, 13.42858, 13.39603, 13.46192,
                     13.42923, 13.46273, 13.46242, 13.42975, 13.42822, 13.42863,
@@ -1553,7 +1557,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(() =>
             {
-                PeakMatcherTestUtil.SelectAndApplyPeak("LGGEEVSVAC[+57.0]K", null, "H_148_REP1", false, 13.6641);
+                PeakMatcherTestUtil.SelectAndApplyPeak("LGGEEVSVAC[+57.0]K", null, "H_148_REP1", false, false, 13.6641);
                 PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(
                     14.30043, 13.79685, 13.79692, 13.79708, 14.33403, 14.90242,
                     13.83123, 14.03223, 13.66342, 13.76475, 13.83022, 13.73013,

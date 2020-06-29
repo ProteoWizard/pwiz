@@ -277,6 +277,8 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return IsDataRefined(Data); }
         }
 
+        public bool RegressionRefinedNull => Data.RegressionRefinedNull;
+
         private GraphData Refine(GraphData currentData, Func<bool> isCanceled)
         {
             GraphData dataNew = currentData != null ? currentData.Refine(isCanceled) : null;
@@ -579,24 +581,27 @@ namespace pwiz.Skyline.Controls.Graphs
                     requestContext.Settings = null;
                 }
 
-                try
+                if (GraphSummary.IsHandleCreated)
                 {
-                    GraphSummary.Invoke(new Action(() =>
+                    try
                     {
-                        try
+                        GraphSummary.Invoke(new Action(() =>
                         {
-                            if (!cancellationToken.IsCancellationRequested)
-                                UpdateGraph(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            Program.ReportException(ex);
-                        }
-                    }));
-                }
-                catch (ObjectDisposedException)
-                {
-                    // Can happen during tests
+                            try
+                            {
+                                if (!cancellationToken.IsCancellationRequested)
+                                    UpdateGraph(false);
+                            }
+                            catch (Exception ex)
+                            {
+                                Program.ReportException(ex);
+                            }
+                        }));
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Can happen during tests
+                    }
                 }
             }
             catch (OperationCanceledException)
@@ -790,9 +795,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    RetentionScoreCalculatorSpec calc = !string.IsNullOrEmpty(_calculatorName)
-                            ? Settings.Default.GetCalculatorByName(Settings.Default.RTCalculatorName)
-                            : null;
+                    var calc = !string.IsNullOrEmpty(_calculatorName)
+                        ? Settings.Default.GetCalculatorByName(Settings.Default.RTCalculatorName)
+                        : null;
                     if (calc == null)
                     {
                         // Initialize all calculators
@@ -931,6 +936,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 get { return _statisticsRefined ?? _statisticsAll; }
             }
+
+            public bool RegressionRefinedNull => _regressionRefined == null;
 
             public bool IsRefined()
             {
@@ -1389,13 +1396,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (IsRunToRun)
                     {
-                        return string.Format(Resources.GraphData_CorrelationLabel_Measured_Time___0__,
-                            _document.MeasuredResults.Chromatograms[_originalIndex].Name);
+                        if (_document.MeasuredResults != null && 0 <= _originalIndex && _originalIndex < _document.MeasuredResults.Chromatograms.Count)
+                        {
+                            return string.Format(Resources.GraphData_CorrelationLabel_Measured_Time___0__,
+                                _document.MeasuredResults.Chromatograms[_originalIndex].Name);
+                        }
+                        return string.Empty;
                     }
-                    else
-                    {
-                        return Calculator.Name;
-                    }
+                    return Calculator.Name;
                 }
             }
 

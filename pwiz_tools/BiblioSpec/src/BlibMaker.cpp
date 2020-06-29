@@ -304,7 +304,7 @@ void BlibMaker::createTables(vector<string> &commands, bool execute)
         "libLSID TEXT, -- LSID of form urn:lsid:<authority>:spectral_library:bibliospec:<type:redundant|nr>:<library name> e.g. urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:byonic.blib\n"
         "createTime TEXT, -- local creation time in ctime() format e.g. Thu Nov 16 17:02:18 2017\n"
         "numSpecs INTEGER, -- number of spectra in this library (-1 means not yet counted)\n"
-        "majorVersion INTEGER, -- always 0, for this generation of BiblioSpec\n"
+        "majorVersion INTEGER, -- revision number for this library (count starts at 1)\n"
         "minorVersion INTEGER ") + version_history_comment +
         ")");
 
@@ -336,7 +336,8 @@ void BlibMaker::createTables(vector<string> &commands, bool execute)
            "ionMobilityType TINYINT, -- ion mobility units (required if ionMobility is used, see IonMobilityTypes table for key)\n"
            "retentionTime REAL, -- chromatographic retention time in minutes, if known\n"
            "startTime REAL, -- start retention time in minutes, if known\n"
-           "endTime REAL, -- end retention time in minutes, if known\n";
+           "endTime REAL, -- end retention time in minutes, if known\n"
+           "totalIonCurrent REAL, -- total ion current of spectrum\n";
     cols += SmallMolMetadata::sql_col_decls();
     cols += "fileID INTEGER, -- index into SpectrumSourceFiles table for source file information\n"
            "SpecIDinFile VARCHAR(256), -- original spectrum label, id, or description in source file\n"
@@ -516,6 +517,8 @@ void BlibMaker::updateTables(){
     newColumns.push_back(make_pair("ionMobility", "REAL"));
     newColumns.push_back(make_pair("ionMobilityHighEnergyOffset", "REAL"));
     newColumns.push_back(make_pair("ionMobilityType", "TINYINT"));
+
+    newColumns.push_back(make_pair("totalIonCurrent", "REAL"));
     
     vector <string> smallMolCols = SmallMolMetadata::sql_col_names();
     vector <string> smallMolTypes = SmallMolMetadata::sql_col_types();
@@ -564,6 +567,61 @@ int BlibMaker::getUnknownFileId(){
         return -1;
     } // else
     return sqlite3_column_int(pStmt, 0);
+}
+
+namespace {
+    struct SchemaColumnInfo
+    {
+        const char* currentName;
+        vector<const char*> previousNames;
+        const char* defaultValue;
+    };
+
+    vector<SchemaColumnInfo> schemaColumnInfo =
+    {
+        { "SpecIDinFile", {}, "NULL" },
+        { "retentionTime", {}, "0" },
+        { "ionMobility", {"driftTimeMsec", "ionMobilityValue"}, "0" },
+        { "ionMobilityType", {}, "1" }, // drift time is default
+        { "collisionalCrossSectionSqA", {}, "0" },
+        { "ionMobilityHighEnergyOffset", {"driftTimeHighEnergyOffsetMsec", "ionMobilityHighEnergyDriftTimeOffsetMsec"}, "0" },
+        { "startTime", {}, "NULL" },
+        { "endTime", {}, "NULL" },
+        { "totalIonCurrent", {}, "NULL" },
+        { "moleculeName", {}, "NULL" },
+        { "chemicalFormula", {}, "NULL" },
+        { "inchiKey", {}, "NULL" },
+        { "otherKeys", {}, "NULL" },
+        { "precursorAdduct", {}, "NULL" }
+    };
+}
+
+/// create a temporary view of the attached file with an up-to-date schema, substituting previous column names or default values where necessary
+void BlibMaker::createUpdatedRefSpectraView(const char* sourceDbName) {
+
+    string viewSql = "CREATE TEMP VIEW RefSpectraTransfer AS SELECT id, peptideSeq, precursorMZ, precursorCharge, peptideModSeq, "
+                     "prevAA, nextAA, copies, numPeaks, fileID, score, scoreType";
+    for (const auto& columnInfo : schemaColumnInfo)
+    {
+        if (tableColumnExists(sourceDbName, "RefSpectra", columnInfo.currentName))
+            viewSql += string(", ") + columnInfo.currentName;
+        else
+        {
+            string substituteValue;
+            for (const auto& previousName : columnInfo.previousNames)
+                if (tableColumnExists(sourceDbName, "RefSpectra", previousName))
+                {
+                    substituteValue = previousName; // forward previous column name to current one
+                    break;
+                }
+            if (substituteValue.empty())
+                substituteValue = columnInfo.defaultValue; // use default value
+
+            viewSql += ", " + substituteValue + " AS " + columnInfo.currentName;
+        }
+    }
+    viewSql += string(" FROM ") + sourceDbName + ".RefSpectra";
+    sql_stmt(viewSql.c_str());
 }
 
 /**
@@ -734,117 +792,19 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
 {
     int newFileID = getNewFileId(schemaTmp, spectraTmpID);
 
-    // find out if the source library has the same columns as the new
-    string alternate_cols = "'0', '0', '0', '0', '0', '0', '0'";
-    if (tableVersion > 0) {
-        if (tableVersion == MIN_VERSION_IMS)
-            alternate_cols = "ionMobilityValue, ionMobilityType, '0'"; // Handle missing ion mobility info
-        else if (tableVersion == MIN_VERSION_IMS_HEOFF)
-            alternate_cols = "ionMobilityValue, ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec";
-        else if (tableVersion == MIN_VERSION_CCS || tableVersion == MIN_VERSION_SMALL_MOL)
-        {
-            alternate_cols = "driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec, '1'"; // DriftTime is only ionmobility type from this era
-            if (tableVersion == MIN_VERSION_SMALL_MOL)
-            {
-                alternate_cols += SmallMolMetadata::sql_col_names_csv();
-            }
-        }
-        else if (tableVersion >= MIN_VERSION_IMS_UNITS)
-        {
-            alternate_cols = "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType";
-            alternate_cols += SmallMolMetadata::sql_col_names_csv();
-            if (tableVersion >= MIN_VERSION_RT_BOUNDS) {
-                alternate_cols += ", startTime, endTime";
-            }
-        }
-        else
-            alternate_cols = "'0', '0', '0', '0', '', '', '', '', ''"; // Handle missing ion mobility and small molecule info
-        alternate_cols += ", retentionTime, specIDinFile, score, scoreType";
-    }
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
+        "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
+        "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
+        "moleculeName, chemicalFormula, inchiKey, otherKeys, precursorAdduct, "
+        "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile, score, scoreType) "
 
-    if (tableVersion >= MIN_VERSION_IMS && tableVersion <= MIN_VERSION_IMS_HEOFF) {
-        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
-                "SELECT peptideSeq, precursorMZ, precursorCharge, "
-                "peptideModSeq, prevAA, nextAA, numPeaks, %s "
-                "FROM %s.RefSpectra WHERE id = %d",
-                alternate_cols.c_str(), schemaTmp, spectraTmpID);
-        sqlite3_stmt* stmt;
-        sqlite3_prepare(db, zSql, -1, &stmt, 0);
-        int rc;
-
-        while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-            string peptideSeq(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
-            double precursorMz = sqlite3_column_double(stmt, 1);
-            int precursorCharge = sqlite3_column_int(stmt, 2);
-            string peptideModSeq(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
-            string prevAA(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)));
-            string nextAA(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5)));
-            int numPeaks = sqlite3_column_int(stmt, 6);
-            double ionMobilityValue = sqlite3_column_double(stmt, 7);
-            int ionMobilityType = sqlite3_column_int(stmt, 8);
-            double driftTimeHighEnergyOffsetMsec = sqlite3_column_double(stmt, 9);
-            double retentionTime = sqlite3_column_double(stmt, 10);
-            string specIDinFile(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 11)));
-            double score = sqlite3_column_double(stmt, 12);
-            int scoreType = sqlite3_column_int(stmt, 13);
-            boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
-                    "INSERT INTO RefSpectra(peptideSeq, precursorMz, precursorCharge, "
-                    "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
-                    "ionMobility, collisionalCrossSectionSqA,  ionMobilityHighEnergyOffset, ionMobilityType, "
-                    "retentionTime, specIDinFile, score, scoreType) "
-                    "VALUES('%s', %f, %d, '%s', '%s', '%s', %d, %d, %d, %f, %f, %f, %d, %f, '%s', %f, %d)",
-                    peptideSeq.c_str(), precursorMz, precursorCharge, peptideModSeq.c_str(),
-                    prevAA.c_str(), nextAA.c_str(), copies, numPeaks, newFileID,
-                    ionMobilityType == 1 ? ionMobilityValue : 0, // DT if known
-                    ionMobilityType == 2 ? ionMobilityValue : 0, // CCS if known
-                    driftTimeHighEnergyOffsetMsec, 
-                    ionMobilityType == 1 ? IONMOBILITY_DRIFTTIME_MSEC : IONMOBILITY_NONE, // ion mobility type if known
-                    retentionTime, specIDinFile.c_str(),
-                    score, scoreType);
-            sql_stmt(zSql);
-        }
-        sqlite3_finalize(stmt);
-    }
-    else if (tableVersion == MIN_VERSION_CCS) {
-        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
-            "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
-            "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
-            "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
-            "retentionTime, specIDinFile, score, scoreType) "
-            "SELECT peptideSeq, precursorMZ, precursorCharge, "
-            "peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, %s "
-            "FROM %s.RefSpectra WHERE id = %d",
-            copies, newFileID, alternate_cols.c_str(), schemaTmp, spectraTmpID);
-        sql_stmt(zSql);
-    }
-    else if (tableVersion >= MIN_VERSION_RT_BOUNDS)
-    {
-        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
-            "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
-            "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
-            "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType%s, "
-            "startTime, endTime, retentionTime, specIDinFile, score, scoreType) "
-            "SELECT peptideSeq, precursorMZ, precursorCharge, "
-            "peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, %s "
-            "FROM %s.RefSpectra WHERE id = %d",
-            SmallMolMetadata::sql_col_names_csv().c_str(),
-            copies, newFileID, alternate_cols.c_str(), schemaTmp, spectraTmpID);
-        sql_stmt(zSql);
-    }
-    else
-    {
-        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
-            "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
-            "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
-            "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType%s, "
-            "retentionTime, specIDinFile, score, scoreType) "
-            "SELECT peptideSeq, precursorMZ, precursorCharge, "
-            "peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, %s "
-            "FROM %s.RefSpectra WHERE id = %d",
-            SmallMolMetadata::sql_col_names_csv().c_str(),
-            copies, newFileID, alternate_cols.c_str(), schemaTmp, spectraTmpID);
-        sql_stmt(zSql);
-    }
+        "SELECT peptideSeq, precursorMZ, precursorCharge, peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, "
+        "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
+        "moleculeName, chemicalFormula, inchiKey, otherKeys, precursorAdduct, "
+        "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile, score, scoreType "
+        "FROM RefSpectraTransfer WHERE id = %d",
+        copies, newFileID, spectraTmpID);
+    sql_stmt(zSql);
 
     int spectraID = (int)sqlite3_last_insert_rowid(getDb());
 
@@ -857,6 +817,84 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
         transferRefSpectraProteins(schemaTmp, spectraID, spectraTmpID);
     }
     return spectraID;
+}
+
+int BlibMaker::transferSpectra(const char* schemaTmp,
+                               vector<pair<int, int>>& bestSpectraIdAndCount,
+                               int tableVersion)
+{
+    // create temp table for copies column
+    sql_stmt("CREATE TEMP TABLE TempSpectrumCopies (Id INTEGER PRIMARY KEY, copies INT)");
+    const char* insertSpectrumCopy = "INSERT INTO TempSpectrumCopies VALUES (?,?)";
+    sqlite3_stmt* insertSpectrumCopyStmt;
+    sqlite3_prepare(getDb(), insertSpectrumCopy, -1, &insertSpectrumCopyStmt, NULL);
+    for (const auto& idCopiesPair : bestSpectraIdAndCount)
+    {
+        sqlite3_bind_int(insertSpectrumCopyStmt, 1, idCopiesPair.first);
+        sqlite3_bind_int(insertSpectrumCopyStmt, 2, idCopiesPair.second);
+        if (sqlite3_step(insertSpectrumCopyStmt) != SQLITE_DONE)
+            throw BlibException(false, "Error inserting row into TempSpectrumCopies: %s", sqlite3_errmsg(getDb()));
+        else if (sqlite3_reset(insertSpectrumCopyStmt) != SQLITE_OK)
+            throw BlibException(false, "Error resetting insert TempSpectrumCopies: %s", sqlite3_errmsg(getDb()));
+    }
+    sqlite3_finalize(insertSpectrumCopyStmt);
+
+    // transfer spectra from source db to filtered db
+
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
+        "INSERT INTO RefSpectra(id, peptideSeq, precursorMZ, precursorCharge, "
+        "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
+        "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
+        "moleculeName, chemicalFormula, inchiKey, otherKeys, precursorAdduct, "
+        "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile, score, scoreType) "
+
+        "SELECT ref.id, peptideSeq, precursorMZ, precursorCharge, "
+        "peptideModSeq, prevAA, nextAA, tmp.copies, numPeaks, fileID, "
+        "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
+        "moleculeName, chemicalFormula, inchiKey, otherKeys, precursorAdduct, "
+        "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile, score, scoreType "
+        "FROM RefSpectraTransfer ref "
+        "JOIN TempSpectrumCopies tmp ON ref.id=tmp.id "
+        "GROUP BY ref.id");
+    sql_stmt(zSql);
+
+    // transfer peaks
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
+        "INSERT INTO RefSpectraPeaks(RefSpectraID,peakMZ,peakIntensity) "
+        "SELECT RefSpectraID, peakMZ, peakIntensity "
+        "FROM %s.RefSpectraPeaks peaks "
+        "WHERE peaks.RefSpectraID IN (SELECT id FROM RefSpectra)", schemaTmp);
+    sql_stmt(zSql);
+
+    // transfer modifications
+    boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
+        "INSERT INTO Modifications (RefSpectraID, position, mass) "
+        "SELECT RefSpectraID, position, mass "
+        "FROM %s.Modifications mods "
+        "WHERE mods.RefSpectraID IN (SELECT id FROM RefSpectra)", schemaTmp);
+    sql_stmt(zSql);
+
+    if (tableVersion >= MIN_VERSION_PEAK_ANNOT) {
+        // transfer peak annotations
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
+            "INSERT INTO RefSpectraPeakAnnotations (RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, mzTheoretical, mzObserved) "
+            "SELECT RefSpectraID, peakIndex, name, formula, ann.inchiKey, ann.otherKeys, charge, adduct, comment, mzTheoretical, mzObserved "
+            "FROM %s.RefSpectraPeakAnnotations ann "
+            "WHERE ann.RefSpectraID IN (SELECT id FROM RefSpectra)", schemaTmp);
+        sql_stmt(zSql);
+    }
+
+    if (tableVersion >= MIN_VERSION_PROTEINS) {
+        // transfer proteins
+        boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
+            "INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) "
+            "SELECT RefSpectraID, ProteinId "
+            "FROM %s.RefSpectraProteins pro "
+            "WHERE pro.RefSpectraID IN (SELECT id FROM RefSpectra)", schemaTmp);
+        sql_stmt(zSql);
+    }
+
+    return 0;
 }
 
 void BlibMaker::transferModifications(const char* schemaTmp, 
@@ -892,36 +930,12 @@ void BlibMaker::transferPeaks(const char* schemaTmp,
                               int spectraID, 
                               int spectraTmpID)
 {
-    typedef unsigned char Byte;
-
     boost::log::aux::snprintf(zSql, ZSQLBUFLEN,
-            "SELECT RefSpectraID, peakMZ, peakIntensity "
+            "INSERT INTO RefSpectraPeaks(RefSpectraID,peakMZ,peakIntensity) "
+            "SELECT %d, peakMZ, peakIntensity "
             "FROM %s.RefSpectraPeaks "
-            "WHERE RefSpectraID=%d", schemaTmp, spectraTmpID);
-    smart_stmt pStmt;
-
-    int rc = sqlite3_prepare(db, zSql, -1, &pStmt, 0);
-
-    check_step(rc, pStmt, zSql, "Failed getting peaks.");
-
-    int numBytes1=sqlite3_column_bytes(pStmt,1);
-    Byte* comprM = (Byte*)sqlite3_column_blob(pStmt,1);
-    int numBytes2=sqlite3_column_bytes(pStmt,2);
-    Byte* comprI = (Byte*)sqlite3_column_blob(pStmt,2);
-
-    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "INSERT INTO RefSpectraPeaks VALUES(%d,?,?)", spectraID);
-    smart_stmt piStmt;
-    rc = sqlite3_prepare(db, zSql, -1, &piStmt, 0);
-
-    check_rc(rc, zSql, "Failed importing peaks.");
-
-    sqlite3_bind_blob(piStmt, 1, comprM, numBytes1, SQLITE_STATIC);
-    sqlite3_bind_blob(piStmt, 2, comprI, numBytes2, SQLITE_STATIC);
-
-    rc = sqlite3_step(piStmt);
-
-    if (rc != SQLITE_DONE)
-        fail_sql(rc, zSql, NULL, "Failed importing peaks.");
+            "WHERE RefSpectraID=%d", spectraID, schemaTmp, spectraTmpID);
+    sql_stmt(zSql);
 }
 
 void BlibMaker::transferPeakAnnotations(const char* schemaTmp,

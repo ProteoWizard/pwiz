@@ -32,11 +32,11 @@
             this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.comboColorType = new System.Windows.Forms.ComboBox();
             this.dataGridViewColors = new pwiz.Common.Controls.CommonDataGridView();
-            this.colorCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colorPickerDlg = new System.Windows.Forms.ColorDialog();
             this.rgbCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.hexCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colBtn = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.colorPickerDlg = new System.Windows.Forms.ColorDialog();
+            this.colorCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewColors)).BeginInit();
             this.SuspendLayout();
@@ -68,13 +68,12 @@
             this.dataGridViewColors.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
             this.dataGridViewColors.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewColors.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colorCol,
             this.rgbCol,
             this.hexCol,
-            this.colBtn});
+            this.colBtn,
+            this.colorCol});
             this.dataGridViewColors.DataSource = this.bindingSource1;
             this.dataGridViewColors.Location = new System.Drawing.Point(0, 0);
-            this.dataGridViewColors.MaximumColumnCount = null;
             this.dataGridViewColors.Name = "dataGridViewColors";
             this.dataGridViewColors.Size = new System.Drawing.Size(318, 200);
             this.dataGridViewColors.TabIndex = 4;
@@ -83,16 +82,6 @@
             this.dataGridViewColors.CurrentCellDirtyStateChanged += new System.EventHandler(this.dataGridViewColors_CurrentCellDirtyStateChanged);
             this.dataGridViewColors.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewColors_DataError);
             this.dataGridViewColors.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridViewColors_KeyDown);
-            // 
-            // colorCol
-            // 
-            this.colorCol.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.colorCol.HeaderText = "";
-            this.colorCol.Name = "colorCol";
-            this.colorCol.ReadOnly = true;
-            this.colorCol.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.colorCol.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.colorCol.Width = 40;
             // 
             // rgbCol
             // 
@@ -122,6 +111,16 @@
             this.colBtn.Text = "...";
             this.colBtn.Width = 20;
             // 
+            // colorCol
+            // 
+            this.colorCol.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.colorCol.HeaderText = "";
+            this.colorCol.Name = "colorCol";
+            this.colorCol.ReadOnly = true;
+            this.colorCol.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.colorCol.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.colorCol.Width = 40;
+            // 
             // ColorGrid
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -142,9 +141,9 @@
         private System.Windows.Forms.ComboBox comboColorType;
         private Common.Controls.CommonDataGridView dataGridViewColors;
         private System.Windows.Forms.ColorDialog colorPickerDlg;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colorCol;
         private System.Windows.Forms.DataGridViewTextBoxColumn rgbCol;
         private System.Windows.Forms.DataGridViewTextBoxColumn hexCol;
         private System.Windows.Forms.DataGridViewButtonColumn colBtn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colorCol;
     }
 }

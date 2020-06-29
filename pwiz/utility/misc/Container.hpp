@@ -35,6 +35,7 @@
 #include <numeric>
 #include <utility>
 #include <boost/foreach.hpp>
+#include <boost/iterator.hpp>
 
 using std::vector;
 using std::list;
@@ -75,6 +76,21 @@ using std::adjacent_find;
 using std::equal_range;
 using std::lower_bound;
 using std::upper_bound;
+
+
+namespace pwiz {
+namespace util {
+
+/// swaps a container with an empty one to release its internal memory
+template<typename T> void deallocate(T& container)
+{
+    container.clear();
+    T tmp;
+    std::swap(tmp, container);
+}
+
+} // namespace util
+} // namespace pwiz
 
 
 #ifndef PWIZ_CONFIG_NO_CONTAINER_OUTPUT_OPERATORS

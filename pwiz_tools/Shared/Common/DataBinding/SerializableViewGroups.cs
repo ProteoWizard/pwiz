@@ -23,6 +23,7 @@ namespace pwiz.Common.DataBinding
             {
                 return;
             }
+            // ReSharper disable once PossibleNullReferenceException
             if (!viewSpecList.ViewSpecs.Any())
             {
                 _viewSpecLists.Remove(viewGroup.Name);

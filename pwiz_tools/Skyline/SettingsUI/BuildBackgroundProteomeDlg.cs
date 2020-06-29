@@ -412,10 +412,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 finally
                 {
-                    if (null != proteomeDb)
-                    {
-                        proteomeDb.Dispose();
-                    }
+                    proteomeDb?.Dispose();
                 }
                 textPath.ForeColor = Color.Black;
             }
@@ -439,6 +436,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return textPath.Text; }
             set { textPath.Text = value; }
+        }
+
+        public void SelToEndBackgroundProteomePath()
+        {
+            textPath.Select();
+            textPath.SelectionStart = textPath.TextLength;
         }
 
         #endregion

@@ -56,6 +56,11 @@ namespace pwiz.Skyline.EditUI
                 {
                     continue;
                 }
+
+                if (annotationDef.Expression != null)
+                {
+                    continue;
+                }
                 AddAnnotationToGridView(annotationDef, annotations);
             }
             if (dataGridView1.Rows.Count == 0)

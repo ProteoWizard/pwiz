@@ -66,6 +66,7 @@ class WiffFile2Impl : public WiffFile
     virtual const vector<string>& getSampleNames() const;
 
     virtual InstrumentModel getInstrumentModel() const;
+    virtual std::string getInstrumentSerialNumber() const;
     virtual IonSourceType getIonSourceType() const;
     virtual blt::local_date_time getSampleAcquisitionTime(int sample, bool adjustToHostTime) const;
 
@@ -176,7 +177,8 @@ struct Spectrum2Impl : public Spectrum
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const;
 
     virtual double getStartTime() const;
-    
+
+    virtual bool getDataIsContinuous() const { return true; }
     virtual size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints = false) const;
     virtual void getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, bool ignoreZeroIntensityPoints) const;
 
@@ -363,6 +365,26 @@ InstrumentModel WiffFile2Impl::getInstrumentModel() const
         if (modelName->Contains("365"))             return API365; // predicted
         if (modelName->Contains("X500QTOF"))        return X500QTOF;
         throw gcnew Exception("unknown instrument type: " + msSample->InstrumentName);
+    }
+    CATCH_AND_FORWARD
+}
+
+std::string WiffFile2Impl::getInstrumentSerialNumber() const
+{
+    try
+    {
+        using namespace System::Reflection;
+
+        // HACK: the current version of SciexToolKit has instrument serial number hidden in internal types
+        auto sciexToolkit = IExperiment::typeid->Assembly;
+        auto sampleInformationType = sciexToolkit->GetType("Clearcore2.DataReader.SampleInformation");
+        auto sampleDataSampleType = sciexToolkit->GetType("Clearcore2.Data.DataAccess.SampleData.Sample");
+        auto sampleDataSampleInfoType = sciexToolkit->GetType("Clearcore2.Data.DataAccess.SampleData.SampleInfo");
+        auto sampleDataSample = sampleInformationType->GetProperty("Sample")->GetMethod->Invoke(msSample, nullptr);
+        auto sampleDataSampleInfo = sampleDataSampleType->GetProperty("Details")->GetMethod->Invoke(sampleDataSample, nullptr);
+        auto serialNumber = (String^) sampleDataSampleInfoType->GetProperty("InstrumentSerialNumber")->GetMethod->Invoke(sampleDataSampleInfo, nullptr);
+
+        return ToStdString(serialNumber);
     }
     CATCH_AND_FORWARD
 }

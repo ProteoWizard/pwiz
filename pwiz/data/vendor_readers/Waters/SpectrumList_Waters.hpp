@@ -69,6 +69,7 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
     virtual pair<int, int> sonarMzToDriftBinRange(int function, float precursorMz, float precursorTolerance) const;
 
     virtual bool hasIonMobility() const;
+    virtual bool hasCombinedIonMobility() const;
     virtual bool canConvertIonMobilityAndCCS() const;
     virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const;
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
@@ -94,6 +95,8 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
     mutable vector<IndexEntry> index_;
     mutable map<string, size_t> idToIndexMap_;
     mutable boost::container::flat_map<double, vector<pair<int, int> > > scanTimeToFunctionAndBlockMap_;
+
+    void getCombinedSpectrumData(int function, int block, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime, bool doCentroid) const;
 
     void initializeCoefficients() const;
     double calibrate(const double &mz) const;

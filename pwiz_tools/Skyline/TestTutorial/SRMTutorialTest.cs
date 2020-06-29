@@ -42,13 +42,14 @@ namespace pwiz.SkylineTestTutorial
     public class SrmTutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
-        public void TestSrmTutorial()
+        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
+        public void TestSrmTutorialLegacy()
         {
             //Set true to look at tutorial screenshots
             //IsPauseForScreenShots = true;
             TestFilesZipPaths = new[]
             {
-                @"http://targetedproteomics.ethz.ch/tutorials2014/USB.zip",
+                @"https://skyline.gs.washington.edu/tutorials/SrmTutorialTest.zip",
                 @"TestTutorial\SRMViews.zip"
             };
             RunFunctionalTest();

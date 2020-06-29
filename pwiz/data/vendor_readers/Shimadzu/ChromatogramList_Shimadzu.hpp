@@ -26,6 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
 
@@ -49,13 +50,15 @@ public:
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
+    virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel) const;
     
 #ifdef PWIZ_READER_SHIMADZU
-    ChromatogramList_Shimadzu(ShimadzuReaderPtr reader);
+    ChromatogramList_Shimadzu(ShimadzuReaderPtr reader, const Reader::Config& config);
 
     private:
 
     ShimadzuReaderPtr rawfile_;
+    Reader::Config config_;
 
     mutable util::once_flag_proxy indexInitialized_;
 

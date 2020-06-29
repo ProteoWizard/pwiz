@@ -19,7 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
@@ -73,6 +75,8 @@ namespace pwiz.SkylineTest
         private void TestAdductOperators()
         {
             // Test some underlying formula handling for fanciful user-supplied values
+            AssertEx.AreEqual(Adduct.SINGLY_PROTONATED, Adduct.FromStringAssumeProtonated("(M+H)+") );
+            AssertEx.IsTrue(Adduct.FromStringAssumeProtonatedNonProteomic("[M-H2O+H]+").SameEffect(Adduct.FromStringAssumeProtonatedNonProteomic("(M+H)+[-H2O]")));
             Assert.IsTrue(Molecule.AreEquivalentFormulas("C10H30Si5O5H-CH4", "C9H27O5Si5"));
             Assert.AreEqual("C7H27O5Si4", BioMassCalc.MONOISOTOPIC.FindFormulaIntersection(new[] { "C8H30Si5O5H-CH4", "C9H27O5Si4", "C9H27O5Si5Na" }));
             Assert.AreEqual("C7H27O5Si4", BioMassCalc.MONOISOTOPIC.FindFormulaIntersectionUnlabeled(new[] { "C7C'H30Si5O5H-CH4", "C9H27O5Si4", "C9H25H'2O5Si5Na" }));
@@ -488,6 +492,42 @@ namespace pwiz.SkylineTest
                     }
                 }
             }
+        }
+
+        [TestMethod]
+        public void ChargeStateTextTest()
+        {
+            int min = Transition.MIN_PRODUCT_CHARGE, max = Transition.MAX_PRODUCT_CHARGE;
+            for (int i = min; i < max; i++)
+            {
+                ValidateChargeText(i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(i)));
+                ValidateChargeText(-i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(-i)));
+                ValidateChargeText(i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(i), CultureInfo.InvariantCulture));
+                ValidateChargeText(-i, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(-i), CultureInfo.InvariantCulture));
+                ValidateChargeText(i, GetLongFormChargeIndicator(i));
+                ValidateChargeText(-i, GetLongFormChargeIndicator(-i));
+            }
+        }
+
+        private static void ValidateChargeText(int charge, string chargeText)
+        {
+            const string pepText = "PEPTIDER";
+            int min = Transition.MIN_PRODUCT_CHARGE, max = Transition.MAX_PRODUCT_CHARGE;
+            Assert.AreEqual(pepText, Transition.StripChargeIndicators(pepText + chargeText, min, max),
+                "Unable to round trip charge text " + chargeText);
+            Assert.AreEqual(Adduct.FromChargeProtonated(charge), Transition.GetChargeFromIndicator(chargeText, min, max));
+
+            // If the charge indicator contains a space, make sure it is not necessary to be interpreted correctly
+            if (chargeText.Contains(' '))
+                ValidateChargeText(charge, chargeText.Replace(" ", string.Empty));
+        }
+
+        private string GetLongFormChargeIndicator(int i)
+        {
+            char c = i > 0 ? '+' : '-';
+            var sb = new StringBuilder();
+            sb.Append(c, Math.Abs(i));
+            return sb.ToString();
         }
     }
 }

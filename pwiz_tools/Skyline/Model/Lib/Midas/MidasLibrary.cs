@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
         private const int SCHEMA_VERSION_CURRENT = 1;
 
         private const double PRECURSOR_TOLERANCE_CHROM = 0.7;
-        private const double PRECURSOR_TOLERANCE = 0.001;
+        private const double PRECURSOR_TOLERANCE = 0.005;
         private const double RT_TOLERANCE = 0.001;
 
         private int SchemaVersion { get; set; }
@@ -216,9 +216,10 @@ namespace pwiz.Skyline.Model.Lib.Midas
                     yield break;
 
                 var spectrum = msd.GetSpectrum(i);
-                if (!spectrum.Precursors.Any())
+                var ms1Precursors = spectrum.GetPrecursorsByMsLevel(1);
+                if (!ms1Precursors.Any())
                     continue;
-                var precursor = spectrum.Precursors.First();
+                var precursor = ms1Precursors.First();
                 yield return new DbSpectrum(new DbResultsFile(msd.FilePath), precursor.PrecursorMz.GetValueOrDefault(),
                     null, null, null, spectrum.RetentionTime.GetValueOrDefault(), spectrum.Mzs, spectrum.Intensities);
             }
@@ -404,7 +405,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
         {
-            libInfo = Contains(key) ? new BiblioSpecSpectrumHeaderInfo(Name, 1) : null;
+            libInfo = Contains(key) ? new BiblioSpecSpectrumHeaderInfo(Name, 1, null, null) : null;
             return libInfo != null;
         }
 
@@ -488,19 +489,25 @@ namespace pwiz.Skyline.Model.Lib.Midas
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             ionMobilities = null;
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities)
         {
             ionMobilities = null;
             return false;
         }
 
-        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
+        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
+        {
+            ionMobilities = null;
+            return false;
+        }
+
+        public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             if (redundancy == LibraryRedundancy.best)
                 yield break;
@@ -508,14 +515,14 @@ namespace pwiz.Skyline.Model.Lib.Midas
             if (!key.IsPrecursorKey)
             {
                 foreach (var spectrum in GetSpectraByPeptide(null, key))
-                    yield return new SpectrumInfo(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, false, spectrum);
+                    yield return new SpectrumInfoLibrary(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, false, spectrum);
                 yield break;
             }
 
             var keyRt = key.RetentionTime;
             foreach (var spectrum in GetSpectraByPrecursor(null, key.PrecursorMz.GetValueOrDefault()))
                 if (!keyRt.HasValue || Equals(keyRt.Value, spectrum.RetentionTime))
-                    yield return new SpectrumInfo(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, false, spectrum);
+                    yield return new SpectrumInfoLibrary(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, false, spectrum);
         }
 
         public override int? FileCount { get { return IsLoaded ? _spectra.Keys.Count : 0; } }

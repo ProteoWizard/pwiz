@@ -193,13 +193,13 @@
     <value>无选择的行。</value>
   </data>
   <data name="GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_peptide__0_" xml:space="preserve">
-    <value>您是否确定想要删除肽{0}？</value>
+    <value>您是否确定想要删除肽段{0}？</value>
   </data>
   <data name="GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_protein__0_" xml:space="preserve">
     <value>您是否确定想要删除蛋白质{0}？</value>
   </data>
   <data name="GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_these__0__peptides" xml:space="preserve">
-    <value>您是否确定想要删除这些{0}肽？</value>
+    <value>您是否确定想要删除这些{0}肽段？</value>
     <comment>Example: Are you sure you want to delete these 7 peptides?</comment>
   </data>
   <data name="GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_these__0__proteins" xml:space="preserve">
@@ -249,7 +249,7 @@
     <value>删除阈值以下</value>
   </data>
   <data name="FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs" xml:space="preserve">
-    <value>删除阈值以下的肽</value>
+    <value>删除截止值以下的肽段</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_None" xml:space="preserve">
     <value>无</value>
@@ -267,7 +267,7 @@
     <value>蛋白质编码基因</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Molecule_Name" xml:space="preserve">
-    <value>肽分子名称</value>
+    <value>肽段分子名称</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Below_left_cutoff" xml:space="preserve">
     <value>在左阈值以下</value>
@@ -300,7 +300,7 @@
     <value>分子式</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name" xml:space="preserve">
-    <value>分子列名称</value>
+    <value>分子列表名称</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size" xml:space="preserve">
     <value>大小</value>

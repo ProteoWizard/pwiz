@@ -21,7 +21,7 @@
 
 #include "ProxlXmlReader.h"
 #include "AminoAcidMasses.h"
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace BiblioSpec {
 
@@ -31,6 +31,16 @@ ProxlXmlReader::ProxlXmlReader(BlibBuilder& maker, const char* filename, const P
     : BuildParser(maker, filename, parentProgress), curProxlPsm_(NULL) {
     setFileName(filename);
     AminoAcidMasses::initializeMass(aaMasses_, 1);
+
+    dirs_.push_back("../");   // look in parent dir in addition to cwd
+    dirs_.push_back("../../");  // look in grandparent dir in addition to cwd
+    extensions_.push_back(".mz5"); // look for spec in mz5 files
+    extensions_.push_back(".mzML"); // look for spec in mzML files
+    extensions_.push_back(".mzXML"); // look for spec in mzXML files
+    extensions_.push_back(".ms2");
+    extensions_.push_back(".cms2");
+    extensions_.push_back(".bms2");
+    extensions_.push_back(".pms2");
 }
 
 ProxlXmlReader::~ProxlXmlReader() {
@@ -57,11 +67,19 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
         }
         break;
     case REPORTED_PEPTIDES_STATE:
-        if (isIElement("reported_peptide", name) && strcmp(getRequiredAttrValue("type", attr), "looplink") != 0) {
+        if (isIElement("reported_peptide", name)) {
             state_.push_back(REPORTED_PEPTIDE_STATE);
 
-            curPeptides_.clear();
-            curPsms_.clear();
+            proxlMatches_.push_back(ProxlMatches());
+            string type = getRequiredAttrValue("type", attr);
+            if (type == "unlinked")
+                proxlMatches_.back().linkType_ = LinkType::Unlinked;
+            else if (type == "crosslink")
+                proxlMatches_.back().linkType_ = LinkType::Crosslink;
+            else if (type == "looplink")
+                proxlMatches_.back().linkType_ = LinkType::Looplink;
+            else
+                proxlMatches_.back().linkType_ = LinkType::Other;
         }
         break;
     case REPORTED_PEPTIDE_STATE:
@@ -75,7 +93,7 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
         if (isIElement("peptide", name)) {
             state_.push_back(PEPTIDE_STATE);
 
-            curPeptides_.push_back(ProxlPeptide(getRequiredAttrValue("sequence", attr)));
+            proxlMatches_.back().peptides_.push_back(ProxlPeptide(getRequiredAttrValue("sequence", attr)));
         }
         break;
     case PEPTIDE_STATE:
@@ -88,13 +106,13 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
     case MODIFICATIONS_STATE:
         if (isIElement("modification", name)) {
             // 1-based positions
-            curPeptides_.back().mods_.push_back(
+            proxlMatches_.back().peptides_.back().mods_.push_back(
                 SeqMod(getIntRequiredAttrValue("position", attr), getDoubleRequiredAttrValue("mass", attr)));
         }
         break;
     case LINKED_POSITIONS_STATE:
         if (isIElement("linked_position", name)) {
-            curPeptides_.back().links_.push_back(getIntRequiredAttrValue("position", attr));
+            proxlMatches_.back().peptides_.back().links_.push_back(getIntRequiredAttrValue("position", attr));
         }
         break;
     case PSMS_STATE:
@@ -103,9 +121,9 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
 
             curProxlPsm_ = new ProxlPsm();
             string filename(getRequiredAttrValue("scan_file_name", attr));
-            map< string, vector<ProxlPsm*> >::iterator i = curPsms_.find(filename);
-            if (i == curPsms_.end()) {
-                curPsms_[filename] = vector<ProxlPsm*>(1, curProxlPsm_);
+            map< string, vector<ProxlPsm*> >::iterator i = proxlMatches_.back().psms_.find(filename);
+            if (i == proxlMatches_.back().psms_.end()) {
+                proxlMatches_.back().psms_[filename] = vector<ProxlPsm*>(1, curProxlPsm_);
             } else {
                 i->second.push_back(curProxlPsm_);
             }
@@ -156,11 +174,11 @@ void ProxlXmlReader::endElement(const XML_Char* name) {
         if (isIElement("proxl_input", name)) {
             state_.pop_back();
 
+            calcPsms();
             for (map< string, vector<PSM*> >::iterator i = fileToPsms_.begin(); i != fileToPsms_.end(); i++) {
                 psms_ = vector<PSM*>(i->second);
                 i->second.clear();
-                applyStaticMods();
-                setSpecFileName(i->first, true);
+                setSpecFileName(i->first, extensions_, dirs_);
                 buildTables(PERCOLATOR_QVALUE);
             }
         }
@@ -173,32 +191,6 @@ void ProxlXmlReader::endElement(const XML_Char* name) {
     case REPORTED_PEPTIDE_STATE:
         if (isIElement("reported_peptide", name)) {
             state_.pop_back();
-
-            for (map< string, vector<ProxlPsm*> >::iterator i = curPsms_.begin(); i != curPsms_.end(); i++) {
-                map< string, vector<PSM*> >::iterator lookup = fileToPsms_.find(i->first);
-                if (lookup == fileToPsms_.end()) {
-                    fileToPsms_[i->first] = vector<PSM*>();
-                    lookup = fileToPsms_.find(i->first);
-                }
-                for (vector<ProxlPsm*>::iterator j = i->second.begin(); j != i->second.end(); j++) {
-                    if ((*j)->score <= getScoreThreshold(SQT)) {
-                        for (vector<ProxlPeptide>::iterator k = curPeptides_.begin(); k != curPeptides_.end(); k++) {
-                            PSM* psm = new PSM();
-                            *psm = **j;
-                            psm->unmodSeq = k->sequence_;
-                            psm->mods = k->mods_;
-                            if (k->links_.size() == 1 && curPeptides_.size() == 2) {
-                                const ProxlPeptide& other = (k == curPeptides_.begin())
-                                    ? curPeptides_[1]
-                                    : curPeptides_[0];
-                                psm->mods.push_back(SeqMod(k->links_[0], other.mass() + (*j)->linkerMass_));
-                            }
-                            lookup->second.push_back(psm);
-                        }
-                    }
-                    delete *j;
-                }
-            }
         }
         break;
     case PEPTIDES_STATE:
@@ -247,23 +239,108 @@ void ProxlXmlReader::endElement(const XML_Char* name) {
 void ProxlXmlReader::characters(const XML_Char *s, int len) {
 }
 
-double ProxlXmlReader::calcMass(const string& sequence) {
+double ProxlXmlReader::calcMass(const string& sequence, const vector<SeqMod>& mods) {
     double sum = 2*aaMasses_['h'] + aaMasses_['o'];
     for (string::const_iterator i = sequence.begin(); i != sequence.end(); i++)
         sum += aaMasses_[*i];
+    for (vector<SeqMod>::const_iterator i = mods.begin(); i != mods.end(); i++)
+        sum += i->deltaMass;
     return sum;
 }
 
-void ProxlXmlReader::applyStaticMods() {
-    for (vector<PSM*>::iterator i = psms_.begin(); i != psms_.end(); i++) {
-        const string& seq = (*i)->unmodSeq;
-        for (int j = 0; j < seq.length(); j++) {
-            map< char, vector<double> >::const_iterator lookup = staticMods_.find(seq[j]);
-            if (lookup == staticMods_.end())
-                continue;
-            for (vector<double>::const_iterator k = lookup->second.begin(); k != lookup->second.end(); k++) {
-                (*i)->mods.push_back(SeqMod(j + 1, *k));
+void ProxlXmlReader::calcPsms() {
+    boost::format modSeqCrosslinkFormat("%s-%s-[+%.4f@%d,%d]");
+    boost::format modSeqLooplinkFormat("%s-[+%.4f@%d-%d]");
+
+    for (auto& match : proxlMatches_) {
+        for (auto& peptide : match.peptides_)
+            applyStaticMods(peptide.sequence_, peptide.mods_);
+
+        for (auto& psmPair : match.psms_) {
+            map< string, vector<PSM*> >::iterator lookup = fileToPsms_.find(psmPair.first);
+            if (lookup == fileToPsms_.end()) {
+                fileToPsms_[psmPair.first] = vector<PSM*>();
+                lookup = fileToPsms_.find(psmPair.first);
             }
+            for (auto& proxlPsm : psmPair.second) {
+                if (proxlPsm->score <= getScoreThreshold(SQT)) {
+                    switch (match.linkType_)
+                    {
+                        case LinkType::Unlinked:
+                        {
+                            if (match.peptides_.size() != 1)
+                                throw runtime_error("[calcPsms] unexpected number of peptides in unlinked peptide: " + match.peptides_.size());
+
+                            auto& pepA = match.peptides_[0];
+
+                            PSM* psm = new PSM();
+                            *psm = *proxlPsm;
+                            psm->unmodSeq = pepA.sequence_;
+                            psm->mods = pepA.mods_;
+                            lookup->second.push_back(psm);
+                        }
+                        break;
+
+                        case LinkType::Crosslink:
+                        {
+                            if (match.peptides_.size() != 2)
+                                throw runtime_error("[calcPsms] unexpected number of peptides in crosslink: " + match.peptides_.size());
+
+                            auto& pepA = match.peptides_[0];
+                            auto& pepB = match.peptides_[1];
+                            if (pepA.links_.size() != 1 || pepB.links_.size() != 1)
+                                throw runtime_error("[calcPsms] unexpected number of links on crosslink: " + pepA.sequence_ + "/" + pepB.sequence_ + " " + lexical_cast<string>(pepA.links_.size()) + "/" + lexical_cast<string>(pepB.links_.size()));
+
+                            PSM* psm = new PSM();
+                            *psm = *proxlPsm;
+                            psm->unmodSeq = pepA.sequence_ + "-" + pepB.sequence_;
+                            string modifiedPepA = blibMaker_.generateModifiedSeq(pepA.sequence_.c_str(), pepA.mods_);
+                            string modifiedPepB = blibMaker_.generateModifiedSeq(pepB.sequence_.c_str(), pepB.mods_);
+                            psm->modifiedSeq = (modSeqCrosslinkFormat % modifiedPepA % modifiedPepB % proxlPsm->linkerMass_ % pepA.links_[0] % pepB.links_[0]).str();
+                            psm->mods = pepA.mods_;
+                            psm->mods.push_back(SeqMod(pepA.links_[0], pepB.mass() + proxlPsm->linkerMass_));
+                            lookup->second.push_back(psm);
+                        }
+                        break;
+
+                        case LinkType::Looplink:
+                        {
+                            if (match.peptides_.size() != 1)
+                                throw runtime_error("[calcPsms] unexpected number of peptides in looplink: " + match.peptides_.size());
+
+                            auto& pepA = match.peptides_[0];
+                            if (pepA.links_.size() != 2)
+                                throw runtime_error("[calcPsms] unexpected number of links on looplink: " + pepA.sequence_ + " " + lexical_cast<string>(pepA.links_.size()));
+
+                            PSM* psm = new PSM();
+                            *psm = *proxlPsm;
+                            psm->unmodSeq = pepA.sequence_;
+                            psm->modifiedSeq = blibMaker_.generateModifiedSeq(psm->unmodSeq.c_str(), pepA.mods_);
+                            psm->modifiedSeq = (modSeqLooplinkFormat % pepA.sequence_ % proxlPsm->linkerMass_ % pepA.links_[0] % pepA.links_[1]).str();
+                            psm->mods = pepA.mods_;
+                            psm->mods.push_back(SeqMod(pepA.links_[0], proxlPsm->linkerMass_));
+                            lookup->second.push_back(psm);
+                        }
+                        break;
+
+                        case LinkType::Other:
+                        default:
+                            break;
+                    }
+                }
+                delete proxlPsm;
+            }
+        }
+    }
+}
+
+void ProxlXmlReader::applyStaticMods(const string& sequence, vector<SeqMod>& mods) {
+    for (int i = 0; i < sequence.length(); i++) {
+        map< char, vector<double> >::const_iterator lookup = staticMods_.find(sequence[i]);
+        if (lookup == staticMods_.end())
+            continue;
+        for (vector<double>::const_iterator j = lookup->second.begin(); j != lookup->second.end(); j++) {
+            mods.push_back(SeqMod(i + 1, *j));
         }
     }
 }

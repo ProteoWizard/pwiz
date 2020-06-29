@@ -207,6 +207,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return MoleculeGroupRef.PROTOTYPE; }
         }
 
+        protected override Type SkylineDocNodeType { get { return typeof(Protein); } }
+
         [ProteomicDisplayName("ProteinLocator")]
         [InvariantDisplayName("MoleculeListLocator")]
         public string Locator { get { return GetLocator(); } }

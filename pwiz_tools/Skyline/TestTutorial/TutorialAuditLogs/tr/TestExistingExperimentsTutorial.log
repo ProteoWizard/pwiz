@@ -334,10 +334,14 @@ Extra Info: File names =
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"
 
-Undo Redo : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++ > V [y4] - 504,2664+ (rank 3) in replicate "silac_1_to_4"
-Summary   : Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++ > V [y4] - 504,2664+ (rank 3) in replicate "silac_1_to_4"
+Undo Redo : Changed quantitative on 4 transitions
+Summary   : Targets > YDL055C > K.ETFPILVEEK.Q [196, 205] changed
 All Info  :
-Removed peak from YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++ > V [y4] - 504,2664+ (rank 3) in replicate "silac_1_to_4"
+Changed quantitative on 4 transitions
+Targets > YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++ > V [y4] - 504,2664+ (rank 3) > Quantitative changed from True to False
+Targets > YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++ > E [y3] - 405,1980+ (rank 2) > Quantitative changed from True to False
+Targets > YDL055C > K.ETFPILVEEK.Q [196, 205] > 606,8337++ (heavy) > V [y4] - 512,2806+ (rank 3) > Quantitative changed from True to False
+Targets > YDL055C > K.ETFPILVEEK.Q [196, 205] > 606,8337++ (heavy) > E [y3] - 413,2122+ (rank 2) > Quantitative changed from True to False
 
 Undo Redo : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++
 Summary   : Changed peak bounds of YDL055C > K.ETFPILVEEK.Q [196, 205] > 602,8266++
@@ -513,31 +517,49 @@ All Info  :
 Transition Settings -- Instrument > Method match tolerance m/z changed to "0,065"
 Settings > Transition Settings -- Instrument > Method match tolerance m/z changed from "0,055" to "0,065"
 
-Undo Redo : Annotation : "Concentration" was added
-Summary   : Settings > Document Settings -- Annotations : "Concentration" was added
+Undo Redo : Transition Settings -- Integration > Integrate All changed to True
+Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
 All Info  :
-Annotation : "Concentration" was added
-Settings > Document Settings -- Annotations : "Concentration" was added
-Settings > Document Settings -- Annotations > "Concentration" > Applies to is "replicate"
-Settings > Document Settings -- Annotations > "Concentration" > Type is "Number"
+Transition Settings -- Integration > Integrate All changed to True
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
 
-Undo Redo : Set Concentration of A_01 to "0"
-Summary   : Set Concentration of A_01 to "0"
+Undo Redo : Set Analyte Concentration of A_01 to "0"
+Summary   : Set Analyte Concentration of A_01 to "0"
 All Info  :
-Set Concentration of A_01 to "0"
+Set Analyte Concentration of A_01 to "0"
 
-Undo Redo : Set Concentration of A_02 to "0"
-Summary   : Set Concentration of A_02 to "0"
+Undo Redo : Set Sample Type of A_01 to "Blank"
+Summary   : Set Sample Type of A_01 to "Blank"
 All Info  :
-Set Concentration of A_02 to "0"
+Set Sample Type of A_01 to "Blank"
 
-Undo Redo : Set Concentration of C_03 to "175"
-Summary   : Set Concentration of C_03 to "175"
+Undo Redo : Set Analyte Concentration of A_02 to "0"
+Summary   : Set Analyte Concentration of A_02 to "0"
 All Info  :
-Set Concentration of C_03 to "175"
+Set Analyte Concentration of A_02 to "0"
 
-Undo Redo : Set Concentration of C_04 to "175"
-Summary   : Set Concentration of C_04 to "175"
+Undo Redo : Set Sample Type of A_02 to "Blank"
+Summary   : Set Sample Type of A_02 to "Blank"
 All Info  :
-Set Concentration of C_04 to "175"
+Set Sample Type of A_02 to "Blank"
+
+Undo Redo : Set Analyte Concentration of C_03 to "175"
+Summary   : Set Analyte Concentration of C_03 to "175"
+All Info  :
+Set Analyte Concentration of C_03 to "175"
+
+Undo Redo : Set Sample Type of C_03 to "Standard"
+Summary   : Set Sample Type of C_03 to "Standard"
+All Info  :
+Set Sample Type of C_03 to "Standard"
+
+Undo Redo : Set Analyte Concentration of C_04 to "175"
+Summary   : Set Analyte Concentration of C_04 to "175"
+All Info  :
+Set Analyte Concentration of C_04 to "175"
+
+Undo Redo : Set Sample Type of C_04 to "Standard"
+Summary   : Set Sample Type of C_04 to "Standard"
+All Info  :
+Set Sample Type of C_04 to "Standard"
 

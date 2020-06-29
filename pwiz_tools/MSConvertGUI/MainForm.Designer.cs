@@ -64,6 +64,14 @@ namespace MSConvertGUI
             this.StartButton = new System.Windows.Forms.Button();
             this.FilterGB = new System.Windows.Forms.GroupBox();
             this.SubsetPanel = new System.Windows.Forms.Panel();
+            this.CollisionEnergyHigh = new System.Windows.Forms.TextBox();
+            this.CollisionEnergyLabel = new System.Windows.Forms.Label();
+            this.CollisionEnergyLow = new System.Windows.Forms.TextBox();
+            this.label12 = new System.Windows.Forms.Label();
+            this.PolarityBox = new System.Windows.Forms.ComboBox();
+            this.PolarityLabel = new System.Windows.Forms.Label();
+            this.AnalyzerTypeBox = new System.Windows.Forms.ComboBox();
+            this.AnalyzerTypeLabel = new System.Windows.Forms.Label();
             this.MSLevelsLabel = new System.Windows.Forms.Label();
             this.ActivationTypeBox = new System.Windows.Forms.ComboBox();
             this.MSLabelSeperator = new System.Windows.Forms.Label();
@@ -95,6 +103,7 @@ namespace MSConvertGUI
             this.ScanNumberLow = new System.Windows.Forms.TextBox();
             this.ScanNumberLabel2 = new System.Windows.Forms.Label();
             this.ScanSummingPanel = new System.Windows.Forms.Panel();
+            this.ScanSummingSumMs1Checkbox = new System.Windows.Forms.CheckBox();
             this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
@@ -191,10 +200,16 @@ namespace MSConvertGUI
             this.networkResourceComboBox = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.presetComboBox = new System.Windows.Forms.ComboBox();
-            this.AnalyzerTypeBox = new System.Windows.Forms.ComboBox();
-            this.AnalyzerTypeLabel = new System.Windows.Forms.Label();
-            this.PolarityBox = new System.Windows.Forms.ComboBox();
-            this.PolarityLabel = new System.Windows.Forms.Label();
+            this.filesToConvertInParallelLabel = new System.Windows.Forms.Label();
+            this.FilesToConvertInParallelUpDown = new System.Windows.Forms.NumericUpDown();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.CollisionEnergyExtraOptions = new System.Windows.Forms.ToolStripDropDownButton();
+            this.CollisionEnergyAcceptNonCIDMSnSpectra = new System.Windows.Forms.ToolStripMenuItem();
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE = new System.Windows.Forms.ToolStripMenuItem();
+            this.DiaUmpirePanel = new System.Windows.Forms.Panel();
+            this.DiaUmpireParamsFileBrowseButton = new System.Windows.Forms.Button();
+            this.DiaUmpireParamsFileLabel = new System.Windows.Forms.Label();
+            this.DiaUmpireParamsFileTextBox = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
             this.SubsetPanel.SuspendLayout();
@@ -210,6 +225,9 @@ namespace MSConvertGUI
             this.OptionsGB.SuspendLayout();
             this.SlidingPanel.SuspendLayout();
             this.presetSaveButtonMenu.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.FilesToConvertInParallelUpDown)).BeginInit();
+            this.toolStrip1.SuspendLayout();
+            this.DiaUmpirePanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // FileBox
@@ -318,16 +336,17 @@ namespace MSConvertGUI
             // 
             this.FilterGB.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.FilterGB.Controls.Add(this.DiaUmpirePanel);
+            this.FilterGB.Controls.Add(this.FilterBox);
+            this.FilterGB.Controls.Add(this.ETDFilterPanel);
+            this.FilterGB.Controls.Add(this.ThresholdFilterPanel);
+            this.FilterGB.Controls.Add(this.ChargeStatePredictorPanel);
             this.FilterGB.Controls.Add(this.SubsetPanel);
             this.FilterGB.Controls.Add(this.ScanSummingPanel);
             this.FilterGB.Controls.Add(this.LockmassRefinerPanel);
             this.FilterGB.Controls.Add(this.DemultiplexPanel);
-            this.FilterGB.Controls.Add(this.FilterBox);
             this.FilterGB.Controls.Add(this.PeakPickingPanel);
             this.FilterGB.Controls.Add(this.ZeroSamplesPanel);
-            this.FilterGB.Controls.Add(this.ETDFilterPanel);
-            this.FilterGB.Controls.Add(this.ThresholdFilterPanel);
-            this.FilterGB.Controls.Add(this.ChargeStatePredictorPanel);
             this.FilterGB.Location = new System.Drawing.Point(322, 83);
             this.FilterGB.Name = "FilterGB";
             this.FilterGB.Size = new System.Drawing.Size(550, 197);
@@ -337,6 +356,11 @@ namespace MSConvertGUI
             // 
             // SubsetPanel
             // 
+            this.SubsetPanel.Controls.Add(this.toolStrip1);
+            this.SubsetPanel.Controls.Add(this.CollisionEnergyHigh);
+            this.SubsetPanel.Controls.Add(this.CollisionEnergyLabel);
+            this.SubsetPanel.Controls.Add(this.CollisionEnergyLow);
+            this.SubsetPanel.Controls.Add(this.label12);
             this.SubsetPanel.Controls.Add(this.PolarityBox);
             this.SubsetPanel.Controls.Add(this.PolarityLabel);
             this.SubsetPanel.Controls.Add(this.AnalyzerTypeBox);
@@ -377,6 +401,90 @@ namespace MSConvertGUI
             this.SubsetPanel.TabIndex = 6;
             this.SubsetPanel.Visible = false;
             // 
+            // CollisionEnergyHigh
+            // 
+            this.CollisionEnergyHigh.Location = new System.Drawing.Point(428, 58);
+            this.CollisionEnergyHigh.Name = "CollisionEnergyHigh";
+            this.CollisionEnergyHigh.Size = new System.Drawing.Size(37, 20);
+            this.CollisionEnergyHigh.TabIndex = 35;
+            // 
+            // CollisionEnergyLabel
+            // 
+            this.CollisionEnergyLabel.AutoSize = true;
+            this.CollisionEnergyLabel.Location = new System.Drawing.Point(283, 60);
+            this.CollisionEnergyLabel.Name = "CollisionEnergyLabel";
+            this.CollisionEnergyLabel.Size = new System.Drawing.Size(83, 13);
+            this.CollisionEnergyLabel.TabIndex = 37;
+            this.CollisionEnergyLabel.Text = "Collision energy:";
+            // 
+            // CollisionEnergyLow
+            // 
+            this.CollisionEnergyLow.Location = new System.Drawing.Point(372, 58);
+            this.CollisionEnergyLow.Name = "CollisionEnergyLow";
+            this.CollisionEnergyLow.Size = new System.Drawing.Size(37, 20);
+            this.CollisionEnergyLow.TabIndex = 34;
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label12.Location = new System.Drawing.Point(411, 56);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(15, 20);
+            this.label12.TabIndex = 36;
+            this.label12.Text = "-";
+            // 
+            // PolarityBox
+            // 
+            this.PolarityBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.PolarityBox.FormattingEnabled = true;
+            this.PolarityBox.Items.AddRange(new object[] {
+            "Any",
+            "Negative",
+            "Positive"});
+            this.PolarityBox.Location = new System.Drawing.Point(135, 112);
+            this.PolarityBox.MaxDropDownItems = 16;
+            this.PolarityBox.Name = "PolarityBox";
+            this.PolarityBox.Size = new System.Drawing.Size(93, 21);
+            this.PolarityBox.Sorted = true;
+            this.PolarityBox.TabIndex = 32;
+            // 
+            // PolarityLabel
+            // 
+            this.PolarityLabel.AutoSize = true;
+            this.PolarityLabel.Location = new System.Drawing.Point(56, 116);
+            this.PolarityLabel.Name = "PolarityLabel";
+            this.PolarityLabel.Size = new System.Drawing.Size(71, 13);
+            this.PolarityLabel.TabIndex = 33;
+            this.PolarityLabel.Text = "Scan polarity:";
+            // 
+            // AnalyzerTypeBox
+            // 
+            this.AnalyzerTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.AnalyzerTypeBox.FormattingEnabled = true;
+            this.AnalyzerTypeBox.Items.AddRange(new object[] {
+            "Any",
+            "FT",
+            "IT",
+            "orbi",
+            "quad",
+            "TOF"});
+            this.AnalyzerTypeBox.Location = new System.Drawing.Point(372, 112);
+            this.AnalyzerTypeBox.MaxDropDownItems = 16;
+            this.AnalyzerTypeBox.Name = "AnalyzerTypeBox";
+            this.AnalyzerTypeBox.Size = new System.Drawing.Size(93, 21);
+            this.AnalyzerTypeBox.Sorted = true;
+            this.AnalyzerTypeBox.TabIndex = 30;
+            // 
+            // AnalyzerTypeLabel
+            // 
+            this.AnalyzerTypeLabel.AutoSize = true;
+            this.AnalyzerTypeLabel.Location = new System.Drawing.Point(293, 116);
+            this.AnalyzerTypeLabel.Name = "AnalyzerTypeLabel";
+            this.AnalyzerTypeLabel.Size = new System.Drawing.Size(73, 13);
+            this.AnalyzerTypeLabel.TabIndex = 31;
+            this.AnalyzerTypeLabel.Text = "Analyzer type:";
+            // 
             // MSLevelsLabel
             // 
             this.MSLevelsLabel.AutoSize = true;
@@ -404,7 +512,7 @@ namespace MSConvertGUI
             "PSD",
             "SID",
             "SORI"});
-            this.ActivationTypeBox.Location = new System.Drawing.Point(372, 60);
+            this.ActivationTypeBox.Location = new System.Drawing.Point(372, 85);
             this.ActivationTypeBox.MaxDropDownItems = 16;
             this.ActivationTypeBox.Name = "ActivationTypeBox";
             this.ActivationTypeBox.Size = new System.Drawing.Size(93, 21);
@@ -447,7 +555,7 @@ namespace MSConvertGUI
             // ActivationTypeLabel
             // 
             this.ActivationTypeLabel.AutoSize = true;
-            this.ActivationTypeLabel.Location = new System.Drawing.Point(286, 64);
+            this.ActivationTypeLabel.Location = new System.Drawing.Point(286, 89);
             this.ActivationTypeLabel.Name = "ActivationTypeLabel";
             this.ActivationTypeLabel.Size = new System.Drawing.Size(80, 13);
             this.ActivationTypeLabel.TabIndex = 15;
@@ -646,6 +754,7 @@ namespace MSConvertGUI
             // 
             // ScanSummingPanel
             // 
+            this.ScanSummingPanel.Controls.Add(this.ScanSummingSumMs1Checkbox);
             this.ScanSummingPanel.Controls.Add(this.label7);
             this.ScanSummingPanel.Controls.Add(this.label8);
             this.ScanSummingPanel.Controls.Add(this.label9);
@@ -653,13 +762,24 @@ namespace MSConvertGUI
             this.ScanSummingPanel.Controls.Add(this.label6);
             this.ScanSummingPanel.Controls.Add(this.ScanSummingScanTimeToleranceTextBox);
             this.ScanSummingPanel.Controls.Add(this.label4);
-            this.ScanSummingPanel.Controls.Add(this.label5);
             this.ScanSummingPanel.Controls.Add(this.ScanSummingPrecursorToleranceTextBox);
+            this.ScanSummingPanel.Controls.Add(this.label5);
             this.ScanSummingPanel.Location = new System.Drawing.Point(24, 47);
             this.ScanSummingPanel.Name = "ScanSummingPanel";
-            this.ScanSummingPanel.Size = new System.Drawing.Size(283, 91);
+            this.ScanSummingPanel.Size = new System.Drawing.Size(283, 112);
             this.ScanSummingPanel.TabIndex = 18;
             this.ScanSummingPanel.Visible = false;
+            // 
+            // ScanSummingSumMs1Checkbox
+            // 
+            this.ScanSummingSumMs1Checkbox.AutoSize = true;
+            this.ScanSummingSumMs1Checkbox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.ScanSummingSumMs1Checkbox.Location = new System.Drawing.Point(14, 87);
+            this.ScanSummingSumMs1Checkbox.Name = "ScanSummingSumMs1Checkbox";
+            this.ScanSummingSumMs1Checkbox.Size = new System.Drawing.Size(128, 17);
+            this.ScanSummingSumMs1Checkbox.TabIndex = 19;
+            this.ScanSummingSumMs1Checkbox.Text = "Sum MS1 scans also:";
+            this.ScanSummingSumMs1Checkbox.UseVisualStyleBackColor = true;
             // 
             // label7
             // 
@@ -850,7 +970,8 @@ namespace MSConvertGUI
             "Threshold Peak Filter",
             "Scan Summing",
             "Subset",
-            "Zero Samples"});
+            "Zero Samples",
+            "DIA-Umpire"});
             this.FilterBox.Location = new System.Drawing.Point(173, 19);
             this.FilterBox.Name = "FilterBox";
             this.FilterBox.Size = new System.Drawing.Size(177, 21);
@@ -1687,62 +1808,130 @@ namespace MSConvertGUI
             this.presetComboBox.TabIndex = 35;
             this.presetComboBox.SelectedIndexChanged += new System.EventHandler(this.presetComboBox_SelectedIndexChanged);
             // 
-            // AnalyzerTypeBox
+            // filesToConvertInParallelLabel
             // 
-            this.AnalyzerTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.AnalyzerTypeBox.FormattingEnabled = true;
-            this.AnalyzerTypeBox.Items.AddRange(new object[] {
-            "Any",
-            "FT",
-            "IT",
-            "orbi",
-            "quad",
-            "TOF"});
-            this.AnalyzerTypeBox.Location = new System.Drawing.Point(372, 86);
-            this.AnalyzerTypeBox.MaxDropDownItems = 16;
-            this.AnalyzerTypeBox.Name = "AnalyzerTypeBox";
-            this.AnalyzerTypeBox.Size = new System.Drawing.Size(93, 21);
-            this.AnalyzerTypeBox.Sorted = true;
-            this.AnalyzerTypeBox.TabIndex = 30;
+            this.filesToConvertInParallelLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.filesToConvertInParallelLabel.AutoSize = true;
+            this.filesToConvertInParallelLabel.Location = new System.Drawing.Point(617, 555);
+            this.filesToConvertInParallelLabel.Name = "filesToConvertInParallelLabel";
+            this.filesToConvertInParallelLabel.Size = new System.Drawing.Size(129, 13);
+            this.filesToConvertInParallelLabel.TabIndex = 20;
+            this.filesToConvertInParallelLabel.Text = "Files to convert in parallel:";
             // 
-            // AnalyzerTypeLabel
+            // FilesToConvertInParallelUpDown
             // 
-            this.AnalyzerTypeLabel.AutoSize = true;
-            this.AnalyzerTypeLabel.Location = new System.Drawing.Point(293, 90);
-            this.AnalyzerTypeLabel.Name = "AnalyzerTypeLabel";
-            this.AnalyzerTypeLabel.Size = new System.Drawing.Size(73, 13);
-            this.AnalyzerTypeLabel.TabIndex = 31;
-            this.AnalyzerTypeLabel.Text = "Analyzer type:";
+            this.FilesToConvertInParallelUpDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.FilesToConvertInParallelUpDown.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::MSConvertGUI.Properties.Settings.Default, "NumFilesToConvertInParallel", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.FilesToConvertInParallelUpDown.Location = new System.Drawing.Point(747, 553);
+            this.FilesToConvertInParallelUpDown.Maximum = new decimal(new int[] {
+            64,
+            0,
+            0,
+            0});
+            this.FilesToConvertInParallelUpDown.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.FilesToConvertInParallelUpDown.Name = "FilesToConvertInParallelUpDown";
+            this.FilesToConvertInParallelUpDown.Size = new System.Drawing.Size(39, 20);
+            this.FilesToConvertInParallelUpDown.TabIndex = 36;
+            this.FilesToConvertInParallelUpDown.Value = global::MSConvertGUI.Properties.Settings.Default.NumFilesToConvertInParallel;
+            this.FilesToConvertInParallelUpDown.ValueChanged += new System.EventHandler(this.FilesToConvertInParallelUpDown_ValueChanged);
             // 
-            // PolarityBox
+            // toolStrip1
             // 
-            this.PolarityBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.PolarityBox.FormattingEnabled = true;
-            this.PolarityBox.Items.AddRange(new object[] {
-            "Any",
-            "Negative",
-            "Positive"});
-            this.PolarityBox.Location = new System.Drawing.Point(135, 112);
-            this.PolarityBox.MaxDropDownItems = 16;
-            this.PolarityBox.Name = "PolarityBox";
-            this.PolarityBox.Size = new System.Drawing.Size(93, 21);
-            this.PolarityBox.Sorted = true;
-            this.PolarityBox.TabIndex = 32;
+            this.toolStrip1.AutoSize = false;
+            this.toolStrip1.CanOverflow = false;
+            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.CollisionEnergyExtraOptions});
+            this.toolStrip1.Location = new System.Drawing.Point(468, 55);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+            this.toolStrip1.Size = new System.Drawing.Size(32, 25);
+            this.toolStrip1.TabIndex = 38;
+            this.toolStrip1.Text = "toolStrip1";
             // 
-            // PolarityLabel
+            // CollisionEnergyExtraOptions
             // 
-            this.PolarityLabel.AutoSize = true;
-            this.PolarityLabel.Location = new System.Drawing.Point(56, 116);
-            this.PolarityLabel.Name = "PolarityLabel";
-            this.PolarityLabel.Size = new System.Drawing.Size(71, 13);
-            this.PolarityLabel.TabIndex = 33;
-            this.PolarityLabel.Text = "Scan polarity:";
+            this.CollisionEnergyExtraOptions.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.CollisionEnergyExtraOptions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.CollisionEnergyAcceptNonCIDMSnSpectra,
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE});
+            this.CollisionEnergyExtraOptions.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.CollisionEnergyExtraOptions.Name = "CollisionEnergyExtraOptions";
+            this.CollisionEnergyExtraOptions.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
+            this.CollisionEnergyExtraOptions.Size = new System.Drawing.Size(29, 22);
+            this.CollisionEnergyExtraOptions.Text = "...";
+            this.CollisionEnergyExtraOptions.ToolTipText = "Additional options for collision energy filtering.";
+            // 
+            // CollisionEnergyAcceptNonCIDMSnSpectra
+            // 
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.Checked = true;
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.CheckOnClick = true;
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.Name = "CollisionEnergyAcceptNonCIDMSnSpectra";
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.Size = new System.Drawing.Size(261, 22);
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.Text = "Accept non-CID MSn spectra";
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.ToolTipText = "If checked, non-CID MSn spectra (e.g. ETD, CI, PTD) will be kept by the collision" +
+    " energy filter.";
+            // 
+            // CollisionEnergyAcceptCIDSpectraWithMissingCE
+            // 
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.CheckOnClick = true;
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.Name = "CollisionEnergyAcceptCIDSpectraWithMissingCE";
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.Size = new System.Drawing.Size(261, 22);
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.Text = "Accept CID spectra with missing CE";
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.ToolTipText = "If checked, CID MSn spectra that are missing their CE will be kept.";
+            // 
+            // DiaUmpirePanel
+            // 
+            this.DiaUmpirePanel.Controls.Add(this.DiaUmpireParamsFileBrowseButton);
+            this.DiaUmpirePanel.Controls.Add(this.DiaUmpireParamsFileLabel);
+            this.DiaUmpirePanel.Controls.Add(this.DiaUmpireParamsFileTextBox);
+            this.DiaUmpirePanel.Location = new System.Drawing.Point(21, 54);
+            this.DiaUmpirePanel.Name = "DiaUmpirePanel";
+            this.DiaUmpirePanel.Size = new System.Drawing.Size(473, 91);
+            this.DiaUmpirePanel.TabIndex = 10;
+            this.DiaUmpirePanel.Visible = false;
+            // 
+            // DiaUmpireParamsFileBrowseButton
+            // 
+            this.DiaUmpireParamsFileBrowseButton.Location = new System.Drawing.Point(416, 34);
+            this.DiaUmpireParamsFileBrowseButton.Name = "DiaUmpireParamsFileBrowseButton";
+            this.DiaUmpireParamsFileBrowseButton.Size = new System.Drawing.Size(50, 23);
+            this.DiaUmpireParamsFileBrowseButton.TabIndex = 7;
+            this.DiaUmpireParamsFileBrowseButton.Text = "Browse";
+            this.DiaUmpireParamsFileBrowseButton.UseVisualStyleBackColor = true;
+            this.DiaUmpireParamsFileBrowseButton.Click += new System.EventHandler(this.DiaUmpireParamsFileBrowseButton_Click);
+            // 
+            // DiaUmpireParamsFileLabel
+            // 
+            this.DiaUmpireParamsFileLabel.AutoSize = true;
+            this.DiaUmpireParamsFileLabel.Location = new System.Drawing.Point(7, 39);
+            this.DiaUmpireParamsFileLabel.Name = "DiaUmpireParamsFileLabel";
+            this.DiaUmpireParamsFileLabel.Size = new System.Drawing.Size(61, 13);
+            this.DiaUmpireParamsFileLabel.TabIndex = 5;
+            this.DiaUmpireParamsFileLabel.Text = "Params file:";
+            // 
+            // DiaUmpireParamsFileTextBox
+            // 
+            this.DiaUmpireParamsFileTextBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this.DiaUmpireParamsFileTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
+            this.DiaUmpireParamsFileTextBox.Location = new System.Drawing.Point(68, 36);
+            this.DiaUmpireParamsFileTextBox.Name = "DiaUmpireParamsFileTextBox";
+            this.DiaUmpireParamsFileTextBox.Size = new System.Drawing.Size(342, 20);
+            this.DiaUmpireParamsFileTextBox.TabIndex = 6;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(884, 585);
+            this.Controls.Add(this.filesToConvertInParallelLabel);
+            this.Controls.Add(this.FilesToConvertInParallelUpDown);
             this.Controls.Add(this.presetComboBox);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.networkResourceComboBox);
@@ -1792,6 +1981,11 @@ namespace MSConvertGUI
             this.SlidingPanel.ResumeLayout(false);
             this.SlidingPanel.PerformLayout();
             this.presetSaveButtonMenu.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.FilesToConvertInParallelUpDown)).EndInit();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
+            this.DiaUmpirePanel.ResumeLayout(false);
+            this.DiaUmpirePanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1943,6 +2137,21 @@ namespace MSConvertGUI
         private System.Windows.Forms.Label AnalyzerTypeLabel;
         private System.Windows.Forms.ComboBox PolarityBox;
         private System.Windows.Forms.Label PolarityLabel;
+        private System.Windows.Forms.CheckBox ScanSummingSumMs1Checkbox;
+        private System.Windows.Forms.NumericUpDown FilesToConvertInParallelUpDown;
+        private System.Windows.Forms.Label filesToConvertInParallelLabel;
+        private System.Windows.Forms.TextBox CollisionEnergyHigh;
+        private System.Windows.Forms.Label CollisionEnergyLabel;
+        private System.Windows.Forms.TextBox CollisionEnergyLow;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripDropDownButton CollisionEnergyExtraOptions;
+        private System.Windows.Forms.ToolStripMenuItem CollisionEnergyAcceptNonCIDMSnSpectra;
+        private System.Windows.Forms.ToolStripMenuItem CollisionEnergyAcceptCIDSpectraWithMissingCE;
+        private System.Windows.Forms.Panel DiaUmpirePanel;
+        private System.Windows.Forms.Button DiaUmpireParamsFileBrowseButton;
+        private System.Windows.Forms.Label DiaUmpireParamsFileLabel;
+        private System.Windows.Forms.TextBox DiaUmpireParamsFileTextBox;
     }
 }
 

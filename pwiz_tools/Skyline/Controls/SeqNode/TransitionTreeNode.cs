@@ -51,6 +51,15 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public TransitionDocNode DocNode { get { return (TransitionDocNode)Model; } }
 
+        public TransitionGroupDocNode TransitionGroupNode
+        {
+            get
+            {
+                return (Parent != null ?
+                    ((TransitionGroupTreeNode)Parent).DocNode : null);
+            }
+        }
+
         public PeptideDocNode PepNode
         {
             get
@@ -78,6 +87,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             string label = DisplayText(DocNode, SequenceTree.GetDisplaySettings(PepNode));
             if (!Equals(label, Text))
                 Text = label;
+            ForeColor = DocNode.ExplicitQuantitative ? SystemColors.WindowText : SystemColors.GrayText;
         }
         
         public int TypeImageIndex
@@ -165,7 +175,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             Transition tran = nodeTran.Transition;
             string labelPrefix;
             const string labelPrefixSpacer = " - ";
-            if (tran.IsPrecursor())
+            if (nodeTran.ComplexFragmentIon.CrosslinkStructure.Count != 0)
+            {
+                labelPrefix = nodeTran.ComplexFragmentIon.GetTargetsTreeLabel() + labelPrefixSpacer;
+            }
+            else if (tran.IsPrecursor())
             {
                 labelPrefix = nodeTran.FragmentIonName + Transition.GetMassIndexText(tran.MassIndex) + labelPrefixSpacer;
             }

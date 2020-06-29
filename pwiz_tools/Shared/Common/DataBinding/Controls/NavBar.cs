@@ -463,6 +463,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         private bool CanRememberView(ViewGroupId viewGroupId)
         {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             return !Equals(viewGroupId, default(ViewGroupId)) && !Equals(viewGroupId, ViewGroup.BUILT_IN.Id);
         }
 
@@ -611,6 +612,10 @@ namespace pwiz.Common.DataBinding.Controls
         public ToolStripDropDownButton ActionsButton
         {
             get { return navBarButtonActions; }
+        }
+        public ToolStripDropDownButton ReportsButton
+        {
+            get { return navBarButtonViews; }
         }
     }
 }

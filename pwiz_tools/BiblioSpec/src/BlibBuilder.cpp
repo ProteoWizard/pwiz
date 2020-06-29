@@ -101,6 +101,7 @@ static vector<string> supportedTypes = {
     ".proxl.xml",
     ".ssl",
     ".mlb",
+    ".speclib",
     ".tsv",
     ".osw",
     ".mzTab",
@@ -129,7 +130,9 @@ void BlibBuilder::usage()
         "   -p <filename>     Specify the path of XML parameters file for parsing MaxQuant files.\n"
         "   -P <float>        Specify pusher interval for Waters final_fragment.csv files.\n"
         "   -d [<filename>]   Document the .blib format by writing SQLite commands to a file, or stdout if no filename is given.\n"
-        "   -E                Prefer reading peaks from embedded spectra (currently only affects MaxQuant msms.txt)\n";
+        "   -E                Prefer reading peaks from embedded spectra (currently only affects MaxQuant msms.txt)\n"
+        "   -A                Output messages noting ambiguously matched spectra (spectra matched to multiple peptides)\n"
+        "   -K                Keep ambiguously matched spectra\n";
 
     cerr << usage << endl;
     exit(1);
@@ -206,6 +209,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                 }
                 char* name = new char[infileName.size()+1];
                 strcpy(name, infileName.c_str());
+                Verbosity::debug("Input file: %s", name);
                 input_files.push_back(name);
             }
             break;
@@ -303,10 +307,14 @@ int BlibBuilder::transferLibrary(int iLib,
             input_files.at(iLib), schemaTmp);
     sql_stmt(zSql);
 
+    createUpdatedRefSpectraView(schemaTmp);
+
     // does the incomming library have retentiontime, score, etc columns
     int tableVersion = 0;
     if (tableColumnExists(schemaTmp, "RefSpectra", "retentionTime")) {
         if (tableColumnExists(schemaTmp, "RefSpectra", "startTime")) {
+            tableVersion = MIN_VERSION_TIC;
+        } else if (tableColumnExists(schemaTmp, "RefSpectra", "startTime")) {
             tableVersion = MIN_VERSION_RT_BOUNDS;
         } else if (tableExists(schemaTmp, "RefSpectraPeakAnnotations")) {
             tableVersion = MIN_VERSION_PEAK_ANNOT;
@@ -360,6 +368,8 @@ int BlibBuilder::transferLibrary(int iLib,
 
         rc = sqlite3_step(pStmt);
     }
+
+    sql_stmt("DROP VIEW RefSpectraTransfer");
 
     endTransaction();
     int numberProcessed =  progress->processed();
@@ -639,7 +649,7 @@ static const char* getModMassFormat(double mass, bool highPrecision) {
     if (decimalInt == (decimalInt /10) * 10) {
         return "[%+.4f]";
     }
-    return "[%+.5f]";
+    return "[%+.5f]"; // This should match Skyline's pwiz.Skyline.Model.MassModification.MAX_PRECISION_FOR_LIB value (good as of Dec 2019)
 }
 
 string BlibBuilder::getModifiedSequenceWithPrecision(const char* unmodSeq,
@@ -690,7 +700,7 @@ string base_name(const char* name)
 
 bool has_extension(const char* name, const char* ext)
 {
-    return strcmp(name + strlen(name) - strlen(ext), ext) == 0;
+    return bal::iends_with(name, ext);
 }
 
 /**

@@ -22,6 +22,15 @@ using System.Globalization;
 
 namespace pwiz.Skyline.Model.Serialization
 {
+    /// <summary>
+    /// Constants listing version numbers which identify times when changes were made to the way
+    /// that Skyline saves documents in the .sky file.
+    /// The current schema is described in a file called "Skyline_Current.xsd".
+    /// The current version number should be changed if you make a change to "Skyline_Current.xsd", and there
+    /// is already a released build of Skyline-Daily that is using the current version.
+    /// When changing the current version number, you should copy "Skyline_Current.xsd" to "Skyline_###.xsd" representing
+    /// the old version number.
+    /// </summary>
     public struct DocumentFormat : IComparable<DocumentFormat>
     {
         public static readonly DocumentFormat VERSION_0_1 = new DocumentFormat(0.1);
@@ -61,7 +70,14 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_4_2 = new DocumentFormat(4.2); // Release format
         public static readonly DocumentFormat VERSION_4_21 = new DocumentFormat(4.21); // Adds Lists feature
         public static readonly DocumentFormat VERSION_4_22 = new DocumentFormat(4.22); // Moves explicite CE, explicit ion mobility high energy offset etc to transition instead of peptide level
-        public static readonly DocumentFormat CURRENT = VERSION_4_22;
+        public static readonly DocumentFormat VERSION_19_1 = new DocumentFormat(19.1); // Release format
+        public static readonly DocumentFormat VERSION_19_11 = new DocumentFormat(19.11); // Annotation expressions
+        public static readonly DocumentFormat VERSION_19_12 = new DocumentFormat(19.12); // Adds sample_id and serial_number
+        public static readonly DocumentFormat VERSION_20_1 = new DocumentFormat(20.1); // Release format
+        public static readonly DocumentFormat VERSION_20_11 = new DocumentFormat(20.11);
+        public static readonly DocumentFormat VERSION_20_12 = new DocumentFormat(20.12); // Crosslinked peptides
+        public static readonly DocumentFormat VERSION_20_13 = new DocumentFormat(20.13); // Add decoy_match_proportion
+        public static readonly DocumentFormat CURRENT = VERSION_20_13;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

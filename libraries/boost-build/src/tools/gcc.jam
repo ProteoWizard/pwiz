@@ -181,31 +181,27 @@ rule init ( version ? : command * : options * : requirement * )
                 tool-command-string = $(tool-command-string:J=" ") ;
                 local tool-version = [ dump-full-version
                     $(tool-command-string) ] ;
-                if $(tool-version) != $(version)
+                # Permit a match between a two-digit version specified by the
+                # user (e.g. 4.4) and a 3-digit version reported by gcc.
+                # Since only two digits are present in the binary name
+                # anyway, insisting that user specify the 3-digit version
+                # when configuring Boost.Build, while it is not required on
+                # the command line, would be strange.
+                local versionl = [ regex.split $(version) "[.]" ] ;
+                local tool-versionl = [ regex.split $(tool-version) "[.]" ] ;
+                if ! ( $(versionl[1]) = $(tool-versionl[1]) &&
+                   $(versionl[2]:E=$(tool-versionl[2])) = $(tool-versionl[2]) &&
+                   $(versionl[3]:E=$(tool-versionl[3])) = $(tool-versionl[3]) )
                 {
-                    # Permit a match between a two-digit version specified by the
-                    # user (e.g. 4.4) and a 3-digit version reported by gcc.
-                    # Since only two digits are present in the binary name
-                    # anyway, insisting that user specify the 3-digit version
-                    # when configuring Boost.Build, while it is not required on
-                    # the command line, would be strange.
-                    local stripped = [ MATCH "^([0-9]+\.[0-9]+).*" :
-                        $(tool-version) ] ;
-                    if $(stripped) != $(version)
-                    {
-                        import errors ;
-                        errors.error toolset gcc "initialization:"
-                            : version '$(version)' requested but
-                                'g++-$(version)' not found and version
-                                '$(tool-version)' of default '$(tool-command)'
-                                does not match
-                            : initialized from [ errors.nearest-user-location ]
-                            ;
-                        tool-command = ;
-                    }
-                    # Use full 3-digit version to be compatible with the
-                    # 'using gcc ;' case
-                    version = $(tool-version) ;
+                    import errors ;
+                    errors.error toolset gcc "initialization:"
+                        : version '$(version)' requested but
+                            'g++-$(version)' not found and version
+                            '$(tool-version)' of default '$(tool-command)'
+                            does not match
+                        : initialized from [ errors.nearest-user-location ]
+                        ;
+                    tool-command = ;
                 }
             }
             else
@@ -263,7 +259,7 @@ rule init ( version ? : command * : options * : requirement * )
     {
         local machine = [ MATCH "^([^ ]+)" :
             [ SHELL "$(command-string) -dumpmachine" ] ] ;
-        version ?= [ dump-full-version $(command-string) ] ;
+        version ?= [ dump-version $(command-string) ] ;
         switch $(machine:L)
         {
             case *mingw* : flavor ?= mingw ;
@@ -374,6 +370,12 @@ local rule dump-full-version ( command-string )
     # recognized will be used.
     return [ MATCH "^([0-9.]+)" :
         [ SHELL "$(command-string) -dumpfullversion -dumpversion" ] ] ;
+}
+
+local rule dump-version ( command-string )
+{
+    return [ MATCH "^([0-9.]+)" :
+        [ SHELL "$(command-string) -dumpversion" ] ] ;
 }
 
 # Uses -print-prog-name to get the name of the tool.
@@ -494,8 +496,8 @@ local rule compile-link-flags ( * )
     local rule init-cxxstd-flags ( condition * : version )
     {
         local std ;
-        if [ version-ge $(version) : 8.0 ] { std = 2a ; }
-        else if [ version-ge $(version) : 5.1 ] { std = 1z ; }
+        if [ version-ge $(version) : 8 ] { std = 2a ; }
+        else if [ version-ge $(version) : 5 ] { std = 1z ; }
         else if [ version-ge $(version) : 4.8 ] { std = 1y ; }
         else if [ version-ge $(version) : 4.7 ] { std = 11 ; }
         else if [ version-ge $(version) : 3.3 ] { std = 98 ; }
@@ -726,8 +728,20 @@ toolset.flags gcc.compile OPTIONS <local-visibility>protected : -fvisibility=pro
 toolset.flags gcc.compile OPTIONS <local-visibility>protected/<target-os>darwin : ;
 toolset.flags gcc.compile OPTIONS <local-visibility>global : -fvisibility=default ;
 
-toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
 toolset.flags gcc.compile.c++ OPTIONS <exception-handling>off : -fno-exceptions ;
+toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
+
+# sanitizers
+toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>on : -fsanitize=address -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>norecover : -fsanitize=address -fno-sanitize-recover=address -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <leak-sanitizer>on : -fsanitize=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <leak-sanitizer>norecover : -fsanitize=leak -fno-sanitize-recover=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>on : -fsanitize=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>on : -fsanitize=undefined -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer ;
+
+toolset.flags gcc.compile.c++ OPTIONS <coverage>on : --coverage ;
 
 # configure Dinkum STL to match compiler options
 toolset.flags gcc.compile.c++ DEFINES <rtti>off/<target-os>vxworks : _NO_RTTI ;
@@ -868,6 +882,18 @@ toolset.flags gcc.link OPTIONS <local-visibility>hidden : -fvisibility=hidden -f
 toolset.flags gcc.link OPTIONS <local-visibility>protected : -fvisibility=protected ;
 toolset.flags gcc.link OPTIONS <local-visibility>protected/<target-os>darwin : ;
 toolset.flags gcc.link OPTIONS <local-visibility>global : -fvisibility=default ;
+
+# sanitizers
+toolset.flags gcc.link OPTIONS <address-sanitizer>on : -fsanitize=address -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <address-sanitizer>norecover : -fsanitize=address -fno-sanitize-recover=address -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <leak-sanitizer>on : -fsanitize=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <leak-sanitizer>norecover : -fsanitize=leak -fno-sanitize-recover=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <thread-sanitizer>on : -fsanitize=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <undefined-sanitizer>on : -fsanitize=undefined -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer ;
+
+toolset.flags gcc.link OPTIONS <coverage>on : --coverage ;
 
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib," ;
@@ -1280,5 +1306,9 @@ cpu-flags gcc OPTIONS : power : rios1 : -mcpu=rios1 ;
 cpu-flags gcc OPTIONS : power : rios2 : -mcpu=rios2 ;
 cpu-flags gcc OPTIONS : power : rsc : -mcpu=rsc ;
 cpu-flags gcc OPTIONS : power : rs64a : -mcpu=rs64 ;
+cpu-flags gcc OPTIONS : s390x : z196 : -march=z196 ;
+cpu-flags gcc OPTIONS : s390x : zEC12 : -march=zEC12 ;
+cpu-flags gcc OPTIONS : s390x : z13 : -march=z13 ;
+cpu-flags gcc OPTIONS : s390x : z14 : -march=z14 ;
 # AIX variant of RS/6000 & PowerPC
 toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X64" ;

@@ -196,7 +196,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var errmsg = "";
 
             LibraryIonMobilityInfo libraryIonMobilityInfo;
-            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(0, out libraryIonMobilityInfo);
+            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(doc1.MoleculeLibKeys.ToArray(), 0, out libraryIonMobilityInfo);
             var driftInfoExplicitDT = libraryIonMobilityInfo;
             var instrumentInfo = new DataFileInstrumentInfo(new MsDataFileImpl(GetTestPath(nextFile)));
             var dictExplicitDT = driftInfoExplicitDT.GetIonMobilityDict();
@@ -246,11 +246,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
             Assert.IsTrue(errmsg.Length == 0, errmsg);
-            Assert.AreEqual(1093425, maxHeight, 1); 
+            Assert.AreEqual(1093421, maxHeight, 1); 
 
             // Does CCS show up in reports?
             TestReports(doc1);
-
         }
 
         private void TestReports(SrmDocument doc1, string msg = null)
@@ -271,9 +270,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 });
             CheckFieldByName(documentGrid, "IonMobilityMS1", row, 0.832, msg);
             CheckFieldByName(documentGrid, "IonMobilityFragment", row, (double?)null, msg); // Document is all precursor
-            CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityValue.GetUnitsString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
+            CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
             CheckFieldByName(documentGrid, "IonMobilityWindow", row, 0.04, msg);
-            CheckFieldByName(documentGrid, "CollisionalCrossSection", row, 474.26, msg);
+            CheckFieldByName(documentGrid, "CollisionalCrossSection", row, 337.4821, msg);
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
         }

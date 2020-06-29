@@ -91,6 +91,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
+    <Reference Include="Grpc.Core.Api, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\Grpc.Core.Api.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
@@ -202,13 +206,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Results\RemoteApi\ChorusContentsTest.cs" />
-    <Compile Include="Results\RemoteApi\ChromTaskListTest.cs" />
+    <Compile Include="PrositBuildLibraryTest.cs" />
+    <Compile Include="PrositConnectionTest.cs" />
     <Compile Include="UnifiFunctionalTest.cs" />
     <Compile Include="Results\RemoteApi\UnifiTest.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Results\RemoteApi\DdaSmall.ChorusRequest.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

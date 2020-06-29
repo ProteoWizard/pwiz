@@ -24,11 +24,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.SkylineTestUtil;
@@ -52,6 +55,8 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
         {
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "IMSFiltering";
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DriftTraining-3_1_1.pdf";
 //            LinkPdf = "file:///C:/Users/brend/Downloads/DriftTraining-3_1_1.pdf";
@@ -60,12 +65,13 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             TestFilesZipPaths = new[]
             {
                 @"http://skyline.ms/tutorials/DriftTimePrediction.zip",
+                @"TestPerf\DriftTimePredictorExtra.zip",
                 @"TestPerf\DriftTimePredictorViews.zip",
                 dataRoot + BSA_Frag + EXT_ZIP,
                 dataRoot + Yeast_BSA + EXT_ZIP,
             };
 
-            TestFilesZipExtractHere = new[] {false, false, true, true};
+            TestFilesZipExtractHere = new[] {false, false, false, true, true};
 
             TestFilesPersistent = new[] { BSA_Frag, Yeast_BSA };
 
@@ -76,6 +82,18 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
         protected override void DoTest()
         {
+            // Check backward compatibility with 19.1.9.338 and 350 when combined IMS got written to MsDataFilePath
+            string legacyFile_19_1_9 = TestFilesDirs[1].GetTestPath(@"BSA-Training.sky");
+            RunUI(() => SkylineWindow.OpenFile(legacyFile_19_1_9));
+            VerifyCombinedIonMobility(WaitForDocumentLoaded());
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument();
+                SkylineWindow.NewDocument();
+                SkylineWindow.OpenFile(legacyFile_19_1_9);
+            });
+            VerifyCombinedIonMobility(WaitForDocumentLoaded());
+
             string skyFile = TestFilesDirs[0].GetTestPath(@"DriftTimePrediction\BSA-Training.sky");
             RunUI(() => SkylineWindow.OpenFile(skyFile));
 
@@ -194,6 +212,30 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 RunUI(() => fullScanGraph.SetZoom(false));
                 PauseForScreenShot("Full scan unzoomed 3D MS/MS graph", 14);
 
+                if (IsPauseForCoverShot)
+                {
+                    RunUI(() =>
+                    {
+                        Settings.Default.ChromatogramFontSize = 14;
+                        Settings.Default.AreaFontSize = 14;
+                        SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    });
+
+                    RestoreCoverViewOnScreen();
+
+                    ClickChromatogram(clickTime2, 5.8E+4, PaneKey.PRODUCTS);
+
+                    var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+                    RenameReplicate(manageResultsDlg, 0, "BSA");
+                    RenameReplicate(manageResultsDlg, 1, "Yeast_BSA");
+                    OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
+
+                    RunUI(SkylineWindow.FocusDocument);
+
+                    PauseForCoverShot();
+                    return;
+                }
+
                 const double clickTime3 = 41.48;
                 ClickChromatogram(yeastReplicateName, clickTime3, 3.14E+4, PaneKey.PRODUCTS);
                 PauseForScreenShot("Interference full scan unzoomed 3D MS/MS graph", 15);
@@ -223,6 +265,9 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                     driftPredictor.GetDriftTimesFromResults();
                 });
                 PauseForScreenShot("Edit predictor form", 18);
+
+                // Check that a new value was calculated for all precursors
+                RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, driftPredictor.Predictor.IonMobilityRows.Count));
 
                 OkDialog(driftPredictor, () => driftPredictor.OkDialog());
 
@@ -299,6 +344,22 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             WaitForDocumentChangeLoaded(docFiltered, 1000 * 60 * 60 * 5); // 5 minutes
 
             // TODO: Check peak ranks before and after
+        }
+
+        private void VerifyCombinedIonMobility(SrmDocument doc)
+        {
+            // Check ChromCachedFile
+            var cachedFile = doc.MeasuredResults.CachedFileInfos.First();
+            VerifyCombinedIonMobilityMoved(cachedFile.FilePath, cachedFile.HasCombinedIonMobility);
+            // Check ChromFileInfo.FilePath
+            var chromFileInfo = doc.MeasuredResults.Chromatograms[0].MSDataFileInfos[0];
+            VerifyCombinedIonMobilityMoved(chromFileInfo.FilePath, true);
+        }
+
+        private void VerifyCombinedIonMobilityMoved(MsDataFileUri fileUri, bool hasCombinedIonMobility)
+        {
+            Assert.IsFalse(((MsDataFilePath)fileUri).LegacyCombineIonMobilitySpectra);
+            Assert.IsTrue(hasCombinedIonMobility);
         }
 
         private static void ValidateClickTime(GraphFullScan fullScanGraph, double clickTime)

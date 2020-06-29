@@ -1,0 +1,559 @@
+Undo Redo : Transition Settings -- Integration > Integrate All changed to True
+Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
+All Info  :
+Transition Settings -- Integration > Integrate All changed to True
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
+
+Undo Redo : Added spectral library "DIA-TTOF-tutorial"
+Summary   : Added spectral library "DIA-TTOF-tutorial"
+All Info  :
+Added spectral library "DIA-TTOF-tutorial"
+Build Spectral Library > Cut-off score is "0,95"
+Build Spectral Library > Search files : contains "interact.pep.xml"
+Build Spectral Library > iRT standard peptides is "Biognosys-11 (iRT-C18)"
+Build Spectral Library > Include ambiguous matches is False
+Build Spectral Library > Filter for document peptides is False
+Build Spectral Library > Workflow is "DIA"
+Extra Info: Cut-off score = "0,95",
+Search files = 
+[
+    "interact.pep.xml"
+],
+iRT standard peptides = "Biognosys-11 (iRT-C18)",
+Include ambiguous matches = False,
+Filter for document peptides = False,
+Workflow = "DIA"
+
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
+All Info  :
+Imported a peptide search
+Import Peptide Search > Extract Chromatograms > Found results files : contains "collinsb_I180316_001_SW-A.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "collinsb_I180316_002_SW-B.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "collinsb_I180316_003_SW-A.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "collinsb_I180316_004_SW-B.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "collinsb_I180316_005_SW-A.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "collinsb_I180316_006_SW-B.mzML"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Peptide Search > Extract Chromatograms > Removed prefix is "collinsb_I180316_00"
+Import Peptide Search > Configure Transition Settings > Precursor charges is "2, 3, 4"
+Import Peptide Search > Configure Transition Settings > Ion charges is "1, 2"
+Import Peptide Search > Configure Transition Settings > Ion types is "y, b"
+Import Peptide Search > Configure Transition Settings > Use DIA precursor window for exclusion is True
+Import Peptide Search > Configure Transition Settings > Ion match tolerance is "0,05"
+Import Peptide Search > Configure Transition Settings > Pick min product ions is "6"
+Import Peptide Search > Configure Transition Settings > Pick product ions is "6"
+Import Peptide Search > Configure Full-Scan Settings > Acquisition method is "DIA"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme is "ETH TTOF (64 variable)"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "400", End = "407,7", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "407,7", End = "415,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "415,3", End = "422,2", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "422,2", End = "429,2", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "429,2", End = "436,8", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "436,8", End = "444,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "444,3", End = "451,2", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "451,2", End = "458,2", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "458,2", End = "466,2", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "466,2", End = "472,9", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "472,9", End = "477,8", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "477,8", End = "484,9", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "484,9", End = "490,7", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "490,7", End = "497,2", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "497,2", End = "503,8", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "503,8", End = "510,7", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "510,7", End = "517,7", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "517,7", End = "524,8", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "524,8", End = "532,8", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "532,8", End = "539,8", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "539,8", End = "546,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "546,3", End = "554", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "554", End = "561,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "561,3", End = "567,8", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "567,8", End = "575,2", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "575,2", End = "581,8", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "581,8", End = "588,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "588,3", End = "595,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "595,3", End = "601,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "601,3", End = "608,4", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "608,4", End = "616,4", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "616,4", End = "624,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "624,3", End = "631,7", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "631,7", End = "640,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "640,3", End = "647,4", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "647,4", End = "654,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "654,3", End = "661", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "661", End = "669,8", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "669,8", End = "678,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "678,3", End = "687,3", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "687,3", End = "696,4", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "696,4", End = "706,4", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "706,4", End = "715,4", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "715,4", End = "725,7", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "725,7", End = "736,9", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "736,9", End = "746,1", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "746,1", End = "757", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "757", End = "767,4", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "767,4", End = "779", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "779", End = "792,4", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "792,4", End = "806,5", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "806,5", End = "819,5", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "819,5", End = "833,7", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "833,7", End = "848,9", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "848,9", End = "865,5", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "865,5", End = "883,9", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "883,9", End = "899,4", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "899,4", End = "918,5", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "918,5", End = "941,6", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "941,6", End = "971,1", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "971,1", End = "1005,5", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "1005,5", End = "1052,5", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "1052,5", End = "1110,1", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "1110,1", End = "1200", Margin = "0,5" }
+Import Peptide Search > Configure Full-Scan Settings > Product mass analyzer is "Centroided"
+Import Peptide Search > Configure Full-Scan Settings > Mass accuracy is "20"
+Import Peptide Search > Configure Full-Scan Settings > Retention time filter type is "Use only scans withing time frame of predicted RT"
+Import Peptide Search > Import FASTA > FASTA file is "target_protein_sequences.fasta"
+Import Peptide Search > Import FASTA > Decoy generation method is "Shuffle Sequence"
+Import Peptide Search > Import FASTA > Decoys per target is "1"
+Import Peptide Search > Import FASTA > Automatically train mProphet model is True
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "collinsb_I180316_001_SW-A.mzML",
+        "collinsb_I180316_002_SW-B.mzML",
+        "collinsb_I180316_003_SW-A.mzML",
+        "collinsb_I180316_004_SW-B.mzML",
+        "collinsb_I180316_005_SW-A.mzML",
+        "collinsb_I180316_006_SW-B.mzML"
+    ],
+    Files to import simultaneously = "Many",
+    Removed prefix = "collinsb_I180316_00"
+},
+Configure Transition Settings = 
+{
+    Precursor charges = "2, 3, 4",
+    Ion charges = "1, 2",
+    Ion types = "y, b",
+    Use DIA precursor window for exclusion = True,
+    Ion match tolerance = "0,05",
+    Pick min product ions = "6",
+    Pick product ions = "6"
+},
+Configure Full-Scan Settings = 
+{
+    Acquisition method = "DIA",
+    Isolation scheme = "ETH TTOF (64 variable)": 
+{
+        Prespecified isolation windows = 
+        [
+            {
+                Start = "400",
+                End = "407,7",
+                Margin = "0,5"
+            },
+            {
+                Start = "407,7",
+                End = "415,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "415,3",
+                End = "422,2",
+                Margin = "0,5"
+            },
+            {
+                Start = "422,2",
+                End = "429,2",
+                Margin = "0,5"
+            },
+            {
+                Start = "429,2",
+                End = "436,8",
+                Margin = "0,5"
+            },
+            {
+                Start = "436,8",
+                End = "444,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "444,3",
+                End = "451,2",
+                Margin = "0,5"
+            },
+            {
+                Start = "451,2",
+                End = "458,2",
+                Margin = "0,5"
+            },
+            {
+                Start = "458,2",
+                End = "466,2",
+                Margin = "0,5"
+            },
+            {
+                Start = "466,2",
+                End = "472,9",
+                Margin = "0,5"
+            },
+            {
+                Start = "472,9",
+                End = "477,8",
+                Margin = "0,5"
+            },
+            {
+                Start = "477,8",
+                End = "484,9",
+                Margin = "0,5"
+            },
+            {
+                Start = "484,9",
+                End = "490,7",
+                Margin = "0,5"
+            },
+            {
+                Start = "490,7",
+                End = "497,2",
+                Margin = "0,5"
+            },
+            {
+                Start = "497,2",
+                End = "503,8",
+                Margin = "0,5"
+            },
+            {
+                Start = "503,8",
+                End = "510,7",
+                Margin = "0,5"
+            },
+            {
+                Start = "510,7",
+                End = "517,7",
+                Margin = "0,5"
+            },
+            {
+                Start = "517,7",
+                End = "524,8",
+                Margin = "0,5"
+            },
+            {
+                Start = "524,8",
+                End = "532,8",
+                Margin = "0,5"
+            },
+            {
+                Start = "532,8",
+                End = "539,8",
+                Margin = "0,5"
+            },
+            {
+                Start = "539,8",
+                End = "546,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "546,3",
+                End = "554",
+                Margin = "0,5"
+            },
+            {
+                Start = "554",
+                End = "561,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "561,3",
+                End = "567,8",
+                Margin = "0,5"
+            },
+            {
+                Start = "567,8",
+                End = "575,2",
+                Margin = "0,5"
+            },
+            {
+                Start = "575,2",
+                End = "581,8",
+                Margin = "0,5"
+            },
+            {
+                Start = "581,8",
+                End = "588,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "588,3",
+                End = "595,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "595,3",
+                End = "601,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "601,3",
+                End = "608,4",
+                Margin = "0,5"
+            },
+            {
+                Start = "608,4",
+                End = "616,4",
+                Margin = "0,5"
+            },
+            {
+                Start = "616,4",
+                End = "624,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "624,3",
+                End = "631,7",
+                Margin = "0,5"
+            },
+            {
+                Start = "631,7",
+                End = "640,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "640,3",
+                End = "647,4",
+                Margin = "0,5"
+            },
+            {
+                Start = "647,4",
+                End = "654,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "654,3",
+                End = "661",
+                Margin = "0,5"
+            },
+            {
+                Start = "661",
+                End = "669,8",
+                Margin = "0,5"
+            },
+            {
+                Start = "669,8",
+                End = "678,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "678,3",
+                End = "687,3",
+                Margin = "0,5"
+            },
+            {
+                Start = "687,3",
+                End = "696,4",
+                Margin = "0,5"
+            },
+            {
+                Start = "696,4",
+                End = "706,4",
+                Margin = "0,5"
+            },
+            {
+                Start = "706,4",
+                End = "715,4",
+                Margin = "0,5"
+            },
+            {
+                Start = "715,4",
+                End = "725,7",
+                Margin = "0,5"
+            },
+            {
+                Start = "725,7",
+                End = "736,9",
+                Margin = "0,5"
+            },
+            {
+                Start = "736,9",
+                End = "746,1",
+                Margin = "0,5"
+            },
+            {
+                Start = "746,1",
+                End = "757",
+                Margin = "0,5"
+            },
+            {
+                Start = "757",
+                End = "767,4",
+                Margin = "0,5"
+            },
+            {
+                Start = "767,4",
+                End = "779",
+                Margin = "0,5"
+            },
+            {
+                Start = "779",
+                End = "792,4",
+                Margin = "0,5"
+            },
+            {
+                Start = "792,4",
+                End = "806,5",
+                Margin = "0,5"
+            },
+            {
+                Start = "806,5",
+                End = "819,5",
+                Margin = "0,5"
+            },
+            {
+                Start = "819,5",
+                End = "833,7",
+                Margin = "0,5"
+            },
+            {
+                Start = "833,7",
+                End = "848,9",
+                Margin = "0,5"
+            },
+            {
+                Start = "848,9",
+                End = "865,5",
+                Margin = "0,5"
+            },
+            {
+                Start = "865,5",
+                End = "883,9",
+                Margin = "0,5"
+            },
+            {
+                Start = "883,9",
+                End = "899,4",
+                Margin = "0,5"
+            },
+            {
+                Start = "899,4",
+                End = "918,5",
+                Margin = "0,5"
+            },
+            {
+                Start = "918,5",
+                End = "941,6",
+                Margin = "0,5"
+            },
+            {
+                Start = "941,6",
+                End = "971,1",
+                Margin = "0,5"
+            },
+            {
+                Start = "971,1",
+                End = "1005,5",
+                Margin = "0,5"
+            },
+            {
+                Start = "1005,5",
+                End = "1052,5",
+                Margin = "0,5"
+            },
+            {
+                Start = "1052,5",
+                End = "1110,1",
+                Margin = "0,5"
+            },
+            {
+                Start = "1110,1",
+                End = "1200",
+                Margin = "0,5"
+            }
+        ]
+    },
+    Product mass analyzer = "Centroided",
+    Mass accuracy = "20",
+    Retention time filter type = "Use only scans withing time frame of predicted RT"
+},
+Import FASTA = 
+{
+    FASTA file = "target_protein_sequences.fasta",
+    Decoy generation method = "Shuffle Sequence",
+    Decoys per target = "1",
+    Automatically train mProphet model = True
+}
+
+Undo Redo : Annotations changed
+Summary   : Settings > Document Settings -- Annotations changed
+All Info  :
+Annotations changed
+Settings > Document Settings -- Annotations : "Condition" was added
+Settings > Document Settings -- Annotations > "Condition" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "Condition" > Type is "Value List"
+Settings > Document Settings -- Annotations > "Condition" > Values : contains "A"
+Settings > Document Settings -- Annotations > "Condition" > Values : contains "B"
+Settings > Document Settings -- Annotations : "BioReplicate" was added
+Settings > Document Settings -- Annotations > "BioReplicate" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "BioReplicate" > Type is "Text"
+
+Undo Redo : Pasted 12 values into the document grid
+Summary   : Pasted 12 values into the document grid
+All Info  :
+Pasted 12 values into the document grid
+Document grid > Report name is "Replicates"
+Set Condition of 1_SW-A to "A"
+Set BioReplicate of 1_SW-A to "1"
+Set Condition of 2_SW-B to "B"
+Set BioReplicate of 2_SW-B to "1"
+Set Condition of 3_SW-A to "A"
+Set BioReplicate of 3_SW-A to "2"
+Set Condition of 4_SW-B to "B"
+Set BioReplicate of 4_SW-B to "2"
+Set Condition of 5_SW-A to "A"
+Set BioReplicate of 5_SW-A to "3"
+Set Condition of 6_SW-B to "B"
+Set BioReplicate of 6_SW-B to "3"
+Extra Info: A	1
+B	1
+A	2
+B	2
+A	3
+B	3
+
+Report name = "Replicates"
+
+Undo Redo : Group Comparison : "By Condition" was added
+Summary   : Settings > Document Settings -- Group Comparisons : "By Condition" was added
+All Info  :
+Group Comparison : "By Condition" was added
+Settings > Document Settings -- Group Comparisons : "By Condition" was added
+Settings > Document Settings -- Group Comparisons > "By Condition" > Control group annotation is "Condition"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Control group value is "A"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Value to compare against is "B"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Identity Annotation is "BioReplicate"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Normalization method is "None"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Summary method is "Sum of transition areas"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Confidence level is "95"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Protein scope is False
+Settings > Document Settings -- Group Comparisons > "By Condition" > Use zero for missing peaks is False
+Settings > Document Settings -- Group Comparisons > "By Condition" > Q-value cutoff is "0,01"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows is Empty
+
+Undo Redo : Group Comparison > "By Condition" > Formatting rows changed
+Summary   : Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows changed
+All Info  :
+Group Comparison > "By Condition" > Formatting rows changed
+Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows : { Expression = "ProteinName: ECOLI", Labeled = False, Size = "Normal", Symbol = "Circle", RGB = "128, 0, 255" } was added
+Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows : { Expression = "ProteinName: YEAS", Labeled = False, Size = "Normal", Symbol = "Circle", RGB = "255, 128, 0" } was added
+Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows : { Expression = "ProteinName: HUMAN", Labeled = False, Size = "Normal", Symbol = "Circle", RGB = "0, 128, 0" } was added
+
+Undo Redo : Group Comparison > "By Condition" > Protein scope changed to True
+Summary   : Settings > Document Settings -- Group Comparisons > "By Condition" > Protein scope changed to True
+All Info  :
+Group Comparison > "By Condition" > Protein scope changed to True
+Settings > Document Settings -- Group Comparisons > "By Condition" > Protein scope changed from False to True
+
+Undo Redo : Group Comparison > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
+Summary   : Settings > Document Settings -- Group Comparisons > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
+All Info  :
+Group Comparison > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
+

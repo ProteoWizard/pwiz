@@ -1,0 +1,339 @@
+Undo Redo : 肽段设置 已更改
+Summary   : 设置 > 肽段设置 已更改
+All Info  :
+肽段设置 已更改
+设置 > 肽段设置 > 背景蛋白质组 从 "None" 更改到 "TubercuList_v2-6"
+设置 > 肽段设置 > 背景蛋白质组 > 背景蛋白质组数据库路径 是 "TubercuList_v2_6.protdb"
+设置 > 肽段设置 -- 过滤器 > 排除 N-末端氨基酸 从 "25" 更改到 "0"
+设置 > 肽段设置 -- 过滤器 > 最小长度 从 "8" 更改到 "7"
+设置 > 肽段设置 -- 库 > 库 : "Mtb_proteome_library" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Mtb_proteome_library" > 路径 是 "Mtb_DirtyPeptides_QT_filtered_cons.sptxt"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(2) (C-term K)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 氨基酸 是 "K"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" : "Label:13C(6)15N(4) (C-term R)" 已添加
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 氨基酸 是 "R"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 末端 是 "C"
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C 是 真
+设置 > 肽段设置 -- 修饰 > 同位素修饰 > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N 是 真
+
+Undo Redo : 离子对设置 已更改
+Summary   : 设置 > 离子对设置 已更改
+All Info  :
+离子对设置 已更改
+设置 > 离子对设置 -- 预测 > 碰撞能量 从 "无" 更改到 "SCIEX"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "2", 斜率 = "0.049", 截距 = "-1" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "3", 斜率 = "0.048", 截距 = "-2" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "4", 斜率 = "0.05", 截距 = "-2" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 步长 是 "3"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 步数 是 "3"
+设置 > 离子对设置 -- 过滤器 > 肽段母离子电荷 从 "2" 更改到 "2, 3"
+设置 > 离子对设置 -- 过滤器 > 肽段离子电荷 从 "1" 更改到 "1, 2"
+设置 > 离子对设置 -- 过滤器 > 子离子选择开始 从 "质荷比 > 母离子" 更改到 "离子 1"
+设置 > 离子对设置 -- 过滤器 > 子离子选择结束 从 "3 个离子" 更改到 "最后一个离子"
+设置 > 离子对设置 -- 过滤器 > 特殊离子: 已删除所有
+设置 > 离子对设置 -- 过滤器 > 母离子质荷比排除窗口 从 "0" 更改到 "5"
+设置 > 离子对设置 -- 库 > 离子匹配耐受性 从 "0.5" 更改到 "1"
+设置 > 离子对设置 -- 库 > 子离子 从 "3" 更改到 "5"
+设置 > 离子对设置 -- 库 > 选择 从 "从已过滤的离子电荷和类型" 更改到 "从已过滤的子离子"
+设置 > 离子对设置 -- 仪器 > 最小质荷比 从 "50" 更改到 "300"
+设置 > 离子对设置 -- 仪器 > 最大质荷比 从 "1500" 更改到 "1250"
+
+Undo Redo : 已插入 30 肽段
+Summary   : 已插入 30 肽段
+All Info  :
+已插入 30 肽段
+Extra Info: 肽段序列	蛋白质名称	蛋白质描述
+VTTSTGASYSYDR	Rv1812c_Rv1812c	
+VIGVPAMFAAGDVAAAR	Rv1812c_Rv1812c	
+ADLLAAAAPR	Rv1812c_Rv1812c	
+AIVHTAAELVDAR	Rv2027c_dosT	
+GVLGALIEEPKPIR	Rv2027c_dosT	
+SAIFDLHAGPSR	Rv2027c_dosT	
+EFPDVAVFSGGR	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	Rv0079_Rv0079	
+LTTPAEALVTR	Rv0079_Rv0079	
+GQGAVAGALLGSVSSSLVR	Rv1996_Rv1996	
+LNWAPIEWR	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	Rv1996_Rv1996	
+ELVGVGLAR	Rv1738_Rv1738	
+NVPEIGDELSVAR	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	Rv1738_Rv1738	
+HLIDDALK	Rv2623_TB31.7	
+LLGSVSSGLLR	Rv2623_TB31.7	
+GGYAGMLVGSVGETVAQLAR	Rv2623_TB31.7	
+SEFAYGSFVR	Rv2031c_hspX	
+TVSLPVGADEDDIK	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	Rv2031c_hspX	
+GLAAGLDPNTATAGELAR	Rv2626c_hrp1	
+LVGIVTEADIAR	Rv2626c_hrp1	
+HLPEHAIVQFVK	Rv2626c_hrp1	
+GLGVIGLLIEDPKPLR	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	Rv3132c_devS	
+TTIYDLHGASQGITR	Rv3132c_devS	
+VPAARPDVAVLDVR	Rv3133c_devR	
+LPDGNGIELC[+57]R	Rv3133c_devR	
+TLLGLLSEGLTNK	Rv3133c_devR	
+		
+
+Undo Redo : 离子对设置 -- 库 > 最小子离子 已更改为 "3"
+Summary   : 设置 > 离子对设置 -- 库 > 最小子离子 已更改为 "3"
+All Info  :
+离子对设置 -- 库 > 最小子离子 已更改为 "3"
+设置 > 离子对设置 -- 库 > 最小子离子 从 "0" 更改到 "3"
+
+Undo Redo : 离子对设置 -- 库 > 最小子离子 已更改为 "4"
+Summary   : 设置 > 离子对设置 -- 库 > 最小子离子 已更改为 "4"
+All Info  :
+离子对设置 -- 库 > 最小子离子 已更改为 "4"
+设置 > 离子对设置 -- 库 > 最小子离子 从 "0" 更改到 "4"
+
+Undo Redo : 离子对设置 -- 库 > 最小子离子 已更改为 "5"
+Summary   : 设置 > 离子对设置 -- 库 > 最小子离子 已更改为 "5"
+All Info  :
+离子对设置 -- 库 > 最小子离子 已更改为 "5"
+设置 > 离子对设置 -- 库 > 最小子离子 从 "0" 更改到 "5"
+
+Undo Redo : 肽段设置 -- 库 > 库 : "Mtb_hDP_20140210" 已添加
+Summary   : 设置 > 肽段设置 -- 库 > 库 : "Mtb_hDP_20140210" 已添加
+All Info  :
+肽段设置 -- 库 > 库 : "Mtb_hDP_20140210" 已添加
+设置 > 肽段设置 -- 库 > 库 : "Mtb_hDP_20140210" 已添加
+设置 > 肽段设置 -- 库 > 库 > "Mtb_hDP_20140210" > 路径 是 "Mtb_hDP_20140210.blib"
+
+Undo Redo : 离子对设置 -- 预测 > 碰撞能量 已更改
+Summary   : 设置 > 离子对设置 -- 预测 > 碰撞能量 已更改
+All Info  :
+离子对设置 -- 预测 > 碰撞能量 已更改
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 步长 从 "3" 更改到 "2"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 步数 从 "3" 更改到 "5"
+
+Undo Redo : 已插入 143 离子对
+Summary   : 已插入 143 离子对
+All Info  :
+已插入 143 离子对
+Extra Info: 肽段	母离子质荷比	子离子质荷比	蛋白质名称	蛋白质描述
+VTTSTGASYSYDR	709.327105	1217.530841	Rv1812c_Rv1812c	
+VTTSTGASYSYDR	709.327105	1116.483162	Rv1812c_Rv1812c	
+VTTSTGASYSYDR	709.327105	1029.451134	Rv1812c_Rv1812c	
+VTTSTGASYSYDR	709.327105	928.403455	Rv1812c_Rv1812c	
+VTTSTGASYSYDR	709.327105	800.344878	Rv1812c_Rv1812c	
+VIGVPAMFAAGDVAAAR	813.439009	740.392497	Rv1812c_Rv1812c	
+VIGVPAMFAAGDVAAAR	813.439009	669.355383	Rv1812c_Rv1812c	
+VIGVPAMFAAGDVAAAR	813.439009	497.306976	Rv1812c_Rv1812c	
+VIGVPAMFAAGDVAAAR	813.439009	629.317831	Rv1812c_Rv1812c	
+ADLLAAAAPR	489.78395	679.412504	Rv1812c_Rv1812c	
+ADLLAAAAPR	489.78395	566.32844	Rv1812c_Rv1812c	
+ADLLAAAAPR	489.78395	424.254212	Rv1812c_Rv1812c	
+ADLLAAAAPR	489.78395	353.217098	Rv1812c_Rv1812c	
+AIVHTAAELVDAR	688.382017	1092.567167	Rv2027c_dosT	
+AIVHTAAELVDAR	688.382017	955.508255	Rv2027c_dosT	
+AIVHTAAELVDAR	688.382017	854.460576	Rv2027c_dosT	
+AIVHTAAELVDAR	688.382017	546.787221	Rv2027c_dosT	
+AIVHTAAELVDAR	688.382017	427.733926	Rv2027c_dosT	
+GVLGALIEEPKPIR	751.452443	991.581026	Rv2027c_dosT	
+GVLGALIEEPKPIR	751.452443	878.496962	Rv2027c_dosT	
+GVLGALIEEPKPIR	751.452443	620.411776	Rv2027c_dosT	
+GVLGALIEEPKPIR	751.452443	673.407504	Rv2027c_dosT	
+GVLGALIEEPKPIR	751.452443	616.865472	Rv2027c_dosT	
+SAIFDLHAGPSR	427.558894	862.44051	Rv2027c_dosT	
+SAIFDLHAGPSR	427.558894	497.270591	Rv2027c_dosT	
+SAIFDLHAGPSR	427.558894	561.800132	Rv2027c_dosT	
+SAIFDLHAGPSR	427.558894	505.2581	Rv2027c_dosT	
+SAIFDLHAGPSR	427.558894	374.210421	Rv2027c_dosT	
+EFPDVAVFSGGR	645.821261	1014.524239	Rv0079_Rv0079	
+EFPDVAVFSGGR	645.821261	703.376118	Rv0079_Rv0079	
+EFPDVAVFSGGR	645.821261	632.339005	Rv0079_Rv0079	
+EFPDVAVFSGGR	645.821261	533.270591	Rv0079_Rv0079	
+EFPDVAVFSGGR	645.821261	507.765758	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	881.495901	963.597345	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	881.495901	848.570402	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	881.495901	579.385226	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	881.495901	482.30231	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	881.495901	424.788839	Rv0079_Rv0079	
+LTTPAEALVTR	591.341829	866.496962	Rv0079_Rv0079	
+LTTPAEALVTR	591.341829	698.407084	Rv0079_Rv0079	
+LTTPAEALVTR	591.341829	569.364491	Rv0079_Rv0079	
+LTTPAEALVTR	591.341829	484.275958	Rv0079_Rv0079	
+LTTPAEALVTR	591.341829	433.752119	Rv0079_Rv0079	
+GQGAVAGALLGSVSSSLVR	869.987909	1127.665818	Rv1996_Rv1996	
+GQGAVAGALLGSVSSSLVR	869.987909	1014.581754	Rv1996_Rv1996	
+GQGAVAGALLGSVSSSLVR	869.987909	901.49769	Rv1996_Rv1996	
+GQGAVAGALLGSVSSSLVR	869.987909	658.375784	Rv1996_Rv1996	
+LNWAPIEWR	597.818325	967.502382	Rv1996_Rv1996	
+LNWAPIEWR	597.818325	781.423069	Rv1996_Rv1996	
+LNWAPIEWR	597.818325	710.385955	Rv1996_Rv1996	
+LNWAPIEWR	597.818325	371.206534	Rv1996_Rv1996	
+LNWAPIEWR	597.818325	355.696615	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	695.90566	1007.587174	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	695.90566	920.555145	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	695.90566	735.475104	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	695.90566	664.43799	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	695.90566	660.387103	Rv1996_Rv1996	
+ELVGVGLAR	462.281044	681.428154	Rv1738_Rv1738	
+ELVGVGLAR	462.281044	582.35974	Rv1738_Rv1738	
+ELVGVGLAR	462.281044	525.338276	Rv1738_Rv1738	
+ELVGVGLAR	462.281044	426.269862	Rv1738_Rv1738	
+NVPEIGDELSVAR	704.86894	1195.619262	Rv1738_Rv1738	
+NVPEIGDELSVAR	704.86894	969.523905	Rv1738_Rv1738	
+NVPEIGDELSVAR	704.86894	856.439841	Rv1738_Rv1738	
+NVPEIGDELSVAR	704.86894	684.391434	Rv1738_Rv1738	
+NVPEIGDELSVAR	704.86894	598.313269	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	557.620993	719.382266	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	557.620993	618.334588	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	557.620993	481.275676	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	557.620993	353.217098	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	557.620993	623.824335	Rv1738_Rv1738	
+HLIDDALK	466.768191	795.470195	Rv2623_TB31.7	
+HLIDDALK	466.768191	682.386131	Rv2623_TB31.7	
+HLIDDALK	466.768191	454.275124	Rv2623_TB31.7	
+HLIDDALK	466.768191	339.248181	Rv2623_TB31.7	
+LLGSVSSGLLR	556.33909	998.58684	Rv2623_TB31.7	
+LLGSVSSGLLR	556.33909	885.502776	Rv2623_TB31.7	
+LLGSVSSGLLR	556.33909	828.481312	Rv2623_TB31.7	
+LLGSVSSGLLR	556.33909	741.449283	Rv2623_TB31.7	
+LLGSVSSGLLR	556.33909	642.380869	Rv2623_TB31.7	
+GGYAGMLVGSVGETVAQLAR	973.505609	1197.646145	Rv2623_TB31.7	
+GGYAGMLVGSVGETVAQLAR	973.505609	954.524239	Rv2623_TB31.7	
+GGYAGMLVGSVGETVAQLAR	973.505609	568.34409	Rv2623_TB31.7	
+GGYAGMLVGSVGETVAQLAR	973.505609	497.306976	Rv2623_TB31.7	
+SEFAYGSFVR	586.784147	956.486397	Rv2031c_hspX	
+SEFAYGSFVR	586.784147	809.417983	Rv2031c_hspX	
+SEFAYGSFVR	586.784147	738.380869	Rv2031c_hspX	
+SEFAYGSFVR	586.784147	575.317541	Rv2031c_hspX	
+SEFAYGSFVR	586.784147	369.694073	Rv2031c_hspX	
+TVSLPVGADEDDIK	733.876853	1066.514244	Rv2031c_hspX	
+TVSLPVGADEDDIK	733.876853	870.393067	Rv2031c_hspX	
+TVSLPVGADEDDIK	733.876853	627.307546	Rv2031c_hspX	
+TVSLPVGADEDDIK	733.876853	533.76076	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	574.995764	883.461087	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	574.995764	776.937245	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	574.995764	720.395213	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	574.995764	669.871373	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	574.995764	620.337166	Rv2031c_hspX	
+GLAAGLDPNTATAGELAR	854.448617	1225.604674	Rv2626c_hrp1	
+GLAAGLDPNTATAGELAR	854.448617	1110.577731	Rv2626c_hrp1	
+GLAAGLDPNTATAGELAR	854.448617	727.397248	Rv2626c_hrp1	
+GLAAGLDPNTATAGELAR	854.448617	369.248399	Rv2626c_hrp1	
+GLAAGLDPNTATAGELAR	854.448617	555.792504	Rv2626c_hrp1	
+LVGIVTEADIAR	633.868211	1054.576669	Rv2626c_hrp1	
+LVGIVTEADIAR	633.868211	884.471141	Rv2626c_hrp1	
+LVGIVTEADIAR	633.868211	785.402727	Rv2626c_hrp1	
+LVGIVTEADIAR	633.868211	684.355049	Rv2626c_hrp1	
+LVGIVTEADIAR	633.868211	555.312455	Rv2626c_hrp1	
+HLPEHAIVQFVK	475.941266	812.512	Rv2626c_hrp1	
+HLPEHAIVQFVK	475.941266	741.474886	Rv2626c_hrp1	
+HLPEHAIVQFVK	475.941266	628.390822	Rv2626c_hrp1	
+HLPEHAIVQFVK	475.941266	401.263831	Rv2626c_hrp1	
+HLPEHAIVQFVK	475.941266	588.336772	Rv2626c_hrp1	
+GLGVIGLLIEDPKPLR	567.349663	977.565376	Rv3132c_devS	
+GLGVIGLLIEDPKPLR	567.349663	620.411776	Rv3132c_devS	
+GLGVIGLLIEDPKPLR	567.349663	395.264049	Rv3132c_devS	
+GLGVIGLLIEDPKPLR	567.349663	687.423154	Rv3132c_devS	
+GLGVIGLLIEDPKPLR	567.349663	630.881122	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	933.987772	1010.550454	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	933.987772	882.491876	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	933.987772	668.396519	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	933.987772	555.312455	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	933.987772	877.44574	Rv3132c_devS	
+TTIYDLHGASQGITR	548.28561	799.429611	Rv3132c_devS	
+TTIYDLHGASQGITR	548.28561	720.877099	Rv3132c_devS	
+TTIYDLHGASQGITR	548.28561	664.335067	Rv3132c_devS	
+TTIYDLHGASQGITR	548.28561	525.289931	Rv3132c_devS	
+TTIYDLHGASQGITR	548.28561	468.747899	Rv3132c_devS	
+VPAARPDVAVLDVR	744.432041	993.56029	Rv3133c_devR	
+VPAARPDVAVLDVR	744.432041	781.480583	Rv3133c_devR	
+VPAARPDVAVLDVR	744.432041	682.41217	Rv3133c_devR	
+VPAARPDVAVLDVR	744.432041	399.222578	Rv3133c_devR	
+VPAARPDVAVLDVR	744.432041	694.897834	Rv3133c_devR	
+LPDGNGIELC[+57_0]R	627.312746	928.454445	Rv3133c_devR	
+LPDGNGIELC[+57_0]R	627.312746	757.390054	Rv3133c_devR	
+LPDGNGIELC[+57_0]R	627.312746	587.284526	Rv3133c_devR	
+LPDGNGIELC[+57_0]R	627.312746	458.241933	Rv3133c_devR	
+LPDGNGIELC[+57_0]R	627.312746	570.770714	Rv3133c_devR	
+TLLGLLSEGLTNK	683.905216	1152.671414	Rv3133c_devR	
+TLLGLLSEGLTNK	683.905216	1039.58735	Rv3133c_devR	
+TLLGLLSEGLTNK	683.905216	869.481822	Rv3133c_devR	
+TLLGLLSEGLTNK	683.905216	756.397758	Rv3133c_devR	
+TLLGLLSEGLTNK	683.905216	540.323136	Rv3133c_devR	
+				
+
+Undo Redo : 已从 4 文件导入结果
+Summary   : 已从 4 文件导入结果
+All Info  :
+已从 4 文件导入结果
+导入结果设置 > 文件名称 : 包含 "CEO_1.wiff"
+导入结果设置 > 文件名称 : 包含 "CEO_2.wiff"
+导入结果设置 > 文件名称 : 包含 "CEO_3.wiff"
+导入结果设置 > 文件名称 : 包含 "CEO_4.wiff"
+导入结果设置 > 添加一个新的重复测定 是 真
+导入结果设置 > 重复测定名称 是 "CEO"
+导入结果设置 > 最优化 是 "碰撞能量"
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "CEO_1.wiff",
+    "CEO_2.wiff",
+    "CEO_3.wiff",
+    "CEO_4.wiff"
+],
+添加一个新的重复测定 = 真,
+重复测定名称 = "CEO",
+最优化 = "碰撞能量",
+要同步导入的文件 = "许多个"
+
+Undo Redo : 已从 2 文件导入结果
+Summary   : 已从 2 文件导入结果
+All Info  :
+已从 2 文件导入结果
+导入结果设置 > 文件名称 : 包含 "CE_plus10.wiff"
+导入结果设置 > 文件名称 : 包含 "CE_minus10.wiff"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "CE_plus10.wiff",
+    "CE_minus10.wiff"
+],
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
+
+Undo Redo : 离子对设置 已更改
+Summary   : 设置 > 离子对设置 已更改
+All Info  :
+离子对设置 已更改
+设置 > 离子对设置 -- 预测 > 碰撞能量 从 "SCIEX" 更改到 "SRMcourse_20140211_Parameters_custom-CE-equation"
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "2", 斜率 = "0.0323", 截距 = "5.567" }
+设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "3", 斜率 = "0.0318", 截距 = "2.9822" }
+设置 > 离子对设置 -- 仪器 > 方法匹配耐受性质荷比 从 "0.055" 更改到 "0.01"
+
+Undo Redo : 已管理结果
+Summary   : 已管理结果
+All Info  :
+已管理结果
+已删除所有重复测定
+
+Undo Redo : 已从 5 文件导入结果
+Summary   : 已从 5 文件导入结果
+All Info  :
+已从 5 文件导入结果
+导入结果设置 > 文件名称 : 包含 "unscheduled_dwell10ms.wiff"
+导入结果设置 > 文件名称 : 包含 "unscheduled_dwell20ms.wiff"
+导入结果设置 > 文件名称 : 包含 "unscheduled_dwell40ms.wiff"
+导入结果设置 > 文件名称 : 包含 "unscheduled_dwell60ms.wiff"
+导入结果设置 > 文件名称 : 包含 "unscheduled_dwell100ms.wiff"
+导入结果设置 > 在文件中添加单次注射重复测定 是 真
+导入结果设置 > 要同步导入的文件 是 "许多个"
+Extra Info: 文件名称 = 
+[
+    "unscheduled_dwell10ms.wiff",
+    "unscheduled_dwell20ms.wiff",
+    "unscheduled_dwell40ms.wiff",
+    "unscheduled_dwell60ms.wiff",
+    "unscheduled_dwell100ms.wiff"
+],
+在文件中添加单次注射重复测定 = 真,
+要同步导入的文件 = "许多个"
+

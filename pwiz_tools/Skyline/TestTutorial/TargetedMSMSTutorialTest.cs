@@ -80,15 +80,15 @@ namespace pwiz.SkylineTestTutorial
         public void DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "TargetedMSMS";
 
             if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
             {
                 Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
-
-            TestSmallMolecules = false; // Don't need that magic extra node, we have an explict test
 
             ForceMzml = true;   // 2-3x faster than raw files for this test.
 
@@ -118,7 +118,8 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             LowResTest();
-            TofTest();
+            if (!IsPauseForCoverShot)
+                TofTest();
         }
 
         private void LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode asSmallMoleculesTestMode, string documentFile)
@@ -281,7 +282,7 @@ namespace pwiz.SkylineTestTutorial
 
             {
                 var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
-                var expectedRows = 10 + (TestSmallMolecules ? 1 : 0);
+                var expectedRows = 10;
                 WaitForConditionUI(() => previewReportDlg.IsComplete && previewReportDlg.RowCount == expectedRows);
                 RunUI(() =>
                 {
@@ -327,7 +328,7 @@ namespace pwiz.SkylineTestTutorial
             if (AsSmallMolecules && !AsSmallMoleculeMasses)
             {
                 // Reload the original peptide data for the purposes of library building
-                // (workflow being demonstratedis peptide based) CONSIDER small mol workflow eventually
+                // (workflow being demonstrated is peptide based) CONSIDER small mol workflow eventually
                 LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode.none, documentFile);
             }
             if (AsSmallMolecules)
@@ -414,10 +415,13 @@ namespace pwiz.SkylineTestTutorial
 
             // We're on the "Configure Transition Settings" page of the wizard.
             // We've already set up these settings, so just click next.
+            // Min/max ion m/z have been set to new defaults, since we haven't changed them, so set them back.
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
+                importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -442,8 +446,8 @@ namespace pwiz.SkylineTestTutorial
 
             const int expectedMoleculeCount = 9;
             const int expectedTransitionGroupCount = 10; // Expect this many with results
-            var expected20TransitionCount = AsSmallMolecules ? 87 : 88; // Expect this many with results
-            var expected80TransitionCount = AsSmallMolecules ? 88 : 87;
+            var expected20TransitionCount = AsSmallMolecules || UseRawFiles ? 87 : 88; // Expect this many with results
+            var expected80TransitionCount = AsSmallMolecules ? 88 : UseRawFiles ? 86 : 87;
 
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expected20TransitionCount, 0);
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes80FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expected80TransitionCount, 0);
@@ -520,7 +524,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 {
                     SkylineWindow.ShowAllTransitions();
-                    SkylineWindow.ShowSplitChromatogramGraph(true);                    
+                    if (!IsPauseForCoverShot)
+                        SkylineWindow.ShowSplitChromatogramGraph(true);                    
                 });
 
             // p. 16 screenshot of full 5-point dilution curve
@@ -532,6 +537,28 @@ namespace pwiz.SkylineTestTutorial
                 FindNode(Resources.CustomMolecule_DisplayName_Molecule + " [1045");
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Replicate Comparison graph metafile with split graphs", 24);
+
+            if (IsPauseForCoverShot)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                    SkylineWindow.ShowChromatogramLegends(false);
+                });
+
+                RestoreCoverViewOnScreen();
+                TreeNode selectedNode = null;
+                RunUI(() => selectedNode = SkylineWindow.SequenceTree.SelectedNode);
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
+                RunUI(() => selectedNode.Nodes[0].Expand());
+                PauseForCoverShot();
+                return;
+            }
+
             RunUI(() =>
             {
                 SkylineWindow.Size = new Size(990, 620);
@@ -604,23 +631,56 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => importResultsDlg3.NamedPathSets = importResultsDlg3.GetDataSourcePathsFileReplicates(
                 new[] { MsDataFileUri.Parse(GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)) }));
             var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
-            WaitForDocumentChangeLoaded(docCalibrate1);
+            var docFullScanError = WaitForDocumentChangeLoaded(docCalibrate1);
+//            WaitForConditionUI(() => importProgress.Files.Any());
             WaitForConditionUI(() => importProgress.Finished);
             string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_;
-            if (!TryWaitForConditionUI(() => !string.IsNullOrEmpty(importProgress.Error)))
+            if (!TryWaitForConditionUI(2000, () => importProgress.Files.Any(f => !string.IsNullOrEmpty(f.Error))))
             {
                 RunUI(() =>
                 {
+                    var messageDlg = FindOpenForm<MessageDlg>();
+                    if (messageDlg != null)
+                    {
+                        Assert.Fail(TextUtil.LineSeparate("Unexpected MessageDlg: ",
+                            messageDlg.DetailedMessage,
+                            TextUtil.LineSeparate(docFullScanError.NonLoadedStateDescriptionsFull)));
+                    }
+
+                    var importProgress2 = FindOpenForm<AllChromatogramsGraph>();
+                    if (importProgress2 != null && !ReferenceEquals(importProgress, importProgress2))
+                    {
+                        Assert.IsTrue(importProgress2.HasErrors);
+                        AssertEx.AreComparableStrings(expectedErrorFormat, importProgress2.Error, 1);
+                        Assert.Fail("Error message appeared in new instance of progress UI");
+                    }
+                    Assert.IsFalse(importProgress.IsDisposed, "Import progress destroyed");
+                    Assert.IsTrue(importProgress.IsHandleCreated, "Import progress not created");
+                    Assert.IsTrue(importProgress.Visible, "Import progress hidden");
+
                     string message = "Missing expected error text: " + expectedErrorFormat;
-                    if (importProgress.SelectedControl == null)
-                        message = string.Format("No selected control. Selected index = {0}", importProgress.Selected);
-                    else if (!string.IsNullOrEmpty(importProgress.SelectedControl.Error))
-                        message = "Selected control error: " + importProgress.SelectedControl.Error + " not in text control";
+                    if (!importProgress.Files.Any())
+                        message = "No files found";
+                    else
+                    {
+                        foreach (var importProgressFile in importProgress.Files)
+                            AssertEx.AreComparableStrings(expectedErrorFormat, importProgressFile.Error);
+
+                        if (importProgress.SelectedControl == null)
+                            message = string.Format("No selected control. Selected index = {0}", importProgress.Selected);
+                        else if (!string.IsNullOrEmpty(importProgress.SelectedControl.Error))
+                            message = "Selected control error: " + importProgress.SelectedControl.Error + " not in text control";
+                    }
 
                     Assert.Fail(TextUtil.LineSeparate(message, "(" + importProgress.DetailedMessage + ")"));
                 });
             }
-            RunUI(() => AssertEx.AreComparableStrings(expectedErrorFormat, importProgress.Error, 1));
+            RunUI(() =>
+            {
+                foreach (var importProgressFile in importProgress.Files)
+                    AssertEx.AreComparableStrings(expectedErrorFormat, importProgressFile.Error);
+                AssertEx.AreComparableStrings(expectedErrorFormat, importProgress.Error, 1);
+            });
             RunUI(() =>
             {
                 importProgress.ClickClose();

@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ratio of the Analyte Concentration (specified on the Replicate) to the Calculated Concentraion.
+        ///   Looks up a localized string similar to Ratio of Calculated Concentration the Analyte Concentration (specified on the Replicate).
         /// </summary>
         public static string Accuracy {
             get {
@@ -151,6 +151,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string AreaRatio {
             get {
                 return ResourceManager.GetString("AreaRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ratio of the normalized area to the sum of the normalized areas of all of the other peptides or molecules in the document that have the same Attribute Area Proportion..
+        /// </summary>
+        public static string AttributeAreaProportion {
+            get {
+                return ResourceManager.GetString("AttributeAreaProportion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Affects the grouping of peptides or molecules in the calculation of Attribute Area Proportion..
+        /// </summary>
+        public static string AttributeGroupId {
+            get {
+                return ResourceManager.GetString("AttributeGroupId", resourceCulture);
             }
         }
         
@@ -283,7 +301,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name of the batch that this replicate belongs to. The calibration curve for a particular replicate will be .
+        ///   Looks up a localized string similar to Name of the batch that this replicate belongs to. The calibration curve for a particular replicate
+        ///will be calculated using the subset of external standards with the same batch name..
         /// </summary>
         public static string BatchName {
             get {
@@ -324,7 +343,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         /// <summary>
         ///   Looks up a localized string similar to The concentration of the analyte is calculated by either:
         ///    1. Using the calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
-        ///    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concetration.
+        ///    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration.
         /// </summary>
         public static string CalculatedConcentration {
             get {
@@ -739,6 +758,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The concentration of this particular molecule or peptide in this particular replicate.
+        ///If the Explicit Analyte Concentration is not specified then the concentration of the analyte is assumed 
+        ///to be the Analyte Concentration from the Replicate times the Concentration Multiplier of the Peptide or Molecule..
+        /// </summary>
+        public static string ExplicitAnalyteConcentration {
+            get {
+                return ResourceManager.GetString("ExplicitAnalyteConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The exact desired collisional cross section (in square angstroms) to be converted to ion mobility and used in extracting chromatograms from ion mobility mass spectra, overriding all model values. .
         /// </summary>
         public static string ExplicitCollisionalCrossSection {
@@ -748,7 +778,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values..
+        ///   Looks up a localized string similar to The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library or per-precursor explicit values..
         /// </summary>
         public static string ExplicitCollisionEnergy {
             get {
@@ -1040,6 +1070,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The instrument serial number read from an imported result file.
+        /// </summary>
+        public static string InstrumentSerialNumber {
+            get {
+                return ResourceManager.GetString("InstrumentSerialNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Comma separated list of chromatogram intensities..
         /// </summary>
         public static string Intensities {
@@ -1238,6 +1277,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Standardized molecular identifier.
+        /// </summary>
+        public static string KEGG {
+            get {
+                return ResourceManager.GetString("KEGG", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Key.
         /// </summary>
         public static string Key {
@@ -1278,6 +1326,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LibraryName {
             get {
                 return ResourceManager.GetString("LibraryName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The probability score assigned to this match in the input files used to build the spectral library..
+        /// </summary>
+        public static string LibraryProbabilityScore {
+            get {
+                return ResourceManager.GetString("LibraryProbabilityScore", resourceCulture);
             }
         }
         
@@ -1429,6 +1486,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MaxBestRetentionTime {
             get {
                 return ResourceManager.GetString("MaxBestRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A  maximum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mPro
+        ///phet model..
+        /// </summary>
+        public static string MaxDetectionQValue {
+            get {
+                return ResourceManager.GetString("MaxDetectionQValue", resourceCulture);
             }
         }
         
@@ -1588,6 +1655,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Median.
+        /// </summary>
+        public static string Median {
+            get {
+                return ResourceManager.GetString("Median", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A  median of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model..
+        /// </summary>
+        public static string MedianDetectionQValue {
+            get {
+                return ResourceManager.GetString("MedianDetectionQValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min.
         /// </summary>
         public static string Min {
@@ -1602,6 +1687,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MinBestRetentionTime {
             get {
                 return ResourceManager.GetString("MinBestRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A  minimum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model..
+        /// </summary>
+        public static string MinDetectionQValue {
+            get {
+                return ResourceManager.GetString("MinDetectionQValue", resourceCulture);
             }
         }
         
@@ -1762,7 +1856,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A free text not associated with the molecule list..
+        ///   Looks up a localized string similar to A free text note associated with the molecule list..
         /// </summary>
         public static string MoleculeListNote {
             get {
@@ -2175,11 +2269,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ratio of the Precursor Calculated Concentration to the Precursor Concentration specified on the Precursor..
+        /// </summary>
+        public static string PrecursorAccuracy {
+            get {
+                return ResourceManager.GetString("PrecursorAccuracy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The adduct which is applied to the molecule to make the precursor..
         /// </summary>
         public static string PrecursorAdduct {
             get {
                 return ResourceManager.GetString("PrecursorAdduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The concentration of the Precursor Result calculated using the isotopolog response curve..
+        /// </summary>
+        public static string PrecursorCalculatedConcentration {
+            get {
+                return ResourceManager.GetString("PrecursorCalculatedConcentration", resourceCulture);
             }
         }
         
@@ -2195,13 +2307,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///      The concentration at which this precursor was spiked into the sample.
-        ///    .
+        ///   Looks up a localized string similar to The concentration at which this precursor was spiked into the sample. This is used for generating Isotopolog Response Curves..
         /// </summary>
         public static string PrecursorConcentration {
             get {
                 return ResourceManager.GetString("PrecursorConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values. May in turn be overridden by per-transition Explicit Collision Energy..
+        /// </summary>
+        public static string PrecursorExplicitCollisionEnergy {
+            get {
+                return ResourceManager.GetString("PrecursorExplicitCollisionEnergy", resourceCulture);
             }
         }
         
@@ -2260,6 +2379,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The normalized area of the Precursor Result.
+        ///This is equal to the Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+        ///If the Peptide Normalization Method is &quot;None&quot; or ratio to a label, then the Precursor Normalized Area will be equal to the Precursor Total Area..
+        /// </summary>
+        public static string PrecursorNormalizedArea {
+            get {
+                return ResourceManager.GetString("PrecursorNormalizedArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A free text note associated with a precursor by clicking Edit Note on
         ///the Edit menu.
         /// </summary>
@@ -2277,6 +2407,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PrecursorPeakFoundRatio {
             get {
                 return ResourceManager.GetString("PrecursorPeakFoundRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values related to using the isotopolog response curve to quantify the precursor result..
+        /// </summary>
+        public static string PrecursorQuantification {
+            get {
+                return ResourceManager.GetString("PrecursorQuantification", resourceCulture);
             }
         }
         
@@ -2691,7 +2830,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The calibration curve made using the Precursor Concentrations and a single replicate..
+        ///   Looks up a localized string similar to The calibration curve made using the replicates that have the same Batch Name as this replicate.
+        ///If the Precursor Concentration is specified on any of the Precursors in this Peptide then the Calibration Curve will be an isotopolog response curve..
         /// </summary>
         public static string ReplicateCalibrationCurve {
             get {
@@ -2880,6 +3020,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SampleDilutionFactor {
             get {
                 return ResourceManager.GetString("SampleDilutionFactor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A free text identifier for referring to a sample (which may be shared among multiple files). Read from the &quot;sample id&quot; attribute in an imported result file.
+        /// </summary>
+        public static string SampleId {
+            get {
+                return ResourceManager.GetString("SampleId", resourceCulture);
             }
         }
         

@@ -161,14 +161,17 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanEventSet : public SpectrumL
 class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanTimeRange : public SpectrumList_Filter::Predicate
 {
     public:
-    SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh);
+    SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh, bool assumeSorted = true);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const;
     virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
+    virtual bool done() const;
     virtual std::string describe() const { return "scan time range"; }
 
     private:
     double scanTimeLow_;
     double scanTimeHigh_;
+    mutable bool eos_;
+    bool assumeSorted_;
 };
 
 
@@ -305,6 +308,21 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ThermoScanFilter : public Spect
     std::string matchString_;
     bool matchExact_;
     bool inverse_;
+};
+
+
+class PWIZ_API_DECL SpectrumList_FilterPredicate_CollisionEnergy : public SpectrumList_Filter::Predicate
+{
+    public:
+    SpectrumList_FilterPredicate_CollisionEnergy(double collisionEnergyLow, double collisionEnergyHigh, bool acceptNonCID, bool acceptMissingCE, FilterMode mode);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const { return boost::logic::indeterminate; }
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
+    virtual std::string describe() const { return "collision energy"; }
+
+    private:
+    double ceLow_, ceHigh_;
+    bool acceptNonCID_, acceptMissingCE_;
+    FilterMode mode_;
 };
 
 } // namespace analysis

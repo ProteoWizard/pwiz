@@ -60,7 +60,6 @@ namespace pwiz.SkylineTestData.Results
                     Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                     return;
                 }
-                TestSmallMolecules = false; // No need to add the magic small molecule test node
             }
             var testFilesDir = new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip"); // Re-used from BlibDriftTimeTest
             // Open document with some peptides but no results
@@ -98,7 +97,7 @@ namespace pwiz.SkylineTestData.Results
                 var newPred = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
                         document, docContainer.DocumentFilePath, true);
                 var result = newPred.MeasuredMobilityIons;
-                Assert.AreEqual(TestSmallMolecules ? 2 : 1, result.Count);
+                Assert.AreEqual(1, result.Count);
                 const double expectedDT = 4.0019;
                 var expectedOffset = .4829;
                 Assert.AreEqual(expectedDT, result.Values.First().IonMobility.Mobility.Value, .001);
@@ -117,7 +116,7 @@ namespace pwiz.SkylineTestData.Results
                     document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
                         document, docContainer.DocumentFilePath, true)).IonMobilityPredictor;
                 result = newPred.MeasuredMobilityIons;
-                Assert.AreEqual(TestSmallMolecules ? 3 : 2, result.Count);
+                Assert.AreEqual(2, result.Count);
                 Assert.AreEqual(expectedDT, result[libKey].IonMobility.Mobility.Value, .001);
                 Assert.AreEqual(expectedOffset, result[libKey].HighEnergyIonMobilityValueOffset, .001);
                 Assert.AreEqual(5, result[libKey2].IonMobility.Mobility.Value, .001);

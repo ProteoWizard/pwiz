@@ -28,10 +28,10 @@ using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.V01;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using pwiz.SkylineTestUtil.Schemas;
 
 namespace pwiz.SkylineTest
 {
@@ -160,7 +160,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), fragmentAdduct), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);
             Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomMolecule);
             var nodeGroup = doc.MoleculeTransitionGroups.ElementAt(0);
-            Assert.AreEqual(4.704984, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.CollisionEnergy);
+            Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
+            Assert.AreEqual(null, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.CollisionEnergy); // Value is found at precursor level
             double expectedIonMobility = 2.34;
             double? expectedCV = imTypeIsDriftTime ? (double?) null : expectedIonMobility;
             Assert.AreEqual(expectedCV, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CompensationVoltage);
@@ -231,8 +232,6 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void DocumentExportProteinsTest()
         {
-            TestSmallMolecules = false; // This test is quite specific to the input data set
-
             SrmDocument document = AssertEx.Deserialize<SrmDocument>(DOC_0_1_PEPTIDES_NO_EMPTY);
             var exporter = new ThermoMassListExporter(document)
                                {
@@ -255,7 +254,7 @@ namespace pwiz.SkylineTest
             Array.Sort(names);
             for (int i = 0; i < arrayTranCounts.Length; i++)
             {
-                Assert.AreEqual(arrayTranCounts[i] + (Settings.Default.TestSmallMolecules ? 2-i : 0) , LineCount(exporter.MemoryOutput[names[i]].ToString()),
+                Assert.AreEqual(arrayTranCounts[i], LineCount(exporter.MemoryOutput[names[i]].ToString()),
                                 "Transitions not distributed correctly");                
             }
         }
@@ -276,9 +275,6 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void DocumentExport_0_1_Test()
         {
-            //This is just for testing version 1 xml documents which couldn't have Custom Ions in them anyway
-            TestSmallMolecules = false;
-
             int count = EqualCsvs(DOC_0_1_BOVINE, 4, ThermoExporters, ExportStrategy.Single, 2, null,
                                   ExportMethodType.Standard);
             Assert.AreEqual(1, count);
@@ -317,7 +313,6 @@ namespace pwiz.SkylineTest
                 return;
             }
 
-            TestSmallMolecules = false; // We wouldn't expect a mixed peptide and non-peptide mass list to work.
             var pathForLibraries = TestContext.ResultsDirectory;
 
             int count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateWatersExporter, ExportStrategy.Single, 2, null,
@@ -1488,7 +1483,7 @@ namespace pwiz.SkylineTest
         };
 
         private readonly string DOC_LABEL_IMPLEMENTED = 
-        "<srm_settings format_version=\"4.11\" software_version=\"Skyline-daily (64-bit) 4.1.1.18118\">\n" +
+        "<srm_settings format_version=\"4.11\" software_version=\"Skyline-daily (64-bit) 4.1.1.18118\">\n" + // Keep -daily
         "  <settings_summary name=\"Default\">\n" +
         "    <peptide_settings>\n" +
         "      <enzyme name=\"TrypsinR\" cut=\"R\" no_cut=\"P\" sense=\"C\" />\n" +
@@ -1552,5 +1547,17 @@ namespace pwiz.SkylineTest
         "    </molecule>\n" +
         "  </peptide_list>\n" +
         "</srm_settings>";
+
+        [TestMethod]
+        public void TestDocumentSchemaDocuments()
+        {
+            foreach (var skylineVersion in SkylineVersion.SupportedForSharing())
+            {
+                var schemaFileName =
+                    SchemaDocuments.GetSkylineSchemaResourceName(skylineVersion.SrmDocumentVersion.ToString());
+                var resourceStream = typeof(SchemaDocuments).Assembly.GetManifestResourceStream(schemaFileName);
+                Assert.IsNotNull(resourceStream, "Unable to find schema document {0} for Skyline Version {1}", schemaFileName, skylineVersion);
+            }
+        }
     }
 }

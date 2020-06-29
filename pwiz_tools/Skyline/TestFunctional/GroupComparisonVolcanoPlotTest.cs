@@ -88,8 +88,8 @@ namespace pwiz.SkylineTestFunctional
             // Remove peptides below cutoffs and restore them
             var count = GetRowCount(grid);
             RunUI(volcanoPlot.RemoveBelowCutoffs);
-            WaitForVolcanoPlotPointCount(grid, count - 83); // 83 peptides are below the cutoffs
-            Assert.AreEqual(count - 83, GetPeptideCount());
+            WaitForVolcanoPlotPointCount(grid, count - 82); // 83 peptides are below the cutoffs, 1 is a global standard type
+            Assert.AreEqual(count - 82, GetPeptideCount());
             RunUI(SkylineWindow.Undo);
             WaitForVolcanoPlotPointCount(grid, count);
             Assert.AreEqual(count, GetPeptideCount());

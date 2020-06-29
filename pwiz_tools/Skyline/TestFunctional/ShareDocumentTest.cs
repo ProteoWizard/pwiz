@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -309,7 +310,6 @@ namespace pwiz.SkylineTestFunctional
             SelectNode(SrmDocument.Level.Molecules, 0);
             WaitForGraphs();
             string prefix = Path.GetFileNameWithoutExtension(DOCUMENT_NAME);
-
             RunUI(() =>
             {
                 Assert.AreEqual("Michrom_QTRAP_v4 (" + prefix + ")", SkylineWindow.GraphSpectrum.LibraryName);
@@ -406,7 +406,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             if (extract)
-                RunUI(() => SkylineWindow.OpenFile(Path.Combine(extractDir, documentName)));
+                RunUI(() => SkylineWindow.OpenFile(Path.Combine(extractDir, PathEx.SafePath(documentName))));
         }
 
         private static void WaitForLibraries()

@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -113,7 +114,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsSmallMolecule())
                     return null;
-                return Sequence.Length;
+                return Sequence.Replace(@"-", string.Empty).Length;
             }
         }
 
@@ -174,14 +175,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
                 else
                 {
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, DocNode);
-                    return molecule.Formula ?? string.Empty;
+                    var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, DocNode.Peptide,
+                        DocNode.ExplicitMods, IsotopeLabelType.light);
+                    return crosslinkBuilder.GetPrecursorFormula().Molecule.ToString();
                 }
             }
         }
 
         [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
-        [Importable]
         public StandardType StandardType
         {
             get
@@ -344,10 +345,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override string ToString()
         {
-            var peptide = DocNode.Peptide;
-            return peptide.IsCustomMolecule
-                ? DocNode.CustomMolecule.ToString()
-                : peptide.Target.Sequence;
+            if (DocNode.Peptide.IsCustomMolecule)
+            {
+                return DocNode.CustomMolecule.ToString();
+            }
+
+            return DocNode.GetCrosslinkedSequence();
         }
 
         [InvariantDisplayName("PeptideDocumentLocation")]
@@ -483,6 +486,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetSMILES() ?? string.Empty : string.Empty; }
         }
 
+        [Hidden(InUiMode = UiModes.PROTEOMIC)]
+        public string KEGG
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetKEGG() ?? string.Empty : string.Empty; }
+        }
+
         [Importable]
         public bool AutoSelectPrecursors
         {
@@ -506,9 +515,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Importable]
+        public string AttributeGroupId
+        {
+            get { return DocNode.AttributeGroupId; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn(nameof(AttributeGroupId), value), docNode=>docNode.ChangeAttributeGroupId(value));
+            }
+        }
+
         protected override NodeRef NodeRefPrototype
         {
             get { return MoleculeRef.PROTOTYPE; }
+        }
+
+        protected override Type SkylineDocNodeType
+        {
+            get { return typeof(Peptide); }
         }
     }
 }

@@ -82,8 +82,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            TestSmallMolecules = false; // Don't need that magic extra node, we have an explict test
-
             // Open the SRMCourse.sky file
             string documentPath1 = TestFilesDir.GetTestPath("SRMCourse.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath1));
@@ -135,12 +133,15 @@ namespace pwiz.SkylineTestFunctional
             }
             // Set Normalization type
             RunUI(() => SetPeptideStandardType(1, 0, 3, PeptideDocNode.STANDARD_TYPE_GLOBAL));
+            WaitForGraphs();
             RunUI(() =>
             {
                 AreaReplicateGraphPane pane;
-                Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
-                Assert.IsTrue(pane.YAxis.Scale.Max > 3e+6);
-                Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area));
+                Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane), "Missing peak area graph");
+                double yMax = pane.YAxis.Scale.Max;
+                Assert.IsTrue(yMax > 1.5e+6, string.Format("{0} not > 1.5e+6", yMax));  // Not L10N
+                Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area), 
+                    string.Format("Unexpected y-axis title {0}", pane.YAxis.Title.Text));
 
                 SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_global_standard_view);
             });
@@ -151,8 +152,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 AreaReplicateGraphPane pane;
                 Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
-                Assert.IsTrue(pane.YAxis.Scale.Max < 0.12);
-                Assert.IsTrue(pane.YAxis.Scale.Max > 0.09);
+                double yMax = pane.YAxis.Scale.Max;
+                Assert.IsTrue(0.07 <= yMax && yMax <= 0.12, string.Format("{0} not between 0.07 and 0.12", yMax));  // Not L10N
                 Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards));
                 Assert.AreEqual(5, SkylineWindow.GraphPeakArea.CurveCount);
 
@@ -172,7 +173,7 @@ namespace pwiz.SkylineTestFunctional
                 AreaReplicateGraphPane pane;
                 Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
                 double yMax = pane.YAxis.Scale.Max;
-                Assert.IsTrue(0.14 <= yMax && yMax  <= 0.22, string.Format("{0} not between 0.14 and 0.22", yMax));  // Not L10N
+                Assert.IsTrue(0.12 <= yMax && yMax  <= 0.22, string.Format("{0} not between 0.12 and 0.22", yMax));  // Not L10N
                 Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards));
                 Assert.AreEqual(2, SkylineWindow.GraphPeakArea.CurveCount);
             });

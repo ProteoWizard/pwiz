@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (GraphSummary.StateProvider.SelectedNode is EmptyNode) // if EmptyNode selected
             {
-                selectedTreeNode = GraphSummary.StateProvider.SelectedNodes.First() as SrmTreeNode;
+                selectedTreeNode = GraphSummary.StateProvider.SelectedNodes.OfType<SrmTreeNode>().FirstOrDefault();
             }
             if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             var graphType = AreaGraphController.GraphDisplayType;
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
-            var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document.Settings);
+            var replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
             var graphData = IsMultiSelect  ? 
                 new AreaGraphData(document,
                     peptidePaths,

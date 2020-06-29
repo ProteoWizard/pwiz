@@ -141,6 +141,7 @@ struct PWIZ_API_DECL Spectrum
 
     virtual double getStartTime() const = 0;
 
+    virtual bool getDataIsContinuous() const = 0;
     virtual size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints = false) const = 0;
     virtual void getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, bool ignoreZeroIntensityPoints = false) const = 0;
 
@@ -227,6 +228,7 @@ class PWIZ_API_DECL WiffFile
     virtual const std::vector<std::string>& getSampleNames() const = 0;
 
     virtual InstrumentModel getInstrumentModel() const = 0;
+    virtual std::string getInstrumentSerialNumber() const = 0;
     virtual IonSourceType getIonSourceType() const = 0;
     virtual boost::local_time::local_date_time getSampleAcquisitionTime(int sample, bool adjustToHostTime) const = 0;
 

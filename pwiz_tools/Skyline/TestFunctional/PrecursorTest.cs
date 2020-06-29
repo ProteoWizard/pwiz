@@ -49,12 +49,10 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
-            // The transition list produced by the special test nodes doesn't parse as peptides, which this test expects
-            TestSmallMolecules = false;
-
             // Open the .sky file
             string documentPath = TestFilesDir.GetTestPath(DOCUMENT_NAME);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
+            WaitForDocumentLoaded();
 
             // SCIEX parameter equations changed in 4.1.1
             RunDlg<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(), tranSettings =>
@@ -114,6 +112,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
+            WaitForDocumentLoaded();
             Assert.AreEqual(2, GetPrecursorTranstionCount());
 
             // Export a transition list

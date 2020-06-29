@@ -28,6 +28,7 @@
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include <boost/functional/hash.hpp>
+#include <boost/range/adaptor/map.hpp>
 #include <stdexcept>
 #include <iostream>
 
@@ -40,7 +41,7 @@ namespace msdata {
 class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 {
     public:
-    SpectrumListBase() : MSLevelsNone() {};
+    SpectrumListBase() : MSLevelsNone(), /*hash_(),*/ spectrum_id_mismatch_hash_(hash("spectrum id mismatch")) {};
 
     /// implementation of SpectrumList
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const {return dp_;}
@@ -49,16 +50,12 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
     virtual void setDataProcessingPtr(DataProcessingPtr dp) { dp_ = dp; }
 
     /// issues a warning once per SpectrumList instance (based on string hash)
-    virtual void warn_once(const char* msg) const
-    {
-        boost::hash<const char*> H;
-        if (warn_msg_hashes.insert(H(msg)).second) // .second is true iff value is new
-        {
-            std::cerr << msg << std::endl;
-        }
-    }
+    virtual void warn_once(const char* msg) const;
 
     protected:
+
+    // when find() fails to find a spectrum id, check whether the id fields of the input id and the spectrum list are matching
+    size_t checkNativeIdFindResult(size_t result, const std::string& id) const;
 
     DataProcessingPtr dp_;
 
@@ -67,7 +64,10 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 
     private:
 
-    mutable std::set<size_t> warn_msg_hashes; // for warn_once use
+    size_t hash(const char*) const;
+    mutable std::set<size_t> warn_msg_hashes_; // for warn_once use
+    //boost::hash<const char*> hash_;
+    size_t spectrum_id_mismatch_hash_;
 };
 
 
@@ -75,6 +75,7 @@ class PWIZ_API_DECL SpectrumListIonMobilityBase : public SpectrumListBase
 {
     public:
     virtual bool hasIonMobility() const = 0;
+    virtual bool hasCombinedIonMobility() const = 0; // Returns true if IM data is returned in 3-array format
     // CONSIDER: should this be in the interface? virtual bool hasPASEF() const = 0;
     virtual bool canConvertIonMobilityAndCCS() const = 0;
     virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const = 0;

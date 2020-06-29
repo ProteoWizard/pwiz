@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -27,7 +26,6 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using System;
@@ -42,6 +40,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class BuildPeptideSearchLibraryControl : UserControl
     {
+        private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
+
         public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager)
         {
             DocumentContainer = documentContainer;
@@ -55,8 +55,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (DocumentContainer.Document.PeptideCount == 0)
                 cbFilterForDocumentPeptides.Hide();
 
-            foreach (var standard in IrtStandard.ALL)
-                comboStandards.Items.Add(standard);
+            _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
+            _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
         }
 
         public BuildPeptideSearchLibrarySettings BuildLibrarySettings
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             public BuildPeptideSearchLibrarySettings(BuildPeptideSearchLibraryControl control) : this(control.CutOffScore,
                 control.SearchFilenames, control.IrtStandards, control.IncludeAmbiguousMatches,
-                control.FilterForDocumentPeptides, control.WorkflowType, control.DocumentContainer.Document.DocumentType)
+                control.FilterForDocumentPeptides, control.WorkflowType, control.ModeUI)
             {
             }
 
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 IncludeAmbiguousMatches = includeAmbiguousMatches;
                 FilterForDocumentPeptides = filterForDocumentPeptides;
                 WorkFlow = workFlow;
-                _docType = SrmDocument.DOCUMENT_TYPE.none;
+                _docType = docType;
             }
 
             [Track(ignoreDefaultParent: true)]
@@ -129,7 +129,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private IModifyDocumentContainer DocumentContainer { get; set; }
         private LibraryManager LibraryManager { get; set; }
-        private ImportPeptideSearch ImportPeptideSearch { get; set; }
+        public ImportPeptideSearch ImportPeptideSearch { get; set; }
+
+        private SrmDocument.DOCUMENT_TYPE ModeUI => (WizardForm is FormEx parent) ? parent.ModeUI : SrmDocument.DOCUMENT_TYPE.none;
 
         private Form WizardForm
         {
@@ -138,25 +140,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public IrtStandard IrtStandards
         {
-            get { return comboStandards.SelectedItem as IrtStandard ?? IrtStandard.EMPTY; }
+            get { return _driverStandards.SelectedItem; }
             set
             {
-                if (value == null)
-                    comboStandards.SelectedIndex = 0;
-
-                for (var i = 0; i < comboStandards.Items.Count; i++)
+                var index = 0;
+                if (value != null)
                 {
-                    if (comboStandards.Items[i] == value)
+                    for (var i = 0; i < comboStandards.Items.Count; i++)
                     {
-                        comboStandards.SelectedIndex = i;
-                        return;
+                        if (comboStandards.Items[i].ToString().Equals(value.GetKey()))
+                        {
+                            index = i;
+                            break;
+                        }
                     }
                 }
-                comboStandards.SelectedIndex = 0;
+                comboStandards.SelectedIndex = index;
+                _driverStandards.SelectedIndexChangedEvent(null, null);
             }
         }
 
         public bool? PreferEmbeddedSpectra { get; set; }
+        public bool DebugMode { get; set; }
 
         public ImportPeptideSearchDlg.Workflow WorkflowType
         {
@@ -281,6 +286,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        public string LastBuildCommandArgs { get; private set; }
+        public string LastBuildOutput { get; private set; }
+
         private bool BuildPeptideSearchLibrary(CancelEventArgs e)
         {
             // Nothing to build, if now search files were specified
@@ -307,6 +315,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 builder = ImportPeptideSearch.GetLibBuilder(DocumentContainer.Document, DocumentContainer.DocumentFilePath, cbIncludeAmbiguousMatches.Checked);
                 builder.PreferEmbeddedSpectra = PreferEmbeddedSpectra;
+                builder.DebugMode = DebugMode;
             }
             catch (FileEx.DeleteException de)
             {
@@ -327,8 +336,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     try
                     {
                         ImportPeptideSearch.ClosePeptideSearchLibraryStreams(DocumentContainer.Document);
+                        var buildState = new LibraryManager.BuildState(null, null);
                         var status = longWaitDlg.PerformWork(WizardForm, 800,
-                            monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, new LibraryManager.BuildState(null, null)));
+                            monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, buildState));
+                        LastBuildCommandArgs = buildState.BuildCommandArgs;
+                        LastBuildOutput = buildState.BuildOutput;
                         if (status.IsError)
                         {
                             // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option
@@ -366,10 +378,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!LoadPeptideSearchLibrary(docLibSpec))
                 return false;
 
-            var selectedIrtStandard = comboStandards.SelectedItem as IrtStandard;
-            var addedIrts = false;
-            if (selectedIrtStandard != null && selectedIrtStandard != IrtStandard.EMPTY)
-                addedIrts = AddIrtLibraryTable(docLibSpec.FilePath, selectedIrtStandard);
+            var addedIrts = LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.DEFAULT, ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
             if (docNew == null)
@@ -384,6 +393,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 MessageDlg.Show(WizardForm, builder.AmbiguousMatchesMessage);
             }
+            ImportPeptideSearch.IrtStandard = _driverStandards.SelectedItem;
             return true;
         }
 
@@ -410,6 +420,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     string libraryName =
                         Helpers.GetUniqueName(Path.GetFileNameWithoutExtension(libraryPath), existingNames);
                     docLibSpec = LibrarySpec.CreateFromPath(libraryName, libraryPath);
+                    if (docLibSpec == null)
+                    {
+                        MessageDlg.Show(WizardForm, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__is_not_a_supported_spectral_library_file_format, libraryPath));
+                        return false;
+                    }
                     Settings.Default.SpectralLibraryList.SetValue(docLibSpec);
                 }
             }
@@ -456,10 +471,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (docLibSpec == null)
                 return false;
 
-            using (var longWait = new LongWaitDlg
-            {
-                Text = Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library
-            })
+            using (var longWait = new LongWaitDlg {Text = Resources.BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library})
             {
                 try
                 {
@@ -479,102 +491,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return ImportPeptideSearch.HasDocLib;
         }
 
-        private bool AddIrtLibraryTable(string path, IrtStandard standard)
-        {
-            if (!ImportPeptideSearch.HasDocLib || !ImportPeptideSearch.DocLib.IsLoaded)
-                return false;
-
-            var lib = ImportPeptideSearch.DocLib;
-
-            ProcessedIrtAverages processed = null;
-            using (var longWait = new LongWaitDlg
-            {
-                Text = Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times
-            })
-            {
-                try
-                {
-                    var status = longWait.PerformWork(WizardForm, 800, monitor =>
-                    {
-                        var irtProviders = lib.RetentionTimeProvidersIrt.ToArray();
-                        if (!irtProviders.Any())
-                            irtProviders = lib.RetentionTimeProviders.ToArray();
-                        processed = RCalcIrt.ProcessRetentionTimes(monitor, irtProviders, irtProviders.Length, standard.Peptides.ToArray(), new DbIrtPeptide[0]);
-                    });
-                    if (status.IsError)
-                        throw status.ErrorException;
-                }
-                catch (Exception x)
-                {
-                    MessageDlg.ShowWithException(WizardForm,
-                        TextUtil.LineSeparate(Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_, x.Message), x);
-                    return false;
-                }
-            }
-
-            using (var resultsDlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.spectral_library, processed))
-            {
-                if (resultsDlg.ShowDialog(this) != DialogResult.OK)
-                    return false;
-            }
-
-            var recalibrate = false;
-            if (processed.CanRecalibrateStandards(standard.Peptides))
-            {
-                using (var dlg = new MultiButtonMsgDlg(
-                    TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
-                        Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_),
-                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
-                {
-                    if (dlg.ShowDialog(WizardForm) == DialogResult.Yes)
-                        recalibrate = true;
-                }
-            }
-
-            using (var longWait = new LongWaitDlg
-            {
-                Text = Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library
-            })
-            {
-                try
-                {
-                    ImmutableList<DbIrtPeptide> newStandards = null;
-                    var status = longWait.PerformWork(WizardForm, 800, monitor =>
-                    {
-                        if (recalibrate)
-                        {
-                            monitor.UpdateProgress(new ProgressStatus().ChangeSegments(0, 2));
-                            newStandards = ImmutableList.ValueOf(processed.RecalibrateStandards(standard.Peptides));
-                            processed = RCalcIrt.ProcessRetentionTimes(
-                                monitor, processed.ProviderData.Select(data => data.Value.RetentionTimeProvider),
-                                processed.ProviderData.Count, newStandards.ToArray(), new DbIrtPeptide[0]);
-                        }
-                        var irtDb = IrtDb.CreateIrtDb(path);
-                        irtDb.AddPeptides(monitor, (newStandards ?? standard.Peptides).Concat(processed.DbIrtPeptides).ToList());
-                    });
-                    if (status.IsError)
-                        throw status.ErrorException;
-                }
-                catch (Exception x)
-                {
-                    MessageDlg.ShowWithException(WizardForm,
-                        TextUtil.LineSeparate(Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_add_iRTs_to_the_library_, x.Message), x);
-                    return false;
-                }
-            }
-            return true;
-        }
-
         public void ForceWorkflow(ImportPeptideSearchDlg.Workflow workflowType)
         {
             WorkflowType = workflowType;
             grpWorkflow.Hide();
-            var offset = grpWorkflow.Height + (lblStandardPeptides.Top - listSearchFiles.Bottom);
-            listSearchFiles.Height += offset;
-            lblStandardPeptides.Top += offset;
-            comboStandards.Top += offset;
-            cbIncludeAmbiguousMatches.Top += offset;
-            cbFilterForDocumentPeptides.Top += offset;
         }
 
         private void radioButtonLibrary_CheckedChanged(object sender, EventArgs e)
@@ -641,6 +561,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void tbxLibraryPath_TextChanged(object sender, EventArgs e)
         {
             FireInputFilesChanged();
+        }
+
+        private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverStandards.SelectedIndexChangedEvent(sender, e);
         }
     }
 }

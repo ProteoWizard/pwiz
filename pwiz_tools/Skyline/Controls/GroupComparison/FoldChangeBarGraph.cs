@@ -91,8 +91,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _skylineWindow = null;
             }
 
-            _bindingListSource.AllRowsChanged -= BindingListSourceAllRowsChanged;
-            _bindingListSource.ListChanged -= BindingListSourceOnListChanged;
+            if (_bindingListSource != null)
+            {
+                _bindingListSource.AllRowsChanged -= BindingListSourceAllRowsChanged;
+                _bindingListSource.ListChanged -= BindingListSourceOnListChanged;
+            }
 
             base.OnHandleDestroyed(e);
         }
@@ -191,6 +194,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 {
                     label += @" (" + row.IsotopeLabelType.Title + @")";
                 }
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 if (showGroup && !Equals(row.Group, default(GroupIdentifier)))
                 {
                     label += @" " + row.Group;

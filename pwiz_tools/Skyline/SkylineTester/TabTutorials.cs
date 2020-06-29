@@ -37,7 +37,7 @@ namespace SkylineTester
             var testList = new List<string>();
             TabTests.GetCheckedTests(MainWindow.TutorialsTree.TopNode, testList);
 
-            var args = new StringBuilder("offscreen=off loop=1 language=");
+            var args = new StringBuilder("offscreen=off loop=1 perftests=on language=");
             args.Append(MainWindow.GetCulture(MainWindow.TutorialsLanguage));
             if (MainWindow.ShowFormNamesTutorial.Checked)
                 args.Append(" showformnames=on");
@@ -48,8 +48,10 @@ namespace SkylineTester
             else
             {
                 int pauseSeconds = -1;
-                if (!MainWindow.PauseTutorialsScreenShots.Checked && 
-                    !Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
+                if (MainWindow.PauseTutorialsCoverShots.Checked)
+                    pauseSeconds = -2;
+                else if (!MainWindow.PauseTutorialsScreenShots.Checked &&
+                         !Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
                     pauseSeconds = 0;
                 args.Append(" pause=");
                 args.Append(pauseSeconds);

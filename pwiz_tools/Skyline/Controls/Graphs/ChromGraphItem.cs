@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Controls.Graphs
                               TransitionDocNode transition,
                               ChromatogramInfo chromatogram,
                               TransitionChromInfo tranPeakInfo,
-                              IRegressionFunction timeRegressionFunction,
+                              RegressionLine timeRegressionFunction,
                               bool[] annotatePeaks,
                               double[] dotProducts,
                               double bestProduct,
@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public TransitionDocNode TransitionNode { get; private set; }
         public ChromatogramInfo Chromatogram { get; private set; }
         public TransitionChromInfo TransitionChromInfo { get; private set; }
-        public IRegressionFunction TimeRegressionFunction { get; private set; }
+        public RegressionLine TimeRegressionFunction { get; private set; }
         public ScaledRetentionTime ScaleRetentionTime(double measuredTime)
         {
             return new ScaledRetentionTime(measuredTime, MeasuredTimeToDisplayTime(measuredTime));
@@ -290,9 +290,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     string title = Chromatogram.FilePath.GetSampleOrFileName();
                     var extractor = Chromatogram.Header.Extractor;
-                    return string.Format(extractor == ChromExtractor.base_peak
-                                             ? Resources.ChromGraphItem_Title__0____base_peak
-                                             : Resources.ChromGraphItem_Title__0____TIC, title);
+                    if (extractor == ChromExtractor.base_peak)
+                        return string.Format(Resources.ChromGraphItem_Title__0____base_peak, title);
+                    if (extractor == ChromExtractor.summed)
+                        return string.Format(Resources.ChromGraphItem_Title__0____TIC, title);
+                    return Chromatogram.GroupInfo.TextId ?? @"no summary text";
                 }
                 if (_step != 0)
                     return string.Format(Resources.ChromGraphItem_Title_Step__0_, _step);
@@ -523,8 +525,41 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            // If explicit retention time is in use, show that instead of predicted since it overrides
+            if (RetentionExplicit != null)
+            {
+                var time = RetentionExplicit.RetentionTime;
+                if (GraphChromatogram.ShowRT != ShowRTChrom.none)
+                {
+                    // Create temporary label to calculate positions
+                    AddRetentionTimeAnnotation(graphPane,
+                        g,
+                        annotations,
+                        ptTop,
+                        Resources.ChromGraphItem_AddAnnotations_Explicit,
+                        GraphObjType.predicted_rt_window,
+                        COLOR_RETENTION_TIME,
+                        ScaleRetentionTime(time));
+                }
+                // Draw background for retention time window
+                if ((RetentionExplicit.RetentionTimeWindow??0) > 0.0)
+                {
+                    var halfwin = (RetentionExplicit.RetentionTimeWindow??0) / 2.0;
+                    double x1 = ScaleRetentionTime(time - halfwin).DisplayTime;
+                    double x2 = ScaleRetentionTime(time + halfwin).DisplayTime;
+                    BoxObj box = new BoxObj(x1, 0, x2 - x1, 1,
+                        COLOR_RETENTION_WINDOW, COLOR_RETENTION_WINDOW)
+                    {
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
+                        IsClippedToChartRect = true,
+                        ZOrder = ZOrder.F_BehindGrid
+                    };
+                    annotations.Add(box);
+                }
+            }
+
             // Draw retention time indicator, if set
-            if (RetentionPrediction.HasValue)
+            else if (RetentionPrediction.HasValue)
             {
                 double time = RetentionPrediction.Value;
 
@@ -555,19 +590,6 @@ namespace pwiz.Skyline.Controls.Graphs
                                      };
                     annotations.Add(box);
                 }
-            }
-
-            if (RetentionExplicit != null && GraphChromatogram.ShowRT != ShowRTChrom.none)
-            {
-                // Create temporary label to calculate positions
-                AddRetentionTimeAnnotation(graphPane,
-                                            g,
-                                            annotations,
-                                            ptTop,
-                                            Resources.ChromGraphItem_AddAnnotations_Explicit,
-                                            GraphObjType.predicted_rt_window,
-                                            COLOR_RETENTION_TIME,
-                                            ScaleRetentionTime(RetentionExplicit.RetentionTime));
             }
 
             for (int i = 0, len = Chromatogram.NumPeaks; i < len; i++)
@@ -900,24 +922,20 @@ namespace pwiz.Skyline.Controls.Graphs
             return TimeRegressionFunction.GetY(time);
         }
 
-        public ScaledRetentionTime GetNearestDisplayTime(double displayTime)
+        public ScaledRetentionTime GetValidPeakBoundaryTime(double displayTime)
         {
-            int index = NearestIndex(_displayTimes, displayTime);
-            if (index < 0)
+            double measuredTime = TimeRegressionFunction == null
+                ? displayTime
+                : TimeRegressionFunction.GetX(displayTime);
+            var chromatogramInfo = Chromatogram;
+            if (chromatogramInfo.TimeIntervals != null)
             {
-                return ScaledRetentionTime.ZERO;
+                return ScaleRetentionTime(measuredTime);
             }
-            return new ScaledRetentionTime(_measuredTimes[index], _displayTimes[index]);
-        }
 
-        public ScaledRetentionTime GetNearestMeasuredTime(double measuredTime)
-        {
-            int index = GetNearestMeasuredIndex(measuredTime);
-            if (index < 0)
-            {
-                return ScaledRetentionTime.ZERO;
-            }
-            return new ScaledRetentionTime(_measuredTimes[index], _displayTimes[index]);
+            var interpolatedTimeIntensities = chromatogramInfo.GetInterpolatedTimeIntensities();
+            int index = interpolatedTimeIntensities.IndexOfNearestTime((float)displayTime);
+            return ScaleRetentionTime(interpolatedTimeIntensities.Times[index]);
         }
 
         public int GetNearestMeasuredIndex(double measuredTime)

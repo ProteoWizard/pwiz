@@ -57,12 +57,22 @@ namespace pwiz.Skyline.Model.Results
             private set { _labelRatios = value as ImmutableList<PeptideLabelRatio> ?? MakeReadOnly(value); }
         }
 
+        [Track(defaultValues:typeof(DefaultValuesFalse))]
         public bool ExcludeFromCalibration { get; private set; }
 
         public PeptideChromInfo ChangeExcludeFromCalibration(bool exclude)
         {
             return ChangeProp(ImClone(this), im => im.ExcludeFromCalibration = exclude);
         }
+
+        [Track(defaultValues: typeof(DefaultValuesNull))]
+        public double? AnalyteConcentration { get; private set; }
+
+        public PeptideChromInfo ChangeAnalyteConcentration(double? analyteConcentration)
+        {
+            return ChangeProp(ImClone(this), im => im.AnalyteConcentration = analyteConcentration);
+        }
+
 
         #region object overrides
 
@@ -74,6 +84,7 @@ namespace pwiz.Skyline.Model.Results
                    other.PeakCountRatio == PeakCountRatio &&
                    other.RetentionTime.Equals(RetentionTime) &&
                    other.ExcludeFromCalibration.Equals(ExcludeFromCalibration) &&
+                   other.AnalyteConcentration.Equals(AnalyteConcentration) &&
                    ArrayUtil.EqualsDeep(other.LabelRatios, LabelRatios);
         }
 
@@ -92,6 +103,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ PeakCountRatio.GetHashCode();
                 result = (result*397) ^ (RetentionTime.HasValue ? RetentionTime.Value.GetHashCode() : 0);
                 result = (result * 397) ^ ExcludeFromCalibration.GetHashCode();
+                result = (result * 397) ^ AnalyteConcentration.GetHashCode();
                 result = (result * 397) ^ LabelRatios.GetHashCodeDeep();
                 return result;
             }
@@ -664,7 +676,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other) &&
+            var result =  base.Equals(other) &&
                    Equals(other.MassError, MassError) &&
                    other.RetentionTime == RetentionTime &&
                    other.StartRetentionTime == StartRetentionTime &&
@@ -685,6 +697,7 @@ namespace pwiz.Skyline.Model.Results
                    Equals(other.IonMobility, IonMobility) &&
                    other.PointsAcrossPeak.Equals(PointsAcrossPeak) &&
                    Equals(IsForcedIntegration, other.IsForcedIntegration);
+            return result; // For ease of breakpoint setting
         }
 
         public override bool Equals(object obj)
@@ -725,26 +738,27 @@ namespace pwiz.Skyline.Model.Results
 
         #endregion
 
-        public static Results<TransitionChromInfo> FromProtoTransitionResults(StringPool stringPool, SrmSettings settings,
+        public static Results<TransitionChromInfo> FromProtoTransitionResults(AnnotationScrubber annotationScrubber, SrmSettings settings,
             SkylineDocumentProto.Types.TransitionResults transitionResults)
         {
             if (transitionResults == null)
             {
                 return null;
             }
+
             var measuredResults = settings.MeasuredResults;
             var peaksByReplicate = transitionResults.Peaks.ToLookup(peak => peak.ReplicateIndex);
             var lists = new List<ChromInfoList<TransitionChromInfo>>();
             for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
             {
                 var transitionChromInfos = peaksByReplicate[replicateIndex]
-                    .Select(transitionPeak => FromProtoTransitionPeak(stringPool, settings, transitionPeak)).ToArray();
+                    .Select(transitionPeak => FromProtoTransitionPeak(annotationScrubber, settings, transitionPeak)).ToArray();
                 lists.Add(new ChromInfoList<TransitionChromInfo>(transitionChromInfos));
             }
             return new Results<TransitionChromInfo>(lists);
         }
 
-        private static TransitionChromInfo FromProtoTransitionPeak(StringPool stringPool, SrmSettings settings,
+        private static TransitionChromInfo FromProtoTransitionPeak(AnnotationScrubber annotationScrubber, SrmSettings settings,
             SkylineDocumentProto.Types.TransitionPeak transitionPeak)
         {
             var measuredResults = settings.MeasuredResults;
@@ -793,7 +807,7 @@ namespace pwiz.Skyline.Model.Results
                 (short) transitionPeak.Rank,
                 (short) transitionPeak.RankByLevel,
                 GetEmptyRatios(settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count),
-                Annotations.FromProtoAnnotations(stringPool, transitionPeak.Annotations), 
+                annotationScrubber.ScrubAnnotations(Annotations.FromProtoAnnotations(transitionPeak.Annotations), AnnotationDef.AnnotationTarget.transition_result), 
                 DataValues.FromUserSet(transitionPeak.UserSet),
                 transitionPeak.ForcedIntegration
                 );

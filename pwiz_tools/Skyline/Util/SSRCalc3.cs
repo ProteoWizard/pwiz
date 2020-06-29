@@ -97,6 +97,11 @@ namespace pwiz.Skyline.Util
             return new Target[] { };
         }
 
+        public RetentionScoreProvider ScoreProvider
+        {
+            get { return null; }
+        }
+
         public RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
         {
             return null;

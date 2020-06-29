@@ -166,13 +166,33 @@ ref class ParallelDownloadQueue
         }
     };
 
+    generic<typename T, typename T2, typename TResult>
+    ref class Bind2
+    {
+        initonly T arg1;
+        initonly T2 arg2;
+        Func<T, T2, TResult>^ const f;
+        TResult _() { return f(arg1, arg2); }
+
+        public:
+        initonly Func<TResult>^ binder;
+        Bind2(Func<T, T2, TResult>^ f, T arg1, T2 arg2) : f(f), arg1(arg1), arg2(arg2) {
+            binder = gcnew Func<TResult>(this, &Bind2::_);
+        }
+    };
+
     ref class Binder abstract sealed // static
     {
         public:
         generic<typename T, typename TResult>
-            static Func<TResult>^ Create(Func<T, TResult>^ f, T arg) {
-                return (gcnew Bind1<T, TResult>(f, arg))->binder;
-            }
+        static Func<TResult>^ Create(Func<T, TResult>^ f, T arg) {
+            return (gcnew Bind1<T, TResult>(f, arg))->binder;
+        }
+
+        generic<typename T, typename T2, typename TResult>
+        static Func<TResult>^ Create(Func<T, T2, TResult>^ f, T arg1, T2 arg2) {
+            return (gcnew Bind2<T, T2, TResult>(f, arg1, arg2))->binder;
+        }
     };
 
     /// returns a JSON array or protobuf stream of the spectral intensities and masses (if the HTTP Accept header specifies 'application/octet-stream')
@@ -198,6 +218,7 @@ ref class ParallelDownloadQueue
 
     public:
     ParallelDownloadQueue(Uri^ url, System::String^ token, HttpClient^ client, int numSpectra, IMemoryCache<int, MSeMassSpectrum^>^ cache, IDictionary<int, Task^>^ tasksByIndex, int chunkSize, int concurrentTasks)
+        : _chunkSize(chunkSize), _concurrentTasks(concurrentTasks)
     {
         _sampleResultUrl = url;
         _accessToken = token;
@@ -207,8 +228,6 @@ ref class ParallelDownloadQueue
         _tasksByIndex = tasksByIndex;
         _httpClients = gcnew System::Collections::Concurrent::ConcurrentQueue<HttpClient^>();
         _cancelTokenSource = gcnew System::Threading::CancellationTokenSource();
-        _chunkSize = chunkSize;
-        _concurrentTasks = concurrentTasks;
         for (int i = 0; i < concurrentTasks+2; ++i)
         {
             auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
@@ -248,12 +267,98 @@ ref class ParallelDownloadQueue
         //    task->Wait();
     }
 
+    static int getRequestLimitTask(System::Uri^ url, System::String^ accessToken)
+    {
+        auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
+        webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
+        webRequestHandler->PreAuthenticate = true;
+
+        auto httpClient = gcnew HttpClient(webRequestHandler);
+        httpClient->BaseAddress = gcnew Uri(url->GetLeftPart(System::UriPartial::Authority));
+        httpClient->DefaultRequestHeaders->Authorization = gcnew AuthenticationHeaderValue("Bearer", accessToken);
+        httpClient->DefaultRequestHeaders->Accept->Add(gcnew MediaTypeWithQualityHeaderValue("application/octet-stream"));
+        httpClient->Timeout = System::TimeSpan::FromSeconds(60);
+
+        System::Net::Http::HttpRequestMessage^ request;
+        System::Net::Http::HttpResponseMessage^ response;
+        for (int streamRetryCount = 1, streamMaxRetryCount = 15; streamRetryCount <= streamMaxRetryCount; ++streamRetryCount)
+        {
+            try
+            {
+                for (int requestRetryCount = 1, requestMaxRetryCount = 15; requestRetryCount <= requestMaxRetryCount; ++requestRetryCount)
+                {
+                    try
+                    {
+                        request = gcnew System::Net::Http::HttpRequestMessage(System::Net::Http::HttpMethod::Get, url);
+                        response = httpClient->SendAsync(request, System::Net::Http::HttpCompletionOption::ResponseContentRead)->Result;
+                        if (response->IsSuccessStatusCode)
+                            break;
+                    }
+                    catch (Exception^ e)
+                    {
+                        if (requestRetryCount < requestMaxRetryCount)
+                        {
+                            // try again
+                            System::Threading::Thread::Sleep(2000 * Math::Pow(2, requestRetryCount));
+                        }
+                        else
+                            throw gcnew Exception(System::String::Format("error requesting spectra chunk {0} ({2})", "0", e->ToString()->Replace("\r", "")->Split(L'\n')[0]));
+                    }
+                }
+                if (!response->IsSuccessStatusCode)
+                    throw gcnew Exception(System::String::Format("error requesting spectra chunk {0} (HTTP {1})", "0", response->StatusCode));
+            }
+            catch (Exception^ e)
+            {
+                // if TooManyRequests, deactivate current httpClient and retry the task with the next available httpClient
+                if (response->StatusCode == (HttpStatusCode) 429)
+                {
+                    return 1;
+                }
+
+                if (streamRetryCount >= streamMaxRetryCount)
+                    throw gcnew Exception(System::String::Format("error deserializing spectra chunk {0} protobuf: {1}", "0", e->ToString()->Replace("\r", "")->Split(L'\n')[0]), e);
+            }
+            finally
+            {
+                delete request;
+
+                if (response != nullptr)
+                    delete response;
+            }
+        }
+        return 0;
+    }
+
+    // launch maxConcurrentTasks HTTP requests at the same time and see how many fail with 429; return the number that did not fail
+    static int GetRequestLimit(System::String^ url, String^ accessToken, int maxConcurrentTasks)
+    {
+        DateTime start = DateTime::UtcNow;
+        auto tasks = gcnew System::Collections::Generic::List<System::Threading::Tasks::Task<int>^>();
+        auto uri = gcnew Uri(url);
+        for (int i=0; i < maxConcurrentTasks; ++i)
+        {
+            auto f = gcnew Func<Uri^, String^, int>(&ParallelDownloadQueue::getRequestLimitTask);
+            tasks->Add(Task::Factory->StartNew(Binder::Create(f, uri, accessToken)));
+        }
+
+        for each (auto task in tasks)
+        {
+            if (task->Result)
+                --maxConcurrentTasks;
+        }
+        return Math::Max(1, maxConcurrentTasks);
+    }
+
     int runChunkTask(size_t taskIndex)
     {
         int currentThreadId = System::Threading::Thread::CurrentThread->ManagedThreadId;
 #ifdef _WIN32 //DEBUG
         Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Requesting chunk {0} on thread {1}", taskIndex, currentThreadId);
 #endif
+
+        _waitForStart->Set();
+
         HttpClient^ httpClient = nullptr;
         while (!_httpClients->TryDequeue(httpClient)) {}
         /*if (!_httpClientByThread->ContainsKey(currentThreadId))
@@ -288,8 +393,8 @@ ref class ParallelDownloadQueue
                     try
                     {
                         requestStart = DateTime::UtcNow;
-                        request = gcnew System::Net::Http::HttpRequestMessage(System::Net::Http::HttpMethod::Get, spectrumEndpoint(taskIndex, Math::Min(_numSpectra, (int) taskIndex + _chunkSize)));
-                        response = httpClient->SendAsync(request, System::Net::Http::HttpCompletionOption::ResponseHeadersRead)->Result;
+                        request = gcnew System::Net::Http::HttpRequestMessage(System::Net::Http::HttpMethod::Get, spectrumEndpoint(taskIndex, _chunkSize));
+                        response = httpClient->SendAsync(request, System::Net::Http::HttpCompletionOption::ResponseContentRead, _cancelTokenSource->Token)->Result;
                         if (response->IsSuccessStatusCode)
                             break;
                     }
@@ -312,112 +417,22 @@ ref class ParallelDownloadQueue
 
                 DateTime stop = DateTime::UtcNow;
 
-                _waitForStart->Set();
-
+                bytesDownloaded = response->Content->Headers->ContentLength.GetValueOrDefault(0);
 #ifdef _WIN32 //DEBUG
                 //if (streamRetryCount == 1)
-                    Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Starting chunk {0} ({1}ms to send request and read response headers)", taskIndex, (stop - requestStart).TotalMilliseconds);
+                    Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Starting chunk {0} ({1}ms to send request and receive {2} bytes; {3:0.}KB/s)", taskIndex, (stop - requestStart).TotalMilliseconds, bytesDownloaded, bytesDownloaded / 1024 / (stop - requestStart).TotalSeconds);
 #endif
 
                 start = DateTime::UtcNow;
                 auto lastSpectrum = start;
                 auto stream = response->Content->ReadAsStreamAsync()->Result;
+                long bytesParsed = 0;
                 for (int i = 0; i < _chunkSize && (taskIndex + i) < _numSpectra; ++i)
                 {
                     //if(!_cache->Contains(taskIndex + i))// ((i % 50) == 0)
                     {
-                        auto spectrum = ProtoBuf::Serializer::DeserializeWithLengthPrefix<MSeMassSpectrum^>(stream, ProtoBuf::PrefixStyle::Base128);
-                        if (spectrum == nullptr)
-                            throw gcnew Exception(System::String::Format("deserialized null spectrum for index {0} (spectrum {1})", i, taskIndex + i));
+                        auto spectrum = getSpectrumFromStream(stream, bytesParsed, taskIndex, i, currentThreadId, lastSpectrum);
 
-                        if (spectrum->Masses == nullptr)
-                        {
-                            spectrum->mzArray = new vector<double>();
-                            spectrum->intensityArray = new vector<double>();
-                            if (!_cache->Contains(taskIndex + i))
-                            {
-                                //Console::WriteLine("Adding result to cache: {0}", taskIndex + i);
-                                _cache->Add(taskIndex + i, spectrum);
-                            }
-                            continue;
-                        }
-                        bytesDownloaded += sizeof(double) * spectrum->Masses->Length * 2;
-
-                        if (bytesDownloaded == 0)
-                            throw gcnew Exception(System::String::Format("empty array for index {0} (spectrum {1})", i, taskIndex + i));
-
-                        // if a spectrum takes more than 5 seconds, something's wrong
-                        if ((DateTime::UtcNow - lastSpectrum).TotalSeconds > 10.0)
-                            throw gcnew Exception(System::String::Format("download is going too slow in chunk {0} on thread {1}: one spectrum ({2}) took {3}s", taskIndex, currentThreadId, taskIndex+i, (DateTime::UtcNow - lastSpectrum).TotalSeconds));
-                        lastSpectrum = DateTime::UtcNow;
-
-                        spectrum->mzArray = new vector<double>();
-                        spectrum->intensityArray = new vector<double>();
-                        auto& mzArray = *spectrum->mzArray;
-                        auto& intensityArray = *spectrum->intensityArray;
-
-                        ToStdVector(spectrum->Masses, mzArray);
-                        ToStdVector(spectrum->Intensities, intensityArray);
-
-                        if (spectrum->ScanSize->Length > 1)
-                        {
-                            // calculate cumulative scan indexes
-                            spectrum->ScanIndexes = gcnew System::Collections::Generic::List<int>(spectrum->ScanSize->Length);
-                            spectrum->ScanIndexes->Add(0);
-                            for (int j = 1; j < spectrum->ScanSize->Length; ++j)
-                                spectrum->ScanIndexes->Add(spectrum->ScanIndexes[j - 1] + spectrum->ScanSize[j - 1]);
-
-                            // for IMS data, we must sort all the points from the drift scans
-                            std::vector<size_t> p(mzArray.size());
-                            std::iota(p.begin(), p.end(), 0);
-                            std::sort(p.begin(), p.end(), ArrayLessThanByIndex<double>(mzArray));
-
-                            std::vector<bool> done(mzArray.size());
-                            for (size_t i = 0; i < mzArray.size(); ++i)
-                            {
-                                if (done[i])
-                                    continue;
-
-                                done[i] = true;
-                                size_t prev_j = i;
-                                size_t j = p[i];
-                                while (i != j)
-                                {
-                                    std::swap(mzArray[prev_j], mzArray[j]);
-                                    std::swap(intensityArray[prev_j], intensityArray[j]);
-                                    done[j] = true;
-                                    prev_j = j;
-                                    j = p[j];
-                                }
-                            }
-
-                            // and then combine equal points
-                            vector<double>& a = mzArray, &b = intensityArray;
-
-                            size_t i = 1, j = 0;
-                            while (i < a.size())
-                            {
-                                while (a[i] == a[j] && i < a.size())
-                                {
-                                    b[j] += b[i];
-                                    ++i;
-                                }
-
-                                if (i == a.size())
-                                    break;
-
-                                ++j;
-                                a[j] = a[i];
-                                b[j] = b[i];
-                                ++i;
-                            }
-
-                            a.resize(j + 1);
-                            b.resize(j + 1);
-                        }
-
-                        //spectrum->Masses = gcnew cli::array<double>(10);
-                        //spectrum->Intensities = gcnew cli::array<double>(10);
                         if (!_cache->Contains(taskIndex + i))
                         {
                             //Console::WriteLine("Adding result to cache: {0}", taskIndex + i);
@@ -436,13 +451,22 @@ ref class ParallelDownloadQueue
             }
             catch (Exception^ e)
             {
-                if (streamRetryCount < streamMaxRetryCount)
+                // if TooManyRequests, deactivate current httpClient and retry the task with the next available httpClient
+                if (response->StatusCode == (HttpStatusCode) 429)
+                {
+                    Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Deactivating HTTP client due to TooManyRequests response"));
+                    delete httpClient;
+                    while (!_httpClients->TryDequeue(httpClient)) {}
+                }
+
+                if (streamRetryCount < streamMaxRetryCount || response->StatusCode == (HttpStatusCode) 429)
                 {
                     // try again
 #ifdef _WIN32 //DEBUG
                     Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk download {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], streamRetryCount));
 #endif
-                    System::Threading::Thread::Sleep(2000 * Math::Pow(2, streamRetryCount));
+                    if (response->StatusCode != (HttpStatusCode) 429)
+                        System::Threading::Thread::Sleep(2000 * Math::Pow(2, streamRetryCount));
                     bytesDownloaded = 0;
                 }
                 else
@@ -482,6 +506,100 @@ ref class ParallelDownloadQueue
             _tasksByIndex->Add(taskIndex, chunkTask);
         }
         return chunkTask;
+    }
+
+    MSeMassSpectrum^ getSpectrumFromStream(System::IO::Stream^ stream, long& bytesDownloaded, int taskIndex, int spectrumIndex, int currentThreadId, DateTime lastSpectrum)
+    {
+        auto spectrum = ProtoBuf::Serializer::DeserializeWithLengthPrefix<MSeMassSpectrum^>(stream, ProtoBuf::PrefixStyle::Base128);
+        if (spectrum == nullptr)
+            throw gcnew Exception(System::String::Format("deserialized null spectrum for index {0} (spectrum {1})", spectrumIndex, taskIndex + spectrumIndex));
+
+        if (spectrum->Masses == nullptr)
+        {
+            spectrum->mzArray = new vector<double>();
+            spectrum->intensityArray = new vector<double>();
+            if (!_cache->Contains(taskIndex + spectrumIndex))
+            {
+                //Console::WriteLine("Adding result to cache: {0}", taskIndex + i);
+                _cache->Add(taskIndex + spectrumIndex, spectrum);
+            }
+            return spectrum;
+        }
+        bytesDownloaded += sizeof(double) * spectrum->Masses->Length * 2;
+
+        if (bytesDownloaded == 0)
+            throw gcnew Exception(System::String::Format("empty array for index {0} (spectrum {1})", spectrumIndex, taskIndex + spectrumIndex));
+
+        // if a spectrum takes more than 5 seconds, something's wrong
+        if ((DateTime::UtcNow - lastSpectrum).TotalSeconds > 10.0)
+            throw gcnew Exception(System::String::Format("download is going too slow in chunk {0} on thread {1}: one spectrum ({2}) took {3}s", taskIndex, currentThreadId, taskIndex + spectrumIndex, (DateTime::UtcNow - lastSpectrum).TotalSeconds));
+        lastSpectrum = DateTime::UtcNow;
+
+        spectrum->mzArray = new vector<double>();
+        spectrum->intensityArray = new vector<double>();
+        auto& mzArray = *spectrum->mzArray;
+        auto& intensityArray = *spectrum->intensityArray;
+
+        ToStdVector(spectrum->Masses, mzArray);
+        ToStdVector(spectrum->Intensities, intensityArray);
+
+        if (spectrum->ScanSize->Length > 1)
+        {
+            // calculate cumulative scan indexes
+            spectrum->ScanIndexes = gcnew System::Collections::Generic::List<int>(spectrum->ScanSize->Length);
+            spectrum->ScanIndexes->Add(0);
+            for (int j = 1; j < spectrum->ScanSize->Length; ++j)
+                spectrum->ScanIndexes->Add(spectrum->ScanIndexes[j - 1] + spectrum->ScanSize[j - 1]);
+
+            // for IMS data, we must sort all the points from the drift scans
+            std::vector<size_t> p(mzArray.size());
+            std::iota(p.begin(), p.end(), 0);
+            std::sort(p.begin(), p.end(), ArrayLessThanByIndex<double>(mzArray));
+
+            std::vector<bool> done(mzArray.size());
+            for (size_t i = 0; i < mzArray.size(); ++i)
+            {
+                if (done[i])
+                    continue;
+
+                done[i] = true;
+                size_t prev_j = i;
+                size_t j = p[i];
+                while (i != j)
+                {
+                    std::swap(mzArray[prev_j], mzArray[j]);
+                    std::swap(intensityArray[prev_j], intensityArray[j]);
+                    done[j] = true;
+                    prev_j = j;
+                    j = p[j];
+                }
+            }
+
+            // and then combine equal points
+            vector<double>& a = mzArray, &b = intensityArray;
+
+            size_t i = 1, j = 0;
+            while (i < a.size())
+            {
+                while (a[i] == a[j] && i < a.size())
+                {
+                    b[j] += b[i];
+                    ++i;
+                }
+
+                if (i == a.size())
+                    break;
+
+                ++j;
+                a[j] = a[i];
+                b[j] = b[i];
+                ++i;
+            }
+
+            a.resize(j + 1);
+            b.resize(j + 1);
+        }
+        return spectrum;
     }
 };
 
@@ -527,20 +645,27 @@ class UnifiData::Impl
             getNumberOfSpectra();
             //Console::WriteLine("numLogicalSpectra: {0}, numNetworkSpectra: {1}", _numLogicalSpectra, _numNetworkSpectra);
 
-            _chunkSize = 10;// Math::Max(10, (int)std::ceil(_numNetworkSpectra / 500.0));
+
+            _chunkSize = 20;// Math::Max(10, (int)std::ceil(_numNetworkSpectra / 500.0));
 
 #ifdef _WIN64
-            _chunkReadahead = 8;
+            int idealChunkReadahead = _chunkReadahead = 8;
 #else
-            _chunkReadahead = 2;
+            int idealChunkReadahead = _chunkReadahead = 2;
 #endif
+            _chunkReadahead = ParallelDownloadQueue::GetRequestLimit(spectrumEndpoint(0, 1), _accessToken, _chunkReadahead);
+            _chunkSize = (double) idealChunkReadahead / _chunkReadahead * _chunkSize;
+
+            if (queryVars[L"chunkSize"] != nullptr) _chunkSize = lexical_cast<int>(ToStdString(queryVars[L"chunkSize"]));
+            if (queryVars[L"chunkReadahead"] != nullptr) _chunkReadahead = lexical_cast<int>(ToStdString(queryVars[L"chunkReadahead"]));
+
             _cacheSize = _chunkSize * _chunkReadahead * 2;
 
             _cache = gcnew MemoryCache<int, MSeMassSpectrum^>(_cacheSize);
             _cache->SetPolicy(LruEvictionPolicy<int, MSeMassSpectrum^>::typeid->GetGenericTypeDefinition());
 
             _tasksByIndex = gcnew ConcurrentDictionary<int, Task^>();
-            _queue = gcnew ParallelDownloadQueue(_sampleResultUrl, _accessToken, _httpClient, _numNetworkSpectra, _cache, _tasksByIndex, _chunkSize, _chunkReadahead+1);
+            _queue = gcnew ParallelDownloadQueue(_sampleResultUrl, _accessToken, _httpClient, _numNetworkSpectra, _cache, _tasksByIndex, _chunkSize, _chunkReadahead);
         }
         CATCH_AND_FORWARD_EX(sampleResultUrl)
     }
@@ -1114,8 +1239,8 @@ class UnifiData::Impl
             {
                 convertWatersToPwizSpectrum(spectrum, result, index, getBinaryData);
 
-                // also queue the next 5 chunks
-                for (int i = 1; i <= _chunkReadahead; ++i)
+                // also queue the next _chunkReadahead chunks
+                for (int i = 1; i < _chunkReadahead; ++i)
                 {
                     if ((taskIndex + _chunkSize * i) > _numNetworkSpectra)
                         break;
@@ -1143,8 +1268,8 @@ class UnifiData::Impl
             // if cache is empty, wait for primary chunk download to start before starting other chunks
             auto chunkTask = _queue->getChunkTask(taskIndex, true, _cache->Count == 0);
 
-            // also queue the next 5 chunks
-            for (int i = 1; i <= _chunkReadahead; ++i)
+            // also queue the next _chunkReadahead chunks
+            for (int i = 1; i < _chunkReadahead; ++i)
             {
                 if ((taskIndex + _chunkSize * i) > _numNetworkSpectra)
                     break;
@@ -1170,553 +1295,6 @@ class UnifiData::Impl
 
 
 };
-
-
-/*struct ExperimentImpl : public Experiment
-{
-    ExperimentImpl(const WiffFileImpl* wifffile, int sample, int period, int experiment);
-
-    virtual int getSampleNumber() const {return sample;}
-    virtual int getPeriodNumber() const {return period;}
-    virtual int getExperimentNumber() const {return experiment;}
-
-    virtual size_t getSRMSize() const;
-    virtual void getSRM(size_t index, Target& target) const;
-    virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const;
-    virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
-                        double& basePeakX, double& basePeakY) const;
-
-    virtual bool getHasIsolationInfo() const;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const;
-
-    virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const;
-    virtual ScanType getScanType() const;
-    virtual ExperimentType getExperimentType() const;
-    virtual Polarity getPolarity() const;
-
-    virtual double convertCycleToRetentionTime(int cycle) const;
-    virtual double convertRetentionTimeToCycle(double rt) const;
-
-    virtual void getTIC(std::vector<double>& times, std::vector<double>& intensities) const;
-    virtual void getBPC(std::vector<double>& times, std::vector<double>& intensities) const;
-
-    const WiffFileImpl* wifffile_;
-    gcroot<MSExperiment^> msExperiment;
-    int sample, period, experiment;
-
-    size_t transitionCount;
-    typedef map<pair<double, double>, pair<int, int> > TransitionParametersMap;
-    TransitionParametersMap transitionParametersMap;
-
-    const vector<double>& cycleTimes() const {initializeTIC(); return cycleTimes_;}
-    const vector<double>& cycleIntensities() const {initializeTIC(); return cycleIntensities_;}
-    const vector<double>& basePeakMZs() const {initializeBPC(); return basePeakMZs_;}
-    const vector<double>& basePeakIntensities() const {initializeBPC(); return basePeakIntensities_;}
-
-    private:
-    void initializeTIC() const;
-    void initializeBPC() const;
-    mutable bool initializedTIC_;
-    mutable bool initializedBPC_;
-    mutable vector<double> cycleTimes_;
-    mutable vector<double> cycleIntensities_;
-    mutable vector<double> basePeakMZs_;
-    mutable vector<double> basePeakIntensities_;
-};
-
-typedef boost::shared_ptr<ExperimentImpl> ExperimentImplPtr;
-
-
-struct SpectrumImpl : public Spectrum
-{
-    SpectrumImpl(ExperimentImplPtr experiment, int cycle);
-
-    virtual int getSampleNumber() const {return experiment->sample;}
-    virtual int getPeriodNumber() const {return experiment->period;}
-    virtual int getExperimentNumber() const {return experiment->experiment;}
-    virtual int getCycleNumber() const {return cycle;}
-
-    virtual int getMSLevel() const;
-
-    virtual bool getHasIsolationInfo() const;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const;
-
-    virtual bool getHasPrecursorInfo() const;
-    virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const;
-
-    virtual double getStartTime() const;
-
-    virtual bool getDataIsContinuous() const {return pointsAreContinuous;}
-    size_t getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints) const;
-    virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints) const;
-
-    virtual double getSumY() const {return sumY;}
-    virtual double getBasePeakX() const {initializeBasePeak(); return bpX;}
-    virtual double getBasePeakY() const {initializeBasePeak(); return bpY;}
-    virtual double getMinX() const {return minX;}
-    virtual double getMaxX() const {return maxX;}
-
-    ExperimentImplPtr experiment;
-    gcroot<MassSpectrumInfo^> spectrumInfo;
-    mutable gcroot<MassSpectrum^> spectrum;
-
-#if __CLR_VER > 40000000 // .NET 4
-    mutable gcroot<cli::array<PeakClass^>^> peakList;
-#endif
-
-    int cycle;
-
-    // data points
-    double sumY, minX, maxX;
-    vector<double> x, y;
-    bool pointsAreContinuous;
-
-    // precursor info
-    double selectedMz, intensity;
-    int charge;
-
-    private:
-
-    mutable double bpX, bpY;
-    void initializeBasePeak() const
-    {
-        if (bpY == -1)
-        {
-            bpY = experiment->basePeakIntensities()[cycle - 1];
-            bpX = bpY > 0 ? experiment->basePeakMZs()[cycle - 1] : 0;
-        }
-    }
-};
-
-typedef boost::shared_ptr<SpectrumImpl> SpectrumImplPtr;*/
-
-
-/*InstrumentModel WiffFileImpl::getInstrumentModel() const
-{
-    try
-    {
-        String^ modelName = sample->Details->InstrumentName->ToUpperInvariant()->Replace(" ", "")->Replace("API", "");
-        if (modelName == "UNKNOWN")                 return InstrumentModel_Unknown;
-        if (modelName->Contains("2000QTRAP"))       return API2000QTrap; // predicted
-        if (modelName->Contains("2000"))            return API2000;
-        if (modelName->Contains("2500QTRAP"))       return API2000QTrap; // predicted
-        if (modelName->Contains("3000"))            return API3000; // predicted
-        if (modelName->Contains("3200QTRAP"))       return API3200QTrap;
-        if (modelName->Contains("3200"))            return API3200; // predicted
-        if (modelName->Contains("3500QTRAP"))       return API3500QTrap; // predicted
-        if (modelName->Contains("4000QTRAP"))       return API4000QTrap;
-        if (modelName->Contains("4000"))            return API4000; // predicted
-        if (modelName->Contains("QTRAP4500"))       return API4500QTrap;
-        if (modelName->Contains("4500"))            return API4500;
-        if (modelName->Contains("5000"))            return API5000; // predicted
-        if (modelName->Contains("QTRAP5500"))       return API5500QTrap; // predicted
-        if (modelName->Contains("5500"))            return API5500; // predicted
-        if (modelName->Contains("QTRAP6500"))       return API6500QTrap; // predicted
-        if (modelName->Contains("6500"))            return API6500; // predicted
-        if (modelName->Contains("QSTARPULSAR"))     return QStarPulsarI; // also covers variants like "API QStar Pulsar i, 0, Qstar"
-        if (modelName->Contains("QSTARXL"))         return QStarXL;
-        if (modelName->Contains("QSTARELITE"))      return QStarElite;
-        if (modelName->Contains("QSTAR"))           return QStar; // predicted
-        if (modelName->Contains("TRIPLETOF4600"))   return API4600TripleTOF; // predicted
-        if (modelName->Contains("TRIPLETOF5600"))   return API5600TripleTOF;
-        if (modelName->Contains("TRIPLETOF6600"))   return API6600TripleTOF; // predicted
-        if (modelName->Contains("NLXTOF"))          return NlxTof; // predicted
-        if (modelName->Contains("100LC"))           return API100LC; // predicted
-        if (modelName->Contains("100"))             return API100; // predicted
-        if (modelName->Contains("150MCA"))          return API150MCA; // predicted
-        if (modelName->Contains("150EX"))           return API150EX; // predicted
-        if (modelName->Contains("165"))             return API165; // predicted
-        if (modelName->Contains("300"))             return API300; // predicted
-        if (modelName->Contains("350"))             return API350; // predicted
-        if (modelName->Contains("365"))             return API365; // predicted
-        if (modelName->Contains("X500QTOF"))        return X500QTOF;
-        throw gcnew Exception("unknown instrument type: " + sample->Details->InstrumentName);
-    }
-    CATCH_AND_FORWARD
-}*/
-
-/*IonSourceType WiffFileImpl::getIonSourceType() const
-{
-    try {return (IonSourceType) 0;} CATCH_AND_FORWARD
-}
-
-blt::local_date_time WiffFileImpl::getSampleAcquisitionTime(int sample, bool adjustToHostTime) const
-{
-    try
-    {
-        setSample(sample);
-
-        System::DateTime acquisitionTime = this->sample->Details->AcquisitionDateTime;
-        bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
-            bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
-
-        if (adjustToHostTime)
-        {
-            bpt::time_duration tzOffset = bpt::second_clock::universal_time() - bpt::second_clock::local_time();
-            return blt::local_date_time(pt + tzOffset, blt::time_zone_ptr()); // treat time as if it came from host's time zone; actual time zone may not be provided by Sciex
-        }
-        else
-            return blt::local_date_time(pt, blt::time_zone_ptr());
-    }
-    CATCH_AND_FORWARD
-}*/
-
-
-/*ExperimentPtr WiffFileImpl::getExperiment(int sample, int period, int experiment) const
-{
-    setExperiment(sample, period, experiment);
-    ExperimentImplPtr msExperiment(new ExperimentImpl(this, sample, period, experiment));
-    return msExperiment;
-}
-
-
-ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int period, int experiment)
-: wifffile_(wifffile), sample(sample), period(period), experiment(experiment), transitionCount(0), initializedTIC_(false), initializedBPC_(false)
-{
-    try
-    {
-        wifffile_->setExperiment(sample, period, experiment);
-        msExperiment = wifffile_->msSample->GetMSExperiment(experiment-1);
-
-        if ((ExperimentType) msExperiment->Details->ExperimentType == MRM)
-            transitionCount = msExperiment->Details->MassRangeInfo->Length;
-    }
-    CATCH_AND_FORWARD
-}
-
-void ExperimentImpl::initializeTIC() const
-{
-    if (initializedTIC_)
-        return;
-
-    try
-    {
-        TotalIonChromatogram^ tic = msExperiment->GetTotalIonChromatogram();
-        ToStdVector(tic->GetActualXValues(), cycleTimes_);
-        ToStdVector(tic->GetActualYValues(), cycleIntensities_);
-
-        initializedTIC_ = true;
-    }
-    CATCH_AND_FORWARD
-}
-
-void ExperimentImpl::initializeBPC() const
-{
-    if (initializedBPC_)
-        return;
-
-    try
-    {
-        BasePeakChromatogramSettings^ bpcs = gcnew BasePeakChromatogramSettings(0, 0, gcnew array<double>(0), gcnew array<double>(0));
-        BasePeakChromatogram^ bpc = msExperiment->GetBasePeakChromatogram(bpcs);
-        BasePeakChromatogramInfo^ bpci = bpc->Info;
-        ToStdVector(bpc->GetActualYValues(), basePeakIntensities_);
-
-        basePeakMZs_.resize(cycleTimes_.size());
-        for (size_t i = 0; i < cycleTimes_.size(); ++i)
-            basePeakMZs_[i] = bpci->GetBasePeakMass(i);
-
-        initializedBPC_ = true;
-    }
-    CATCH_AND_FORWARD
-}
-
-size_t ExperimentImpl::getSRMSize() const
-{
-    try {return transitionCount;} CATCH_AND_FORWARD
-}
-
-void ExperimentImpl::getSRM(size_t index, Target& target) const
-{
-    try
-    {
-        if (index >= transitionCount)
-            throw std::out_of_range("[Experiment::getSRM()] index out of range");
-
-        MRMMassRange^ transition = (MRMMassRange^) msExperiment->Details->MassRangeInfo[index];
-        //const pair<int, int>& e = transitionParametersMap.find(make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble))->second;
-
-        target.type = TargetType_SRM;
-        target.Q1 = transition->Q1Mass;
-        target.Q3 = transition->Q3Mass;
-        target.dwellTime = transition->DwellTime;
-        // TODO: store RTWindow?
-
-        {
-            // TODO: use NaN to indicate these values should be considered missing?
-            target.collisionEnergy = 0;
-            target.declusteringPotential = 0;
-        }
-    }
-    CATCH_AND_FORWARD
-}
-
-void ExperimentImpl::getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const
-{
-    double x, y;
-    getSIC(index, times, intensities, x, y);
-}
-
-void ExperimentImpl::getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
-                            double& basePeakX, double& basePeakY) const
-{
-    try
-    {
-        if (index >= transitionCount)
-            throw std::out_of_range("[Experiment::getSIC()] index out of range");
-
-        ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
-        ExtractedIonChromatogram^ xic = msExperiment->GetExtractedIonChromatogram(option);
-
-        ToStdVector(xic->GetActualXValues(), times);
-        ToStdVector(xic->GetActualYValues(), intensities);
-
-        basePeakY = xic->MaximumYValue;
-        basePeakX = 0;
-        for (size_t i=0; i < intensities.size(); ++i)
-            if (intensities[i] == basePeakY)
-            {
-                basePeakX = times[i];
-                break;
-            }
-    }
-    CATCH_AND_FORWARD
-}
-
-void ExperimentImpl::getAcquisitionMassRange(double& startMz, double& stopMz) const
-{
-    try
-    {
-        if ((ExperimentType) msExperiment->Details->ExperimentType != MRM)
-        {
-            startMz = msExperiment->Details->StartMass;
-            stopMz = msExperiment->Details->EndMass;
-        }
-        else
-            startMz = stopMz = 0;
-    }
-    CATCH_AND_FORWARD
-}
-
-ScanType ExperimentImpl::getScanType() const
-{
-    try {return (ScanType) msExperiment->Details->SpectrumType;} CATCH_AND_FORWARD
-}
-
-ExperimentType ExperimentImpl::getExperimentType() const
-{
-    try {return (ExperimentType) msExperiment->Details->ExperimentType;} CATCH_AND_FORWARD
-}
-
-Polarity ExperimentImpl::getPolarity() const
-{
-    try {return (Polarity) msExperiment->Details->Polarity;} CATCH_AND_FORWARD
-}
-
-double ExperimentImpl::convertCycleToRetentionTime(int cycle) const
-{
-    try {return msExperiment->GetRTFromExperimentScanIndex(cycle);} CATCH_AND_FORWARD
-}
-
-double ExperimentImpl::convertRetentionTimeToCycle(double rt) const
-{
-    try {return msExperiment->RetentionTimeToExperimentScan(rt);} CATCH_AND_FORWARD
-}
-
-void ExperimentImpl::getTIC(std::vector<double>& times, std::vector<double>& intensities) const
-{
-    try
-    {
-        times = cycleTimes();
-        intensities = cycleIntensities();
-    }
-    CATCH_AND_FORWARD
-}
-
-void ExperimentImpl::getBPC(std::vector<double>& times, std::vector<double>& intensities) const
-{
-    try
-    {
-        times = cycleTimes();
-        intensities = basePeakIntensities();
-    }
-    CATCH_AND_FORWARD
-}
-
-bool ExperimentImpl::getHasIsolationInfo() const
-{
-    return (ExperimentType)msExperiment->Details->ExperimentType == Product &&
-           msExperiment->Details->MassRangeInfo->Length > 0;
-}
-
-void ExperimentImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const
-{
-    if (!getHasIsolationInfo())
-        return;
-
-    try
-    {
-        double isolationWidth = ((FragmentBasedScanMassRange^)(msExperiment->Details->MassRangeInfo[0]))->IsolationWindow;
-
-        centerMz = (double)((FragmentBasedScanMassRange^)(msExperiment->Details->MassRangeInfo[0]))->FixedMasses[0];
-        lowerLimit = centerMz - isolationWidth / 2;
-        upperLimit = centerMz + isolationWidth / 2;
-    }
-    CATCH_AND_FORWARD
-}
-
-
-SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
-: experiment(experiment), cycle(cycle), selectedMz(0), bpY(-1), bpX(-1)
-{
-    try
-    {
-        spectrumInfo = experiment->msExperiment->GetMassSpectrumInfo(cycle-1);
-
-        pointsAreContinuous = !spectrumInfo->CentroidMode;
-
-        sumY = experiment->cycleIntensities()[cycle-1];
-        //minX = experiment->; // TODO Mass range?
-        //maxX = spectrum->MaximumXValue;
-
-        if (spectrumInfo->IsProductSpectrum)
-        {
-            selectedMz = spectrumInfo->ParentMZ;
-            intensity = 0;
-            charge = spectrumInfo->ParentChargeState;
-        }
-    }
-    CATCH_AND_FORWARD
-}
-
-int SpectrumImpl::getMSLevel() const
-{
-    try {return spectrumInfo->MSLevel == 0 ? 1 : spectrumInfo->MSLevel;} CATCH_AND_FORWARD
-}
-
-bool SpectrumImpl::getHasIsolationInfo() const { return experiment->getHasIsolationInfo(); }
-
-void SpectrumImpl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const
-{
-    if (!getHasIsolationInfo())
-        return;
-
-    try
-    {
-        double isolationWidth = ((FragmentBasedScanMassRange^)(experiment->msExperiment->Details->MassRangeInfo[0]))->IsolationWindow;
-        centerMz = getHasPrecursorInfo() ? selectedMz : (double)((FragmentBasedScanMassRange^)(experiment->msExperiment->Details->MassRangeInfo[0]))->FixedMasses[0];
-        lowerLimit = centerMz - isolationWidth / 2;
-        upperLimit = centerMz + isolationWidth / 2;
-    }
-    CATCH_AND_FORWARD
-}
-
-bool SpectrumImpl::getHasPrecursorInfo() const
-{
-    return selectedMz != 0;
-}
-
-void SpectrumImpl::getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const
-{
-    selectedMz = this->selectedMz;
-    intensity = this->intensity;
-    charge = this->charge;
-}
-
-double SpectrumImpl::getStartTime() const
-{
-    return spectrumInfo->StartRT;
-}
-
-size_t SpectrumImpl::getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints) const
-{
-    try
-    {
-#if __CLR_VER > 40000000 // .NET 4
-        if (doCentroid)
-        {
-            if ((cli::array<PeakClass^>^) peakList == nullptr) peakList = experiment->msExperiment->GetPeakArray(cycle-1);
-            return (size_t) peakList->Length;
-        }
-        else
-#endif
-        {
-            if ((MassSpectrum^) spectrum == nullptr)
-            {
-                spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
-#if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
-                if (!ignoreZeroIntensityPoints && pointsAreContinuous)
-                {
-                    ExperimentType experimentType = experiment->getExperimentType();
-                    if (experimentType != MRM && experimentType != SIM)
-                        experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
-                }
-#endif
-            }
-            return (size_t) spectrum->NumDataPoints;
-        }
-    }
-    CATCH_AND_FORWARD
-}
-
-void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities, bool ignoreZeroIntensityPoints) const
-{
-    try
-    {
-#if __CLR_VER > 40000000 // .NET 4
-        if (doCentroid && pointsAreContinuous)
-        {
-            if ((cli::array<PeakClass^>^) peakList == nullptr) peakList = experiment->msExperiment->GetPeakArray(cycle-1);
-            size_t numPoints = peakList->Length;
-            mz.resize(numPoints);
-            intensities.resize(numPoints);
-            for (size_t i=0; i < numPoints; ++i)
-            {
-                PeakClass^ peak = peakList[(int)i];
-                mz[i] = peak->xValue;
-                intensities[i] = peak->area;
-            }
-        }
-        else
-#endif
-        {
-            if ((MassSpectrum^) spectrum == nullptr)
-            {
-                spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
-#if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
-                if (!ignoreZeroIntensityPoints && pointsAreContinuous)
-                {
-                    ExperimentType experimentType = experiment->getExperimentType();
-                    if (experimentType != MRM && experimentType != SIM)
-                        experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
-                }
-#endif
-            }
-            ToStdVector(spectrum->GetActualXValues(), mz);
-            ToStdVector(spectrum->GetActualYValues(), intensities);
-        }
-    }
-    CATCH_AND_FORWARD
-}
-
-
-SpectrumPtr WiffFileImpl::getSpectrum(int sample, int period, int experiment, int cycle) const
-{
-    try
-    {
-        ExperimentPtr msExperiment = getExperiment(sample, period, experiment);
-        return getSpectrum(msExperiment, cycle);
-    }
-    CATCH_AND_FORWARD
-}
-
-SpectrumPtr WiffFileImpl::getSpectrum(ExperimentPtr experiment, int cycle) const
-{
-    SpectrumImplPtr spectrum(new SpectrumImpl(boost::static_pointer_cast<ExperimentImpl>(experiment), cycle));
-    return spectrum;
-}*/
-
-
 
 
 PWIZ_API_DECL

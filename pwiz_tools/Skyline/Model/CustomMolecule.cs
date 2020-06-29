@@ -47,12 +47,13 @@ namespace pwiz.Skyline.Model
         public string PrimaryAccessionValue { get { return AccessionNumbers == null ? null : AccessionNumbers.Values.FirstOrDefault(); } } // Value of key, if any, in first order of PREFERRED_ACCESSION_TYPE_ORDER
 
         // Familiar molecule ID formats, and our order of preference as primary key
-        public static readonly string[] PREFERRED_ACCESSION_TYPE_ORDER = { TagInChiKey, TagCAS, TagHMDB, TagInChI, TagSMILES };
+        public static readonly string[] PREFERRED_ACCESSION_TYPE_ORDER = { TagInChiKey, TagCAS, TagHMDB, TagInChI, TagSMILES, TagKEGG };
         public const string TagInChiKey = "InChiKey";
         public const string TagCAS = "CAS";
         public const string TagHMDB = "HMDB";
         public const string TagInChI = "InChI";
         public const string TagSMILES = "SMILES";
+        public const string TagKEGG = "KEGG";
 
         public static MoleculeAccessionNumbers FromString(string tsv)
         {
@@ -146,14 +147,20 @@ namespace pwiz.Skyline.Model
 
         public string GetHMDB()
         {
-            string cas;
-            return AccessionNumbers != null && AccessionNumbers.TryGetValue(TagHMDB, out cas) ? cas : null;
+            string hmdb;
+            return AccessionNumbers != null && AccessionNumbers.TryGetValue(TagHMDB, out hmdb) ? hmdb : null;
         }
 
         public string GetSMILES()
         {
-            string cas;
-            return AccessionNumbers != null && AccessionNumbers.TryGetValue(TagSMILES, out cas) ? cas : null;
+            string smiles;
+            return AccessionNumbers != null && AccessionNumbers.TryGetValue(TagSMILES, out smiles) ? smiles : null;
+        }
+
+        public string GetKEGG()
+        {
+            string kegg;
+            return AccessionNumbers != null && AccessionNumbers.TryGetValue(TagKEGG, out kegg) ? kegg : null;
         }
 
         public string GetNonInChiKeys()

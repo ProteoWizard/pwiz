@@ -18,27 +18,44 @@
  */
 
 using System;
+using System.ComponentModel;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using Grpc.Core;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Prosit;
+using pwiz.Skyline.Model.Prosit.Communication;
+using pwiz.Skyline.Model.Prosit.Config;
+using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
+using Server = pwiz.Skyline.Util.Server;
 
 namespace pwiz.Skyline.ToolsUI
 {
     public partial class ToolOptionsUI : FormEx
     {
         private readonly SettingsListBoxDriver<Server> _driverServers;
-        private readonly SettingsListBoxDriver<RemoteAccount> _driverChorusAccounts;
+        private readonly SettingsListBoxDriver<RemoteAccount> _driverRemoteAccounts;
         private readonly SettingsListComboDriver<ColorScheme> _driverColorSchemes;
 
-        public ToolOptionsUI()
+        // For Prosit pinging
+        private readonly SrmSettings _settingsNoMod;
+        private readonly PrositIntensityModel.PeptidePrecursorNCE _pingInput;
+        public ToolOptionsUI(SrmSettings settings)
         {
             InitializeComponent();
             checkBoxShowWizard.Checked = Settings.Default.ShowStartupForm;
@@ -47,10 +64,18 @@ namespace pwiz.Skyline.ToolsUI
 
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
             _driverServers.LoadList();
-            _driverChorusAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
-            _driverChorusAccounts.LoadList();
+            _driverRemoteAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
+            _driverRemoteAccounts.LoadList();
             _driverColorSchemes = new SettingsListComboDriver<ColorScheme>(comboColorScheme, Settings.Default.ColorSchemes, true);
             _driverColorSchemes.LoadList(Settings.Default.CurrentColorScheme);
+
+            var pingPep = new Peptide(@"PING");
+            var peptide = new PeptideDocNode(pingPep);
+            var precursor = new TransitionGroupDocNode(new TransitionGroup(pingPep, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
+                new TransitionDocNode[0]);
+            _pingInput = new PrositIntensityModel.PeptidePrecursorNCE(peptide, precursor, IsotopeLabelType.light, 32);
+            _settingsNoMod = settings.ChangePeptideModifications(
+                pm => new PeptideModifications(new StaticMod[0], new TypedModifications[0]));
 
             // Hide ability to turn off live reports
             //tabControl.TabPages.Remove(tabMisc);
@@ -73,6 +98,161 @@ namespace pwiz.Skyline.ToolsUI
             }
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
             comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
+
+            var iModels = PrositIntensityModel.Models.ToList();
+            iModels.Insert(0, string.Empty);
+            var rtModels = PrositRetentionTimeModel.Models.ToList();
+            rtModels.Insert(0, string.Empty);
+
+            tbxPrositServer.Text = PrositConfig.GetPrositConfig().Server;
+            intensityModelCombo.Items.AddRange(iModels.ToArray());
+            iRTModelCombo.Items.AddRange(rtModels.ToArray());
+            
+            prositServerStatusLabel.Text = string.Empty;
+            if (iModels.Contains(Settings.Default.PrositIntensityModel))
+                intensityModelCombo.SelectedItem = Settings.Default.PrositIntensityModel;
+            if (rtModels.Contains(Settings.Default.PrositRetentionTimeModel))
+                iRTModelCombo.SelectedItem = Settings.Default.PrositRetentionTimeModel;
+
+            ceCombo.Items.AddRange(
+                Enumerable.Range(PrositConstants.MIN_NCE, PrositConstants.MAX_NCE - PrositConstants.MIN_NCE + 1).Select(c => (object) c)
+                    .ToArray());
+            ceCombo.SelectedItem = Settings.Default.PrositNCE;
+        }
+
+        private class PrositPingRequest : PrositHelpers.PrositRequest
+        {
+            public PrositPingRequest(string ms2Model, string rtModel, SrmSettings settings,
+                PeptideDocNode peptide, TransitionGroupDocNode precursor, int nce, Action updateCallback) : base(null,
+                null, null, settings, peptide, precursor, null, nce, updateCallback)
+            {
+                Client = PrositPredictionClient.CreateClient(PrositConfig.GetPrositConfig());
+                IntensityModel = PrositIntensityModel.GetInstance(ms2Model);
+                RTModel = PrositRetentionTimeModel.GetInstance(rtModel);
+
+                if (IntensityModel == null && RTModel == null)
+                    throw new PrositNotConfiguredException();
+            }
+
+            public override PrositHelpers.PrositRequest Predict()
+            {
+                ActionUtil.RunAsync(() =>
+                {
+                    try
+                    {
+                        var labelType = Precursor.LabelType;
+                        var ms = IntensityModel.PredictSingle(Client, Settings,
+                            new PrositIntensityModel.PeptidePrecursorNCE(Peptide, Precursor, labelType, NCE), _tokenSource.Token);
+
+                        var iRTMap = RTModel.PredictSingle(Client,
+                            Settings,
+                            Peptide, _tokenSource.Token);
+
+                        var spectrumInfo = new SpectrumInfoProsit(ms, Precursor, labelType, NCE);
+                        var irt = iRTMap[Peptide];
+                        Spectrum = new SpectrumDisplayInfo(
+                            spectrumInfo, Precursor, irt);
+                    }
+                    catch (Exception ex)
+                    {
+                        Exception = ex;
+
+                        // Ignore, UpdateUI is already working on a new request,
+                        // so don't even update UI
+                        if (ex.InnerException is RpcException rpcEx && rpcEx.StatusCode == StatusCode.Cancelled)
+                            return;
+                    }
+                    
+                    // Bad timing could cause the ping to finish right when we cancel as the form closes
+                    // causing a UI update to be called after the form was destroyed
+                    if (!_tokenSource.IsCancellationRequested)
+                        _updateCallback.Invoke();
+                });
+
+                return this;
+            }
+        }
+
+        private PrositPingRequest _pingRequest;
+
+
+        public enum ServerStatus
+        {
+            UNAVAILABLE, QUERYING, AVAILABLE, SELECT_SERVER, SELECT_MODEL
+        }
+
+        public ServerStatus PrositServerStatus { get; private set; }
+
+        private void SetServerStatus(ServerStatus status)
+        {
+            switch (status)
+            {
+                case ServerStatus.UNAVAILABLE:
+                    prositServerStatusLabel.Text =
+                        PrositResources.ToolOptionsUI_UpdateServerStatus_Server_unavailable;
+                    prositServerStatusLabel.ForeColor = Color.Red;
+                    break;
+                case ServerStatus.QUERYING:
+                    prositServerStatusLabel.Text =
+                        PrositResources.ToolOptionsUI_UpdateServerStatus_Querying_server___;
+                    prositServerStatusLabel.ForeColor = Color.Black;
+                    break;
+                case ServerStatus.AVAILABLE:
+                    prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_ToolOptionsUI_Server_online;
+                    prositServerStatusLabel.ForeColor = Color.Green;
+                    break;
+                case ServerStatus.SELECT_SERVER:
+                    prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_SetServerStatus_Select_a_server;
+                    prositServerStatusLabel.ForeColor = Color.Red;
+                    break;
+                case ServerStatus.SELECT_MODEL:
+                    prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_SetServerStatus_Select_both_models;
+                    prositServerStatusLabel.ForeColor = Color.Red;
+                    break;
+            }
+
+            PrositServerStatus = status;
+        }
+
+        private void UpdateServerStatus()
+        {
+            if (!IsHandleCreated)
+                return;
+
+            try
+            {
+                if (PrositIntensityModelCombo == null || PrositRetentionTimeModelCombo == null)
+                {
+                    _pingRequest?.Cancel();
+                    SetServerStatus(ServerStatus.SELECT_MODEL);
+                    return;
+                }
+
+                var pr = new PrositPingRequest(PrositIntensityModelCombo,
+                    PrositRetentionTimeModelCombo,
+                    _settingsNoMod, _pingInput.NodePep, _pingInput.NodeGroup, _pingInput.NCE.Value,
+                    () => { Invoke((Action) UpdateServerStatus); });
+                if (_pingRequest == null || !_pingRequest.Equals(pr))
+                {
+                    _pingRequest?.Cancel();
+                    _pingRequest = (PrositPingRequest) pr.Predict();
+                    prositServerStatusLabel.Text = PrositResources.ToolOptionsUI_UpdateServerStatus_Querying_server___;
+                    prositServerStatusLabel.ForeColor = Color.Black;
+
+                }
+                else if (_pingRequest.Spectrum == null)
+                {
+                    SetServerStatus(_pingRequest.Exception == null ? ServerStatus.QUERYING : ServerStatus.UNAVAILABLE);
+                }
+                else
+                {
+                    SetServerStatus(ServerStatus.AVAILABLE);
+                }
+            }
+            catch
+            {
+                SetServerStatus(ServerStatus.UNAVAILABLE);
+            }
         }
 
         private void btnEditServers_Click(object sender, EventArgs e)
@@ -85,14 +265,22 @@ namespace pwiz.Skyline.ToolsUI
             _driverServers.EditList();
         }
 
-        private void btnEditChorusAccountList_Click(object sender, EventArgs e)
+        private void btnEditRemoteAccountList_Click(object sender, EventArgs e)
         {
-            EditChorusAccounts();
+            EditRemoteAccounts();
         }
 
-        public void EditChorusAccounts()
+        public void EditRemoteAccounts()
         {
-            _driverChorusAccounts.EditList();
+            _driverRemoteAccounts.EditList();
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+
+            if (!e.Cancel)
+                _pingRequest?.Cancel();
         }
 
         protected override void OnClosed(EventArgs e)
@@ -105,14 +293,21 @@ namespace pwiz.Skyline.ToolsUI
                     Settings.Default.ShowStartupForm = checkBoxShowWizard.Checked;
                     Settings.Default.DisplayLanguage = displayLanguageItem.Key;
                     Settings.Default.UsePowerOfTen = powerOfTenCheckBox.Checked;
-                    Program.MainWindow.UpdateGraphPanes();
+                    Program.MainWindow?.UpdateGraphPanes();
                 }
                 CompactFormatOption compactFormatOption = comboCompactFormatOption.SelectedItem as CompactFormatOption;
                 if (null != compactFormatOption)
                 {
                     Settings.Default.CompactFormatOption = compactFormatOption.Name;
                 }
-                Settings.Default.CurrentColorScheme = comboColorScheme.SelectedItem as string;
+                Settings.Default.CurrentColorScheme = (string) comboColorScheme.SelectedItem;
+
+                bool prositSettingsValidBefore = PrositHelpers.PrositSettingsValid;
+                Settings.Default.PrositIntensityModel = (string) intensityModelCombo.SelectedItem;
+                Settings.Default.PrositRetentionTimeModel = (string) iRTModelCombo.SelectedItem;
+                Settings.Default.PrositNCE = (int) ceCombo.SelectedItem;
+                if (prositSettingsValidBefore != PrositHelpers.PrositSettingsValid)
+                    Program.MainWindow?.UpdateGraphSpectrumEnabled();
             }
             base.OnClosed(e);
         }
@@ -138,19 +333,25 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // ReSharper disable InconsistentNaming
-        public enum TABS { Panorama, Chorus, Language, Miscellaneous, Display }
+        public enum TABS { Panorama, Remote, Prosit, Language, Miscellaneous, Display }
         // ReSharper restore InconsistentNaming
 
         public class PanoramaTab : IFormView { }
-        public class ChorusTab : IFormView { }
+        public class RemoteTab : IFormView { }
         public class LanguageTab : IFormView { }
         public class MiscellaneousTab : IFormView { }
         public class DisplayTab : IFormView { }
+        public class PrositTab : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new PanoramaTab(), new ChorusTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(),
+            new PanoramaTab(), new RemoteTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(), new PrositTab()
         };
+
+        public void NavigateToTab(TABS tab)
+        {
+            SelectedTab = tab;
+        }
 
         #region Functional testing support
 
@@ -176,6 +377,24 @@ namespace pwiz.Skyline.ToolsUI
             set { powerOfTenCheckBox.Checked = value; }
         }
 
+        public string PrositIntensityModelCombo
+        {
+            get { return (string)intensityModelCombo.SelectedItem; }
+            set { intensityModelCombo.SelectedItem = value; }
+        }
+
+        public string PrositRetentionTimeModelCombo
+        {
+            get { return (string) iRTModelCombo.SelectedItem; }
+            set { iRTModelCombo.SelectedItem = value; }
+        }
+
+        public int CECombo
+        {
+            get { return (int) ceCombo.SelectedItem; }
+            set { ceCombo.SelectedItem = value; }
+        }
+
         #endregion
 
         private void comboColorScheme_SelectedIndexChanged(object sender, EventArgs e)
@@ -184,7 +403,7 @@ namespace pwiz.Skyline.ToolsUI
             if (newColorScheme != null)
             {
                 Settings.Default.CurrentColorScheme = newColorScheme.Name;
-                Program.MainWindow.ChangeColorScheme();
+                Program.MainWindow?.ChangeColorScheme();
             }
             _driverColorSchemes.SelectedIndexChangedEvent(sender, e);
         }
@@ -214,6 +433,48 @@ namespace pwiz.Skyline.ToolsUI
             {
                 Settings.Default.Reset();
             }
+        }
+
+        private void prositDescrLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            WebHelpers.OpenLink(@"https://www.proteomicsdb.org/prosit/");
+        }
+
+        private void intensityModelCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty((string) intensityModelCombo.SelectedItem) &&
+                !string.IsNullOrEmpty((string) iRTModelCombo.SelectedItem))
+            {
+                iRTModelCombo.SelectedItem = string.Empty;
+            }
+            else if (!string.IsNullOrEmpty((string) intensityModelCombo.SelectedItem) &&
+                     string.IsNullOrEmpty((string) iRTModelCombo.SelectedItem))
+            {
+                iRTModelCombo.SelectedIndex = 1;    // First non-empty iRT model
+            }
+
+            UpdateServerStatus();
+        }
+
+        private void iRTModelCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty((string)intensityModelCombo.SelectedItem) &&
+                string.IsNullOrEmpty((string)iRTModelCombo.SelectedItem))
+            {
+                intensityModelCombo.SelectedItem = string.Empty;
+            }
+            else if (string.IsNullOrEmpty((string)intensityModelCombo.SelectedItem) &&
+                     !string.IsNullOrEmpty((string)iRTModelCombo.SelectedItem))
+            {
+                intensityModelCombo.SelectedIndex = 1;    // First non-empty intensity model
+            }
+
+            UpdateServerStatus();
+        }
+
+        private void ToolOptionsUI_Shown(object sender, EventArgs e)
+        {
+            UpdateServerStatus();
         }
     }
 }

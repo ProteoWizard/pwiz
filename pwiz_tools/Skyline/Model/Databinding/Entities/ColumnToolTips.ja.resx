@@ -107,7 +107,7 @@
     <value>複数のペプチドまたはタンパク質にわたるこのグループ比較内での複数の比較に対して調整されているP値。Benjamini-Hochberg法を用いて調整が行われています。</value>
   </data>
   <data name="Accuracy">
-    <value>算出される濃度に対するアナライトの濃度比（繰り返し測定で指定）</value>
+    <value>アナライトの濃度と算出される濃度の比率（繰り返し測定で指定）</value>
   </data>
   <data name="AcquiredTime">
     <value>質量分析計が前回この繰り返し測定データの取得を開始した日時です。1.1より古いバージョンでファイルがインポートされた場合には#N/Aとなります。</value>
@@ -124,6 +124,24 @@
   <data name="AreaRatio">
     <value>最初の内標準標識のタイプでの該当するトランジションに対するこのトランジションの Area比です。バージョン0.7より前では、これは常にLight/Heavyであり、 Heavyトランジション上に表示されていました。</value>
   </data>
+  <data name="AttributeAreaProportion">
+    <value>同じ属性面積率を持つドキュメント内における、正規化された面積と他のすべてのペプチドまたは分子の正規化面積の和に対する比率です。</value>
+  </data>
+  <data name="AttributeGroupId">
+    <value>属性面積率の算出においてペプチドまたは分子のグループ化に影響します。</value>
+  </data>
+  <data name="AutoSelectMolecules">
+    <value>真の場合、Skylineは現在の設定に基づき分子リストから自動的に分子を追加または削除します。</value>
+  </data>
+  <data name="AutoSelectPeptides">
+    <value>真の場合、Skylineは[ペプチド設定]フィルタに基づき自動的にペプチドを追加または削除します。</value>
+  </data>
+  <data name="AutoSelectPrecursors">
+    <value>真の場合、Skylineは[トランジションの設定]フィルタ、スペクトルライブラリなどに基づき自動的にプリカーサーを追加または削除します。</value>
+  </data>
+  <data name="AutoSelectTransitions">
+    <value>真の場合、Skylineは[トランジションの設定]フィルタ、スペクトルライブラリなどによってプリカーサーから自動的にトランジションを追加または削除します。</value>
+  </data>
   <data name="AverageMassErrorPPM">
     <value>平均質量誤差(PPM)</value>
   </data>
@@ -136,6 +154,18 @@
   <data name="Background">
     <value>両側の積分境界線とベースライン、および積分境界線とトランジションピークのクロマトグラムの 交点の強度の低い方から引いたその境界線に垂直な直線とで形成される長方形の面積です。</value>
   </data>
+  <data name="BatchFiguresOfMerit">
+    <value>性能指数は、バッチ名がこの繰り返し測定と同じである外部標準の繰り返し測定サブセットを用いて計算されました。</value>
+  </data>
+  <data name="BatchLimitOfDetection">
+    <value>検出下限は、バッチ名がこの繰り返し測定と同じである外部標準の繰り返し測定サブセットを用いて計算されました。</value>
+  </data>
+  <data name="BatchLimitOfQuantification">
+    <value>定量下限は、バッチ名がこの繰り返し測定と同じである外部標準の繰り返し測定サブセットを用いて計算されました。</value>
+  </data>
+  <data name="BatchName">
+    <value>この繰り返し測定が属するバッチの名前です。特定の繰り返し測定に対する検量線は、バッチ名が同じである外部標準のサブセットを用いて計算されます。</value>
+  </data>
   <data name="BeginPos">
     <value>ペプチドに含まれるタンパク質シークエンス内の最初の（N末端）アミノ酸の位置です。 タンパク質シークエンスがない場合には#N/Aとなります。  </value>
   </data>
@@ -147,7 +177,7 @@
   </data>
   <data name="CalculatedConcentration">
     <value>アナライト濃度は、以下のいずれかによって計算されます：  
-1. 校正曲線を使用する（[ペプチド設定] &gt; [定量] に[回帰式に合わせる]が指定されている場合）  
+1. 校正曲線を使用する（[ペプチド設定] &gt; [定量]に[回帰式に合わせる]が指定されている場合）  
 2. 内標準（またはサロゲート）に対する比率を使用し、内標準物質の濃度を乗じる</value>
   </data>
   <data name="CalibrationCurve">
@@ -302,7 +332,7 @@
     <value>ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれるS-レンズ値（Thermo製装置のみ）です。</value>
   </data>
   <data name="FiguresOfMerit">
-    <value>ペプチドまたは分子の検出限界と定量限界です。これらの数量算出メソッドは、[ぺプチド設定]の[定量化]タブで選択できます。</value>
+    <value>ペプチドまたは分子の検出限界と定量限界です。これらの数量算出メソッドは、[ペプチド設定]の[定量化]タブで選択できます。</value>
   </data>
   <data name="FileIndex">
     <value>ファイルインデックス</value>
@@ -370,6 +400,9 @@
   <data name="InterpolatedNumberOfPoints">
     <value>補間済みクロマトグラムにある点の数です。</value>
   </data>
+  <data name="InterpolatedSpectrumIds">
+    <value>補間済みクロマトグラム内の点に寄与するスペクトルの識別子です。</value>
+  </data>
   <data name="InterpolatedTimes">
     <value>補間済みクロマトグラムの保持時間です。</value>
   </data>
@@ -409,6 +442,9 @@
   <data name="LibraryName">
     <value>MS/MSスペクトルライブラリのスペクトルがプリカーサーイオンに関連付けられている場合には、MS/MSスペクトルライブラリの名前となります。</value>
   </data>
+  <data name="LibraryProbabilityScore">
+    <value>スペクトラルライブラリの構築に使用される入力ファイルの中で、この一致に割り当てられている確率スコアです。</value>
+  </data>
   <data name="LibraryRank">
     <value>トランジションフィルタ設定で許可されるすべてのトランジションでの、このトランジションのLibraryIntensityに基づく順位です。ユーザーインターフェイスでは[(rank #)]と表示されます。</value>
   </data>
@@ -438,6 +474,9 @@
   </data>
   <data name="Losses">
     <value>このフラグメントからのすべてのニュートラルロスのカンマで区切られたリスト</value>
+  </data>
+  <data name="LossFormulas">
+    <value>このフラグメントによるすべてのニュートラルロスに対する化学式のカンマ区切りのリストです。あるいはすべてのロスに式がない場合、空となります。</value>
   </data>
   <data name="LossNeutralMass">
     <value>このフラグメントからのすべてのニュートラルロスの合計質量</value>
@@ -523,6 +562,9 @@
   <data name="MissedCleavages">
     <value>ペプチドシークエンスにおけるmissed cleavage siteの数</value>
   </data>
+  <data name="ModifiedAreaProportion">
+    <value>このペプチドの結果の正規化された面積を、同じタンパク質および繰り返し測定された同じ非修飾シークエンスを持つすべてのペプチドの結果の合計で割ったものです。</value>
+  </data>
   <data name="ModifiedSequence">
     <value>システインアルキル化など、アミノ酸のすべての修飾を含んだペプチドのシークエンス。 （例：AGLC[+57]QTFVYGGC[+57]R）</value>
   </data>
@@ -544,14 +586,59 @@
   <data name="ModifiedTime">
     <value>ディスク上で元の質量分析計のファイルが前回編集された日時</value>
   </data>
+  <data name="Molecule">
+    <value>分子は分子リストに属し、プリカーサーが含まれます。</value>
+  </data>
   <data name="MoleculeFormula">
     <value>質量分析計で測定される荷電されていない非標識の分子の原子化学式。</value>
   </data>
+  <data name="MoleculeListLocator">
+    <value>ドキュメント内の分子リストの一意の識別子です。これは「MoleculeGroup:」で始まります。</value>
+    <comment>Do not translate "MoleculeGroup:".</comment>
+  </data>
+  <data name="MoleculeListName">
+    <value>分子リストの名前です。</value>
+  </data>
+  <data name="MoleculeListNote">
+    <value>分子リストに関連付けられたフリーテキストのメモです。</value>
+  </data>
+  <data name="MoleculeList">
+    <value>Skylineドキュメントにある分子のグループ化です。</value>
+  </data>
+  <data name="MoleculeLists">
+    <value>Skylineドキュメントにある分子すべてのグループ化の最上位セットです。</value>
+  </data>
+  <data name="MoleculeLocator">
+    <value>ドキュメント内の分子の一意の識別子です。これは「Molecule:」で始まります。</value>
+    <comment>Do not translate "Molecule:".</comment>
+  </data>
   <data name="MoleculeName">
-    <value>荷電されていない非標識の低分子に割り当てできる一般的な名前です。</value>
+    <value>荷電されていない非標識の分子に割り当てできる一般的な名前です。</value>
+  </data>
+  <data name="MoleculeNote">
+    <value>分子に関連付けられたフリーテキストのメモです。</value>
+  </data>
+  <data name="MoleculePeakFoundRatio">
+    <value>分子ピーク検出率</value>
   </data>
   <data name="MonoisotopicMasses">
     <value>「C[+57.021464]」のように修飾部分がモノアイソトピック質量で言い表される、修飾シークエンスです。</value>
+  </data>
+  <data name="MoleculeResult">
+    <value>分子結果</value>
+  </data>
+  <data name="MoleculeResultLocator">
+    <value>ドキュメント内の分子結果の一意の識別子です。これは「MoleculeResult:」で始まり、分子名および繰り返し測定名を含みます。</value>
+    <comment>Do not translate "MoleculeResult:"</comment>
+  </data>
+  <data name="MoleculeResults">
+    <value>分子に関連付けられた結果です。</value>
+  </data>
+  <data name="MoleculeRetentionTime">
+    <value>特定の繰り返し測定におけるプリカーサーに対する最良保持時間の平均値です。</value>
+  </data>
+  <data name="Molecules">
+    <value>分子リストにある分子です。</value>
   </data>
   <data name="MsLevel">
     <value>プリカーサーの強度（MS1レベル）かプロダクトの強度（MS2レベル）のみを使用して結果を取得したかを示します。</value>
@@ -654,15 +741,20 @@
   <data name="Precursor">
     <value>プリカーサー</value>
   </data>
+  <data name="PrecursorAccuracy">
+    <value>プリカーサーで指定されたプリカーサー濃度に対するプリカーサー計算濃度の比率です。</value>
+  </data>
   <data name="PrecursorAdduct">
     <value>プリカーサーを作成するよう分子に適用される付加物です。</value>
+  </data>
+  <data name="PrecursorCalculatedConcentration">
+    <value>アイソトポログ反応曲線を使用して計算されたプリカーサー結果の濃度です。</value>
   </data>
   <data name="PrecursorCharge">
     <value>  プリカーサーイオンと関連付けられた電荷。</value>
   </data>
   <data name="PrecursorConcentration">
-    <value>
-      このプリカーサーが試料にスパイクされた濃度です。</value>
+    <value>このプリカーサーが試料にスパイクされた濃度です。これを使用してアイソトポログ反応曲線を作成します。</value>
   </data>
   <data name="PrecursorIonFormula">
     <value>プリカーサーイオン式です。</value>
@@ -677,6 +769,11 @@
   <data name="PrecursorNeutralFormula">
     <value>プリカーサーイオン式です。この用語は非推奨で、代わりに「PrecursorIonFomula」を使用してください。</value>
   </data>
+  <data name="PrecursorNormalizedArea">
+    <value>プリカーサー結果の正規化面積。
+これはペプチドの正規化メソッドに従い正規化されたプリカーサー結果の合計面積と同じです。
+ペプチド正規化メソッドが「なし」または標識に対する比率である場合、プリカーサー正規化面積はプリカーサー合計面積と同じです。</value>
+  </data>
   <data name="PrecursorMz">
     <value>プリカーサーイオンの質量電荷比（m/z）。</value>
   </data>
@@ -688,6 +785,9 @@
   </data>
   <data name="PrecursorPeakFoundRatio">
     <value>ペプチドのトランジション総数に対する、ピークが測定されたトランジションの比です。ペプチドツリー表示でのピークインジケーターは、 緑＝1.0（すべてのトランジションを積分）、オレンジ＞＝0.5、赤＜0.5に該当します。</value>
+  </data>
+  <data name="PrecursorQuantification">
+    <value>プリカーサー結果を定量化するためのアイソトポログ反応曲線の使用に関する値です。</value>
   </data>
   <data name="PrecursorReplicateNote">
     <value>結果グリッドを使用すると表示される、プリカーサーの結果セットに関連付けられているフリーテキストのメモ。</value>
@@ -811,6 +911,9 @@
   <data name="RawNumberOfPoints">
     <value>生（未補間）のクロマトグラムの点の数です。</value>
   </data>
+  <data name="RawSpectrumIds">
+    <value>生（未補間）のクロマトグラムにある点に寄与するスペクトルの識別子です。</value>
+  </data>
   <data name="RawTimes">
     <value>生（未補間）のクロマトグラムの保持時間です。</value>
   </data>
@@ -818,7 +921,8 @@
     <value>繰り返し測定</value>
   </data>
   <data name="ReplicateCalibrationCurve">
-    <value>プリカーサー濃度と単一繰り返し測定を用いて作成した校正曲線です。</value>
+    <value>この繰り返し測定と同じバッチ名を持つ繰り返し測定を用いて作成した検量線です。
+プリカーサー濃度がこのペプチドのプリカーサーで指定されている場合、検量線はアイソトポログ反応曲線となります。</value>
   </data>
   <data name="ReplicateCount">
     <value>有効な強度を持ち、結果に寄与する繰り返し測定の回数</value>
@@ -898,6 +1002,9 @@ Double Blank（ダブルブランク）</value>
   </data>
   <data name="Slope">
     <value>近似曲線または直線の線形項の係数。</value>
+  </data>
+  <data name="SpectrumIds">
+    <value>クロマトグラムに寄与するスペクトルの識別子です。</value>
   </data>
   <data name="StandardError">
     <value>線形回帰における推定値の標準誤差です。</value>
@@ -1030,9 +1137,6 @@ Double Blank（ダブルブランク）</value>
   <data name="UserSetTotal">
     <value>デフォルトのピーク選択または境界が手動で変更された場合は真です。</value>
   </data>
-  <data name="Value">
-    <value>値</value>
-  </data>
   <data name="CollisionalCrossSection">
     <value>イオン移動度をオングストロームの二乗で表したものです。通常は適切な単位（ドリフト時間、K0の逆数など）に変換され、イオン移動度質量スペクトルからのクロマトグラムの抽出に使用されます。</value>
   </data>
@@ -1072,11 +1176,20 @@ Double Blank（ダブルブランク）</value>
   <data name="InChiKey" xml:space="preserve">
     <value>標準分子ID</value>
   </data>
+  <data name="KEGG" xml:space="preserve">
+    <value>標準分子ID</value>
+  </data>
   <data name="SMILES" xml:space="preserve">
     <value>標準分子ID</value>
   </data>
+  <data name="Time">
+    <value>この変更が行われた時間で、現在のローカルタイムゾーンで表記されています。</value>
+  </data>
+  <data name="UTCTime">
+    <value>この変更が行われた時間で、グリニッジ標準時[GMT]で表記されています。</value>
+  </data>
   <data name="TimeStamp">
-    <value>この変更が行われた時間</value>
+    <value>この変更が行われた時間で、UTC時刻にオフセットされたローカルタイムで表記されています。</value>
   </data>
   <data name="UndoRedoMessage">
     <value>変更の説明</value>
@@ -1110,5 +1223,11 @@ Double Blank（ダブルブランク）</value>
   </data>
   <data name="AuditLogDetailRowId">
     <value>詳しいメッセージのID</value>
+  </data>
+  <data name="SampleId" xml:space="preserve">
+    <value>試料を参照するフリーテキスト識別子（複数のファイルで共有可能）。インポートされた結果ファイルの「試料ID」属性から読み込まれます。</value>
+  </data>
+  <data name="InstrumentSerialNumber" xml:space="preserve">
+    <value>インポートされた結果ファイルから読み込まれた装置のシリアル番号</value>
   </data>
 </root>

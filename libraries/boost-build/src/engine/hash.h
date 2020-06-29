@@ -11,6 +11,7 @@
 #ifndef BOOST_JAM_HASH_H
 #define BOOST_JAM_HASH_H
 
+#include "config.h"
 #include "object.h"
 
 /*

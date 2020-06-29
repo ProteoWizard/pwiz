@@ -48,15 +48,19 @@ namespace util {
 template <typename Item, typename KeyExtractor = boost::multi_index::identity<Item> >
 class mru_list
 {
+    struct hash_index_tag {};
+
     typedef boost::multi_index::multi_index_container
     <
         Item,
         boost::multi_index::indexed_by
         <
             boost::multi_index::sequenced<>,
-            boost::multi_index::hashed_unique<KeyExtractor>
+            boost::multi_index::hashed_unique<boost::multi_index::tag<hash_index_tag>, KeyExtractor>
         >
     > item_list;
+
+    typedef typename item_list::template index<hash_index_tag>::type item_hash_index;
 
 public:
   typedef Item item_type;
@@ -107,6 +111,12 @@ public:
 
   const_reverse_iterator rbegin() const {return il.rbegin();}
   const_reverse_iterator rend() const {return il.rend();}
+
+  iterator find(const typename KeyExtractor::result_type& key) const
+  {
+      const auto& idx = il.template get<hash_index_tag>();
+      return this->il.template project<0>(idx.find(key));
+  }
 
 private:
   item_list   il;

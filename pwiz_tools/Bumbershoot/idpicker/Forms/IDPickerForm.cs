@@ -480,9 +480,14 @@ namespace IDPicker
                                 result = sourcePath;
                                 break;
                             }
-                            catch
+                            catch (ArgumentException e)
                             {
                                 // couldn't find the source in that directory; prompt user again
+                                MessageBox.Show(e.Message);
+                            }
+                            catch(Exception e)
+                            {
+                                Program.HandleException(e);
                             }
                         }
                     }));
@@ -1124,8 +1129,8 @@ namespace IDPicker
         {
             try
             {
-                var xml_filepaths = filepaths.Where(filepath => !filepath.EndsWith(".idpDB"));
-                var idpDB_filepaths = filepaths.Where(filepath => filepath.EndsWith(".idpDB"));
+                var xml_filepaths = filepaths.Where(filepath => !filepath.ToLower().EndsWith(".idpdb"));
+                var idpDB_filepaths = filepaths.Where(filepath => filepath.ToLower().EndsWith(".idpdb"));
                 bool openSingleFile = xml_filepaths.Count() + idpDB_filepaths.Count() == 1;
 
                 if (xml_filepaths.Count() + idpDB_filepaths.Count() == 0)

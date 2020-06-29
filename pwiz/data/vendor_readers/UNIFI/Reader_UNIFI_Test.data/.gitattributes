@@ -1,0 +1,4 @@
+# Don't change line endings on vendor data
+* binary
+
+urls.txt !binary

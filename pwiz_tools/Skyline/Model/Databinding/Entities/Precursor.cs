@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
@@ -153,18 +154,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             else
             {
-                PeptideDocNode parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
-                if (parent == null)
-                {
-                    adduct = Util.Adduct.EMPTY;
-                    formula = String.Empty;
-                    return;
-                }
-
-                var molecule = RefinementSettings.ConvertToSmallMolecule(
-                    RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, out adduct,
-                    DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.TransitionGroup.LabelType);
-                formula = molecule.Formula ?? string.Empty;
+                var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, DocNode.TransitionGroup.Peptide,
+                    Peptide.DocNode.ExplicitMods, DocNode.LabelType);
+                adduct = Util.Adduct.FromChargeProtonated(Charge);
+                formula = crosslinkBuilder.GetPrecursorFormula().Molecule.ToString();
             }
         }
 
@@ -248,15 +241,30 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        [Obsolete("Use Transition.ExplicitCollisionEnergy instead")]
+        [Obsolete("Use PrecursorExplicitCollisionEnergy instead")]
         public double? ExplicitCollisionEnergy
         {
             get
             {
-                // If all transitions have the same value, show that
-                return Transitions.Any() && Transitions.All(t => Equals(t.ExplicitCollisionEnergy, Transitions.First().ExplicitCollisionEnergy))
-                    ? Transitions.First().ExplicitCollisionEnergy
-                    : null;
+                return PrecursorExplicitCollisionEnergy;
+            }
+            set
+            {
+                PrecursorExplicitCollisionEnergy = value;
+            }
+        }
+
+        [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
+        public double? PrecursorExplicitCollisionEnergy
+        {
+            get
+            {
+                return DocNode.ExplicitValues.CollisionEnergy;
+            }
+            set
+            {
+                ChangeDocNode(EditColumnDescription(nameof(PrecursorExplicitCollisionEnergy), value),
+                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeCollisionEnergy(value)));
             }
         }
 
@@ -274,7 +282,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        [Obsolete("Use Transition.ExplicitConeVolrage instead")]
+        [Obsolete("Use Transition.ExplicitConeVoltage instead")]
         public double? ExplicitConeVoltage
         {
             get
@@ -361,7 +369,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 eIonMobilityUnits eValue;
-                if (SmallMoleculeTransitionListReader.IonMobilityUnitsSynonyms.TryGetValue(value.Trim(), out eValue))
+                if (SmallMoleculeTransitionListReader.IonMobilityUnitsSynonyms.TryGetValue(string.IsNullOrEmpty(value) ? string.Empty : value.Trim(), out eValue))
                     ChangeDocNode(EditColumnDescription(nameof(ExplicitIonMobilityUnits), eValue),
                         docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(docNode.ExplicitValues.IonMobility, eValue)));
             }
@@ -440,6 +448,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
                 return null;
             }
+        }
+
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public double? LibraryProbabilityScore
+        {
+            get { return (DocNode.LibInfo as BiblioSpecSpectrumHeaderInfo)?.Score; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
@@ -536,6 +550,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return PrecursorRef.PROTOTYPE; }
         }
+
+        protected override Type SkylineDocNodeType
+        {
+            get { return typeof(Precursor); }
+        }
     }
 
     public class PrecursorResultSummary : SkylineObject
@@ -552,6 +571,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var totalAreasNormalized = new List<double>();
             var totalAreasRatio = new List<double>();
             var maxHeights = new List<double>();
+            var detectionQValues = new List<double>();
             foreach (var result in results)
             {
                 if (result.BestRetentionTime.HasValue)
@@ -578,10 +598,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     maxHeights.Add(result.MaxHeight.Value);
                 }
+                if (result.DetectionQValue.HasValue)
+                {
+                    detectionQValues.Add(result.DetectionQValue.Value);
+                }
             }
             if (bestRetentionTimes.Count > 0)
             {
                 BestRetentionTime = new RetentionTimeSummary(new Statistics(bestRetentionTimes));
+            }
+            if (detectionQValues.Count > 0)
+            {
+                DetectionQValue = new DetectionQValueSummary(new Statistics(detectionQValues));
             }
             if (maxFhwms.Count > 0)
             {
@@ -611,6 +639,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string ReplicatePath { get { return @"/"; } }
         [ChildDisplayName("{0}BestRetentionTime")]
         public RetentionTimeSummary BestRetentionTime { get; private set; }
+        [ChildDisplayName("{0}DetectionQValue")]
+        public DetectionQValueSummary DetectionQValue { get; private set; }
         [ChildDisplayName("{0}MaxFwhm")]
         public FwhmSummary MaxFwhm { get; private set; }
         [ChildDisplayName("{0}TotalArea")]

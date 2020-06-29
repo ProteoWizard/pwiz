@@ -43,8 +43,8 @@ namespace pwiz.SkylineTestTutorial
         }
 
         [TestMethod]
-        [Timeout(int.MaxValue)] // This can take a long time when checking code coverage
-        public void TestGroupedStudiesTutorial()
+        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
+        public void TestGroupedStudiesTutorialDraft()
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;

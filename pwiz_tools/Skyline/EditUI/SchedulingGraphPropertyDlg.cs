@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Windows.Forms;
 using System.Linq;
 using pwiz.Common.SystemUtil;
@@ -26,7 +27,9 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -38,6 +41,7 @@ namespace pwiz.Skyline.EditUI
 
             TimeWindows = RTScheduleGraphPane.ScheduleWindows;
             PrimaryTransitionCount = RTScheduleGraphPane.PrimaryTransitionCount;
+            BrukerTemplateFile = RTScheduleGraphPane.BrukerTemplateFile;
         }
 
         public double[] TimeWindows
@@ -60,6 +64,12 @@ namespace pwiz.Skyline.EditUI
                     ? string.Empty
                     : value.ToString(LocalizationHelper.CurrentCulture);
             }
+        }
+
+        public string BrukerTemplateFile
+        {
+            get => textBrukerTemplate.Text;
+            set => textBrukerTemplate.Text = value;
         }
 
         private static string WindowsToString(IEnumerable<double> windows)
@@ -92,12 +102,56 @@ namespace pwiz.Skyline.EditUI
                     return;
             }
 
+            var brukerTemplate = textBrukerTemplate.Text;
+            if (!string.IsNullOrEmpty(brukerTemplate) && !File.Exists(brukerTemplate))
+            {
+                helper.ShowTextBoxError(textBrukerTemplate, Resources.SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_);
+                return;
+            }
+
             Array.Sort(timeWindows);
 
             RTScheduleGraphPane.ScheduleWindows = timeWindows;
             RTScheduleGraphPane.PrimaryTransitionCount = primaryTransitionCount;
+            RTScheduleGraphPane.BrukerTemplateFile = brukerTemplate;
 
             DialogResult = DialogResult.OK;
+        }
+
+        private void btnBrukerTemplateBrowse_Click(object sender, EventArgs e)
+        {
+            using (var openFileDialog = new OpenFileDialog
+            {
+                Title = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template,
+                // Extension based on currently selected type
+                CheckPathExists = true
+            })
+            {
+                var templateName = textBrukerTemplate.Text;
+                if (!string.IsNullOrEmpty(templateName))
+                {
+                    try
+                    {
+                        openFileDialog.InitialDirectory = Path.GetDirectoryName(templateName);
+                        openFileDialog.FileName = Path.GetFileName(templateName);
+                    }
+                    catch (ArgumentException)
+                    {
+                    } // Invalid characters
+                    catch (PathTooLongException)
+                    {
+                    }
+                }
+
+                openFileDialog.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
+                    string.Format(Resources.ExportMethodDlg_btnBrowseTemplate_Click__0__Method,
+                        ExportInstrumentType.BRUKER_TIMSTOF), ExportInstrumentType.EXT_BRUKER_TIMSTOF));
+
+                if (openFileDialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    textBrukerTemplate.Text = openFileDialog.FileName;
+                }
+            }
         }
     }
 }

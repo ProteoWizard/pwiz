@@ -122,11 +122,11 @@ namespace pwiz.Skyline.Controls.Graphs
             ReplicateGroupOp replicateGroupOp;
             if (rtValue == RTPeptideValue.All)
             {
-                replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document.Settings, GraphValues.AggregateOp.MEAN);
+                replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document, GraphValues.AggregateOp.MEAN);
             }
             else
             {
-                replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document.Settings);
+                replicateGroupOp = ReplicateGroupOp.FromCurrentSettings(document);
             }
             var retentionTimeValue = new GraphValues.RetentionTimeTransform(rtValue, rtTransformOp, replicateGroupOp.AggregateOp);
             YAxis.Title.Text = retentionTimeValue.GetAxisTitle();
@@ -364,7 +364,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 Assume.IsNotNull(chromInfoData, @"chromInfoData");
                 Assume.IsNotNull(chromInfoData.ChromFileInfo, @"chromInfoData.ChromFileInfo");
-                IRegressionFunction regressionFunction;
+                RegressionLine regressionFunction;
                 return !RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);
             }
 
@@ -383,7 +383,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var chromInfoData in chromInfoDatas)
                 {
                     var retentionTimeValues = getRetentionTimeValues(chromInfoData).GetValueOrDefault();
-                    IRegressionFunction regressionFunction = null;
+                    RegressionLine regressionFunction = null;
                     if (null != RetentionTimeTransform.RtTransformOp)
                     {
                         RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);

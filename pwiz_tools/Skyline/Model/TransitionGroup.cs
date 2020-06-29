@@ -95,7 +95,16 @@ namespace pwiz.Skyline.Model
 
         public static int CompareTransitions(TransitionDocNode node1, TransitionDocNode node2)
         {
-            Transition tran1 = node1.Transition, tran2 = node2.Transition;
+            int result = CompareTransitionIds(node1.Transition, node2.Transition);
+            if (result == 0)
+            {
+                result = node1.LostMass.CompareTo(node2.LostMass);
+            }
+            return result;
+        }
+
+        public static int CompareTransitionIds(Transition tran1, Transition tran2)
+        {
             int diffType = GetOrder(tran1.IonType) - GetOrder(tran2.IonType);
             if (diffType != 0)
                 return diffType;
@@ -105,7 +114,7 @@ namespace pwiz.Skyline.Model
             int diffOffset = tran1.CleavageOffset - tran2.CleavageOffset;
             if (diffOffset != 0)
                 return diffOffset;
-            return Comparer<double>.Default.Compare(node1.LostMass, node2.LostMass);
+            return 0;
         }
 
         private static int GetOrder(IonType ionType)
@@ -177,7 +186,8 @@ namespace pwiz.Skyline.Model
                                                              IsotopeDistInfo isotopeDist,
                                                              SpectrumHeaderInfo libInfo,
                                                              IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
-                                                             bool useFilter)
+                                                             bool useFilter,
+                                                             bool ensureMassesAreMeasurable)
         {
             Assume.IsTrue(ReferenceEquals(groupDocNode.TransitionGroup, this));
             // Get necessary mass calculators and masses
@@ -264,13 +274,13 @@ namespace pwiz.Skyline.Model
             }
 
             // Return precursor ions
-            if (!useFilter || types.Contains(IonType.precursor))
+            if (!useFilter || types.Contains(IonType.precursor) || !ensureMassesAreMeasurable)
             {
                 bool libraryFilter = (pick == TransitionLibraryPick.all || pick == TransitionLibraryPick.filter);
                 foreach (var nodeTran in GetPrecursorTransitions(settings, mods, calcPredictPre, calcPredict ?? calcFilter,
-                    precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter))
+                    precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter, ensureMassesAreMeasurable))
                 {
-                    if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
+                    if (!ensureMassesAreMeasurable || minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
                         yield return nodeTran;
                 }
             }
@@ -350,10 +360,6 @@ namespace pwiz.Skyline.Model
 
                 foreach (var adduct in adducts)
                 {
-                    // Precursor charge can never be lower than product ion charge.
-                    if (Math.Abs(PrecursorAdduct.AdductCharge) < Math.Abs(adduct.AdductCharge))
-                        continue;
-
                     int start = 0, end = 0;
                     if (pick != TransitionLibraryPick.all)
                     {
@@ -372,6 +378,18 @@ namespace pwiz.Skyline.Model
                         Assume.IsTrue(massH.IsMonoIsotopic() == calcPredict.MassType.IsMonoisotopic());
                         foreach (var losses in CalcTransitionLosses(type, i, massType, potentialLosses))
                         {
+                            if (!ensureMassesAreMeasurable)
+                            {
+                                // If the transition is going to be linked to other ions, just return it now without
+                                // checking that its mass is in the correct range, etc.
+                                yield return CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
+                                continue;
+                            }
+
+                            // Precursor charge can never be lower than product ion charge.
+                            if (!adduct.IsValidProductAdduct(PrecursorAdduct, losses))
+                                continue;
+
                             double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(massH, losses), adduct);
 
                             // Make sure the fragment m/z value falls within the valid instrument range.
@@ -469,7 +487,8 @@ namespace pwiz.Skyline.Model
                                                              IList<IList<ExplicitLoss>> potentialLosses,
                                                              IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
                                                              bool libraryFilter,
-                                                             bool useFilter)
+                                                             bool useFilter,
+                                                             bool ensureMassesAreMeasurable)
         {
             var tranSettings = settings.TransitionSettings;
             var fullScan = tranSettings.FullScan;
@@ -489,13 +508,27 @@ namespace pwiz.Skyline.Model
 
             foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
             {
+                Adduct productAdduct;
+                if (losses == null)
+                {
+                    productAdduct = PrecursorAdduct;
+                }
+                else
+                {
+                    productAdduct = losses.GetProductAdduct(PrecursorAdduct);
+                    if (productAdduct == null)
+                    {
+                        continue;
+                    }
+                }
+
                 double ionMz = IsProteomic ? 
                     SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), PrecursorAdduct) :
                     PrecursorAdduct.MzFromNeutralMass(CustomMolecule.GetMass(massTypeIon), massTypeIon);
 
                 if (losses == null)
                 {
-                    if (precursorMS1 && isotopeDist != null)
+                    if (precursorMS1 && isotopeDist != null && ensureMassesAreMeasurable)
                     {
                         foreach (int i in fullScan.SelectMassIndices(isotopeDist, useFilter))
                         {
@@ -505,14 +538,14 @@ namespace pwiz.Skyline.Model
                                 continue;
                             var isotopeDistInfo = new TransitionIsotopeDistInfo(
                                 isotopeDist.GetRankI(i), isotopeDist.GetProportionI(i));
-                            yield return CreateTransitionNode(i, precursorMS1Mass, isotopeDistInfo, null, transitionRanks);
+                            yield return CreateTransitionNode(i, precursorMS1Mass, isotopeDistInfo, null, transitionRanks, productAdduct);
                         }
                         continue;
                     }
                 }
                 // If there was loss, it is possible (though not likely) that the ion m/z value
                 // will now fall below the minimum measurable value for the instrument
-                else if (minMz > ionMz)
+                else if (ensureMassesAreMeasurable && minMz > ionMz)
                 {
                     continue;
                 }
@@ -527,7 +560,7 @@ namespace pwiz.Skyline.Model
                                                     PrecursorAdduct, losses))
                 {
                     yield return CreateTransitionNode(0, precursorMassPredict, null, losses,
-                                                      precursorIsProduct ? transitionRanks : null);
+                                                      precursorIsProduct ? transitionRanks : null, productAdduct);
                 }
             }            
         }
@@ -648,9 +681,9 @@ namespace pwiz.Skyline.Model
         }
 
         private TransitionDocNode CreateTransitionNode(int massIndex, TypedMass precursorMassH, TransitionIsotopeDistInfo isotopeDistInfo,
-            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, CustomMolecule customMolecule = null)
+            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, Adduct productAdduct, CustomMolecule customMolecule = null)
         {
-            Transition transition = new Transition(this, massIndex, customMolecule);
+            Transition transition = new Transition(this, massIndex, productAdduct, customMolecule);
             var quantInfo = TransitionDocNode.TransitionQuantInfo.GetLibTransitionQuantInfo(transition, losses,
                 Transition.CalcMass(precursorMassH, losses), transitionRanks).ChangeIsotopeDistInfo(isotopeDistInfo);
             var transitionDocNode = new TransitionDocNode(transition, losses, precursorMassH, quantInfo, ExplicitTransitionValues.EMPTY);

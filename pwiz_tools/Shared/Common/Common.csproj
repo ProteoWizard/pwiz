@@ -146,6 +146,7 @@
     <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
+    <Compile Include="DataBinding\ColumnSelector.cs" />
     <Compile Include="DataBinding\Controls\ColumnListEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -548,9 +549,6 @@
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DataBinding\ColumnCaptions\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

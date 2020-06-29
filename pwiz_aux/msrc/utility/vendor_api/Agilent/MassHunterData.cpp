@@ -29,7 +29,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "MassHunterData.hpp"
 #include "MidacData.hpp"
-
+#include "pwiz/utility/minimxml/SAXParser.hpp"
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
@@ -49,6 +49,71 @@ namespace Agilent {
 
 
 namespace {
+
+using namespace pwiz::minimxml;
+using boost::iostreams::stream_offset;
+using boost::iostreams::offset_to_position;
+
+struct Device
+{
+    int DeviceID;
+    string Name;
+    string DriverVersion;
+    string FirmwareVersion;
+    string ModelNumber;
+    string OrdinalNumber;
+    string SerialNumber;
+    string Type;
+    string StoredDataType;
+    string Delay;
+    string Vendor;
+};
+
+struct HandlerDevices : public SAXParser::Handler
+{
+    vector<Device> devices;
+    string* currentProperty;
+
+    HandlerDevices() : currentProperty(nullptr)
+    {
+        parseCharacters = true;
+    }
+
+    virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
+    {
+        if (name == "Device")
+        {
+            devices.push_back(Device());
+            getAttribute(attributes, "DeviceID", devices.back().DeviceID);
+        }
+        else if (name == "Devices" || name == "Version") return Status::Ok;
+        else if (name == "Name") currentProperty = &devices.back().Name;
+        else if (name == "DriverVersion") currentProperty = &devices.back().DriverVersion;
+        else if (name == "FirmwareVersion") currentProperty = &devices.back().FirmwareVersion;
+        else if (name == "ModelNumber") currentProperty = &devices.back().ModelNumber;
+        else if (name == "OrdinalNumber") currentProperty = &devices.back().OrdinalNumber;
+        else if (name == "SerialNumber") currentProperty = &devices.back().SerialNumber;
+        else if (name == "Type") currentProperty = &devices.back().Type;
+        else if (name == "StoredDataType") currentProperty = &devices.back().StoredDataType;
+        else if (name == "Delay") currentProperty = &devices.back().Delay;
+        else if (name == "Vendor") currentProperty = &devices.back().Vendor;
+        else
+            throw runtime_error(("[HandlerDevices] Unexpected element name: " + name).c_str());
+
+        return Status::Ok;
+    }
+
+    virtual Status characters(const SAXParser::saxstring& text, stream_offset position)
+    {
+        if (currentProperty)
+        {
+            currentProperty->assign(text.c_str());
+            currentProperty = nullptr;
+        }
+
+        return Status::Ok;
+    }
+};
 
 MHDAC::IMsdrPeakFilter^ msdrPeakFilter(PeakFilterPtr peakFilter)
 {
@@ -117,10 +182,10 @@ class MassHunterDataImpl : public MassHunterData
     virtual const set<Transition>& getTransitions() const;
     virtual ChromatogramPtr getChromatogram(const Transition& transition) const;
 
-    virtual const automation_vector<double>& getTicTimes() const;
-    virtual const automation_vector<double>& getBpcTimes() const;
-    virtual const automation_vector<float>& getTicIntensities() const;
-    virtual const automation_vector<float>& getBpcIntensities() const;
+    virtual const BinaryData<double>& getTicTimes(bool ms1Only) const;
+    virtual const BinaryData<double>& getBpcTimes(bool ms1Only) const;
+    virtual const BinaryData<float>& getTicIntensities(bool ms1Only) const;
+    virtual const BinaryData<float>& getBpcIntensities(bool ms1Only) const;
 
     virtual ScanRecordPtr getScanRecord(int row) const;
     virtual SpectrumPtr getProfileSpectrumByRow(int row) const;
@@ -133,8 +198,8 @@ class MassHunterDataImpl : public MassHunterData
     gcroot<MHDAC::IMsdrDataReader^> reader_;
     gcroot<MIDAC::IMidacImsReader^> imsReader_;
     gcroot<MHDAC::IBDAMSScanFileInformation^> scanFileInfo_;
-    automation_vector<double> ticTimes_, bpcTimes_;
-    automation_vector<float> ticIntensities_, bpcIntensities_;
+    BinaryData<double> ticTimes_, ticTimesMs1_, bpcTimes_, bpcTimesMs1_;
+    BinaryData<float> ticIntensities_, ticIntensitiesMs1_, bpcIntensities_, bpcIntensitiesMs1_;
     set<Transition> transitions_;
     map<Transition, int> transitionToChromatogramIndexMap_;
 
@@ -210,8 +275,8 @@ struct ChromatogramImpl : public Chromatogram
 
     virtual double getCollisionEnergy() const;
     virtual int getTotalDataPoints() const;
-    virtual void getXArray(automation_vector<double>& x) const;
-    virtual void getYArray(automation_vector<float>& y) const;
+    virtual void getXArray(BinaryData<double>& x) const;
+    virtual void getYArray(BinaryData<float>& y) const;
     virtual IonPolarity getIonPolarity() const;
 
     private:
@@ -263,6 +328,8 @@ bool MassHunterData::hasIonMobilityData(const string& path)
 
 MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
 {
+    massHunterRootPath_ = path;
+
     try
     {
         String^ filepath = ToSystemString(path);
@@ -287,14 +354,26 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
         // set filter for TIC
         filter->ChromatogramType = MHDAC::ChromType::TotalIon;
         MHDAC::IBDAChromData^ tic = reader_->GetChromatogram(filter)[0];
-        ToAutomationVector(tic->XArray, ticTimes_);
-        ToAutomationVector(tic->YArray, ticIntensities_);
+        ToBinaryData(tic->XArray, ticTimes_);
+        ToBinaryData(tic->YArray, ticIntensities_);
 
         // set filter for BPC
         filter->ChromatogramType = MHDAC::ChromType::BasePeak;
         MHDAC::IBDAChromData^ bpc = reader_->GetChromatogram(filter)[0];
-        ToAutomationVector(bpc->XArray, bpcTimes_);
-        ToAutomationVector(bpc->YArray, bpcIntensities_);
+        ToBinaryData(bpc->XArray, bpcTimes_);
+        ToBinaryData(bpc->YArray, bpcIntensities_);
+
+        filter->MSLevelFilter = MHDAC::MSLevel::MS;
+        filter->ChromatogramType = MHDAC::ChromType::TotalIon;
+        tic = reader_->GetChromatogram(filter)[0];
+        ToBinaryData(tic->XArray, ticTimesMs1_);
+        ToBinaryData(tic->YArray, ticIntensitiesMs1_);
+
+        // set filter for BPC
+        filter->ChromatogramType = MHDAC::ChromType::BasePeak;
+        bpc = reader_->GetChromatogram(filter)[0];
+        ToBinaryData(bpc->XArray, bpcTimesMs1_);
+        ToBinaryData(bpc->YArray, bpcIntensitiesMs1_);
 
         // chromatograms are always read completely into memory, and failing
         // to store them on this object after reading cost a 50x performance
@@ -396,6 +475,27 @@ std::string MassHunterDataImpl::getDeviceName(DeviceType deviceType) const
     try {return ToStdString(reader_->FileInformation->GetDeviceName((MHDAC::DeviceType) deviceType));} CATCH_AND_FORWARD
 }
 
+std::string MassHunterData::getDeviceSerialNumber(DeviceType deviceType) const
+{
+    bfs::path massHunterDevicesPath(massHunterRootPath_);
+    massHunterDevicesPath /= "AcqData/Devices.xml";
+    if (!bfs::exists(massHunterDevicesPath))
+        return "";
+
+    ifstream devicesXml(massHunterDevicesPath.string().c_str());
+    HandlerDevices handler;
+    SAXParser::parse(devicesXml, handler);
+
+    if (handler.devices.empty())
+        return "";
+
+    auto findItr = std::find_if(handler.devices.begin(), handler.devices.end(), [&](const Device& device) { return lexical_cast<int>(device.Type) == (int) deviceType; });
+    if (findItr == handler.devices.end())
+        return "";
+
+    return findItr->SerialNumber;
+}
+
 blt::local_date_time MassHunterDataImpl::getAcquisitionTime(bool adjustToHostTime) const
 {
     try
@@ -464,24 +564,24 @@ const set<Transition>& MassHunterDataImpl::getTransitions() const
     return transitions_;
 }
 
-const automation_vector<double>& MassHunterDataImpl::getTicTimes() const
+const BinaryData<double>& MassHunterDataImpl::getTicTimes(bool ms1Only) const
 {
-    return ticTimes_;
+    return ms1Only ? ticTimesMs1_ : ticTimes_;
 }
 
-const automation_vector<double>& MassHunterDataImpl::getBpcTimes() const
+const BinaryData<double>& MassHunterDataImpl::getBpcTimes(bool ms1Only) const
 {
-    return bpcTimes_;
+    return ms1Only ? bpcTimesMs1_ : bpcTimes_;
 }
 
-const automation_vector<float>& MassHunterDataImpl::getTicIntensities() const
+const BinaryData<float>& MassHunterDataImpl::getTicIntensities(bool ms1Only) const
 {
-    return ticIntensities_;
+    return ms1Only ? ticIntensitiesMs1_ : ticIntensities_;
 }
 
-const automation_vector<float>& MassHunterDataImpl::getBpcIntensities() const
+const BinaryData<float>& MassHunterDataImpl::getBpcIntensities(bool ms1Only) const
 {
-    return bpcIntensities_;
+    return ms1Only ? bpcIntensitiesMs1_ : bpcIntensities_;
 }
 
 ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition) const
@@ -684,14 +784,14 @@ int ChromatogramImpl::getTotalDataPoints() const
     try {return chromData_->TotalDataPoints;} CATCH_AND_FORWARD
 }
 
-void ChromatogramImpl::getXArray(automation_vector<double>& x) const
+void ChromatogramImpl::getXArray(BinaryData<double>& x) const
 {
-    try {return ToAutomationVector(chromData_->XArray, x);} CATCH_AND_FORWARD
+    try {return ToBinaryData(chromData_->XArray, x);} CATCH_AND_FORWARD
 }
 
-void ChromatogramImpl::getYArray(automation_vector<float>& y) const
+void ChromatogramImpl::getYArray(BinaryData<float>& y) const
 {
-    try {return ToAutomationVector(chromData_->YArray, y);} CATCH_AND_FORWARD
+    try {return ToBinaryData(chromData_->YArray, y);} CATCH_AND_FORWARD
 }
 
 IonPolarity ChromatogramImpl::getIonPolarity() const

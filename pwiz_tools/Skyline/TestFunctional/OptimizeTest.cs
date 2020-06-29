@@ -73,7 +73,6 @@ namespace pwiz.SkylineTestFunctional
                 Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
-            RunUI(() => TestSmallMolecules = false); //No need to add magic test nodes when we have small mol version of test
 
             CEOptimizationTest();
             OptLibNeutralLossTest();
@@ -879,7 +878,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
 
             SrmDocument docCurrent = SkylineWindow.Document;
-            int transitions = docCurrent.MoleculeTransitionCount / (docCurrent.MoleculeTransitionGroupCount - (TestSmallMolecules ? 1 : 0));
+            int transitions = docCurrent.MoleculeTransitionCount / docCurrent.MoleculeTransitionGroupCount;
             foreach (var chromSet in docCurrent.Settings.MeasuredResults.Chromatograms)
                 Assert.AreEqual(transitions, SkylineWindow.GetGraphChrom(chromSet.Name).CurveCount);
             Assert.AreEqual(transitions, SkylineWindow.GraphPeakArea.CurveCount);
@@ -939,7 +938,7 @@ namespace pwiz.SkylineTestFunctional
             stepCount = stepCount*2 + 1;
 
             string[] lines = File.ReadAllLines(filePath);
-            Assert.AreEqual((document.MoleculeTransitionCount + (TestSmallMolecules ? 2 : 0)) * stepCount, lines.Length);
+            Assert.AreEqual(document.MoleculeTransitionCount * stepCount, lines.Length);
 
             int stepsSeen = 0;
             double lastPrecursorMz = 0;

@@ -25,14 +25,12 @@ using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -41,6 +39,56 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
+
+    public class AuditLogException : Exception
+    {
+        public AuditLogException(string pMessage) : base(pMessage)
+        {
+        }
+        public AuditLogException(string pMessage, Exception pInner) : base(pMessage, pInner)
+        {
+        }
+
+        /// <summary>
+        /// Checks if the given exception was thrown due to problems with audit log processing
+        /// </summary>
+        /// <param name="ex">Exception to check</param>
+        /// <returns>True if this or any nested exception is of <see cref="AuditLogException"> AuditLogException </see> type.</returns>
+        public static bool IsAuditLogInvolved(Exception ex)
+        {
+            do      //traverse the nested exception chain to look for AuditLogException
+            {
+                if (ex is AuditLogException) return true;
+                ex = ex.InnerException;
+            } while (ex != null);
+
+            return false;
+        }
+
+        /// <summary>
+        /// Extracts messages from all the nested exceptions and concatenates them into a single string.
+        /// </summary>
+        /// <param name="ex">Exception to extract the message from.</param>
+        /// <returns>String with all the nested exception messages separated by new lines and exception separator --> </returns>
+        public static string GetMultiLevelMessage(Exception ex)
+        {
+            var msgStrings = new List<string>();
+
+            do
+            {
+                //Make the error dialog a bit more user friendly by showing the full chain of nested exceptions in the message
+                //so they don't have to dig through the stack traces to find the root cause.
+                if (msgStrings.Count > 0)
+                    msgStrings.Add(Resources.ExceptionDialog_Caused_by_____);
+                msgStrings.Add(ex.Message);
+                ex = ex.InnerException;
+
+            } while (ex != null);
+
+            return TextUtil.LineSeparate(msgStrings);
+        }
+    }
+
     [XmlRoot(XML_ROOT)]
     public class AuditLogList : Immutable, IXmlSerializable
     {
@@ -140,11 +188,16 @@ namespace pwiz.Skyline.Model.AuditLog
             var time = DateTime.MaxValue;
             var logIndex = int.MinValue;
 
+            //make sure the entries timestamp in the log is always increasing 
             foreach (var entry in AuditLogEntries.Enumerate())
             {
-                Assume.IsTrue(entry.TimeStampUTC <= time && entry.LogIndex > logIndex,
-                    AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing);
-
+                if (entry.TimeStampUTC > time || entry.LogIndex <= logIndex)
+                {
+                    string msg = string.Format(
+                        AuditLogStrings.AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing,
+                        entry.LogIndex, entry.TimeStampUTC, logIndex, time);
+                    throw new AuditLogException(msg);
+                }
                 time = entry.TimeStampUTC;
                 logIndex = entry.LogIndex;
             }
@@ -204,20 +257,12 @@ namespace pwiz.Skyline.Model.AuditLog
             }
             catch(Exception ex)
             {
-                using (var alert = new AlertDlg())
-                {
-                    alert.Message = string.Format(
+
+                throw new AuditLogException(
+                    string.Format(
                         AuditLogStrings.AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log,
-                        fileName);
-                    alert.DetailMessage = ex.StackTrace;
-                    alert.AddMessageBoxButtons(MessageBoxButtons.OK);
-                    alert.ShowParentlessDialog();
-                }
-
-                loggedSkylineDocumentHash = null;
-                result = null;
-
-                return false;
+                        fileName),
+                    ex);
             }
         }
 
@@ -228,7 +273,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (reader.HasAttributes)
             {
                 var docFormatString = reader.GetAttribute(ATTR.format_version);
-                if (double.TryParse(docFormatString, out var format))
+                if (double.TryParse(docFormatString, NumberStyles.Float, CultureInfo.InvariantCulture, out var format))
                     docFormat = new DocumentFormat(format);
             }
 
@@ -265,20 +310,19 @@ namespace pwiz.Skyline.Model.AuditLog
                 .ChangeActualHash(result.CalculateRootHash())
                 .ChangeSkylHash(Hash.FromBase64(rootHash));
 
+            // yell if audit log entry hash does not match.
             // If the docFormat is null, this is an old audit log and there won't be any entry hashes.
             // We can't just always ignore non-existent hashes, otherwise people could just delete the hash elements
             // and get Skyline to successfully load the audit log
-            if (docFormat != null && !result.RootHash.SkylAndActualHashesEqual())
-            {
-                var modifiedEntries =
-                    result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.SkylAndActualHashesEqual());
-                var dlg = new AlertDlg(AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
-                                       string.Join(Environment.NewLine,
-                                           modifiedEntries.Select(entry => entry.UndoRedo.ToString())),
-                    MessageBoxButtons.OK);
-                dlg.ShowParentlessDialog();
-            }
+            var modifiedEntries =
+                result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.SkylAndActualHashesEqual()).ToArray();
 
+            if (docFormat != null && (!result.RootHash.SkylAndActualHashesEqual() || modifiedEntries.Length > 0))
+            {
+                throw new AuditLogException(
+                    AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
+                    TextUtil.LineSeparate(modifiedEntries.Select(entry => entry.UndoRedo.ToString())));
+            }
 
             reader.ReadEndElement();
             return true;
@@ -459,6 +503,18 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return ReferenceEquals(this, ROOT); }
         }
 
+        public static AuditLogEntry SKIP = new AuditLogEntry { Count = -1, LogIndex = int.MinValue };
+
+        public static AuditLogEntry SkipChange(SrmDocumentPair pair)
+        {
+            return SKIP;
+        }
+
+        public bool IsSkip
+        {
+            get { return ReferenceEquals(this, SKIP); }
+        }
+
         private AuditLogEntry(DateTime timeStampUTC, string reason, SrmDocument.DOCUMENT_TYPE docType,
             string extraInfo = null) : this()
         {
@@ -467,8 +523,6 @@ namespace pwiz.Skyline.Model.AuditLog
             SkylineVersion = _skylineVersion;
 
             DocumentType = docType == SrmDocument.DOCUMENT_TYPE.none ? SrmDocument.DOCUMENT_TYPE.proteomic : docType;
-
-           // User = _user;
 
             Assume.IsTrue(timeStampUTC.Kind == DateTimeKind.Utc); // We only deal in UTC
             TimeStampUTC = timeStampUTC;
@@ -699,6 +753,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 unloggedCount);
         }
 
+        /*
         private AuditLogEntry CreateUnloggedEntry(SrmDocument doc, out bool replace)
         {
             var countEntry = doc.AuditLog.AuditLogEntries;
@@ -711,11 +766,13 @@ namespace pwiz.Skyline.Model.AuditLog
                     .ChangeAllInfo(ImmutableList.Singleton(new MessageInfo(MessageType.log_unlogged_changes, 0)));
                 countEntry.CountEntryType = MessageType.log_unlogged_changes;
             }
-            return countEntry.ChangeUndoRedo(GetUnloggedMessages(int.Parse(countEntry.UndoRedo.Names[0]) + 1))
+
+            return countEntry?.ChangeUndoRedo(GetUnloggedMessages(int.Parse(countEntry.UndoRedo.Names[0]) + 1))
                 .ChangeSummary(GetUnloggedMessages(int.Parse(countEntry.Summary.Names[0]) + 1))
                 .ChangeAllInfo(ImmutableList.Singleton(GetUnloggedMessages(
                     int.Parse(countEntry._allInfoNoUndoRedo.First().Names[0]) + _allInfoNoUndoRedo.Count())));
         }
+        */
 
         public static AuditLogEntry GetAuditLoggingStartExistingDocEntry(SrmDocument doc, SrmDocument.DOCUMENT_TYPE defaultDocumentType)
         {

@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using SkylineNightly.Properties;
 
 namespace SkylineNightly
 {
@@ -29,6 +30,12 @@ namespace SkylineNightly
         private static bool PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
         {
             var nightly = new Nightly(runMode, decorateSrcDirName);
+            var nightlyTask = Nightly.NightlyTask;
+            if (nightlyTask != null && DateTime.UtcNow.Add(nightly.TargetDuration).ToLocalTime() > nightlyTask.NextRunTime)
+            {
+                // Don't run, because the projected end time is after the start of the next scheduled start
+                return false;
+            }
             var errMessage = nightly.RunAndPost();
             var message = string.Format(@"Completed {0}", arg);
             nightly.Finish(message, errMessage);
@@ -48,6 +55,13 @@ namespace SkylineNightly
         [STAThread]
         static void Main(string[] args)
         {
+            if (Settings.Default.SettingsUpgradeRequired)
+            {
+                Settings.Default.Upgrade();
+                Settings.Default.SettingsUpgradeRequired = false;
+                Settings.Default.Save();
+            }
+
             if (args.Length == 0)
             {
                 Application.EnableVisualStyles();

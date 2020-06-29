@@ -22,6 +22,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 #include "Reader_Waters_Detail.hpp"
 #include "pwiz/utility/misc/Once.hpp"
 
@@ -39,15 +40,17 @@ class PWIZ_API_DECL ChromatogramList_Waters : public ChromatogramListBase
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const std::string& id) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
-    virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const;
+    virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel) const;
+    virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const;
 
 #ifdef PWIZ_READER_WATERS
-    ChromatogramList_Waters(RawDataPtr rawdata);
+    ChromatogramList_Waters(RawDataPtr rawdata, const Reader::Config& config);
 
     private:
 
     RawDataPtr rawdata_;
     mutable size_t size_;
+    Reader::Config config_;
 
     mutable util::once_flag_proxy indexInitialized_;
 

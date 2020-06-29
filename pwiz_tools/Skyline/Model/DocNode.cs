@@ -456,24 +456,6 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// Adds all children to a map by their <see cref="Identity"/> itself,
-        /// and not the <see cref="Identity.GlobalIndex"/>.  Callers should be
-        /// sure that the <see cref="Identity"/> subclass provides a useful
-        /// implementation of <see cref="object.GetHashCode"/>, otherwise this
-        /// will result in a map with one value, since by default all <see cref="Identity"/>
-        /// objects are considered content equal.
-        /// 
-        /// This method is used when picking children where distinct new
-        /// <see cref="Identity"/> objects are created, but should not replace
-        /// existing objects with the same identity.
-        /// </summary>
-        /// <returns>A map of children by their <see cref="Identity"/> values</returns>
-        public Dictionary<Identity, DocNode> CreateIdContentToChildMap()
-        {
-            return Children.ToDictionary(child => child.Id);
-        }
-        
-        /// <summary>
         /// Returns the DocNodes that are in an IdentityPath.
         /// </summary>
         public DocNode[] ToNodeArray(IdentityPath identityPath)
@@ -727,19 +709,11 @@ namespace pwiz.Skyline.Model
             List<DocNode> childrenNew = new List<DocNode>(Children);
             List<int> nodeCountStack = new List<int>(_nodeCountStack);
 
-            // Support for small molecule work - most tests have a special node added to see if it breaks anything
-            bool hasSpecialTestNode = childrenNew.Any() && SrmDocument.IsSpecialNonProteomicTestDocNode(childrenNew.Last());
-            if (hasSpecialTestNode)
-                childrenNew.RemoveAt(childrenNew.Count-1);
-
             foreach(DocNode childAdd in childrenAdd)
             {
                 childrenNew.Add(childAdd);
                 AddCounts(childAdd, nodeCountStack);
             }
-
-            if (hasSpecialTestNode)
-                childrenNew.Add(Children.Last()); // Restorethe special test node, at the end
 
             return ChangeChildren(childrenNew, nodeCountStack);
         }
@@ -1094,13 +1068,13 @@ namespace pwiz.Skyline.Model
                 AddCounts(childNew, nodeCountStack);
             }
 
-            // If no children changed, then just return this node
-            if (ArrayUtil.ReferencesEqual(Children, childrenNew))
-                return this;
-
             // If this is a level below which empty nodes are removed, return null if empty
             if (levelRemoveEmpty.HasValue && levelRemoveEmpty.Value < 0 && childrenNew.Count == 0)
                 return null;
+
+            // If no children changed, then just return this node
+            if (ArrayUtil.ReferencesEqual(Children, childrenNew))
+                return this;
 
             return ChangeChildren(childrenNew, nodeCountStack).ChangeAutoManageChildren(false);
         }

@@ -27,6 +27,7 @@ using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -69,7 +70,8 @@ namespace pwiz.Skyline.SettingsUI
                 Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_A_verage_mass_,
                 Resources.EditMeasuredIonDlg_EditMeasuredIonDlg__Monoisotopic_mass_)
             {
-                Location = location
+                Location = location,
+                TabIndex = cbVariableMod.TabIndex+1
             };
             Controls.Add(_formulaBox);
 
@@ -101,7 +103,10 @@ namespace pwiz.Skyline.SettingsUI
 
             ShowLoss = false;
             if (heavy)
+            {
                 btnLoss.Visible = false;
+                cbCrosslinker.Visible = false;
+            }
 
 
             Modification = _originalModification = modEditing;
@@ -113,7 +118,6 @@ namespace pwiz.Skyline.SettingsUI
             set
             {
                 var modification = value;
-
                 // Update the dialog.
                 if (modification == null)
                 {
@@ -134,7 +138,7 @@ namespace pwiz.Skyline.SettingsUI
                     cb37Cl.Checked = false;
                     cb81Br.Checked = false;
                     cb37Cl.Visible = cb81Br.Visible = false;  // No demonstrated need for this yet
-                    listNeutralLosses.Items.Clear();
+                    listLosses.Items.Clear();
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedIndex = 0;
                 }
@@ -181,18 +185,25 @@ namespace pwiz.Skyline.SettingsUI
 
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedItem = modification.RelativeRT.ToString();
-
-                    listNeutralLosses.Items.Clear();
+                    listLosses.Items.Clear();
                     if (modification.HasLoss)
                     {
                         foreach (var loss in modification.Losses)
-                            listNeutralLosses.Items.Add(loss);
+                            listLosses.Items.Add(loss);
                     }
-                    ShowLoss = listNeutralLosses.Items.Count > 0;
+                    ShowLoss = listLosses.Items.Count > 0;
                     UpdateMasses();
                 }
+
+                cbCrosslinker.Checked = null != modification?.CrosslinkerSettings;
                 _modification = modification;
             }
+        }
+
+        public bool IsCrosslinker
+        {
+            get { return cbCrosslinker.Checked; }
+            set { cbCrosslinker.Checked = value; }
         }
 
         public string Formula
@@ -205,15 +216,15 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                foreach (FragmentLoss loss in listNeutralLosses.Items)
+                foreach (FragmentLoss loss in listLosses.Items)
                     yield return loss;
             }
 
             set
             {
                 var losses = FragmentLoss.SortByMz(value.ToArray());
-                listNeutralLosses.Items.Clear();
-                listNeutralLosses.Items.AddRange(losses.Cast<object>().ToArray());
+                listLosses.Items.Clear();
+                listLosses.Items.AddRange(losses.Cast<object>().ToArray());
             }
         }
 
@@ -333,7 +344,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Get the losses to know whether any exist below
             IList<FragmentLoss> losses = null;
-            if (listNeutralLosses.Items.Count > 0)
+            if (listLosses.Items.Count > 0)
             {
                 losses = Losses.ToArray();
             }
@@ -400,7 +411,6 @@ namespace pwiz.Skyline.SettingsUI
                                          monoMass,
                                          avgMass,
                                          losses);
-
             foreach (StaticMod mod in _existing)
             {
                 if (newMod.Equivalent(mod) && !(_editing && mod.Equals(_originalModification)))
@@ -418,6 +428,11 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     return;
                 }
+            }
+
+            if (cbCrosslinker.Checked)
+            {
+                newMod = newMod.ChangeCrosslinkerSettings(CrosslinkerSettings.EMPTY);
             }
             
             var uniMod = UniMod.GetModification(name, IsStructural);
@@ -587,7 +602,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             ShowLoss = !ShowLoss;
             if (ShowLoss)
-                listNeutralLosses.Focus();
+                listLosses.Focus();
         }
 
 
@@ -647,7 +662,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Losses = new List<FragmentLoss>(Losses) {dlg.Loss};
-                    listNeutralLosses.SelectedItem = dlg.Loss;
+                    listLosses.SelectedItem = dlg.Loss;
                 }
             }
         }
@@ -659,17 +674,17 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditLoss()
         {
-            var lossEdit = (FragmentLoss) listNeutralLosses.SelectedItem;
-            var listLosses = new List<FragmentLoss>(Losses);
-            listLosses.Remove(lossEdit);
+            var lossEdit = (FragmentLoss) listLosses.SelectedItem;
+            var listFragmentLosses = new List<FragmentLoss>(Losses);
+            listFragmentLosses.Remove(lossEdit);
 
-            using (var dlg = new EditFragmentLossDlg(listLosses) { Loss = lossEdit })
+            using (var dlg = new EditFragmentLossDlg(listFragmentLosses) { Loss = lossEdit })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    listLosses.Add(dlg.Loss);
-                    Losses = listLosses;
-                    listNeutralLosses.SelectedItem = dlg.Loss;
+                    listFragmentLosses.Add(dlg.Loss);
+                    Losses = listFragmentLosses;
+                    listLosses.SelectedItem = dlg.Loss;
                 }
             }
         }
@@ -681,14 +696,14 @@ namespace pwiz.Skyline.SettingsUI
 
         public void DeleteLoss()
         {
-            int indexSelected = listNeutralLosses.SelectedIndex;
-            listNeutralLosses.Items.Remove(listNeutralLosses.SelectedItem);
-            listNeutralLosses.SelectedIndex = Math.Min(indexSelected, listNeutralLosses.Items.Count - 1);
+            int indexSelected = listLosses.SelectedIndex;
+            listLosses.Items.Remove(listLosses.SelectedItem);
+            listLosses.SelectedIndex = Math.Min(indexSelected, listLosses.Items.Count - 1);
         }
 
         private void listNeutralLosses_SelectedIndexChanged(object sender, EventArgs e)
         {
-            bool enable = (listNeutralLosses.SelectedIndex != -1);
+            bool enable = (listLosses.SelectedIndex != -1);
             tbbEditLoss.Enabled = enable;
             tbbDeleteLoss.Enabled = enable;
         }
@@ -710,13 +725,13 @@ namespace pwiz.Skyline.SettingsUI
 
         public int LossSelectedIndex
         {
-            get { return listNeutralLosses.SelectedIndex; }
-            set { listNeutralLosses.SelectedIndex = value; }
+            get { return listLosses.SelectedIndex; }
+            set { listLosses.SelectedIndex = value; }
         }
 
         public string GetLossText(int indexLoss)
         {
-            return listNeutralLosses.Items[indexLoss].ToString();
+            return listLosses.Items[indexLoss].ToString();
         }
 
         #endregion
@@ -795,6 +810,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return comboMod.Visible; }
             private set { comboMod.Visible = value; }
+        }
+
+        private void cbCrosslinker_CheckedChanged(object sender, EventArgs e)
+        {
+            cbVariableMod.Enabled = !cbCrosslinker.Checked;
         }
     }
 }

@@ -113,8 +113,7 @@ namespace SkylineTester
                 MainWindow.Pass1.Checked.ToString(),
                 MainWindow.QualityChooseTests.Checked ? TabTests.GetTestList() : "",
                 MainWindow.QualityChooseTests.Checked ? " perftests=on" : "",  // In case any perf tests are explicitly selected - no harm if they aren't
-                MainWindow.QualityRunSmallMoleculeVersions.Checked ? " runsmallmoleculeversions=on" : "",
-                MainWindow.QualityAddSmallMoleculeNodes.Checked ? " testsmallmolecules=on" : "");
+                MainWindow.QualityRunSmallMoleculeVersions.Checked ? " runsmallmoleculeversions=on" : "");
             MainWindow.AddTestRunner(args);
 
             MainWindow.RunCommands();
@@ -162,6 +161,7 @@ namespace SkylineTester
                 _lastRun.TestsRun = MainWindow.TestsRun;
                 _lastRun.Failures = runFromLine.Failures;
                 _lastRun.ManagedMemory = runFromLine.ManagedMemory;
+                _lastRun.CommittedMemory = runFromLine.CommittedMemory;
                 _lastRun.TotalMemory = runFromLine.TotalMemory;
                 _lastRun.UserHandles = runFromLine.UserHandles;
                 _lastRun.GdiHandles = runFromLine.GdiHandles;

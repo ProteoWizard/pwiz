@@ -25,6 +25,7 @@
 
 #include "SpectrumList_ScanSummer.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/sort_together.hpp"
 #include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
 #include <boost/range/adaptor/map.hpp>
 
@@ -170,7 +171,6 @@ double SpectrumList_ScanSummer::getPrecursorMz(const msdata::Spectrum& spectrum)
 // SpectrumList_ScanSummer
 //
 
-
 void SpectrumList_ScanSummer::sumSubScansNaive( BinaryData<double> & x, BinaryData<double> & y, const precursorGroupPtr& precursorGroupPtr, DetailLevel detailLevel ) const
 {
     if (x.size() != y.size())
@@ -178,6 +178,8 @@ void SpectrumList_ScanSummer::sumSubScansNaive( BinaryData<double> & x, BinaryDa
 
     BinaryData<double>& summedMZ = x;
     BinaryData<double>& summedIntensity = y;
+
+    sort_together(summedMZ, vector<boost::iterator_range<BinaryData<double>::iterator>> { summedIntensity });
 
     vector<double> binnedMZ; binnedMZ.reserve(summedMZ.size());
     vector<double> binnedIntensity; binnedIntensity.reserve(summedMZ.size());
@@ -204,6 +206,10 @@ void SpectrumList_ScanSummer::sumSubScansNaive( BinaryData<double> & x, BinaryDa
         swap(summedMZ, binnedMZ);
         swap(summedIntensity, binnedIntensity);
     }
+
+    if (!precursorGroupPtr)
+        return;
+
     vector<int>::const_iterator InitialIt = precursorGroupPtr->indexList.begin()+1;
     for( vector<int>::const_iterator listIt = InitialIt; listIt != precursorGroupPtr->indexList.end(); ++listIt)
     {
@@ -239,8 +245,8 @@ void SpectrumList_ScanSummer::sumSubScansNaive( BinaryData<double> & x, BinaryDa
 
 
 
-PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumListPtr& original, double precursorTol, double rTimeTol, double mobilityTol, IterationListenerRegistry* ilr)
-:   SpectrumListWrapper(original), precursorTol_(precursorTol), rTimeTol_(rTimeTol), mobilityTol_(mobilityTol)
+PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumListPtr& original, double precursorTol, double rTimeTol, double mobilityTol, bool sumMs1, IterationListenerRegistry* ilr)
+:   SpectrumListWrapper(original), precursorTol_(precursorTol), rTimeTol_(rTimeTol), mobilityTol_(mobilityTol), sumMs1_(sumMs1)
 {
     if (!inner_.get()) throw runtime_error("[SpectrumList_ScanSummer] Null pointer");
 
@@ -253,7 +259,7 @@ PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumLis
             SpectrumPtr s = inner_->spectrum(i, false);
             double precursorMZ = getPrecursorMz(*s);
 
-            if (precursorMZ == 0.0) // ms1 scans do not need summing
+            if (precursorMZ == 0.0) // ms1 scans do not need grouping
             {
                 pushSpectrum(spectrumIdentity);
                 precursorMap.push_back(precursorGroupPtr());
@@ -348,33 +354,44 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ScanSummer::spectrum(size_t index, Detail
 
     size_t summedScanIndex = indexMap.at(index);
     SpectrumPtr summedSpectrum = inner_->spectrum(summedScanIndex, true);
-    
-    if (summedSpectrum->cvParam(MS_ms_level).valueAs<int>() > 1) // MS/MS scan
+
+    int msLevel = summedSpectrum->cvParam(MS_ms_level).valueAs<int>();
+    if (msLevel > 1 || sumMs1_)
     {
         try
         {
-            auto precursorGroupPtr = precursorMap.at(index);
-            if (!precursorGroupPtr)
-                throw runtime_error("ms2 index points to null precursorGroupPtr");
+            precursorGroupPtr precursorGroupPtr;
+            if (msLevel > 1)
+            {
+                precursorGroupPtr = precursorMap.at(index);
+                if (!precursorGroupPtr)
+                    throw runtime_error("ms2 index points to null precursorGroupPtr");
 
-            // output ms2 spectra by retention time, grab the appropriate spectrum
-            int newIndex = precursorGroupPtr->indexList[0];
-            summedSpectrum = inner_->spectrum(newIndex, true);
+                // output ms2 spectra by retention time, grab the appropriate spectrum
+                int newIndex = precursorGroupPtr->indexList[0];
+                summedSpectrum = inner_->spectrum(newIndex, true);
 
-            for (auto& cvParam : summedSpectrum->scanList.scans[0].cvParams)
-                if (cvParam.cvid == MS_scan_start_time)
-                    cvParam.value = lexical_cast<string>(median(precursorGroupPtr->scanTimes));
-                else if (cvParam.cvid == MS_inverse_reduced_ion_mobility)
-                    cvParam.value = lexical_cast<string>(median(precursorGroupPtr->ionMobilities));
-            for (auto& cvParam : summedSpectrum->precursors[0].selectedIons[0].cvParams)
-                if (cvParam.cvid == MS_selected_ion_m_z)
-                    cvParam.value = lexical_cast<string>(median(precursorGroupPtr->precursorMZs));
+                for (auto& cvParam : summedSpectrum->scanList.scans[0].cvParams)
+                    if (cvParam.cvid == MS_scan_start_time)
+                        cvParam.value = lexical_cast<string>(median(precursorGroupPtr->scanTimes));
+                    else if (cvParam.cvid == MS_inverse_reduced_ion_mobility)
+                        cvParam.value = lexical_cast<string>(median(precursorGroupPtr->ionMobilities));
+                for (auto& cvParam : summedSpectrum->precursors[0].selectedIons[0].cvParams)
+                    if (cvParam.cvid == MS_selected_ion_m_z)
+                        cvParam.value = lexical_cast<string>(median(precursorGroupPtr->precursorMZs));
 
-            // keep only first scan
-            summedSpectrum->scanList.scans.erase(summedSpectrum->scanList.scans.begin() + 1, summedSpectrum->scanList.scans.end());
+                // keep only first scan
+                summedSpectrum->scanList.scans.erase(summedSpectrum->scanList.scans.begin() + 1, summedSpectrum->scanList.scans.end());
+            }
 
             BinaryData<double>& mzs = summedSpectrum->getMZArray()->data;
             BinaryData<double>& intensities = summedSpectrum->getIntensityArray()->data;
+
+            // remove extra arrays that are the same length as the m/z array because the summing will not preserve the one-to-one correspondence
+            for (size_t i = 2; i < summedSpectrum->binaryDataArrayPtrs.size(); ++i)
+                if (summedSpectrum->binaryDataArrayPtrs[i]->data.size() == mzs.size())
+                    summedSpectrum->binaryDataArrayPtrs.erase(summedSpectrum->binaryDataArrayPtrs.begin() + (i--));
+
             sumSubScansNaive(mzs, intensities, precursorGroupPtr, DetailLevel_FullData);
             summedSpectrum->defaultArrayLength = mzs.size();
 

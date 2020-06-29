@@ -31,23 +31,136 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineTestUtil.Schemas;
 
 namespace pwiz.SkylineTestUtil
 {
+    /// <summary>
+    /// AssertEx provides an extended set of Assert functions, such as collection equality, as well as
+    /// new implementations of common Assert functions such as Assert.IsTrue.
+    /// 
+    /// These implementations give two advantages over standard Assert.* functions:
+    ///    Easier to set breakpoints while debugging
+    ///    Tests can optionally invoke a debugger instead of quitting, using the <see cref="Assume.DebugOnFail"/> mechanism.
+    /// </summary>
     public static class AssertEx
     {
         public static void AreEqualDeep<TItem>(IList<TItem> l1, IList<TItem> l2)
         {
-            Assert.AreEqual(l1.Count, l2.Count);
+            AreEqual(l1.Count, l2.Count);
             for (int i = 0; i < l1.Count; i++)
             {
                 if (!Equals(l1[i], l2[i]))
-                    Assert.AreEqual(l1[i], l2[i]);  // For setting breakpoint
+                {
+                    AreEqual(l1[i], l2[i]);  // For setting breakpoint
+                }
             }
         }
+
+        public static void AreEqual<T>(T expected, T actual, string message = null)
+        {
+            if (!Equals(expected, actual))
+            {
+                if (Assume.InvokeDebuggerOnFail)
+                {
+                    Assume.Fail(message); // Handles the debugger launch
+                }
+                Assert.AreEqual(expected, actual, message);
+            }
+        }
+
+        public static void AreNotEqual<T>(T expected, T actual, string message)
+        {
+            if (Equals(expected, actual))
+            {
+                if (Assume.InvokeDebuggerOnFail)
+                {
+                    Assume.Fail(message); // Handles the debugger launch
+                }
+                Assert.AreNotEqual(expected, actual, message);
+            }
+        }
+
+        public static void AreNotSame(object expected, object actual)
+        {
+            if (!ReferenceEquals(expected, actual))
+            {
+                if (Assume.InvokeDebuggerOnFail)
+                {
+                    Assume.Fail(); // Handles the debugger launch
+                }
+                Assert.AreNotSame(expected, actual);
+            }
+        }
+
+        public static void Fail(string message = null)
+        {
+            if (Assume.InvokeDebuggerOnFail)
+            {
+                Assume.Fail(message); // Handles the debugger launch
+            }
+            Assert.Fail(message);
+        }
+
+        public static void Fail(string message, params object[] parameters)
+        {
+            if (Assume.InvokeDebuggerOnFail)
+            {
+                Assume.Fail(message); // Handles the debugger launch
+            }
+            Assert.Fail(message, parameters);
+        }
+
+        public static void AreEqual(double expected, double actual, double tolerance, string message = null)
+        {
+            if (!Equals(expected, actual))
+            {
+                if (Math.Abs(expected - actual) > tolerance)
+                {
+                    AreEqual(expected, actual, message);
+                }
+            }
+        }
+
+        public static void AreEqual(double? expected, double? actual, double tolerance, string message = null)
+        {
+            if (!Equals(expected, actual))
+            {
+                if (expected.HasValue && actual.HasValue)
+                {
+                    AreEqual(expected.Value, actual.Value, tolerance, message);
+                }
+                else
+                {
+                    AreEqual(expected, actual, message);
+                }
+            }
+        }
+
+        public static void IsTrue(bool expected, string message = null)
+        {
+            AreEqual(expected, true, message);
+        }
+
+        public static void IsFalse(bool expected, string message = null)
+        {
+            AreEqual(expected, false, message);
+        }
+
+        public static void IsNull(object obj, string message = null)
+        {
+            AreEqual(null, obj, message);
+        }
+
+        public static void IsNotNull(object obj, string message = null)
+        {
+            AreNotEqual(null, obj, message);
+        }
+
 
         public static void ThrowsException<TEx>(Action throwEx, string message = null)
             where TEx : Exception
@@ -71,7 +184,7 @@ namespace pwiz.SkylineTestUtil
             }
             // Assert that an exception was thrown. We do this outside of the catch block
             // so that the AssertFailedException will not get caught if TEx is Exception.
-            Assert.IsTrue(exceptionThrown, "Exception expected");
+            IsTrue(exceptionThrown, "Exception expected");
         }
 
 
@@ -90,7 +203,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (TEx x)
             {
-                Assert.Fail(TextUtil.LineSeparate(string.Format("Unexpected exception: {0}", x.Message), x.StackTrace));
+                Fail(TextUtil.LineSeparate(string.Format("Unexpected exception: {0}", x.Message), x.StackTrace));
             }
         }
 
@@ -99,19 +212,31 @@ namespace pwiz.SkylineTestUtil
             if (exceptions.Count == 0)
                 return;
 
-            Assert.Fail(TextUtil.LineSeparate(exceptions.Count == 1 ? "Unexpected exception:" : "Unexpected exceptions:",
-                TextUtil.LineSeparate(exceptions.Select(x => TextUtil.LineSeparate(x.Message, ExceptionUtil.GetStackTraceText(x, null, false), string.Empty)))));
+            Fail(TextUtil.LineSeparate(exceptions.Count == 1 ? "Unexpected exception:" : "Unexpected exceptions:",
+                TextUtil.LineSeparate(exceptions.Select(x => x.ToString()))));
         }
 
         public static void Contains(string value, params string[] parts)
         {
-            Assert.IsNotNull(value, "No message found");
-            Assert.AreNotEqual(0, parts.Length, "Must have at least one thing contained");
+            IsNotNull(value, "No message found");
+            AreNotEqual(0, parts.Length, "Must have at least one thing contained");
             foreach (string part in parts)
             {
-                if (!value.Contains(part))
-                    Assert.Fail("The text '{0}' does not contain '{1}'", value, part);
+                if (!string.IsNullOrEmpty(part) && !value.Contains(part))
+                    Fail("The text '{0}' does not contain '{1}'", value, part);
             }
+        }
+
+        public static void FileExists(string filePath, string message = null)
+        {
+            if (!File.Exists(filePath))
+                Fail(TextUtil.LineSeparate(string.Format("Missing file {0}", filePath), message ?? string.Empty));
+        }
+
+        public static void FileNotExists(string filePath, string message = null)
+        {
+            if (File.Exists(filePath))
+                Fail(TextUtil.LineSeparate(string.Format("Unexpected file exists {0}", filePath), message ?? string.Empty));
         }
 
         public static TObj Deserialize<TObj>(string s)
@@ -172,7 +297,7 @@ namespace pwiz.SkylineTestUtil
                     if (deserializeType == DeserializeType.error)
                     {
                         // Fail if deserialization succeeds.
-                        Assert.Fail("Expected error deserializing {0}:\r\n{1}", typeof(TObj).Name, s);
+                        Fail("Expected error deserializing {0}:\r\n{1}", typeof(TObj).Name, s);
                     }
 
                     if (deserializeType == DeserializeType.roundtrip)
@@ -189,7 +314,7 @@ namespace pwiz.SkylineTestUtil
                     }
                     else
                     {
-                        Assert.Fail("Unexpected exception {0} - {1}:\r\n{2}", typeof(TEx), message, x.StackTrace);
+                        Fail("Unexpected exception {0} - {1}:\r\n{2}", typeof(TEx), message, x.StackTrace);
                     }
                 }
                 catch (TEx x)
@@ -197,14 +322,14 @@ namespace pwiz.SkylineTestUtil
                     message = GetMessageStack(x, null);
                     if (deserializeType != DeserializeType.error)
                     {
-                        Assert.Fail("Unexpected exception {0} - {1}:\r\n{2}", typeof(TEx), message, x.StackTrace);
+                        Fail("Unexpected exception {0} - {1}:\r\n{2}", typeof(TEx), message, x.StackTrace);
                     }
                 }
                 if (expectedExceptionText != null)
                 {
                     if ((message == null) || !message.Contains(expectedExceptionText))
                     {
-                        Assert.Fail("Unexpected exception message for {0}: expected to contain\r\n{1}\r\nactual\r\n{2}", typeof(TEx), expectedExceptionText, message ?? "<none>");
+                        Fail("Unexpected exception message for {0}: expected to contain\r\n{1}\r\nactual\r\n{2}", typeof(TEx), expectedExceptionText, message ?? "<none>");
                     }
                 }
             }
@@ -214,6 +339,21 @@ namespace pwiz.SkylineTestUtil
         {
             Serializable(doc, DocumentCloned);
             VerifyModifiedSequences(doc);
+            // Skyline uses a format involving protocol buffers if the document is very large.
+            // Make sure to serialize the document the other way, and make sure it's still the same.
+            bool wasCompactFormat = CompactFormatOption.FromSettings().UseCompactFormat(doc);
+            string oldSetting = Settings.Default.CompactFormatOption;
+            try
+            {
+                Settings.Default.CompactFormatOption =
+                    (wasCompactFormat ? CompactFormatOption.NEVER : CompactFormatOption.ALWAYS).Name;
+                Assert.AreNotEqual(wasCompactFormat, CompactFormatOption.FromSettings().UseCompactFormat(doc));
+                Serializable(doc, DocumentCloned);
+            }
+            finally
+            {
+                Settings.Default.CompactFormatOption = oldSetting;
+            }
         }
 
         public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
@@ -255,24 +395,28 @@ namespace pwiz.SkylineTestUtil
         {
             foreach (var peptide in doc.Peptides)
             {
+                if (peptide.ExplicitMods != null && peptide.ExplicitMods.HasCrosslinks)
+                {
+                    continue;
+                }
                 var peptideModifiedSequence =
                     ModifiedSequence.GetModifiedSequence(doc.Settings, peptide, IsotopeLabelType.light);
-                Assert.IsNotNull(peptideModifiedSequence);
+                IsNotNull(peptideModifiedSequence);
                 if (peptide.ModifiedSequenceDisplay != peptideModifiedSequence.ToString())
                 {
-                    Assert.AreEqual(peptide.ModifiedSequenceDisplay, peptideModifiedSequence.ToString());
+                    AreEqual(peptide.ModifiedSequenceDisplay, peptideModifiedSequence.ToString());
                 }
                 foreach (var precursor in peptide.TransitionGroups)
                 {
                     var modifiedSequence = ModifiedSequence.GetModifiedSequence(doc.Settings, peptide,
                         precursor.TransitionGroup.LabelType);
-                    Assert.IsNotNull(modifiedSequence);
+                    IsNotNull(modifiedSequence);
                     var expectedModifiedSequence = doc.Settings.GetPrecursorCalc(
                             precursor.TransitionGroup.LabelType, peptide.ExplicitMods)
                         .GetModifiedSequence(peptide.Peptide.Target, true).ToString();
                     if (expectedModifiedSequence != modifiedSequence.ToString())
                     {
-                        Assert.AreEqual(expectedModifiedSequence, modifiedSequence.ToString());
+                        AreEqual(expectedModifiedSequence, modifiedSequence.ToString());
                     }
                 }
             }
@@ -305,9 +449,10 @@ namespace pwiz.SkylineTestUtil
                             throw new OutOfMemoryException("Strangely large non-document object", x.InnerException);
                         }
                         var assembly = Assembly.GetAssembly(typeof(AssertEx));
-                        var xsdName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, ".Schemas.Skyline_{0}.xsd", SrmDocument.FORMAT_VERSION);
+                        var xsdName = SchemaDocuments.GetSkylineSchemaResourceName(SrmDocument.FORMAT_VERSION.ToString());
                         var schemaStream = assembly.GetManifestResourceStream(xsdName);
-                        Assert.IsNotNull(schemaStream, string.Format("Schema {0} not found in TestUtil assembly", xsdName));
+                        IsNotNull(schemaStream, string.Format("Schema {0} not found in TestUtil assembly", xsdName));
+                        // ReSharper disable once AssignNullToNotNullAttribute
                         var schemaText = (new StreamReader(schemaStream)).ReadToEnd();
                         var xd = new XmlDocument();
                         xd.Load(new MemoryStream(Encoding.UTF8.GetBytes(schemaText)));
@@ -334,7 +479,8 @@ namespace pwiz.SkylineTestUtil
                                     {
                                         // Don't enter a redundant definition
                                         targetXML = xml;
-                                        Assert.IsNotNull(xd.DocumentElement);
+                                        IsNotNull(xd.DocumentElement);
+                                        // ReSharper disable once PossibleNullReferenceException
                                         xd.DocumentElement.AppendChild(nodes[i]);
                                     }
                                 }
@@ -364,14 +510,14 @@ namespace pwiz.SkylineTestUtil
                                 }
                                 catch (Exception e)
                                 {
-                                    Assert.Fail(e.Message + "  XML text:\r\n" + xmlText);
+                                    Fail(e.Message + "  XML text:\r\n" + xmlText);
                                 }
                             }
                         }
                     }
                     catch (Exception e)
                     {
-                        Assert.Fail(e.ToString());
+                        Fail(e.ToString());
                     }
                 }
             }
@@ -392,7 +538,7 @@ namespace pwiz.SkylineTestUtil
             string schemaVer = xmlText.Substring(verStart, xmlText.Substring(verStart).IndexOf("\"", StringComparison.Ordinal));
             // ReSharper restore LocalizableElement
 
-            ValidatesAgainstSchema(xmlText, "Skyline_" + schemaVer);
+            ValidatesAgainstSchema(xmlText, SchemaDocuments.GetSkylineSchemaResourceName(schemaVer));
         }
 
         [Localizable(false)]
@@ -403,7 +549,7 @@ namespace pwiz.SkylineTestUtil
 
             string version = "0";
             if (documentHashIndex < 0)
-                Assert.Fail("Invalid Audit Log. No audit_log tag found");
+                Fail("Invalid Audit Log. No audit_log tag found");
             if (formatVersionIndex > 0 && formatVersionIndex < documentHashIndex)
             {
                 version = xmlText.Substring(formatVersionIndex + 16,
@@ -417,16 +563,16 @@ namespace pwiz.SkylineTestUtil
                 version = "4.21";
             }
 
-            ValidatesAgainstSchema(xmlText, "AuditLog.Skyl_" + version);
+            ValidatesAgainstSchema(xmlText, SchemaDocuments.GetAuditLogSchemaResourceName(version));
         }
 
 
-        public static void ValidatesAgainstSchema(string xmlText, string xsdName)
+        public static void ValidatesAgainstSchema(string xmlText, string xsdResourceName)
         {
             var assembly = Assembly.GetAssembly(typeof(AssertEx));
-            var schemaFileName = typeof(AssertEx).Namespace + String.Format(CultureInfo.InvariantCulture, @".Schemas.{0}.xsd", xsdName);
-            var schemaFile = assembly.GetManifestResourceStream(schemaFileName);
-            Assert.IsNotNull(schemaFile, "could not locate a schema file called " + schemaFileName);
+            var schemaFile = assembly.GetManifestResourceStream(xsdResourceName);
+            IsNotNull(schemaFile, "could not locate a schema file called " + xsdResourceName);
+            // ReSharper disable once AssignNullToNotNullAttribute
             using (var schemaReader = new XmlTextReader(schemaFile))
             {
                 var schema = XmlSchema.Read(schemaReader, OldSchemaValidationCallBack);
@@ -450,7 +596,7 @@ namespace pwiz.SkylineTestUtil
                     }
                     catch (Exception e)
                     {
-                        Assert.Fail(e.Message + "  XML text:\r\n" + xmlText);
+                        Fail(e.Message + "  XML text:\r\n" + xmlText);
                     }
                 }
             }
@@ -499,7 +645,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (Exception e)
                 {
-                    Assert.Fail(e.ToString());
+                    Fail(e.ToString());
                 }
             }
 
@@ -579,16 +725,18 @@ namespace pwiz.SkylineTestUtil
                     if (lineTarget == null && lineActual == null)
                         return;
                     if (lineTarget == null)
-                        Assert.Fail(GetEarlyEndingMessage(helpMsg, "Expected", count-1, lineEqualLast, lineActual, readerActual));
+                        Fail(GetEarlyEndingMessage(helpMsg, "Expected", count-1, lineEqualLast, lineActual, readerActual));
                     if (lineActual == null)
-                        Assert.Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
+                        Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
                     if (lineTarget != lineActual)
                     {
                         bool failed = true;
                         if (columnTolerances != null)
                         {
+                            // ReSharper disable PossibleNullReferenceException
                             var colsActual = lineActual.Split('\t');
                             var colsTarget = lineTarget.Split('\t');
+                            // ReSharper restore PossibleNullReferenceException
                             if (colsTarget.Length == colsActual.Length)
                             {
                                 failed = false; // May yet be saved by tolerance check
@@ -611,7 +759,7 @@ namespace pwiz.SkylineTestUtil
                         }
 
                         if (failed)
-                            Assert.Fail(helpMsg + "Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                            Fail(helpMsg + "Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                     }
 
                     lineEqualLast = lineTarget;
@@ -679,11 +827,11 @@ namespace pwiz.SkylineTestUtil
                         allowedExtraLinesInActual--;
                     }
                     if (lineActual != null)
-                        Assert.Fail("Target stops at line {0}.", count);
+                        Fail("Target stops at line {0}.", count);
                 }
                 else if (lineActual == null)
                 {
-                    Assert.Fail("Actual stops at line {0}.", count);
+                    Fail("Actual stops at line {0}.", count);
                 }
                 else if (lineTarget != lineActual)
                 {
@@ -696,7 +844,7 @@ namespace pwiz.SkylineTestUtil
                         countFields = Math.Max(fieldsTarget.Length, fieldsActual.Length);
                     }
                     if (fieldsTarget.Length < countFields || fieldsActual.Length < countFields)
-                        Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                        Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                     for (int i = 0; i < countFields; i++)
                     {
                         if (exceptIndex.HasValue && exceptIndex.Value == i)
@@ -719,7 +867,7 @@ namespace pwiz.SkylineTestUtil
                                 if (Math.Abs(dTarget - dActual) <= toler)
                                     continue;
                             }
-                            Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                            Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                         }
                     }
                 }
@@ -737,7 +885,7 @@ namespace pwiz.SkylineTestUtil
                 string actualXML = null;
                 RoundTrip(actual, ref actualXML); // Just for the XML output
                 NoDiff(expectedXML, actualXML, "AssertEx.DocsEqual failed.  Expressing as XML to aid in debugging:");  // This should throw
-                Assert.AreEqual(expected, actual);  // In case NoDiff doesn't throw (as when problem is actually in XML read or write)
+                AreEqual(expected, actual);  // In case NoDiff doesn't throw (as when problem is actually in XML read or write)
             }
         }
 
@@ -746,7 +894,7 @@ namespace pwiz.SkylineTestUtil
             DocsEqual(expected, actual);
             if (ReferenceEquals(expected, actual))
             {
-                Assert.AreNotSame(expected, actual);
+                AreNotSame(expected, actual);
             }
         }
 
@@ -758,11 +906,11 @@ namespace pwiz.SkylineTestUtil
         {
             if (!Equals(expected, actual))
             {
-                Assert.AreEqual(expected, actual);
+                AreEqual(expected, actual);
             }
             if (ReferenceEquals(expected, actual) && !ReferenceEquals(actual, def))
             {
-                Assert.AreNotSame(expected, actual);
+                AreNotSame(expected, actual);
             }
         }
 
@@ -770,7 +918,7 @@ namespace pwiz.SkylineTestUtil
         {
             string message = GetMessageStack(x, t);
             if (message != null)
-                Assert.Fail("Expected exception type {0} not found:\r\n{1}", t.Name, message);
+                Fail("Expected exception type {0} not found:\r\n{1}", t.Name, message);
         }
 
         private static string GetMessageStack(Exception x, Type t)
@@ -818,33 +966,7 @@ namespace pwiz.SkylineTestUtil
         {
             string errmsg = string.Empty;
             if (revision != null)
-            {
-                if (Settings.Default.TestSmallMolecules && (revision == (document.RevisionIndex - 1)))
-                    revision++;
-                        // Presumably this got bumped up during document deserialization in our special test mode
                 errmsg += DocumentStateTestAreEqual("RevisionIndex", revision, document.RevisionIndex);
-            }
-            if (Settings.Default.TestSmallMolecules)
-            {
-                // We'll have added a node at the end that the test writer didn't anticipate - bump the counts accordingly
-                if (groups.HasValue)
-                    groups = document.MoleculeGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
-                        .Aggregate(groups, (current, @group) => current + 1);
-                if (molecules.HasValue)
-                    molecules = document.Molecules.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
-                        .Aggregate(molecules, (current, @molecule) => current + 1);
-                if (tranGroups.HasValue)
-                    tranGroups =
-                        document.MoleculeTransitionGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode)
-                            .Aggregate(tranGroups, (current, @transgroup) => current + 1);
-                if (transitions.HasValue)
-                {
-                    foreach (var tg in document.MoleculeTransitionGroups.Where(SrmDocument.IsSpecialNonProteomicTestDocNode))
-                    {
-                        transitions += tg.TransitionCount;
-                    }
-                }
-            }
             if (groups.HasValue)
                 errmsg += DocumentStateTestAreEqual("MoleculeGroupCount", groups, document.MoleculeGroupCount);
             if (molecules.HasValue)
@@ -861,14 +983,14 @@ namespace pwiz.SkylineTestUtil
         {
             var errmsg = DocumentStateTestResultString(document, revision, groups, peptides, tranGroups, transitions);
             if (errmsg.Length > 0)
-                Assert.Fail((hint??string.Empty) + errmsg);
+                Fail((hint??string.Empty) + errmsg);
 
             // Verify that no two nodes in the document tree have the same global index
             var setIndexes = new HashSet<int>();
             var nodeDuplicate = FindFirstDuplicateGlobalIndex(document, setIndexes);
             if (nodeDuplicate != null)
             {
-                Assert.Fail((hint??string.Empty) + "Duplicate global index {0} found in node {1}",
+                Fail((hint??string.Empty) + "Duplicate global index {0} found in node {1}",
                     nodeDuplicate.Id.GlobalIndex, nodeDuplicate);
             }
         }
@@ -906,7 +1028,7 @@ namespace pwiz.SkylineTestUtil
             File.WriteAllText(tmpSky, xmlSaved);
             using (var cmd = new Skyline.CommandLine())
             {
-                Assert.IsTrue(cmd.OpenSkyFile(tmpSky)); // Handles any path shifts in database files, like our .imdb file
+                IsTrue(cmd.OpenSkyFile(tmpSky)); // Handles any path shifts in database files, like our .imdb file
                 var docLoad = cmd.Document;
                 using (var docContainer = new ResultsTestDocumentContainer(null, tmpSky))
                 {
@@ -973,9 +1095,12 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.DataSettings.GroupComparisonDefs, copy.DataSettings.GroupComparisonDefs, defData.GroupComparisonDefs);
             Cloned(target.DataSettings.Lists, copy.DataSettings.Lists, defData.Lists);
             Cloned(target.DataSettings.ViewSpecList, copy.DataSettings.ViewSpecList, defData.ViewSpecList);
-            Assert.AreEqual(target.DataSettings, copy.DataSettings);  // Might both by DataSettings.DEFAULT
+            AreEqual(target.DataSettings, copy.DataSettings);  // Might both by DataSettings.DEFAULT
             if (!DataSettings.DEFAULT.Equals(target.DataSettings))
-                Assert.AreNotSame(target.DataSettings, copy.DataSettings);
+                AreNotSame(target.DataSettings, copy.DataSettings);
+            AreEqual(target.MeasuredResults, copy.MeasuredResults);
+            if (target.MeasuredResults != null)
+                AreNotSame(target.MeasuredResults, copy.MeasuredResults);
             Cloned(target, copy);
         }
 
@@ -985,16 +1110,16 @@ namespace pwiz.SkylineTestUtil
             string[] expectedParts = Regex.Split(expected,@"{\d}");
             if (replacements.HasValue)
             {
-                Assert.AreEqual(replacements, expectedParts.Length - 1,
-                    "Expected {0} replacements in string resource '{1}'", replacements, expected);
+                AreEqual(replacements, expectedParts.Length - 1,
+                    string.Format("Expected {0} replacements in string resource '{1}'", replacements, expected));
             }
 
             int startIndex = 0;
             foreach (var expectedPart in expectedParts)
             {
                 int partIndex = actual.IndexOf(expectedPart, startIndex, StringComparison.Ordinal);
-                Assert.AreNotEqual(-1, partIndex,
-                    "Expected part '{0}' not found in the string '{1}'", expectedPart, actual);
+                AreNotEqual(-1, partIndex,
+                    string.Format("Expected part '{0}' not found in the string '{1}'", expectedPart, actual));
                 startIndex = partIndex + expectedPart.Length;
             }
         }
@@ -1003,17 +1128,41 @@ namespace pwiz.SkylineTestUtil
         {
             if (num1 == null || num2 == null)
             {
-                Assert.IsTrue(num1 == null && num2 == null);
+                IsTrue(num1 == null && num2 == null);
             }
             else
             {
-                Assert.AreEqual(num1.Value, num2.Value, diff);
+                AreEqual(num1.Value, num2.Value, diff);
             }
         }
 
         public static void AreEqualLines(string expected, string actual)
         {
-            Assert.AreEqual(LineBracket(expected), LineBracket(actual));
+            AreEqual(LineBracket(expected), LineBracket(actual));
+        }
+
+        public static void IsLessThan<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) >= 0)
+                Fail("\"{0}\" is not less than \"{1}\"", actual, expectedBound);
+        }
+
+        public static void IsLessThanOrEqual<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) > 0)
+                Fail("\"{0}\" is not less than or equal to \"{1}\"", actual, expectedBound);
+        }
+
+        public static void IsGreaterThan<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) <= 0)
+                Fail("\"{0}\" is not greater than \"{1}\"", actual, expectedBound);
+        }
+
+        public static void IsGreaterThanOrEqual<T>(T actual, T expectedBound) where T : IComparable<T>
+        {
+            if (actual.CompareTo(expectedBound) < 0)
+                Fail("\"{0}\" is not greater than or equal to \"{1}\"", actual, expectedBound);
         }
 
         /// <summary>
@@ -1042,7 +1191,7 @@ namespace pwiz.SkylineTestUtil
                     convertedMoleculeGroupsIterator.MoveNext();
                     ConvertedSmallMoleculePeptideGroupIsSimilar(convertedMoleculeGroupsIterator.Current, peptideGroupDocNode, conversionMode);
                 }
-                Assert.IsFalse(convertedMoleculeGroupsIterator.MoveNext());
+                IsFalse(convertedMoleculeGroupsIterator.MoveNext());
             }
         }
 
@@ -1056,19 +1205,20 @@ namespace pwiz.SkylineTestUtil
                     convertedMoleculesIterator.MoveNext();
                     var convertedMol = convertedMoleculesIterator.Current;
                     Assert.IsNotNull(convertedMol);
+                    // ReSharper disable once PossibleNullReferenceException
                     if (convertedMol.Note != null)
-                        Assert.AreEqual(mol.Note ?? string.Empty,
+                        AreEqual(mol.Note ?? string.Empty,
                             convertedMol.Note.Replace(RefinementSettings.TestingConvertedFromProteomic, string.Empty));
                     else
-                        Assert.AreEqual(mol.CustomMolecule.InvariantName, SrmDocument.TestingNonProteomicMoleculeName); // This was the magic test molecule
-                    Assert.AreEqual(mol.SourceKey, convertedMol.SourceKey);
-                    Assert.AreEqual(mol.Rank, convertedMol.Rank);
-                    Assert.AreEqual(mol.Results, convertedMol.Results);
-                    Assert.AreEqual(mol.ExplicitRetentionTime, convertedMol.ExplicitRetentionTime);
-                    Assert.AreEqual(mol.BestResult, convertedMol.BestResult);
+                        Fail(@"unexpected empty note"); 
+                    AreEqual(mol.SourceKey, convertedMol.SourceKey);
+                    AreEqual(mol.Rank, convertedMol.Rank);
+                    AreEqual(mol.Results, convertedMol.Results);
+                    AreEqual(mol.ExplicitRetentionTime, convertedMol.ExplicitRetentionTime);
+                    AreEqual(mol.BestResult, convertedMol.BestResult);
                     ConvertedSmallMoleculeIsSimilar(convertedMol, mol, conversionMode);
                 }
-                Assert.IsFalse(convertedMoleculesIterator.MoveNext());
+                IsFalse(convertedMoleculesIterator.MoveNext());
             }
         }
 
@@ -1096,7 +1246,7 @@ namespace pwiz.SkylineTestUtil
                 return;
             }
             if (!Equals(group.Results, convertedGroup.Results))
-                Assert.AreEqual(group.Results, convertedGroup.Results, group + " vs " + convertedGroup);
+                AreEqual(group.Results, convertedGroup.Results, group + " vs " + convertedGroup);
         }
 
         private static void ConvertedSmallMoleculeIsSimilar(PeptideDocNode convertedMol, PeptideDocNode mol, RefinementSettings.ConvertToSmallMoleculesMode conversionMode)
@@ -1108,21 +1258,22 @@ namespace pwiz.SkylineTestUtil
                     convertedTransitionGroupIterator.MoveNext();
                     var convertedTransitionGroupDocNode = convertedTransitionGroupIterator.Current;
                     ConvertedSmallMoleculePrecursorIsSimilar(convertedTransitionGroupDocNode, transitionGroupDocNode, conversionMode);
-                    Assert.IsNotNull(convertedTransitionGroupDocNode);
-                    Assert.AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge,
+                    IsNotNull(convertedTransitionGroupDocNode);
+                    // ReSharper disable once PossibleNullReferenceException
+                    AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge,
                         convertedTransitionGroupDocNode.TransitionGroup.PrecursorCharge);
-                    Assert.AreEqual(transitionGroupDocNode.TransitionGroup.LabelType,
+                    AreEqual(transitionGroupDocNode.TransitionGroup.LabelType,
                         convertedTransitionGroupDocNode.TransitionGroup.LabelType);
-                    Assert.AreEqual(transitionGroupDocNode.PrecursorMz, convertedTransitionGroupDocNode.PrecursorMz,
+                    AreEqual(transitionGroupDocNode.PrecursorMz, convertedTransitionGroupDocNode.PrecursorMz,
                         SequenceMassCalc.MassTolerance, "transitiongroup as small molecule");
                     ConvertedSmallMoleculeTransitionGroupResultIsSimilar(convertedTransitionGroupDocNode, transitionGroupDocNode, conversionMode);
-                    Assert.AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge,
+                    AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge,
                         convertedTransitionGroupDocNode.TransitionGroup.PrecursorCharge);
-                    Assert.AreEqual(transitionGroupDocNode.TransitionGroup.LabelType,
+                    AreEqual(transitionGroupDocNode.TransitionGroup.LabelType,
                         convertedTransitionGroupDocNode.TransitionGroup.LabelType);
 
                 }
-                Assert.IsFalse(convertedTransitionGroupIterator == null || convertedTransitionGroupIterator.MoveNext());
+                IsFalse(convertedTransitionGroupIterator.MoveNext());
             }
         }
 
@@ -1134,15 +1285,16 @@ namespace pwiz.SkylineTestUtil
                 {
                     convertedTransitionIterator.MoveNext();
                     var convertedTransition = convertedTransitionIterator.Current;
-                    Assert.IsNotNull(convertedTransition);
+                    IsNotNull(convertedTransition);
+                    // ReSharper disable once PossibleNullReferenceException
                     if (Math.Abs(transition.Mz - convertedTransition.Mz) > SequenceMassCalc.MassTolerance)
-                        Assert.AreEqual(transition.Mz, convertedTransition.Mz, "mz mismatch transition as small molecule");
-                    Assert.AreEqual(transition.IsotopeDistInfo, convertedTransition.IsotopeDistInfo);
+                        AreEqual(transition.Mz, convertedTransition.Mz, "mz mismatch transition as small molecule");
+                    AreEqual(transition.IsotopeDistInfo, convertedTransition.IsotopeDistInfo);
                     if (conversionMode == RefinementSettings.ConvertToSmallMoleculesMode.formulas && 
                         !Equals(transition.Results, convertedTransition.Results))
-                        Assert.AreEqual(transition.Results, convertedTransition.Results, "results mismatch transition as small molecule");
+                        AreEqual(transition.Results, convertedTransition.Results, "results mismatch transition as small molecule");
                 }
-                Assert.IsFalse(convertedTransitionIterator.MoveNext());
+                IsFalse(convertedTransitionIterator.MoveNext());
             }
         }
     }

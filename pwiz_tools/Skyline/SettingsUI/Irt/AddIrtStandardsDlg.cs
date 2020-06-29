@@ -20,6 +20,8 @@ using System;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
@@ -27,36 +29,55 @@ namespace pwiz.Skyline.SettingsUI.Irt
     public partial class AddIrtStandardsDlg : FormEx
     {
         private readonly int _peptideCount;
+        private readonly RegressionGraphData _graphData;
 
-        public AddIrtStandardsDlg(int peptideCount)
+        public AddIrtStandardsDlg(int peptideCount, bool peptidesExcluded)
         {
             _peptideCount = peptideCount;
+            _graphData = null;
 
             InitializeComponent();
 
-            labelMessage.Text = string.Format(labelMessage.Text, peptideCount);
+            labelMessage.Text = string.Format(!peptidesExcluded ? labelMessage.Text : Resources.AddIrtStandardsDlg_AddIrtStandardsDlg_MessagePeptidesExcluded, peptideCount);
+        }
+
+        public AddIrtStandardsDlg(int peptideCount, string message, RegressionGraphData graphData = null)
+        {
+            _peptideCount = peptideCount;
+            _graphData = graphData;
+
+            InitializeComponent();
+
+            labelMessage.Text = message;
+            btnGraph.Visible = graphData != null;
         }
 
         public int StandardCount
         {
-            get
-            {
-                int count;
-                if (int.TryParse(textPeptideCount.Text, out count))
-                    return count;
-                return 0;
-            }
+            get => int.TryParse(textPeptideCount.Text, out var count) ? count : 0;
+            set => textPeptideCount.Text = value.ToString(LocalizationHelper.CurrentCulture);
+        }
 
-            set { textPeptideCount.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        private void btnGraph_Click(object sender, EventArgs e)
+        {
+            if (_graphData != null)
+            {
+                using (var graph = new GraphRegression(new[] { _graphData }) { Width = 800, Height = 600 })
+                {
+                    graph.ShowDialog(this);
+                }
+            }
         }
 
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
 
-            int standardCount;
-            if (!helper.ValidateNumberTextBox(textPeptideCount, CalibrateIrtDlg.MIN_STANDARD_PEPTIDES, _peptideCount, out standardCount))
+            if (!helper.ValidateNumberTextBox(textPeptideCount, CalibrateIrtDlg.MIN_STANDARD_PEPTIDES, _peptideCount, out _))
+            {
+                DialogResult = DialogResult.None;
                 return;
+            }
 
             DialogResult = DialogResult.OK;
         }

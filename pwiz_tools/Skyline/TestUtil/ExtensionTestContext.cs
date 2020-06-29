@@ -45,19 +45,29 @@ namespace pwiz.SkylineTestUtil
             return Path.Combine(testContext.TestDir, relativePath);
         }
 
-        public static String GetProjectDirectory(this TestContext testContext, string relativePath)
+        public static String GetProjectDirectory(string relativePath)
         {
             for (String directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                    directory != null && directory.Length > 10;
-                    directory = Path.GetDirectoryName(directory))
+                directory != null && directory.Length > 10;
+                directory = Path.GetDirectoryName(directory))
             {
                 var testZipFiles = Path.Combine(directory, "TestZipFiles");
                 if (Directory.Exists(testZipFiles))
                     return Path.Combine(testZipFiles, relativePath);
-                if (File.Exists(Path.Combine(directory, Program.Name + ".sln")))
+                if (File.Exists(Path.Combine(directory, "Skyline.sln")))
                     return Path.Combine(directory, relativePath);
             }
+
+            // as last resort, check if current directory is the pwiz repository root (e.g. when running TestRunner in Docker container)
+            if (File.Exists(Path.Combine("pwiz_tools", "Skyline", "Skyline.sln")))
+                return Path.Combine("pwiz_tools", "Skyline", relativePath);
+
             return null;
+        }
+
+        public static String GetProjectDirectory(this TestContext testContext, string relativePath)
+        {
+            return GetProjectDirectory(relativePath);
         }
 
         public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir, string[] persistentFiles, string persistentFilesDir)
@@ -157,10 +167,9 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return (DateTime.UtcNow.DayOfYear > 240 /* start failing after 8 months into the new year */ ||
-                        (Environment.Is64BitProcess && !Program.SkylineOffscreen &&  /* wiff2 access leaks thread and event handles, so avoid it during nightly tests when offscreen */
-                         (CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator != "," || /* wiff2 access fails under french language settings */
-                          CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator != "\xA0")) /* no break space */ ) ;
+                return (Environment.Is64BitProcess && !Program.SkylineOffscreen &&  /* wiff2 access leaks thread and event handles, so avoid it during nightly tests when offscreen */
+                        (CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator != "," || /* wiff2 access fails under french language settings */
+                         CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator != "\xA0")) /* no break space */ ;
             }
         }
 

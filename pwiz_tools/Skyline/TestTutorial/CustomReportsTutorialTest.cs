@@ -18,8 +18,10 @@
  */
 
 using System;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
@@ -31,6 +33,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -52,7 +55,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestCustomReportsTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "CustomReports";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/CustomReports-2_5.pdf";
 
@@ -97,8 +102,8 @@ namespace pwiz.SkylineTestTutorial
             DoCreatingASimpleReport();
             DoExportingReportDataToAFile();
             DoSharingManagingModifyingReportTemplates();
-            DoQualityControlSummaryReports();
-            DoResultsGridView();
+            if (DoQualityControlSummaryReports())
+                DoResultsGridView();
         }
 
 
@@ -123,6 +128,7 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.Height = Math.Max(viewEditor.Height, 600);
                 Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse("Proteins!*.Peptides!*.Sequence"))); // Not L10N
                 viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                viewEditor.ChooseColumnsTab.ScrollTreeToTop();
             });
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form", 5);
 
@@ -143,6 +149,7 @@ namespace pwiz.SkylineTestTutorial
                 }
                 Assert.AreEqual(4, viewEditor.ChooseColumnsTab.ColumnCount);
                 viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First().SetPivotReplicate(true);
+                viewEditor.ChooseColumnsTab.ScrollTreeToTop();
             });
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form", 7);
             // p. 7
@@ -151,7 +158,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForConditionUI(() => previewReportDlg.IsComplete);
                 RunUI(() =>
                 {
-                    Assert.AreEqual(20 + (TestSmallMolecules ? 1 : 0), previewReportDlg.RowCount);
+                    Assert.AreEqual(20, previewReportDlg.RowCount);
                     Assert.AreEqual(58, previewReportDlg.ColumnCount);
                 });
                 PauseForScreenShot<DocumentGridForm>("Preview form", 8);
@@ -198,10 +205,10 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(manageViewsForm, manageViewsForm.Close); // Not L10N
             }
 
-            // Managing Report Templayes in Skyline, p. 10
+            // Managing Report Templates in Skyline, p. 10
             var editReportListDlg0 = ShowDialog<ManageViewsForm>(exportReportDlg1.EditList);
             RunUI(() => editReportListDlg0.SelectView(customReportName));
-            PauseForScreenShot<EditListDlg<SettingsListBase<ReportOrViewSpec>, ReportOrViewSpec>>("Edit Reports form", 12);   // p. 11
+            PauseForScreenShot<ManageViewsForm>("Edit Reports form", 12);   // p. 11
 
             RunUI(() =>
             {
@@ -230,7 +237,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(()=>{exportReportDlg1.ReportName = customReportName;});
             }
             var previewDlg = ShowDialog<DocumentGridForm>(exportReportDlg1.ShowPreview);
-            var expectedRows = 20 + (TestSmallMolecules ? 1 : 0);
+            var expectedRows = 20;
             WaitForCondition(() => previewDlg.RowCount == expectedRows);
             Assert.AreEqual(expectedRows, previewDlg.RowCount);
             Assert.AreEqual(58, previewDlg.ColumnCount);
@@ -279,7 +286,7 @@ namespace pwiz.SkylineTestTutorial
                 }
                 var pivotWidget = viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First();
                 pivotWidget.SetPivotReplicate(false);
-                viewEditor.Height = Math.Max(viewEditor.Height, 610);
+                viewEditor.Height = Math.Max(viewEditor.Height, 940);
             });
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form expanded to show selected columns", 16);
 
@@ -302,7 +309,20 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     Assert.IsTrue(previewReportDlg.ColumnCount > columnCount);
-                    Assert.AreEqual((rowCount / 2) + (TestSmallMolecules ? 1 : 0), previewReportDlg.RowCount);
+                    Assert.AreEqual((rowCount / 2), previewReportDlg.RowCount);
+
+                    string heightCol = TextUtil.SpaceSeparate("light", ColumnCaptions.Height);
+                    bool foundHeightCol = false;
+                    foreach (DataGridViewColumn leftCol in previewReportDlg.DataGridView.Columns)
+                    {
+                        if (leftCol.HeaderText == heightCol)
+                        {
+                            previewReportDlg.DataGridView.FirstDisplayedScrollingColumnIndex = leftCol.Index;
+                            foundHeightCol = true;
+                            break;
+                        }
+                    }
+                    Assert.IsTrue(foundHeightCol);
                 });
                 PauseForScreenShot<DocumentGridForm>("Adjust the scrollbar so that the first displayed column is \"light Height\" and the last displayed column is \"heavy Product Mz\"", 17);
                 OkDialog(previewReportDlg, previewReportDlg.Close);
@@ -317,7 +337,7 @@ namespace pwiz.SkylineTestTutorial
 
             OkDialog(exportReportDlg1, exportReportDlg1.CancelClick);
         }
-        protected void DoQualityControlSummaryReports()
+        protected bool DoQualityControlSummaryReports()
         {
             // Quality Control Summary Reports, p. 18
             RunUI(() =>
@@ -334,11 +354,76 @@ namespace pwiz.SkylineTestTutorial
             );
             PauseForScreenShot<ManageViewsForm>("Manage Reports form", 19);
             OkDialog(manageViewsForm, manageViewsForm.Close);
-            PauseForScreenShot<DocumentGridForm>("Click the Reports dropdown and highlight 'Summary_stats'", 20);
+            Size originalSize = Size.Empty;
+            Point formLocation = Point.Empty;
+            if (IsPauseForScreenShots)
+            {
+                // CONSIDER: The ShowDropDown() use below causes User+GDI handle leaks
+                RunUI(() =>
+                {
+                    documentGridForm.NavBar.ReportsButton.ShowDropDown();   //we need to expand it to determine its full size
+                    int ddHeight = documentGridForm.NavBar.ReportsButton.DropDown.Height;
+                    formLocation = new Point(SkylineWindow.DesktopBounds.Left + 200, SkylineWindow.DesktopBounds.Top + 200);
+                    documentGridForm.NavBar.ReportsButton.HideDropDown();
+                    originalSize = documentGridForm.Size;
+                    //make sure the dropdown fits into the window with some margin.
+                    documentGridForm.FloatingPane.FloatAt(new Rectangle(formLocation, new Size(documentGridForm.Width, ddHeight + 150)));
+                    documentGridForm.NavBar.ReportsButton.ShowDropDown();
 
+                    var i = 0;      //find and select the Summary Statistics item.
+                    var items = documentGridForm.NavBar.ReportsButton.DropDown.Items;
+                    while (i < items.Count && items[i].Text != "Summary Statistics")
+                    {
+                        i++;
+                    }
+                    if (i < items.Count)
+                        items[i].Select();
+                    else
+                    {
+                        Assert.Fail("Summary Statistics not found in Reports menu");
+                    }
+                });
+                PauseForScreenShot<DocumentGridForm>("Click the Reports dropdown and highlight 'Summary_stats'", 20);
+
+                RunUI(() => documentGridForm.NavBar.ReportsButton.HideDropDown());
+            }
             RunUI(() => documentGridForm.ChooseView("Summary Statistics"));
             WaitForConditionUI(() => documentGridForm.IsComplete);
+            RunUI(() => documentGridForm.ExpandColumns());
+            
+            if (IsPauseForScreenShots)
+                RunUI(() => documentGridForm.FloatingPane.FloatAt(new Rectangle(formLocation, originalSize)));
+
             PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 20);
+
+            if (IsPauseForCoverShot)
+            {
+                RestoreCoverViewOnScreen();
+                var documentGridFormCover = WaitForOpenForm<DocumentGridForm>();
+                RunUI(SkylineWindow.AutoZoomBestPeak);
+                WaitForGraphs();
+                var viewEditorCover = ShowDialog<ViewEditor>(documentGridFormCover.NavBar.CustomizeView);
+                RunUI(() =>
+                {
+                    viewEditorCover.Top = SkylineWindow.Top + 10;
+                    viewEditorCover.Width -= 40;
+                    viewEditorCover.Left = SkylineWindow.Right - viewEditorCover.Width;
+                    var columnsExpand = new[]
+                    {
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.MaxFwhm.Cv"),
+                        PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.ResultSummary.TotalArea.Cv"),
+                        PropertyPath.Parse("Proteins!*"), 
+                    };
+                    foreach (var id in columnsExpand)
+                    {
+                        Assert.IsTrue(viewEditorCover.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
+                    }
+                });
+                PauseForCoverShot();
+
+                OkDialog(viewEditorCover, viewEditorCover.CancelButton.PerformClick);
+                return false;
+            }
 
             var viewEditor = ShowDialog<ViewEditor>(documentGridForm.NavBar.CustomizeView);
             RunUI(() => Assert.AreEqual(11, viewEditor.ChooseColumnsTab.ColumnCount));
@@ -367,19 +452,27 @@ namespace pwiz.SkylineTestTutorial
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
+            SkylineWindow.BeginInvoke(new Action(() =>
+            {
+                ExpandMenu((MenuStrip)SkylineWindow.Controls[3], "View>Peak Areas>Replicate Comparison");
+                Thread.Sleep(500);
+            }));
             PauseForScreenShot("Highlight the menu item 'View>Peak Areas>Replicate Comparison'", 23);
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             WaitForGraphs();
+
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas view", 24);
+            return true;    // Continue subsequent tests
         }
 
         protected void DoResultsGridView()
         {
             // Results Grid View
             RestoreViewOnScreen(25);
-            PauseForScreenShot<LiveResultsGrid>("Take full screen capture of floating windows", 25);
+            PauseForScreenShot(SkylineWindow, "Take full screen capture of floating windows", 25);
             RestoreViewOnScreen(26);
-            PauseForScreenShot("Main window layout", 26);
+
+            PauseForScreenShot(SkylineWindow, "Main window layout", 26);
 
             // Not understood: WaitForOpenForm occasionally hangs in nightly test runs. Fixed it by calling
             // ShowDialog when LiveResultsGrid cannot be found.
@@ -411,8 +504,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             RunUI(() => SkylineWindow.SelectedResultsIndex = 1);
             WaitForGraphs();
-
-            PauseForScreenShot("Results Grid view subsection", 27);
+            PauseForScreenShot<LiveResultsGrid>("Results Grid view subsection", 27);
 
             RunDlg<ViewEditor>(resultsGridForm.NavBar.CustomizeView, resultsGridViewEditor =>
             {
@@ -453,7 +545,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
             OkDialog(editListDlg, editListDlg.OkDialog);
             RunUI(() => chooseAnnotationsDlg.AnnotationsCheckedListBox.SetItemChecked(0, true));
-            PauseForScreenShot<DocumentSettingsDlg>("Annotation Settings form", 29);   // p. 26
+            PauseForScreenShot<DocumentSettingsDlg>("Annotation Settings form", 29);   // p. 29
 
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
 
@@ -469,7 +561,7 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Customize View form showing Tailing annotation checked", 30);
             OkDialog(viewEditor, viewEditor.OkDialog);
-            PauseForScreenShot("Main window with Tailing column added to Results Grid");   // p. 27
+            PauseForScreenShot(SkylineWindow, "Main window with Tailing column added to Results Grid", 30);   // p. 30
         }
         private string GetLocalizedCaption(string caption)
         {

@@ -16,13 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -133,7 +133,8 @@ namespace pwiz.Skyline.Controls.Graphs
                             properties.MinimumDetections,
                             settings.BinWidth,
                             settings.MsLevel,
-                            settings.Transitions), _tokenSource.Token);
+                            settings.Transitions,
+                            settings.CountTransitions), _tokenSource.Token);
 
                     lock (_cacheInfo)
                     {
@@ -151,17 +152,19 @@ namespace pwiz.Skyline.Controls.Graphs
                     properties.NormalizationMethod, properties.RatioIndex);
             }
 
-            public AreaCVGraphData Get(string group, string annotation, int minimumDetections,
+            public AreaCVGraphData Get(ReplicateValue group, object annotation, int minimumDetections,
                 AreaCVNormalizationMethod normalizationMethod, int ratioIndex)
             {
                 lock (_cacheInfo)
                 {
                     // Linear search, but very short list
-                    return _cacheInfo.Data.FirstOrDefault(d => d._graphSettings.Group == group &&
-                                                     d._graphSettings.Annotation == annotation &&
-                                                     d._graphSettings.MinimumDetections == minimumDetections &&
-                                                     d._graphSettings.NormalizationMethod == normalizationMethod &&
-                                                     d._graphSettings.RatioIndex == ratioIndex);
+                    return _cacheInfo.Data.FirstOrDefault(d => Equals(d._graphSettings.Group, group) &&
+                                                               Equals(d._graphSettings.Annotation, annotation) &&
+                                                               d._graphSettings.MinimumDetections ==
+                                                               minimumDetections &&
+                                                               d._graphSettings.NormalizationMethod ==
+                                                               normalizationMethod &&
+                                                               d._graphSettings.RatioIndex == ratioIndex);
                 }
             }
 
@@ -175,10 +178,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            private static int GetMinDetectionsForAnnotation(SrmDocument document, AreaCVGraphSettings graphSettings, string annotationValue)
+            private static int GetMinDetectionsForAnnotation(SrmDocument document, AreaCVGraphSettings graphSettings, object annotationValue)
             {
                 return document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained && !double.IsNaN(graphSettings.QValueCutoff)
-                    ? AnnotationHelper.GetReplicateIndices(document.Settings, graphSettings.Group, annotationValue).Length
+                    ? AnnotationHelper.GetReplicateIndices(document, graphSettings.Group, annotationValue).Length
                     : 2;
             }
 
@@ -190,8 +193,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     document = _cacheInfo.Document;
                 }
 
-                var annotationsArray = AnnotationHelper.GetPossibleAnnotations(document.Settings,
-                    graphSettings.Group, AnnotationDef.AnnotationTarget.replicate);
+                var annotationsArray = AnnotationHelper.GetPossibleAnnotations(document, graphSettings.Group);
 
                 // Add an entry for All
                 var annotations = annotationsArray.Concat(new string[] { null }).ToList();
@@ -285,7 +287,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 public bool Equals(GraphDataProperties other)
                 {
-                    return string.Equals(Group, other.Group) && NormalizationMethod == other.NormalizationMethod && RatioIndex == other.RatioIndex && string.Equals(Annotation, other.Annotation) && MinimumDetections == other.MinimumDetections;
+                    return Equals(Group, other.Group) && NormalizationMethod == other.NormalizationMethod && RatioIndex == other.RatioIndex && Equals(Annotation, other.Annotation) && MinimumDetections == other.MinimumDetections;
                 }
 
                 public override bool Equals(object obj)
@@ -316,7 +318,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     MinimumDetections = settings.MinimumDetections;
                 }
 
-                public GraphDataProperties(string group, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, string annotation, int minimumDetections)
+                public GraphDataProperties(ReplicateValue group, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, object annotation, int minimumDetections)
                 {
                     Group = group;
                     NormalizationMethod = normalizationMethod;
@@ -325,10 +327,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     MinimumDetections = minimumDetections;
                 }
 
-                public string Group { get; private set; }
+                public ReplicateValue Group { get; private set; }
                 public AreaCVNormalizationMethod NormalizationMethod { get; private set; }
                 public int RatioIndex { get; private set; }
-                public string Annotation { get; private set; }
+                public object Annotation { get; private set; }
                 public int MinimumDetections { get; private set; }
             }
 

@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.DataAnalysis.Matrices;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.GroupComparison
@@ -78,16 +79,11 @@ namespace pwiz.Skyline.Model.GroupComparison
         public SrmDocument ApplyChangesToDocument(SrmDocument doc, GroupComparisonDef groupDef)
         {
             var groupComparisons = doc.Settings.DataSettings.GroupComparisonDefs.ToList();
-            int index =
-                groupComparisons.FindIndex(def => def.Name == GroupComparisonName);
-            if (index < 0)
-            {
-                groupComparisons.Add(groupDef);
-            }
-            else
-            {
-                groupComparisons[index] = groupDef;
-            }
+            int index = groupComparisons.FindIndex(def => def.Name == GroupComparisonName);
+            if (index < 0 || Equals(groupDef, groupComparisons[index]))
+                return doc;
+
+            groupComparisons[index] = groupDef;
             doc =
                 doc.ChangeSettings(
                     doc.Settings.ChangeDataSettings(
@@ -297,33 +293,51 @@ namespace pwiz.Skyline.Model.GroupComparison
             List<GroupComparisonResult> results = new List<GroupComparisonResult>();
             if (groupComparer.IsValid)
             {
-                var peptideGroups = document.MoleculeGroups.ToArray();
-                for (int i = 0; i < peptideGroups.Length; i++)
-                {
-                    int percentComplete = 100 * i / peptideGroups.Length;
-                    lock (_lock)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        _percentComplete = percentComplete;
-                    }
-                    var peptideGroup = peptideGroups[i];
-                    IEnumerable<PeptideDocNode> peptides;
-                    if (groupComparer.ComparisonDef.PerProtein)
-                    {
-                        peptides = new PeptideDocNode[] {null};
-                    }
-                    else
-                    {
-                        peptides = peptideGroup.Molecules;
-                    }
-                    foreach (var peptide in peptides)
-                    {
-                        results.AddRange(groupComparer.CalculateFoldChanges(peptideGroup, peptide));
-                    }
-                }
+                results = ComputeResults(groupComparer, document, cancellationToken, _lock);
             }
             DateTime endTime = DateTime.Now;
             return new GroupComparisonResults(groupComparer, results, startTime, endTime);
+        }
+
+        public static List<GroupComparisonResult> ComputeResults(GroupComparer groupComparer, SrmDocument document,
+            CancellationToken? cancellationToken, object _lock, SrmSettingsChangeMonitor progressMonitor = null)
+        {
+            var results = new List<GroupComparisonResult>();
+            var peptideGroups = document.MoleculeGroups.ToArray();
+            for (int i = 0; i < peptideGroups.Length; i++)
+            {
+                if (_lock != null)
+                {
+                    lock (_lock)
+                    {
+                        if (cancellationToken.HasValue)
+                            cancellationToken.Value.ThrowIfCancellationRequested();
+                    }
+                }
+
+                var peptideGroup = peptideGroups[i];
+                IEnumerable<PeptideDocNode> peptides;
+                if (groupComparer.ComparisonDef.PerProtein)
+                {
+                    peptides = new PeptideDocNode[] { null };
+                }
+                else
+                {
+                    peptides = peptideGroup.Molecules;
+                }
+                foreach (var peptide in peptides)
+                {
+                    if (progressMonitor != null && progressMonitor.IsCanceled())
+                        throw new OperationCanceledException();
+                    if (progressMonitor != null)
+                    {
+                        progressMonitor.ProcessMolecule(peptide);
+                    }
+                    results.AddRange(groupComparer.CalculateFoldChanges(peptideGroup, peptide));
+                }
+            }
+
+            return results;
         }
 
         private class ModelChangeSupport : IDisposable

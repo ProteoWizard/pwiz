@@ -132,6 +132,15 @@ namespace pwiz.Skyline.Model
             get { return ProgressList.Any(status => !string.IsNullOrEmpty(status.WarningMessage)); }
         }
 
+        public string  WarningMessage
+        {
+            get
+            {
+                return TextUtil.LineSeparate(ProgressList.Select(status => status.WarningMessage)
+                    .Where(status => !string.IsNullOrEmpty(status)));
+            }
+        }
+
         public bool IsCanceled { get { return State == ProgressState.cancelled; } }
         public bool IsBegin { get { return State == ProgressState.begin; } }
 
@@ -261,7 +270,7 @@ namespace pwiz.Skyline.Model
         {
             foreach (var loadingStatus in ProgressList)
             {
-                if (loadingStatus.FilePath.Equals(filePath))
+                if (loadingStatus.FilePath.GetLocation().Equals(filePath.GetLocation()))
                     return loadingStatus;
             }
             return null;

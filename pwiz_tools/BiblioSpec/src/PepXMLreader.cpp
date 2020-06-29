@@ -28,6 +28,7 @@
 #include "mzxmlParser.h"
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+#include <boost/xpressive/xpressive.hpp>
 #include <cmath>
 
 namespace bal = boost::algorithm;
@@ -55,8 +56,13 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
     probCutOff = getScoreThreshold(PEPXML);
     dirs.push_back("../");   // look in parent dir in addition to cwd
     dirs.push_back("../../");  // look in grandparent dir in addition to cwd
+    extensions.push_back(".mz5"); // look for spec in mz5 files
     extensions.push_back(".mzML"); // look for spec in mzML files
     extensions.push_back(".mzXML"); // look for spec in mzXML files
+    extensions.push_back(".ms2");
+    extensions.push_back(".cms2");
+    extensions.push_back(".bms2");
+    extensions.push_back(".pms2");
 }
 
 PepXMLreader::~PepXMLreader() {
@@ -80,28 +86,24 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        
        if (analysis.find("interprophet") == 0) {
            analysisType_ = INTER_PROPHET_ANALYSIS;
-           // Unfortunately, there is no way to get a file count
-           // from this element.
-           struct stat filestatus;
-           stat(getFileName().c_str(), &filestatus);
+           // Unfortunately, there is no way to get a file count from this element.
+
            // work in bytes / 1000 to avoid overflow
-           initSpecFileProgress(filestatus.st_size / 1000);
+           initSpecFileProgress(bfs::file_size(getFileName()) / 1000);
        }
    } else if(state == STATE_PROPHET_SUMMARY && isElement("inputfile",name)) {
       // Count files for use in reporting percent complete
       numFiles++;
    } else if(isElement("msms_run_summary",name)) {
-      string fileroot = getRequiredAttrValue("base_name",attr);
+      fileroot_ = getRequiredAttrValue("base_name",attr);
       // Because Mascot2XML uses the full path for the base_name,
       // only the part beyond the last "\" or "/" is taken.
-      size_t slash = fileroot.rfind('/');
-      size_t bslash = fileroot.rfind('\\');
+      size_t slash = fileroot_.rfind('/');
+      size_t bslash = fileroot_.rfind('\\');
       if (slash == string::npos || (bslash != string::npos && bslash > slash))
           slash = bslash;
       if (slash != string::npos)
-          fileroot.erase(0, slash + 1);
-          
-      setSpecFileName(fileroot.c_str(), extensions, dirs); 
+          fileroot_.erase(0, slash + 1);
 
       // Check if this pepXML file is from Proteome Discoverer
       string rawType = getAttrValue("raw_data_type", attr);
@@ -113,11 +115,16 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
    //get massType and search engine
    else if(isElement("search_summary",name)) {
+       string search_engine_version = getAttrValue("search_engine_version", attr);
+       std::transform(search_engine_version.begin(), search_engine_version.end(), search_engine_version.begin(), ::tolower);
+       bal::replace_all(search_engine_version, " ", ""); // remove spaces
+
        if (analysisType_ == UNKNOWN_ANALYSIS ||
            analysisType_ == PROTEOME_DISCOVERER_ANALYSIS) {
            string search_engine = getAttrValue("search_engine", attr);
            std::transform(search_engine.begin(), search_engine.end(), search_engine.begin(), ::tolower);
            bal::replace_all(search_engine, " ", ""); // remove spaces
+
            if(search_engine.find("spectrummill") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Spectrum Mill.");
                analysisType_ = SPECTRUM_MILL_ANALYSIS;
@@ -169,13 +176,25 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                probCutOff = getScoreThreshold(MASCOT);
            } else if(search_engine.find("x!tandem") == 0 &&
                      analysisType_ != PEPTIDE_PROPHET_ANALYSIS) {
-               Verbosity::comment(V_DEBUG, "Pepxml file is from X! Tandem.");
-               analysisType_ = XTANDEM_ANALYSIS;
+               if (search_engine_version.find("msfragger") == 0) {
+                   Verbosity::comment(V_DEBUG, "Pepxml file is from MSFragger.");
+                   analysisType_ = MSFRAGGER_ANALYSIS;
+               }
+               else {
+                   Verbosity::comment(V_DEBUG, "Pepxml file is from X! Tandem.");
+                   analysisType_ = XTANDEM_ANALYSIS;
+               }
                scoreType_ = TANDEM_EXPECTATION_VALUE;
                probCutOff = getScoreThreshold(TANDEM);
            } else if(search_engine.find("crux") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from Crux.");
                analysisType_ = CRUX_ANALYSIS;
+           
+           } else if(search_engine.find("comet") == 0) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from Comet.");
+               analysisType_ = COMET_ANALYSIS;
+               scoreType_ = TANDEM_EXPECTATION_VALUE; // expect values should be compatible with X!Tandem
+               probCutOff = getScoreThreshold(TANDEM);
            }// else assume peptide prophet or inter prophet 
 
            if (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS &&
@@ -185,6 +204,31 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                                 "Proteome Discoverer but not from one of the supported "
                                 "search engines (SEQUEST, Mascot).");
            }
+
+           // SpectrumMill pepXMLs require mzXML due to using mzxmlFinder
+           if (analysisType_ == SPECTRUM_MILL_ANALYSIS)
+           {
+               extensions.clear();
+               extensions.push_back(".mzML");
+               extensions.push_back(".mzXML");
+           }
+       }
+
+       // handle msfragger source extensions for both native msfragger pepXMLs or PeptideProphet-analyzed pep.xmls
+       if (search_engine_version.find("msfragger") == 0)
+       {
+           extensions.push_back("_calibrated.mgf");
+           extensions.push_back("_uncalibrated.mgf");
+
+           if (analysisType_ != MSFRAGGER_ANALYSIS)
+               parentAnalysisType_ = MSFRAGGER_ANALYSIS;
+       }
+
+       setSpecFileName(fileroot_.c_str(), extensions, dirs);
+
+       if ((analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) && bal::iends_with(getSpecFileName(), ".mgf")) {
+           lookUpBy_ = NAME_ID;
+           specReader_->setIdType(NAME_ID);
        }
 
        massType = (boost::iequals("average", getAttrValue("fragment_mass_type", attr))) ? 0 : 1;       
@@ -198,6 +242,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        pepProb = 0;
        pepSeq[0]='\0';
        mods.clear();
+       ionMobility = 0;
        
        int minCharge = 1;
        
@@ -208,11 +253,19 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            // In case this is necessary for calculating charge
            precursorMZ = atof(getAttrValue("precursor_m_over_z", attr));
        }
-       // if morpheus type
-       else if (analysisType_ == MORPHEUS_ANALYSIS) {
+       // if morpheus or msfragger type
+       else if (analysisType_ == MORPHEUS_ANALYSIS || analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) {
            spectrumName = getRequiredAttrValue("spectrum", attr);
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            scanIndex = scanNumber - 1;
+
+           // HACK: remove zero padding of scan numbers in the spectrum attribute title because MSFragger MGF files don't have padding
+           if (lookUpBy_ == NAME_ID && (analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS))
+           {
+               namespace bxp = boost::xpressive;
+               auto scanNumberPaddingRegex = bxp::sregex::compile("(.*?\\.)0*(\\d+\\.)0*(\\d+\\.\\d+)");
+               spectrumName = bxp::regex_replace(spectrumName, scanNumberPaddingRegex, "$1$2$3");
+           }
        }
        // this should never happen, error should have been thrown earlier
        else if (analysisType_ == UNKNOWN_ANALYSIS) {
@@ -222,12 +275,14 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            scanNumber = getIntRequiredAttrValue("start_scan", attr);
            if (lookUpBy_ == NAME_ID) {
                spectrumName = getRequiredAttrValue("spectrumNativeID", attr);
-           } else if (psms_.empty() && !(spectrumName = getAttrValue("spectrumNativeID", attr)).empty()) {
+           } else if (psms_.empty() && analysisType_ != INTER_PROPHET_ANALYSIS &&
+                      !(spectrumName = getAttrValue("spectrumNativeID", attr)).empty()) {
                // if the file has spectrumNativeIDs, use those for spectrum lookups
                lookUpBy_ = NAME_ID;
            }
        }
        charge = getIntRequiredAttrValue("assumed_charge",attr, minCharge, 20);
+       ionMobility = getDoubleAttrValueOr("ion_mobility", attr, 0.0);
    } else if(isElement("search_hit", name)) {
        // Only use this search hit, if rank is 1 or missing (zero)
        if (atoi(getAttrValue("hit_rank",attr)) < 2 && state == STATE_ROOT) {
@@ -332,8 +387,10 @@ void PepXMLreader::endElement(const XML_Char* name)
             throw BlibException(false, "The .pep.xml file is not from one of "
                                 "the recognized sources (PeptideProphet, "
                                 "iProphet, SpectrumMill, OMSSA, Protein Prospector, "
-                                "X! Tandem, Proteome Discoverer, Morpheus, MSGF+).");
+                                "X! Tandem, Proteome Discoverer, Morpheus, MSGF+, "
+                                "Comet, Crux, MSFragger).");
         }
+
         // if we are using pep.xml from Spectrum mill, we still don't have
         // scan numbers/indexes, here's a hack to get them
         if( analysisType_ == SPECTRUM_MILL_ANALYSIS ) {
@@ -397,6 +454,9 @@ void PepXMLreader::endElement(const XML_Char* name)
             curPSM_->score = pepProb;
             curPSM_->mods = mods;
             curPSM_->specName = spectrumName;
+            curPSM_->ionMobility = ionMobility;
+            if (ionMobility > 0)
+                curPSM_->ionMobilityType = IONMOBILITY_INVERSEREDUCED_VSECPERCM2; // currently only from MS-Fragger which only supports TIMS ion mobility (?)
             
             Verbosity::comment(V_DETAIL, "Adding psm.  Scan %d, charge %d, "
                                "score %.2f, seq %s, name %s.",
@@ -459,6 +519,8 @@ bool PepXMLreader::scorePasses(double score){
     case MSGF_ANALYSIS:
     case PEAKS_ANALYSIS:
     case CRUX_ANALYSIS:
+    case COMET_ANALYSIS:
+    case MSFRAGGER_ANALYSIS:
         if(score <= probCutOff){
             return true;
         }
@@ -466,6 +528,8 @@ bool PepXMLreader::scorePasses(double score){
 
     case UNKNOWN_ANALYSIS:
         return false;
+    default:
+        throw std::runtime_error("analysis type " + lexical_cast<string>(analysisType_) + " is not handled by PepXMLreader::scorePasses (bug)");
     }
     return false;
 }

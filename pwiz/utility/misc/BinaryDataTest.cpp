@@ -22,7 +22,14 @@
 
 #include "Std.hpp"
 #include "BinaryData.hpp"
+#include "sort_together.hpp"
 #include "pwiz/utility/misc/unit.hpp"
+
+#ifdef __cplusplus_cli
+#include <gcroot.h>
+#include <vcclr.h>
+typedef System::Runtime::InteropServices::GCHandle GCHandle;
+#endif
 
 using namespace pwiz::util;
 
@@ -135,6 +142,7 @@ void test()
 
         std::swap(vStd, v);
 
+        unit_assert(vStd.empty());
         unit_assert(!v.empty());
         unit_assert_operator_equal(10, v.size());
         unit_assert(equals(v.front(), testValue));
@@ -190,6 +198,137 @@ void test()
         unit_assert(equals(*vStd.begin(), vStd.front()));
         unit_assert(equals(*vStd.rbegin(), vStd.back()));
     }
+
+    // test sort_together
+    {
+        std::vector<T> expectedV1{ 3,  2,  5,  1,  6,  4 };
+        std::vector<T> expectedV2{ 5, 10, 15, 20, 30, 50 };
+
+        {
+            std::vector<T> v1 = {  1,  2, 3,  4,  5,  6 };
+            std::vector<T> v2 = { 20, 10, 5, 50, 15, 30 };
+
+            vector<boost::iterator_range<typename std::vector<T>::iterator>> cov = { v1 };
+            pwiz::util::sort_together(v2, cov.begin(), cov.end());
+
+            for (size_t i = 0; i < v1.size(); ++i)
+            {
+                unit_assert_operator_equal(expectedV1[i], v1[i]);
+                unit_assert_operator_equal(expectedV2[i], v2[i]);
+            }
+        }
+
+        {
+            std::vector<T> v1 = {  1,  2, 3,  4,  5,  6 };
+            std::vector<T> v2 = { 20, 10, 5, 50, 15, 30 };
+            std::vector<T> v3 = {  6,  5, 4,  3,  2,  1 };
+
+            vector<boost::iterator_range<typename std::vector<T>::iterator>> cov = { v1, v3 };
+            pwiz::util::sort_together(v2, cov.begin(), cov.end());
+
+            std::vector<T> expectedV3{ 4, 5, 2, 6, 1, 3 };
+            for (size_t i = 0; i < v1.size(); ++i)
+            {
+                unit_assert_operator_equal(expectedV1[i], v1[i]);
+                unit_assert_operator_equal(expectedV2[i], v2[i]);
+                unit_assert_operator_equal(expectedV3[i], v3[i]);
+            }
+        }
+
+        {
+            std::vector<T> v1 = {  1,  2, 3,  4,  5,  6 };
+            std::vector<T> v2 = { 20, 10, 5, 50, 15, 30 };
+            std::vector<T> v3 = {  6,  5, 4,  3,  2,  1 };
+
+            vector<boost::iterator_range<typename std::vector<T>::iterator>> cov = { v1, v3 };
+            pwiz::util::sort_together(v2, cov);
+
+            std::vector<T> expectedV3{ 4, 5, 2, 6, 1, 3 };
+            for (size_t i = 0; i < v1.size(); ++i)
+            {
+                unit_assert_operator_equal(expectedV1[i], v1[i]);
+                unit_assert_operator_equal(expectedV2[i], v2[i]);
+                unit_assert_operator_equal(expectedV3[i], v3[i]);
+            }
+        }
+    }
+
+#ifdef __cplusplus_cli
+    // test swap with std::vector<T> with managed array
+    {
+        std::vector<T> vStd(10, testValue);
+
+        unit_assert(!vStd.empty());
+        unit_assert(equals(vStd.front(), testValue));
+
+        GCHandle handle = GCHandle::Alloc(gcnew cli::array<T> { (T) 1.23, (T) 2.34, (T) 3.45, (T) 4.56 });
+        TestVector v = ((System::IntPtr)handle).ToPointer();
+        handle.Free();
+        unit_assert(!v.empty());
+        unit_assert_operator_equal(4, v.size());
+
+        std::swap(vStd, v);
+
+        unit_assert(!v.empty());
+        unit_assert_operator_equal(10, v.size());
+        unit_assert(equals(v.front(), testValue));
+        unit_assert_operator_equal(testValue, v.back());
+        unit_assert(equals(*v.begin(), v.front()));
+        unit_assert(equals(*v.rbegin(), v.back()));
+
+        unit_assert(!vStd.empty());
+        unit_assert_operator_equal(4, vStd.size());
+
+        std::swap(vStd, v);
+
+        unit_assert(!v.empty());
+        unit_assert_operator_equal(4, v.size());
+
+        unit_assert(!vStd.empty());
+        unit_assert_operator_equal(10, vStd.size());
+        unit_assert(equals(vStd.front(), testValue));
+        unit_assert(equals(vStd.back(), testValue));
+    }
+
+    // test implicit cast to const std::vector<T>& with managed array and then a swap
+    {
+        GCHandle handle = GCHandle::Alloc(gcnew cli::array<T> { (T) 1.23, (T) 2.34, (T) 3.45, (T) 4.56 });
+        TestVector v = ((System::IntPtr)handle).ToPointer();
+        handle.Free();
+
+        {
+            const std::vector<T>& vStd2 = v;
+
+            unit_assert(!vStd2.empty());
+            unit_assert_operator_equal(4, vStd2.size());
+            unit_assert(equals(vStd2.front(), v.front()));
+            unit_assert(equals(vStd2.back(), v.back()));
+            unit_assert(equals(*vStd2.begin(), vStd2.front()));
+            unit_assert(equals(*vStd2.rbegin(), vStd2.back()));
+        }
+
+        std::vector<T> vStd(10, testValue);
+        std::swap(vStd, v);
+
+        unit_assert(!v.empty());
+        unit_assert_operator_equal(10, v.size());
+        unit_assert(equals(v.front(), testValue));
+        unit_assert(equals(v.back(), testValue));
+        unit_assert(equals(*v.begin(), v.front()));
+        unit_assert(equals(*v.rbegin(), v.back()));
+
+        {
+            const std::vector<T>& vStd2 = v;
+
+            unit_assert(!vStd2.empty());
+            unit_assert_operator_equal(10, vStd2.size());
+            unit_assert(equals(v.front(), vStd2.front()));
+            unit_assert(equals(v.back(), vStd2.back()));
+            unit_assert(equals(*vStd2.begin(), vStd2.front()));
+            unit_assert(equals(*vStd2.rbegin(), vStd2.back()));
+        }
+    }
+#endif
 }
 
 

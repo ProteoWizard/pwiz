@@ -16,11 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -56,6 +59,7 @@ namespace pwiz.SkylineTestFunctional
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(() =>
             {
+                documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.reports);
                 documentSettingsDlg.ChooseViewsControl.CheckedViews = new[]{PersistedViews.MainGroup.Id.ViewName(viewName)};
             });
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
@@ -78,6 +82,62 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.OpenFile(documentFilePath);
             });
             Assert.IsNotNull(Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id).GetView(viewName));
+
+
+            // Add some peptides to the document
+            SetClipboardText("ELVIS\nLIVES");
+            RunUI(SkylineWindow.Paste);
+            Assert.AreEqual(2, SkylineWindow.Document.PeptideCount);
+
+            // Test using the "Add" and "Edit List" buttons on reports tab.
+            const string addedFromDocumentSettings = "Added From Document Settings";
+            {
+                var documentReportNames = SkylineWindow.Document.Settings.DataSettings.ViewSpecList.ViewSpecs
+                    .Select(spec => spec.Name).ToList();
+                CollectionAssert.Contains(documentReportNames, viewName);
+                CollectionAssert.DoesNotContain(documentReportNames, addedFromDocumentSettings);
+            }
+
+            documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
+            RunUI(()=>documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.reports));
+            CollectionAssert.DoesNotContain(documentSettingsDlg.ChooseViewsControl.CheckedViews.ToList(), 
+                PersistedViews.MainGroup.Id.ViewName(addedFromDocumentSettings));
+
+            viewEditor = ShowDialog<ViewEditor>(documentSettingsDlg.NewReport);
+            RunUI(()=>
+            {
+                viewEditor.ViewName = addedFromDocumentSettings;
+                viewEditor.ChooseColumnsTab.AddColumn(PropertyPath.Root
+                    .Property(nameof(SkylineDocument.Proteins)).LookupAllItems()
+                    .Property(nameof(Protein.Peptides)).LookupAllItems());
+                viewEditor.ChooseColumnsTab.AddColumn(PropertyPath.Root
+                    .Property(nameof(SkylineDocument.Proteins)).LookupAllItems()
+                    .Property(nameof(Protein.Peptides)).LookupAllItems()
+                    .Property(nameof(Skyline.Model.Databinding.Entities.Peptide.MoleculeFormula)));
+            });
+
+
+            var previewForm = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
+            WaitForConditionUI(() => previewForm.IsComplete);
+            Assert.AreEqual(2, previewForm.DataGridView.RowCount);
+            OkDialog(previewForm, previewForm.Close);
+            OkDialog(viewEditor, viewEditor.OkDialog);
+            CollectionAssert.Contains(documentSettingsDlg.ChooseViewsControl.CheckedViews.ToList(), 
+                PersistedViews.MainGroup.Id.ViewName(addedFromDocumentSettings));
+            manageViewsForm = ShowDialog<ManageViewsForm>(documentSettingsDlg.EditReportList);
+            RunUI(()=>
+            {
+                manageViewsForm.SelectView(viewName);
+                manageViewsForm.Remove(false);
+            });
+            OkDialog(manageViewsForm, manageViewsForm.OkDialog);
+            OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
+            {
+                var documentReportNames = SkylineWindow.Document.Settings.DataSettings.ViewSpecList.ViewSpecs
+                    .Select(spec => spec.Name).ToList();
+                CollectionAssert.DoesNotContain(documentReportNames, viewName);
+                CollectionAssert.Contains(documentReportNames, addedFromDocumentSettings);
+            }
         }
     }
 }

@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -190,7 +191,7 @@ namespace pwiz.SkylineTestData.Results
             string fileName = Path.GetFileName(path);
             if (fileName != null && fileName.StartsWith(FileSaver.TEMP_PREFIX))
                 return true;
-            return path.EndsWith(ChromatogramCache.EXT);
+            return PathEx.HasExtension(path, ChromatogramCache.EXT);
         }
 
         /// <summary>
@@ -218,8 +219,6 @@ namespace pwiz.SkylineTestData.Results
 
         public void DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
         {
-            TestSmallMolecules = false;  // We do this explicitly
-
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
             SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
@@ -255,6 +254,10 @@ namespace pwiz.SkylineTestData.Results
                 Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
                 docContainer.AssertComplete();
                 docResults = docContainer.Document;
+
+                Assert.IsTrue(docResults.MeasuredResults.CachedFileInfos.All(fi => fi.InstrumentSerialNumber == "TQU00490"));
+                Assert.IsTrue(docResults.MeasuredResults.CachedFileInfos.All(fi => fi.SampleId == "10 fmol/ul peptides in 3% ACN/0.1% Formic Acid"));
+
                 // Make sure all groups have at least 5 transitions (of 6) with ratios
                 int ratioGroupMissingCount = 0;
                 foreach (var nodeGroup in docResults.MoleculeTransitionGroups)

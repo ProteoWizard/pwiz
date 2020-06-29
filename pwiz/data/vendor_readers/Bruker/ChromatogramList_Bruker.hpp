@@ -22,6 +22,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/String.hpp"
@@ -47,12 +48,14 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramListBase
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
+    virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel) const;
 
 #ifdef PWIZ_READER_BRUKER
     ChromatogramList_Bruker(MSData& msd,
                             const string& rootpath,
                             Bruker::Reader_Bruker_Format format,
-                            CompassDataPtr compassDataPtr);
+                            CompassDataPtr compassDataPtr,
+                            const Reader::Config& config);
 
     private:
 
@@ -61,6 +64,7 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramListBase
     Bruker::Reader_Bruker_Format format_;
     CompassDataPtr compassDataPtr_;
     size_t size_;
+    Reader::Config config_;
 
     struct IndexEntry : public ChromatogramIdentity
     {

@@ -49,8 +49,10 @@ class BlibMaker
     // integer values minorVersion, the minorVersion field has been taken
     // for use as a schemaVersion
 #define MAJOR_VERSION_CURRENT 0
-#define MINOR_VERSION_CURRENT 9
+#define MINOR_VERSION_CURRENT 10
 
+    // Make sure you update version_history_comment (below) when bumping the schema version
+#define MIN_VERSION_TIC       10 // Version 10 adds TIC as a column
 #define MIN_VERSION_PROTEINS   9 // Version 9 adds Proteins and RefSpectraProteins tables
 #define MIN_VERSION_RT_BOUNDS  8 // Version 8 adds startTime and endTime
 #define MIN_VERSION_PEAK_ANNOT 7 // Version 7 adds peak annotations
@@ -60,6 +62,10 @@ class BlibMaker
 #define MIN_VERSION_IMS_HEOFF  3 // Version 3 adds product ion mobility offset information for Waters Mse IMS
 #define MIN_VERSION_IMS        2 // Version 2 adds ion mobility information
 const char * version_history_comment =  // This gets written to the output db
+        "-- Schema version number:\n"
+        "-- Version 10 adds TIC as a column\n"
+        "-- Version 9 adds Proteins and RefSpectraProteins tables\n"
+        "-- Version 8 adds startTime and endTime\n"
         "-- Version 7 adds peak annotations\n"
         "-- Version 6 generalized ion mobility to value, high energy offset, and type (currently drift time msec, and inverse reduced ion mobility Vsec/cm2)\n"
         "-- Version 5 added small molecule columns\n"
@@ -124,6 +130,7 @@ protected:
     virtual string getLSID();
     virtual void getNextRevision(int* dataRev);
 
+    void createUpdatedRefSpectraView(const char* schemaTmp);
     bool tableExists(const char* schmaTmp, const char* tableName);
     bool tableColumnExists(const char* schmaTmp, const char* tableName, 
                            const char* columnName);
@@ -133,6 +140,9 @@ protected:
                          int spectraTmpID, 
                          int copies,
                          int tableVersion = 0);
+    int transferSpectra(const char* schemaTmp,
+                        vector<pair<int, int>>& bestSpectraIdAndCount,
+                        int tableVersion = 0);
     void transferModifications(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferPeaks(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferPeakAnnotations(const char* schemaTmp, int spectraID, int spectraTmpID);

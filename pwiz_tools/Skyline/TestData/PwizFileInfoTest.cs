@@ -20,6 +20,8 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
@@ -83,18 +85,31 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestTicChromatogram()
         {
-            const string testZipPath = @"TestData\PwizFileInfoTest.zip";
+            if (Skyline.Program.NoVendorReaders)
+                return;
 
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "PressureTrace1.wiff"), 0, 0);
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent, "ImsSynthAllIons.d"), 49, 369032);
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent, "GFb_4Scan_TimeSegs_1530_100ng.d"), 63, 56163792);
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Bruker, "Hela_QC_PASEF_Slot1-first-6-frames.d"), 1, 23340182);
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "090701-LTQVelos-unittest-01.raw"), 30, 32992246);
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "MSe_Short.raw"), 2, 3286253);
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "HDMRM_Short_noLM.raw"), 0, 0);
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "HDDDA_Short_noLM.raw"), 1, 3692876);
+        }
 
-            VerifyTicChromatogram(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw), 5257, 8023);
-            VerifyTicChromatogram(testFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff), 2814, 357100, 2);
+        [TestMethod]
+        public void TestScanDescription()
+        {
+            if (Skyline.Program.NoVendorReaders)
+                return;
 
-            if (ExtensionTestContext.CanImportAbWiff2)
-                VerifyTicChromatogram(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"), 240, 143139); 
+            string path = TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "IT-HCD-SPS.raw");
 
-            VerifyTicChromatogram(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ExtensionTestContext.ExtThermoRaw), 608, 54066072);
-            VerifyTicChromatogram(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ExtensionTestContext.ExtWatersRaw), 5108, 372494752);
+            using (var msDataFile = new MsDataFileImpl(path))
+            {
+                Assert.AreEqual("sps", msDataFile.GetScanDescription(0));
+            }
         }
 
         [TestMethod]
@@ -114,6 +129,76 @@ namespace pwiz.SkylineTestData
                 VerifyQcTrace(pressureTraces[3], "Column Pressure (channel 4)", 3508, 0, 29.225, 1396, 1322, MsDataFileImpl.QcTraceQuality.Pressure, MsDataFileImpl.QcTraceUnits.PoundsPerSquareInch);
                 VerifyQcTrace(pressureTraces[4], "Pump A Flowrate (channel 5)", 3508, 0, 29.225, 7038, 7833, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
                 VerifyQcTrace(pressureTraces[5], "Pump B Flowrate (channel 6)", 3508, 0, 29.225, 680, 151, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
+
+                string docPath = testFilesDir.GetTestPath("PressureTrace1.sky");
+                SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+                AssertEx.IsDocumentState(doc, 0, 1, 3, 9);
+
+                using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
+                {
+                    const string replicateName = "PressureTrace1";
+                    string extRaw = ExtensionTestContext.ExtAbWiff;
+                    var chromSets = new[]
+                    {
+                        new ChromatogramSet(replicateName, new[]
+                            { new MsDataFilePath(testFilesDir.GetTestPath("PressureTrace1" + extRaw)),  }),
+                    };
+                    var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
+                    Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+                    docContainer.AssertComplete();
+                    docResults = docContainer.Document;
+
+                    var chromCache = docResults.Settings.MeasuredResults.GetChromCacheMinimizer(docResults).ChromatogramCache;
+                    var tic = chromCache.LoadAllIonsChromatogramInfo(ChromExtractor.summed, chromSets[0]);
+                    var bpc = chromCache.LoadAllIonsChromatogramInfo(ChromExtractor.base_peak, chromSets[0]);
+                    var qc = chromCache.LoadAllIonsChromatogramInfo(ChromExtractor.qc, chromSets[0]);
+
+                    Assert.AreEqual(0, tic.Count());    // No longer expect these in SRM data
+                    Assert.AreEqual(0, bpc.Count());    // No longer expect these in SRM data
+                    var qcNames = qc.Select(o => o.TextId).ToArray();
+                    Assert.AreEqual(6, qcNames.Length);
+                    CollectionAssert.IsSubsetOf(new [] {"Column Pressure (channel 1)",
+                                                        "Pump A Flowrate (channel 2)",
+                                                        "Pump B Flowrate (channel 3)",
+                                                        "Column Pressure (channel 4)",
+                                                        "Pump A Flowrate (channel 5)",
+                                                        "Pump B Flowrate (channel 6)" },
+                                                qcNames);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestInstrumentSerialNumbers()
+        {
+            if (Skyline.Program.NoVendorReaders)
+                return;
+
+            const string testZipPath = @"TestData\PwizFileInfoTest.zip";
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            if (ExtensionTestContext.CanImportAbWiff2)
+                VerifySerialNumber(testFilesDir.GetTestPath("OnyxTOFMS.wiff2"), null); // WIFF2 file with empty serial number
+
+            if (ExtensionTestContext.CanImportAbWiff)
+                VerifySerialNumber(testFilesDir.GetTestPath("051309_digestion.wiff"), "U016050603");
+
+            if (ExtensionTestContext.CanImportAgilentRaw)
+                VerifySerialNumber(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05.d"), "50331873");
+
+            if (ExtensionTestContext.CanImportShimadzuRaw)
+                VerifySerialNumber(testFilesDir.GetTestPath("10nmol_Negative_MS_ID_ON_055.lcd"), null); // Shimadzu does not provide serial number
+
+            if (ExtensionTestContext.CanImportWatersRaw)
+                VerifySerialNumber(testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"), null); // Waters does not provide serial number
+
+            if (ExtensionTestContext.CanImportThermoRaw)
+            {
+                VerifySerialNumber(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01.raw"), null); // Thermo RAW file with empty serial number
+
+                const string testZipPath2 = @"TestData\Results\ThermoQuant.zip";
+                var testFilesDir2 = new TestFilesDir(TestContext, testZipPath2);
+                VerifySerialNumber(testFilesDir2.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.raw"), "TQU00490");
             }
         }
 
@@ -134,11 +219,14 @@ namespace pwiz.SkylineTestData
 
         private static void VerifyTicChromatogram(string path, int count, double maxIntensity, int sampleIndex = 0)
         {
+            if (!MsDataFileImpl.SupportsMultipleSamples(path))
+                sampleIndex = 0;
+
             using (var msDataFile = new MsDataFileImpl(path, sampleIndex))
             {
                 var tic = msDataFile.GetTotalIonCurrent();
                 Assert.AreEqual(count, tic.Length);
-                Assert.AreEqual(maxIntensity, tic.Max());
+                Assert.AreEqual(maxIntensity, tic.Length > 0 ? tic.Max() : 0);
             }
         }
 
@@ -157,6 +245,17 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(firstIntensity, qcTrace.Intensities.First());
             Assert.AreEqual(lastTime, qcTrace.Times.Last(), 1e-6);
             Assert.AreEqual(lastIntensity, qcTrace.Intensities.Last());
+        }
+
+        private static void VerifySerialNumber(string path, string serialNumber, int sampleIndex = 0)
+        {
+            if (!MsDataFileImpl.SupportsMultipleSamples(path))
+                sampleIndex = 0;
+
+            using (var msDataFile = new MsDataFileImpl(path, sampleIndex))
+            {
+                Assert.AreEqual(serialNumber, msDataFile.GetInstrumentSerialNumber());
+            }
         }
     }
 }
