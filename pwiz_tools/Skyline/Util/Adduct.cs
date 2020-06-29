@@ -126,6 +126,28 @@ namespace pwiz.Skyline.Util
                     input = @"[" + input + @"]";
                 }
 
+                // Watch for strange construction from Agilent MP system e.g. (M+H)+ and (M+H)+[-H2O]
+                if (input.StartsWith(@"(") && input.Contains(@")") && input.Contains(@"M"))
+                {
+                    var parts = input.Split('['); // Break off water loss etc, if any
+                    if (parts.Length == 1 || input.IndexOf(')') < input.IndexOf('['))
+                    {
+                        var constructed = parts[0].Replace(@"(", @"[").Replace(@")", @"]");
+                        if (parts.Length > 1) // Deal with water loss etc
+                        {
+                            // Rearrange (M+H)+[-H2O] as [M-H2O+H]+
+                            var mod = parts[1].Split(']')[0]; // Trim end
+                            var mPos = input.IndexOf('M');
+                            constructed = constructed.Substring(0, mPos+1) + mod + constructed.Substring(mPos + 1);
+                        }
+                        if (TryParse(constructed, out var _))
+                        {
+                            input = constructed; // Constructed string is parseable
+                        }
+                    }
+                }
+
+
                 // Check for implied positive ion mode - we see "MH", "MH+", "MNH4+" etc in the wild
                 // Also watch for for label-only like  "[M2Cl37]"
                 var posNext = input.IndexOf('M') + 1;
