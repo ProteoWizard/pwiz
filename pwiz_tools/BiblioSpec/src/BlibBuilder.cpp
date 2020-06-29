@@ -700,7 +700,7 @@ string base_name(const char* name)
 
 bool has_extension(const char* name, const char* ext)
 {
-    return strcmp(name + strlen(name) - strlen(ext), ext) == 0;
+    return bal::iends_with(name, ext);
 }
 
 /**
