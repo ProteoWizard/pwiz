@@ -134,6 +134,9 @@ void embedIsobaricSampleMapping(const string& idpDbFilepath, const map<string, v
 /// retrieves the mapping of source group to sample names; the sample names are in ascending order of isobaric quantitation channel reporter ion mass
 map<string, vector<string> > getIsobaricSampleMapping(const string& idpDbFilepath);
 
+/// returns the number of channels for the given method
+int channelsByQuantitationMethod(QuantitationMethod quantitationMethod);
+
 /// checks whether the given idpDB has embedded gene metadata (although it may not necessarily be the most up-to-date)
 bool hasGeneMetadata(const string& idpDbFilepath);
 
