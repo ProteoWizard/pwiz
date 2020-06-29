@@ -591,6 +591,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edited ion mobility library {0} ({1}).
+        /// </summary>
+        public static string edited_ion_mobility_library {
+            get {
+                return ResourceManager.GetString("edited_ion_mobility_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edited note of {0}.
         /// </summary>
         public static string edited_note {

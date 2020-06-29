@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestUtil
             {
                 using (var cmd = new CommandLine())
                 {
-                    Assert.IsTrue(cmd.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imdb file
+                    Assert.IsTrue(cmd.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imsdb file
                     var docLoad = cmd.Document;
                     using (var docContainer = new ResultsTestDocumentContainer(null, docPath))
                     {
@@ -97,7 +97,7 @@ namespace pwiz.SkylineTestUtil
             // Save and restore to ensure library caches
             var cmdline = new CommandLine();
             cmdline.SaveDocument(docResults, docPath, TextWriter.Null);
-            Assert.IsTrue(cmdline.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imdb file
+            Assert.IsTrue(cmdline.OpenSkyFile(docPath)); // Handles any path shifts in database files, like our .imsdb file
             docResults = cmdline.Document;
             using (var docContainer = new ResultsTestDocumentContainer(null, docPath))
             {

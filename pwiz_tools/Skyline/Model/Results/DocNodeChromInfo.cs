@@ -21,7 +21,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -771,7 +770,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var ionMobilityWidth = DataValues.FromOptional(transitionPeak.IonMobilityWindow);
                 var ionMobilityUnits = msDataFileInfo.IonMobilityUnits;
-                ionMobility = IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(ionMobilityValue, ionMobilityUnits), ionMobilityWidth, null);
+                ionMobility = IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue.Value, ionMobilityUnits, ionMobilityWidth, null);
             }
             else
             {

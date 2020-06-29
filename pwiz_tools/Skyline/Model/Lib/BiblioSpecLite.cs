@@ -323,7 +323,7 @@ namespace pwiz.Skyline.Model.Lib
                             while (reader.Read())
                             {
                                 string filename = reader.GetString(0);
-                                string idFilename = icolIdFileName > 0 ? reader.GetString(icolIdFileName) : null;
+                                string idFilename = icolIdFileName > 0 && !reader.IsDBNull(icolIdFileName) ? reader.GetString(icolIdFileName) : null;
                                 SpectrumSourceFileDetails sourceFileDetails;
                                 if (!detailsByFileName.TryGetValue(filename, out sourceFileDetails))
                                 {
@@ -333,11 +333,11 @@ namespace pwiz.Skyline.Model.Lib
                                 sourceFileDetails.BestSpectrum += Convert.ToInt32(reader.GetValue(2));
                                 sourceFileDetails.MatchedSpectrum += Convert.ToInt32(reader.GetValue(3));
 
-                                string scoreName = reader.GetString(1);
+                                string scoreName = reader.IsDBNull(1) ? null : reader.GetString(1);
                                 if (null != scoreName)
                                 {
                                     double? cutoffScore = null;
-                                    if (icolCutoffScore >= 0)
+                                    if (icolCutoffScore >= 0 && !reader.IsDBNull(icolCutoffScore))
                                     {
                                         cutoffScore = Convert.ToDouble(reader.GetValue(icolCutoffScore));
                                     }
@@ -742,7 +742,7 @@ namespace pwiz.Skyline.Model.Lib
 
                         // Avoid creating a cache which will just report it is corrupted.
                         // Older versions of BlibBuild used to create matches with charge 0.
-                        // Newer versions that handle small molecules may reasonably use negtive charges.
+                        // Newer versions that handle small molecules may reasonably use negative charges.
                         if (charge == 0 || Math.Abs(charge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
                             continue;
                         var retentionTimesByFileId = default(IndexedRetentionTimes);
@@ -1561,7 +1561,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (fileIndex >= 0 && fileIndex < _librarySourceFiles.Length)
             {
-                ILookup<LibKey, IonMobilityAndCCS[]> timesLookup;
+                ILookup<LibKey, IonMobilityAndCCS[]> ionMobilitiesLookup;
                 var source = _librarySourceFiles[fileIndex];
                 if (targetIons != null)
                 {
@@ -1571,17 +1571,17 @@ namespace pwiz.Skyline.Model.Lib
                         return true; // return value false means "that's not a proper file index"'
                     }
 
-                    timesLookup = targetIons.SelectMany(target => _libraryEntries.ItemsMatching(target, true)).ToLookup(
+                    ionMobilitiesLookup = targetIons.SelectMany(target => _libraryEntries.ItemsMatching(target, true)).ToLookup(
                         entry => entry.Key,
                         entry => entry.IonMobilitiesByFileId.GetIonMobilityInfo(source.Id));
                 }
                 else
                 {
-                    timesLookup = _libraryEntries.ToLookup(
+                    ionMobilitiesLookup = _libraryEntries.ToLookup(
                         entry => entry.Key,
                         entry => entry.IonMobilitiesByFileId.GetIonMobilityInfo(source.Id));
                 }
-                var timesDict = timesLookup.Where(tl => !tl.IsNullOrEmpty() && tl.Any(i => i != null)).ToDictionary(
+                var ionMobilitiesDict = ionMobilitiesLookup.Where(tl => !tl.IsNullOrEmpty() && tl.Any(i => i != null)).ToDictionary(
                     grouping => grouping.Key,
                     grouping =>
                     {
@@ -1589,10 +1589,10 @@ namespace pwiz.Skyline.Model.Lib
                         Array.Sort(array);
                         return array;
                     });
-                var nonEmptyTimesDict = timesDict
+                var nonEmptyIonMobilitiesDict = ionMobilitiesDict
                     .Where(kvp => kvp.Value.Length > 0)
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                ionMobilities = nonEmptyTimesDict.Any() ? new LibraryIonMobilityInfo(source.FilePath, nonEmptyTimesDict) : null;
+                ionMobilities = nonEmptyIonMobilitiesDict.Any() ? new LibraryIonMobilityInfo(source.FilePath, false, nonEmptyIonMobilitiesDict) : null;
                 return true;  // return value false means "that's not a proper file index"'
             }
 
@@ -1603,7 +1603,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (targetIons != null && targetIons.Length > 0)
             {
-                var timesDict = new Dictionary<LibKey, IonMobilityAndCCS[]>();
+                var ionMobilitiesDict = new Dictionary<LibKey, IonMobilityAndCCS[]>();
                 foreach (var target in targetIons)
                 {
                     foreach (var matchedItem in _libraryEntries.ItemsMatching(target, true))
@@ -1612,24 +1612,24 @@ namespace pwiz.Skyline.Model.Lib
                         var match = matchedItem.IonMobilitiesByFileId.AllValuesSorted;
                         if (match == null)
                             continue;
-                        if (timesDict.TryGetValue(matchedTarget, out var mobilities))
+                        if (ionMobilitiesDict.TryGetValue(matchedTarget, out var mobilities))
                         {
                             var newMobilities = match.Concat(mobilities).ToArray();
                             Array.Sort(newMobilities);
-                            timesDict[matchedTarget] = newMobilities;
+                            ionMobilitiesDict[matchedTarget] = newMobilities;
                         }
                         else
                         {
-                            timesDict[matchedTarget] = match;
+                            ionMobilitiesDict[matchedTarget] = match;
                         }
                     }
                 }
-                if (!timesDict.Values.Any(v => v.Any()))
+                if (!ionMobilitiesDict.Values.Any(v => v.Any()))
                 {
                     ionMobilities = null;
                     return false;
                 }
-                ionMobilities = new LibraryIonMobilityInfo(FilePath, timesDict);
+                ionMobilities = new LibraryIonMobilityInfo(FilePath, false, ionMobilitiesDict);
                 return true;
             }
 
@@ -1867,30 +1867,27 @@ namespace pwiz.Skyline.Model.Lib
             if (SchemaVersion == 0)
                 return 0;
 
+            if (!SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes"))
+            {
+                // SchemaVersion 1 does not have RetentionTimes table for redundant libraries. 
+                return 0;
+            }
+
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
                 select.CommandText = @"SELECT count(*) FROM [RetentionTimes]";
 
-                // SchemaVersion 1 does not have RetentionTimes table for redundant libraries. 
-                // Querying a non-existent RetentionTimes table will throw an exception. 
-                try
+                using (SQLiteDataReader reader = select.ExecuteReader())
                 {
-                    using (SQLiteDataReader reader = select.ExecuteReader())
-                    {
                         if (!reader.Read())
-                            throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_spectra_in_the_library__0__, FilePath));
-                        int rows = reader.GetInt32(0);
-                        return rows;
-                    }
-                }
-                catch (SQLiteException)
-                {
-                    return 0;
+                        throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_spectra_in_the_library__0__, FilePath));
+                    int rows = reader.GetInt32(0);
+                    return rows;
                 }
             }
         }
 
-        private bool HasRedundanModificationsTable()
+        private bool HasRedundantModificationsTable()
         {
             return SqliteOperations.TableExists(_sqliteConnectionRedundant.Connection, @"Modifications");
         }
@@ -1898,7 +1895,7 @@ namespace pwiz.Skyline.Model.Lib
         public void DeleteDataFiles(string[] filenames, IProgressMonitor monitor)
         {
             string inList = GetInList(filenames);
-            bool hasModsTable = HasRedundanModificationsTable();
+            bool hasModsTable = HasRedundantModificationsTable();
  
             // Make the changes to the redundant library and then use BlibFilter
             using (var myTrans = _sqliteConnectionRedundant.Connection.BeginTransaction(IsolationLevel.ReadCommitted))
@@ -2119,6 +2116,7 @@ namespace pwiz.Skyline.Model.Lib
 
             public List<KeyValuePair<int, KeyValuePair<int, double>>> SpectaIdFileIdTimes { get; private set; }
 
+            // List of <RefSpectra Id, <FileId, ionMobility>>
             public List<KeyValuePair<int, KeyValuePair<int, IonMobilityAndCCS>>> SpectraIdFileIdIonMobilities { get; private set;
             }
 
@@ -2146,7 +2144,7 @@ namespace pwiz.Skyline.Model.Lib
                             new KeyValuePair<int, double>(spectrumSourceId.Value, retentionTime.Value)));
                     }
                     IonMobilityAndCCS ionMobilityInfo = ReadIonMobilityInfo();
-                    if (ionMobilityInfo != null)
+                    if (!IonMobilityAndCCS.IsNullOrEmpty(ionMobilityInfo))
                     {
                         SpectraIdFileIdIonMobilities.Add(
                             new KeyValuePair<int, KeyValuePair<int, IonMobilityAndCCS>>(refSpectraId.Value,
@@ -2448,7 +2446,7 @@ namespace pwiz.Skyline.Model.Lib
                     PrimitiveArrays.WriteOneValue(stream, driftTimeInfo.IonMobility.Mobility ?? 0);
                     PrimitiveArrays.WriteOneValue(stream, (int)driftTimeInfo.IonMobility.Units);
                     PrimitiveArrays.WriteOneValue(stream, driftTimeInfo.CollisionalCrossSectionSqA ?? 0);
-                    PrimitiveArrays.WriteOneValue(stream, driftTimeInfo.HighEnergyIonMobilityValueOffset);
+                    PrimitiveArrays.WriteOneValue(stream, driftTimeInfo.HighEnergyIonMobilityValueOffset ?? 0);
                 }
             }
         }

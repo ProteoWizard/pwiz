@@ -768,7 +768,7 @@ namespace pwiz.Skyline
                     // If the document was modified, then we want to fail if there is no audit log entry.
                     // We do not want to silently succeed without either an undo record or an audit log entry.
                     if (AssumeNonNullModificationAuditLogging)  // For now this check is limited to functional testing
-                        Assume.IsNotNull(entry);
+                        Assume.IsNotNull(entry, @"Document was modified, but audit log entry"); // Error message will tack on " is null"
                     if (entry != null && !entry.IsSkip)
                         undo.Commit(entry.UndoRedo.ToString());
                 }

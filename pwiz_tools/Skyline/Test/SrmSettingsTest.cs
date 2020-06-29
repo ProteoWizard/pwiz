@@ -25,8 +25,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -59,10 +62,10 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void SettingsSerializeCurrentTest()
         {
-            AssertEx.Serializable(AssertEx.Deserialize<SrmSettings>(SETTINGS_CURRENT), 3, AssertEx.SettingsCloned);
+            AssertEx.Serializable(AssertEx.Deserialize<SrmSettings>(SETTINGS_V19), 3, AssertEx.SettingsCloned);
         }
 
-        private const string SETTINGS_CURRENT =
+        private const string SETTINGS_V19 =
             "<settings_summary name=\"Default\">\n" +
             "    <peptide_settings>\n" +
             "        <enzyme name=\"LysN promisc\" cut=\"KASR\" no_cut=\"\" sense=\"N\" />\n" +
@@ -118,7 +121,7 @@ namespace pwiz.SkylineTest
             XmlSerializer ser_0_1 = new XmlSerializer(typeof(SrmSettingsList));
             XmlSerializer serCurrent = new XmlSerializer(typeof(SrmSettings));
             using (TextReader reader_0_1 = new StringReader(SETTINGS_LIST_0_1))
-            using (TextReader readerCurrent = new StringReader(SETTINGS_CURRENT))
+            using (TextReader readerCurrent = new StringReader(SETTINGS_V19))
             {
                 SrmSettings settings_0_1 = ((SrmSettingsList) ser_0_1.Deserialize(reader_0_1))[0];
                 SrmSettings settingsCurrent = (SrmSettings) serCurrent.Deserialize(readerCurrent);
@@ -1098,6 +1101,41 @@ namespace pwiz.SkylineTest
             }
         }
 
+        TransitionIonMobilityFiltering CheckIonMobilitySettingsBackwardCompatibility(string xml, string expectError = null)
+        {
+            var testFilesDir = TestContext.GetTestPath(string.Empty);
+
+            if (expectError != null)
+            {
+                try
+                {
+                    AssertEx.DeserializeError<DriftTimePredictor>(xml, DocumentFormat.VERSION_19_1, expectError);
+                }
+                catch (Exception)
+                {
+                    // See if error handling is dealt with in the conversion to modern form
+                    try
+                    {
+                        var old = AssertEx.Deserialize<DriftTimePredictor>(xml);
+                        old.CreateTransitionIonMobilityFiltering(testFilesDir);
+                        Assert.Fail($@"Expected exception with message '{expectError}'");
+                    }
+                    catch (Exception xx)
+                    {
+                        if (!xx.Message.Contains(expectError))
+                        {
+                            Assert.Fail($@"Expected exception with message '{expectError}'");
+                        }
+                    }
+                }
+                return null;
+            }
+
+            return AssertEx.Deserialize<DriftTimePredictor>(xml).CreateTransitionIonMobilityFiltering(testFilesDir);
+            
+        }
+
+
         /// <summary>
         /// Test serialization of ion mobility data
         /// </summary>
@@ -1105,90 +1143,102 @@ namespace pwiz.SkylineTest
         public void SerializeIonMobilityTest()
         {
 
-            // Check using drift time predictor without measured drift times
-            const string predictor = "<predict_drift_time name=\"test\" resolving_power=\"100\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/>" +
-                                     "<regression_dt charge=\"1\" slope=\"1\" intercept=\"0\"/></predict_drift_time>";
-            const string predictorNoRegression = "<predict_drift_time name=\"test\" resolving_power=\"100\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/></predict_drift_time>";
-            AssertEx.DeserializeNoError<IonMobilityPredictor>(predictor);
-            var pred = AssertEx.Deserialize<IonMobilityPredictor>(predictor);
-            Assert.AreEqual("db.imdb", pred.IonMobilityLibrary.PersistencePath);
-            Assert.AreEqual("scaled", pred.IonMobilityLibrary.Name);
-            Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, pred.WindowWidthCalculator.PeakWidthMode);
-            Assert.AreEqual(0, pred.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
-            Assert.AreEqual(0, pred.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
-            Assert.AreEqual(100, pred.WindowWidthCalculator.ResolvingPower);
+            // Check using drift time predictor without measured drift times (this never was exposed in production, so just testing ability to ignore it in test docs)
+            const string predictorV19 = "<predict_drift_time name=\"test\" resolving_power=\"100\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/>" +
+                                        "<regression_dt charge=\"1\" slope=\"1\" intercept=\"0\"/></predict_drift_time>";
+            AssertEx.DeserializeNoError<DriftTimePredictor>(predictorV19, DocumentFormat.VERSION_19_1);
+
+            var pred = CheckIonMobilitySettingsBackwardCompatibility("<predict_drift_time name=\"test\" resolving_power=\"100\"></predict_drift_time>");
+            var libFileName = "test"+IonMobilityDb.EXT;
+            Assert.AreEqual(TestContext.GetTestPath(libFileName), pred.IonMobilityLibrary.FilePath);
+            Assert.AreEqual("test", pred.IonMobilityLibrary.Name);
+            Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, pred.FilterWindowWidthCalculator.WindowWidthMode);
+            Assert.AreEqual(0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
+            Assert.AreEqual(0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
+            Assert.AreEqual(0, pred.FilterWindowWidthCalculator.FixedWindowWidth);
+            Assert.AreEqual(100, pred.FilterWindowWidthCalculator.ResolvingPower);
             var driftTimeMax = 5000;
             var driftTime = 2000;
-            Assert.AreEqual(40, pred.WindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
-            Assert.AreEqual(1, pred.GetRegressionLine(1).Slope);
-            Assert.AreEqual(0, pred.GetRegressionLine(1).Intercept);
-            AssertEx.DeserializeError<IonMobilityPredictor>(predictor.Replace("100", "0"), Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
-            AssertEx.DeserializeError<IonMobilityPredictor>(predictor.Replace("db.imdb", ""), Resources.IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
-            AssertEx.DeserializeError<IonMobilityPredictor>(predictorNoRegression, Resources.IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_);
+            Assert.AreEqual(40, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
+            CheckIonMobilitySettingsBackwardCompatibility(predictorV19.Replace("100", "0")); // Contains no trained values, so resolving power isn't checked
 
             // Check using drift time predictor with only measured drift times, and no high energy drift offset
-            const string predictor1 = "<predict_drift_time name=\"test1\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" /> </predict_drift_time>";
-            AssertEx.DeserializeNoError<IonMobilityPredictor>(predictor1);
-            var pred1 = AssertEx.Deserialize<IonMobilityPredictor>(predictor1);
-            Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, pred1.WindowWidthCalculator.PeakWidthMode);
-            Assert.AreEqual(0, pred1.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
-            Assert.AreEqual(0, pred1.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
-            Assert.AreEqual(100, pred1.WindowWidthCalculator.ResolvingPower);
-            Assert.AreEqual(17.0, pred1.GetMeasuredIonMobility(new LibKey("JLMN", Adduct.SINGLY_PROTONATED)).IonMobility.Mobility);
-            Assert.AreEqual(17.0, pred1.GetMeasuredIonMobility(new LibKey("JLMN", Adduct.SINGLY_PROTONATED)).GetHighEnergyDriftTimeMsec() ?? 0); // Apply the high energy offset
-            Assert.IsFalse(pred1.GetMeasuredIonMobility(new LibKey("JLMN", Adduct.QUINTUPLY_PROTONATED)).IonMobility.HasValue); // Should not find a value for that charge state
-            Assert.IsFalse(pred1.GetMeasuredIonMobility(new LibKey("LMNJK", Adduct.QUINTUPLY_PROTONATED)).IonMobility.HasValue); // Should not find a value for that peptide
+            var predictor1 =
+                "<predict_drift_time name=\"test1\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" ccs=\"123.45\" /> </predict_drift_time>";
+            var pred1 = CheckIonMobilitySettingsBackwardCompatibility(predictor1);
+            Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, pred1.FilterWindowWidthCalculator.WindowWidthMode);
+            Assert.AreEqual(0, pred1.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
+            Assert.AreEqual(0, pred1.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
+            Assert.AreEqual(100, pred1.FilterWindowWidthCalculator.ResolvingPower);
+            var dummy_mz = 0;
+            Assert.AreEqual(17.0, pred1.GetIonMobilityFilter(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), dummy_mz, null).IonMobility.Mobility);
+            Assert.AreEqual(123.45, pred1.GetIonMobilityFilter(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), dummy_mz, null).CollisionalCrossSectionSqA);
+            Assert.AreEqual(17.0, pred1.GetIonMobilityFilter(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), dummy_mz, null).GetHighEnergyIonMobility() ?? 0); // Apply the high energy offset
+            Assert.IsNull(pred1.GetIonMobilityFilter(new LibKey("JLMN", Adduct.QUINTUPLY_PROTONATED), dummy_mz, null)); // Should not find a value for that charge state
+            Assert.IsNull(pred1.GetIonMobilityFilter(new LibKey("LMNJK", Adduct.QUINTUPLY_PROTONATED), dummy_mz, null)); // Should not find a value for that peptide
+
+            // Check for enforcement of valid resolving power
+            CheckIonMobilitySettingsBackwardCompatibility(predictor1.Replace("100", "-1"),Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
 
             // Check using drift time predictor with only measured drift times, and a high energy scan drift time offset
-            const string predictor2 = "<predict_drift_time name=\"test2\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" collisional_cross_section=\"0\" high_energy_drift_time_offset=\"-1.0\"/> </predict_drift_time>";
-            AssertEx.DeserializeNoError<IonMobilityPredictor>(predictor2);
-            var pred2 = AssertEx.Deserialize<IonMobilityPredictor>(predictor2);
-            Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, pred2.WindowWidthCalculator.PeakWidthMode);
-            Assert.AreEqual(0, pred2.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
-            Assert.AreEqual(0, pred2.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
-            Assert.AreEqual(100, pred2.WindowWidthCalculator.ResolvingPower);
-            Assert.AreEqual(17.0, pred2.GetMeasuredIonMobility(new LibKey("JLMN", Adduct.SINGLY_PROTONATED)).IonMobility.Mobility);
-            Assert.AreEqual(16.0, pred2.GetMeasuredIonMobility(new LibKey("JLMN", Adduct.SINGLY_PROTONATED)).GetHighEnergyDriftTimeMsec() ?? 0); // Apply the high energy offset
-            Assert.IsFalse(pred2.GetMeasuredIonMobility(new LibKey("JLMN", Adduct.QUINTUPLY_PROTONATED)).IonMobility.HasValue); // Should not find a value for that charge state
-            Assert.IsFalse(pred2.GetMeasuredIonMobility(new LibKey("LMNJK", Adduct.QUINTUPLY_PROTONATED)).IonMobility.HasValue); // Should not find a value for that peptide
+            var pred2 = CheckIonMobilitySettingsBackwardCompatibility("<predict_drift_time name=\"test2\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" ccs=\"0\" high_energy_drift_time_offset=\"-1.0\"/> </predict_drift_time>");
+            Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, pred2.FilterWindowWidthCalculator.WindowWidthMode);
+            Assert.AreEqual(0, pred2.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
+            Assert.AreEqual(0, pred2.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
+            Assert.AreEqual(100, pred2.FilterWindowWidthCalculator.ResolvingPower);
+            Assert.AreEqual(17.0, pred2.GetIonMobilityFilter(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), dummy_mz, null).IonMobility.Mobility);
+            Assert.AreEqual(16.0, pred2.GetIonMobilityFilter(new LibKey("JLMN", Adduct.SINGLY_PROTONATED), dummy_mz, null).GetHighEnergyIonMobility() ?? 0); // Apply the high energy offset
+            Assert.IsNull(pred2.GetIonMobilityFilter(new LibKey("JLMN", Adduct.QUINTUPLY_PROTONATED), dummy_mz, null)); // Should not find a value for that charge state
+            Assert.IsNull(pred2.GetIonMobilityFilter(new LibKey("LMNJK", Adduct.QUINTUPLY_PROTONATED), dummy_mz, null)); // Should not find a value for that peptide
 
             // Check using drift time predictor with only measured drift times, and a high energy scan drift time offset, and linear width
-            string predictor3 = "<predict_drift_time name=\"test\" peak_width_calc_type=\"resolving_power\" resolving_power=\"100\" width_at_dt_zero=\"20\" width_at_dt_max=\"500\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/>" +
-                                     "<regression_dt charge=\"1\" slope=\"1\" intercept=\"0\"/></predict_drift_time>";
-            string predictor3NoRegression = "<predict_drift_time name=\"test\" peak_width_calc_type=\"resolving_power\" resolving_power=\"100\"  width_at_dt_zero=\"100\" width_at_dt_max=\"500\" > <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/></predict_drift_time>";
-            AssertEx.DeserializeNoError<IonMobilityPredictor>(predictor3);
-            pred = AssertEx.Deserialize<IonMobilityPredictor>(predictor3);
-            Assert.AreEqual("db.imdb", pred.IonMobilityLibrary.PersistencePath);
-            Assert.AreEqual("scaled", pred.IonMobilityLibrary.Name);
-            Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, pred.WindowWidthCalculator.PeakWidthMode);
-            Assert.AreEqual(40, pred.WindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
+            var predictor3 =
+                "<predict_drift_time name=\"test\" peak_width_calc_type=\"resolving_power\" resolving_power=\"100\" width_at_dt_zero=\"20\" width_at_dt_max=\"500\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" /> </predict_drift_time>";
+            pred = CheckIonMobilitySettingsBackwardCompatibility(predictor3);
+            Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, pred.FilterWindowWidthCalculator.WindowWidthMode);
+            Assert.AreEqual(40, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
             var widthAtDt0 = 20;
             var widthAtDtMax = 500;
-            Assert.AreEqual(widthAtDt0, pred.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
-            Assert.AreEqual(widthAtDtMax, pred.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
-            Assert.AreEqual(100, pred.WindowWidthCalculator.ResolvingPower);
-            Assert.AreEqual(1, pred.GetRegressionLine(1).Slope);
-            Assert.AreEqual(0, pred.GetRegressionLine(1).Intercept);
-            AssertEx.DeserializeError<IonMobilityPredictor>(predictor3.Replace("100", "0"), Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
-            AssertEx.DeserializeError<IonMobilityPredictor>(predictor3.Replace("db.imdb", ""), Resources.IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
-            AssertEx.DeserializeError<IonMobilityPredictor>(predictor3NoRegression, Resources.IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_);
+            Assert.AreEqual(widthAtDt0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
+            Assert.AreEqual(widthAtDtMax, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
+            Assert.AreEqual(100, pred.FilterWindowWidthCalculator.ResolvingPower);
+            AssertEx.DeserializeError<DriftTimePredictor>(predictor3.Replace("100", "0"), Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
 
             predictor3 = predictor3.Replace("\"resolving_power\"", "\"linear_range\"");
-            predictor3NoRegression = predictor3NoRegression.Replace("\"resolving_power\"", "\"linear_range\"");
-            pred = AssertEx.Deserialize<IonMobilityPredictor>(predictor3);
-            Assert.AreEqual("db.imdb", pred.IonMobilityLibrary.PersistencePath);
-            Assert.AreEqual("scaled", pred.IonMobilityLibrary.Name);
-            Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range, pred.WindowWidthCalculator.PeakWidthMode);
-            Assert.AreEqual(widthAtDt0, pred.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
-            Assert.AreEqual(widthAtDtMax, pred.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
-            Assert.AreEqual(100, pred.WindowWidthCalculator.ResolvingPower);
-            Assert.AreEqual(1, pred.GetRegressionLine(1).Slope);
-            Assert.AreEqual(0, pred.GetRegressionLine(1).Intercept);
-            AssertEx.DeserializeError<IonMobilityPredictor>(predictor3.Replace("20", "-1"), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
-            AssertEx.DeserializeError<IonMobilityPredictor>(predictor3.Replace("500", "-1"), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
-            AssertEx.DeserializeError<IonMobilityPredictor>(predictor3.Replace("db.imdb", ""), Resources.IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
-            AssertEx.DeserializeError<IonMobilityPredictor>(predictor3NoRegression, Resources.IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_);
-            Assert.AreEqual(widthAtDt0 + (widthAtDtMax-widthAtDt0)*driftTime/driftTimeMax, pred.WindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
+            pred = CheckIonMobilitySettingsBackwardCompatibility(predictor3);
+            Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.linear_range, pred.FilterWindowWidthCalculator.WindowWidthMode);
+            Assert.AreEqual(widthAtDt0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
+            Assert.AreEqual(widthAtDtMax, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
+            Assert.AreEqual(100, pred.FilterWindowWidthCalculator.ResolvingPower);
+            CheckIonMobilitySettingsBackwardCompatibility(predictor3.Replace("20", "-1"),Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
+            CheckIonMobilitySettingsBackwardCompatibility(predictor3.Replace("500", "-1"), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
+            Assert.AreEqual(widthAtDt0 + (widthAtDtMax-widthAtDt0)*driftTime/driftTimeMax, pred.FilterWindowWidthCalculator.WidthAt(driftTime, driftTimeMax));
+
+            // Test ability to roundtrip to older doc formats
+            var xml = SETTINGS_V19.Replace("</peptide_prediction>", predictor3 + "\n</peptide_prediction>");
+            var settings = AssertEx.Deserialize<SrmSettings>(xml);
+            var save = AuditLogList.IgnoreTestChecks;
+            AuditLogList.IgnoreTestChecks = true;
+            var tmpFile19 = "V19_1.sky";
+            var tmpFileCurrent = "V20_13.sky";
+            var oldDoc = new SrmDocument(settings.ChangeDataSettings(settings.DataSettings.ChangeAuditLogging(false)));
+            var testPath = TestContext.TestDir;
+            AssertEx.Serializable(oldDoc, testPath, SkylineVersion.V19_1); // Round trip with IMS info in peptide settings
+            AssertEx.Serializable(oldDoc, testPath, SkylineVersion.CURRENT); // Round trip with IMS info in transition settings
+            oldDoc.SerializeToFile(tmpFile19, tmpFile19, SkylineVersion.V19_1, null);
+            oldDoc.SerializeToFile(tmpFileCurrent, tmpFileCurrent, SkylineVersion.CURRENT, null);
+            var oldDocXML = File.ReadAllText(tmpFile19);
+            var currentDocXML = File.ReadAllText(tmpFileCurrent);
+            Assert.IsTrue(oldDocXML.Contains(DriftTimePredictor.EL.predict_drift_time.ToString()));
+            Assert.IsTrue(!currentDocXML.Contains(DriftTimePredictor.EL.predict_drift_time.ToString()));
+            var newDoc = AssertEx.Deserialize<SrmDocument>(oldDocXML);
+            var currentDoc = AssertEx.Deserialize<SrmDocument>(currentDocXML);
+            var diff = SrmDocument.EqualsVerbose(oldDoc, newDoc);
+            if (diff != null)
+                Assert.Fail(diff);
+            Assert.AreEqual(newDoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name, "test");
+            Assert.AreEqual(currentDoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name, "test");
+            AuditLogList.IgnoreTestChecks = save;
 
         }
 

@@ -479,7 +479,7 @@ namespace pwiz.Skyline.Model.Serialization
                     retentionTime,
                     startRetentionTime,
                     endRetentionTime,
-                    IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityUnits), ionMobilityWindow, null), 
+                    IonMobilityFilter.GetIonMobilityFilter(ionMobility, ionMobilityUnits, ionMobilityWindow, null), 
                     area,
                     backgroundArea,
                     height,

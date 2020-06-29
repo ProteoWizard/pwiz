@@ -1514,4 +1514,25 @@
   <data name="LinkedPeptide_Position" xml:space="preserve">
     <value>Position</value>
   </data>
+  <data name="IonMobilityWindowWidthCalculator_FixedWindowWidth" xml:space="preserve">
+    <value>Ion mobility filter window fixed width value</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_WindowWidthMode" xml:space="preserve">
+    <value>Ion mobility filter window width calculation type</value>
+  </data>
+  <data name="TransitionIonMobilityFiltering_IonMobilityLibrary" xml:space="preserve">
+    <value>Ion mobility library</value>
+  </data>
+  <data name="TransitionIonMobilityFiltering_UseSpectralLibraryIonMobilityValues" xml:space="preserve">
+    <value>Use spectral library ion mobility values</value>
+  </data>
+  <data name="TransitionSettings_IonMobilityFiltering" xml:space="preserve">
+    <value>Ion mobility</value>
+  </data>
+  <data name="IonMobilityLibrary_FilePathAuditLog" xml:space="preserve">
+    <value>File path</value>
+  </data>
+  <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
+    <value>Library ion mobility values</value>
+  </data>
 </root>

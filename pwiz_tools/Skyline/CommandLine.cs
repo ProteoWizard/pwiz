@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -836,20 +837,20 @@ namespace pwiz.Skyline
             {
                 if (commandArgs.IonMobilityLibraryRes.HasValue)
                 {
-                    if (!_doc.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues)
+                    if (!_doc.Settings.TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues)
                         _out.WriteLine(Resources.CommandLine_SetImsSettings_Enabling_extraction_based_on_spectral_library_ion_mobility_values_);
                     double rp = commandArgs.IonMobilityLibraryRes.Value;
                     var imsWindowCalcNew = new IonMobilityWindowWidthCalculator(rp);
-                    var imsWindowCalc = _doc.Settings.PeptideSettings.Prediction.LibraryIonMobilityWindowWidthCalculator;
+                    var imsWindowCalc = _doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator;
                     if (!Equals(imsWindowCalc, imsWindowCalcNew))
                         _out.WriteLine(Resources.CommandLine_SetImsSettings_Changing_ion_mobility_spectral_library_resolving_power_to__0__, rp);
-                    ModifyDocument(d => d.ChangeSettings(d.Settings.ChangePeptidePrediction(p =>
+                    ModifyDocument(d => d.ChangeSettings(d.Settings.ChangeTransitionIonMobilityFiltering(p =>
                         {
                             var result = p;
-                            if (!result.UseLibraryIonMobilityValues)
-                                result = result.ChangeUseLibraryIonMobilityValues(true);
-                            if (!Equals(result.LibraryIonMobilityWindowWidthCalculator, imsWindowCalcNew))
-                                result = result.ChangeLibraryDriftTimesWindowWidthCalculator(imsWindowCalcNew);
+                            if (!result.UseSpectralLibraryIonMobilityValues)
+                                result = result.ChangeUseSpectralLibraryIonMobilityValues(true);
+                            if (!Equals(result.FilterWindowWidthCalculator, imsWindowCalcNew))
+                                result = result.ChangeFilterWindowWidthCalculator(imsWindowCalcNew);
                             return result;
                         })),
                         AuditLogEntry.SettingsLogFunction);
@@ -870,8 +871,12 @@ namespace pwiz.Skyline
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
                 string hash;
-                using (var reader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
+                using (var hashingStreamReader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
                 {
+                    // Wrap stream in XmlReader so that BaseUri is known
+                    var reader = XmlReader.Create(hashingStreamReader, 
+                        new XmlReaderSettings() { IgnoreWhitespace = true }, 
+                        skylineFile);  
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
@@ -880,7 +885,7 @@ namespace pwiz.Skyline
                         return false;
 
                     _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
-                    hash = reader.Stream.Done();
+                    hash = hashingStreamReader.Stream.Done();
                 }
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));
@@ -1059,7 +1064,7 @@ namespace pwiz.Skyline
 
         private SrmDocument ConnectIonMobilityDatabase(SrmDocument document, string documentPath)
         {
-            var settings = document.Settings.ConnectIonMobilityLibrary(imdb => FindIonMobilityDatabase(documentPath, imdb));
+            var settings = document.Settings.ConnectIonMobilityLibrary(imsdb => FindIonMobilityDatabase(documentPath, imsdb));
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))
@@ -1067,25 +1072,22 @@ namespace pwiz.Skyline
             return document.ChangeSettings(settings);
         }
 
-        private IonMobilityLibrarySpec FindIonMobilityDatabase(string documentPath, IonMobilityLibrarySpec ionMobilityLibSpec)
+        private IonMobilityLibrary FindIonMobilityDatabase(string documentPath, IonMobilityLibrary ionMobilityLibSpec)
         {
 
-            IonMobilityLibrarySpec result;
-            if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibSpec.Name, out result))
+            if (Settings.Default.IonMobilityLibraryList.TryGetValue(ionMobilityLibSpec.Name, out var result))
             {
-                if (result.IsNone || File.Exists(result.PersistencePath))
+                if (result.IsNone || File.Exists(result.FilePath))
                     return result;                
             }
 
             // First look for the file name in the document directory
-            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibSpec.PersistencePath);
+            string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibSpec.FilePath);
             if (filePath != null)
             {
                 try
                 {
-                    var lib = ionMobilityLibSpec as IonMobilityLibrary;
-                    if (lib != null)
-                        return lib.ChangeDatabasePath(filePath);
+                    return ionMobilityLibSpec.ChangeDatabasePath(filePath);
                 }
 // ReSharper disable once EmptyGeneralCatchClause
                 catch
@@ -1094,7 +1096,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            _out.WriteLine(Resources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__, Path.GetFileName(ionMobilityLibSpec.PersistencePath));
+            _out.WriteLine(Resources.CommandLine_FindIonMobilityDatabase_Error__Could_not_find_the_ion_mobility_library__0__, Path.GetFileName(ionMobilityLibSpec.FilePath));
             return null;
         }
 

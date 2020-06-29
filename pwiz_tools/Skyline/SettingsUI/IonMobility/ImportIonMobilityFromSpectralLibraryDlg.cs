@@ -22,8 +22,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -36,8 +37,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
     public partial class ImportIonMobilityFromSpectralLibraryDlg : FormEx
     {
         private CollisionalCrossSectionGridViewDriver _gridViewDriver;
+        private IList<ValidatingIonMobilityPrecursor> _existing;
 
-        public ImportIonMobilityFromSpectralLibraryDlg(IEnumerable<LibrarySpec> librarySpecs, CollisionalCrossSectionGridViewDriver gridViewDriver)
+        public ImportIonMobilityFromSpectralLibraryDlg(IEnumerable<LibrarySpec> librarySpecs, IList<ValidatingIonMobilityPrecursor> existing, CollisionalCrossSectionGridViewDriver gridViewDriver)
         {
             InitializeComponent();
 
@@ -46,6 +48,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 comboLibrary.SelectedIndex = 0; // The obvious choice
             ComboHelper.AutoSizeDropDown(comboLibrary);
             _gridViewDriver = gridViewDriver;
+            _existing = existing;
         }
 
         public SpectralLibrarySource Source
@@ -71,8 +74,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
-        public Dictionary<int, RegressionLine> ChargeRegressionsLines { get; private set; }
-
         public string FilePath
         {
             get { return textFilePath.Text; }
@@ -84,12 +85,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             string message = null;
             if (string.IsNullOrEmpty(path))
                 message = Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_specify_a_path_to_an_existing_spectral_library;
-            else if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
+            else if (PathEx.HasExtension(path, BiblioSpecLiteSpec.EXT_REDUNDANT))
             {
                 message = TextUtil.LineSeparate(string.Format(Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__appears_to_be_a_redundant_library_, path),
                                                 Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Please_choose_a_non_redundant_library_);
             }
-            else if (!path.EndsWith(BiblioSpecLiteSpec.EXT))
+            else if (!PathEx.HasExtension(path, BiblioSpecLiteSpec.EXT))
             {
                 message = TextUtil.LineSeparate(string.Format(Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__is_not_a_BiblioSpec_library_, path),
                                                 Resources.ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_Only_BiblioSpec_libraries_contain_enough_ion_mobility_information_to_support_this_operation_);
@@ -123,14 +124,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 return;
             }
 
-            var table = new ChargeRegressionTable(gridRegression);
-            var chargeRegressionLinesList = table.GetTableChargeRegressionLines();
-            if (chargeRegressionLinesList == null) // Some error detected in the charged regression lines table
-                return;
-            ChargeRegressionsLines = chargeRegressionLinesList.ToDictionary(x => x.Charge, x => x.RegressionLine);
-
             // Have we got everything we need to populate the caller's grid view?
-            message = _gridViewDriver.ImportFromSpectralLibrary(librarySpec, ChargeRegressionsLines);
+            message = _gridViewDriver.ImportFromSpectralLibrary(librarySpec, _existing);
             if (message == null)
             {
                 DialogResult = DialogResult.OK;
@@ -189,28 +184,6 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FileName);
                 textFilePath.Text = dlg.FileName;
-            }
-        }
-
-        #region Functional test support
-
-        public void PasteRegressionValues()
-        {
-            gridRegression.DoPaste(this, ChargeRegressionTable.ValidateRegressionCellValues);
-        }
-
-        #endregion
-
-        private void gridRegression_KeyDown(object sender, KeyEventArgs e)
-        {
-            // Handle Ctrl + V for paste
-            if (e.KeyCode == Keys.V && e.Control)
-            {
-                PasteRegressionValues();
-            }
-            else if (e.KeyCode == Keys.Delete)
-            {
-                gridRegression.DoDelete();
             }
         }
 

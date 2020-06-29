@@ -353,7 +353,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, pick);
             Helpers.AssignIfEquals(ref libraries, settings.Libraries);
 
-            return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, settings.FullScan);
+            return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, settings.FullScan, settings.IonMobilityFiltering);
         }
     }
 }

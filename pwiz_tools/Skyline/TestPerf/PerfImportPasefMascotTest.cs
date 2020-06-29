@@ -27,14 +27,11 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -47,7 +44,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class PerfImportBrukerPasefMascotTest : AbstractFunctionalTestEx
     {
-
         [TestMethod]
         [Timeout(6000000)]  // Initial download can take a long time
         public void BrukerPasefMascotImportTest()
@@ -92,7 +88,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            
             string skyfile = TestFilesDir.GetTestPath("test_pasef_mascot.sky");
             RunUI(() =>
             {
@@ -106,15 +101,15 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             loadStopwatch.Start();
 
             // Enable use of drift times in spectral library
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                peptideSettingsUI.IsUseSpectralLibraryDriftTimes = true;
-                peptideSettingsUI.SpectralLibraryDriftTimeResolvingPower = 50;
+                transitionSettingsUI.IonMobilityControl.IsUseSpectralLibraryIonMobilities = true;
+                transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50;
             });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+            
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
             var nextFile = "FZGC A 100 ng_Slot1-46_01_440.d";
@@ -125,7 +120,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var searchResultsList = new[] {searchResults};
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage ==
                                 ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchResultsList);
                 importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
@@ -138,13 +133,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Verify document library was built
             string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(skyfile);
             string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
-            Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
+            AssertEx.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
-            Assert.IsTrue(librarySettings.HasDocumentLibrary);
+            AssertEx.IsTrue(librarySettings.HasDocumentLibrary);
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the files should be found, and we should
             // just be able to move to the next page.
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
+            RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
             RunUI(() =>
             {
                 var importResultsControl = (ImportResultsControl) importPeptideSearchDlg.ImportResultsControl;
@@ -168,20 +163,20 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Modifications are already set up, so that page should get skipped.
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
-            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.SetUseSpectralLibraryDriftTimes(true));
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.SetUseSpectralLibraryIonMobilities(true));
 
             // Verify error handling in ion mobility control
-            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.SetResolvingPowerText("fish"));
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.SetResolvingPowerText("fish"));
             var errDlg = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             RunUI(() => errDlg.OkDialog());
 
-            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.SetResolvingPower(40));
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.SetResolvingPower(40));
 
             RunUI(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings
             // We're on the "Import FASTA" page of the wizard.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("human_and_yeast.fasta"));
             });
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
@@ -194,7 +189,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             loadStopwatch.Stop();
             DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
             var errmsg = "";
-
+            
             LibraryIonMobilityInfo libraryIonMobilityInfo;
             doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(doc1.MoleculeLibKeys.ToArray(), 0, out libraryIonMobilityInfo);
             var driftInfoExplicitDT = libraryIonMobilityInfo;
@@ -204,9 +199,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 foreach (var nodeGroup in pep.TransitionGroups)
                 {
-                    double windowDT;
-                    var calculatedDriftTime = doc1.Settings.GetIonMobility(
-                        pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0, out windowDT);
+                    var calculatedDriftTime = doc1.Settings.GetIonMobilityFilter(
+                        pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0).IonMobilityAndCCS;
                     var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorAdduct);
                     IonMobilityAndCCS[] infoValueExplicitDT;
                     if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))
@@ -228,13 +222,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     }
                 }
             }
-
+            
             float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             double maxHeight = 0;
             var results = doc1.Settings.MeasuredResults;
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
-                Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
+                AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
                     tolerance, true, out var chromGroupInfo));
 
                 foreach (var chromGroup in chromGroupInfo)
@@ -245,59 +239,27 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     }
                 }
             }
-            Assert.IsTrue(errmsg.Length == 0, errmsg);
-            Assert.AreEqual(1093421, maxHeight, 1); 
-
+            AssertEx.IsTrue(errmsg.Length == 0, errmsg);
+            AssertEx.AreEqual(1093421, maxHeight, 1);
+            
             // Does CCS show up in reports?
-            TestReports(doc1);
+            TestReports();
         }
 
-        private void TestReports(SrmDocument doc1, string msg = null)
+        private void TestReports(string msg = null)
         {
             // Verify reports working for CCS
             var row = 0;
-            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-            EnableDocumentGridColumns(documentGrid,
-                Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List,
-                doc1.PeptideTransitionCount * doc1.MeasuredResults.Chromatograms.Count,
-                new[]
-                {
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CollisionalCrossSection",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityMS1",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityFragment",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityUnits",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityWindow"
-                });
-            CheckFieldByName(documentGrid, "IonMobilityMS1", row, 0.832, msg);
-            CheckFieldByName(documentGrid, "IonMobilityFragment", row, (double?)null, msg); // Document is all precursor
-            CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
-            CheckFieldByName(documentGrid, "IonMobilityWindow", row, 0.04, msg);
-            CheckFieldByName(documentGrid, "CollisionalCrossSection", row, 337.4821, msg);
+            var documentGrid = EnableDocumentGridIonMobilityResultsColumns();
+            var imPrecursor = 0.832;
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, imPrecursor, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "TransitionResult.IonMobilityFragment", row, imPrecursor, msg); // Document is all precursor
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.04, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 337.4821, msg);
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
         }
 
-        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null)
-        {
-            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult." + name);
-            RunUI(() =>
-            {
-                // By checking the 1th row we check both the single file and two file cases
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as double?;
-                Assert.AreEqual(expected.HasValue, val.HasValue, name + (msg ?? string.Empty));
-                Assert.AreEqual(expected ?? 0, val ?? 0, 0.005, name + (msg ?? string.Empty));
-            });
-        }
-
-        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null)
-        {
-            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult." + name);
-            RunUI(() =>
-            {
-                // By checking the 1th row we check both the single file and two file cases
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
-                Assert.AreEqual(expected, val, name + (msg ?? string.Empty));
-            });
-        }
     }
 }
