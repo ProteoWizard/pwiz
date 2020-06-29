@@ -140,7 +140,7 @@ namespace pwiz.Skyline.Util
                             var mPos = input.IndexOf('M');
                             constructed = constructed.Substring(0, mPos+1) + mod + constructed.Substring(mPos + 1);
                         }
-                        if (TryParse(constructed, out var _))
+                        if (TryParse(constructed, out _))
                         {
                             input = constructed; // Constructed string is parseable
                         }
