@@ -3517,7 +3517,7 @@ namespace pwiz.Skyline.Model
     public class WatersMassListExporter : AbstractMassListExporter
     {
         // Hack to workaround limitation of 32 transitions per function
-        protected readonly Dictionary<string, int> _compoundCounts = new Dictionary<string, int>();
+        protected readonly Dictionary<Tuple<string, int>, int> _compoundCounts = new Dictionary<Tuple<string, int>, int>();
         protected const int MAX_COMPOUND_NAME = 32;
 
         protected bool USE_COMPOUND_COUNT_WORKAROUND { get { return true; } }
@@ -3603,13 +3603,14 @@ namespace pwiz.Skyline.Model
 
             if (USE_COMPOUND_COUNT_WORKAROUND)
             {
-                if (!_compoundCounts.ContainsKey(compound))
+                var key = Tuple.Create(compound, step);
+                if (!_compoundCounts.ContainsKey(key))
                 {
-                    _compoundCounts[compound] = 0;
+                    _compoundCounts[key] = 0;
                 }
                 else
                 {
-                    int compoundStep = ++_compoundCounts[compound] / MAX_COMPOUND_NAME + 1;
+                    int compoundStep = ++_compoundCounts[key] / MAX_COMPOUND_NAME + 1;
                     if (compoundStep > 1)
                         compound += '.' + compoundStep.ToString(CultureInfo);
                 }
