@@ -30,6 +30,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
@@ -995,6 +996,53 @@ namespace pwiz.Skyline.Model.Lib
             var entryList = ImmutableList.ValueOf(entries);
 
             _libraryEntries = new LibKeyMap<TInfo>(entryList, entryList.Select(entry=>entry.Key.LibraryKey));
+        }
+
+        protected List<TInfo> FilterInvalidLibraryEntries(ref IProgressStatus status, IEnumerable<TInfo> entries)
+        {
+            var validEntries = new List<TInfo>();
+            var invalidKeys = new List<LibKey>();
+            foreach (var entry in entries)
+            {
+                if (!IsValidLibKey(entry.Key))
+                {
+                    invalidKeys.Add(entry.Key);
+                }
+                else
+                {
+                    validEntries.Add(entry);
+                }
+            }
+
+            status = WarnInvalidEntries(status, validEntries.Count, invalidKeys);
+            return validEntries;
+        }
+
+        protected bool IsValidLibKey(LibKey libKey)
+        {
+            try
+            {
+                var unused = libKey.LibraryKey.CreatePeptideIdentityObj();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        protected IProgressStatus WarnInvalidEntries(IProgressStatus progressStatus, int validEntryCount,
+            ICollection<LibKey> invalidEntries)
+        {
+            if (invalidEntries.Count == 0)
+            {
+                return progressStatus;
+            }
+            var invalidText = TextUtil.LineSeparate(invalidEntries.Take(10).Select(key => key.ToString()));
+            string warningMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_,
+                Name, invalidEntries.Count, invalidEntries.Count + validEntryCount, invalidText);
+            progressStatus = progressStatus.ChangeWarningMessage(warningMessage);
+            return progressStatus;
         }
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
@@ -2318,7 +2366,7 @@ namespace pwiz.Skyline.Model.Lib
         public SpectrumInfoLibrary(Library library, IsotopeLabelType labelType, string filePath,
             double? retentionTime, IonMobilityAndCCS ionMobilityInfo, bool isBest, object spectrumKey) :
                 base(labelType, true)
-    {
+        {
             _library = library;
             LabelType = labelType;
             SpectrumKey = spectrumKey;
@@ -2371,8 +2419,8 @@ namespace pwiz.Skyline.Model.Lib
 
         private SpectrumPeaksInfo _peaksInfo;
 
-        public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, int nce) : base(
-            IsotopeLabelType.light, true)
+        public SpectrumInfoProsit(PrositMS2Spectra ms2Spectrum, TransitionGroupDocNode precursor, IsotopeLabelType labelType, int nce)
+            : base(labelType, true)
         {
             _peaksInfo = ms2Spectrum?.GetSpectrum(precursor).SpectrumPeaks;
             Precursor = precursor;
@@ -2497,6 +2545,17 @@ namespace pwiz.Skyline.Model.Lib
         public string Name { get; private set; }
 
         public string Link { get; private set; }
+
+        // This appears in stack traces when we report unhandled parsing issues
+        public override string ToString()
+        {
+            var result = new List<string>();
+            if (!string.IsNullOrEmpty(Name))
+                result.Add($@"LinkName: {Name} ");
+            if (!string.IsNullOrEmpty(Link))
+                result.Add($@"LinkURL: {Link} ");
+            return TextUtil.LineSeparate(result);
+        }
     }
 
     public sealed class LibraryFiles
@@ -2554,6 +2613,25 @@ namespace pwiz.Skyline.Model.Lib
         {
             get { return _libLinks; }
         }
+
+        // This appears in stack traces when we report unhandled parsing issues
+        public override string ToString()
+        {
+            var lines = new List<string>();
+            if (!string.IsNullOrEmpty(Format))
+                lines.Add($@"Format: {Format}");
+            if (!string.IsNullOrEmpty(Id))
+                lines.Add($@"LSID: {Id}");
+            if (!string.IsNullOrEmpty(Revision))
+                lines.Add($@"FileRevision: {Revision}");
+            if (!string.IsNullOrEmpty(Version))
+                lines.Add($@"SchemaVersion: {Version}");
+            if (_dataFiles != null && _dataFiles.Any())
+                lines.AddRange(_dataFiles.Select(df => df.ToString()));
+            if (_libLinks != null && _libLinks.Any())
+                lines.AddRange(_libLinks.Select(link => link.ToString()));
+            return TextUtil.LineSeparate(lines);
+        }
     }
 
     /// <summary>
@@ -2569,7 +2647,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public LibKey(string sequence, int charge) : this()
         {
-            LibraryKey = new PeptideLibraryKey(sequence, charge);
+            LibraryKey = (LibraryKey) CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(sequence, charge)
+                         ?? new PeptideLibraryKey(sequence, charge);
         }
 
         public LibKey(SmallMoleculeLibraryAttributes attributes, Adduct adduct) : this()
@@ -2581,7 +2660,9 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (adduct.IsProteomic)
             {
-                LibraryKey = new PeptideLibraryKey(primaryKey, adduct.AdductCharge);
+                LibraryKey = (LibraryKey)
+                             CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(primaryKey, adduct.AdductCharge)
+                             ?? new PeptideLibraryKey(primaryKey, adduct.AdductCharge);
             }
             else
             {
@@ -2603,7 +2684,11 @@ namespace pwiz.Skyline.Model.Lib
             : this()
         {
             if (target.IsProteomic)
-                LibraryKey = new PeptideLibraryKey(target.Sequence, adduct.AdductCharge);
+            {
+                LibraryKey = (LibraryKey)
+                             CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(target.Sequence, adduct.AdductCharge)
+                             ?? new PeptideLibraryKey(target.Sequence, adduct.AdductCharge);
+            }
             else
                 LibraryKey = new MoleculeLibraryKey(target.Molecule.GetSmallMoleculeLibraryAttributes(), adduct);
         }
@@ -2743,9 +2828,10 @@ namespace pwiz.Skyline.Model.Lib
 
     public class SpectrumSourceFileDetails
     {
-        public SpectrumSourceFileDetails(String filePath)
+        public SpectrumSourceFileDetails(string filePath, string idFilePath = null)
         {
             FilePath = filePath;
+            IdFilePath = idFilePath;
             CutoffScores = new Dictionary<string, double?>();
             BestSpectrum = 0;
             MatchedSpectrum = 0;
@@ -2756,5 +2842,15 @@ namespace pwiz.Skyline.Model.Lib
         public Dictionary<string, double?> CutoffScores { get; private set; }
         public int BestSpectrum { get; set; }
         public int MatchedSpectrum { get; set; }
+
+        public override string ToString()
+        {
+            var result = new List<string>();
+            if (!string.IsNullOrEmpty(IdFilePath))
+                result.Add($@"IdFilePath: {IdFilePath}");
+            if (!string.IsNullOrEmpty(FilePath))
+                result.Add($@"FilePath: {FilePath}");
+            return TextUtil.LineSeparate(result);
+        }
     }
 }

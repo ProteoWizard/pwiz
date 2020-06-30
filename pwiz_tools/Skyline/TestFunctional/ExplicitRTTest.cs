@@ -54,9 +54,9 @@ namespace pwiz.SkylineTestFunctional
             // three transition nodes with that Q1>Q3 but different RTs (one with neg charge)
             // Expected alignment: 
             // function 65/ index 242 : RT 6.95 glutamate
-            // function 66/ index 243 : RT 7.95 glutamine (peak found at 8.1)
+            // function 66/ index 243 : RT 7.95 glutamine (peak found at 8.1, but declared explicit RT window is 7.95 +/- .1 so no match)
             // function 197/ index 117 (neg ion mode): RT 6.4 alpha_ketogluterate
-            DoSubTest(testFilesDir, "glutes.sky", new[] { 6.95, 8.1, 6.4 } , new[] { "090215_033" }, null,
+            DoSubTest(testFilesDir, "glutes.sky", new[] { 6.95, 0, 6.4 } , new[] { "090215_033" }, null,
                 new[] { Adduct.M_PLUS_H, Adduct.M_PLUS_H, Adduct.M_MINUS_H });
 
             // Verify our handling of two Q1>Q3 transitions with no RT overlap - formerly we just ignored one or the other though both are needed
@@ -79,17 +79,8 @@ namespace pwiz.SkylineTestFunctional
             
             // These test files are some of our oldest small molecule docs, let's see if we can roundtrip them
             AssertEx.Serializable(doc, 3, AssertEx.DocumentCloned);
-
-            var listChromatograms = new List<ChromatogramSet>();
-            foreach (var filename in filenames)
-            {
-                var path = MsDataFileUri.Parse(filename + ExtensionTestContext.ExtMzml);
-                listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
-                                      new ChromatogramSet(path.GetFileName().Replace('.', '_'), new[] { path }));
-            }
-            var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-            Assert.IsTrue(SkylineWindow.SetDocument(docResults, doc));
-            var document = WaitForDocumentLoaded();
+            ImportResultsAsync(filenames.Select(f => f + ExtensionTestContext.ExtMzml).ToArray(), null, null, filenames.Length > 1 ? false : (bool?) null);
+            var document = WaitForDocumentChangeLoaded(doc);
             float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var infos = new List<ChromatogramGroupInfo[]>();
             int adductIndex = 0;

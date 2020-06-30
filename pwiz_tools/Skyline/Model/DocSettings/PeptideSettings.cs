@@ -90,6 +90,7 @@ namespace pwiz.Skyline.Model.DocSettings
         [TrackChildren(true)]
         public PeptideModifications Modifications { get; private set; }
 
+        [TrackChildren(true)]
         public PeptideIntegration Integration { get; private set; }
 
         [TrackChildren(true)]
@@ -2676,6 +2677,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public bool AutoTrain { get; private set; }
+        [TrackChildren]
         public PeakScoringModelSpec PeakScoringModel { get; private set; }
         public bool IsSerializable { get { return PeakScoringModel.IsTrained; } }
         public MProphetResultsHandler ResultsHandler { get; private set; }

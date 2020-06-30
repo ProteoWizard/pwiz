@@ -51,7 +51,7 @@
             this.textName = new System.Windows.Forms.TextBox();
             this.comboRegression = new System.Windows.Forms.ComboBox();
             this.btnGraph = new System.Windows.Forms.Button();
-            this.grpLinearEquation = new System.Windows.Forms.GroupBox();
+            this.grpRegressionEquation = new System.Windows.Forms.GroupBox();
             this.lblEquation = new System.Windows.Forms.Label();
             this.comboMaxPeptide = new System.Windows.Forms.ComboBox();
             this.labelMaxPeptide = new System.Windows.Forms.Label();
@@ -65,7 +65,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewCalibrate)).BeginInit();
-            this.grpLinearEquation.SuspendLayout();
+            this.grpRegressionEquation.SuspendLayout();
             this.panelPeptides.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -200,23 +200,23 @@
             this.btnGraph.UseVisualStyleBackColor = true;
             this.btnGraph.Click += new System.EventHandler(this.btnGraph_Click);
             // 
-            // grpLinearEquation
+            // grpRegressionEquation
             // 
-            this.grpLinearEquation.Controls.Add(this.lblEquation);
-            this.grpLinearEquation.Controls.Add(this.comboMaxPeptide);
-            this.grpLinearEquation.Controls.Add(this.labelMaxPeptide);
-            this.grpLinearEquation.Controls.Add(this.comboMinPeptide);
-            this.grpLinearEquation.Controls.Add(this.labelMinPeptide);
-            this.grpLinearEquation.Controls.Add(this.label4);
-            this.grpLinearEquation.Controls.Add(this.btnGraph);
-            this.grpLinearEquation.Controls.Add(this.comboRegression);
-            this.grpLinearEquation.Controls.Add(this.labelMinIrt);
-            this.grpLinearEquation.Controls.Add(this.textMinIrt);
-            this.grpLinearEquation.Controls.Add(this.textMaxIrt);
-            this.grpLinearEquation.Controls.Add(this.labelMaxIrt);
-            resources.ApplyResources(this.grpLinearEquation, "grpLinearEquation");
-            this.grpLinearEquation.Name = "grpLinearEquation";
-            this.grpLinearEquation.TabStop = false;
+            this.grpRegressionEquation.Controls.Add(this.lblEquation);
+            this.grpRegressionEquation.Controls.Add(this.comboMaxPeptide);
+            this.grpRegressionEquation.Controls.Add(this.labelMaxPeptide);
+            this.grpRegressionEquation.Controls.Add(this.comboMinPeptide);
+            this.grpRegressionEquation.Controls.Add(this.labelMinPeptide);
+            this.grpRegressionEquation.Controls.Add(this.label4);
+            this.grpRegressionEquation.Controls.Add(this.btnGraph);
+            this.grpRegressionEquation.Controls.Add(this.comboRegression);
+            this.grpRegressionEquation.Controls.Add(this.labelMinIrt);
+            this.grpRegressionEquation.Controls.Add(this.textMinIrt);
+            this.grpRegressionEquation.Controls.Add(this.textMaxIrt);
+            this.grpRegressionEquation.Controls.Add(this.labelMaxIrt);
+            resources.ApplyResources(this.grpRegressionEquation, "grpRegressionEquation");
+            this.grpRegressionEquation.Name = "grpRegressionEquation";
+            this.grpRegressionEquation.TabStop = false;
             // 
             // lblEquation
             // 
@@ -287,7 +287,7 @@
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.panelPeptides);
             this.Controls.Add(this.btnGraphIrts);
-            this.Controls.Add(this.grpLinearEquation);
+            this.Controls.Add(this.grpRegressionEquation);
             this.Controls.Add(this.textName);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.btnUseCurrent);
@@ -298,11 +298,12 @@
             this.Name = "CalibrateIrtDlg";
             this.ShowInTaskbar = false;
             this.Load += new System.EventHandler(this.OnLoad);
+            this.Shown += new System.EventHandler(this.CalibrateIrtDlg_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewCalibrate)).EndInit();
-            this.grpLinearEquation.ResumeLayout(false);
-            this.grpLinearEquation.PerformLayout();
+            this.grpRegressionEquation.ResumeLayout(false);
+            this.grpRegressionEquation.PerformLayout();
             this.panelPeptides.ResumeLayout(false);
             this.panelPeptides.PerformLayout();
             this.ResumeLayout(false);
@@ -325,7 +326,7 @@
         private System.Windows.Forms.TextBox textName;
         private System.Windows.Forms.ComboBox comboRegression;
         private System.Windows.Forms.Button btnGraph;
-        private System.Windows.Forms.GroupBox grpLinearEquation;
+        private System.Windows.Forms.GroupBox grpRegressionEquation;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ComboBox comboMaxPeptide;
         private System.Windows.Forms.Label labelMaxPeptide;

@@ -247,6 +247,7 @@ namespace pwiz.SkylineTestData
         public void ConsoleRefineConsistencyTest()
         {
             string cvCutoff = 20.ToString();
+            string cvCutoffDecimalPercent = 0.2.ToString(CultureInfo.CurrentCulture);
             var args = new List<string>
             {
                 CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff)
@@ -256,26 +257,38 @@ namespace pwiz.SkylineTestData
                 PropertyNames.RefinementSettings_CVCutoff
             };
             // Remove all elements above the cv cutoff
-            TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional/AreaCVHistogramTest.zip");
-            DocumentPath = InitRefineDocument("Rat_plasma.sky", 48, 0, 125, 125, 721);
+            TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional\AreaCVHistogramTest.zip");
+            DocumentPath = InitRefineDocument("Rat_plasma.sky", 19, 29, 125, 125, 721);
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
             var output = Run(args.ToArray());
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 3, 0, 3, 18, output);
+            IsDocumentState(OutPath, 19, 29, 3, 0, 3, 18, output);
+
+            // Remove empty proteins
+            args.Add(CommandArgs.ARG_REFINE_MIN_PEPTIDES.GetArgumentTextWithValue(1.ToString()));
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 2, 1, 3, 0, 3, 18, output);
+            args.RemoveAt(args.Count - 1);
+
+            // Try the same using a decimal percentage
+            output = Run(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoffDecimalPercent));
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 19, 29, 3, 0, 3, 18, output);
 
             // Normalize to medians and remove all elements above the cv cutoff
             args.Add(CommandArgs.ARG_REFINE_CV_GLOBAL_NORMALIZE.GetArgumentTextWithValue(NormalizationMethod.EQUALIZE_MEDIANS.Name));
             output = Run(args.ToArray());
             parts.Add(PropertyNames.RefinementSettings_NormalizationMethod);
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 10, 0, 10, 58, output);
+            IsDocumentState(OutPath, 19, 29, 10, 0, 10, 58, output);
 
             // Test best transitions
             args[1] = CommandArgs.ARG_REFINE_CV_TRANSITIONS.GetArgumentTextWithValue("best");
             output = Run(args.ToArray());
             parts[1] = PropertyNames.RefinementSettings_Transitions;
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 3, 0, 3, 18, output);
+            IsDocumentState(OutPath, 19, 29, 3, 0, 3, 18, output);
 
             // Test count transitions
             args[1] = CommandArgs.ARG_REFINE_CV_TRANSITIONS_COUNT.GetArgumentTextWithValue(4.ToString());
@@ -283,13 +296,70 @@ namespace pwiz.SkylineTestData
             output = Run(args.ToArray());
             parts[1] = PropertyNames.RefinementSettings_CountTransitions;
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 3, 0, 3, 18, output);
+            IsDocumentState(OutPath, 19, 29, 3, 0, 3, 18, output);
 
             // Make sure error is recorded when peptide have only 1 replicate
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
             DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky", 1, 4, 37, 40, 338);
             output = Run(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff));
             AssertEx.Contains(output, Resources.RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_);
+        }
+
+        [TestMethod]
+        public void ConsoleRefineGroupComparisonsTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefineGroupComparisonTest.zip");
+            DocumentPath = InitRefineDocument("Rat_plasma.sky", 48, 0, 125, 125, 721);
+            OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "gctest.sky");
+
+            // Verify pValueCutoff and fold change cutoff work
+            var pValueCutoff = 0.05.ToString(CultureInfo.CurrentCulture);
+            var foldChangeCutoff = 2.ToString(CultureInfo.CurrentCulture);
+            var args = new List<string>
+            {
+                CommandArgs.ARG_REFINE_GC_P_VALUE_CUTOFF.GetArgumentTextWithValue(pValueCutoff),
+                CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff),
+                CommandArgs.ARG_REFINE_GROUP_NAME.GetArgumentTextWithValue("Test Group Comparison"),
+            };
+
+            var parts = new List<string>
+            {
+                PropertyNames.RefinementSettings_AdjustedPValueCutoff,
+                PropertyNames.RefinementSettings_FoldChangeCutoff
+            };
+            var output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 43, 0, 43, 248, output);
+
+            // Verify only fold change cutoff works
+            args.RemoveAt(0);
+            foldChangeCutoff = 3.ToString();
+            args[0] = CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff);
+            parts.RemoveAt(0);
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 20, 0, 20, 114, output);
+
+            // Verify only p value cutoff works
+            pValueCutoff = 0.08.ToString(CultureInfo.CurrentCulture);
+            args[0] = CommandArgs.ARG_REFINE_GC_P_VALUE_CUTOFF.GetArgumentTextWithValue(pValueCutoff);
+            parts[0] = PropertyNames.RefinementSettings_AdjustedPValueCutoff;
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 103, 0, 103, 597, output);
+
+            // Verify the union of two group comparisons works
+            pValueCutoff = 0.05.ToString(CultureInfo.CurrentCulture);
+            foldChangeCutoff = 2.ToString();
+            args.Clear();
+            args.Add(CommandArgs.ARG_REFINE_GC_P_VALUE_CUTOFF.GetArgumentTextWithValue(pValueCutoff));
+            args.Add(CommandArgs.ARG_REFINE_GC_FOLD_CHANGE_CUTOFF.GetArgumentTextWithValue(foldChangeCutoff));
+            args.Add(CommandArgs.ARG_REFINE_GROUP_NAME.GetArgumentTextWithValue("Test Group Comparison"));
+            args.Add(CommandArgs.ARG_REFINE_GROUP_NAME.GetArgumentTextWithValue("Test Group Comparison 2"));
+            parts.Add(PropertyNames.RefinementSettings_FoldChangeCutoff);
+            output = Run(args.ToArray());
+            AssertEx.Contains(output, parts.ToArray());
+            IsDocumentState(OutPath, 48, 0, 44, 0, 44, 255, output);
         }
 
         //        [TestMethod]

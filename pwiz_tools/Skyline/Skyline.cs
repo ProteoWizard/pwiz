@@ -268,6 +268,7 @@ namespace pwiz.Skyline
         }
 
         public AllChromatogramsGraph ImportingResultsWindow { get; private set; }
+        public MultiProgressStatus ImportingResultsError { get; private set; }
 
         protected override void OnShown(EventArgs e)
         {
@@ -475,6 +476,15 @@ namespace pwiz.Skyline
         public DockPanel DockPanel
         {
             get { return dockPanel; }
+        }
+
+        public ToolStripSplitButton UndoButton
+        {
+            get { return undoToolBarButton; }
+        }
+        public ToolStripSplitButton RedoButton
+        {
+            get { return redoToolBarButton; }
         }
         public bool DiscardChanges { get; set; }
 
@@ -746,20 +756,28 @@ namespace pwiz.Skyline
             }
         }
 
+        public bool AssumeNonNullModificationAuditLogging { get; set; }
+
         public void ModifyDocumentOrThrow(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act,
             Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc)
         {
             using (var undo = BeginUndo(undoState))
             {
-                // Only create undo-redo record if an audit log entry was created
-                if (ModifyDocumentInner(act, onModifying, onModified, description, logFunc, out var entry) && entry != null)
-                    undo.Commit(entry.UndoRedo.ToString());
+                if (ModifyDocumentInner(act, onModifying, onModified, description, logFunc, out var entry))
+                {
+                    // If the document was modified, then we want to fail if there is no audit log entry.
+                    // We do not want to silently succeed without either an undo record or an audit log entry.
+                    if (AssumeNonNullModificationAuditLogging)  // For now this check is limited to functional testing
+                        Assume.IsNotNull(entry);
+                    if (entry != null && !entry.IsSkip)
+                        undo.Commit(entry.UndoRedo.ToString());
+                }
             }
         }
 
         public void ModifyDocumentNoUndo(Func<SrmDocument, SrmDocument> act)
         {
-            ModifyDocumentInner(act, null, null, null, null, out _);
+            ModifyDocumentInner(act, null, null, null, AuditLogEntry.SkipChange, out _);
         }
 
         private bool ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, string description, Func<SrmDocumentPair, AuditLogEntry> logFunc, out AuditLogEntry resultEntry)
@@ -787,6 +805,9 @@ namespace pwiz.Skyline
                 try
                 {
                     resultEntry = entry = logFunc?.Invoke(SrmDocumentPair.Create(docOriginal, docNew, ModeUI));
+                    // Compatibility: original implementation treated null as an acceptable reason to skip audit logging
+                    if (entry != null && entry.IsSkip)
+                        entry = null;
                 }
                 catch (Exception ex)
                 {
@@ -1681,6 +1702,7 @@ namespace pwiz.Skyline
                 copyToolBarButton.Enabled = copyMenuItem.Enabled = false;
                 pasteToolBarButton.Enabled = pasteMenuItem.Enabled = false;
                 deleteMenuItem.Enabled = false;
+                selectAllMenuItem.Enabled = false;
                 // If it is a grid, then disable next and previous replicate keys in favor of ctrl-Up and ctrl-Down
                 // working in the grid
                 if (_activeClipboardControl is DataboundGridControl)
@@ -1694,6 +1716,7 @@ namespace pwiz.Skyline
             copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
             pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
             deleteMenuItem.Enabled = enabled;
+            selectAllMenuItem.Enabled = true;
             // Always enable these, as they are harmless if enabled with no results and otherwise unmanaged.
             nextReplicateMenuItem.Enabled = previousReplicateMenuItem.Enabled = true;
         }
@@ -1842,6 +1865,9 @@ namespace pwiz.Skyline
                                                                                                resultText,
                                                                                                resultColorIndex,
                                                                                                resultAnnotations);
+                                                            if (Equals(newAnnotations, nodeInDoc.Annotations))
+                                                                continue;
+
                                                             doc = (SrmDocument) doc.ReplaceChild(nodePath.Parent,
                                                                                                  nodeInDoc.
                                                                                                      ChangeAnnotations(
@@ -2191,6 +2217,9 @@ namespace pwiz.Skyline
                                         dlg.ResultExplicitTransitionGroupValues, nodeTransGroup.Results,
                                         nodeTransGroup.Children.Cast<TransitionDocNode>().ToArray(),
                                         nodeTransGroup.AutoManageChildren);
+                                if (Equals(newNode, nodeTransGroup))
+                                    return doc;
+
                                 return (SrmDocument) doc.ReplaceChild(nodeTransitionGroupTree.Path.Parent, newNode);
                             }
                         }, docPair => AuditLogEntry.DiffDocNodes(MessageType.modified, docPair, AuditLogEntry.GetNodeName(docPair.OldDoc, nodeTransGroup)));
@@ -2225,6 +2254,10 @@ namespace pwiz.Skyline
                                     // But if custom molecule has changed then we can't "Replace", since newNode has a different identity and isn't in the document.  We have to 
                                     // insert and delete instead.  
                                     var newNode = nodePep.ChangeCustomIonValues(doc.Settings, dlg.ResultCustomMolecule, dlg.ExplicitRetentionTimeInfo);
+                                    // Nothing to do if the node is not changing
+                                    if (Equals(nodePep, newNode))
+                                        return doc;
+
                                     if (!nodePep.Peptide.Equals(newNode.Peptide)) // Did that change the Id object?
                                     {
                                         // We don't want the tree selection to change, so note this as a replacement.
@@ -2242,7 +2275,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    using (var dlg = new EditPepModsDlg(DocumentUI.Settings, nodePep))
+                    using (var dlg = new EditPepModsDlg(DocumentUI.Settings, nodePep, true))
                     {
                         dlg.Height = Math.Min(dlg.Height, Screen.FromControl(this).WorkingArea.Height);
                         if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -2308,6 +2341,10 @@ namespace pwiz.Skyline
                                     nodeTran.QuantInfo,
                                     dlg.ResultExplicitTransitionValues,
                                     null);
+                                // Nothing to do, if the transition is not changing
+                                if (Equals(newDocNode, nodeTran))
+                                    return doc;
+
                                 if (noTransitionChange)
                                 {
                                     // If we are not changing anything in the transition ID, we can be more gentle in replacement
@@ -2561,12 +2598,27 @@ namespace pwiz.Skyline
 
         public void ShowRefineDlg()
         {
-            using (var refineDlg = new RefineDlg(DocumentUI))
+            using (var refineDlg = new RefineDlg(this))
             {
                 if (refineDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine,
-                        doc => refineDlg.RefinementSettings.Refine(doc), refineDlg.FormSettings.EntryCreator.Create);
+                        doc =>
+                        {
+                            using (var longWaitDlg = new LongWaitDlg(this))
+                            {
+                                longWaitDlg.Message = Resources.SkylineWindow_ShowRefineDlg_Refining_document;
+                                longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
+                                {
+                                    var srmSettingsChangeMonitor =
+                                        new SrmSettingsChangeMonitor(progressMonitor, Resources.SkylineWindow_ShowRefineDlg_Refining_document, this, doc);
+
+                                        doc = refineDlg.RefinementSettings.Refine(doc, srmSettingsChangeMonitor);
+                                    });
+                            }
+
+                            return doc;
+                        }, refineDlg.FormSettings.EntryCreator.Create);
                 }
             }
         }
@@ -3025,7 +3077,7 @@ namespace pwiz.Skyline
 
         private void editGroupComparisonListMenuItem_Click(object sender, EventArgs e)
         {
-            DisplayDocumentSettingsDialogPage(1);
+            DisplayDocumentSettingsDialogPage(DocumentSettingsDlg.TABS.group_comparisons);
         }
 
         private void groupComparisonsMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -3409,9 +3461,8 @@ namespace pwiz.Skyline
             }
             
             // Determine which peptides are in the standard, but not in the document
-            var missingPeptides = new TargetMap<bool>(newStandard
-                .Except(Document.Peptides.Select(pep => pep.Peptide.Target))
-                .Select(target => new KeyValuePair<Target, bool>(target, true)));
+            var documentPeps = new TargetMap<bool>(Document.Molecules.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            var missingPeptides = new TargetMap<bool>(newStandard.Where(pep => !documentPeps.ContainsKey(pep)).Select(target => new KeyValuePair<Target, bool>(target, true)));
             if (missingPeptides.Count == 0)
                 return;
 
@@ -3573,7 +3624,7 @@ namespace pwiz.Skyline
                                                     {
                                                         settingsNew = (SrmSettings) doc.Settings.ChangeName(ss.SaveName);
                                                         return doc.ChangeSettings(settingsNew);
-                                                    }, AuditLogEntry.SettingsLogFunction);
+                                                    }, AuditLogEntry.SkipChange);
 
                 if (settingsNew != null)
                     Settings.Default.SrmSettingsList.Add(settingsNew.MakeSavable(ss.SaveName));
@@ -3745,14 +3796,17 @@ namespace pwiz.Skyline
 
         public void ShowDocumentSettingsDialog()
         {
-            DisplayDocumentSettingsDialogPage(0);
+            DisplayDocumentSettingsDialogPage(null);
         }
 
-        public void DisplayDocumentSettingsDialogPage(int tabPageIndex)
+        public void DisplayDocumentSettingsDialogPage(DocumentSettingsDlg.TABS? tab)
         {
             using (var dlg = new DocumentSettingsDlg(this))
             {
-                dlg.GetTabControl().SelectedIndex = tabPageIndex;
+                if (tab.HasValue)
+                {
+                    dlg.SelectTab(tab.Value);
+                }
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings,
@@ -5000,7 +5054,14 @@ namespace pwiz.Skyline
                 if (final)
                 {
                     if (i != -1)
+                    {
+                        // Avoid a race condition where simply removing the status can cause a update
+                        // caused by a timer tick to remove the ImportingResultsWindow
+                        if (status.IsError)
+                            ImportingResultsError = multiStatus;
+
                         _listProgress.RemoveAt(i);
+                    }
                 }
                 // Otherwise, if present update the status
                 else if (i != -1)
@@ -5015,6 +5076,9 @@ namespace pwiz.Skyline
                 }
                 first = i == 0;
             }
+
+            // A problematic place to put a Thread.Sleep which exposed some race conditions causing failures in nightly tests
+//            Thread.Sleep(100);
 
             // If the status is first in the queue and it is beginning, initialize
             // the progress UI.
@@ -5031,7 +5095,9 @@ namespace pwiz.Skyline
                 // Also, it is important to do this with one update, or a timer tick can destroy the window and this
                 // will recreate it causing tests to fail because they have the wrong Form reference
                 if (status.IsError)
+                {
                     RunUIAction(CompleteProgressUI, e);
+                }
                 else
                 {
                     // Import progress needs to know about this status immediately.  It might be gone by
@@ -5070,6 +5136,10 @@ namespace pwiz.Skyline
                 // Update the progress UI immediately
                 UpdateProgressUI();
             }
+            if (!string.IsNullOrEmpty(e.Progress.WarningMessage))
+            {
+                MessageDlg.Show(this, e.Progress.WarningMessage);
+            }
         }
 
         private void ShowProgressErrorUI(ProgressUpdateEventArgs e)
@@ -5088,6 +5158,8 @@ namespace pwiz.Skyline
                 var multiProgress = (MultiProgressStatus) e.Progress;
                 ImportingResultsWindow.UpdateStatus(multiProgress);
                 ShowAllChromatogramsGraph();
+                // Safe to resume updates based on timer ticks
+                ImportingResultsError = null;
                 // Make sure user is actually seeing an error
                 if (ImportingResultsWindow != null && ImportingResultsWindow.HasErrors)
                     return;
@@ -5153,6 +5225,10 @@ namespace pwiz.Skyline
                 }
                 else if (ImportingResultsWindow != null)
                 {
+                    // If an importing results error is pending or the window handle is not yet created, then ignore this update
+                    if (ImportingResultsError != null || !ImportingResultsWindow.IsHandleCreated)
+                        return;
+
                     if (!ImportingResultsWindow.IsUserCanceled)
                         Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
                     ImportingResultsWindow.Finish();
@@ -5691,11 +5767,13 @@ namespace pwiz.Skyline
                     return;
                 }
 
+                var count = pathsToProcess.Count;
+                var changedTargets = count == 1 ? SelectedNode.Text : string.Format(AuditLogStrings.SkylineWindow_ChangeQuantitative_0_transitions, count);
                 ModifyDocument(message, doc =>
                 {
-                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));
+                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));  // CONSIDER: Might not be true if background processing is happening
                     return newDocument;
-                }, AuditLogEntry.SettingsLogFunction);
+                }, docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, changedTargets));
             }
         }
 

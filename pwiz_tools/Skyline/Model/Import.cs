@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
@@ -71,7 +72,8 @@ namespace pwiz.Skyline.Model
             bool requireLibraryMatch = Document.Settings.PeptideSettings.Libraries.Pick == PeptidePick.library
                                        || Document.Settings.PeptideSettings.Libraries.Pick == PeptidePick.both;
             // Set starting values for limit counters
-            _countPeptides = Document.PeptideCount;
+            int originalPeptideCount = Document.PeptideCount;
+            _countPeptides = originalPeptideCount;
             _countIons = Document.PeptideTransitionCount;
 
             // Store set of existing FASTA sequences to keep from duplicating
@@ -112,7 +114,7 @@ namespace pwiz.Skyline.Model
 
                 if (line.StartsWith(@">"))
                 {
-                    if (!requireLibraryMatch)
+                    if (!requireLibraryMatch && progressMonitor == null)
                     {
                         if (_countIons > SrmDocument.MaxTransitionCount)
                         {
@@ -138,8 +140,20 @@ namespace pwiz.Skyline.Model
                     {
                         throw new InvalidDataException(string.Format(Resources.FastaImporter_Import_Error_at_or_around_line__0____1_, linesRead, x.Message), x);
                     }
+
                     if (progressMonitor != null)
-                        progressMonitor.UpdateProgress(status = status.ChangeMessage(string.Format(Resources.FastaImporter_Import_Adding_protein__0__, seqBuilder.Name)));
+                    {
+                        string message = string.Format(Resources.FastaImporter_Import_Adding_protein__0__,
+                            seqBuilder.Name);
+                        int newPeptideCount = _countPeptides - originalPeptideCount;
+                        if (newPeptideCount > 0)
+                        {
+                            message = TextUtil.LineSeparate(message,
+                                string.Format(Resources.FastaImporter_Import__0__proteins_and__1__peptides_added, peptideGroupsNew.Count,
+                                    newPeptideCount));
+                        }
+                        progressMonitor.UpdateProgress(status = status.ChangeMessage(message));
+                    }
                 }
                 else if (seqBuilder == null)
                 {
@@ -1619,9 +1633,15 @@ namespace pwiz.Skyline.Model
                 provider = LocalizationHelper.CurrentCulture;
                 sep = TextUtil.SEPARATOR_CSV_INTL;           
             }
-            else if (TrySplitColumns(line, TextUtil.SEPARATOR_CSV, out columns))
+            else
             {
-                sep = TextUtil.SEPARATOR_CSV;           
+                if (null == CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(line.Trim(), 0))
+                {
+                    if (TrySplitColumns(line, TextUtil.SEPARATOR_CSV, out columns))
+                    {
+                        sep = TextUtil.SEPARATOR_CSV;
+                    }
+                }
             }
 
             if (sep == '\0')

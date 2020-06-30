@@ -71,7 +71,9 @@ namespace pwiz.Skyline.EditUI
         public ComparePeakPickingDlg(SrmDocument document)
         {
             InitializeComponent();
-            
+
+            Icon = Resources.Skyline;
+
             _axisLabelScaler = new AxisLabelScaler(zedGraphFiles.GraphPane);
             _colors =
                 Settings.Default.ColorSchemes.GetDefaults()

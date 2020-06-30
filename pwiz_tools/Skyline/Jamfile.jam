@@ -140,6 +140,22 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         exit %status%
     }
     
+    rule do_skyline_test_pass1_subset ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_test_pass1_subset
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building Skyline Test Data in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestData /nologo /verbosity:minimal
+        echo Testing subset of Skyline's leak checking (pass1) in $(CONFIGURATION:L) configuration...
+        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram $(.teamcity-test-decoration)
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+    
     rule do_skyline_test_functional ( targets + : sources * : properties * )
     {
         return [ build-properties $(targets) : $(sources) : $(properties) ] ;
@@ -249,11 +265,14 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@no-express-requirement
             <conditional>@msvc-dotnet-requirement
             <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
+            <assembly>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler
             <assembly>TestDiagnostics//TestDiagnostics
             <conditional>@build-location
             <conditional>@install-vendor-api-dependencies
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>TestDiagnostics//TestDiagnostics/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
@@ -269,10 +288,13 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@no-express-requirement
             <conditional>@msvc-dotnet-requirement
             <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
+            <assembly>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler
             <conditional>@build-location
             <dependency>Skyline.exe
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
@@ -296,6 +318,18 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         : # sources
         : # actions
             @do_skyline_test_a
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+    
+    make TestPass1Subset
+        : # sources
+        : # actions
+            @do_skyline_test_pass1_subset
         : # requirements
             <link>shared:<build>no
             <conditional>@no-express-requirement

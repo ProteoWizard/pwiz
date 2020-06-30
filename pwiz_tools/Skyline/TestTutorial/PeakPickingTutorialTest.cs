@@ -63,7 +63,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestPeakPickingTutorial()
         {
             // Set true to look at tutorial screenshots.
-            //IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "PeakPicking";
 
             ForceMzml = false;  // Mzml isn't faster for this test.
 
@@ -249,6 +251,25 @@ namespace pwiz.SkylineTestTutorial
             {
                 if (!(0 < i && i < 5))
                     RemovePeptide(missingPeptides[i], isDecoys[i]);
+            }
+
+            if (IsPauseForCoverShot)
+            {
+                RestoreCoverViewOnScreen();
+                var reintegrateDlgCover = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
+                var editModelCover = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlgCover.AddPeakScoringModel);
+                RunUI(() =>
+                {
+                    editModelCover.Top = SkylineWindow.Top + 8;
+                    editModelCover.Left = SkylineWindow.Right - editModelCover.Width - 8;
+                    editModelCover.PeakScoringModelName = "SRMCourse";
+                    editModelCover.TrainModelClick();
+                });
+                PauseForCoverShot();
+
+                OkDialog(editModelCover, editModelCover.CancelDialog);
+                OkDialog(reintegrateDlgCover, reintegrateDlgCover.CancelDialog);
+                return;
             }
 
             var reintegrateDlgNew = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -478,18 +499,6 @@ namespace pwiz.SkylineTestTutorial
                 Console.WriteLine(@"""{0}"", // Not L10N", coefficients);  // Not L10N
             else
                 AssertEx.AreEqualLines(EXPECTED_COEFFICIENTS[coeffIndex], coefficients);
-        }
-
-        private IEnumerable<string> GetCoefficientStrings(EditPeakScoringModelDlg editDlg)
-        {
-            for (int i = 0; i < editDlg.PeakCalculatorsGrid.Items.Count; i++)
-            {
-                double? weight = editDlg.PeakCalculatorsGrid.Items[i].Weight;
-                if (weight.HasValue)
-                    yield return string.Format(CultureInfo.InvariantCulture, "{0:F04}", weight.Value);
-                else
-                    yield return " null ";  // To help values line up
-            }
         }
 
         private void CheckPointsTypeRT(PointsTypeRT pointsType, int expectedPoints)

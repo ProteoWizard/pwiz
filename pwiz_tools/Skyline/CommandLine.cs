@@ -259,7 +259,7 @@ namespace pwiz.Skyline
                     return false;
             }
 
-            if (commandArgs.AddDecoys)
+            if (commandArgs.AddDecoys || commandArgs.DiscardDecoys)
             {
                 if (!AddDecoys(commandArgs))
                     return false;
@@ -377,12 +377,10 @@ namespace pwiz.Skyline
 
                 if (string.IsNullOrEmpty(commandArgs.ReplicateName) && !commandArgs.ImportAppend)
                 {
-                    // A named path will be removed if the document contains a replicate with the same name and file path.
-                    if (!RemoveImportedFiles(listNamedPaths, out var listNewPaths))
-                    {
-                        return false;
-                    }
-
+                    // A named path will be removed if the document contains a replicate with this file path.
+                    RemoveImportedFiles(listNamedPaths, out var listNewPaths,
+                        true /*Remove files paths that have already been imported into any replicate.*/);
+                   
                     if (listNewPaths.Count == 0)
                     {
                         _out.WriteLine(Resources.CommandLine_ImportResults_No_replicates_left_to_import_);
@@ -463,6 +461,16 @@ namespace pwiz.Skyline
                     commandArgs.Refinement.NormalizationLabelType = labelType;
                 else
                     return false;
+            }
+
+            if (!commandArgs.Refinement.GroupComparisonNames.IsNullOrEmpty())
+            {
+                foreach (var name in commandArgs.Refinement.GroupComparisonNames)
+                {
+                    var gc = Document.Settings.DataSettings.GroupComparisonDefs.FirstOrDefault(g => g.Name.Equals(name));
+                    if (gc != null)
+                        commandArgs.Refinement.GroupComparisonDefs.Add(gc);
+                }
             }
 
             _out.WriteLine(Resources.CommandLine_RefineDocument_Refining_document___);
@@ -1146,9 +1154,20 @@ namespace pwiz.Skyline
                 // If the name exists, files should get imported into it
                 listNamedPaths = new[] { new KeyValuePair<string, MsDataFileUri[]>(replicateName, listNamedPaths.SelectMany(s => s.Value).ToArray()) };
             }
-            else
+
+            // Remove replicates and/or files that have already been imported into the document
+            RemoveImportedFiles(listNamedPaths, out var listNewPaths,
+                string.IsNullOrEmpty(replicateName) /*If a replicate name is not given, remove file paths imported into any replicate.*/);
+            if (listNewPaths.Count == 0)
             {
-                // Otherwise, new replicates will be created and should have new unique names.  
+                _out.WriteLine(Resources.CommandLine_ImportResults_No_replicates_left_to_import_);
+                return false;
+            }
+
+            listNamedPaths = listNewPaths;
+            if(string.IsNullOrEmpty(replicateName))
+            {  
+                // If a replicate name is not given new replicates will be created and should have new unique names.  
                 MakeReplicateNamesUnique(listNamedPaths);
             }
 
@@ -1442,14 +1461,8 @@ namespace pwiz.Skyline
                 }
                 listNamedPaths = listRenamedPaths;
             }
-
-            // remove replicates and/or files that have already been imported into the document
-            List<KeyValuePair<string, MsDataFileUri[]>> listNewPaths;
-            if(!RemoveImportedFiles(listNamedPaths, out listNewPaths))
-            {
-                return null;
-            }
-            return listNewPaths;
+            
+            return listNamedPaths;
         }
 
         private bool ApplyNamingPattern(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, Regex namingPattern, 
@@ -1490,57 +1503,79 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private bool RemoveImportedFiles(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths,
-                                         out List<KeyValuePair<string, MsDataFileUri[]>> listNewNamedPaths)
+        private void RemoveImportedFiles(IEnumerable<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths,
+            out List<KeyValuePair<string, MsDataFileUri[]>> listNewNamedPaths, bool checkAllReplicates)
         {
             listNewNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
 
             if(!_doc.Settings.HasResults)
             {
                 listNewNamedPaths.AddRange(listNamedPaths);
-                return true;
+                return;
+            }
+
+            var chromatFilePaths = new HashSet<MsDataFileUri>();
+            if (checkAllReplicates)
+            {
+                // Get all the file paths imported in the document
+                chromatFilePaths =
+                    new HashSet<MsDataFileUri>(_doc.Settings.MeasuredResults.MSDataFilePaths.Select(path => path.ToLower()));
             }
 
             foreach (var namedPaths in listNamedPaths)
             {
                 var replicateName = namedPaths.Key;
 
-                // check if the document already has a replicate with this name
-                int indexChrom;
-                ChromatogramSet chromatogram;
-                if (!_doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName,
-                                                                         out chromatogram, out indexChrom))
+                if (!checkAllReplicates)
                 {
-                    listNewNamedPaths.Add(namedPaths);
+                    // check if the document already has a replicate with this name
+                    int indexChrom;
+                    ChromatogramSet chromatogram;
+                    if (!_doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName,
+                        out chromatogram, out indexChrom))
+                    {
+                        listNewNamedPaths.Add(namedPaths);
+                        continue;
+                    }
+                    else
+                    {
+                        // We are appending to an existing replicate in the document.
+                        // We will remove files that are already associated with the replicate
+                        // Get the files imported in this replicate
+                        chromatFilePaths =
+                            new HashSet<MsDataFileUri>(chromatogram.MSDataFilePaths.Select(path => path.ToLower()));
+                    }
                 }
-                else
-                {   
-                    // We are appending to an existing replicate in the document.
-                    // Remove files that are already associated with the replicate
-                    var chromatFilePaths = new HashSet<MsDataFileUri>(chromatogram.MSDataFilePaths.Select(path => path.ToLower()));
 
-                    var filePaths = namedPaths.Value;
-                    var filePathsNotInRepl = new List<MsDataFileUri>(filePaths.Length);
-                    foreach (var fpath in filePaths)
+                var filePaths = namedPaths.Value;
+                var filePathsNotInRepl = new List<MsDataFileUri>(filePaths.Length);
+                foreach (var fpath in filePaths)
+                {
+                    if (chromatFilePaths.Contains(fpath.ToLower()))
                     {
-                        if (chromatFilePaths.Contains(fpath.ToLower()))
+                        if (checkAllReplicates)
                         {
-                            _out.WriteLine(Resources.CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___, replicateName, fpath);
-                        }
-                        else
-                        {
-                            filePathsNotInRepl.Add(fpath);
-                        }
-                    }
+                            // We are looking at all file paths so get the name of the replicate to which this file belongs.
+                            var chromatogram = _doc.Settings.MeasuredResults.Chromatograms.First(c =>
+                                c.MSDataFilePaths.Any(path => path.ToLower().Equals(fpath.ToLower())));
 
-                    if (filePathsNotInRepl.Count > 0)
-                    {
-                        listNewNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(replicateName,
-                                                                                 filePathsNotInRepl.ToArray()));
+                            replicateName = chromatogram.Name;
+                        }
+
+                        _out.WriteLine(Resources.CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___, replicateName, fpath);
                     }
+                    else
+                    {
+                        filePathsNotInRepl.Add(fpath);
+                    }
+                }
+
+                if (filePathsNotInRepl.Count > 0)
+                {
+                    listNewNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(replicateName,
+                        filePathsNotInRepl.ToArray()));
                 }
             }
-            return true;
         }
 
         private bool ImportDataFilesWithAppend(IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, LockMassParameters lockMassParameters,
@@ -1834,7 +1869,16 @@ namespace pwiz.Skyline
 
         private bool AddDecoys(CommandArgs commandArgs)
         {
-            if (_doc.PeptideGroups.Contains(g => g.IsDecoy))
+            if (!commandArgs.AddDecoys)
+            {
+                if (!commandArgs.DiscardDecoys || !_doc.MoleculeGroups.Contains(g => g.IsDecoy))
+                    return true;
+
+                ModifyDocument(RefinementSettings.RemoveDecoys);
+                _out.WriteLine(Resources.CommandLine_AddDecoys_Decoys_discarded);
+                return true;
+            }
+            if (!commandArgs.DiscardDecoys && _doc.PeptideGroups.Contains(g => g.IsDecoy))
             {
                 _out.WriteLine(Resources.CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_);
                 return false;
@@ -1850,6 +1894,7 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.CommandLine_AddDecoys_Error_The_number_of_peptides,
                     numDecoys, numComparableGroups, CommandArgs.ARG_DECOYS_ADD.ArgumentText, CommandArgs.ARG_VALUE_DECOYS_ADD_SHUFFLE);
+                return false;
             }
             var refineAddDecoys = new RefinementSettings
             {
@@ -1857,8 +1902,16 @@ namespace pwiz.Skyline
                 NumberOfDecoys = numDecoys
             };
             int peptidesBefore = _doc.PeptideCount;
+            int decoyPeptideCount = 0;
+            if (commandArgs.DiscardDecoys)
+                decoyPeptideCount = _doc.MoleculeGroups.Where(g => g.IsDecoy).Sum(g => g.MoleculeCount);
+
             ModifyDocument(d => refineAddDecoys.GenerateDecoys(d));
-            _out.WriteLine(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method, _doc.PeptideCount - peptidesBefore, commandArgs.AddDecoysType);
+
+            if (decoyPeptideCount > 0)
+                _out.WriteLine(Resources.CommandLine_AddDecoys_Decoys_discarded);
+            _out.WriteLine(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
+                _doc.PeptideCount - (peptidesBefore - decoyPeptideCount), commandArgs.AddDecoysType);
             return true;
         }
 
@@ -3682,6 +3735,7 @@ namespace pwiz.Skyline
         private readonly DateTime _waitStart;
         private DateTime _lastOutput;
         private string _lastMessage;
+        private string _lastWarning;
 
         private readonly TextWriter _out;
         private Thread _waitingThread;
@@ -3778,6 +3832,12 @@ namespace pwiz.Skyline
             else if (writeMessage)
             {
                 _out.WriteLine(status.Message);
+            }
+
+            if (!string.IsNullOrEmpty(status.WarningMessage) && !Equals(_lastWarning, status.WarningMessage))
+            {
+                _out.WriteLine(status.WarningMessage);
+                _lastWarning = status.WarningMessage;
             }
 
             if (writeMessage)

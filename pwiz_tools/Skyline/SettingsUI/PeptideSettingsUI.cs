@@ -49,21 +49,22 @@ namespace pwiz.Skyline.SettingsUI
 
 // ReSharper disable InconsistentNaming
         public enum TABS { Digest, Prediction, Filter, Library, Modifications, Labels, /* Integration, */ Quantification }
-// ReSharper restore InconsistentNaming
+        // ReSharper restore InconsistentNaming
 
-        public class DigestionTab : IFormView { }
-        public class PredictionTab : IFormView { }
-        public class FilterTab : IFormView { }
-        public class LibraryTab : IFormView { }
-        public class ModificationsTab : IFormView { }
-        public class LabelsTab : IFormView { }
-//        public class IntegrationTab : IFormView { }    - not yet visible ever
-        public class QuantificationTab : IFormView { }
-
-        private static readonly IFormView[] TAB_PAGES =
+        public class TabWithPage : IFormView
         {
-            new DigestionTab(), new PredictionTab(), new FilterTab(), new LibraryTab(), new ModificationsTab(), new LabelsTab(), /* new IntegrationTab(), */ new QuantificationTab(), 
-        };
+            public TabPage Page;
+        }
+        public class DigestionTab : TabWithPage { }
+        public class PredictionTab : TabWithPage { }
+        public class FilterTab : TabWithPage { }
+        public class LibraryTab : TabWithPage { }
+        public class ModificationsTab : TabWithPage { }
+        public class LabelsTab : TabWithPage { }
+        /* public class IntegrationTab : TabWithPage { } never visible */
+        public class QuantificationTab : TabWithPage { }
+
+        private readonly Dictionary<TABS, TabWithPage> _tabPages;
 
         private readonly SkylineWindow _parent;
         private readonly LibraryManager _libraryManager;
@@ -88,6 +89,18 @@ namespace pwiz.Skyline.SettingsUI
         public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager, TABS? selectTab)
         {
             InitializeComponent();
+
+            _tabPages = new Dictionary<TABS, TabWithPage>
+            {
+                {TABS.Digest, new DigestionTab { Page = tabDigestion }},
+                {TABS.Prediction, new PredictionTab {Page = tabPrediction }},
+                {TABS.Filter, new FilterTab {Page = tabFilter}},
+                {TABS.Library, new LibraryTab {Page = tabLibrary}},
+                {TABS.Modifications, new ModificationsTab {Page = tabModifications}},
+                {TABS.Labels, new LabelsTab {Page = tabLabels}},
+                // {TABS.Integration, new IntegrationTab {Page = tabIntegration}},
+                {TABS.Quantification, new QuantificationTab {Page = tabQuantification}}
+            };
 
             RestoreTabSel(selectTab);
 
@@ -174,7 +187,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Initialize modification settings
             _driverStaticMod = new SettingsListBoxDriver<StaticMod>(listStaticMods, Settings.Default.StaticModList);
-            _driverStaticMod.LoadList(null, Modifications.StaticModifications);
+            _driverStaticMod.LoadList(null, Modifications.StaticModifications.Where(mod=>null == mod.CrosslinkerSettings).ToList());
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
             _driverLabelType = new LabelTypeComboDriver(LabelTypeComboDriver.UsageType.ModificationsPicker, comboLabelType, Modifications, _driverHeavyMod, 
                 labelStandardType, comboStandardType, listStandardTypes);
@@ -307,11 +320,34 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
         }
+        // Adjusts indexing for tabs that may be hidden due to UI mode
+        private int TabEnumToControlIndex(TABS tab)
+        {
+            int tabIndex = tabControl1.TabPages.IndexOf(_tabPages[tab].Page);
+            if (tabIndex != -1)
+                return tabIndex;
+            return 0; // The tab is not visible default to the first tab
+        }
+
+        // Adjusts indexing for tabs that may be hidden due to UI mode
+        private TABS ControlIndexToTabEnum(int controlIndex)
+        {
+            var control = tabControl1.TabPages[controlIndex];
+            var kvp = _tabPages.FirstOrDefault(p => ReferenceEquals(p.Value.Page, control));
+            return kvp.Key;
+        }
+
+        // Adjusts indexing for tabs that may be hidden due to UI mode
+        private TabWithPage ControlIndexToTabPage(int controlIndex)
+        {
+            var tab = ControlIndexToTabEnum(controlIndex);
+            return _tabPages[tab];
+        }
 
         protected override void OnShown(EventArgs e)
         {
-            if (TabControlSel != null) 
-                tabControl1.SelectedIndex = (int) TabControlSel; 
+            if (TabControlSel.HasValue)
+                tabControl1.SelectedIndex = TabEnumToControlIndex(TabControlSel.Value); 
             tabControl1.FocusFirstTabStop();
         }
 
@@ -343,7 +379,10 @@ namespace pwiz.Skyline.SettingsUI
             BackgroundProteome backgroundProteome = BackgroundProteome.NONE;
             if (!backgroundProteomeSpec.IsNone)
             {
-                backgroundProteome = new BackgroundProteome(backgroundProteomeSpec);
+                if (_peptideSettings.BackgroundProteome.EqualsSpec(backgroundProteomeSpec))
+                    backgroundProteome = _peptideSettings.BackgroundProteome;
+                else
+                    backgroundProteome = new BackgroundProteome(backgroundProteomeSpec);
                 if (backgroundProteome.DatabaseInvalid)
                 {
 
@@ -513,9 +552,14 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         librarySpecs = Libraries.LibrarySpecs;
                         librariesLoaded = Libraries.Libraries;
+                        documentLibrary = Libraries.HasDocumentLibrary;
+                    }
+                    else
+                    {
+                        // Set to true only if one of the selected libraries is a document library.
+                        documentLibrary = librarySpecs.Any(libSpec => libSpec != null && libSpec.IsDocumentLibrary);
                     }
 
-                    documentLibrary = Libraries.HasDocumentLibrary;
                     // Otherwise, leave the list of loaded libraries empty,
                     // and let the LibraryManager refill it.  This ensures a
                     // clean save of library specs only in the user config, rather
@@ -544,7 +588,7 @@ namespace pwiz.Skyline.SettingsUI
                 ? _driverSmallMolInternalStandardTypes.InternalStandardTypes
                 : _driverLabelType.InternalStandardTypes;
             PeptideModifications modifications = new PeptideModifications(
-                _driverStaticMod.Chosen, maxVariableMods, maxNeutralLosses,
+                _driverStaticMod.Chosen.Where(mod=>null == mod.CrosslinkerSettings).ToList(), maxVariableMods, maxNeutralLosses,
                 _driverLabelType.GetHeavyModifications(), standardTypes);
             // Should not be possible to change explicit modifications in the background,
             // so this should be safe.  CONSIDER: Document structure because of a library load?
@@ -599,7 +643,7 @@ namespace pwiz.Skyline.SettingsUI
                 return;
 
             // Only update, if anything changed
-            if (!Equals(settings, _peptideSettings))
+            if (!Equals(MakeDocIndependent(settings), MakeDocIndependent(_peptideSettings)))
             {
                 if (!_parent.ChangeSettingsMonitored(this, Resources.PeptideSettingsUI_OkDialog_Changing_peptide_settings,
                                                      s => s.ChangePeptideSettings(settings)))
@@ -609,6 +653,13 @@ namespace pwiz.Skyline.SettingsUI
                 _peptideSettings = settings;
             }
             DialogResult = DialogResult.OK;
+        }
+
+        private PeptideSettings MakeDocIndependent(PeptideSettings settings)
+        {
+            // TODO(nicksh): This is to handle the fact that we currently cache document information in PeptideModifications.HasHeavyModifications
+            //               The cached value gets updated later. So, any PeptideSettings where it is true will not equal the one constructed by this form
+            return settings.ChangeModifications(settings.Modifications.ChangeHasHeavyModifications(false));
         }
 
         private void enzyme_SelectedIndexChanged(object sender, EventArgs e)
@@ -841,6 +892,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         public bool IsBuildingLibrary { get; private set; }
+        public bool ReportLibraryBuildFailure { get; set; }
 
         public void ShowBuildLibraryDlg()
         {
@@ -871,6 +923,9 @@ namespace pwiz.Skyline.SettingsUI
 
                         if (!success)
                         {
+                            if (ReportLibraryBuildFailure)
+                                Console.WriteLine(@"Library {0} build failed", builder.LibrarySpec.Name);
+
                             _parent.Invoke(new Action(() =>
                             {
                                 if (Settings.Default.SpectralLibraryList.Contains(builder.LibrarySpec))
@@ -1233,14 +1288,14 @@ namespace pwiz.Skyline.SettingsUI
             {
                 int selectedIndex = 0;
                 Invoke(new Action(() => selectedIndex = tabControl1.SelectedIndex));
-                return TAB_PAGES[selectedIndex];
+                return ControlIndexToTabPage(selectedIndex);
             }
         }
 
         public TABS SelectedTab
         {
-            get { return (TABS)tabControl1.SelectedIndex; }
-            set { tabControl1.SelectedIndex = (int)value; }
+            get { return ControlIndexToTabEnum(tabControl1.SelectedIndex); }
+            set { tabControl1.SelectedIndex = TabEnumToControlIndex(value); }
         }
 
         public void ChooseRegression(string name)

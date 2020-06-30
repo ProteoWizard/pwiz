@@ -27,12 +27,15 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Xml;
 using System.Threading;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
 using pwiz.CLI.msdata;
 using pwiz.MSGraph;
+using System.Text.RegularExpressions;
 
 namespace seems
 {
@@ -52,7 +55,7 @@ namespace seems
                 getDetails = false;
             }
 
-            public SourceInfo[] sourceInfoList;
+            //public SourceInfo[] sourceInfoList;
 
             /// <summary>
             /// Lists paths to Waters, Bruker, Agilent, etc. source directories
@@ -98,6 +101,38 @@ namespace seems
                 set { getDetails = value; }
             }
             private bool getDetails;
+        }
+
+        public class MSDataRunPath
+        {
+            public MSDataRunPath(string filepathPossiblyWithRunIndexSuffix)
+            {
+                var match = Regex.Match(filepathPossiblyWithRunIndexSuffix, @"(.+):(\d+)");
+                if (match.Success)
+                {
+                    Filepath = match.Groups[1].Value;
+                    RunIndex = int.Parse(match.Groups[2].Value);
+                }
+                else
+                {
+                    Filepath = filepathPossiblyWithRunIndexSuffix;
+                    RunIndex = 0;
+                }
+            }
+
+            public MSDataRunPath(string filepath, int runIndex)
+            {
+                Filepath = filepath;
+                RunIndex = runIndex;
+            }
+
+            public string Filepath { get; }
+            public int RunIndex { get; }
+
+            public override string ToString()
+            {
+                return $"{Filepath}:{RunIndex}";
+            }
         }
 
         public OpenDataSourceDialog()
@@ -194,6 +229,7 @@ namespace seems
                             item.SubItems[3].Tag = (object) sourceInfo.size;
                             item.SubItems[4].Tag = (object) sourceInfo.dateModified;
                             item.Name = sourceInfo.name;
+                            item.Tag = sourceInfo;
                             listView.Items.Add( item );
                         }
                     } else // second pass
@@ -208,6 +244,7 @@ namespace seems
                             item.SubItems[3].Tag = (object) sourceInfo.size;
                             item.SubItems[4].Tag = (object) sourceInfo.dateModified;
                             item.Name = sourceInfo.name;
+                            item.Tag = sourceInfo;
                             listView.Items.Add( item );
                         }
 
@@ -291,7 +328,7 @@ namespace seems
 
         #region Properties
         private string currentDirectory;
-        private string CurrentDirectory
+        public string CurrentDirectory
         {
             get { return currentDirectory; }
             set
@@ -312,16 +349,13 @@ namespace seems
             set { initialDirectory = value; }
         }
 
-        public string DataSource
+        public MSDataRunPath DataSource
         {
-            get { return dataSources[0]; }
+            get { return DataSources[0]; }
         }
 
-        private string[] dataSources;
-        public string[] DataSources
-        {
-            get { return dataSources; }
-        }
+        public MSDataRunPath[] DataSources { get; private set; }
+
         #endregion
 
         private class SourceInfo
@@ -330,6 +364,8 @@ namespace seems
             public string type;
             public UInt64 size;
             public DateTime dateModified;
+
+            public MSDataRunPath path;
 
             public bool hasDetails;
             public int spectra;
@@ -430,14 +466,22 @@ namespace seems
             }
         }
 
-        private string getSourceType( string path )
+        private string getSourceType( object source )
         {
-            if( File.Exists( path ) )
-                return getSourceType( new FileInfo( path ) );
-            else if( Directory.Exists( path ) )
-                return getSourceType( new DirectoryInfo( path ) );
-            else
-                throw new ArgumentException( "path is not a file or a directory" );
+            if (source is string)
+            {
+                string path = source as string;
+                if (File.Exists(path))
+                    return getSourceType(new FileInfo(path));
+                if (Directory.Exists(path))
+                    return getSourceType(new DirectoryInfo(path));
+            }
+            else if (source is SourceInfo)
+            {
+                return (source as SourceInfo).type;
+            }
+            
+            throw new ArgumentException( "path is not a file, directory, or SourceInfo" );
         }
 
         private string getSourceType( DirectoryInfo dirInfo )
@@ -471,6 +515,7 @@ namespace seems
             sourceInfoList.Add( new SourceInfo() );
             sourceInfoList[0].type = getSourceType( dirInfo );
             sourceInfoList[0].name = dirInfo.Name;
+            sourceInfoList[0].path = new MSDataRunPath(dirInfo.FullName, 0);
             sourceInfoList[0].dateModified = dirInfo.LastWriteTime;
             sourceInfoList[0].hasDetails = getDetails;
 
@@ -515,6 +560,7 @@ namespace seems
             sourceInfoList.Add( new SourceInfo() );
             sourceInfoList[0].type = getSourceType( fileInfo );
             sourceInfoList[0].name = fileInfo.Name;
+            sourceInfoList[0].path = new MSDataRunPath(fileInfo.FullName, 0);
             sourceInfoList[0].hasDetails = getDetails;
             sourceInfoList[0].size = (UInt64) fileInfo.Length;
             sourceInfoList[0].dateModified = fileInfo.LastWriteTime;
@@ -527,10 +573,14 @@ namespace seems
                 {
                     ReaderList readerList = ReaderList.FullReaderList;
                     var readerConfig = new ReaderConfig
-                        {
-                            simAsSpectra = Program.SimAsSpectra,
-                            srmAsSpectra = Program.SrmAsSpectra
-                        };
+                    {
+                        simAsSpectra = Properties.Settings.Default.SimAsSpectra,
+                        srmAsSpectra = Properties.Settings.Default.SrmAsSpectra,
+                        combineIonMobilitySpectra = Properties.Settings.Default.CombineIonMobilitySpectra,
+                        ignoreZeroIntensityPoints = Properties.Settings.Default.IgnoreZeroIntensityPoints,
+                        acceptZeroLengthSpectra = Properties.Settings.Default.AcceptZeroLengthSpectra,
+                        allowMsMsWithoutPrecursor = false
+                    };
 
                     MSDataList msInfo = new MSDataList();
                     readerList.read( fileInfo.FullName, msInfo, readerConfig );
@@ -540,6 +590,7 @@ namespace seems
                         SourceInfo sourceInfo = new SourceInfo();
                         sourceInfo.type = sourceInfoList[0].type;
                         sourceInfo.name = sourceInfoList[0].name;
+                        sourceInfo.path = new MSDataRunPath(fileInfo.FullName, sourceInfoList.Count);
                         if( msInfo.Count > 1 )
                             sourceInfo.name += " (" + msData.run.id + ")";
                         sourceInfo.populateFromMSData( msData );
@@ -747,7 +798,7 @@ namespace seems
 
                         if( invalidPaths.Count == 0 )
                         {
-                            dataSources = sourcePaths.ToArray();
+                            DataSources = sourcePaths.Select(o => new MSDataRunPath(o)).ToArray();
                             DialogResult = DialogResult.OK;
                             Close();
                         } else
@@ -774,7 +825,7 @@ namespace seems
                 CurrentDirectory = Path.Combine( CurrentDirectory, item.SubItems[0].Text );
             }  else
             {
-                dataSources = new string[] { Path.Combine( CurrentDirectory, item.SubItems[0].Text ) };
+                DataSources = new [] { (item.Tag as SourceInfo).path };
                 DialogResult = DialogResult.OK;
                 Close();
             }
@@ -803,62 +854,72 @@ namespace seems
 
         private void listView_ItemSelectionChanged( object sender, ListViewItemSelectionChangedEventArgs e )
         {
-            if( listView.SelectedItems.Count > 1 )
+            string sourcePath = null;
+            string sourceType = null;
+            int runIndex = 0;
+
+            if ( listView.SelectedItems.Count > 0 )
             {
                 List<string> dataSourceList = new List<string>();
                 foreach( ListViewItem item in listView.SelectedItems )
                 {
-                    if( item.SubItems[1].Text != "File Folder" )
-                        dataSourceList.Add( String.Format( "\"{0}\"", item.SubItems[0].Text ) );
-                }
-                sourcePathTextBox.Text = String.Join( " ", dataSourceList.ToArray() );
-
-                ticGraphControl.GraphPane.GraphObjList.Clear();
-                ticGraphControl.GraphPane.CurveList.Clear();
-                ticGraphControl.Visible = false;
-
-            } else if( listView.SelectedItems.Count > 0 )
-            {
-                sourcePathTextBox.Text = listView.SelectedItems[0].SubItems[0].Text;
-
-                ticGraphControl.GraphPane.GraphObjList.Clear();
-                ticGraphControl.GraphPane.CurveList.Clear();
-
-                string sourcePath = Path.Combine( CurrentDirectory, sourcePathTextBox.Text );
-                string sourceType = getSourceType( sourcePath );
-                if( !String.IsNullOrEmpty( sourceType ) &&
-                    sourceType != "File Folder" )
-                {
-                    using (MSData msd = new MSData())
+                    var sourceInfo = item.Tag as SourceInfo;
+                    if (sourceInfo != null)
                     {
-                        ReaderList.FullReaderList.read(sourcePath, msd, 0, SpectrumSource.GetReaderConfig());
-                        using (ChromatogramList cl = msd.run.chromatogramList)
-                        {
-                            if( cl != null && !cl.empty() && cl.find( "TIC" ) != cl.size() )
-                            {
-                                ticGraphControl.Visible = true;
-                                pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram( cl.find( "TIC" ), true );
-                                Map<double, double> sortedFullPointList = new Map<double, double>();
-                                IList<double> timeList = tic.binaryDataArrays[0].data;
-                                IList<double> intensityList = tic.binaryDataArrays[1].data;
-                                int arrayLength = timeList.Count;
-                                for( int i = 0; i < arrayLength; ++i )
-                                    sortedFullPointList[timeList[i]] = intensityList[i];
-                                ZedGraph.PointPairList points = new ZedGraph.PointPairList(
-                                    new List<double>( sortedFullPointList.Keys ).ToArray(),
-                                    new List<double>( sortedFullPointList.Values ).ToArray() );
-                                ZedGraph.LineItem item = ticGraphControl.GraphPane.AddCurve( "TIC", points, Color.Black, ZedGraph.SymbolType.None );
-                                item.Line.IsAntiAlias = true;
-                                ticGraphControl.AxisChange();
-                                ticGraphControl.Refresh();
-                            } else
-                                ticGraphControl.Visible = false;
-                        }
+                        dataSourceList.Add(sourceInfo.path.ToString());
+                        sourcePath = sourceInfo.path.Filepath;
+                        sourceType = sourceInfo.type;
+                        runIndex = sourceInfo.path.RunIndex;
                     }
-                } else
-                    ticGraphControl.Visible = false;
+                    else
+                    {
+                        dataSourceList.Add(item.SubItems[0].Text);
+                        sourcePath = Path.Combine(CurrentDirectory, sourcePathTextBox.Text);
+                        sourceType = getSourceType(sourcePath);
+                    }
+                }
+                sourcePathTextBox.Text = $"\"{String.Join("\" \"", dataSourceList.ToArray())}\"";
+            }
+
+            ticGraphControl.GraphPane.GraphObjList.Clear();
+            ticGraphControl.GraphPane.CurveList.Clear();
+            if (listView.SelectedItems.Count != 1)
+            {
+                ticGraphControl.Visible = false;
+                return;
+            }
+
+            if( !String.IsNullOrEmpty( sourceType ) &&
+                sourceType != "File Folder" )
+            {
+                using (MSData msd = new MSData())
+                {
+                    ReaderList.FullReaderList.read(sourcePath, msd, runIndex, SpectrumSource.GetReaderConfig());
+                    using (ChromatogramList cl = msd.run.chromatogramList)
+                    {
+                        if( cl != null && !cl.empty() && cl.find( "TIC" ) != cl.size() )
+                        {
+                            ticGraphControl.Visible = true;
+                            pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram( cl.find( "TIC" ), true );
+                            Map<double, double> sortedFullPointList = new Map<double, double>();
+                            IList<double> timeList = tic.binaryDataArrays[0].data;
+                            IList<double> intensityList = tic.binaryDataArrays[1].data;
+                            int arrayLength = timeList.Count;
+                            for( int i = 0; i < arrayLength; ++i )
+                                sortedFullPointList[timeList[i]] = intensityList[i];
+                            ZedGraph.PointPairList points = new ZedGraph.PointPairList(
+                                new List<double>( sortedFullPointList.Keys ).ToArray(),
+                                new List<double>( sortedFullPointList.Values ).ToArray() );
+                            ZedGraph.LineItem item = ticGraphControl.GraphPane.AddCurve( "TIC", points, Color.Black, ZedGraph.SymbolType.None );
+                            item.Line.IsAntiAlias = true;
+                            ticGraphControl.AxisChange();
+                            ticGraphControl.Refresh();
+                        } else
+                            ticGraphControl.Visible = false;
+                    }
+                }
             } else
-                sourcePathTextBox.Text = "";
+                ticGraphControl.Visible = false;
         }
 
         private void listView_KeyDown( object sender, KeyEventArgs e )
@@ -886,9 +947,9 @@ namespace seems
                 foreach( ListViewItem item in listView.SelectedItems )
                 {
                     if( item.SubItems[1].Text != "File Folder" )
-                        dataSourceList.Add( Path.Combine( CurrentDirectory, item.SubItems[0].Text ) );
+                        dataSourceList.Add( (item.Tag as SourceInfo).path.ToString() );
                 }
-                dataSources = dataSourceList.ToArray();
+                DataSources = dataSourceList.Select(o => new MSDataRunPath(o)).ToArray();
                 initializeBackgroundSourceLoader();
                 DialogResult = DialogResult.OK;
                 Close();

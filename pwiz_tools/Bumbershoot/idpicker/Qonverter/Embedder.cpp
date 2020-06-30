@@ -85,11 +85,11 @@ string defaultSourceExtensionPriorityList()
 QuantitationConfiguration::QuantitationConfiguration(QuantitationMethod quantitationMethod, pwiz::chemistry::MZTolerance reporterIonMzTolerance, bool normalizeIntensities)
     : quantitationMethod(quantitationMethod), reporterIonMzTolerance(reporterIonMzTolerance), normalizeIntensities(normalizeIntensities)
 {
-    if (quantitationMethod == QuantitationMethod::TMT10plex)
+    if (quantitationMethod >= QuantitationMethod::TMT10plex)
     {
         const double midwayBetweenTMT_130C_vs_130N = 130.13798; // (130.14114 + 130.13482) / 2;
         if ((130.14114 - reporterIonMzTolerance) < midwayBetweenTMT_130C_vs_130N)
-            throw invalid_argument("[QuantitationConfiguration] resolving TMT10's N vs. C isotopes requires reporter ion m/z tolerance less than 0.0032 m/z (~25 ppm)");
+            throw invalid_argument("[QuantitationConfiguration] resolving TMT10/11/16's N vs. C isotopes requires reporter ion m/z tolerance less than 0.0032 m/z (~25 ppm)");
     }
     else
     {
@@ -252,7 +252,7 @@ struct SpectrumRow
 // 118    118.112008  0      1      0.9970
 // 119    119.115363  0      1      1.0034
 // 121    121.122072  0      1      2.0067
-ReporterIon iTRAQ_masses[8] =
+ReporterIon iTRAQ_masses[Embedder::MAX_ITRAQ_REPORTER_IONS] =
 {
     { 113.107873, 0 },
     { 114.111228, 1 },
@@ -267,17 +267,23 @@ ReporterIon iTRAQ_masses[8] =
 // TMT
 // http://www.piercenet.com/instructions/2162457.pdf
 // Label  Mass        2plex  6plex  10plex   DeltaMassFromLastReporter
-// 126    126.12773   1      1      1
-// 127N   127.12476   0      1      1        0.9970
-// 127C   127.13108   1      0      1        0.0063
-// 128N   128.12811   0      0      1        0.9970
-// 128C   128.13443   0      1      1        0.0063
-// 129N   129.13147   0      1      1        0.9970
-// 129C   129.13779   0      0      1        0.0063
-// 130N   130.13482   0      0      1        0.9970
-// 130C   130.14114   0      1      1        0.0063
-// 131    131.13818   0      1      1        0.9970
-ReporterIon TMT_masses[10] =
+// 126       126.12773   1      1      1
+// 127N      127.12476   0      1      1        0.9970
+// 127C      127.13108   1      0      1        0.0063
+// 128N      128.12811   0      0      1        0.9970
+// 128C      128.13443   0      1      1        0.0063
+// 129N      129.13147   0      1      1        0.9970
+// 129C      129.13779   0      0      1        0.0063
+// 130N      130.13482   0      0      1        0.9970
+// 130C      130.14114   0      1      1        0.0063
+// 131N      131.13818   0      1      1        0.9970
+// 131C      130.14500   0      0      0        0.0063
+//TMTpro132N 132.14154
+//TMTpro132C 132.14786
+//TMTpro133N 133.14489
+//TMTpro133C 133.15121
+//TMTpro134N 134.14825
+ReporterIon TMT_masses[Embedder::MAX_TMT_REPORTER_IONS] =
 {
     { 126.12773, 0 },
     { 127.12476, 1 },
@@ -288,7 +294,13 @@ ReporterIon TMT_masses[10] =
     { 129.13779, 6 },
     { 130.13482, 7 },
     { 130.14114, 8 },
-    { 131.13818, 9 }
+    { 131.13818, 9 },
+    { 131.14500, 10 },
+    { 132.14154, 11 },
+    { 132.14786, 12 },
+    { 133.14489, 13 },
+    { 133.15121, 14 },
+    { 134.14825, 15 }
 };
 
 void correctIsotopeImpurities(vector<SpectrumRow>& spectrumRows,
@@ -352,6 +364,8 @@ void correctIsotopeImpurities(vector<SpectrumRow>& spectrumRows,
 
         case QuantitationMethod::TMT2plex: // TODO: get default values for these
         case QuantitationMethod::TMT10plex:
+        case QuantitationMethod::TMT11plex:
+        case QuantitationMethod::TMTpro16plex:
             return;
 
         default: return;
@@ -502,11 +516,13 @@ struct SpectrumList_Quantifier
         tmt2plexIons += TMT_masses[0], TMT_masses[2];
         tmt6plexIons += TMT_masses[0], TMT_masses[1], TMT_masses[4], TMT_masses[5], TMT_masses[8], TMT_masses[9];
         tmt10plexIons.assign(TMT_masses, TMT_masses+10);
+        tmt11plexIons.assign(TMT_masses, TMT_masses+11);
+        tmt16plexIons.assign(TMT_masses, TMT_masses+16);
 
-        itraqReporterIonIntensities.resize(8);
-        itraqTotalReporterIonIntensities.resize(8, 0);
-        tmtReporterIonIntensities.resize(10);
-        tmtTotalReporterIonIntensities.resize(10, 0);
+        itraqReporterIonIntensities.resize(Embedder::MAX_ITRAQ_REPORTER_IONS);
+        itraqTotalReporterIonIntensities.resize(Embedder::MAX_ITRAQ_REPORTER_IONS, 0);
+        tmtReporterIonIntensities.resize(Embedder::MAX_TMT_REPORTER_IONS);
+        tmtTotalReporterIonIntensities.resize(Embedder::MAX_TMT_REPORTER_IONS, 0);
 
         if (quantitationMethod == QuantitationMethod::None || quantitationMethod == QuantitationMethod::LabelFree)
             return;
@@ -554,6 +570,14 @@ struct SpectrumList_Quantifier
                             findReporterIons(s->id, mz->data, intensities->data, tmt10plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
                             break;
 
+                        case QuantitationMethod::TMT11plex:
+                            findReporterIons(s->id, mz->data, intensities->data, tmt11plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
+                            break;
+
+                        case QuantitationMethod::TMTpro16plex:
+                            findReporterIons(s->id, mz->data, intensities->data, tmt16plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
+                            break;
+
                         default: break;
                     }
                 }
@@ -588,6 +612,8 @@ struct SpectrumList_Quantifier
                 break;
 
             case QuantitationMethod::TMT10plex:
+            case QuantitationMethod::TMT11plex:
+            case QuantitationMethod::TMTpro16plex:
                 //correctIsotopeImpurities(spectrumQuantitationRows, tmtTotalReporterIonIntensities, tmt10plexIons, quantitationMethod, nullptr);
                 if (quantitationConfig.normalizeIntensities)
                     normalizeReporterIons(tmtTotalReporterIonIntensities);
@@ -655,7 +681,7 @@ struct SpectrumList_Quantifier
     const QuantitationMethod quantitationMethod;
     MZTolerance tolerance;
     vector<ReporterIon> itraq4plexIons, itraq8plexIons;
-    vector<ReporterIon> tmt2plexIons, tmt6plexIons, tmt10plexIons;
+    vector<ReporterIon> tmt2plexIons, tmt6plexIons, tmt10plexIons, tmt11plexIons, tmt16plexIons;
     vector<double> itraqReporterIonIntensities, itraqTotalReporterIonIntensities;
     vector<double> tmtReporterIonIntensities, tmtTotalReporterIonIntensities;
 };
@@ -862,9 +888,8 @@ void embed(const string& idpDbFilepath,
             if (newQuantitationConfig.quantitationMethod == QuantitationMethod::ITRAQ4plex ||
                 newQuantitationConfig.quantitationMethod == QuantitationMethod::ITRAQ8plex)
                 insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, iTRAQ_ReporterIonIntensities) VALUES (?,?)"));
-            else if (newQuantitationConfig.quantitationMethod == QuantitationMethod::TMT2plex ||
-                     newQuantitationConfig.quantitationMethod == QuantitationMethod::TMT6plex ||
-                     newQuantitationConfig.quantitationMethod == QuantitationMethod::TMT10plex)
+            else if (newQuantitationConfig.quantitationMethod >= QuantitationMethod::TMT2plex &&
+                     newQuantitationConfig.quantitationMethod <= QuantitationMethod::TMTpro16plex)
                 insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, TMT_ReporterIonIntensities) VALUES (?,?)"));
             else
                 throw runtime_error("[embed] unhandled QuantitationMethod");
@@ -995,9 +1020,8 @@ void embedScanTime(const string& idpDbFilepath,
             if (newQuantitationConfig.quantitationMethod == QuantitationMethod::ITRAQ4plex ||
                 newQuantitationConfig.quantitationMethod == QuantitationMethod::ITRAQ8plex)
                 insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, iTRAQ_ReporterIonIntensities) VALUES (?,?)"));
-            else if (newQuantitationConfig.quantitationMethod == QuantitationMethod::TMT2plex ||
-                     newQuantitationConfig.quantitationMethod == QuantitationMethod::TMT6plex ||
-                     newQuantitationConfig.quantitationMethod == QuantitationMethod::TMT10plex)
+            else if (newQuantitationConfig.quantitationMethod >= QuantitationMethod::TMT2plex &&
+                     newQuantitationConfig.quantitationMethod <= QuantitationMethod::TMTpro16plex)
                 insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, TMT_ReporterIonIntensities) VALUES (?,?)"));
             else
                 throw runtime_error("[embed] unhandled QuantitationMethod");
@@ -1031,8 +1055,6 @@ void embedScanTime(const string& idpDbFilepath,
 }
 
 
-namespace {
-
 int channelsByQuantitationMethod(QuantitationMethod method)
 {
     switch (method.value())
@@ -1042,11 +1064,11 @@ int channelsByQuantitationMethod(QuantitationMethod method)
         case QuantitationMethod::TMT2plex: return 2;
         case QuantitationMethod::TMT6plex: return 6;
         case QuantitationMethod::TMT10plex: return 10;
+        case QuantitationMethod::TMT11plex: return 11;
+        case QuantitationMethod::TMTpro16plex: return 16;
         default: throw runtime_error("[channelsByQuantitationMethod] unhandled QuantitationMethod");
     }
 }
-
-} // namespace
 
 
 void embedIsobaricSampleMapping(const string& idpDbFilepath, const map<string, vector<string> >& isobaricSampleMap)

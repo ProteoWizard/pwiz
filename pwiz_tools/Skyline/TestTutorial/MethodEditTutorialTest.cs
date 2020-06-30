@@ -22,7 +22,6 @@ using System.IO;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -57,8 +56,10 @@ namespace pwiz.SkylineTestTutorial
         public void TestMethodEditTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
-            //IsPauseForAuditLog = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForAuditLog = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "MethodEdit";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MethodEdit-3_7.pdf";
             
@@ -108,9 +109,10 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast"; // Not L10N
-                buildBackgroundProteomeDlg.CreateDb(TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\Yeast")); // Not L10N
+                buildBackgroundProteomeDlg.CreateDb(TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\Yeast" + ProteomeDb.EXT_PROTDB)); // Not L10N
             });
             AddFastaToBackgroundProteome(buildBackgroundProteomeDlg, TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\sgd_yeast.fasta"), 61);
+            RunUI(buildBackgroundProteomeDlg.SelToEndBackgroundProteomePath);
             PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome form", 5); // Not L10N
 
             OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
@@ -156,7 +158,7 @@ namespace pwiz.SkylineTestTutorial
 
             // New in v0.7 : Skyline asks about removing empty proteins.
             using (new CheckDocumentState(35, 25, 25, 75, null, true))
-            using (new DocChangeLogger())
+//            using (new ImportFastaDocChangeLogger()) // Log any unexpected document changes (i.e. changes not due to import fasta)
             {
                 var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(SkylineWindow.Paste);
                 RunUI(() => emptyProteinsDlg.IsKeepEmptyProteins = true);
@@ -167,6 +169,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[3].Nodes[0];
+                SkylineWindow.Size = new Size(1035, 511);
             });
             RestoreViewOnScreen(07);
             PauseForScreenShot("Main window", 7); // Not L10N
@@ -203,6 +206,22 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             }
             PauseForScreenShot("Targets tree clipped from main window", 11); // Not L10N
+
+            if (IsPauseForCoverShot)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.SpectrumFontSize = 14;
+                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                });
+                RestoreCoverViewOnScreen(false);
+                RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SelectedNode.Parent.Parent.Parent);
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
+                PauseForCoverShot();
+                return;
+            }
 
             CheckTransitionCount("VDIIANDQGNR", 5); // Not L10N
 
@@ -284,7 +303,7 @@ namespace pwiz.SkylineTestTutorial
             
             // Inserting a Peptide List, p. 13
             using (new CheckDocumentState(25, 70, 70, 338, null, true))
-            using (new DocChangeLogger())
+//            using (new ImportFastaDocChangeLogger()) // Log any unexpected document changes (i.e. changes not due to import fasta)
             {
                 RunUI(() =>
                     {
@@ -465,7 +484,6 @@ namespace pwiz.SkylineTestTutorial
                     AssertEx.FieldsEqual(target, actual, 6, null, true);
                 }
             }
-            PauseForAuditLog();
         }
         private void ShowNodeTip(string nodeText)
         {
@@ -508,37 +526,6 @@ namespace pwiz.SkylineTestTutorial
                     return childNode;
             }
             return null;
-        }
-
-        private class DocChangeLogger : StackTraceLogger, IDisposable
-        {
-            public DocChangeLogger()
-                : base("SkylineWindow.ImportFasta")
-            {
-                SkylineWindow.LogChange = LogChange;
-            }
-
-            private void LogChange(SrmDocument docNew, SrmDocument docOriginal)
-            {
-                LogStack(() => LogMessage(docNew));
-            }
-
-            private static string LogMessage(SrmDocument doc)
-            {
-                var sb = new StringBuilder();
-                sb.Append(string.Format(@"Setting document revision {0}", doc.RevisionIndex));
-                if (!doc.IsLoaded)
-                {
-                    foreach (var desc in doc.NonLoadedStateDescriptions)
-                        sb.AppendLine().Append(desc);
-                }
-                return sb.ToString();
-            }
-
-            public void Dispose()
-            {
-                SkylineWindow.LogChange = null;
-            }
         }
 
         private void SetClipboardFileText(string filepath)

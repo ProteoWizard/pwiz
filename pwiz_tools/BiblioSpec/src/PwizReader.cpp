@@ -178,7 +178,7 @@ bool PwizReader::getSpectrum(int identifier,
  * string or as a TITLE= field.
  * \returns The found index or -1 if not found.
  */
-int PwizReader::getSpecIndex(string identifier){
+int PwizReader::getSpecIndex(const string& identifier){
     static bool lookUpByNative = true; // remember this value for next time
 
     int timesLooked = 0;

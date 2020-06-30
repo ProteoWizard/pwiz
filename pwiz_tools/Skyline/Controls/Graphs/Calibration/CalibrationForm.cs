@@ -305,8 +305,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
                 if (CalibrationCurve.RSquared.HasValue)
                 {
-                    labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_ +
-                                   CalibrationCurve.RSquared.Value.ToString(@"0.####"));
+                    labelLines.Add(CalibrationCurve.RSquaredDisplayText(CalibrationCurve.RSquared.Value));
                 }
                 if (!Equals(curveFitter.QuantificationSettings.RegressionWeighting, RegressionWeighting.NONE))
                 {
@@ -418,7 +417,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (calculatedConcentration.HasValue)
                 {
                     labelLines.Add(string.Format(@"{0} = {1}",
-                        QuantificationStrings.Calculated_Concentration, calculatedConcentration));
+                        QuantificationStrings.Calculated_Concentration,
+                        QuantificationResult.FormatCalculatedConcentration(calculatedConcentration.Value,
+                            curveFitter.QuantificationSettings.Units)));
                 }
                 else if (quantificationResult != null && !quantificationResult.NormalizedArea.HasValue)
                 {
@@ -637,7 +638,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
         }
 
-        private ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
+        public ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
         {
             var document = DocumentUiContainer.DocumentUI;
             if (!document.Settings.HasResults)

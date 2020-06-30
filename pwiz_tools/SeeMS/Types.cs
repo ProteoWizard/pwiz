@@ -222,7 +222,7 @@ namespace seems
 
             if( IsChromatogram )
             {
-                axis.Title.Text = "Time";
+                axis.Title.Text = "Time " + (Properties.Settings.Default.TimeInMinutes ? "(min)" : "(sec)");
             } else
             {
                 axis.Title.Text = "m/z";
@@ -346,7 +346,17 @@ namespace seems
             {
                 using( pwiz.CLI.msdata.Chromatogram element = chromatogramList.chromatogram( index, true ) )
                 {
-                    return new ZedGraph.PointPairList( element.binaryDataArrays[0].data, element.binaryDataArrays[1].data );
+                    var timeArray = element.getTimeArray();
+                    var timeArrayData = timeArray.data;
+                    var timeArrayUnits = timeArray.cvParam(CVID.MS_time_array).units;
+                    if (timeArrayUnits == CVID.UO_second && Properties.Settings.Default.TimeInMinutes)
+                        for (int i = 0; i < timeArrayData.Count; ++i)
+                            timeArrayData[i] /= 60;
+                    else if (timeArrayUnits == CVID.UO_minute && !Properties.Settings.Default.TimeInMinutes)
+                        for (int i = 0; i < timeArrayData.Count; ++i)
+                            timeArrayData[i] *= 60;
+
+                    return new ZedGraph.PointPairList(timeArrayData, element.binaryDataArrays[1].data );
                 }
             }
 		}
@@ -592,7 +602,7 @@ namespace seems
         {
             string label = null;
             if( ShowXValues && ShowYValues )
-                label = String.Format( "{0]\n{1}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces), point.Y.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
+                label = String.Format( "{0}\n{1}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces), point.Y.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
             else if( ShowXValues )
                 label = String.Format( "{0}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
             else if( ShowYValues )

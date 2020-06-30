@@ -57,6 +57,7 @@
             this.tbbEditLoss = new System.Windows.Forms.ToolStripButton();
             this.tbbDeleteLoss = new System.Windows.Forms.ToolStripButton();
             this.comboMod = new System.Windows.Forms.ComboBox();
+            this.cbCrosslinker = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelAtoms.SuspendLayout();
             this.panelLoss.SuspendLayout();
@@ -259,12 +260,20 @@
             this.comboMod.SelectedIndexChanged += new System.EventHandler(this.comboMod_SelectedIndexChanged);
             this.comboMod.DropDownClosed += new System.EventHandler(this.comboMod_DropDownClosed);
             // 
+            // cbCrosslinker
+            // 
+            resources.ApplyResources(this.cbCrosslinker, "cbCrosslinker");
+            this.cbCrosslinker.Name = "cbCrosslinker";
+            this.cbCrosslinker.UseVisualStyleBackColor = true;
+            this.cbCrosslinker.CheckedChanged += new System.EventHandler(this.cbCrosslinker_CheckedChanged);
+            // 
             // EditStaticModDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbCrosslinker);
             this.Controls.Add(this.panelLoss);
             this.Controls.Add(this.comboMod);
             this.Controls.Add(this.labelLoss);
@@ -329,5 +338,6 @@
         private System.Windows.Forms.ToolStripButton tbbEditLoss;
         private System.Windows.Forms.ToolStripButton tbbDeleteLoss;
         private System.Windows.Forms.ComboBox comboMod;
+        private System.Windows.Forms.CheckBox cbCrosslinker;
     }
 }

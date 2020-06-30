@@ -76,6 +76,8 @@ namespace pwiz.Skyline.Model.Serialization
             public const string molecule = "molecule";
             public const string transition_data = "transition_data";
             public const string results_data = "results_data";
+            public const string linked_peptide = "linked_peptide";
+            public const string linked_fragment_ion = "linked_fragment_ion";
             // ReSharper restore LocalizableElement
         }
 
@@ -142,6 +144,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string auto_manage_children = "auto_manage_children";
             public const string decoy = "decoy";
             public const string decoy_mass_shift = "decoy_mass_shift";
+            public const string decoy_match_proportion = "decoy_match_proportion";
             public const string isotope_dist_rank = "isotope_dist_rank";
             public const string isotope_dist_proportion = "isotope_dist_proportion";
             public const string ion_formula = "ion_formula";
@@ -192,9 +195,10 @@ namespace pwiz.Skyline.Model.Serialization
             public const string qvalue = "qvalue";
             public const string zscore = "zscore";
             public const string exclude_from_calibration = "exclude_from_calibration";
+            public const string analyte_concentration = "analyte_concentration";
             public const string points_across = "points_across";
-
             public const string forced_integration = "forced_integration";
+            public const string orphaned_crosslink_ion = "orphaned_crosslink_ion";
             // ReSharper restore LocalizableElement
         }
     }

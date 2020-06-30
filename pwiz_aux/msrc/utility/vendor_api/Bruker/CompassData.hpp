@@ -27,7 +27,6 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/BinaryData.hpp"
-#include "pwiz/utility/misc/automation_vector.h"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/chemistry/MzMobilityWindow.hpp"
 #include <string>
@@ -195,8 +194,8 @@ struct PWIZ_API_DECL MSSpectrum
     virtual bool hasProfileData() const = 0;
     virtual size_t getLineDataSize() const = 0;
     virtual size_t getProfileDataSize() const = 0;
-    virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const = 0;
-    virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const = 0;
+    virtual void getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const = 0;
+    virtual void getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const = 0;
 
     virtual double getTIC() const = 0;
     virtual double getBPI() const = 0;

@@ -420,6 +420,8 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
                 if (analysisType_ == MSGF_ANALYSIS)
                     return cvParam.valueAs<double>();
                 break;
+            default:
+                break;
         }
     }
 

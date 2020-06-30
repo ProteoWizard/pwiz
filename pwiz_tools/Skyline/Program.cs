@@ -426,6 +426,7 @@ namespace pwiz.Skyline
             int numTools = toolList.Count;
             const int endValue = 100;
             int progressValue = 0;
+            // ReSharper disable once UselessBinaryOperation (in case we decide to start at progress>0 for display purposes)
             int increment = (endValue - progressValue)/(numTools +1);
 
             foreach (var tool in toolList)
@@ -610,9 +611,16 @@ namespace pwiz.Skyline
         {
             get
             {
-                return _name ??
-                       (_name =
-                        Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? @"-daily" : string.Empty));
+                if (Settings.Default.TutorialMode)
+                    _name = Settings.Default.ProgramName;
+                else if (_name == null)
+                {
+                    _name = Settings.Default.ProgramName;
+                    if (Install.Type == Install.InstallType.daily)
+                        _name += @"-daily";
+                }
+
+                return _name;
             }
         }
 

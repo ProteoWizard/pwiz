@@ -121,6 +121,13 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 {
                     result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, intensityUnits);
 
+                    auto msLevelArray = boost::make_shared<IntegerDataArray>();
+                    result->integerDataArrayPtrs.emplace_back(msLevelArray);
+                    msLevelArray->set(MS_non_standard_data_array, "ms level", UO_dimensionless_unit);
+                    msLevelArray->data.resize(cd->times().size());
+                    for (size_t i = 0; i < cd->times().size(); ++i)
+                        msLevelArray->data[i] = rawfile_->getMSOrder(rawfile_->scanNumber(cd->times()[i]));
+
                     if (intensityUnits == UO_microampere)
                     {
                         // Thermo seems to store CAD intensities as attoAmps but shows them as picoAmps in QualBrowser;
@@ -277,7 +284,16 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
         long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
         for (long n=1; n <= numControllers; ++n)
         {
-            rawfile_->setCurrentController((ControllerType) controllerType, n);
+            try
+            {
+                rawfile_->setCurrentController((ControllerType)controllerType, n);
+            }
+            catch (exception& e)
+            {
+                // TODO: add warn_once for chromatograms
+                cerr << "[ChromatogramList_Thermo::createIndex] error setting controller to " << ControllerTypeStrings[controllerType] << ": " << e.what() << endl;
+                continue;
+            }
 
             // skip this controller if it has no spectra
             if (rawfile_->getLastScanNumber() == 0)

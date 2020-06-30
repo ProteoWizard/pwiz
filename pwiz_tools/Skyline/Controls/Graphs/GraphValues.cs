@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Controls.Graphs
             /// If successful, then this method returns true, and the regressionFunction is set 
             /// appropriately.
             /// </summary>
-            bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out IRegressionFunction regressionFunction);
+            bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out RegressionLine regressionFunction);
         }
 
         public class RegressionUnconversion : IRetentionTimeTransformOp
@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return string.Format(Resources.RegressionUnconversion_CalculatorScoreValueFormat, calculatorName, ToLocalizedString(rtPeptideValue));
             }
 
-            public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out IRegressionFunction regressionFunction)
+            public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out RegressionLine regressionFunction)
             {
                 regressionFunction = _retentionTimeRegression.GetUnconversion(chromFileInfoId);
                 return regressionFunction != null;
@@ -221,7 +221,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public ChromatogramSet ChromatogramSet { get; private set; }
             public ChromFileInfo ChromFileInfo { get; private set; }
             public FileRetentionTimeAlignments FileRetentionTimeAlignments { get; private set; }
-            public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out IRegressionFunction regressionFunction)
+            public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out RegressionLine regressionFunction)
             {
                 if (ReferenceEquals(chromFileInfoId, ChromFileInfo.Id))
                 {

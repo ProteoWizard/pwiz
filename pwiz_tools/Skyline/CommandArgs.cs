@@ -505,7 +505,6 @@ namespace pwiz.Skyline
             Dependencies =
             {
                 { ARG_DECOYS_ADD_COUNT, ARG_DECOYS_ADD },
-                { ARG_DECOYS_DISCARD, ARG_DECOYS_ADD },
             }
         };
 
@@ -754,7 +753,7 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.UseBestResult = true);
         // Refinement consistency tab
         public static readonly Argument ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF = new RefineArgument(@"refine-cv-remove-above-cutoff", NUM_VALUE,
-            (c,p) => c.Refinement.CVCutoff = p.ValueDouble);
+            (c,p) => c.Refinement.CVCutoff = p.ValueDouble >= 1 ? p.ValueDouble : p.ValueDouble * 100);  // If a value like 0.2, interpret as 20%
         public static readonly Argument ARG_REFINE_CV_GLOBAL_NORMALIZE = new RefineArgument(@"refine-cv-global-normalize",
             new[] { NormalizationMethod.GLOBAL_STANDARDS.Name, NormalizationMethod.EQUALIZE_MEDIANS.Name },
             (c, p) =>
@@ -789,6 +788,17 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.QValueCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_MINIMUM_DETECTIONS = new RefineArgument(@"refine-minimum-detections", INT_VALUE,
             (c, p) => c.Refinement.MinimumDetections = p.ValueInt);
+        // Refinement Group Comparison Tab
+        public static readonly Argument ARG_REFINE_GC_P_VALUE_CUTOFF = new RefineArgument(
+            @"refine-gc-p-value-cutoff", NUM_VALUE,
+            (c, p) => c.Refinement.AdjustedPValueCutoff = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_GC_FOLD_CHANGE_CUTOFF = new RefineArgument(@"refine-gc-fold-change-cutoff",
+            NUM_VALUE,
+            (c, p) => c.Refinement.FoldChangeCutoff = Math.Log(p.ValueDouble, 2));
+        public static readonly Argument ARG_REFINE_GC_MS_LEVEL = new RefineArgument(@"refine-gc-ms-level", NUM_VALUE,
+            (c, p) => c.Refinement.MSLevelGroupComparison = p.ValueInt);
+        public static readonly Argument ARG_REFINE_GROUP_NAME = new RefineArgument(@"refine-gc-name", LABEL_VALUE,
+            (c, p) => c.Refinement.GroupComparisonNames.Add(p.Value));
 
         private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT, false,
@@ -806,7 +816,8 @@ namespace pwiz.Skyline
             ARG_REFINE_USE_BEST_RESULT,
             ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF, ARG_REFINE_CV_GLOBAL_NORMALIZE, ARG_REFINE_CV_REFERENCE_NORMALIZE,
             ARG_REFINE_CV_TRANSITIONS, ARG_REFINE_CV_TRANSITIONS_COUNT, ARG_REFINE_CV_MS_LEVEL,
-            ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS);
+            ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS,
+            ARG_REFINE_GC_P_VALUE_CUTOFF, ARG_REFINE_GC_FOLD_CHANGE_CUTOFF, ARG_REFINE_GC_MS_LEVEL, ARG_REFINE_GROUP_NAME);
         
 
         public RefinementSettings Refinement { get; private set; }
@@ -1528,7 +1539,7 @@ namespace pwiz.Skyline
             (c, p) => c.UseSlens = true)
             { AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_Thermo};
         public static readonly Argument ARG_EXP_RUN_LENGTH = new DocArgument(@"exp-run-length", MINUTES_VALUE,
-            (c, p) => c.RunLength = p.GetValueInt(AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX))
+            (c, p) => c.RunLength = p.GetValueDouble(AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX))
             { AppliesTo = CommandArgUsage.CommandArgs_ARG_EXP_RUN_LENGTH_AppliesTo};
 
         private static readonly ArgumentGroup GROUP_EXP_INSTRUMENT = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_EXP_INSTRUMENT_Vendor_specific_method_and_transition_list_options, false,
@@ -1627,8 +1638,8 @@ namespace pwiz.Skyline
 
         public bool AddEnergyRamp { get; private set; }
         public bool UseSlens { get; private set; }
-        private int _runLength;
-        public int RunLength
+        private double _runLength;
+        public double RunLength
         {
             get { return _runLength; }
             set

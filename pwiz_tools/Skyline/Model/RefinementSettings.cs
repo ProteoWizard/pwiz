@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -67,6 +68,8 @@ namespace pwiz.Skyline.Model
         {
             NormalizationMethod = AreaCVNormalizationMethod.none;
             MSLevel = AreaCVMsLevel.products;
+            GroupComparisonNames = new List<string>();
+            GroupComparisonDefs = new List<GroupComparisonDef>();
         }
 
         public override MessageInfo MessageInfo
@@ -212,6 +215,15 @@ namespace pwiz.Skyline.Model
         public int? CountTransitions { get; set; }
         [Track]
         public AreaCVMsLevel MSLevel { get; set; }
+        [Track]
+        public double? FoldChangeCutoff { get; set; }
+        [Track]
+        public double? AdjustedPValueCutoff { get; set; }
+        [Track]
+        public int? MSLevelGroupComparison { get; set; }
+        [Track]
+        public List<GroupComparisonDef> GroupComparisonDefs { get; set; }
+        public List<string> GroupComparisonNames { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -220,6 +232,22 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Refine(SrmDocument document, SrmSettingsChangeMonitor progressMonitor)
         {
+            if (progressMonitor != null)
+            {
+                var molCount = document.PeptideCount;
+                if (CVCutoff.HasValue || QValueCutoff.HasValue)
+                {
+                    molCount *= 2;
+                }
+
+                if (AdjustedPValueCutoff.HasValue || FoldChangeCutoff.HasValue)
+                {
+                    molCount *= 4;
+                }
+
+                progressMonitor.MoleculeCount = molCount;
+            }
+
             HashSet<int> outlierIds = new HashSet<int>();
             if (RTRegressionThreshold.HasValue)
             {
@@ -263,8 +291,8 @@ namespace pwiz.Skyline.Model
             int minPeptides = MinPeptidesPerProtein ?? 0;
             foreach (PeptideGroupDocNode nodePepGroup in document.Children)
             {
-                if (progressMonitor != null)
-                    progressMonitor.ProcessGroup(nodePepGroup);
+//                if (progressMonitor != null)
+//                    progressMonitor.ProcessGroup(nodePepGroup);
 
                 if (acceptedProteins != null && !acceptedProteins.Contains(GetAcceptProteinKey(nodePepGroup)))
                     continue;
@@ -321,6 +349,7 @@ namespace pwiz.Skyline.Model
                 listPepGroups = listPepGroupsFiltered;                
             }
             var refined = (SrmDocument)document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
+            var refinedBasic = refined;
             if (CVCutoff.HasValue || QValueCutoff.HasValue)
             {
                 if (!document.Settings.HasResults || document.MeasuredResults.Chromatograms.Count < 2)
@@ -336,16 +365,31 @@ namespace pwiz.Skyline.Model
                     throw new Exception(Resources.RefinementSettings_Refine_The_document_does_not_have_a_global_standard_to_normalize_by_);
                 }
 
-                double cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
-                double qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
-                int minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
-                int ratioIndex = GetLabelIndex(NormalizationLabelType, document);
-                int countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
+                var cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
+                var qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
+                var minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
+                var ratioIndex = GetLabelIndex(NormalizationLabelType, document);
+                var countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
                 var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod, ratioIndex,
-                    Transitions, countTransitions, MSLevel));
+                    Transitions, countTransitions, MSLevel), null, progressMonitor);
                 refined = data.RemoveAboveCVCutoff(refined);
             }
 
+            if (AdjustedPValueCutoff.HasValue || FoldChangeCutoff.HasValue)
+            {
+                var pValueCutoff = AdjustedPValueCutoff.HasValue ? AdjustedPValueCutoff.Value : double.NaN;
+                var foldChangeCutoff = FoldChangeCutoff.HasValue ? FoldChangeCutoff.Value : double.NaN;
+                var groupComparisonData = new GroupComparisonRefinementData(refined, pValueCutoff, foldChangeCutoff,
+                    MSLevelGroupComparison, GroupComparisonDefs, progressMonitor);
+                refined = groupComparisonData.RemoveBelowCutoffs(refined);
+            }
+
+            if (minPeptides > 0 && !ReferenceEquals(refined, refinedBasic))
+            {
+                // One last pass to remove proteins without enough peptides
+                refined = (SrmDocument)document.ChangeChildrenChecked(
+                    refined.MoleculeGroups.Where(n => n.Children.Count >= minPeptides).ToArray(), true);
+            }
             return refined;
         }
 
@@ -1231,7 +1275,7 @@ namespace pwiz.Skyline.Model
             return document;
         }
 
-        public SrmDocument RemoveDecoys(SrmDocument document)
+        public static SrmDocument RemoveDecoys(SrmDocument document)
         {
             // Remove the existing decoys
             return (SrmDocument) document.RemoveAll(document.MoleculeGroups.Where(nodePeptideGroup => nodePeptideGroup.IsDecoy)
@@ -1289,8 +1333,7 @@ namespace pwiz.Skyline.Model
             return count;
         }
 
-        private static SrmDocument GenerateDecoysFunc(SrmDocument document, int numDecoys, bool multiCycle,
-                                                      Func<SequenceMods, SequenceMods> genDecoySequence)
+        private static SrmDocument GenerateDecoysFunc(SrmDocument document, int numDecoys, bool multiCycle, Func<SequenceMods, SequenceMods> genDecoySequence)
         {
             // Loop through the existing tree in random order creating decoys
             var settings = document.Settings;
@@ -1316,48 +1359,73 @@ namespace pwiz.Skyline.Model
                     if (genDecoySequence != null && sequence.Substring(0, sequence.Length - 1).Distinct().Count() == 1)
                         continue;
 
-                    var seqMods = new SequenceMods(nodePep);
-                    if (genDecoySequence != null)
+                    const int maxIterations = 10; // Maximum number of times to try generating decoy
+                    for (var iteration = 0; iteration < maxIterations; iteration++)
                     {
-                        seqMods = genDecoySequence(seqMods);
-                    }
-                    var peptide = nodePep.Peptide;
-                    var decoyPeptide = new Peptide(null, seqMods.Sequence, null, null, enzyme.CountCleavagePoints(seqMods.Sequence), true);
-                    if (seqMods.Mods != null)
-                        seqMods.Mods = seqMods.Mods.ChangePeptide(decoyPeptide);
-
-                    foreach (var comparableGroups in PeakFeatureEnumerator.ComparableGroups(nodePep))
-                    {
-                        var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, seqMods.Mods, comparableGroups, document,
-                                                                    Equals(seqMods.Sequence, peptide.Sequence), randomShift);
-                        if (decoyNodeTranGroupList.Count == 0)
-                            continue;
-
-                        var nodePepNew = new PeptideDocNode(decoyPeptide, settings, seqMods.Mods,
-                            null, nodePep.ExplicitRetentionTime, decoyNodeTranGroupList.ToArray(), false);
-
-                        if (!Equals(nodePep.ModifiedSequence, nodePepNew.ModifiedSequence))
+                        var seqMods = new SequenceMods(nodePep);
+                        if (genDecoySequence != null)
                         {
-                            var sourceKey = new ModifiedSequenceMods(nodePep.ModifiedSequence, nodePep.ExplicitMods);
-                            nodePepNew = nodePepNew.ChangeSourceKey(sourceKey);
+                            seqMods = genDecoySequence(seqMods);
                         }
+                        var peptide = nodePep.Peptide;
+                        var decoyPeptide = new Peptide(null, seqMods.Sequence, null, null, enzyme.CountCleavagePoints(seqMods.Sequence), true);
+                        if (seqMods.Mods != null)
+                            seqMods.Mods = seqMods.Mods.ChangePeptide(decoyPeptide);
 
-                        // Avoid adding duplicate peptides
-                        if (setDecoyKeys.Contains(nodePepNew.Key))
-                            continue;
-                        setDecoyKeys.Add(nodePepNew.Key);
+                        var retry = false;
+                        foreach (var comparableGroups in PeakFeatureEnumerator.ComparableGroups(nodePep))
+                        {
+                            var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, seqMods.Mods,
+                                comparableGroups, document, Equals(seqMods.Sequence, peptide.Sequence), randomShift);
+                            if (decoyNodeTranGroupList.Count == 0)
+                                continue;
 
-                        decoyNodePepList.Add(nodePepNew);
-                        numDecoys--;
+                            var nodePepNew = new PeptideDocNode(decoyPeptide, settings, seqMods.Mods,
+                                null, nodePep.ExplicitRetentionTime, decoyNodeTranGroupList.ToArray(), false);
+
+                            // Avoid adding empty peptide nodes
+                            nodePepNew = nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                            if (nodePepNew.Children.Count == 0)
+                                continue;
+
+                            if (multiCycle && nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL).TransitionCount != nodePep.TransitionCount)
+                            {
+                                // Try to generate a new decoy if multi-cycle and the generated decoy has a different number of transitions than the target
+                                retry = true;
+                                break;
+                            }
+
+                            if (!Equals(nodePep.ModifiedSequence, nodePepNew.ModifiedSequence))
+                            {
+                                var sourceKey = new ModifiedSequenceMods(nodePep.ModifiedSequence, nodePep.ExplicitMods);
+                                nodePepNew = nodePepNew.ChangeSourceKey(sourceKey);
+                            }
+
+                            // Avoid adding duplicate peptides
+                            if (setDecoyKeys.Contains(nodePepNew.Key))
+                                continue;
+                            setDecoyKeys.Add(nodePepNew.Key);
+
+                            decoyNodePepList.Add(nodePepNew);
+                            numDecoys--;
+                        }
+                        if (!retry)
+                            break;
                     }
                 }
                 // Stop if not multi-cycle or the number of decoys has not changed.
                 if (!multiCycle || startDecoys == numDecoys)
                     break;
             }
-            var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, PeptideGroup.DECOYS,
-                                                            null, decoyNodePepList.ToArray(), false);
+            var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY,
+                PeptideGroup.DECOYS, null, decoyNodePepList.ToArray(), false);
             decoyNodePepGroup = decoyNodePepGroup.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+
+            if (decoyNodePepGroup.PeptideCount > 0)
+            {
+                decoyNodePepGroup.CheckDecoys(document, out _, out _, out var proportionDecoysMatch);
+                decoyNodePepGroup = decoyNodePepGroup.ChangeProportionDecoysMatch(proportionDecoysMatch);
+            }
 
             return (SrmDocument)document.Add(decoyNodePepGroup);
         }

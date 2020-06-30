@@ -21,14 +21,17 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
-    public class PeptideFormatter
+    public class PeptideFormatter : Immutable
     {
+        public static readonly Color COLOR_CROSSLINK = Color.Green;
         private SequenceInfo _lightSequenceInfo;
 
         private List<Tuple<IsotopeLabelType, SequenceInfo>> _heavySequenceInfos =
@@ -44,27 +47,73 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             LightModifiedSequence = lightModifiedSequence;
             ModFontHolder = modFontHolder;
-            DisplayModificationOption = DisplayModificationOption.NOT_SHOWN;
+            LinkedPeptides = ImmutableSortedList<ModificationSite, PeptideFormatter>.EMPTY;
         }
 
         public static PeptideFormatter MakePeptideFormatter(SrmSettings srmSettings, PeptideDocNode peptideDocNode,
             ModFontHolder modFontHolder)
         {
+            var heavyLabelTypes = srmSettings.PeptideSettings.Modifications.GetHeavyModificationTypes()
+                .Where(peptideDocNode.HasChildType).ToHashSet();
+            return MakePeptideFormatter(srmSettings, peptideDocNode.Peptide, peptideDocNode.ExplicitMods,
+                heavyLabelTypes, modFontHolder);
+        }
+
+        public static PeptideFormatter MakePeptideFormatter(SrmSettings srmSettings, Peptide peptide,
+            ExplicitMods explicitMods, ICollection<IsotopeLabelType> heavyLabelTypes,
+            ModFontHolder modFontHolder)
+        {
             var lightModifiedSequence =
-                ModifiedSequence.GetModifiedSequence(srmSettings, peptideDocNode, IsotopeLabelType.light);
+                ModifiedSequence.GetModifiedSequence(srmSettings, peptide.Sequence, explicitMods, IsotopeLabelType.light);
             var heavyModifiedSequences = new List<KeyValuePair<IsotopeLabelType, ModifiedSequence>>();
             foreach (var labelType in srmSettings.PeptideSettings.Modifications.GetHeavyModificationTypes())
             {
-                if (!peptideDocNode.HasChildType(labelType))
+                if (!heavyLabelTypes.Contains(labelType))
                 {
                     continue;
                 }
 
                 heavyModifiedSequences.Add(new KeyValuePair<IsotopeLabelType, ModifiedSequence>(labelType,
-                    ModifiedSequence.GetModifiedSequence(srmSettings, peptideDocNode, labelType)));
+                    ModifiedSequence.GetModifiedSequence(srmSettings, peptide.Sequence, explicitMods, labelType)));
             }
 
-            return new PeptideFormatter(srmSettings, lightModifiedSequence, heavyModifiedSequences, modFontHolder);
+            var peptideFormatter = new PeptideFormatter(srmSettings, lightModifiedSequence, heavyModifiedSequences, modFontHolder);
+            if (explicitMods != null && explicitMods.HasCrosslinks)
+            {
+                var linkedPeptides = new List<KeyValuePair<ModificationSite, PeptideFormatter>>();
+                foreach (var entry in explicitMods.Crosslinks)
+                {
+                    if (entry.Value.Peptide == null)
+                    {
+                        continue;
+                    }
+
+                    var childFormatter = MakePeptideFormatter(srmSettings, entry.Value.Peptide,
+                            entry.Value.ExplicitMods, heavyLabelTypes, modFontHolder)
+                        .ChangeCrosslinkedIndexAa(entry.Value.IndexAa);
+                    linkedPeptides.Add(new KeyValuePair<ModificationSite, PeptideFormatter>(entry.Key, childFormatter));
+                }
+
+                peptideFormatter = peptideFormatter
+                    .ChangeLinkedPeptides(ImmutableSortedList.FromValues(linkedPeptides));
+            }
+
+            return peptideFormatter;
+        }
+
+        public int? CrosslinkedIndexAa { get; private set; }
+
+        public PeptideFormatter ChangeCrosslinkedIndexAa(int? index)
+        {
+            return ChangeProp(ImClone(this), im => im.CrosslinkedIndexAa = index);
+        }
+
+        public ImmutableSortedList<ModificationSite, PeptideFormatter> LinkedPeptides { get; private set; }
+
+        public PeptideFormatter ChangeLinkedPeptides(
+            ImmutableSortedList<ModificationSite, PeptideFormatter> linkedPeptides)
+        {
+            return ChangeProp(ImClone(this), im => im.LinkedPeptides = linkedPeptides);
         }
 
         public ModifiedSequence LightModifiedSequence { get; private set; }
@@ -81,10 +130,10 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         public IEnumerable<Tuple<IsotopeLabelType, ImmutableList<ModifiedSequence.Modification>>>
-            GetModificationsAtResidue(int residue)
+            GetModificationsAtResidue(DisplayModificationOption displayModificationOption, int residue)
         {
             var mods = ImmutableList.ValueOf(_lightSequenceInfo.ModificationsByResidue[residue]);
-            if (DisplayModificationOption.IgnoreZeroMassMods)
+            if (displayModificationOption.IgnoreZeroMassMods)
             {
                 mods = ImmutableList.ValueOf(mods.Where(mod=>mod.MonoisotopicMass != 0 || mod.AverageMass != 0));
             }
@@ -103,13 +152,24 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
-        public TextSequence GetTextSequenceAtAaIndex(int residue)
+        public TextSequence GetTextSequenceAtAaIndex(DisplayModificationOption displayModificationOption, int residue)
         {
             Font font = ModFontHolder.Plain;
             Color color = Color.Black;
-            String strAminoAcid = UnmodifiedSequence.Substring(residue, 1);
+            string strAminoAcid = UnmodifiedSequence.Substring(residue, 1);
 
-            var modsAtResidue = GetModificationsAtResidue(residue).ToArray();
+            var modsAtResidue = GetModificationsAtResidue(displayModificationOption, residue).ToArray();
+            if (residue == CrosslinkedIndexAa
+                || modsAtResidue.Any(labeledMod => labeledMod.Item2.Any(mod => mod.ExplicitMod.LinkedPeptide != null))
+                || _lightSequenceInfo.LooplinkSites.Contains(residue))
+            {
+                return new TextSequence
+                {
+                    Color = COLOR_CROSSLINK,
+                    Font = ModFontHolder.LightAndHeavy,
+                    Text = strAminoAcid
+                };
+            }
             if (modsAtResidue.Length == 0)
             {
                 return new TextSequence
@@ -130,7 +190,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     Color = color,
                     Font = font,
-                    Text = strAminoAcid + DisplayModificationOption.GetModificationText(SrmSettings, firstEntry.Item2)
+                    Text = strAminoAcid + displayModificationOption.GetModificationText(SrmSettings, firstEntry.Item2)
                 };
             }
 
@@ -144,7 +204,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 font = ModFontHolder.LightAndHeavy;
             }
             string modText;
-            if (DisplayModificationOption == DisplayModificationOption.NOT_SHOWN)
+            if (displayModificationOption == DisplayModificationOption.NOT_SHOWN)
             {
                 modText = strAminoAcid;
             }
@@ -161,11 +221,73 @@ namespace pwiz.Skyline.Controls.SeqNode
             };
         }
 
+        private const string STR_WIDE_DASH = "\u2014";
+
+        public IEnumerable<TextSequence> GetTextSequencesForLinkedPeptides(DisplayModificationOption displayModificationOption)
+        {
+            var result = new List<TextSequence>();
+            if (LinkedPeptides.Count == 0)
+            {
+                return result;
+            }
+
+            result.Add(new TextSequence
+            {
+                Color = Color.Black,
+                Font = ModFontHolder.Plain,
+                Text = STR_WIDE_DASH
+            });
+            if (LinkedPeptides.Count > 1)
+            {
+                result.Add(new TextSequence
+                {
+                    Color = Color.Black,
+                    Font = ModFontHolder.Plain,
+                    Text = @"["
+                });
+            }
+
+            bool first = true;
+            foreach (var linkedPeptide in LinkedPeptides.Values)
+            {
+                if (!first)
+                {
+                    result.Add(new TextSequence
+                    {
+                        Color = Color.Black,
+                        Font = ModFontHolder.Plain,
+                        Text = @","
+                    });
+                }
+
+                first = false;
+                result.AddRange(linkedPeptide.GetTextSequencesForSelfAndChildren(displayModificationOption));
+            }
+
+            if (LinkedPeptides.Count > 1)
+            {
+                result.Add(new TextSequence
+                {
+                    Color = Color.Black,
+                    Font = ModFontHolder.Plain,
+                    Text = @"]"
+                });
+            }
+
+            return result;
+        }
+
+        private IEnumerable<TextSequence> GetTextSequencesForSelfAndChildren(
+            DisplayModificationOption displayModificationOption)
+        {
+            return Enumerable.Range(0, UnmodifiedSequence.Length)
+                .Select(i => GetTextSequenceAtAaIndex(displayModificationOption, i))
+                .Concat(GetTextSequencesForLinkedPeptides(displayModificationOption));
+        }
+
 
         public SrmSettings SrmSettings { get; private set; }
         public ModFontHolder ModFontHolder { get; private set; }
-        public IDeviceContext DeviceContext { get; set; }
-        public DisplayModificationOption DisplayModificationOption { get; set; }
 
         private class SequenceInfo
         {
@@ -173,10 +295,14 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 ModifiedSequence = modifiedSequence;
                 ModificationsByResidue = modifiedSequence.GetModifications().ToLookup(mod => mod.IndexAA);
+                LooplinkSites = ImmutableList.ValueOf(modifiedSequence.GetModifications()
+                    .Where(mod => mod.ExplicitMod.LinkedPeptide != null && mod.ExplicitMod.LinkedPeptide.Peptide == null)
+                    .Select(mod => mod.ExplicitMod.LinkedPeptide.IndexAa));
             }
 
             public ModifiedSequence ModifiedSequence { get; private set; }
             public ILookup<int, ModifiedSequence.Modification> ModificationsByResidue { get; private set; }
+            public ICollection<int> LooplinkSites { get; private set; }
         }
     }
 }

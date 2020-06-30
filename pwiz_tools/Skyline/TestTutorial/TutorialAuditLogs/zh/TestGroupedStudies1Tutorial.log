@@ -93,6 +93,12 @@ Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844+
 All Info  :
 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
 
+Undo Redo : 离子对设置 -- Integration > Integrate All 已更改为 真
+Summary   : 设置 > 离子对设置 -- Integration > Integrate All 已更改为 真
+All Info  :
+离子对设置 -- Integration > Integrate All 已更改为 真
+设置 > 离子对设置 -- Integration > Integrate All 从 假 更改到 真
+
 Undo Redo : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 Summary   : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 All Info  :
@@ -327,10 +333,10 @@ All Info  :
 设置 > 文档设置 -- 注释 > "MissingData" > 应用于 是 "peptide"
 设置 > 文档设置 -- 注释 > "MissingData" > 类型 是 "真/假"
 
-Undo Redo : 将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
-Summary   : 将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+Undo Redo : 将 DFATVYVDAVK 的 MissingData 设定为 真
+Summary   : 将 DFATVYVDAVK 的 MissingData 设定为 真
 All Info  :
-将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
 
 Undo Redo : 已将 149 值粘贴到文档网格
 Summary   : 已将 149 值粘贴到文档网格
@@ -338,24 +344,6 @@ All Info  :
 已将 149 值粘贴到文档网格
 文档网格 > 查看名称 是 "Truncated Precursors"
 文档网格 > 列设置 > 列分类 : 包含 { 列 = "截尾计数", 方位 = "降序" }
-将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
-将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
-将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
-将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
-将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
-将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
-将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
-将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
-将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
-将 GSYNLQDLLAQAK 的 MissingData 设定为 真
-将 GSYNLQDLLAQAK 的 MissingData 设定为 真
-将 GSYNLQDLLAQAK 的 MissingData 设定为 真
-将 GSYNLQDLLAQAK 的 MissingData 设定为 真
-将 GSYNLQDLLAQAK 的 MissingData 设定为 真
-将 DFATVYVDAVK 的 MissingData 设定为 真
-将 DFATVYVDAVK 的 MissingData 设定为 真
-将 DFATVYVDAVK 的 MissingData 设定为 真
-将 DFATVYVDAVK 的 MissingData 设定为 真
 将 DFATVYVDAVK 的 MissingData 设定为 真
 将 DFATVYVDAVK 的 MissingData 设定为 真
 将 DFATVYVDAVK 的 MissingData 设定为 真
@@ -366,124 +354,142 @@ All Info  :
 将 DYVSQFESSTLGK 的 MissingData 设定为 真
 将 DYVSQFESSTLGK 的 MissingData 设定为 真
 将 DYVSQFESSTLGK 的 MissingData 设定为 真
-将 DYVSQFESSTLGK 的 MissingData 设定为 真
-将 DYVSQFESSTLGK 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
 将 DYVSQFESSTLGK 的 MissingData 设定为 真
 将 TGTNLMDFLSR 的 MissingData 设定为 真
 将 TGTNLMDFLSR 的 MissingData 设定为 真
 将 TGTNLMDFLSR 的 MissingData 设定为 真
 将 TGTNLMDFLSR 的 MissingData 设定为 真
-将 TGTNLMDFLSR 的 MissingData 设定为 真
-将 TGTNLMDFLSR 的 MissingData 设定为 真
-将 LNDGSQITFEK 的 MissingData 设定为 真
-将 LNDGSQITFEK 的 MissingData 设定为 真
-将 LNDGSQITFEK 的 MissingData 设定为 真
-将 LNDGSQITFEK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 ATAQDNPK 的 MissingData 设定为 真
-将 GTITSIAALDDPK 的 MissingData 设定为 真
-将 GTITSIAALDDPK 的 MissingData 设定为 真
-将 GTITSIAALDDPK 的 MissingData 设定为 真
-将 GTITSIAALDDPK 的 MissingData 设定为 真
-将 GTITSIAALDDPK 的 MissingData 设定为 真
-将 GTITSIAALDDPK 的 MissingData 设定为 真
-将 GTITSIAALDDPK 的 MissingData 设定为 真
-将 GTITSIAALDDPK 的 MissingData 设定为 真
-将 IFPENNIK 的 MissingData 设定为 真
-将 IFPENNIK 的 MissingData 设定为 真
-将 SLLNSLEEAK 的 MissingData 设定为 真
-将 SLLNSLEEAK 的 MissingData 设定为 真
 将 SLLNSLEEAK 的 MissingData 设定为 真
 将 ASGIIDTLFQDR 的 MissingData 设定为 真
 将 ASGIIDTLFQDR 的 MissingData 设定为 真
 将 ASGIIDTLFQDR 的 MissingData 设定为 真
 将 ASGIIDTLFQDR 的 MissingData 设定为 真
 将 ASGIIDTLFQDR 的 MissingData 设定为 真
-将 ASGIIDTLFQDR 的 MissingData 设定为 真
-将 C[+57.021464]IVDGDDR 的 MissingData 设定为 真
-将 C[+57.021464]IVDGDDR 的 MissingData 设定为 真
-将 YLMFFAC[+57.021464]TILVPK 的 MissingData 设定为 真
-将 YLMFFAC[+57.021464]TILVPK 的 MissingData 设定为 真
-将 YLMFFAC[+57.021464]TILVPK 的 MissingData 设定为 真
-将 WVLTVAHC[+57.021464]FEGR 的 MissingData 设定为 真
-将 HTNNGMIC[+57.021464]LTSLLR 的 MissingData 设定为 真
-将 HTNNGMIC[+57.021464]LTSLLR 的 MissingData 设定为 真
-将 HTNNGMIC[+57.021464]LTSLLR 的 MissingData 设定为 真
 将 HTNNGMIC[+57.021464]LTSLLR 的 MissingData 设定为 真
 将 VFWIEVALFWR 的 MissingData 设定为 真
 将 VFWIEVALFWR 的 MissingData 设定为 真
 将 VFWIEVALFWR 的 MissingData 设定为 真
-将 VFWIEVALFWR 的 MissingData 设定为 真
 将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
 将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
 将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
-将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
-将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
-将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
-将 SFSC[+57.021464]EVEILEGDK 的 MissingData 设定为 真
 将 ENSSNILDNLLSR 的 MissingData 设定为 真
-将 TQEQAQALR 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 STAEPDDSHALYAK 的 MissingData 设定为 真
+将 FAEDHFAHEATK 的 MissingData 设定为 真
+将 FAEDHFAHEATK 的 MissingData 设定为 真
+将 FAEDHFAHEATK 的 MissingData 设定为 真
+将 TLNSINIAVFSK 的 MissingData 设定为 真
+将 TLNSINIAVFSK 的 MissingData 设定为 真
+将 DLTGFPQGADQR 的 MissingData 设定为 真
+将 DLTGFPQGADQR 的 MissingData 设定为 真
+将 WTNPDGTTSK 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 GSYNLQDLLAQAK 的 MissingData 设定为 真
+将 GSYNLQDLLAQAK 的 MissingData 设定为 真
+将 GSYNLQDLLAQAK 的 MissingData 设定为 真
+将 GSYNLQDLLAQAK 的 MissingData 设定为 真
+将 GSYNLQDLLAQAK 的 MissingData 设定为 真
+将 TGTNLMDFLSR 的 MissingData 设定为 真
+将 LNDGSQITFEK 的 MissingData 设定为 真
+将 LNDGSQITFEK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 HTNNGMIC[+57.021464]LTSLLR 的 MissingData 设定为 真
+将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
+将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 WWGQEITELAQGPGR 的 MissingData 设定为 真
+将 AGDQILAINEINVK 的 MissingData 设定为 真
+将 AGSWQITMK 的 MissingData 设定为 真
+将 TYIWQIPER 的 MissingData 设定为 真
+将 ENLSPPLGEC[+57.021464]LLER 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 ATAQDNPK 的 MissingData 设定为 真
+将 IFPENNIK 的 MissingData 设定为 真
+将 SLLNSLEEAK 的 MissingData 设定为 真
+将 ASGIIDTLFQDR 的 MissingData 设定为 真
+将 C[+57.021464]IVDGDDR 的 MissingData 设定为 真
+将 SDFQVPC[+57.021464]QYSQQLK 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
+将 AFGMQNLFGPHR 的 MissingData 设定为 真
+将 TYIWQIPER 的 MissingData 设定为 真
+将 ENLSPPLGEC[+57.021464]LLER 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 DYVSQFESSTLGK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 IFPENNIK 的 MissingData 设定为 真
+将 C[+57.021464]IVDGDDR 的 MissingData 设定为 真
+将 YLMFFAC[+57.021464]TILVPK 的 MissingData 设定为 真
+将 HTNNGMIC[+57.021464]LTSLLR 的 MissingData 设定为 真
 将 YHGVTGLVVMDK 的 MissingData 设定为 真
-将 STAEPDDSHALYAK 的 MissingData 设定为 真
-将 STAEPDDSHALYAK 的 MissingData 设定为 真
-将 STAEPDDSHALYAK 的 MissingData 设定为 真
-将 STAEPDDSHALYAK 的 MissingData 设定为 真
-将 STAEPDDSHALYAK 的 MissingData 设定为 真
-将 STAEPDDSHALYAK 的 MissingData 设定为 真
 将 TAC[+57.021464]VLPAPAGPSQGK 的 MissingData 设定为 真
 将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
 将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
 将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
-将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
-将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
-将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
-将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
-将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
-将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
-将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
-将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
-将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
-将 ALIHC[+57.021464]LHMS 的 MissingData 设定为 真
 将 VLMSLLNLAR 的 MissingData 设定为 真
-将 WWGQEITELAQGPGR 的 MissingData 设定为 真
-将 LTTDHTPER 的 MissingData 设定为 真
-将 AGDQILAINEINVK 的 MissingData 设定为 真
-将 AFGMQNLFGPHR 的 MissingData 设定为 真
-将 AFGMQNLFGPHR 的 MissingData 设定为 真
 将 YGLDLGSLLVR 的 MissingData 设定为 真
+将 HGLLESAVLAR 的 MissingData 设定为 真
+将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DYVSQFESSTLGK 的 MissingData 设定为 真
+将 TGTNLMDFLSR 的 MissingData 设定为 真
+将 LNDGSQITFEK 的 MissingData 设定为 真
+将 LNDGSQITFEK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 SLLNSLEEAK 的 MissingData 设定为 真
+将 YLMFFAC[+57.021464]TILVPK 的 MissingData 设定为 真
+将 HTNNGMIC[+57.021464]LTSLLR 的 MissingData 设定为 真
+将 AFGMQNLFGPHR 的 MissingData 设定为 真
 将 AGSWQITMK 的 MissingData 设定为 真
-将 AGSWQITMK 的 MissingData 设定为 真
-将 FAEDHFAHEATK 的 MissingData 设定为 真
-将 FAEDHFAHEATK 的 MissingData 设定为 真
-将 FAEDHFAHEATK 的 MissingData 设定为 真
+将 HGLLESAVLAR 的 MissingData 设定为 真
+将 TLNSINIAVFSK 的 MissingData 设定为 真
+将 AFMDC[+57.021464]C[+57.021464]NYITK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
+将 GTITSIAALDDPK 的 MissingData 设定为 真
+将 YLMFFAC[+57.021464]TILVPK 的 MissingData 设定为 真
+将 WVLTVAHC[+57.021464]FEGR 的 MissingData 设定为 真
+将 VFWIEVALFWR 的 MissingData 设定为 真
+将 SFSC[+57.021464]EVEILEGDK 的 MissingData 设定为 真
+将 TQEQAQALR 的 MissingData 设定为 真
+将 LTTDHTPER 的 MissingData 设定为 真
 将 DVNEAIQWMEEK 的 MissingData 设定为 真
 将 HGLLESAVLAR 的 MissingData 设定为 真
-将 HGLLESAVLAR 的 MissingData 设定为 真
-将 HGLLESAVLAR 的 MissingData 设定为 真
-将 TLNSINIAVFSK 的 MissingData 设定为 真
-将 TLNSINIAVFSK 的 MissingData 设定为 真
-将 TLNSINIAVFSK 的 MissingData 设定为 真
-将 DLTGFPQGADQR 的 MissingData 设定为 真
-将 DLTGFPQGADQR 的 MissingData 设定为 真
 将 DLTGFPQGADQR 的 MissingData 设定为 真
 将 HFLIETGPK 的 MissingData 设定为 真
-将 WTNPDGTTSK 的 MissingData 设定为 真
-将 TYIWQIPER 的 MissingData 设定为 真
-将 TYIWQIPER 的 MissingData 设定为 真
 将 ENLSPPLGEC[+57.021464]LLER 的 MissingData 设定为 真
-将 ENLSPPLGEC[+57.021464]LLER 的 MissingData 设定为 真
-将 ENLSPPLGEC[+57.021464]LLER 的 MissingData 设定为 真
-将 AFMDC[+57.021464]C[+57.021464]NYITK 的 MissingData 设定为 真
 将 EEPSADALLPIDC[+57.021464]R 的 MissingData 设定为 真
 将 MSPVPDLVPGSFK 的 MissingData 设定为 真
 将 MSPVPDLVPGSFK 的 MissingData 设定为 真

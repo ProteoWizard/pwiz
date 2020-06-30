@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
@@ -73,6 +74,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         public void UniquePeptides1PerfTest()
         {
             // 1)  No current background proteome
+using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermittent failure is diagnosed
             scenario(PeptideFilter.PeptideUniquenessConstraint.gene, null, "human_and_yeast_no_metadata.protdb");
         }
 

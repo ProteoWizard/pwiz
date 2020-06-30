@@ -19,11 +19,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.FileUI;
@@ -61,8 +63,7 @@ namespace pwiz.SkylineTestTutorial
             // IsPauseForScreenShots = true;
 
             ForceMzml = true; // Prefer mzML as being the more efficient download
-
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculesMethodDevAndCEOptimization.pdf";
+            LinkPdf = "https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Small%20Molecule%20Method%20Dev%20and%20CE%20Opt.pdf";
 
             TestFilesZipPaths = new[]
             {
@@ -91,13 +92,20 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<StartPage>("Start Window small molecule", 3);
             RunUI(() => startPage.DoAction(skylineWindow => true));
             WaitForOpenForm<SkylineWindow>();
+            var libraryMatchPanel = FindOpenForm<GraphSpectrum>();
+            if (libraryMatchPanel != null)
+                RunUI(libraryMatchPanel.Close);
 
             // Inserting a Transition List, p. 2
             {
                 var doc = SkylineWindow.Document;
 
                 SetCsvFileClipboardText(GetTestPath("Energy_TransitionList.csv"));
-                RunUI(SkylineWindow.Paste);
+                RunUI(() =>
+                {
+                    SkylineWindow.Paste();
+                    AdjustSequenceTreePanelWidth();
+                });
 
                 PauseForScreenShot<SkylineWindow>("after paste from csv", 3);
 
@@ -194,7 +202,7 @@ namespace pwiz.SkylineTestTutorial
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Unscheduled"));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 7);
+                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 7);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
  
                     var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
@@ -258,23 +266,32 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(string.IsNullOrEmpty(msg), msg);
                 RestoreViewOnScreen(9);
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
+                WaitForGraphs();
+                RunUI(() =>
+                {
+                    AdjustSequenceTreePanelWidth();
+                    var ch = SkylineWindow.GraphChromatograms.FirstOrDefault((chrom) => chrom.NameSet == "unscheduled_2min");
+                    ch?.ZoomTo(.85, 2.1, 1.9e+8);
+                });
+
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 10);
 
-                // Set zoom to show better peak seperation in 5 minute run
+                // Set zoom to show better peak separation in 5 minute run
                 for (var index = 0; index < 2; index++)
                 {
                     var indexChrom = index;
                     WaitForGraphs();
-                    RunUI(() => SkylineWindow.GraphChromatograms.ToArray()[indexChrom].ZoomTo(.8, 1.8));
+                    RunUI(() => SkylineWindow.GraphChromatograms.ToArray()[indexChrom].ZoomTo(.8, 1.8, 1.39e+8));
                     WaitForGraphs();
                 }
-                PauseForScreenShot<SkylineWindow>("Skyline window showing relative peak seperation", 12);
+                PauseForScreenShot<SkylineWindow>("Skyline window showing relative peak separation", 12);
 
                 // Set time window
                 var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
                 RunUI(() =>
                 {
-                    peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Prediction;
+                    // ReSharper disable once RedundantCast
+                    peptideSettingsDlg.SelectedTab = (PeptideSettingsUI.TABS)0; //regular enum does not work because of the hidden tabs in the Small Molecule mode.
                     peptideSettingsDlg.UseMeasuredRT(true);
                     peptideSettingsDlg.TimeWindow = 1;
                 });
@@ -398,7 +415,8 @@ namespace pwiz.SkylineTestTutorial
 
                     RunUI(() =>
                     {
-                        peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Quantification;
+                        // ReSharper disable once RedundantCast
+                        peptideSettingsUI.SelectedTab = (PeptideSettingsUI.TABS)3;
                         peptideSettingsUI.QuantRegressionFit = RegressionFit.LINEAR;
                         peptideSettingsUI.QuantNormalizationMethod =
                             new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);
@@ -418,7 +436,7 @@ namespace pwiz.SkylineTestTutorial
                 var transitionSettingsUI2 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
                 RunUI(() =>
                 {
-                    // Predicition Settings
+                    // Prediction Settings
                     transitionSettingsUI2.SelectedTab = TransitionSettingsUI.TABS.Prediction;
                     transitionSettingsUI2.PrecursorMassType = MassType.Monoisotopic;
                     transitionSettingsUI2.FragmentMassType = MassType.Monoisotopic;
@@ -476,17 +494,20 @@ namespace pwiz.SkylineTestTutorial
                         importResultsDlg1.OptimizationName = ExportOptimize.CE;
                         importResultsDlg1.ReplicateName = "CE Optimization";
                     });
+                    PauseForScreenShot<ImportResultsDlg>("Setting new replicate name to CE Optimization", 30);
                     var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.OkDialog());
                     RunUI(() =>
                     {
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("CE Optimization"));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 20);
+                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 20);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
-
+                    PauseForScreenShot<SkylineWindow>("Skyline shows new replicate \"CE Optimization\"", 32);
                     RunUI(() =>
                     {
+                        SkylineWindow.Size = new Size(1600, 960);
+                        AdjustSequenceTreePanelWidth();
                         SkylineWindow.ShowSingleTransition();
                         SkylineWindow.ShowSplitChromatogramGraph(true);
                     });

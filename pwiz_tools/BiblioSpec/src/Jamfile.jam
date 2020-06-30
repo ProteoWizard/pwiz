@@ -137,6 +137,7 @@ lib blibbuild
   : # sources
     BlibBuilder.cpp
     BuildParser.cpp
+    DiaNNSpecLibReader.cpp
     IdpXMLreader.cpp
     MzIdentMLReader.cpp
     PepXMLreader.cpp

@@ -124,7 +124,7 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
 }
 
 
-InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID massAnalyzerType)
+InstrumentConfigurationPtr SpectrumList_Thermo::findInstrumentConfiguration(const MSData& msd, CVID massAnalyzerType) const
 {
     if (msd.instrumentConfigurationPtrs.empty())
         return InstrumentConfigurationPtr();
@@ -133,11 +133,19 @@ InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID m
     {
         size_t analyzerCount = boost::range::count_if(icPtr->componentList, [](const auto& component) { return component.type == ComponentType_Analyzer; });
 
-        if (icPtr->componentList.analyzer(analyzerCount-1).hasCVParam(massAnalyzerType))
-            return icPtr;
+        try
+        {
+            if (icPtr->componentList.analyzer(analyzerCount - 1).hasCVParam(massAnalyzerType))
+                return icPtr;
+        }
+        catch (out_of_range&)
+        {
+            continue;
+        }
     }
 
-    throw runtime_error("no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName());
+    warn_once(("no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName()).c_str());
+    return InstrumentConfigurationPtr();
 }
 
 inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& scanInfo)
@@ -284,8 +292,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         {
             scan.instrumentConfigurationPtr = msd_.instrumentConfigurationPtrs.back();
 
-            result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), UO_nanometer);
-            result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
+            if (scanInfo->basePeakMass() > 0)
+            {
+                result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), UO_nanometer);
+                result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
+            }
             result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
 
             scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass(), UO_nanometer));
@@ -328,6 +339,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
         string filterString = scanInfo->filter();
         scan.set(MS_filter_string, filterString);
+
+        string scanDescriptionStr = scanInfo->trailerExtraValue("Scan Description:");
+        bal::trim(scanDescriptionStr);
+        if (!scanDescriptionStr.empty())
+            result->userParams.emplace_back("scan description", scanDescriptionStr, "xsd:string");
 
         int scanSegment = 1, scanEvent = 1;
 
@@ -446,6 +462,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             for (const auto& precursorInfo : boost::adaptors::reverse(precursorInfoList)) // highest ms level first
             {
                 precursor.clear();
+                precursor.isolationWindow.clear();
                 selectedIon.clear();
 
                 double isolationMz = precursorInfo.isolationMZ;
@@ -463,7 +480,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
                 precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
                 precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
-                precursor.userParams.push_back(UserParam("ms level", lexical_cast<string>(precursorInfo.msLevel)));
+                precursor.isolationWindow.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
 
                 ActivationType activationType = scanInfo->activationType();
                 if (activationType == ActivationType_Unknown)
@@ -489,7 +506,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
                 if (addMultiFill)
                 {
-                    precursor.userParams.push_back(UserParam("MultiFillTime", lexical_cast<string>(*fillTimeItr), "xsd:double"));
+                    scan.userParams.push_back(UserParam("MultiFillTime", lexical_cast<string>(*fillTimeItr), "xsd:double"));
                     ++fillTimeItr;
                 }
                 result->precursors.push_back(precursor);
@@ -516,7 +533,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 {
                     // isolationWindow
 
-                    double isolationWidth = 0;
+                    double isolationWidth = precursorInfo.isolationWidth / 2;
 
                     try
                     {
@@ -643,7 +660,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                     if (ie.msOrder != MSOrder_ParentScan)
                         precursor.selectedIons.push_back(selectedIon);
 
-                    precursor.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
+                    precursor.isolationWindow.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
                     result->precursors.push_back(precursor);
 
                     if (ie.msOrder == MSOrder_ParentScan)
@@ -702,7 +719,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                     //    precursor.activation.set(MS_collision_energy, electronvoltActivationEnergy.get(), UO_electronvolt);
 
                     precursor.selectedIons.push_back(selectedIon);
-                    precursor.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
+                    precursor.isolationWindow.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
                     result->precursors.push_back(precursor);
                 }
             }
@@ -813,7 +830,16 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 
         for (long n=1; n <= numControllers; ++n)
         {
-            rawfile_->setCurrentController((ControllerType) controllerType, n);
+            try
+            {
+                rawfile_->setCurrentController((ControllerType) controllerType, n);
+            }
+            catch (exception& e)
+            {
+                warn_once(("[SpectrumList_Thermo::createIndex] error setting controller to " + lexical_cast<std::string>(ControllerTypeStrings[controllerType]) + ": " + e.what()).c_str());
+                continue;
+            }
+
             long numSpectra = rawfile_->getLastScanNumber();
             switch (controllerType)
             {

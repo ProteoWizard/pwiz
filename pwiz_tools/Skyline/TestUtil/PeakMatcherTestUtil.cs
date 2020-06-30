@@ -15,7 +15,7 @@ namespace pwiz.SkylineTestUtil
 {
     public static class PeakMatcherTestUtil
     {
-        public static void SelectAndApplyPeak(string modifiedSequence, double? precursorMz, string resultsName, bool subsequent, double rt)
+        public static void SelectAndApplyPeak(string modifiedSequence, double? precursorMz, string resultsName, bool subsequent, bool group, double rt)
         {
             bool found = false;
             var skylineWindow = Program.MainWindow;
@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestUtil
             {
                 Assert.Fail("Could not find results {0}", resultsName);
             }
-            skylineWindow.ApplyPeak(subsequent);
+            skylineWindow.ApplyPeak(subsequent, group);
         }
 
         public static void VerifyPeaks(IReadOnlyDictionary<string, double> expected)

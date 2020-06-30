@@ -392,10 +392,26 @@ BinaryDataArray::BinaryDataArray()
 DataProcessing^ BinaryDataArray::dataProcessing::get() {return NATIVE_SHARED_PTR_TO_CLI(b::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
 void BinaryDataArray::dataProcessing::set(DataProcessing^ value) {(*base_)->dataProcessingPtr = CLI_TO_NATIVE_SHARED_PTR(b::DataProcessingPtr, value);}
 
-pwiz::CLI::util::BinaryData^ BinaryDataArray::data::get() {return gcnew pwiz::CLI::util::BinaryData(base_, this);}
-void BinaryDataArray::data::set(pwiz::CLI::util::BinaryData^ value) {(*base_)->data = (*value->base_)->data;}
+pwiz::CLI::util::BinaryDataDouble^ BinaryDataArray::data::get() {return gcnew pwiz::CLI::util::BinaryDataDouble(&(*base_)->data, this);}
+void BinaryDataArray::data::set(pwiz::CLI::util::BinaryDataDouble^ value) {(*base_)->data = value->base();}
 
 bool BinaryDataArray::empty()
+{
+    return (*base_)->empty();
+}
+
+
+IntegerDataArray::IntegerDataArray()
+: ParamContainer(new b::IntegerDataArray())
+{base_ = new boost::shared_ptr<b::IntegerDataArray>(static_cast<b::IntegerDataArray*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
+
+DataProcessing^ IntegerDataArray::dataProcessing::get() {return NATIVE_SHARED_PTR_TO_CLI(b::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
+void IntegerDataArray::dataProcessing::set(DataProcessing^ value) {(*base_)->dataProcessingPtr = CLI_TO_NATIVE_SHARED_PTR(b::DataProcessingPtr, value);}
+
+pwiz::CLI::util::BinaryDataInteger^ IntegerDataArray::data::get() {return gcnew pwiz::CLI::util::BinaryDataInteger(&(*base_)->data, this);}
+void IntegerDataArray::data::set(pwiz::CLI::util::BinaryDataInteger^ value) {(*base_)->data = value->base();}
+
+bool IntegerDataArray::empty()
 {
     return (*base_)->empty();
 }
@@ -487,6 +503,9 @@ ProductList^ Spectrum::products::get() {return gcnew ProductList(&(*base_)->prod
 
 BinaryDataArrayList^ Spectrum::binaryDataArrays::get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs, this);}
 void Spectrum::binaryDataArrays::set(BinaryDataArrayList^ value) {(*base_)->binaryDataArrayPtrs = *value->base_;}
+
+IntegerDataArrayList^ Spectrum::integerDataArrays::get() { return gcnew IntegerDataArrayList(&(*base_)->integerDataArrayPtrs, this); }
+void Spectrum::integerDataArrays::set(IntegerDataArrayList^ value) { (*base_)->integerDataArrayPtrs = *value->base_; }
 
 void Spectrum::getMZIntensityPairs(MZIntensityPairList^% output)
 {
@@ -595,14 +614,17 @@ void Chromatogram::defaultArrayLength::set(System::UInt64 value) {(*base_)->defa
 DataProcessing^ Chromatogram::dataProcessing::get()  {return NATIVE_SHARED_PTR_TO_CLI(pwiz::msdata::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
 //void set(DataProcessing^ value) {(*base_)->dataProcessingPtr = *value->base_;}
 
-Precursor^ Chromatogram::precursor::get() {return gcnew Precursor(&(*base_)->precursor);}
+Precursor^ Chromatogram::precursor::get() {return gcnew Precursor(&(*base_)->precursor, this);}
 void Chromatogram::precursor::set(Precursor^ value) {(*base_)->precursor = *value->base_;}
 
-Product^ Chromatogram::product::get() {return gcnew Product(&(*base_)->product);}
+Product^ Chromatogram::product::get() {return gcnew Product(&(*base_)->product, this);}
 void Chromatogram::product::set(Product^ value) {(*base_)->product = *value->base_;}
 
 BinaryDataArrayList^ Chromatogram::binaryDataArrays::get() {return gcnew BinaryDataArrayList(&(*base_)->binaryDataArrayPtrs, this);}
 void Chromatogram::binaryDataArrays::set(BinaryDataArrayList^ value) {(*base_)->binaryDataArrayPtrs = *value->base_;}
+
+IntegerDataArrayList^ Chromatogram::integerDataArrays::get() { return gcnew IntegerDataArrayList(&(*base_)->integerDataArrayPtrs, this); }
+void Chromatogram::integerDataArrays::set(IntegerDataArrayList^ value) { (*base_)->integerDataArrayPtrs = *value->base_; }
 
 void Chromatogram::getTimeIntensityPairs(TimeIntensityPairList^% output)
 {

@@ -615,6 +615,11 @@ namespace pwiz.Skyline.SettingsUI
             _driverIsolationScheme.AddItem();
         }
 
+        public void EditCurrentIsolationScheme()
+        {
+            _driverIsolationScheme.EditCurrent();
+        }
+
         public void EditIsolationScheme()
         {
             _driverIsolationScheme.EditList();
@@ -778,14 +783,13 @@ namespace pwiz.Skyline.SettingsUI
             set { radioKeepAllTime.Checked = value; }
         }
 
-        public bool UseTimeAroundMs2Ids
-        {
-            get { return radioTimeAroundMs2Ids.Checked; }
-        }
-
         public double TimeAroundMs2Ids
         {
             get { return double.Parse(tbxTimeAroundMs2Ids.Text); }
+        }
+        public double TimeAroundPrediction
+        {
+            get { return double.Parse(tbxTimeAroundPrediction.Text); }
         }
 
         public static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,

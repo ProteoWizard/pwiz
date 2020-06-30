@@ -39,6 +39,7 @@
             this.foldChangeUnitLabel = new System.Windows.Forms.Label();
             this.pValueLowerBoundLabel = new System.Windows.Forms.Label();
             this.checkBoxFilter = new System.Windows.Forms.CheckBox();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -103,7 +104,7 @@
             this.checkBoxFilter.UseVisualStyleBackColor = true;
             this.checkBoxFilter.CheckedChanged += new System.EventHandler(this.Preview);
             // 
-            // VolcanoPlotProperties
+            // VolcanoPlotPropertiesDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
@@ -126,6 +127,7 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.VolcanoPlotProperties_FormClosing);
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

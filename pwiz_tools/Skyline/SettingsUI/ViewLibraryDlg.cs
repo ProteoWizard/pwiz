@@ -346,6 +346,10 @@ namespace pwiz.Skyline.SettingsUI
                             MessageDlg.ShowException(this, status.ErrorException);
                             return;
                         }
+                        else if (!string.IsNullOrEmpty(status.WarningMessage))
+                        {
+                            MessageDlg.Show(this, status.WarningMessage);
+                        }
                     }
                     catch (Exception x)
                     {
@@ -496,7 +500,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         for (int i = start; i < end; i++)
                         {
-                            if (IsUpdateCanceled)   // Allows tests to get out of this loop and fail
+                            if (IsUpdateCanceled) // Allows tests to get out of this loop and fail
                                 break;
                             longWaitBroker.SetProgressCheckCancel(i - start, end - start);
                             ViewLibraryPepInfo pepInfo = _peptides[_currentRange[i]];
@@ -508,6 +512,15 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (OperationCanceledException)
                 {
+                }
+                catch (Exception x)
+                {
+                    // Unexpected exception, gather context info and pass it along
+                    var errorMessage = TextUtil.LineSeparate(
+                        string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, _selectedLibName),
+                        x.Message,
+                        _selectedLibrary.LibraryDetails.ToString());
+                    throw new Exception(errorMessage, x);
                 }
 
                 listPeptide.SelectedIndex = Math.Min(selectPeptideIndex, listPeptide.Items.Count - 1);
@@ -535,7 +548,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (null != pepInfo.Key.LibraryKey.Target)
             {
-                var peptide = new Peptide(pepInfo.Key.LibraryKey.StripModifications().Target);
+                var peptide = pepInfo.Key.LibraryKey.CreatePeptideIdentityObj();
                 transitionGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, pepInfo.Adduct,
                                                       IsotopeLabelType.light, true, null), null);
                 if (pepInfo.Key.IsSmallMoleculeKey)
@@ -681,7 +694,7 @@ namespace pwiz.Skyline.SettingsUI
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
                         var spectrumInfo = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
-                        var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrum,
+                        var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrum,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
                                                                           transitionGroupDocNode,
                                                                           settings,
@@ -1912,9 +1925,20 @@ namespace pwiz.Skyline.SettingsUI
         private static IEnumerable<ModificationInfo> GetModifications(ViewLibraryPepInfo pep)
         {
             IList<ModificationInfo> modList = new List<ModificationInfo>();
-            if (!pep.Target.IsProteomic)
+            string sequence;
+            if (pep.Key.LibraryKey is PeptideLibraryKey peptideLibraryKey)
+            {
+                sequence = peptideLibraryKey.ModifiedSequence;
+            }
+            else if (pep.Key.LibraryKey is CrosslinkLibraryKey crosslinkLibraryKey)
+            {
+                sequence = string.Join(string.Empty,
+                    crosslinkLibraryKey.PeptideLibraryKeys.Select(key => key.ModifiedSequence));
+            }
+            else
+            {
                 return modList;
-            string sequence = pep.Target.Sequence;
+            }
             int iMod = -1;
             for (int i = 0; i < sequence.Length; i++)
             {

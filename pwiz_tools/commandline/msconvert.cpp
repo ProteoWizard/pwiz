@@ -921,6 +921,10 @@ void processFile(const string& filename, const Config& config, const ReaderList&
                 MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
             }
         }
+        catch (user_error&)
+        {
+            throw;
+        }
         catch (exception& e)
         {
             cerr << "Error writing run " << (i+1) << " in " << bfs::path(filename).leaf() << ":\n" << e.what() << endl;
@@ -957,6 +961,10 @@ int go(const Config& config)
             try
             {
                 processFile(*it, config, readers);
+            }
+            catch (user_error&)
+            {
+                throw;
             }
             catch (exception& e)
             {

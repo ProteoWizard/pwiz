@@ -89,6 +89,19 @@
             this.labelDetections = new System.Windows.Forms.Label();
             this.labelQVal = new System.Windows.Forms.Label();
             this.textQVal = new System.Windows.Forms.TextBox();
+            this.tabGroupComparisons = new System.Windows.Forms.TabPage();
+            this.comboMSGroupComparisons = new System.Windows.Forms.ComboBox();
+            this.labelFoldChangeUnit = new System.Windows.Forms.Label();
+            this.labelPValueUnit = new System.Windows.Forms.Label();
+            this.checkBoxLog = new System.Windows.Forms.CheckBox();
+            this.textFoldChange = new System.Windows.Forms.TextBox();
+            this.textPValue = new System.Windows.Forms.TextBox();
+            this.labelFoldChange = new System.Windows.Forms.Label();
+            this.labelPValue = new System.Windows.Forms.Label();
+            this.labelMSLevel = new System.Windows.Forms.Label();
+            this.labelGroupComparison = new System.Windows.Forms.Label();
+            this.btnEditGroupComparisons = new System.Windows.Forms.Button();
+            this.checkedListBoxGroupComparisons = new System.Windows.Forms.CheckedListBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
@@ -99,6 +112,7 @@
             this.groupPeakArea.SuspendLayout();
             this.groupDetection.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDetections)).BeginInit();
+            this.tabGroupComparisons.SuspendLayout();
             this.SuspendLayout();
             // 
             // helpTip
@@ -275,6 +289,7 @@
             this.tabControl1.Controls.Add(this.tabDocument);
             this.tabControl1.Controls.Add(this.tabResults);
             this.tabControl1.Controls.Add(this.tabConsistency);
+            this.tabControl1.Controls.Add(this.tabGroupComparisons);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             // 
@@ -514,6 +529,93 @@
             resources.ApplyResources(this.textQVal, "textQVal");
             this.textQVal.Name = "textQVal";
             // 
+            // tabGroupComparisons
+            // 
+            this.tabGroupComparisons.Controls.Add(this.comboMSGroupComparisons);
+            this.tabGroupComparisons.Controls.Add(this.labelFoldChangeUnit);
+            this.tabGroupComparisons.Controls.Add(this.labelPValueUnit);
+            this.tabGroupComparisons.Controls.Add(this.checkBoxLog);
+            this.tabGroupComparisons.Controls.Add(this.textFoldChange);
+            this.tabGroupComparisons.Controls.Add(this.textPValue);
+            this.tabGroupComparisons.Controls.Add(this.labelFoldChange);
+            this.tabGroupComparisons.Controls.Add(this.labelPValue);
+            this.tabGroupComparisons.Controls.Add(this.labelMSLevel);
+            this.tabGroupComparisons.Controls.Add(this.labelGroupComparison);
+            this.tabGroupComparisons.Controls.Add(this.btnEditGroupComparisons);
+            this.tabGroupComparisons.Controls.Add(this.checkedListBoxGroupComparisons);
+            resources.ApplyResources(this.tabGroupComparisons, "tabGroupComparisons");
+            this.tabGroupComparisons.Name = "tabGroupComparisons";
+            this.tabGroupComparisons.UseVisualStyleBackColor = true;
+            // 
+            // comboMSGroupComparisons
+            // 
+            this.comboMSGroupComparisons.FormattingEnabled = true;
+            resources.ApplyResources(this.comboMSGroupComparisons, "comboMSGroupComparisons");
+            this.comboMSGroupComparisons.Name = "comboMSGroupComparisons";
+            // 
+            // labelFoldChangeUnit
+            // 
+            resources.ApplyResources(this.labelFoldChangeUnit, "labelFoldChangeUnit");
+            this.labelFoldChangeUnit.Name = "labelFoldChangeUnit";
+            // 
+            // labelPValueUnit
+            // 
+            resources.ApplyResources(this.labelPValueUnit, "labelPValueUnit");
+            this.labelPValueUnit.Name = "labelPValueUnit";
+            // 
+            // checkBoxLog
+            // 
+            resources.ApplyResources(this.checkBoxLog, "checkBoxLog");
+            this.checkBoxLog.Checked = true;
+            this.checkBoxLog.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxLog.Name = "checkBoxLog";
+            this.checkBoxLog.UseVisualStyleBackColor = true;
+            this.checkBoxLog.CheckedChanged += new System.EventHandler(this.checkBoxLog_CheckedChanged);
+            // 
+            // textFoldChange
+            // 
+            resources.ApplyResources(this.textFoldChange, "textFoldChange");
+            this.textFoldChange.Name = "textFoldChange";
+            // 
+            // textPValue
+            // 
+            resources.ApplyResources(this.textPValue, "textPValue");
+            this.textPValue.Name = "textPValue";
+            // 
+            // labelFoldChange
+            // 
+            resources.ApplyResources(this.labelFoldChange, "labelFoldChange");
+            this.labelFoldChange.Name = "labelFoldChange";
+            // 
+            // labelPValue
+            // 
+            resources.ApplyResources(this.labelPValue, "labelPValue");
+            this.labelPValue.Name = "labelPValue";
+            // 
+            // labelMSLevel
+            // 
+            resources.ApplyResources(this.labelMSLevel, "labelMSLevel");
+            this.labelMSLevel.Name = "labelMSLevel";
+            // 
+            // labelGroupComparison
+            // 
+            resources.ApplyResources(this.labelGroupComparison, "labelGroupComparison");
+            this.labelGroupComparison.Name = "labelGroupComparison";
+            // 
+            // btnEditGroupComparisons
+            // 
+            resources.ApplyResources(this.btnEditGroupComparisons, "btnEditGroupComparisons");
+            this.btnEditGroupComparisons.Name = "btnEditGroupComparisons";
+            this.btnEditGroupComparisons.UseVisualStyleBackColor = true;
+            this.btnEditGroupComparisons.Click += new System.EventHandler(this.btnEditGroupComparisons_Click);
+            // 
+            // checkedListBoxGroupComparisons
+            // 
+            this.checkedListBoxGroupComparisons.CheckOnClick = true;
+            this.checkedListBoxGroupComparisons.FormattingEnabled = true;
+            resources.ApplyResources(this.checkedListBoxGroupComparisons, "checkedListBoxGroupComparisons");
+            this.checkedListBoxGroupComparisons.Name = "checkedListBoxGroupComparisons";
+            // 
             // RefineDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -544,6 +646,8 @@
             this.groupDetection.ResumeLayout(false);
             this.groupDetection.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDetections)).EndInit();
+            this.tabGroupComparisons.ResumeLayout(false);
+            this.tabGroupComparisons.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -609,5 +713,18 @@
         private System.Windows.Forms.ComboBox comboTransitions;
         private System.Windows.Forms.Label labelTransType;
         private System.Windows.Forms.ComboBox comboTransType;
+        private System.Windows.Forms.TabPage tabGroupComparisons;
+        private System.Windows.Forms.CheckedListBox checkedListBoxGroupComparisons;
+        private System.Windows.Forms.Button btnEditGroupComparisons;
+        private System.Windows.Forms.CheckBox checkBoxLog;
+        private System.Windows.Forms.TextBox textFoldChange;
+        private System.Windows.Forms.TextBox textPValue;
+        private System.Windows.Forms.Label labelFoldChange;
+        private System.Windows.Forms.Label labelPValue;
+        private System.Windows.Forms.Label labelMSLevel;
+        private System.Windows.Forms.Label labelGroupComparison;
+        private System.Windows.Forms.Label labelFoldChangeUnit;
+        private System.Windows.Forms.Label labelPValueUnit;
+        private System.Windows.Forms.ComboBox comboMSGroupComparisons;
     }
 }

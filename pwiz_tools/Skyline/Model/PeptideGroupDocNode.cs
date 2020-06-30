@@ -60,6 +60,12 @@ namespace pwiz.Skyline.Model
 
         public PeptideGroupDocNode(PeptideGroup id, Annotations annotations, ProteinMetadata proteinMetadata,
             PeptideDocNode[] children, bool autoManageChildren)
+            : this(id, annotations, proteinMetadata, children, autoManageChildren, null)
+        {
+        }
+
+        public PeptideGroupDocNode(PeptideGroup id, Annotations annotations, ProteinMetadata proteinMetadata,
+            PeptideDocNode[] children, bool autoManageChildren, double? proportionDecoysMatch)
             : base(id, annotations, children, autoManageChildren)
         {
             if (Equals(id.Name, proteinMetadata.Name))
@@ -67,6 +73,7 @@ namespace pwiz.Skyline.Model
             if (Equals(id.Description, proteinMetadata.Description))
                 proteinMetadata = proteinMetadata.ChangeDescription(null);  // Make it clear that the description hasn't been altered
             _proteinMetadata = proteinMetadata;
+            ProportionDecoysMatch = proportionDecoysMatch;
         }
 
         public override string AuditLogText { get { return Name; } }
@@ -80,6 +87,7 @@ namespace pwiz.Skyline.Model
         public bool IsProtein { get { return PeptideGroup is FastaSequence; } }
         public bool IsPeptideList { get { return !(PeptideGroup is FastaSequence); } }
         public bool IsDecoy { get { return PeptideGroup.IsDecoy; } }
+        public double? ProportionDecoysMatch { get; private set; }
 
         public string Name { get { return _proteinMetadata.Name ?? PeptideGroup.Name ?? string.Empty; } } // prefer ours over peptidegroup, if set
         public string OriginalName { get { return PeptideGroup.Name; } }
@@ -151,6 +159,11 @@ namespace pwiz.Skyline.Model
             if (Equals(PeptideGroup.Description, newMetadata.Description))
                 newMetadata = newMetadata.ChangeDescription(null); // no actual override
             return ChangeProp(ImClone(this), im => im._proteinMetadata = newMetadata);
+        }
+
+        public PeptideGroupDocNode ChangeProportionDecoysMatch(double proportion)
+        {
+            return ChangeProp(ImClone(this), im => im.ProportionDecoysMatch = proportion);
         }
 
         public PeptideGroupDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff,
@@ -403,6 +416,8 @@ namespace pwiz.Skyline.Model
             {
                 var setNonExplicit = new HashSet<Peptide>();
                 IPeptideFilter filter = (useFilter ? settings : PeptideFilter.UNFILTERED);
+                var explicitKeys = Peptides.Where(nodePep => nodePep.HasExplicitMods && !nodePep.HasVariableMods)
+                    .Select(nodePep => nodePep.Key).ToHashSet();
                 foreach (PeptideDocNode nodePep in Children)
                 {
                     if (monitor != null && monitor.IsCanceled())
@@ -422,8 +437,11 @@ namespace pwiz.Skyline.Model
                             peptide = (Peptide) peptide.Copy();
                         foreach (PeptideDocNode nodePepResult in peptide.CreateDocNodes(settings, filter))
                         {
-                            yield return nodePepResult;
-                            returnedResult = true;
+                            if (!explicitKeys.Contains(nodePepResult.Key))
+                            {
+                                yield return nodePepResult;
+                                returnedResult = true;
+                            }
                         }
                         // Make sure the peptide is not removed due to filtering
                         if (!returnedResult)
@@ -432,6 +450,29 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+        }
+
+        public void CheckDecoys(SrmDocument document, out int decoysNoSource, out int decoysWrongTransitionCount, out double proportionDecoysMatch)
+        {
+            var targets = document.Peptides.Where(pep => !pep.IsDecoy).ToArray();
+            var targetMap = new TargetMap<HashSet<int>>(targets.Select(target =>
+                new KeyValuePair<Target, HashSet<int>>(target.ModifiedTarget, new HashSet<int>())));
+            foreach (var target in targets)
+            foreach (var nodeTranGroup in target.TransitionGroups)
+                targetMap[target.ModifiedTarget].Add(nodeTranGroup.TransitionCount);
+
+            decoysNoSource = 0;
+            decoysWrongTransitionCount = 0;
+
+            var decoys = Peptides.Where(pep => pep.IsDecoy).ToArray();
+            foreach (var decoy in decoys)
+            {
+                if (!targetMap.TryGetValue(decoy.SourceModifiedTarget, out var transitionCounts))
+                    decoysNoSource++;
+                else if (decoy.TransitionGroups.All(nodeTranGroup => !transitionCounts.Contains(nodeTranGroup.TransitionCount)))
+                    decoysWrongTransitionCount++;
+            }
+            proportionDecoysMatch = 1 - (double) (decoysNoSource + decoysWrongTransitionCount) / decoys.Length;
         }
 
         private Dictionary<PeptideModKey, DocNode> CreatePeptideModToChildMap()

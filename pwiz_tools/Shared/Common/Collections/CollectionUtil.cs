@@ -208,6 +208,6 @@ namespace pwiz.Common.Collections
         public static Comparer<object> ColumnValueComparer
         {
             get { return Comparer<object>.Create(CompareColumnValues); }
-        } 
+        }
     }
 }

@@ -31,14 +31,17 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.Win32;
+using pwiz.CLI.Bruker.PrmScheduling;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Shimadzu.LabSolutions.MethodConverter;
 using Shimadzu.LabSolutions.MethodWriter;
+using ZedGraph;
 
 namespace pwiz.Skyline.Model
 {
@@ -171,6 +174,7 @@ namespace pwiz.Skyline.Model
         public const string AGILENT6400 = "Agilent 6400 Series";
         public const string BRUKER = "Bruker";
         public const string BRUKER_TOF = "Bruker QTOF";
+        public const string BRUKER_TIMSTOF = "Bruker timsTOF";
         public const string SHIMADZU = "Shimadzu";
         public const string THERMO = "Thermo";
         public const string THERMO_TSQ = "Thermo TSQ";
@@ -190,6 +194,7 @@ namespace pwiz.Skyline.Model
         public const string EXT_AB_SCIEX = ".dam";
         public const string EXT_AGILENT = ".m";
         public const string EXT_BRUKER = ".m";
+        public const string EXT_BRUKER_TIMSTOF = ".prmsqlite";
         public const string EXT_SHIMADZU = ".lcm";
         public const string EXT_THERMO = ".meth";
         public const string EXT_WATERS = ".exp";
@@ -198,6 +203,7 @@ namespace pwiz.Skyline.Model
             {
                 AGILENT6400,
                 BRUKER_TOF,
+                BRUKER_TIMSTOF,
                 ABI_QTRAP,
                 ABI_TOF,
                 SHIMADZU,
@@ -243,6 +249,7 @@ namespace pwiz.Skyline.Model
                                        {ABI_TOF, EXT_AB_SCIEX},
                                        {AGILENT6400, EXT_AGILENT},
                                        {BRUKER_TOF, EXT_BRUKER},
+                                       {BRUKER_TIMSTOF, EXT_BRUKER_TIMSTOF},
                                        {SHIMADZU, EXT_SHIMADZU},
                                        {THERMO_TSQ, EXT_THERMO},
                                        {THERMO_LTQ, EXT_THERMO},
@@ -381,6 +388,8 @@ namespace pwiz.Skyline.Model
 
         public virtual bool ExportEdcMass { get; set; }
 
+        public virtual double Ms1RepetitionTime { get; set; }
+
         public TExp InitExporter<TExp>(TExp exporter)
             where TExp : AbstractMassListExporter
         {
@@ -436,6 +445,8 @@ namespace pwiz.Skyline.Model
                         return null;
                     }
                     return ExportBrukerMethod(doc, path, template);
+                case ExportInstrumentType.BRUKER_TIMSTOF:
+                    return ExportBrukerTimsTofMethod(doc, path, template);
                 case ExportInstrumentType.THERMO:
                 case ExportInstrumentType.THERMO_TSQ:
                     if (type == ExportFileType.List)
@@ -590,6 +601,15 @@ namespace pwiz.Skyline.Model
             var exporter = new BrukerDiaExporter(document) {RunLength = RunLength};
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+        }
+
+        public AbstractMassListExporter ExportBrukerTimsTofMethod(SrmDocument document, string filename, string templateName)
+        {
+            var exporter = InitExporter(new BrukerTimsTofMethodExporter(document));
+            exporter.RunLength = RunLength;
+            exporter.Ms1RepetitionTime = Ms1RepetitionTime;
+            PerformLongExport(m => exporter.ExportMethod(filename, templateName, m, out _, out _));
+            return exporter;
         }
 
         public AbstractMassListExporter ExportThermoCsv(SrmDocument document, string fileName)
@@ -1236,42 +1256,44 @@ namespace pwiz.Skyline.Model
     public class ShimadzuMassListExporter : AbstractMassListExporter
     {
         public double? RunLength { get; set; }
-        private readonly Dictionary<GroupStepKey, int> _peptidesSeen = new Dictionary<GroupStepKey, int>();
         private int LastFileNumber { get; set; }
 
-        private struct GroupStepKey
+        private EventInfo _eventInfo;
+
+        private class EventInfo
         {
-            private readonly int _groupGlobalIndex;
-            private readonly int _step;
+            private const int MAX_TRANSITIONS_PER_EVENT = 32;
+            public int Id { get; set; }
+            public int PeptideId { get; set; }
+            private int TransitionsWritten { get; set; }
 
-            public GroupStepKey(int groupGlobalIndex, int step)
+            public EventInfo()
             {
-                _groupGlobalIndex = groupGlobalIndex;
-                _step = step;
+                Id = 0;
+                PeptideId = -1;
+                TransitionsWritten = 0;
             }
 
-            #region object overrides
-
-            private bool Equals(GroupStepKey other)
+            public void Write(TextWriter writer, int peptideId)
             {
-                return _groupGlobalIndex == other._groupGlobalIndex && _step == other._step;
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                return obj is GroupStepKey && Equals((GroupStepKey) obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
+                if (peptideId != PeptideId)
                 {
-                    return (_groupGlobalIndex*397) ^ _step;
+                    Next();
+                    PeptideId = peptideId;
+                }
+                writer.Write(Id);
+                TransitionsWritten++;
+                if (TransitionsWritten >= MAX_TRANSITIONS_PER_EVENT)
+                {
+                    Next();
                 }
             }
 
-            #endregion
+            private void Next()
+            {
+                Id++;
+                TransitionsWritten = 0;
+            }
         }
 
         public ShimadzuMassListExporter(SrmDocument document)
@@ -1323,23 +1345,15 @@ namespace pwiz.Skyline.Model
             {
                 // When generating multiple files, Shimadzu expects each one to start from ID 1,
                 // so reset if this is a new file
-                _peptidesSeen.Clear();
                 LastFileNumber = fileNumber;
+                _eventInfo = new EventInfo();
             }
-            var compound = GetCompound(nodePep, nodeTranGroup) +
-                  @"_" + nodeTranGroup.TransitionGroup.LabelType;
+            var compound = GetCompound(nodePep, nodeTranGroup) + @"_" + nodeTranGroup.TransitionGroup.LabelType;
             if (step != 0)
                 compound += (@"_" + step);
             writer.WriteDsvField(compound.Replace(' ', '_'), FieldSeparator);
             writer.Write(FieldSeparator);
-            int id;
-            var key = new GroupStepKey(nodeTranGroup.Id.GlobalIndex, step);
-            if (!_peptidesSeen.TryGetValue(key, out id))
-            {
-                id = _peptidesSeen.Count + 1;
-                _peptidesSeen.Add(key, id);
-            }
-            writer.Write(id);
+            _eventInfo.Write(writer, nodePep.Id.GlobalIndex);
             writer.Write(FieldSeparator);
             var istdTypes = Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
             writer.Write(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType)
@@ -3105,7 +3119,190 @@ namespace pwiz.Skyline.Model
         }
     }
 
+    public class BrukerTimsTofMethodExporter : AbstractMassListExporter
+    {
+        private readonly List<InputTarget> _targets;
+        private readonly HashSet<LibKey> _missingIonMobility;
 
+        public double RunLength { get; set; }
+        public double Ms1RepetitionTime { get; set; }
+
+        public LibKey[] MissingIonMobility => _missingIonMobility.OrderBy(k => k.ToString()).ToArray();
+
+        public BrukerTimsTofMethodExporter(SrmDocument document)
+            : base(document, null)
+        {
+            IsPrecursorLimited = true;
+            IsolationList = true;
+            _targets = new List<InputTarget>();
+            _missingIonMobility = new HashSet<LibKey>();
+        }
+
+        public int Id { get; set; }
+
+        protected override string InstrumentType
+        {
+            get { return ExportInstrumentType.BRUKER_TIMSTOF; }
+        }
+
+        public override bool HasHeaders { get { return false; } }
+
+        protected override void WriteTransition(TextWriter writer,
+            int fileNumber,
+            PeptideGroupDocNode nodePepGroup,
+            PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeTranGroup,
+            TransitionGroupDocNode nodeTranGroupPrimary,
+            TransitionDocNode nodeTran,
+            int step)
+        {
+            var target = new InputTarget();
+            
+            var prediction = Document.Settings.PeptideSettings.Prediction;
+
+            if (MethodType == ExportMethodType.Standard)
+            {
+                target.time_in_seconds_begin = 0;
+                target.time_in_seconds_end = RunLength * 60;
+            }
+            else
+            {
+                var predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
+                target.time_in_seconds_begin = (predictedRT.Value - windowRT / 2) * 60;
+                target.time_in_seconds_end = (predictedRT.Value + windowRT / 2) * 60;
+            }
+            target.time_in_seconds = (target.time_in_seconds_begin + target.time_in_seconds_end) / 2;
+
+            target.isolation_mz = nodeTranGroup.PrecursorMz;
+            target.monoisotopic_mz = nodeTranGroup.PrecursorMz;
+            target.isolation_width = 3.0;
+
+            double? ionMobility = null;
+            var windowIM = 0.4;
+            if (prediction.IonMobilityPredictor != null)
+            {
+                var result = Document.Settings.GetIonMobility(nodePep, nodeTranGroup, nodeTran, null, null, 1.2, out windowIM);
+                if (result.HasIonMobilityValue)
+                    ionMobility = result.IonMobility.Mobility.Value;
+            }
+            if (!ionMobility.HasValue)
+                _missingIonMobility.Add(nodeTranGroup.GetLibKey(Document.Settings, nodePep));
+            target.one_over_k0_lower_limit = (ionMobility ?? 1.0) - windowIM / 2;
+            target.one_over_k0_upper_limit = (ionMobility ?? 1.0) + windowIM / 2;
+            target.one_over_k0 = (target.one_over_k0_lower_limit + target.one_over_k0_upper_limit) / 2;
+
+            target.charge = nodeTranGroup.PrecursorCharge;
+            target.collision_energy = (int) Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
+
+            _targets.Add(target);
+        }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor, out TimeSegmentList timeSegments, out SchedulingEntryList schedulingEntries)
+        {
+            if (templateName == null)
+                throw new IOException(Resources.BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_);
+
+            _missingIonMobility.Clear();
+            InitExport(fileName, progressMonitor);
+
+            if (!Equals(templateName, fileName) && !string.IsNullOrEmpty(fileName))
+                File.Copy(templateName, fileName, true);
+
+            using (var s = new Scheduler(fileName ?? templateName))
+            {
+                s.SetAdditionalMeasurementParameters(new AdditionalMeasurementParameters
+                {
+                    ms1_repetition_time = Ms1RepetitionTime,
+                    default_pasef_collision_energies = _targets.All(t => t.collision_energy == 0)
+                });
+                for (var i = 0; i < _targets.Count; i++)
+                {
+                    var id = (i + 1).ToString();
+                    var description = id;
+                    s.AddInputTarget(_targets[i], id, description);
+                }
+
+                var progress = new ProgressStatus(Resources.BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___);
+
+                timeSegments = new TimeSegmentList();
+                schedulingEntries = new SchedulingEntryList();
+
+                bool ProgressCallback(double progressPercentage)
+                {
+                    // return true to cancel, false to continue
+                    if (progressMonitor == null) return false;
+
+                    if (progressMonitor.IsCanceled) return true;
+
+                    progressMonitor.UpdateProgress(progress.ChangePercentComplete((int) Math.Round(progressPercentage)));
+                    return false;
+                }
+
+                s.GetScheduling(timeSegments, schedulingEntries, ProgressCallback);
+
+                if (!string.IsNullOrEmpty(fileName) && (progressMonitor == null || !progressMonitor.IsCanceled))
+                    s.WriteScheduling();
+            }
+        }
+
+        public static LibKey[] GetMissingIonMobility(SrmDocument document, ExportProperties exportProperties,
+            string templateName)
+        {
+            var exporter = exportProperties.InitExporter(new BrukerTimsTofMethodExporter(document));
+            exporter.RunLength = exportProperties.RunLength;
+            exporter.Ms1RepetitionTime = exportProperties.Ms1RepetitionTime;
+            exporter.InitExport(null, null);
+            return exporter.MissingIonMobility;
+        }
+
+        public static void GetScheduling(SrmDocument document, ExportProperties exportProperties, string templateName,
+            IProgressMonitor progressMonitor, out IPointList pointList)
+        {
+            var exporter = exportProperties.InitExporter(new BrukerTimsTofMethodExporter(document));
+            exporter.RunLength = exportProperties.RunLength;
+            exporter.Ms1RepetitionTime = exportProperties.Ms1RepetitionTime;
+            exporter.ExportMethod(null, templateName, progressMonitor, out var timeSegments, out var schedulingEntries);
+
+            var timeSegmentCounts = new Dictionary<uint, HashSet<uint>>();
+            foreach (var entry in schedulingEntries)
+            {
+                if (!timeSegmentCounts.ContainsKey(entry.time_segment_id))
+                    timeSegmentCounts[entry.time_segment_id] = new HashSet<uint>();
+                timeSegmentCounts[entry.time_segment_id].Add(entry.frame_id);
+            }
+
+            var points = new List<PointPair>();
+            for (uint i = 0; i < timeSegments.Count; i++)
+            {
+                var count = 0;
+                if (timeSegmentCounts.TryGetValue(i, out var countSet))
+                    count = countSet.Count;
+                points.Add(new PointPair(timeSegments[(int) i].time_in_seconds_begin / 60, count));
+                points.Add(new PointPair(timeSegments[(int) i].time_in_seconds_end / 60, count));
+            }
+
+            if (timeSegments.Count > 0)
+            {
+                points.Insert(0, new PointPair(points.First().X, 0));
+                points.Insert(0, new PointPair(points.First().X - 1, 0));
+
+                const double pointLimit = 1e9;
+                if (points.Last().X > pointLimit)
+                {
+                    var penultimate = points[points.Count - 2].X;
+                    if (penultimate < pointLimit)
+                    {
+                        points[points.Count - 1].X = penultimate + 1;
+                    }
+                }
+
+                points.Add(new PointPair(points.Last().X, 0));
+            }
+
+            pointList = new PointPairList(points);
+        }
+    }
 
     public class ThermoQExactiveIsolationListExporter : ThermoMassListExporter
     {

@@ -157,13 +157,13 @@ namespace seems
 			// if on SRM, disable annotation
 		}
 
-		private void openFile( string filepath )
+		private void openFile( OpenDataSourceDialog.MSDataRunPath filepath )
 		{
             // update recent files list
-            recentFilesMenu.AddFile( filepath, Path.GetFileName( filepath ) );
+            recentFilesMenu.AddFile( filepath.ToString(), filepath.ToString().Split('\\').Last() );
             recentFilesMenu.SaveToRegistry();
 
-			Manager.OpenFile(filepath, closeIfOpen: true);
+			Manager.OpenFile(filepath.ToString(), closeIfOpen: true);
 		}
 
         private delegate void ParseArgsCallback (string[] args);
@@ -303,12 +303,16 @@ namespace seems
         }
 
 		private void openFile_Click( object sender, EventArgs e )
-        {
+		{
+		    browseToFileDialog.InitialDirectory = Properties.Settings.Default.LastBrowseToFileLocation;
 			if( browseToFileDialog.ShowDialog() == DialogResult.OK )
 			{
-                foreach( string dataSource in browseToFileDialog.DataSources )
+                foreach( var dataSource in browseToFileDialog.DataSources )
                     openFile( dataSource );
-			}
+
+			    Properties.Settings.Default.LastBrowseToFileLocation = browseToFileDialog.CurrentDirectory;
+			    Properties.Settings.Default.Save();
+            }
 		}
 
 		private void cascadeWindowMenuItem_Click( object sender, EventArgs e )
@@ -339,7 +343,7 @@ namespace seems
 
 		private void recentFilesFileMenuItem_Click( int index, string filepath )
 		{
-			openFile( filepath );
+			openFile( new OpenDataSourceDialog.MSDataRunPath(filepath) );
 		}
 
 		private void exitFileMenuItem_Click( object sender, EventArgs e )
@@ -473,6 +477,18 @@ namespace seems
         private void timeInMinutesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Properties.Settings.Default.TimeInMinutes = timeInMinutesToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void showSIMScansAsSpectraToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.SimAsSpectra = showSIMScansAsSpectraToolStripMenuItem.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void showSRMScansAsSpectraToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.SrmAsSpectra = showSRMScansAsSpectraToolStripMenuItem.Checked;
             Properties.Settings.Default.Save();
         }
     }

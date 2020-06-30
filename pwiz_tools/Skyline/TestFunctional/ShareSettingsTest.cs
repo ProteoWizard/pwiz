@@ -22,7 +22,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
@@ -84,8 +86,10 @@ namespace pwiz.SkylineTestFunctional
                 {
                     IonType.b, IonType.y, IonType.precursor
                 };
-            RunUI(() => SkylineWindow.Document.Settings.TransitionSettings.Libraries.ChangeIonCount(6));
-            RunUI(() => SkylineWindow.Document.Settings.TransitionSettings.Filter.ChangePeptideIonTypes(ionList));
+            RunUI(() => SkylineWindow.ModifyDocument("Change settings", d =>
+                    d.ChangeSettings(d.Settings.ChangeTransitionLibraries(l => l.ChangeIonCount(l.IonCount/2))
+                        .ChangeTransitionFilter(f => f.ChangePeptideIonTypes(ionList))),
+                AuditLogEntry.SettingsLogFunction));
             RunDlg<SaveSettingsDlg>(() => SkylineWindow.SaveSettings(),
                 saveSettingsDlg =>
                     {

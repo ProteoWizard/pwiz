@@ -47,6 +47,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("OrderByReplicateAnnotation.sky")));
+            WaitForDocumentLoaded();
 
             // Add a calculated Replicate annotation called "TotalIonCurrent"
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);

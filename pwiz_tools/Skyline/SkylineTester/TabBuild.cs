@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 
 namespace SkylineTester
 {
@@ -192,26 +191,18 @@ namespace SkylineTester
                 }
             }
 
-            if (nukeBuild || updateBuild)
-            {
-                string tutorialsFolder = Path.Combine(PathEx.GetDownloadsPath(), "Tutorials");
-                commandShell.Add("#@ Deleting Tutorials directory...\n");
-                commandShell.Add("# Deleting Tutorials directory...");
-                commandShell.Add("rmdir /s {0}", tutorialsFolder);
-            }
-
             if (nukeBuild)
             {
                 commandShell.Add("#@ Checking out {0} source files...\n", branchName);
                 commandShell.Add("# Checking out {0} source files...", branchName);
                 if (branchName.Contains("master"))
                 {
-                    commandShell.Add("{0} clone {1} {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} clone {1} {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
                 }
                 else
                 {
                     var branch = branchUrl.Split(new[] {"tree/"}, StringSplitOptions.None)[1];
-                    commandShell.Add("{0} clone {1} -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} clone {1} -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
                 }
             }
 

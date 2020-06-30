@@ -18,9 +18,11 @@
  */
 
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
@@ -81,9 +83,14 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        protected override bool ShowWithoutActivation
+        {
+            get { return true; }    // Don't take activation away from SkylineWindow
+        }
+
         private static readonly object _pauseLock = new object();
 
-        public static void Show(string description = null, string link = null, bool showMatchingPages = false)
+        public static void Show(string description = null, string link = null, bool showMatchingPages = false, int? timeout = null)
         {
             ClipboardEx.UseInternalClipboard(false);
 
@@ -123,7 +130,13 @@ namespace pwiz.SkylineTestUtil
             lock (_pauseLock)
             {
                 // Wait for an event on the pause lock, when the form is closed
-                Monitor.Wait(_pauseLock);
+                if (!Monitor.Wait(_pauseLock, timeout ?? -1))
+                {
+                    // Close the form programmatically if timeout is exceeded
+                    var form = FormUtil.OpenForms.FirstOrDefault(f => f is PauseAndContinueForm && f.IsHandleCreated);
+                    if (form != null)
+                        form.Close();
+                }
                 ClipboardEx.UseInternalClipboard();
                 if (SkylineWindow != null)
                     RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = true);

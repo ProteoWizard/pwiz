@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/sort_together.hpp"
 #include "TimsData.hpp"
 #include "sqlite3pp.h"
 
@@ -297,7 +298,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
     bool isDdaPasef = db.has_table("PasefFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM PasefFrameMsMsInfo").begin()->get<int>(0) > 0;
     bool isDiaPasef = !isDdaPasef && db.has_table("DiaFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM DiaFrameMsMsInfo").begin()->get<int>(0) > 0;
-    hasPASEFData_ = isDdaPasef | isDiaPasef;
+    bool isPrmPasef = !isDdaPasef && !isDiaPasef && db.has_table("PrmFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM PrmFrameMsMsInfo").begin()->get<int>(0) > 0;
+    hasPASEFData_ = isDdaPasef | isDiaPasef | isPrmPasef;
 
     string pasefIsolationMzFilter;
     if (hasPASEFData_ && !isolationMzFilter_.empty())
@@ -351,7 +353,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 info.intensity = row.get<double>(++idx);
             }
         }
-        else // DiaPasef
+        else if (isDiaPasef)
         {
             string querySql = "SELECT Frame, MIN(ScanNumBegin), MAX(ScanNumEnd), IsolationMz, IsolationWidth, AVG(CollisionEnergy), f.WindowGroup "
                               "FROM DiaFrameMsMsInfo f "
@@ -436,6 +438,40 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
                 frame->windowGroup_ = windowGroup; 
                 frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
+            }
+        }
+        else // PrmPasef
+        {
+            string querySql = "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, MonoisotopicMz, Charge, Target "
+                              "FROM PrmFrameMsMsInfo f "
+                              "JOIN PrmTargets t ON t.Id=f.Target " +
+                              pasefIsolationMzFilter +
+                              "ORDER BY Frame, ScanNumBegin";
+            sqlite::query q(db, querySql.c_str());
+            for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
+            {
+                sqlite::query::rows row = *itr;
+                int idx = -1;
+                int64_t frameId = row.get<sqlite3_int64>(++idx);
+
+                auto findItr = frames_.find(frameId);
+                if (findItr == frames_.end()) // numPeaks == 0, but sometimes still shows up in PasefFrameMsMsInfo!?
+                    continue;
+                auto& frame = findItr->second;
+
+                frame->pasef_precursor_info_.emplace_back(new PasefPrecursorInfo);
+                PasefPrecursorInfo& info = *frame->pasef_precursor_info_.back();
+
+                info.scanBegin = row.get<int>(++idx);
+                info.scanEnd = row.get<int>(++idx) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
+
+                info.isolationMz = row.get<double>(++idx);
+                info.isolationWidth = row.get<double>(++idx);
+                info.collisionEnergy = row.get<double>(++idx);
+                info.monoisotopicMz = row.get<double>(++idx);
+                info.charge = row.get<int>(++idx);
+                info.avgScanNumber = 0;
+                info.intensity = 0;
             }
         }
     }
@@ -669,6 +705,7 @@ TimsFrame::TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
         case MsMsType::MRM: msLevel_ = 2; break; // MRM
         case MsMsType::DDA_PASEF: msLevel_ = 2; break; // PASEF
         case MsMsType::DIA_PASEF: msLevel_ = 2; break; // DIA
+        case MsMsType::PRM_PASEF: msLevel_ = 2; break; // PRM
         default: throw runtime_error("Unhandled msmsType: " + lexical_cast<string>((int) msmsType_));
     }
 }
@@ -680,7 +717,7 @@ bool TimsSpectrum::hasProfileData() const { return false; }
 size_t TimsSpectrum::getLineDataSize() const { return frame_.timsDataImpl_.readFrame(frame_.frameId_).getNbrPeaks(scanBegin_); }
 size_t TimsSpectrum::getProfileDataSize() const { return 0; }
 
-void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+void TimsSpectrum::getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
     auto& storage = frame_.timsDataImpl_;
     const auto& frameProxy = storage.readFrame(frame_.frameId_);
@@ -696,8 +733,8 @@ void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<
     }
 
     auto scanMZs = frameProxy.getScanMZs(scanBegin_);
-    intensities.resize_no_initialize(intensityCounts.size());
-    mz.resize_no_initialize(intensityCounts.size());
+    intensities.resize(intensityCounts.size());
+    mz.resize(intensityCounts.size());
 
     double *m = &mz[0];
     double *inten = &intensities[0];
@@ -708,7 +745,7 @@ void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<
     }
 }
 
-void TimsSpectrum::getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const
+void TimsSpectrum::getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const
 {
     // TDF does not support profile data
     mz.clear();
@@ -738,21 +775,6 @@ double TimsSpectrum::oneOverK0() const
     }
 }
 
-namespace {
-    template<typename T>
-    struct SortByOther
-    {
-        const vector<T> & value_vector;
-
-        SortByOther(const vector<T> & val_vec) :
-            value_vector(val_vec) {}
-
-        bool operator()(int i1, int i2) const
-        {
-            return value_vector[i1] < value_vector[i2];
-        }
-    };
-}
 
 void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const
 {
@@ -791,21 +813,7 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
     if (!sortAndJitter)
         return;
 
-    // sort an array of indices by m/z; these indices are used to reorder all 3 arrays
-    vector<int> indices(mz.size());
-    for (int i = 0; i < mz.size(); ++i)
-        indices[i] = i;
-    std::sort(indices.begin(), indices.end(), SortByOther<double>(mz));
-    pwiz::util::BinaryData<double> mzTmp(mz.size()), intensityTmp(mz.size()), mobilityTmp(mz.size());
-    for (int i = 0; i < mz.size(); ++i)
-    {
-        mzTmp[i] = mz[indices[i]];
-        intensityTmp[i] = intensities[indices[i]];
-        mobilityTmp[i] = mobilities[indices[i]];
-    }
-    swap(mzTmp, mz);
-    swap(intensityTmp, intensities);
-    swap(mobilityTmp, mobilities);
+    sort_together(mz, vector<boost::iterator_range<BinaryData<double>::iterator>> { intensities, mobilities });
 
     // add jitter to identical m/z values (which come from different mobility bins)
     for (size_t i = 1; i < mz.size(); ++i)

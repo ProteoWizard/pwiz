@@ -56,7 +56,7 @@ class PWIZ_API_DECL SpectrumList_ScanSummer : public msdata::SpectrumListWrapper
 {
     public:
 
-    SpectrumList_ScanSummer(const msdata::SpectrumListPtr& inner, double precursorTol, double rTimeTol, double mobilityTol = 0, pwiz::util::IterationListenerRegistry* ilr = 0);
+    SpectrumList_ScanSummer(const msdata::SpectrumListPtr& inner, double precursorTol, double rTimeTol, double mobilityTol = 0, bool sumMs1 = false, pwiz::util::IterationListenerRegistry* ilr = 0);
     void pushSpectrum(const msdata::SpectrumIdentity&);
     double getPrecursorMz(const msdata::Spectrum&) const;
     //void sumSubScansResample( std::vector<double> &, std::vector<double> &, size_t, msdata::DetailLevel) const;
@@ -74,6 +74,7 @@ class PWIZ_API_DECL SpectrumList_ScanSummer : public msdata::SpectrumListWrapper
     double precursorTol_;
     double rTimeTol_;
     double mobilityTol_;
+    bool sumMs1_;
 
     std::vector<msdata::SpectrumIdentity> spectrumIdentities; // local cache, with fixed up index fields
     std::vector<size_t> indexMap; // maps index -> original index

@@ -1,5 +1,6 @@
 ﻿syntax = "proto3";
 option csharp_namespace = "pwiz.Skyline.Model.Serialization";
+option java_package = "org.labkey.targetedms.parser.proto";
 message SkylineDocumentProto {
 	enum UserSet {
 		USER_SET_FALSE = 0;
@@ -102,6 +103,8 @@ message SkylineDocumentProto {
 		OptionalDouble explicitSLens = 34;
 		OptionalDouble explicitConeVoltage = 35;
 		OptionalDouble explicitDeclusteringPotential = 36;
+		bool orphanedCrosslinkIon = 37;
+		repeated LinkedIon linkedIons = 38;
 	}
 
 	message OptionalFloat {
@@ -145,6 +148,15 @@ message SkylineDocumentProto {
 	message TransitionData {
 		repeated Transition transitions = 1;
 	}
+
+	message LinkedIon {
+		IonType ionType = 1;
+		int32 ordinal = 2;
+		int32 modificationIndex = 3;
+		string modificationName = 4;
+		repeated LinkedIon children = 5;
+		bool orphan = 7;
+	}
 }
 
 message LibraryKeyProto
@@ -153,6 +165,14 @@ message LibraryKeyProto
 		peptide = 0;
 		small_molecule = 1;
 		precursor_mz = 2;
+		crosslink = 3;
+	}
+	message Crosslinker {
+		string name = 1;
+		repeated Positions positions = 2;
+	}
+	message Positions {
+		repeated int32 position = 1;
 	}
 	KeyType keyType = 1;
 	string modifiedSequence = 2;
@@ -164,4 +184,7 @@ message LibraryKeyProto
 	string adduct = 8;
 	double precursorMz = 9;
 	double retentionTime = 10;
+	repeated string crosslinkedSequences = 11;
+	repeated Crosslinker crosslinkers = 12;
 }
+

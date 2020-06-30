@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Model
             FormatVersion = doc.FormatVersion;
             RevisionIndex = doc.RevisionIndex;
             UserRevisionIndex = doc.UserRevisionIndex;
-            Settings = settings;
+            Settings = doc.UpdateHasHeavyModifications(settings);
             AuditLog = doc.AuditLog;
             DocumentHash = doc.DocumentHash;
             DeferSettingsChanges = doc.DeferSettingsChanges;
@@ -942,7 +942,7 @@ namespace pwiz.Skyline.Model
         /// <returns>A new document revision</returns>
         public SrmDocument ChangeSettingsNoDiff(SrmSettings settingsNew)
         {
-            return new SrmDocument(this, UpdateHasHeavyModifications(settingsNew), doc =>
+            return new SrmDocument(this, settingsNew, doc =>
             {
                 doc.RevisionIndex++;
                 doc.IsProteinMetadataPending = doc.CalcIsProteinMetadataPending();
@@ -1847,7 +1847,7 @@ namespace pwiz.Skyline.Model
             }
 
             var pepModsNew = pepMods.DeclareExplicitMods(docResult, listGlobalStaticMods, listGlobalHeavyMods);
-            if (ReferenceEquals(pepModsNew, pepMods))
+            if (Equals(pepModsNew, pepMods))
                 return docResult;
 
             // Make sure any newly included modifications are added to the settings
@@ -2115,12 +2115,10 @@ namespace pwiz.Skyline.Model
         public static double GetCollisionEnergy(SrmSettings settings, PeptideDocNode nodePep,
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CollisionEnergyRegression regression, int step)
         {
-            var ce = nodeTran==null // If we're only given a precursor, use the explicit CE of its children if they all agree
-                ? (nodeGroup.Children.Any() && nodeGroup.Children.All( node => ((TransitionDocNode)node).ExplicitValues.CollisionEnergy == ((TransitionDocNode)nodeGroup.Children.First()).ExplicitValues.CollisionEnergy) 
-                    ? ((TransitionDocNode)nodeGroup.Children.First()).ExplicitValues.CollisionEnergy : null)
-                : nodeTran.ExplicitValues.CollisionEnergy;
+            var ce = GetExplicitCollisionEnergy(nodeGroup, nodeTran);
             if (regression != null)
             {
+                // If still no explicit CE value found the CE is calculated using the provided regression, if any.
                 if (!ce.HasValue)
                 {
                     var charge = nodeGroup.TransitionGroup.PrecursorAdduct;
@@ -2130,6 +2128,28 @@ namespace pwiz.Skyline.Model
                 return ce.Value + regression.StepSize * step;
             }
             return ce ?? 0.0;
+        }
+
+        private static double? GetExplicitCollisionEnergy(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
+        {
+            double? ce = null;
+            if (nodeTran != null)
+            {
+                // Collision Energy explicitly declared at the transition level is taken to be the correct value.
+                ce = nodeTran.ExplicitValues.CollisionEnergy;
+            }
+            else
+            {
+                // If we're only given a precursor, use the explicit CE of its children if they all agree.
+                var ceValues = nodeGroup.Transitions.Select(node =>
+                    node.ExplicitValues.CollisionEnergy).Distinct().ToArray();
+                if (ceValues.Length == 1)
+                {
+                    ce = ceValues[0];
+                }
+            }
+            // If no transition-level declaration then explicitly declared value at the precursor level is used.
+            return ce ?? nodeGroup.ExplicitValues.CollisionEnergy;
         }
 
         public double? GetOptimizedCollisionEnergy(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)
@@ -2331,7 +2351,7 @@ namespace pwiz.Skyline.Model
 
             double? covRough = OptimizationStep<CompensationVoltageRegressionRough>.FindOptimizedValueFromResults(settings,
                 nodePep, nodeGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageRough);
-            return covRough.HasValue && covRough.Value > 0 ? covRough.Value + regression.StepSizeMedium*step : 0;
+            return covRough.HasValue ? covRough.Value + regression.StepSizeMedium*step : 0;
         }
 
         public static double GetCompensationVoltageFine(SrmSettings settings, PeptideDocNode nodePep,
@@ -2342,7 +2362,7 @@ namespace pwiz.Skyline.Model
 
             double? covMedium = OptimizationStep<CompensationVoltageRegressionMedium>.FindOptimizedValueFromResults(settings,
                 nodePep, nodeGroup, null, OptimizedMethodType.Precursor, GetCompensationVoltageMedium);
-            return covMedium.HasValue && covMedium.Value > 0 ? covMedium.Value + regression.StepSizeFine*step : 0;
+            return covMedium.HasValue ? covMedium.Value + regression.StepSizeFine*step : 0;
         }
 
         public double? GetOptimizedCompensationVoltage(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, CompensationVoltageParameters.Tuning tuneLevel)

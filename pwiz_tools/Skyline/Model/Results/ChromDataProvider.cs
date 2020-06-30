@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public int IndexOffset { get; set; }
 
-        public int? TicChromatogramIndex { get; }
+        public int? TicChromatogramIndex { get; set; }
         public int? BpcChromatogramIndex { get; }
 
         public IList<int> GlobalChromatogramIndexes
@@ -169,11 +169,35 @@ namespace pwiz.Skyline.Model.Results
             }
             else if (index == TicChromatogramIndex || index == BpcChromatogramIndex)
             {
-                _dataFile.GetChromatogram(index, out string id, out times, out intensities);
+                _dataFile.GetChromatogram(index, out string id, out times, out intensities, true);
             }
             else
             {
                 times = intensities = null;
+            }
+
+            return times != null;
+        }
+
+        /// <summary>
+        /// Returns true if the TIC chromatogram present in the .raw file can be relied on
+        /// for the calculation of total MS1 ion current.
+        /// </summary>
+        public bool IsTicChromatogramUsable()
+        {
+            if (!TicChromatogramIndex.HasValue)
+            {
+                return false;
+            }
+
+            float[] times;
+            if (!GetChromatogram(TicChromatogramIndex.Value, out times, out _))
+            {
+                return false;
+            }
+
+            if (times.Length == 0)
+            {
                 return false;
             }
 
