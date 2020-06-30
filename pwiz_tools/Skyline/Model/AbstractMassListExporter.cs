@@ -620,8 +620,11 @@ namespace pwiz.Skyline.Model
 
             protected override void InsertItem(int index, PeptideSchedule item)
             {
-                TransitionCount += item.TransitionCount;
-                base.InsertItem(index, item);
+                if (item != null)
+                {
+                    TransitionCount += item.TransitionCount;
+                    base.InsertItem(index, item);
+                }
             }
 
             protected override void RemoveItem(int index)
@@ -632,8 +635,11 @@ namespace pwiz.Skyline.Model
 
             protected override void SetItem(int index, PeptideSchedule item)
             {
-                TransitionCount += item.TransitionCount - this[index].TransitionCount;
-                base.SetItem(index, item);
+                if (item != null)
+                {
+                    TransitionCount += item.TransitionCount - this[index].TransitionCount;
+                    base.SetItem(index, item);
+                }
             }
         }
 

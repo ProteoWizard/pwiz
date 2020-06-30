@@ -1300,7 +1300,7 @@ namespace pwiz.Skyline.Util
                         {
                             resultDict[unlabeledSymbol] = unlabeledCount; // Number of remaining non-label atoms
                         }
-                        else if (unlabeledCount < 0) // Can't remove that which is not there
+                        else // Can't remove that which is not there
                         {
                             throw new InvalidOperationException(
                                 string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
