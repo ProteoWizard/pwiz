@@ -308,7 +308,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             double imTestValue = 0.832;
             double ccs = imsl->ionMobilityToCCS(imTestValue, 678.9, 2);
             double imValue = imsl->ccsToIonMobility(ccs, 678.9, 2);
-            unit_assert_equal(imValue, imTestValue, 1e-9);
+            unit_assert_equal(imValue, imTestValue, 1e-5); // some vendors use 32-bit float so accuracy can't be too stringent
         }
       
         // test that non-IMS peak picked data have unique m/z values
