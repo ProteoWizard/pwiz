@@ -1454,7 +1454,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
-            if (PeptideSequence.IsProteomic && !FastaSequence.IsExSequence(PeptideSequence.Sequence))
+            if (PeptideSequence.IsProteomic && !FastaSequence.IsValidPeptideSequence(PeptideSequence.Sequence))
             {
                 throw new InvalidDataException(string.Format(Resources.MeasuredRetentionTime_Validate_The_sequence__0__is_not_a_valid_peptide,
                                                              PeptideSequence));

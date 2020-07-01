@@ -170,7 +170,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     sb.Append(seq.Substring(index));
                     return sb.ToString();
                 }
-                sb.Append(seq.Substring(index, modificationIndex - 1 - index));
+
+                if (modificationIndex > index)
+                {
+                    sb.Append(seq.Substring(index, modificationIndex - 1 - index));
+                }
                 sb.Append(seq.Substring(modificationIndex-1, 1).ToLower());
                 index = seq.IndexOf(']', modificationIndex + 1) + 1;
                 if (index == 0)
