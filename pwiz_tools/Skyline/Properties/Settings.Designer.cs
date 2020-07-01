@@ -2987,6 +2987,8 @@ namespace pwiz.Skyline.Properties {
             set { this["ExportMs1RepetitionTime"] = value; }
         }
 
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Thousands")]
         public string DetectionsYScaleFactor
         {
