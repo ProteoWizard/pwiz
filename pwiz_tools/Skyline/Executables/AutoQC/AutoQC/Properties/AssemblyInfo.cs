@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("AutoQC Loader")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
-[assembly: AssemblyProduct("Panorama AutoQC")]
+[assembly: AssemblyProduct("AutoQC")]
 [assembly: AssemblyCopyright("Copyright © University of Washington 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
