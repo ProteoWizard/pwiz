@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsPauseForCoverShot = true;
-            PauseStartPage = 22;
+//            PauseStartPage = 30;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-2_5.pdf";
 
@@ -204,7 +204,7 @@ namespace pwiz.SkylineTestTutorial
                 using (var blibDbRedundant = BlibDb.OpenBlibDb(redundantDocLibPath))
                 {
                     VerifyLib(searchFileNames, expectedRedundantSpectra, blibDbRedundant.GetIdFilePaths(), blibDbRedundant.GetSpectraCount(),
-                        "redunant library", buildArgs, buildOutput);
+                        "redundant library", buildArgs, buildOutput);
                 }
                 using (var blibDb = BlibDb.OpenBlibDb(docLibPath))
                 {
@@ -381,13 +381,14 @@ namespace pwiz.SkylineTestTutorial
                 dlg.OkDialog();
             });
             const int skylineWindowWidth = 1160;
+            const int skylineWindowHeight = 792;
             RunUI(() =>
                 {
                     // Make window screenshot size
                     if (IsPauseForScreenShots && SkylineWindow.WindowState != FormWindowState.Maximized)
                     {
                         SkylineWindow.Width = skylineWindowWidth;
-                        SkylineWindow.Height = 792;
+                        SkylineWindow.Height = skylineWindowHeight;
                     }
                 });
             RestoreViewOnScreen(13);
@@ -438,9 +439,10 @@ namespace pwiz.SkylineTestTutorial
             CheckAnnotations(TIB_L, pepIndex, atest++);
 
             var alignmentForm = ShowDialog<AlignmentForm>(() => SkylineWindow.ShowRetentionTimeAlignmentForm());
+            const int skylineWindowNarrowWidth = 788;
             RunUI(() =>
             {
-                SkylineWindow.Width = 788;
+                SkylineWindow.Width = skylineWindowNarrowWidth;
                 alignmentForm.Width = 660;
                 alignmentForm.Height = 561;
                 alignmentForm.Left = SkylineWindow.Right + 20;
@@ -452,10 +454,11 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(alignmentForm, alignmentForm.Close);
             PauseForScreenShot("Status bar clipped from main window - 4/51 pep 4/52 prec 10/156 tran", 23);
 
+            const string TIP_NAME = "5b_MCF7_TiTip3";
             if (IsPauseForCoverShot)
             {
                 RestoreCoverViewOnScreen();
-                ClickChromatogram("5b_MCF7_TiTip3", 34.5, 366);
+                ClickChromatogram(TIP_NAME, 34.5, 366);
                 TreeNode selectedNode = null;
                 RunUI(() => selectedNode = SkylineWindow.SequenceTree.SelectedNode);
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0]);
@@ -466,16 +469,12 @@ namespace pwiz.SkylineTestTutorial
             }
 
             pepIndex = JumpToPeptide("SSKASLGSLEGEAEAEASSPK");
-            RunUI(() =>
-            {
-                // SkylineWindow.Width = 788;
-                SkylineWindow.ShowChromatogramLegends(true);
-            });
+            RunUI(() => SkylineWindow.ShowChromatogramLegends(true));
             Assert.IsTrue(8 == pepIndex);
             PauseForScreenShot("Chromatogram graph metafiles for 9th peptide", 24);
             CheckAnnotations(TIB_L, pepIndex, atest++); 
 
-            ZoomSingle(TIP3,32.6, 41.4); // simulate the wheel scroll described in tutorial
+            ZoomSingle(TIP3,31.8, 42.2, 280); // simulate the wheel scroll described in tutorial
             PauseForScreenShot("Chromatogram graph metafile showing all peaks for 1_MCF_TiB_L", 24);
             CheckAnnotations(TIB_L, pepIndex, atest++); 
 
@@ -492,55 +491,82 @@ namespace pwiz.SkylineTestTutorial
 
             var undoIndex = SkylineWindow.Document.RevisionIndex; // preserve for simulating ctrl-z
 
+            RunUI(() => SkylineWindow.Width = skylineWindowWidth);
             PickPeakBoth(pepIndex, 40.471035, 40.8134); // select peak for both chromatograms at these respective retention times
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 25);
 
             int[] m1Thru4 = {1,2,3,4,5};
             PickTransitions(pepIndex, m1Thru4, "Transition pick list filtered", 26, "Transition pick list unfiltered", 26); // turn on chromatograms
             PickPeakBoth(pepIndex, 36.992836, 37.3896027); // select peak for both chromatograms at these respective retention times
-            ZoomSingle(TIP3, 32.4, 39.6); // set the view for screenshot
+            ZoomSingle(TIP3, 32.4, 42.2, 520); // set the view for screenshot
+            RunUI(() =>
+            {
+                SkylineWindow.Height = 550;
+                SkylineWindow.ArrangeGraphsTabbed();
+            });
+            ActivateReplicate(TIP_NAME);
             PauseForScreenShot("Chromatogram graph metafile comparing 33 and 37 minute peaks", 27);
             CheckAnnotations(TIB_L, pepIndex, atest++);
             CheckAnnotations(TIP3, pepIndex, atest++);
 
             RevertDoc(undoIndex); // undo changes
-            pepIndex=JumpToPeptide("ASLGSLEGEAEAEASSPKGK"); // Not L10N
+
+            ActivateReplicate(TIP_NAME);
+            ClickChromatogram(TIP_NAME, 37.3, 164);
+            PauseForScreenShot("MS1 spectrum graph 37.32 minutes", 28);
+            ClickChromatogram(TIP_NAME, 33.2, 328.1);
+            PauseForScreenShot("MS1 spectrum graph 33.19 minutes", 29);
+            RunUI(() => SkylineWindow.HideFullScanGraph());
+
+            RunUI(() =>
+            {
+                SkylineWindow.Width = skylineWindowNarrowWidth;
+                SkylineWindow.Height = skylineWindowHeight;
+                SkylineWindow.ArrangeGraphs(DisplayGraphsType.Column);
+            });
+            pepIndex = JumpToPeptide("ASLGSLEGEAEAEASSPKGK"); // Not L10N
             Assert.IsTrue(10 == pepIndex);
-            PauseForScreenShot("Chromatogram graph meta files for peptide ASLGSLEGEAEAEASSPKGK", 28);
+            PauseForScreenShot("Chromatogram graph meta files for peptide ASLGSLEGEAEAEASSPKGK", 30);
             CheckAnnotations(TIB_L, pepIndex, atest++);
             CheckAnnotations(TIP3, pepIndex, atest++);
 
             PickTransitions(pepIndex, m1Thru4); // turn on M+3 and M+4
             ChangePeakBounds(TIP3, pepIndex, 37.35, 38.08);
-            ZoomSingle(TIP3, 36.65, 39.11); // simulate the wheel scroll described in tutorial
-            PauseForScreenShot("upper - Chromatogram graph metafile for peptide ASLGSLEGEAEAEASSPKGK with adjusted integration", 29);
+            ZoomSingle(TIP3, 36.65, 39.11, 300); // simulate the wheel scroll described in tutorial
+            PauseForScreenShot("upper - Chromatogram graph metafile for peptide ASLGSLEGEAEAEASSPKGK with adjusted integration", 31);
             CheckAnnotations(TIP3, pepIndex, atest++);
 
             RevertDoc(undoIndex); // undo changes
             pepIndex = JumpToPeptide("AEGEWEDQEALDYFSDKESGK"); // Not L10N
-            PauseForScreenShot("lower - Chromatogram graph metafiles for peptide AEGEWEDQEALDYFSDKESGK", 29);
+            PauseForScreenShot("lower - Chromatogram graph metafiles for peptide AEGEWEDQEALDYFSDKESGK", 31);
             CheckAnnotations(TIB_L, pepIndex, atest++);
             CheckAnnotations(TIP3, pepIndex, atest++);
 
             int[] m1Thru5 = { 1, 2, 3, 4, 5, 6 };
             PickTransitions(pepIndex, m1Thru5); // turn on M+3 M+4 and M+5
-            PauseForScreenShot("Chromatogram graph metafiles with M+3, M+4 and M+5 added", 30);
+            PauseForScreenShot("Chromatogram graph metafiles with M+3, M+4 and M+5 added", 32);
             CheckAnnotations(TIB_L, pepIndex, atest++);
             CheckAnnotations(TIP3, pepIndex, atest++);
 
             JumpToPeptide("ALVEFESNPEETREPGSPPSVQR"); // Not L10N
-            PauseForScreenShot("Chromatogram graph metafiles for peptide ALVEFESNPEETREPGSPPSVQR", 31); 
+            PauseForScreenShot("Chromatogram graph metafiles for peptide ALVEFESNPEETREPGSPPSVQR", 33); 
 
             pepIndex = JumpToPeptide("YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR"); // Not L10N
-            PauseForScreenShot("upper - Peak Areas graph metafile for peptide YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR", 32);
+            if (IsPauseForScreenShots)
+            {
+                RestoreViewOnScreen(34);
+                PauseForScreenShot("upper - Peak Areas graph metafile for peptide YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR", 34);
+            }
 
             int[] m1Thru7 = { 1, 2, 3, 4, 5, 6, 7, 8 };
             PickTransitions(pepIndex, m1Thru7); // enable [M+3] [M+4] [M+5] [M+6] [M+7]
-            PauseForScreenShot("lower - Peak Areas graph metafile with M+3 through M+7 added", 32);
+            PauseForScreenShot("lower - Peak Areas graph metafile with M+3 through M+7 added", 34);
             CheckAnnotations(TIB_L, pepIndex, atest++);
             CheckAnnotations(TIP3, pepIndex, atest++);
 
-            // page 32 zooming setup
+            RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
+
+            // page 36 zooming setup
             RunUI(() => 
             {
                 SkylineWindow.SynchronizeZooming(true);
@@ -548,29 +574,34 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.AlignToFile = GetGraphChromatogram(TIP3).GetChromFileInfoId(); // align to Tip3
             });
             ZoomBoth(36.5, 39.5, 1600); // simulate the wheel scroll described in tutorial
-            RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
-            PauseForScreenShot("Chromatogram graphs clipped from main window with synchronized zooming", 32);
+            RunUI(() =>
+            {
+                SkylineWindow.ShowChromatogramLegends(false);
+                SkylineWindow.Width = skylineWindowWidth;
+                SkylineWindow.Height = 720;
+            });
+            PauseForScreenShot("Chromatogram graphs clipped from main window with synchronized zooming", 35);
 
-            RestoreViewOnScreen(33); // float the  Library Match window TODO this causes a crash at next call to ChangePeakBounds, in pwiz.Skyline.Controls.Graphs.GraphChromatogram.ChromGroupInfos.get() Line 492 , why?
+            ClickChromatogram(TIP_NAME, 37.5, 1107.3);
+            PauseForScreenShot("MS1 spectrum graph 37.50 minutes", 36);
+            RunUI(() => SkylineWindow.HideFullScanGraph());
+
+            RunUI(() =>
+            {
+                SkylineWindow.ShowChromatogramLegends(true);
+                SkylineWindow.Width = skylineWindowNarrowWidth;
+                SkylineWindow.Height = skylineWindowHeight;
+            });
+            RestoreViewOnScreen(36); // float the Library Match window
             RunUI(() => SkylineWindow.GraphSpectrum.SelectSpectrum(new SpectrumIdentifier(MsDataFileUri.Parse(Tip3Filename), 37.6076f))); // set the Library Match view
-            PauseForScreenShot<GraphSpectrum>("Library Match graph metafile - 5b_MCF7_TiTip3 (37.61 Min)", 33);
+            PauseForScreenShot<GraphSpectrum>("Library Match graph metafile - 5b_MCF7_TiTip3 (37.61 Min)", 37);
 
             RunUI(() => SkylineWindow.GraphSpectrum.SelectSpectrum(new SpectrumIdentifier(MsDataFileUri.Parse(Tib_LFilename), 37.0335f))); // set the Library Match view
-            PauseForScreenShot<GraphSpectrum>("Library Match graph metafile - 1_MCF_TiB_L (37.03 min)", 33);
+            PauseForScreenShot<GraphSpectrum>("Library Match graph metafile - 1_MCF_TiB_L (37.03 min)", 37);
 
-            RestoreViewOnScreen(34); // back to normal view
-
-            pepIndex = JumpToPeptide("GVVDSEDLPLNISR"); // Not L10N
-            RunUI(() => SkylineWindow.ShowChromatogramLegends(true));
-            PauseForScreenShot("upper - Chromatogram graph metafiles for peptide GVVDSEDLPLNISR", 34);
-
-            ZoomBoth(35.05,36.9,480);
-            PauseForScreenShot("lower - Chromatogram graph metafile - effect of zoom ", 34);  
-            ChangePeakBounds(TIP3, pepIndex, 35.7, 36.5); // adjust integration per tutorial 
-            CheckAnnotations(TIP3, pepIndex, atest++); // check the new idotp values
-
+            RestoreViewOnScreen(37); // back to normal view
             /* pepIndex = */ JumpToPeptide("DQVANSAFVER"); // Not L10N
-            PauseForScreenShot("Chromatogram graph metafiles for peptide DQVANSAFVER", 35);
+            PauseForScreenShot("Chromatogram graph metafiles for peptide DQVANSAFVER", 38);
 
 //            int[] m1 = {2};
 //            PickTransitions(pepIndex, m1); // enable [M+1] only
@@ -621,7 +652,7 @@ namespace pwiz.SkylineTestTutorial
                     minimizeResultsDlg.LimitNoiseTime = true;
                     minimizeResultsDlg.NoiseTimeRange = 2; // Not L10N
                 });
-                PauseForScreenShot<MinimizeResultsDlg>("Minimize Results form (percentages vary slightly)", 36);   // old p. 23
+                PauseForScreenShot<MinimizeResultsDlg>("Minimize Results form (percentages vary slightly)", 39);   // old p. 23
 
                 OkDialog(minimizeResultsDlg, () => minimizeResultsDlg.MinimizeToFile(minimizedFile));
                 WaitForCondition(() => File.Exists(cacheFile));
