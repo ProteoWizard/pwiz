@@ -144,8 +144,8 @@ namespace pwiz.Skyline.Controls.Graphs
             /// </summary>
             public int getCountForMinReplicates(int minRep)
             {
-                if (minRep <= 0) return 0;
-                return Enumerable.Range(0, Math.Min(minRep, Histogram.Count)).Select(i => Histogram[i]).Sum();
+                if (minRep > Histogram.Count) return 0;
+                return Enumerable.Range(Math.Max(minRep-1, 0), Histogram.Count - Math.Max(minRep - 1, 0)).Select(i => Histogram[i]).Sum();
             }
         }
 
