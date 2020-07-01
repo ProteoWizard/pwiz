@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -11,6 +14,173 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public sealed class DetectionsGraphController : GraphSummary.IControllerSplit
     {
+
+        public class IntLabeledValue : LabeledValues<int>
+        {
+            protected IntLabeledValue(int value, Func<string> getLabelFunc) : base(value, getLabelFunc)
+            {
+                Value = value;
+            }
+            public float Value { get; private set; }
+
+            public override string ToString()
+            {
+                return Label;
+            }
+
+            public static IEnumerable<T> GetValues<T>() where T : IntLabeledValue
+            {
+                return (IEnumerable<T>)typeof(T).InvokeMember("GetValues", BindingFlags.InvokeMethod,
+                    null, null, new object[0]);
+            }
+
+            public static T GetDefaultValue<T>() where T : IntLabeledValue
+            {
+                return (T)typeof(T).InvokeMember("GetDefaultValue", BindingFlags.InvokeMethod,
+                    null, null, new object[0]);
+            }
+
+            public static T GetFromString<T>(string str) where T : IntLabeledValue
+            {
+                var res = GetValues<T>().FirstOrDefault(
+                    (t) => t.Label.Equals(str));
+                if (res == default(T))
+                    return GetDefaultValue<T>();
+                else return res;
+            }
+
+            public static void PopulateCombo<T>(ComboBox comboBox, T currentValue) where T : IntLabeledValue
+            {
+                comboBox.Items.Clear();
+                foreach (var val in GetValues<T>())
+                {
+                    comboBox.Items.Add(val);
+                    if (Equals(val, currentValue))
+                    {
+                        comboBox.SelectedIndex = comboBox.Items.Count - 1;
+                    }
+                }
+            }
+            public static void PopulateCombo<T>(ToolStripComboBox comboBox, T currentValue) where T : IntLabeledValue
+            {
+                comboBox.Items.Clear();
+                foreach (var val in GetValues<T>())
+                {
+                    comboBox.Items.Add(val);
+                    if (Equals(val, currentValue))
+                    {
+                        comboBox.SelectedIndex = comboBox.Items.Count - 1;
+                    }
+                }
+            }
+
+            public static T GetValue<T>(ComboBox comboBox, T defaultVal) where T : IntLabeledValue
+            {
+                return comboBox.SelectedItem as T ?? defaultVal;
+            }
+            public static T GetValue<T>(ToolStripComboBox comboBox, T defaultVal) where T : IntLabeledValue
+            {
+                return comboBox.SelectedItem as T ?? defaultVal;
+            }
+        }
+
+        public class TargetType : IntLabeledValue
+        {
+            private TargetType(int value, Func<string> getLabelFunc) : base(value, getLabelFunc) { }
+
+            public static readonly TargetType PRECURSOR = new TargetType(0, () => Resources.DetectionPlot_TargetType_Precursor);
+            public static readonly TargetType PEPTIDE = new TargetType(1, () => Resources.DetectionPlot_TargetType_Peptide);
+
+            public static IEnumerable<TargetType> GetValues()
+            {
+                return new[] { PRECURSOR, PEPTIDE };
+            }
+
+            public static TargetType GetDefaultValue()
+            {
+                return PRECURSOR;
+            }
+        }
+
+        public class YScaleFactorType : IntLabeledValue
+        {
+            private YScaleFactorType(int value, Func<string> getLabelFunc) : base(value, getLabelFunc) { }
+
+            public static readonly YScaleFactorType ONE = new YScaleFactorType(1, () => Resources.DetectionPlot_YScale_One);
+            public static readonly YScaleFactorType HUNDRED = new YScaleFactorType(100, () => Resources.DetectionPlot_YScale_Hundred);
+            public static readonly YScaleFactorType THOUSAND = new YScaleFactorType(1000, () => Resources.DetectionPlot_YScale_Thousand);
+            public static readonly YScaleFactorType PERCENT = new YScaleFactorType(0, () => Resources.DetectionPlot_YScale_Percent);
+
+            public static IEnumerable<YScaleFactorType> GetValues()
+            {
+                return new[] { ONE, HUNDRED, THOUSAND, PERCENT };
+            }
+            public static YScaleFactorType GetDefaultValue()
+            {
+                return THOUSAND;
+            }
+        }
+
+
+        public class Settings
+        {
+            public static float QValueCutoff
+            {
+                get => Properties.Settings.Default.DetectionsQValueCutoff;
+                set => Properties.Settings.Default.DetectionsQValueCutoff = value;
+            }
+
+            public static TargetType TargetType
+            {
+                get => IntLabeledValue.GetFromString<TargetType>(
+                    Properties.Settings.Default.DetectionsTargetType);
+                set => Properties.Settings.Default.DetectionsTargetType = value.ToString();
+            }
+            public static YScaleFactorType YScaleFactor
+            {
+                get => IntLabeledValue.GetFromString<YScaleFactorType>(
+                        Properties.Settings.Default.DetectionsYScaleFactor);
+                set => Properties.Settings.Default.DetectionsYScaleFactor = value.ToString();
+            }
+
+            public static int RepCount
+            {
+                get => Properties.Settings.Default.DetectionsRepCount;
+                set => Properties.Settings.Default.DetectionsRepCount = value;
+            }
+
+            public static float FontSize
+            {
+                get => Properties.Settings.Default.AreaFontSize;
+                set => Properties.Settings.Default.AreaFontSize = value;
+            }
+
+            public static bool ShowAtLeastN
+            {
+                get => Properties.Settings.Default.DetectionsShowAtLeastN;
+                set => Properties.Settings.Default.DetectionsShowAtLeastN = value;
+            }
+
+            // ReSharper disable once MemberHidesStaticFromOuterClass
+            public static bool ShowSelection
+            {
+                get => Properties.Settings.Default.DetectionsShowSelection;
+                set => Properties.Settings.Default.DetectionsShowSelection = value;
+            }
+
+            public static bool ShowMean
+            {
+                get => Properties.Settings.Default.DetectionsShowMean;
+                set => Properties.Settings.Default.DetectionsShowMean = value;
+            }
+            public static bool ShowLegend
+            {
+                get => Properties.Settings.Default.DetectionsShowLegend;
+                set => Properties.Settings.Default.DetectionsShowLegend = value;
+            }
+        }
+
+
         private GraphSummary.IControllerSplit _controllerInterface;
         public DetectionsGraphController()
         {
@@ -19,16 +189,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static GraphTypeSummary GraphType
         {
-            get { return Helpers.ParseEnum(Settings.Default.DetectionGraphType, GraphTypeSummary.invalid); }
-            set { Settings.Default.DetectionGraphType = value.ToString(); }
+            get { return Helpers.ParseEnum(Properties.Settings.Default.DetectionGraphType, GraphTypeSummary.invalid); }
+            set { Properties.Settings.Default.DetectionGraphType = value.ToString(); }
         }
 
         GraphSummary GraphSummary.IController.GraphSummary { get; set; }
 
         UniqueList<GraphTypeSummary> GraphSummary.IController.GraphTypes
         {
-            get { return Settings.Default.DetectionGraphTypes; }
-            set { Settings.Default.DetectionGraphTypes = value; }
+            get { return Properties.Settings.Default.DetectionGraphTypes; }
+            set { Properties.Settings.Default.DetectionGraphTypes = value; }
         }
 
         public IFormView FormView { get { return new GraphSummary.DetectionsGraphView(); } }
@@ -85,7 +255,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         void GraphSummary.IController.OnResultsIndexChanged()
         {
-            if (_controllerInterface.GraphSummary.GraphPanes.OfType<DetectionsPlotPane>().Any())
+            if (_controllerInterface.GraphSummary.GraphPanes.OfType<DetectionsByReplicatePane>().Any())
                 _controllerInterface.GraphSummary.UpdateUI();
         }
 
@@ -96,20 +266,19 @@ namespace pwiz.Skyline.Controls.Graphs
             switch (_controllerInterface.GraphSummary.Type)
             {
                 case GraphTypeSummary.detections:
-                    if (!(pane is DetectionsPlotPane))
+                    if (!(pane is DetectionsByReplicatePane))
                         _controllerInterface.GraphSummary.GraphPanes = new[]
                         {
-                            new DetectionsPlotPane(_controllerInterface.GraphSummary), 
+                            new DetectionsByReplicatePane(_controllerInterface.GraphSummary), 
                         };
                     break;
                 case GraphTypeSummary.detections_histogram:
-                    throw new NotImplementedException();
-                    //if (!(pane is AreaCVHistogram2DGraphPane))
-                    //    _controllerInterface.GraphSummary.GraphPanes = new[]
-                    //    {
-                    //        new AreaCVHistogram2DGraphPane(_controllerInterface.GraphSummary)
-                    //    };
-                    //break;
+                    if (!(pane is DetectionsHistogramPane))
+                        _controllerInterface.GraphSummary.GraphPanes = new[]
+                        {
+                            new DetectionsHistogramPane(_controllerInterface.GraphSummary)
+                        };
+                    break;
             }
 
             if (!ReferenceEquals(_controllerInterface.GraphSummary.GraphPanes.FirstOrDefault(), pane))

@@ -10872,6 +10872,9 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlot_YScale_One" xml:space="preserve">
     <value>One</value>
   </data>
+  <data name="DetectionPlot_YScale_Percent" xml:space="preserve">
+    <value>%</value>
+  </data>
   <data name="DetectionPlot_YScale_Hundred" xml:space="preserve">
     <value>Hundreds</value>
   </data>
@@ -10922,5 +10925,17 @@ Invalid peptide sequence at position 18
   </data>
   <data name="DetectionPlotPane_EmptyPlot_Label" xml:space="preserve">
     <value>No valid data for this plot.</value>
+  </data>
+  <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
+    <value>Replicate Count</value>
+  </data>
+  <data name="DetectionHistogramPane_YAxis_Name" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="DetectionHistogramPane_Tooltip_ReplicateCount" xml:space="preserve">
+    <value>Replicate Count</value>
+  </data>
+  <data name="DetectionHistogramPane_Tooltip_Count" xml:space="preserve">
+    <value>{0} Count</value>
   </data>
 </root>

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Util;
-using Settings = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.Settings;
+using Settings = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.Settings;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -14,13 +14,13 @@ namespace pwiz.Skyline.Controls.Graphs
         private List<QData> _precursorData;
         private List<QData> _peptideData;
         private bool _isValid;
-        private Dictionary<DetectionsPlotPane.TargetType, DataSet> _data = new Dictionary<DetectionsPlotPane.TargetType, DataSet>();
+        private Dictionary<DetectionsGraphController.TargetType, DataSet> _data = new Dictionary<DetectionsGraphController.TargetType, DataSet>();
 
         public float QValueCutoff { get; private set; }
         public bool IsValid => _isValid;
         public int ReplicateCount { get; private set; }
 
-        public DataSet GetData(DetectionsPlotPane.TargetType target)
+        public DataSet GetData(DetectionsGraphController.TargetType target)
         {
             return _data[target];
 
@@ -86,8 +86,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            _data[DetectionsPlotPane.TargetType.PRECURSOR] = new DataSet(_precursorData, ReplicateCount, QValueCutoff);
-            _data[DetectionsPlotPane.TargetType.PEPTIDE] = new DataSet(_peptideData, ReplicateCount, QValueCutoff);
+            _data[DetectionsGraphController.TargetType.PRECURSOR] = new DataSet(_precursorData, ReplicateCount, QValueCutoff);
+            _data[DetectionsGraphController.TargetType.PEPTIDE] = new DataSet(_peptideData, ReplicateCount, QValueCutoff);
 
             _isValid = true;
         }
@@ -99,20 +99,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         public class DataSet
         {
-            private readonly IEnumerable<int> _count;
-            private IEnumerable<int> _cumulative;
-            private IEnumerable<int> _all;
-            private readonly IEnumerable<int> _histogram;
-            private IEnumerable<float> _qMedians;
-            private List<QData> _data;
-            private float _qValueCutoff;
-
-
-            public List<int> TargetsCount => new List<int>(_count); 
-            public List<int> TargetsCumulative => new List<int>(_cumulative);
-            public List<int> TargetsAll => new List<int>(_all);
-            public List<float> QMedians => new List<float>(_qMedians);
-            public List<int> Histogram => new List<int>(_histogram);
+            public ImmutableList<int> TargetsCount { get; private set; }
+            public ImmutableList<int> TargetsCumulative { get; private set; }
+            public ImmutableList<int> TargetsAll { get; private set; }
+            public ImmutableList<float> QMedians { get; private set; }
+            public ImmutableList<int> Histogram { get; private set; }
 
 
             public double MaxCount
@@ -122,29 +113,30 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public DataSet(List<QData> data, int replicateCount, float qValueCutoff)
             {
-                _data = data;
-                _qValueCutoff = qValueCutoff;
-                _count = Enumerable.Range(0, replicateCount)
-                    .Select(i => data.Count(t => t.QValues[i] < qValueCutoff));
+                TargetsCount = ImmutableList<int>.ValueOf(Enumerable.Range(0, replicateCount)
+                    .Select(i => data.Count(t => t.QValues[i] < qValueCutoff)));
 
-                _qMedians = Enumerable.Range(0, replicateCount)
+                QMedians = ImmutableList<float>.ValueOf(Enumerable.Range(0, replicateCount)
                     .Select(i =>
                     {
-                        var qStats = new Statistics(data.Select(t => (double)t.QValues[i]));
+                        var qStats = new Statistics(
+                            data.FindAll(t => t.QValues[i] < qValueCutoff)
+                                .Select(t => (double)t.QValues[i]));
                         return (float)qStats.Median();
-                    });
-                
-                _cumulative = Enumerable.Range(0, replicateCount)
-                    .Select(i => data.Count(t => t.MinQValues[i] < qValueCutoff));
-                _all = Enumerable.Range(0, replicateCount)
-                    .Select(i => data.Count(t => t.MaxQValues[i] < qValueCutoff));
+                    }));
 
-                _histogram = data.Select(t => t.QValues.Count(f => f < qValueCutoff)) //Count replicates for each target
-                    .GroupBy(f => f, f => 1,
+                TargetsCumulative = ImmutableList<int>.ValueOf(Enumerable.Range(0, replicateCount)
+                    .Select(i => data.Count(t => t.MinQValues[i] < qValueCutoff)));
+                TargetsAll = ImmutableList<int>.ValueOf(Enumerable.Range(0, replicateCount)
+                    .Select(i => data.Count(t => t.MaxQValues[i] < qValueCutoff)));
+
+                var histogramPairs = data.Select(t => t.QValues.Count(f => f < qValueCutoff)) //Count replicates for each target
+                    .GroupBy(f => f, c => 1,
                         (f, c) => new
-                            {replicateNum = f, histCount = c.Sum()}) //Group targets by the number of replicates
-                    .OrderBy(e => e.replicateNum)    //Make sure the final list is ordered by the replicate count
-                    .Select(e => e.histCount);
+                            {replicateNum = f, histCount = c.Sum()}).ToLookup((tuple)=> tuple.replicateNum); //Group targets by the number of replicates
+
+                Histogram = ImmutableList<int>.ValueOf(Enumerable.Range(1, replicateCount + 1)
+                    .Select(n => histogramPairs.Contains(n) ? histogramPairs[n].First().histCount : 0));
             }
 
             /// <summary>
@@ -152,10 +144,9 @@ namespace pwiz.Skyline.Controls.Graphs
             /// </summary>
             public int getCountForMinReplicates(int minRep)
             {
-                return _data.Count(qs => qs.QValues.Count(q => q < _qValueCutoff) >= minRep);
+                if (minRep <= 0) return 0;
+                return Enumerable.Range(0, Math.Min(minRep, Histogram.Count)).Select(i => Histogram[i]).Sum();
             }
-
-
         }
 
         /// <summary>

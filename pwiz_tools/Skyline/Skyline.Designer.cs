@@ -588,6 +588,7 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.detectionsYScalePercentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
@@ -4438,15 +4439,15 @@ namespace pwiz.Skyline
             // 
             this.detectionsTargetPrecursorToolStripMenuItem.Name = "detectionsTargetPrecursorToolStripMenuItem";
             resources.ApplyResources(this.detectionsTargetPrecursorToolStripMenuItem, "detectionsTargetPrecursorToolStripMenuItem");
-            this.detectionsTargetPrecursorToolStripMenuItem.Click += new System.EventHandler(this.detectionsTargetPrecursorToolStripMenuItem_Click);
             this.detectionsTargetPrecursorToolStripMenuItem.Tag = 0;
+            this.detectionsTargetPrecursorToolStripMenuItem.Click += new System.EventHandler(this.detectionsTargetPrecursorToolStripMenuItem_Click);
             // 
             // detectionsTargetPeptideToolStripMenuItem
             // 
             this.detectionsTargetPeptideToolStripMenuItem.Name = "detectionsTargetPeptideToolStripMenuItem";
             resources.ApplyResources(this.detectionsTargetPeptideToolStripMenuItem, "detectionsTargetPeptideToolStripMenuItem");
-            this.detectionsTargetPeptideToolStripMenuItem.Click += new System.EventHandler(this.detectionsTargetPeptideToolStripMenuItem_Click);
             this.detectionsTargetPeptideToolStripMenuItem.Tag = 1;
+            this.detectionsTargetPeptideToolStripMenuItem.Click += new System.EventHandler(this.detectionsTargetPeptideToolStripMenuItem_Click);
             // 
             // detectionsGraphTypeToolStripMenuItem
             // 
@@ -4512,7 +4513,8 @@ namespace pwiz.Skyline
             this.detectionsYScaleToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.detectionsYScaleOneToolStripMenuItem,
             this.detectionsYScaleHundredToolStripMenuItem,
-            this.detectionsYScaleThousandToolStripMenuItem});
+            this.detectionsYScaleThousandToolStripMenuItem,
+            this.detectionsYScalePercentToolStripMenuItem});
             this.detectionsYScaleToolStripMenuItem.Name = "detectionsYScaleToolStripMenuItem";
             resources.ApplyResources(this.detectionsYScaleToolStripMenuItem, "detectionsYScaleToolStripMenuItem");
             // 
@@ -4520,22 +4522,22 @@ namespace pwiz.Skyline
             // 
             this.detectionsYScaleOneToolStripMenuItem.Name = "detectionsYScaleOneToolStripMenuItem";
             resources.ApplyResources(this.detectionsYScaleOneToolStripMenuItem, "detectionsYScaleOneToolStripMenuItem");
-            this.detectionsYScaleOneToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScaleOneToolStripMenuItem_Click);
             this.detectionsYScaleOneToolStripMenuItem.Tag = 1;
+            this.detectionsYScaleOneToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScaleOneToolStripMenuItem_Click);
             // 
             // detectionsYScaleHundredToolStripMenuItem
             // 
             this.detectionsYScaleHundredToolStripMenuItem.Name = "detectionsYScaleHundredToolStripMenuItem";
             resources.ApplyResources(this.detectionsYScaleHundredToolStripMenuItem, "detectionsYScaleHundredToolStripMenuItem");
-            this.detectionsYScaleHundredToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScaleHundredToolStripMenuItem_Click);
             this.detectionsYScaleHundredToolStripMenuItem.Tag = 100;
+            this.detectionsYScaleHundredToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScaleHundredToolStripMenuItem_Click);
             // 
             // detectionsYScaleThousandToolStripMenuItem
             // 
             this.detectionsYScaleThousandToolStripMenuItem.Name = "detectionsYScaleThousandToolStripMenuItem";
             resources.ApplyResources(this.detectionsYScaleThousandToolStripMenuItem, "detectionsYScaleThousandToolStripMenuItem");
-            this.detectionsYScaleThousandToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScaleThousandToolStripMenuItem_Click);
             this.detectionsYScaleThousandToolStripMenuItem.Tag = 1000;
+            this.detectionsYScaleThousandToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScaleThousandToolStripMenuItem_Click);
             // 
             // detectionsToolStripSeparator2
             // 
@@ -4552,6 +4554,12 @@ namespace pwiz.Skyline
             // 
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
+            // 
+            // detectionsYScalePercentToolStripMenuItem
+            // 
+            this.detectionsYScalePercentToolStripMenuItem.Name = "detectionsYScalePercentToolStripMenuItem";
+            resources.ApplyResources(this.detectionsYScalePercentToolStripMenuItem, "detectionsYScalePercentToolStripMenuItem");
+            this.detectionsYScalePercentToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScalePercentToolStripMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -5142,6 +5150,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator detectionsToolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem detectionsPropertiesToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator detectionsToolStripSeparator3;
+        private System.Windows.Forms.ToolStripMenuItem detectionsYScalePercentToolStripMenuItem;
     }
 }
 

@@ -346,6 +346,8 @@
     </Compile>
     <Compile Include="Controls\Graphs\DetectionPlotData.cs" />
     <Compile Include="Controls\Graphs\DetectionsGraphController.cs" />
+    <Compile Include="Controls\Graphs\DetectionsHistogramPane.cs" />
+    <Compile Include="Controls\Graphs\DetectionsByReplicatePane.cs" />
     <Compile Include="Controls\Graphs\DetectionsPlotPane.cs" />
     <Compile Include="Controls\Graphs\DetectionsToolbar.cs">
       <SubType>UserControl</SubType>

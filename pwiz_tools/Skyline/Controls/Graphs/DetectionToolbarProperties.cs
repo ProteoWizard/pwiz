@@ -4,8 +4,8 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
-using Settings = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.Settings;
-using IntLabeledValue = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.IntLabeledValue;
+using Settings = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.Settings;
+using IntLabeledValue = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.IntLabeledValue;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -41,10 +41,12 @@ namespace pwiz.Skyline.Controls.Graphs
             cbShowAtLeastN.Checked = Settings.ShowAtLeastN;
             cbShowSelection.Checked = Settings.ShowSelection;
             cbShowMeanStd.Checked = Settings.ShowMean;
+            cbShowLegend.Checked = Settings.ShowLegend;
             GraphFontSize.PopulateCombo(cmbFontSize, Settings.FontSize);
 
             tbAtLeastN.Maximum = _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
             tbAtLeastN.Value = Settings.RepCount;
+            cmbTargetType.Focus();
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -71,6 +73,8 @@ namespace pwiz.Skyline.Controls.Graphs
             Settings.ShowAtLeastN = cbShowAtLeastN.Checked;
             Settings.ShowSelection = cbShowSelection.Checked;
             Settings.ShowMean = cbShowMeanStd.Checked;
+            Settings.ShowLegend = cbShowLegend.Checked;
+
             Settings.RepCount = tbAtLeastN.Value;
             Settings.FontSize = GraphFontSize.GetFontSize(cmbFontSize).PointSize;
 
@@ -87,5 +91,6 @@ namespace pwiz.Skyline.Controls.Graphs
             gbAtLeastN.Text = String.Format(CultureInfo.CurrentCulture,
                 Resources.DetectionToolbarProperties_AtLeastNReplicates, tbAtLeastN.Value);
         }
+
     }
 }

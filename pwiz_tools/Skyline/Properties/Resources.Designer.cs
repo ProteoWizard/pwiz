@@ -8250,6 +8250,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} Count.
+        /// </summary>
+        public static string DetectionHistogramPane_Tooltip_Count {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_Tooltip_Count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Count.
+        /// </summary>
+        public static string DetectionHistogramPane_Tooltip_ReplicateCount {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_Tooltip_ReplicateCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Count.
+        /// </summary>
+        public static string DetectionHistogramPane_XAxis_Name {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_XAxis_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Frequency.
+        /// </summary>
+        public static string DetectionHistogramPane_YAxis_Name {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_YAxis_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide.
         /// </summary>
         public static string DetectionPlot_TargetType_Peptide {
@@ -8282,6 +8318,15 @@ namespace pwiz.Skyline.Properties {
         public static string DetectionPlot_YScale_One {
             get {
                 return ResourceManager.GetString("DetectionPlot_YScale_One", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to %.
+        /// </summary>
+        public static string DetectionPlot_YScale_Percent {
+            get {
+                return ResourceManager.GetString("DetectionPlot_YScale_Percent", resourceCulture);
             }
         }
         

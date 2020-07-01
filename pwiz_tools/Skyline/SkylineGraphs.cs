@@ -5889,9 +5889,9 @@ namespace pwiz.Skyline
 
         public void ShowDetectionsHistogramGraph()
         {
-            //Settings.Default.DetectionGraphTypes.Insert(0, GraphTypeSummary.detections_histogram);
-            //ShowGraphDetections(true, GraphTypeSummary.detections);
-            //UpdateDetectionsGraph();
+            Settings.Default.DetectionGraphTypes.Insert(0, GraphTypeSummary.detections_histogram);
+            ShowGraphDetection(true, GraphTypeSummary.detections_histogram);
+            UpdateDetectionsGraph();
         }
 
         public void ShowGraphDetection(bool show)
@@ -5995,10 +5995,10 @@ namespace pwiz.Skyline
             }
 
             //Update menu according to the current settings
-            detectionsShowMeanToolStripMenuItem.Checked = DetectionsPlotPane.Settings.ShowMean;
-            detectionsShowSelectionToolStripMenuItem.Checked = DetectionsPlotPane.Settings.ShowSelection;
-            detectionsShowLegendToolStripMenuItem.Checked = DetectionsPlotPane.Settings.ShowLegend;
-            detectionsShowAtLeastNToolStripMenuItem.Checked = DetectionsPlotPane.Settings.ShowAtLeastN;
+            detectionsShowMeanToolStripMenuItem.Checked = DetectionsGraphController.Settings.ShowMean;
+            detectionsShowSelectionToolStripMenuItem.Checked = DetectionsGraphController.Settings.ShowSelection;
+            detectionsShowLegendToolStripMenuItem.Checked = DetectionsGraphController.Settings.ShowLegend;
+            detectionsShowAtLeastNToolStripMenuItem.Checked = DetectionsGraphController.Settings.ShowAtLeastN;
 
             foreach (var item in new[]
             {
@@ -6006,7 +6006,7 @@ namespace pwiz.Skyline
                 detectionsYScaleHundredToolStripMenuItem,
                 detectionsYScaleThousandToolStripMenuItem
             })
-                item.Checked = ((int)item.Tag) == DetectionsPlotPane.Settings.YScaleFactor.Value;
+                item.Checked = ((int)item.Tag) == DetectionsGraphController.Settings.YScaleFactor.Value;
 
 
             foreach (var item in new[]
@@ -6014,7 +6014,7 @@ namespace pwiz.Skyline
                 detectionsTargetPrecursorToolStripMenuItem,
                 detectionsTargetPeptideToolStripMenuItem
             })
-                item.Checked = ((int)item.Tag) == DetectionsPlotPane.Settings.TargetType.Value;
+                item.Checked = ((int)item.Tag) == DetectionsGraphController.Settings.TargetType.Value;
         }
 
         private void detectionsPropertiesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -6039,53 +6039,58 @@ namespace pwiz.Skyline
 
         private void detectionsYScaleOneToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DetectionsPlotPane.Settings.YScaleFactor = DetectionsPlotPane.YScaleFactorType.ONE;
+            DetectionsGraphController.Settings.YScaleFactor = DetectionsGraphController.YScaleFactorType.ONE;
             UpdateDetectionsGraph();
         }
 
         private void detectionsYScaleHundredToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DetectionsPlotPane.Settings.YScaleFactor = DetectionsPlotPane.YScaleFactorType.HUNDRED;
+            DetectionsGraphController.Settings.YScaleFactor = DetectionsGraphController.YScaleFactorType.HUNDRED;
             UpdateDetectionsGraph();
         }
 
         private void detectionsYScaleThousandToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DetectionsPlotPane.Settings.YScaleFactor = DetectionsPlotPane.YScaleFactorType.THOUSAND;
+            DetectionsGraphController.Settings.YScaleFactor = DetectionsGraphController.YScaleFactorType.THOUSAND;
+            UpdateDetectionsGraph();
+        }
+        private void detectionsYScalePercentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DetectionsGraphController.Settings.YScaleFactor = DetectionsGraphController.YScaleFactorType.PERCENT;
             UpdateDetectionsGraph();
         }
 
         private void detectionsShowSelectionToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DetectionsPlotPane.Settings.ShowSelection = !DetectionsPlotPane.Settings.ShowSelection;
+            DetectionsGraphController.Settings.ShowSelection = !DetectionsGraphController.Settings.ShowSelection;
             UpdateDetectionsGraph();
         }
 
         private void detectionsShowLegendToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DetectionsPlotPane.Settings.ShowLegend = !DetectionsPlotPane.Settings.ShowLegend;
+            DetectionsGraphController.Settings.ShowLegend = !DetectionsGraphController.Settings.ShowLegend;
             UpdateDetectionsGraph();
         }
 
         private void detectionsShowMeanToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DetectionsPlotPane.Settings.ShowMean = !DetectionsPlotPane.Settings.ShowMean;
+            DetectionsGraphController.Settings.ShowMean = !DetectionsGraphController.Settings.ShowMean;
             UpdateDetectionsGraph();
         }
 
         private void detectionsShowAtLeastNToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DetectionsPlotPane.Settings.ShowAtLeastN = !DetectionsPlotPane.Settings.ShowAtLeastN;
+            DetectionsGraphController.Settings.ShowAtLeastN = !DetectionsGraphController.Settings.ShowAtLeastN;
             UpdateDetectionsGraph();
         }
         private void detectionsTargetPrecursorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DetectionsPlotPane.Settings.TargetType = DetectionsPlotPane.TargetType.PRECURSOR;
+            DetectionsGraphController.Settings.TargetType = DetectionsGraphController.TargetType.PRECURSOR;
             UpdateDetectionsGraph();
         }
         private void detectionsTargetPeptideToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            DetectionsPlotPane.Settings.TargetType = DetectionsPlotPane.TargetType.PEPTIDE;
+            DetectionsGraphController.Settings.TargetType = DetectionsGraphController.TargetType.PEPTIDE;
             detectionsTargetPrecursorToolStripMenuItem.Checked = false;
             detectionsTargetPeptideToolStripMenuItem.Checked = true;
             UpdateDetectionsGraph();
@@ -6093,11 +6098,13 @@ namespace pwiz.Skyline
 
         private void detectionsGraphTypeReplicateToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ShowDetectionsReplicateComparisonGraph();
+
         }
 
         private void detectionsGraphTypeHistogramToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            ShowDetectionsHistogramGraph();
         }
         #endregion
 

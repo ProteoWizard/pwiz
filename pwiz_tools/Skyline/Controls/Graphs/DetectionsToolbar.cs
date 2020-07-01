@@ -4,8 +4,8 @@ using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
-using Settings = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.Settings;
-using IntLabeledValue = pwiz.Skyline.Controls.Graphs.DetectionsPlotPane.IntLabeledValue;
+using Settings = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.Settings;
+using IntLabeledValue = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.IntLabeledValue;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
