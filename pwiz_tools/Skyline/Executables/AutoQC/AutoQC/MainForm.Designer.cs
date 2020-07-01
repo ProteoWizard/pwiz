@@ -341,7 +341,7 @@
             this.cb_minimizeToSysTray.Name = "cb_minimizeToSysTray";
             this.cb_minimizeToSysTray.Size = new System.Drawing.Size(320, 24);
             this.cb_minimizeToSysTray.TabIndex = 2;
-            this.cb_minimizeToSysTray.Text = "Minize program to Windows System Tray";
+            this.cb_minimizeToSysTray.Text = "Minimize program to Windows System Tray";
             this.cb_minimizeToSysTray.UseVisualStyleBackColor = true;
             // 
             // cb_keepRunning

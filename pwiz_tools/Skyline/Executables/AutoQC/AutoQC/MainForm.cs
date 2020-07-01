@@ -24,7 +24,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -697,7 +696,7 @@ namespace AutoQC
         private int RemoveConfiguration(AutoQcConfig config)
         {
             Program.LogInfo(string.Format("Removing configuration \"{0}\"", config.Name));
-            var lvi = listViewConfigs.FindItemWithText(config.Name);
+            var lvi = listViewConfigs.FindItemWithText(config.Name, false, 0, false);
             var lviIndex = lvi == null ? -1 : lvi.Index;
             if (lvi != null)
             {
