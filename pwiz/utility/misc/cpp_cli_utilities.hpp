@@ -44,7 +44,7 @@
 #include "BinaryData.hpp"
 
 #ifdef __cplusplus_cli
-//#define PWIZ_MANAGED_PASSTHROUGH
+#define PWIZ_MANAGED_PASSTHROUGH
 #endif
 
 namespace pwiz {
@@ -169,6 +169,12 @@ template<typename managed_value_type, typename native_value_type>
 void ToBinaryData(cli::array<managed_value_type>^ managedArray, BinaryData<native_value_type>& binaryData)
 {
     typedef System::Runtime::InteropServices::GCHandle GCHandle;
+
+    if (managedArray->Length == 0)
+    {
+        binaryData.clear();
+        return;
+    }
 
 #ifdef PWIZ_MANAGED_PASSTHROUGH
     GCHandle handle = GCHandle::Alloc(managedArray);

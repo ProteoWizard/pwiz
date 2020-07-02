@@ -758,6 +758,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The concentration of this particular molecule or peptide in this particular replicate.
+        ///If the Explicit Analyte Concentration is not specified then the concentration of the analyte is assumed 
+        ///to be the Analyte Concentration from the Replicate times the Concentration Multiplier of the Peptide or Molecule..
+        /// </summary>
+        public static string ExplicitAnalyteConcentration {
+            get {
+                return ResourceManager.GetString("ExplicitAnalyteConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The exact desired collisional cross section (in square angstroms) to be converted to ion mobility and used in extracting chromatograms from ion mobility mass spectra, overriding all model values. .
         /// </summary>
         public static string ExplicitCollisionalCrossSection {
@@ -767,7 +778,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values..
+        ///   Looks up a localized string similar to The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library or per-precursor explicit values..
         /// </summary>
         public static string ExplicitCollisionEnergy {
             get {
@@ -1319,6 +1330,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The probability score assigned to this match in the input files used to build the spectral library..
+        /// </summary>
+        public static string LibraryProbabilityScore {
+            get {
+                return ResourceManager.GetString("LibraryProbabilityScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The rank based on LibraryIntensity of this transition among all transitions
         ///allowed by the transition Filter settings, shown in the user interface as “(rank #)”..
         /// </summary>
@@ -1466,6 +1486,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MaxBestRetentionTime {
             get {
                 return ResourceManager.GetString("MaxBestRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A  maximum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mPro
+        ///phet model..
+        /// </summary>
+        public static string MaxDetectionQValue {
+            get {
+                return ResourceManager.GetString("MaxDetectionQValue", resourceCulture);
             }
         }
         
@@ -1625,6 +1655,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Median.
+        /// </summary>
+        public static string Median {
+            get {
+                return ResourceManager.GetString("Median", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A  median of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model..
+        /// </summary>
+        public static string MedianDetectionQValue {
+            get {
+                return ResourceManager.GetString("MedianDetectionQValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min.
         /// </summary>
         public static string Min {
@@ -1639,6 +1687,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MinBestRetentionTime {
             get {
                 return ResourceManager.GetString("MinBestRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A  minimum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model..
+        /// </summary>
+        public static string MinDetectionQValue {
+            get {
+                return ResourceManager.GetString("MinDetectionQValue", resourceCulture);
             }
         }
         
@@ -2255,6 +2312,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PrecursorConcentration {
             get {
                 return ResourceManager.GetString("PrecursorConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values. May in turn be overridden by per-transition Explicit Collision Energy..
+        /// </summary>
+        public static string PrecursorExplicitCollisionEnergy {
+            get {
+                return ResourceManager.GetString("PrecursorExplicitCollisionEnergy", resourceCulture);
             }
         }
         

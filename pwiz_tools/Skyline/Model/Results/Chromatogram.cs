@@ -30,7 +30,6 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -240,7 +239,7 @@ namespace pwiz.Skyline.Model.Results
             private void FinishLoad(string documentPath, MeasuredResults resultsLoad, MeasuredResults resultsPrevious)
             {
                 // Only one finisher at a time, otherwise guaranteed wasted work
-                // CONSIDER: In thoery this should be a lock per document container, but in
+                // CONSIDER: In theory this should be a lock per document container, but in
                 //           practice we have only one document container per process
                 lock (_finishLock)
                 {
@@ -374,7 +373,8 @@ namespace pwiz.Skyline.Model.Results
         {
             for (int i = 0; i < _msDataFileInfo.Count; i++)
             {
-                if (Equals(_msDataFileInfo[i].FilePath, filePath))
+                // Compare ignoring centroiding, combineIMS etc
+                if (Equals(_msDataFileInfo[i].FilePath.GetLocation(), filePath.GetLocation()))
                     return true;
             }
             return false;
@@ -480,14 +480,21 @@ namespace pwiz.Skyline.Model.Results
             var set = ImClone(this);
 
             // Be sure to preserve existing file info objects
-            var dictPathToFileInfo = MSDataFileInfos.ToDictionary(info => info.FilePath);
+            var dictPathToFileInfo = MSDataFileInfos.ToLookup(info => info.FilePath.GetLocation());
             var listFileInfos = new List<ChromFileInfo>();
             foreach (var filePath in prop)
             {
-                ChromFileInfo chromFileInfo;
-                if (!dictPathToFileInfo.TryGetValue(filePath, out chromFileInfo))
+                ChromFileInfo chromFileInfo = dictPathToFileInfo[filePath.GetLocation()].FirstOrDefault();
+                if (chromFileInfo == null)
                 {
                     chromFileInfo = new ChromFileInfo(filePath);
+                }
+                else
+                {
+                    if (!Equals(chromFileInfo.FilePath, filePath))
+                    {
+                        chromFileInfo = chromFileInfo.ChangeFilePath(filePath);
+                    }
                 }
                 listFileInfos.Add(chromFileInfo);
             }
@@ -533,7 +540,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 fileInfos[i] = MSDataFileInfos[i];
                 
-                var path = fileInfos[i].FilePath;
+                var path = fileInfos[i].FilePath.GetLocation(); // Strips any decoration like "?centroid_ms1=true" etc
 
                 ChromCachedFile fileInfo;
                 if (cachedPaths.TryGetValue(path, out fileInfo))
@@ -736,7 +743,12 @@ namespace pwiz.Skyline.Model.Results
                     reader.IsStartElement(EL.chromatogram_file))
             {
                 // Note that the file path may actually be a URI that encodes things like lockmass correction as well as filename
-                ChromFileInfo chromFileInfo = new ChromFileInfo(MsDataFileUri.Parse(reader.GetAttribute(ATTR.file_path)));
+                var fileUri = MsDataFileUri.Parse(reader.GetAttribute(ATTR.file_path));
+                // BACKWARD COMPATIBILITY: Deal with legacy parameters which got stored on the file_path URI
+                var filePath = fileUri as MsDataFilePath;
+                if (filePath != null)
+                    fileUri = filePath.RemoveLegacyParameters();
+                ChromFileInfo chromFileInfo = new ChromFileInfo(fileUri);
                 chromFileInfo = chromFileInfo.ChangeHasMidasSpectra(reader.GetBoolAttribute(ATTR.has_midas_spectra, false));
                 var imUnitsStr = reader.GetAttribute(ATTR.ion_mobility_type);
                 var imUnits = SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(imUnitsStr);
@@ -764,6 +776,11 @@ namespace pwiz.Skyline.Model.Results
 
             // Consume end tag
             reader.ReadEndElement();
+        }
+
+        public ChromatogramSet RestoreLegacyUriParameters()
+        {
+            return ChangeMSDataFileInfos(MSDataFileInfos.Select(fi => fi.RestoreLegacyUriParameters()).ToArray());
         }
 
         public override void WriteXml(XmlWriter writer)
@@ -937,12 +954,6 @@ namespace pwiz.Skyline.Model.Results
                 FileWriteTime = remoteUrl.ModifiedTime;
                 filePath = remoteUrl.ChangeModifiedTime(null);
             }
-            var chorusUrl = filePath as ChorusUrl;
-            if (chorusUrl != null)
-            {
-                RunStartTime = chorusUrl.RunStartTime;
-                filePath = chorusUrl.ChangeRunStartTime(null);
-            }
             FilePath = filePath;
             InstrumentInfoList = new MsInstrumentConfigInfo[0];
         }
@@ -957,6 +968,10 @@ namespace pwiz.Skyline.Model.Results
         public double MaxRetentionTime { get; private set; }
         public double MaxIntensity { get; private set; }
         public bool HasMidasSpectra { get; private set; }
+        // Only used for File > Share to older versions, use ChromCachedFile versions instead in other cases
+        public bool? UsedMs1Centroids { get; private set; }
+        // Only used for File > Share to older versions, use ChromCachedFile versions instead in other cases
+        public bool? UsedMs2Centroids { get; private set; }
         public double? ExplicitGlobalStandardArea { get; private set; }
         public double? TicArea { get; private set; }
         public eIonMobilityUnits IonMobilityUnits { get; private set; }
@@ -1004,6 +1019,8 @@ namespace pwiz.Skyline.Model.Results
                                                      im.MaxRetentionTime = fileInfo.MaxRetentionTime;
                                                      im.MaxIntensity = fileInfo.MaxIntensity;
                                                      im.HasMidasSpectra = fileInfo.HasMidasSpectra;
+                                                     im.UsedMs1Centroids = fileInfo.UsedMs1Centroids;
+                                                     im.UsedMs2Centroids = fileInfo.UsedMs2Centroids;
                                                      im.TicArea = fileInfo.TicArea;
                                                      im.IonMobilityUnits = fileInfo.IonMobilityUnits;
                                                      im.SampleId = fileInfo.SampleId;
@@ -1062,6 +1079,10 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (HasMidasSpectra != other.HasMidasSpectra)
                 return false;
+            if (!Equals(UsedMs1Centroids, other.UsedMs1Centroids))
+                return false;
+            if (!Equals(UsedMs2Centroids, other.UsedMs2Centroids))
+                return false;
             if (!Equals(ExplicitGlobalStandardArea, other.ExplicitGlobalStandardArea))
                 return false;
             if (!Equals(TicArea, other.TicArea))
@@ -1100,19 +1121,29 @@ namespace pwiz.Skyline.Model.Results
                          (InstrumentInfoList != null ? InstrumentInfoList.GetHashCodeDeep() : 0);
                 result = (result*397) ^
                          (RetentionTimeAlignments == null ? 0 : RetentionTimeAlignments.GetHashCodeDeep());
-                result = (result * 397) ^ MaxIntensity.GetHashCode();
-                result = (result * 397) ^ MaxRetentionTime.GetHashCode();
+                result = (result*397) ^ MaxIntensity.GetHashCode();
+                result = (result*397) ^ MaxRetentionTime.GetHashCode();
                 result = (result*397) ^ HasMidasSpectra.GetHashCode();
+                result = (result*397) ^ UsedMs1Centroids.GetHashCode();
+                result = (result*397) ^ UsedMs2Centroids.GetHashCode();
                 result = (result*397) ^ ExplicitGlobalStandardArea.GetHashCode();
-                result = (result * 397) ^ TicArea.GetHashCode();
-                result = (result * 397) ^ IonMobilityUnits.GetHashCode();
-                result = (result * 397) ^ SampleId?.GetHashCode() ?? 0;
-                result = (result * 397) ^ InstrumentSerialNumber?.GetHashCode() ?? 0;
+                result = (result*397) ^ TicArea.GetHashCode();
+                result = (result*397) ^ IonMobilityUnits.GetHashCode();
+                result = (result*397) ^ SampleId?.GetHashCode() ?? 0;
+                result = (result*397) ^ InstrumentSerialNumber?.GetHashCode() ?? 0;
                 return result;
             }
         }
 
         #endregion
+
+        public ChromFileInfo RestoreLegacyUriParameters()
+        {
+            var filePath = FilePath.RestoreLegacyParameters(UsedMs1Centroids ?? false, UsedMs2Centroids ?? false);
+            if (!ReferenceEquals(filePath, FilePath))
+                return ChangeFilePath(filePath);
+            return this;
+        }
     }
 
     /// <summary>
@@ -1136,7 +1167,7 @@ namespace pwiz.Skyline.Model.Results
     /// the simplest solution is to encode the necessary information into the
     /// existing path string used to identify a single sample file.
     /// 
-    /// It's now (v3.5) being expanded to include other information needed to reproducably 
+    /// It's now (v3.5) being expanded to include other information needed to reproducibly 
     /// read raw data - lockmass settings, for example.  Probably ought to be moved out to 
     /// MSDataFileUri, really
     /// 
@@ -1148,10 +1179,19 @@ namespace pwiz.Skyline.Model.Results
         private const string TAG_LOCKMASS_TOL = "lockmass_tol";
         private const string TAG_CENTROID_MS1 = "centroid_ms1";
         private const string TAG_CENTROID_MS2 = "centroid_ms2";
+        private const string TAG_COMBINE_IMS = "combine_ims";   // LEGACY: Introduced temporarily in 19.1.9.338 and 350
         private const string VAL_TRUE = "true";
 
-        public static string EncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters,
-            bool centroidMS1, bool centroidMS2)
+        public static string EncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters)
+        {
+            return LegacyEncodePath(filePath, sampleName, sampleIndex, lockMassParameters, false, false, false);
+        }
+
+        /// <summary>
+        /// Use directly only when access to combineIonMobilitySpectra is required for legacy testing
+        /// </summary>
+        public static string LegacyEncodePath(string filePath, string sampleName, int sampleIndex, LockMassParameters lockMassParameters,
+            bool centroidMS1, bool centroidMS2, bool combineIonMobilitySpectra)
         {
             var parameters = new List<string>();
             const string pairFormat = "{0}={1}";
@@ -1182,6 +1222,10 @@ namespace pwiz.Skyline.Model.Results
             if (centroidMS2)
             {
                 parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_CENTROID_MS2, VAL_TRUE));
+            }
+            if (combineIonMobilitySpectra)
+            {
+                parameters.Add(string.Format(CultureInfo.InvariantCulture, pairFormat, TAG_COMBINE_IMS, VAL_TRUE));
             }
 
             return parameters.Any() ? string.Format(@"{0}?{1}", filePart, string.Join(@"&", parameters)) : filePart;
@@ -1272,6 +1316,11 @@ namespace pwiz.Skyline.Model.Results
         public static bool GetCentroidMs2(string path)
         {
             return ParseParameterBool(TAG_CENTROID_MS2, path) ?? false;
+        }
+
+        public static bool GetCombineIonMobilitySpectra(string path)
+        {
+            return ParseParameterBool(TAG_COMBINE_IMS, path) ?? false;
         }
 
         /// <summary>

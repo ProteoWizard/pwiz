@@ -101,6 +101,7 @@ static vector<string> supportedTypes = {
     ".proxl.xml",
     ".ssl",
     ".mlb",
+    ".speclib",
     ".tsv",
     ".osw",
     ".mzTab",
@@ -648,7 +649,7 @@ static const char* getModMassFormat(double mass, bool highPrecision) {
     if (decimalInt == (decimalInt /10) * 10) {
         return "[%+.4f]";
     }
-    return "[%+.5f]";
+    return "[%+.5f]"; // This should match Skyline's pwiz.Skyline.Model.MassModification.MAX_PRECISION_FOR_LIB value (good as of Dec 2019)
 }
 
 string BlibBuilder::getModifiedSequenceWithPrecision(const char* unmodSeq,
@@ -699,7 +700,7 @@ string base_name(const char* name)
 
 bool has_extension(const char* name, const char* ext)
 {
-    return strcmp(name + strlen(name) - strlen(ext), ext) == 0;
+    return bal::iends_with(name, ext);
 }
 
 /**

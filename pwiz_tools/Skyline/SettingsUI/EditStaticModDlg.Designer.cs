@@ -49,7 +49,7 @@
             this.comboRelativeRT = new System.Windows.Forms.ComboBox();
             this.labelRelativeRT = new System.Windows.Forms.Label();
             this.cbVariableMod = new System.Windows.Forms.CheckBox();
-            this.listNeutralLosses = new System.Windows.Forms.ListBox();
+            this.listLosses = new System.Windows.Forms.ListBox();
             this.labelLoss = new System.Windows.Forms.Label();
             this.panelLoss = new System.Windows.Forms.Panel();
             this.toolBarLosses = new System.Windows.Forms.ToolStrip();
@@ -57,6 +57,8 @@
             this.tbbEditLoss = new System.Windows.Forms.ToolStripButton();
             this.tbbDeleteLoss = new System.Windows.Forms.ToolStripButton();
             this.comboMod = new System.Windows.Forms.ComboBox();
+            this.cbCrosslinker = new System.Windows.Forms.CheckBox();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelAtoms.SuspendLayout();
             this.panelLoss.SuspendLayout();
             this.toolBarLosses.SuspendLayout();
@@ -197,12 +199,12 @@
             this.cbVariableMod.Name = "cbVariableMod";
             this.cbVariableMod.UseVisualStyleBackColor = true;
             // 
-            // listNeutralLosses
+            // listLosses
             // 
-            resources.ApplyResources(this.listNeutralLosses, "listNeutralLosses");
-            this.listNeutralLosses.FormattingEnabled = true;
-            this.listNeutralLosses.Name = "listNeutralLosses";
-            this.listNeutralLosses.SelectedIndexChanged += new System.EventHandler(this.listNeutralLosses_SelectedIndexChanged);
+            resources.ApplyResources(this.listLosses, "listLosses");
+            this.listLosses.FormattingEnabled = true;
+            this.listLosses.Name = "listLosses";
+            this.listLosses.SelectedIndexChanged += new System.EventHandler(this.listNeutralLosses_SelectedIndexChanged);
             // 
             // labelLoss
             // 
@@ -211,7 +213,7 @@
             // 
             // panelLoss
             // 
-            this.panelLoss.Controls.Add(this.listNeutralLosses);
+            this.panelLoss.Controls.Add(this.listLosses);
             this.panelLoss.Controls.Add(this.toolBarLosses);
             resources.ApplyResources(this.panelLoss, "panelLoss");
             this.panelLoss.Name = "panelLoss";
@@ -258,12 +260,20 @@
             this.comboMod.SelectedIndexChanged += new System.EventHandler(this.comboMod_SelectedIndexChanged);
             this.comboMod.DropDownClosed += new System.EventHandler(this.comboMod_DropDownClosed);
             // 
+            // cbCrosslinker
+            // 
+            resources.ApplyResources(this.cbCrosslinker, "cbCrosslinker");
+            this.cbCrosslinker.Name = "cbCrosslinker";
+            this.cbCrosslinker.UseVisualStyleBackColor = true;
+            this.cbCrosslinker.CheckedChanged += new System.EventHandler(this.cbCrosslinker_CheckedChanged);
+            // 
             // EditStaticModDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbCrosslinker);
             this.Controls.Add(this.panelLoss);
             this.Controls.Add(this.comboMod);
             this.Controls.Add(this.labelLoss);
@@ -286,6 +296,7 @@
             this.MinimizeBox = false;
             this.Name = "EditStaticModDlg";
             this.ShowInTaskbar = false;
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelAtoms.ResumeLayout(false);
             this.panelAtoms.PerformLayout();
             this.panelLoss.ResumeLayout(false);
@@ -319,7 +330,7 @@
         private System.Windows.Forms.ComboBox comboRelativeRT;
         private System.Windows.Forms.Label labelRelativeRT;
         private System.Windows.Forms.CheckBox cbVariableMod;
-        private System.Windows.Forms.ListBox listNeutralLosses;
+        private System.Windows.Forms.ListBox listLosses;
         private System.Windows.Forms.Label labelLoss;
         private System.Windows.Forms.Panel panelLoss;
         private System.Windows.Forms.ToolStrip toolBarLosses;
@@ -327,5 +338,6 @@
         private System.Windows.Forms.ToolStripButton tbbEditLoss;
         private System.Windows.Forms.ToolStripButton tbbDeleteLoss;
         private System.Windows.Forms.ComboBox comboMod;
+        private System.Windows.Forms.CheckBox cbCrosslinker;
     }
 }

@@ -1,0 +1,339 @@
+Undo Redo : ペプチド設定が変更されました
+Summary   : 設定>ペプチド設定が変更されました
+All Info  :
+ペプチド設定が変更されました
+設定>ペプチド設定>バックグラウンドプロテオームは"None"から"TubercuList_v2-6"に変更されました
+設定>ペプチド設定>バックグラウンドプロテオーム>バックグラウンドプロテオーム用データベースのパスは"TubercuList_v2_6.protdb"です
+設定>ペプチド設定－フィルタ>N末端アミノ酸を除外は"25"から"0"に変更されました
+設定>ペプチド設定－フィルタ>最小長は"8"から"7"に変更されました
+設定>ペプチド設定－ライブラリ>ライブラリ："Mtb_proteome_library"が追加されました
+設定>ペプチド設定－ライブラリ>ライブラリ>"Mtb_proteome_library">パスは"Mtb_DirtyPeptides_QT_filtered_cons.sptxt"です
+設定>ペプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">アミノ酸は"K"です
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">末端は"C"です
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">13Cは真です
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(2) (C-term K)">15Nは真です
+設定>ペプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(4) (C-term R)"が追加されました
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">アミノ酸は"R"です
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">末端は"C"です
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">13Cは真です
+設定>ペプチド設定－修飾>同位体修飾>"heavy">"Label:13C(6)15N(4) (C-term R)">15Nは真です
+
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
+All Info  :
+トランジションの設定が変更されました
+設定>トランジションの設定－予測>衝突エネルギーは"なし"から"SCIEX"に変更されました
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "2", 傾き = "0.049", 切片 = "-1" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "3", 傾き = "0.048", 切片 = "-2" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "4", 傾き = "0.05", 切片 = "-2" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>ステップサイズは"3"です
+設定>トランジションの設定－予測>衝突エネルギー>ステップ数は"3"です
+設定>トランジションの設定－フィルタ>ペプチドプリカーサー電荷は"2"から"2, 3"に変更されました
+設定>トランジションの設定－フィルタ>ペプチドイオン電荷は"1"から"1, 2"に変更されました
+設定>トランジションの設定－フィルタ>プロダクトイオン選択開始は"m/z >プリカーサー"から"イオン1"に変更されました
+設定>トランジションの設定－フィルタ>プロダクトイオン選択終了は"3個のイオン"から"最後のイオン"に変更されました
+設定>トランジションの設定－フィルタ>特殊イオン：すべてが削除されました
+設定>トランジションの設定－フィルタ>プリカーサーm/z除外ウィンドウは"0"から"5"に変更されました
+設定>トランジションの設定－ライブラリ>イオン許容誤差は"0.5"から"1"に変更されました
+設定>トランジションの設定－ライブラリ>プロダクトイオンは"3"から"5"に変更されました
+設定>トランジションの設定－ライブラリ>選択は"フィルタされたイオン電荷とタイプから"から"フィルタされたプロダクトイオンから"に変更されました
+設定>トランジションの設定－装置>最小m/zは"50"から"300"に変更されました
+設定>トランジションの設定－装置>最大m/zは"1500"から"1250"に変更されました
+
+Undo Redo : 30個のペプチドが挿入されました
+Summary   : 30個のペプチドが挿入されました
+All Info  :
+30個のペプチドが挿入されました
+Extra Info: ペプチドシークエンス	タンパク質名	タンパク質の説明
+VTTSTGASYSYDR	Rv1812c_Rv1812c	
+VIGVPAMFAAGDVAAAR	Rv1812c_Rv1812c	
+ADLLAAAAPR	Rv1812c_Rv1812c	
+AIVHTAAELVDAR	Rv2027c_dosT	
+GVLGALIEEPKPIR	Rv2027c_dosT	
+SAIFDLHAGPSR	Rv2027c_dosT	
+EFPDVAVFSGGR	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	Rv0079_Rv0079	
+LTTPAEALVTR	Rv0079_Rv0079	
+GQGAVAGALLGSVSSSLVR	Rv1996_Rv1996	
+LNWAPIEWR	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	Rv1996_Rv1996	
+ELVGVGLAR	Rv1738_Rv1738	
+NVPEIGDELSVAR	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	Rv1738_Rv1738	
+HLIDDALK	Rv2623_TB31.7	
+LLGSVSSGLLR	Rv2623_TB31.7	
+GGYAGMLVGSVGETVAQLAR	Rv2623_TB31.7	
+SEFAYGSFVR	Rv2031c_hspX	
+TVSLPVGADEDDIK	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	Rv2031c_hspX	
+GLAAGLDPNTATAGELAR	Rv2626c_hrp1	
+LVGIVTEADIAR	Rv2626c_hrp1	
+HLPEHAIVQFVK	Rv2626c_hrp1	
+GLGVIGLLIEDPKPLR	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	Rv3132c_devS	
+TTIYDLHGASQGITR	Rv3132c_devS	
+VPAARPDVAVLDVR	Rv3133c_devR	
+LPDGNGIELC[+57]R	Rv3133c_devR	
+TLLGLLSEGLTNK	Rv3133c_devR	
+		
+
+Undo Redo : トランジションの設定－ライブラリ>最小プロダクトイオンが"3"に変更されました
+Summary   : 設定>トランジションの設定－ライブラリ>最小プロダクトイオンが"3"に変更されました
+All Info  :
+トランジションの設定－ライブラリ>最小プロダクトイオンが"3"に変更されました
+設定>トランジションの設定－ライブラリ>最小プロダクトイオンは"0"から"3"に変更されました
+
+Undo Redo : トランジションの設定－ライブラリ>最小プロダクトイオンが"4"に変更されました
+Summary   : 設定>トランジションの設定－ライブラリ>最小プロダクトイオンが"4"に変更されました
+All Info  :
+トランジションの設定－ライブラリ>最小プロダクトイオンが"4"に変更されました
+設定>トランジションの設定－ライブラリ>最小プロダクトイオンは"0"から"4"に変更されました
+
+Undo Redo : トランジションの設定－ライブラリ>最小プロダクトイオンが"5"に変更されました
+Summary   : 設定>トランジションの設定－ライブラリ>最小プロダクトイオンが"5"に変更されました
+All Info  :
+トランジションの設定－ライブラリ>最小プロダクトイオンが"5"に変更されました
+設定>トランジションの設定－ライブラリ>最小プロダクトイオンは"0"から"5"に変更されました
+
+Undo Redo : ペプチド設定－ライブラリ>ライブラリ："Mtb_hDP_20140210"が追加されました
+Summary   : 設定>ペプチド設定－ライブラリ>ライブラリ："Mtb_hDP_20140210"が追加されました
+All Info  :
+ペプチド設定－ライブラリ>ライブラリ："Mtb_hDP_20140210"が追加されました
+設定>ペプチド設定－ライブラリ>ライブラリ："Mtb_hDP_20140210"が追加されました
+設定>ペプチド設定－ライブラリ>ライブラリ>"Mtb_hDP_20140210">パスは"Mtb_hDP_20140210.blib"です
+
+Undo Redo : トランジションの設定－予測>衝突エネルギーが変更されました
+Summary   : 設定>トランジションの設定－予測>衝突エネルギーが変更されました
+All Info  :
+トランジションの設定－予測>衝突エネルギーが変更されました
+設定>トランジションの設定－予測>衝突エネルギー>ステップサイズは"3"から"2"に変更されました
+設定>トランジションの設定－予測>衝突エネルギー>ステップ数は"3"から"5"に変更されました
+
+Undo Redo : 143のトランジションが挿入されました
+Summary   : 143のトランジションが挿入されました
+All Info  :
+143のトランジションが挿入されました
+Extra Info: ペプチド	プリカーサーm/z	プロダクトm/z	タンパク質名	タンパク質の説明
+VTTSTGASYSYDR	709.327105	1217.530841	Rv1812c_Rv1812c	
+VTTSTGASYSYDR	709.327105	1116.483162	Rv1812c_Rv1812c	
+VTTSTGASYSYDR	709.327105	1029.451134	Rv1812c_Rv1812c	
+VTTSTGASYSYDR	709.327105	928.403455	Rv1812c_Rv1812c	
+VTTSTGASYSYDR	709.327105	800.344878	Rv1812c_Rv1812c	
+VIGVPAMFAAGDVAAAR	813.439009	740.392497	Rv1812c_Rv1812c	
+VIGVPAMFAAGDVAAAR	813.439009	669.355383	Rv1812c_Rv1812c	
+VIGVPAMFAAGDVAAAR	813.439009	497.306976	Rv1812c_Rv1812c	
+VIGVPAMFAAGDVAAAR	813.439009	629.317831	Rv1812c_Rv1812c	
+ADLLAAAAPR	489.78395	679.412504	Rv1812c_Rv1812c	
+ADLLAAAAPR	489.78395	566.32844	Rv1812c_Rv1812c	
+ADLLAAAAPR	489.78395	424.254212	Rv1812c_Rv1812c	
+ADLLAAAAPR	489.78395	353.217098	Rv1812c_Rv1812c	
+AIVHTAAELVDAR	688.382017	1092.567167	Rv2027c_dosT	
+AIVHTAAELVDAR	688.382017	955.508255	Rv2027c_dosT	
+AIVHTAAELVDAR	688.382017	854.460576	Rv2027c_dosT	
+AIVHTAAELVDAR	688.382017	546.787221	Rv2027c_dosT	
+AIVHTAAELVDAR	688.382017	427.733926	Rv2027c_dosT	
+GVLGALIEEPKPIR	751.452443	991.581026	Rv2027c_dosT	
+GVLGALIEEPKPIR	751.452443	878.496962	Rv2027c_dosT	
+GVLGALIEEPKPIR	751.452443	620.411776	Rv2027c_dosT	
+GVLGALIEEPKPIR	751.452443	673.407504	Rv2027c_dosT	
+GVLGALIEEPKPIR	751.452443	616.865472	Rv2027c_dosT	
+SAIFDLHAGPSR	427.558894	862.44051	Rv2027c_dosT	
+SAIFDLHAGPSR	427.558894	497.270591	Rv2027c_dosT	
+SAIFDLHAGPSR	427.558894	561.800132	Rv2027c_dosT	
+SAIFDLHAGPSR	427.558894	505.2581	Rv2027c_dosT	
+SAIFDLHAGPSR	427.558894	374.210421	Rv2027c_dosT	
+EFPDVAVFSGGR	645.821261	1014.524239	Rv0079_Rv0079	
+EFPDVAVFSGGR	645.821261	703.376118	Rv0079_Rv0079	
+EFPDVAVFSGGR	645.821261	632.339005	Rv0079_Rv0079	
+EFPDVAVFSGGR	645.821261	533.270591	Rv0079_Rv0079	
+EFPDVAVFSGGR	645.821261	507.765758	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	881.495901	963.597345	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	881.495901	848.570402	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	881.495901	579.385226	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	881.495901	482.30231	Rv0079_Rv0079	
+AQAATAGIDDLRPALIR	881.495901	424.788839	Rv0079_Rv0079	
+LTTPAEALVTR	591.341829	866.496962	Rv0079_Rv0079	
+LTTPAEALVTR	591.341829	698.407084	Rv0079_Rv0079	
+LTTPAEALVTR	591.341829	569.364491	Rv0079_Rv0079	
+LTTPAEALVTR	591.341829	484.275958	Rv0079_Rv0079	
+LTTPAEALVTR	591.341829	433.752119	Rv0079_Rv0079	
+GQGAVAGALLGSVSSSLVR	869.987909	1127.665818	Rv1996_Rv1996	
+GQGAVAGALLGSVSSSLVR	869.987909	1014.581754	Rv1996_Rv1996	
+GQGAVAGALLGSVSSSLVR	869.987909	901.49769	Rv1996_Rv1996	
+GQGAVAGALLGSVSSSLVR	869.987909	658.375784	Rv1996_Rv1996	
+LNWAPIEWR	597.818325	967.502382	Rv1996_Rv1996	
+LNWAPIEWR	597.818325	781.423069	Rv1996_Rv1996	
+LNWAPIEWR	597.818325	710.385955	Rv1996_Rv1996	
+LNWAPIEWR	597.818325	371.206534	Rv1996_Rv1996	
+LNWAPIEWR	597.818325	355.696615	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	695.90566	1007.587174	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	695.90566	920.555145	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	695.90566	735.475104	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	695.90566	664.43799	Rv1996_Rv1996	
+AVVNSGQAPVIVAR	695.90566	660.387103	Rv1996_Rv1996	
+ELVGVGLAR	462.281044	681.428154	Rv1738_Rv1738	
+ELVGVGLAR	462.281044	582.35974	Rv1738_Rv1738	
+ELVGVGLAR	462.281044	525.338276	Rv1738_Rv1738	
+ELVGVGLAR	462.281044	426.269862	Rv1738_Rv1738	
+NVPEIGDELSVAR	704.86894	1195.619262	Rv1738_Rv1738	
+NVPEIGDELSVAR	704.86894	969.523905	Rv1738_Rv1738	
+NVPEIGDELSVAR	704.86894	856.439841	Rv1738_Rv1738	
+NVPEIGDELSVAR	704.86894	684.391434	Rv1738_Rv1738	
+NVPEIGDELSVAR	704.86894	598.313269	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	557.620993	719.382266	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	557.620993	618.334588	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	557.620993	481.275676	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	557.620993	353.217098	Rv1738_Rv1738	
+VSTHDIEAVTHQPAR	557.620993	623.824335	Rv1738_Rv1738	
+HLIDDALK	466.768191	795.470195	Rv2623_TB31.7	
+HLIDDALK	466.768191	682.386131	Rv2623_TB31.7	
+HLIDDALK	466.768191	454.275124	Rv2623_TB31.7	
+HLIDDALK	466.768191	339.248181	Rv2623_TB31.7	
+LLGSVSSGLLR	556.33909	998.58684	Rv2623_TB31.7	
+LLGSVSSGLLR	556.33909	885.502776	Rv2623_TB31.7	
+LLGSVSSGLLR	556.33909	828.481312	Rv2623_TB31.7	
+LLGSVSSGLLR	556.33909	741.449283	Rv2623_TB31.7	
+LLGSVSSGLLR	556.33909	642.380869	Rv2623_TB31.7	
+GGYAGMLVGSVGETVAQLAR	973.505609	1197.646145	Rv2623_TB31.7	
+GGYAGMLVGSVGETVAQLAR	973.505609	954.524239	Rv2623_TB31.7	
+GGYAGMLVGSVGETVAQLAR	973.505609	568.34409	Rv2623_TB31.7	
+GGYAGMLVGSVGETVAQLAR	973.505609	497.306976	Rv2623_TB31.7	
+SEFAYGSFVR	586.784147	956.486397	Rv2031c_hspX	
+SEFAYGSFVR	586.784147	809.417983	Rv2031c_hspX	
+SEFAYGSFVR	586.784147	738.380869	Rv2031c_hspX	
+SEFAYGSFVR	586.784147	575.317541	Rv2031c_hspX	
+SEFAYGSFVR	586.784147	369.694073	Rv2031c_hspX	
+TVSLPVGADEDDIK	733.876853	1066.514244	Rv2031c_hspX	
+TVSLPVGADEDDIK	733.876853	870.393067	Rv2031c_hspX	
+TVSLPVGADEDDIK	733.876853	627.307546	Rv2031c_hspX	
+TVSLPVGADEDDIK	733.876853	533.76076	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	574.995764	883.461087	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	574.995764	776.937245	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	574.995764	720.395213	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	574.995764	669.871373	Rv2031c_hspX	
+GILTVSVAVSEGKPTEK	574.995764	620.337166	Rv2031c_hspX	
+GLAAGLDPNTATAGELAR	854.448617	1225.604674	Rv2626c_hrp1	
+GLAAGLDPNTATAGELAR	854.448617	1110.577731	Rv2626c_hrp1	
+GLAAGLDPNTATAGELAR	854.448617	727.397248	Rv2626c_hrp1	
+GLAAGLDPNTATAGELAR	854.448617	369.248399	Rv2626c_hrp1	
+GLAAGLDPNTATAGELAR	854.448617	555.792504	Rv2626c_hrp1	
+LVGIVTEADIAR	633.868211	1054.576669	Rv2626c_hrp1	
+LVGIVTEADIAR	633.868211	884.471141	Rv2626c_hrp1	
+LVGIVTEADIAR	633.868211	785.402727	Rv2626c_hrp1	
+LVGIVTEADIAR	633.868211	684.355049	Rv2626c_hrp1	
+LVGIVTEADIAR	633.868211	555.312455	Rv2626c_hrp1	
+HLPEHAIVQFVK	475.941266	812.512	Rv2626c_hrp1	
+HLPEHAIVQFVK	475.941266	741.474886	Rv2626c_hrp1	
+HLPEHAIVQFVK	475.941266	628.390822	Rv2626c_hrp1	
+HLPEHAIVQFVK	475.941266	401.263831	Rv2626c_hrp1	
+HLPEHAIVQFVK	475.941266	588.336772	Rv2626c_hrp1	
+GLGVIGLLIEDPKPLR	567.349663	977.565376	Rv3132c_devS	
+GLGVIGLLIEDPKPLR	567.349663	620.411776	Rv3132c_devS	
+GLGVIGLLIEDPKPLR	567.349663	395.264049	Rv3132c_devS	
+GLGVIGLLIEDPKPLR	567.349663	687.423154	Rv3132c_devS	
+GLGVIGLLIEDPKPLR	567.349663	630.881122	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	933.987772	1010.550454	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	933.987772	882.491876	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	933.987772	668.396519	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	933.987772	555.312455	Rv3132c_devS	
+LSDVVDDLQDVIQEIR	933.987772	877.44574	Rv3132c_devS	
+TTIYDLHGASQGITR	548.28561	799.429611	Rv3132c_devS	
+TTIYDLHGASQGITR	548.28561	720.877099	Rv3132c_devS	
+TTIYDLHGASQGITR	548.28561	664.335067	Rv3132c_devS	
+TTIYDLHGASQGITR	548.28561	525.289931	Rv3132c_devS	
+TTIYDLHGASQGITR	548.28561	468.747899	Rv3132c_devS	
+VPAARPDVAVLDVR	744.432041	993.56029	Rv3133c_devR	
+VPAARPDVAVLDVR	744.432041	781.480583	Rv3133c_devR	
+VPAARPDVAVLDVR	744.432041	682.41217	Rv3133c_devR	
+VPAARPDVAVLDVR	744.432041	399.222578	Rv3133c_devR	
+VPAARPDVAVLDVR	744.432041	694.897834	Rv3133c_devR	
+LPDGNGIELC[+57_0]R	627.312746	928.454445	Rv3133c_devR	
+LPDGNGIELC[+57_0]R	627.312746	757.390054	Rv3133c_devR	
+LPDGNGIELC[+57_0]R	627.312746	587.284526	Rv3133c_devR	
+LPDGNGIELC[+57_0]R	627.312746	458.241933	Rv3133c_devR	
+LPDGNGIELC[+57_0]R	627.312746	570.770714	Rv3133c_devR	
+TLLGLLSEGLTNK	683.905216	1152.671414	Rv3133c_devR	
+TLLGLLSEGLTNK	683.905216	1039.58735	Rv3133c_devR	
+TLLGLLSEGLTNK	683.905216	869.481822	Rv3133c_devR	
+TLLGLLSEGLTNK	683.905216	756.397758	Rv3133c_devR	
+TLLGLLSEGLTNK	683.905216	540.323136	Rv3133c_devR	
+				
+
+Undo Redo : 4個のファイルから結果がインポートされました
+Summary   : 4個のファイルから結果がインポートされました
+All Info  :
+4個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："CEO_1.wiff"が含まれています
+結果設定をインポート>ファイル名："CEO_2.wiff"が含まれています
+結果設定をインポート>ファイル名："CEO_3.wiff"が含まれています
+結果設定をインポート>ファイル名："CEO_4.wiff"が含まれています
+結果設定をインポート>新しい繰り返し測定を1つ追加は真です
+結果設定をインポート>繰り返し測定名は"CEO"です
+結果設定をインポート>最適化中は"衝突エネルギー"です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
+[
+    "CEO_1.wiff",
+    "CEO_2.wiff",
+    "CEO_3.wiff",
+    "CEO_4.wiff"
+],
+新しい繰り返し測定を1つ追加 = 真,
+繰り返し測定名 = "CEO",
+最適化中 = "衝突エネルギー",
+同時にインポートするファイル = "多く"
+
+Undo Redo : 2個のファイルから結果がインポートされました
+Summary   : 2個のファイルから結果がインポートされました
+All Info  :
+2個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："CE_plus10.wiff"が含まれています
+結果設定をインポート>ファイル名："CE_minus10.wiff"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
+[
+    "CE_plus10.wiff",
+    "CE_minus10.wiff"
+],
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
+
+Undo Redo : トランジションの設定が変更されました
+Summary   : 設定>トランジションの設定が変更されました
+All Info  :
+トランジションの設定が変更されました
+設定>トランジションの設定－予測>衝突エネルギーは"SCIEX"から"SRMcourse_20140211_Parameters_custom-CE-equation"に変更されました
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "2", 傾き = "0.0323", 切片 = "5.567" }が含まれています
+設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "3", 傾き = "0.0318", 切片 = "2.9822" }が含まれています
+設定>トランジションの設定－装置>メソッド許容誤差m/zは"0.055"から"0.01"に変更されました
+
+Undo Redo : 結果が管理されました
+Summary   : 結果が管理されました
+All Info  :
+結果が管理されました
+すべての繰り返し測定が削除されました
+
+Undo Redo : 5個のファイルから結果がインポートされました
+Summary   : 5個のファイルから結果がインポートされました
+All Info  :
+5個のファイルから結果がインポートされました
+結果設定をインポート>ファイル名："unscheduled_dwell10ms.wiff"が含まれています
+結果設定をインポート>ファイル名："unscheduled_dwell20ms.wiff"が含まれています
+結果設定をインポート>ファイル名："unscheduled_dwell40ms.wiff"が含まれています
+結果設定をインポート>ファイル名："unscheduled_dwell60ms.wiff"が含まれています
+結果設定をインポート>ファイル名："unscheduled_dwell100ms.wiff"が含まれています
+結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
+結果設定をインポート>同時にインポートするファイルは"多く"です
+Extra Info: ファイル名 = 
+[
+    "unscheduled_dwell10ms.wiff",
+    "unscheduled_dwell20ms.wiff",
+    "unscheduled_dwell40ms.wiff",
+    "unscheduled_dwell60ms.wiff",
+    "unscheduled_dwell100ms.wiff"
+],
+ファイルにシングルインジェクション繰り返し測定を追加 = 真,
+同時にインポートするファイル = "多く"
+

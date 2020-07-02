@@ -98,6 +98,11 @@ namespace pwiz.Skyline.Model.Lists
                 {
                     stringBuilder.Append(ch);
                 }
+
+                if (stringBuilder.Length > 100)
+                {
+                    break;
+                }
             }
             stringBuilder.Append('_');
             stringBuilder.Append(uniquefier);

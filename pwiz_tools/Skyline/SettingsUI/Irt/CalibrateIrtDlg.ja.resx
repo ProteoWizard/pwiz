@@ -117,70 +117,73 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+  <data name="labelMinIrt.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 13</value>
+  <data name="labelMinIrt.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 70</value>
   </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="labelMinIrt.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 13</value>
   </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>最小iRT値(&amp;M)：</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 39</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>79, 13</value>
-  </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+  <data name="labelMinIrt.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>最大iRT値(&amp;X)：</value>
+  <data name="labelMinIrt.Text" xml:space="preserve">
+    <value>最小iRT値(&amp;M)：</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
+  <data name="&gt;&gt;labelMinIrt.Name" xml:space="preserve">
+    <value>labelMinIrt</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelMinIrt.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>$this</value>
+  <data name="&gt;&gt;labelMinIrt.Parent" xml:space="preserve">
+    <value>grpLinearEquation</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>6</value>
+  <data name="&gt;&gt;labelMinIrt.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="labelMaxIrt.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelMaxIrt.Location" type="System.Drawing.Point, System.Drawing">
+    <value>141, 70</value>
+  </data>
+  <data name="labelMaxIrt.Size" type="System.Drawing.Size, System.Drawing">
+    <value>79, 13</value>
+  </data>
+  <data name="labelMaxIrt.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="labelMaxIrt.Text" xml:space="preserve">
+    <value>最大iRT値(&amp;X)：</value>
+  </data>
+  <data name="&gt;&gt;labelMaxIrt.Name" xml:space="preserve">
+    <value>labelMaxIrt</value>
+  </data>
+  <data name="&gt;&gt;labelMaxIrt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelMaxIrt.Parent" xml:space="preserve">
+    <value>grpLinearEquation</value>
+  </data>
+  <data name="&gt;&gt;labelMaxIrt.ZOrder" xml:space="preserve">
+    <value>11</value>
   </data>
   <data name="textMaxIrt.Location" type="System.Drawing.Point, System.Drawing">
-    <value>99, 36</value>
+    <value>143, 86</value>
   </data>
   <data name="textMaxIrt.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
+    <value>123, 20</value>
   </data>
   <data name="textMaxIrt.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="textMaxIrt.Text" xml:space="preserve">
     <value>100</value>
@@ -192,19 +195,19 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMaxIrt.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>grpLinearEquation</value>
   </data>
   <data name="&gt;&gt;textMaxIrt.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>10</value>
   </data>
   <data name="textMinIrt.Location" type="System.Drawing.Point, System.Drawing">
-    <value>99, 10</value>
+    <value>7, 86</value>
   </data>
   <data name="textMinIrt.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
+    <value>124, 20</value>
   </data>
   <data name="textMinIrt.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="textMinIrt.Text" xml:space="preserve">
     <value>0</value>
@@ -216,10 +219,10 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMinIrt.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>grpLinearEquation</value>
   </data>
   <data name="&gt;&gt;textMinIrt.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>9</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -232,7 +235,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -247,7 +250,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>7</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -259,7 +262,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>7</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
@@ -274,19 +277,22 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>6</value>
   </data>
   <data name="btnUseCurrent.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
+  <data name="btnUseCurrent.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="btnUseCurrent.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 290</value>
+    <value>85, 441</value>
   </data>
   <data name="btnUseCurrent.Size" type="System.Drawing.Size, System.Drawing">
     <value>96, 23</value>
   </data>
   <data name="btnUseCurrent.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
+    <value>4</value>
   </data>
   <data name="btnUseCurrent.Text" xml:space="preserve">
     <value>結果を使用(&amp;U)</value>
@@ -301,10 +307,10 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnUseCurrent.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>5</value>
   </data>
   <metadata name="bindingSourceStandard.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+    <value>155, 17</value>
   </metadata>
   <data name="gridViewCalibrate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -321,32 +327,452 @@
   <data name="calibrateMeasuredRt.HeaderText" xml:space="preserve">
     <value>保持時間（分）</value>
   </data>
-  <metadata name="checkFixedPoint.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <metadata name="colIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="checkFixedPoint.HeaderText" xml:space="preserve">
-    <value>固定ポイント</value>
+  <data name="colIrt.HeaderText" xml:space="preserve">
+    <value>iRT</value>
   </data>
   <data name="gridViewCalibrate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 79</value>
+    <value>3, 16</value>
   </data>
   <data name="gridViewCalibrate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>348, 199</value>
+    <value>352, 155</value>
   </data>
   <data name="gridViewCalibrate.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;gridViewCalibrate.Name" xml:space="preserve">
     <value>gridViewCalibrate</value>
   </data>
   <data name="&gt;&gt;gridViewCalibrate.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=19.1.1.294, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewCalibrate.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>panelPeptides</value>
   </data>
   <data name="&gt;&gt;gridViewCalibrate.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 8</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>38, 13</value>
+  </data>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>名前(&amp;N)：</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 24</value>
+  </data>
+  <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>259, 20</value>
+  </data>
+  <data name="textName.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textName.Name" xml:space="preserve">
+    <value>textName</value>
+  </data>
+  <data name="&gt;&gt;textName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="comboRegression.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 33</value>
+  </data>
+  <data name="comboRegression.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="comboRegression.Size" type="System.Drawing.Size, System.Drawing">
+    <value>260, 21</value>
+  </data>
+  <data name="comboRegression.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboRegression.Name" xml:space="preserve">
+    <value>comboRegression</value>
+  </data>
+  <data name="&gt;&gt;comboRegression.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboRegression.Parent" xml:space="preserve">
+    <value>grpLinearEquation</value>
+  </data>
+  <data name="&gt;&gt;comboRegression.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="btnGraph.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnGraph.Location" type="System.Drawing.Point, System.Drawing">
+    <value>280, 31</value>
+  </data>
+  <data name="btnGraph.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnGraph.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnGraph.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="btnGraph.Text" xml:space="preserve">
+    <value>グラフ化…</value>
+  </data>
+  <data name="&gt;&gt;btnGraph.Name" xml:space="preserve">
+    <value>btnGraph</value>
+  </data>
+  <data name="&gt;&gt;btnGraph.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnGraph.Parent" xml:space="preserve">
+    <value>grpLinearEquation</value>
+  </data>
+  <data name="&gt;&gt;btnGraph.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="lblEquation.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblEquation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 172</value>
+  </data>
+  <data name="lblEquation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 13</value>
+  </data>
+  <data name="lblEquation.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="lblEquation.Text" xml:space="preserve">
+    <value>iRT式</value>
+  </data>
+  <data name="&gt;&gt;lblEquation.Name" xml:space="preserve">
+    <value>lblEquation</value>
+  </data>
+  <data name="&gt;&gt;lblEquation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblEquation.Parent" xml:space="preserve">
+    <value>grpLinearEquation</value>
+  </data>
+  <data name="&gt;&gt;lblEquation.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboMaxPeptide.Location" type="System.Drawing.Point, System.Drawing">
+    <value>143, 138</value>
+  </data>
+  <data name="comboMaxPeptide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="comboMaxPeptide.Size" type="System.Drawing.Size, System.Drawing">
+    <value>124, 21</value>
+  </data>
+  <data name="comboMaxPeptide.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;comboMaxPeptide.Name" xml:space="preserve">
+    <value>comboMaxPeptide</value>
+  </data>
+  <data name="&gt;&gt;comboMaxPeptide.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboMaxPeptide.Parent" xml:space="preserve">
+    <value>grpLinearEquation</value>
+  </data>
+  <data name="&gt;&gt;comboMaxPeptide.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelMaxPeptide.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelMaxPeptide.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelMaxPeptide.Location" type="System.Drawing.Point, System.Drawing">
+    <value>141, 123</value>
+  </data>
+  <data name="labelMaxPeptide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelMaxPeptide.Size" type="System.Drawing.Size, System.Drawing">
+    <value>93, 13</value>
+  </data>
+  <data name="labelMaxPeptide.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="labelMaxPeptide.Text" xml:space="preserve">
+    <value>最大固定ペプチド：</value>
+  </data>
+  <data name="&gt;&gt;labelMaxPeptide.Name" xml:space="preserve">
+    <value>labelMaxPeptide</value>
+  </data>
+  <data name="&gt;&gt;labelMaxPeptide.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelMaxPeptide.Parent" xml:space="preserve">
+    <value>grpLinearEquation</value>
+  </data>
+  <data name="&gt;&gt;labelMaxPeptide.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="comboMinPeptide.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 138</value>
+  </data>
+  <data name="comboMinPeptide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="comboMinPeptide.Size" type="System.Drawing.Size, System.Drawing">
+    <value>124, 21</value>
+  </data>
+  <data name="comboMinPeptide.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;comboMinPeptide.Name" xml:space="preserve">
+    <value>comboMinPeptide</value>
+  </data>
+  <data name="&gt;&gt;comboMinPeptide.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboMinPeptide.Parent" xml:space="preserve">
+    <value>grpLinearEquation</value>
+  </data>
+  <data name="&gt;&gt;comboMinPeptide.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="labelMinPeptide.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelMinPeptide.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 124</value>
+  </data>
+  <data name="labelMinPeptide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelMinPeptide.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 13</value>
+  </data>
+  <data name="labelMinPeptide.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelMinPeptide.Text" xml:space="preserve">
+    <value>最小固定ペプチド：</value>
+  </data>
+  <data name="&gt;&gt;labelMinPeptide.Name" xml:space="preserve">
+    <value>labelMinPeptide</value>
+  </data>
+  <data name="&gt;&gt;labelMinPeptide.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelMinPeptide.Parent" xml:space="preserve">
+    <value>grpLinearEquation</value>
+  </data>
+  <data name="&gt;&gt;labelMinPeptide.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 18</value>
+  </data>
+  <data name="label4.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>77, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>計算：</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>grpLinearEquation</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="grpLinearEquation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 66</value>
+  </data>
+  <data name="grpLinearEquation.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="grpLinearEquation.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="grpLinearEquation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>359, 194</value>
+  </data>
+  <data name="grpLinearEquation.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="grpLinearEquation.Text" xml:space="preserve">
+    <value>線形方程式</value>
+  </data>
+  <data name="&gt;&gt;grpLinearEquation.Name" xml:space="preserve">
+    <value>grpLinearEquation</value>
+  </data>
+  <data name="&gt;&gt;grpLinearEquation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;grpLinearEquation.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;grpLinearEquation.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="label7.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
+    <value>2, 0</value>
+  </data>
+  <data name="label7.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
+    <value>147, 13</value>
+  </data>
+  <data name="label7.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label7.Text" xml:space="preserve">
+    <value>標準校正ペプチド：</value>
+  </data>
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
+    <value>label7</value>
+  </data>
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
+    <value>panelPeptides</value>
+  </data>
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnGraphIrts.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnGraphIrts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnGraphIrts.Location" type="System.Drawing.Point, System.Drawing">
+    <value>228, 441</value>
+  </data>
+  <data name="btnGraphIrts.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnGraphIrts.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnGraphIrts.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="btnGraphIrts.Text" xml:space="preserve">
+    <value>グラフ化…</value>
+  </data>
+  <data name="&gt;&gt;btnGraphIrts.Name" xml:space="preserve">
+    <value>btnGraphIrts</value>
+  </data>
+  <data name="&gt;&gt;btnGraphIrts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnGraphIrts.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnGraphIrts.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelStandardCount.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="labelStandardCount.Location" type="System.Drawing.Point, System.Drawing">
+    <value>162, 0</value>
+  </data>
+  <data name="labelStandardCount.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelStandardCount.Size" type="System.Drawing.Size, System.Drawing">
+    <value>198, 13</value>
+  </data>
+  <data name="labelStandardCount.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelStandardCount.Text" xml:space="preserve">
+    <value>0個のペプチド</value>
+  </data>
+  <data name="labelStandardCount.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>TopRight</value>
+  </data>
+  <data name="&gt;&gt;labelStandardCount.Name" xml:space="preserve">
+    <value>labelStandardCount</value>
+  </data>
+  <data name="&gt;&gt;labelStandardCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelStandardCount.Parent" xml:space="preserve">
+    <value>panelPeptides</value>
+  </data>
+  <data name="&gt;&gt;labelStandardCount.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="panelPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 265</value>
+  </data>
+  <data name="panelPeptides.Size" type="System.Drawing.Size, System.Drawing">
+    <value>359, 171</value>
+  </data>
+  <data name="panelPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;panelPeptides.Name" xml:space="preserve">
+    <value>panelPeptides</value>
+  </data>
+  <data name="&gt;&gt;panelPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelPeptides.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelPeptides.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -355,7 +781,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>375, 325</value>
+    <value>375, 473</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -381,11 +807,11 @@
   <data name="&gt;&gt;calibrateMeasuredRt.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;checkFixedPoint.Name" xml:space="preserve">
-    <value>checkFixedPoint</value>
+  <data name="&gt;&gt;colIrt.Name" xml:space="preserve">
+    <value>colIrt</value>
   </data>
-  <data name="&gt;&gt;checkFixedPoint.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewCheckBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;colIrt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>CalibrateIrtDlg</value>

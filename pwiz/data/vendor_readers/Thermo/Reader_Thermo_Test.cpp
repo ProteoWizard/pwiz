@@ -189,16 +189,30 @@ int main(int argc, char* argv[])
         bool requireUnicodeSupport = true;
         pwiz::msdata::Reader_Thermo reader;
         pwiz::util::ReaderTestConfig config;
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
+        pwiz::util::TestResult result;
+
+        #ifndef _WIN64
+        config.diffPrecision = 1e-2;
+        #endif
+
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
 
         config.peakPicking = true;
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
+
+        // test globalChromatogramsAreMs1Only, but don't need to test spectra here
+        auto newConfig = config;
+        newConfig.globalChromatogramsAreMs1Only = true;
+        newConfig.indexRange = make_pair(0, 0);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile("090701-LTQVelos-unittest-01.raw"), newConfig);
 
         #ifdef PWIZ_READER_THERMO
         // CONSIDER: do this test in VendorReaderTestHarness for all vendor readers?
         ::SetThreadLocale(LANG_TURKISH);
-        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawFile(), config);
         #endif
+
+        result.check();
     }
     catch (exception& e)
     {

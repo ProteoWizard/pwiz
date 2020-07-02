@@ -49,6 +49,9 @@ class PWIZ_API_DECL SpectrumList_IonMobility : public msdata::SpectrumListWrappe
     /// returns true if file in question contains necessary information for CCS/IonMobility handling (as with Drift Time in Agilent)
     virtual bool canConvertIonMobilityAndCCS(IonMobilityUnits units) const;
 
+    /// returns true if file in question will return ion mobility in 3-array format
+    virtual bool hasCombinedIonMobility() const;
+
     /// returns collisional cross-section associated with the ion mobility (units depend on IonMobilityEquipment)
     virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const;
 

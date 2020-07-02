@@ -159,7 +159,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(graphChrom.NameSet, dictGraphPositions[ptLeftTop].NameSet);
             }
 
-            var firstGraphChrom = listGraphChroms[3];
+            var firstGraphChrom = listGraphChroms[0]; // First loaded is least recently used, and this list serves as an MRU with most recent at the tail
             Point ptLeftTopFirst = GetTopLeft(firstGraphChrom.Parent);
 
             RunDlg<ArrangeGraphsGroupedDlg>(SkylineWindow.ArrangeGraphsGrouped, dlg =>
@@ -227,6 +227,7 @@ namespace pwiz.SkylineTestFunctional
                 docReimport.Settings.MeasuredResults.Chromatograms[3]);
             Assert.AreEqual(new MsDataFilePath(TestFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML")),
                 docReimport.Settings.MeasuredResults.Chromatograms[1].MSDataFilePaths.ToArray()[0]);
+            Assert.AreEqual(newName, docReimport.Settings.MeasuredResults.Chromatograms[1].Name);
 
             // Remove the last 2 replicates
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>

@@ -67,15 +67,15 @@ struct PWIZ_API_DECL Baf2SqlSpectrum : public MSSpectrum
     virtual bool hasProfileData() const;
     virtual size_t getLineDataSize() const;
     virtual size_t getProfileDataSize() const;
-    virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
-    virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
+    virtual void getLineData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const;
+    virtual void getProfileData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities) const;
 
     virtual double getTIC() const { return tic_; }
     virtual double getBPI() const { return bpi_; }
 
     virtual int getMSMSStage() const;
     virtual double getRetentionTime() const;
-    virtual void getIsolationData(std::vector<double>& isolatedMZs, std::vector<IsolationMode>& isolationModes) const;
+    virtual void getIsolationData(std::vector<IsolationInfo>& isolationInfo) const;
     virtual void getFragmentationData(std::vector<double>& fragmentedMZs, std::vector<FragmentationMode>& fragmentationModes) const;
     virtual IonPolarity getPolarity() const;
 
@@ -87,8 +87,8 @@ struct PWIZ_API_DECL Baf2SqlSpectrum : public MSSpectrum
 
     private:
     virtual void handleAllIons(); // Deal with all-ions MS1 data by presenting it as MS2 with a wide isolation window
-    virtual void readArray(uint64_t id, automation_vector<double> & result) const;
-    virtual void readArray(uint64_t id, automation_vector<double> & result, size_t n) const; // For use when the id's array size is known, as when reading mz after reading intensity
+    virtual void readArray(uint64_t id, pwiz::util::BinaryData<double> & result) const;
+    virtual void readArray(uint64_t id, pwiz::util::BinaryData<double> & result, size_t n) const; // For use when the id's array size is known, as when reading mz after reading intensity
 
     int index_;
     int msLevel_;
@@ -144,10 +144,10 @@ struct PWIZ_API_DECL Baf2SqlImpl : public CompassData
     virtual LCSpectrumPtr getLCSpectrum(int source, int scan) const;
 
     /// returns a chromatogram with times and total ion currents of all spectra, or a null pointer if the format doesn't support fast access to TIC
-    virtual ChromatogramPtr getTIC() const;
+    virtual ChromatogramPtr getTIC(bool ms1Only) const;
 
     /// returns a chromatogram with times and base peak intensities of all spectra, or a null pointer if the format doesn't support fast access to BPC
-    virtual ChromatogramPtr getBPC() const;
+    virtual ChromatogramPtr getBPC(bool ms1Only) const;
 
     virtual std::string getOperatorName() const;
     virtual std::string getAnalysisName() const ;
@@ -175,7 +175,7 @@ struct PWIZ_API_DECL Baf2SqlImpl : public CompassData
     std::string serialNumber_;
     std::string acquisitionDateTime_;
     std::string operatorName_;
-    ChromatogramPtr tic_, bpi_;
+    ChromatogramPtr tic_, ticMs1_, bpi_, bpiMs1_;
 };
 
 

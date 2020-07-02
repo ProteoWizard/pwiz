@@ -281,7 +281,7 @@ namespace pwiz.SkylineTestData.Results
                 var filePath = testFilesDir.GetTestPath(fileName);
                 AssertEx.ThrowsException<AssertFailedException>(() =>
                 {
-                    listResults = new List<ChromatogramSet> { new ChromatogramSet("rep1", new[] { new MsDataFilePath(filePath, null, true) }), };
+                    listResults = new List<ChromatogramSet> { new ChromatogramSet("rep1", new[] { new MsDataFilePath(filePath) }), };
                     docContainer.ChangeMeasuredResults(new MeasuredResults(listResults.ToArray()), 1, 1, 1);
                 },
                     string.Format(Resources.NoCentroidedDataException_NoCentroidedDataException_No_centroided_data_available_for_file___0_____Adjust_your_Full_Scan_settings_, filePath));
@@ -442,7 +442,7 @@ namespace pwiz.SkylineTestData.Results
             var refine = new RefinementSettings();
             var docSM = refine.ConvertToSmallMolecules(doc0, ".", asSmallMolecules);
             docCheckPoints.Add(docSM);
-            Assume.IsFalse(docSM.MoleculeTransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist != null));
+            Assert.IsFalse(docSM.MoleculeTransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist != null));
             AssertEx.Serializable(docSM, AssertEx.Cloned);
 
             double c13Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) -
@@ -455,15 +455,15 @@ namespace pwiz.SkylineTestData.Results
             var docIsotopes = docSM.ChangeSettings(docSM.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3, enrichments)));
             docCheckPoints.Add(docIsotopes);
-            Assume.AreEqual(FullScanMassAnalyzerType.tof,
+            Assert.AreEqual(FullScanMassAnalyzerType.tof,
                 docIsotopes.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
-            Assume.IsFalse(docIsotopes.MoleculeTransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist == null));
+            Assert.IsFalse(docIsotopes.MoleculeTransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist == null));
             foreach (var nodeGroup in docIsotopes.MoleculeTransitionGroups)
             {
-                Assume.AreEqual(3, nodeGroup.Children.Count);
+                Assert.AreEqual(3, nodeGroup.Children.Count);
                 var isotopePeaks = nodeGroup.IsotopeDist;
-                Assume.IsNotNull(isotopePeaks);
-                Assume.IsTrue(nodeGroup.HasIsotopeDist);
+                Assert.IsNotNull(isotopePeaks);
+                Assert.IsTrue(nodeGroup.HasIsotopeDist);
                 // The peaks should always includ at least M-1
                 Assume.IsTrue(isotopePeaks.MassIndexToPeakIndex(0) > 0);
                 // Within 2.5% of 100% of the entire isotope distribution
@@ -471,8 +471,8 @@ namespace pwiz.SkylineTestData.Results
 
                 // Precursor mass and m/z values are expected to match exactly (well, within XML roundtrip accuracy anyway)
 
-                Assume.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0), SequenceMassCalc.MassTolerance);
-                Assume.AreEqual(nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.IsCustomIon ?
+                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0), SequenceMassCalc.MassTolerance);
+                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.IsCustomIon ?
                                 BioMassCalc.CalculateIonMz(nodeGroup.IsotopeDist.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorAdduct.Unlabeled) :
                                 SequenceMassCalc.GetMZ(nodeGroup.IsotopeDist.GetMassI(0),
@@ -482,30 +482,30 @@ namespace pwiz.SkylineTestData.Results
                 for (int i = 1; i < isotopePeaks.CountPeaks; i++)
                 {
                     int massIndex = isotopePeaks.PeakIndexToMassIndex(i);
-                    Assume.IsTrue(isotopePeaks.GetMZI(massIndex - 1) < isotopePeaks.GetMZI(massIndex));
+                    Assert.IsTrue(isotopePeaks.GetMZI(massIndex - 1) < isotopePeaks.GetMZI(massIndex));
                     double massDelta = GetMassDelta(isotopePeaks, massIndex);
                     if (nodeGroup.TransitionGroup.LabelType.IsLight)
                     {
                         // All positive should be close to 13C - C, and 0 should be the same as the next delta
                         double expectedDelta = (massIndex > 0 ? c13Delta : GetMassDelta(isotopePeaks, massIndex + 1));
-                        Assume.AreEqual(expectedDelta, massDelta, 0.001);
+                        Assert.AreEqual(expectedDelta, massDelta, 0.001);
                     }
                     else if (nodeGroup.TransitionGroup.LabelType.Name.Contains("15N"))
                     {
                         // All positive should be close to 13C, and all negative 15N
                         double expectedDelta = (massIndex > 0 ? c13Delta : n15Delta);
-                        Assume.AreEqual(expectedDelta, massDelta, 0.0015);
+                        Assert.AreEqual(expectedDelta, massDelta, 0.0015);
                     }
                     else if (massIndex == 0)
                     {
                         double expectedDelta = (isotopePeaks.GetProportionI(massIndex - 1) == 0
                                                     ? GetMassDelta(isotopePeaks, massIndex + 1)
                                                     : 1.0017);
-                        Assume.AreEqual(expectedDelta, massDelta, 0.001);
+                        Assert.AreEqual(expectedDelta, massDelta, 0.001);
                     }
                     else
                     {
-                        Assume.AreEqual(c13Delta, massDelta, 0.001);
+                        Assert.AreEqual(c13Delta, massDelta, 0.001);
                     }
                 }
             }
@@ -523,7 +523,7 @@ namespace pwiz.SkylineTestData.Results
             {
                 Assert.AreNotSame(tranGroupsOld[i], tranGroupsNew[i]);
                 Assert.AreNotSame(tranGroupsOld[i].IsotopeDist, tranGroupsNew[i].IsotopeDist);
-                Assume.IsTrue(tranGroupsOld[i].IsotopeDist.ExpectedProportions.Sum() >
+                Assert.IsTrue(tranGroupsOld[i].IsotopeDist.ExpectedProportions.Sum() >
                     tranGroupsNew[i].IsotopeDist.ExpectedProportions.Sum());
             }
 
@@ -579,7 +579,7 @@ namespace pwiz.SkylineTestData.Results
                 else
                 {
                     var firstChild = (TransitionDocNode)nodeGroup.Children[0];
-                    Assume.IsTrue(firstChild.Transition.MassIndex < 0);
+                    Assert.IsTrue(firstChild.Transition.MassIndex < 0);
                 }
             }
             AssertEx.Serializable(docIsotopesLow13C, AssertEx.Cloned); // Express any failure as XML diffs
@@ -594,32 +594,32 @@ namespace pwiz.SkylineTestData.Results
                 Assume.AreEqual(nodeGroup.IsotopeDist.CountPeaks, nodeGroup.Children.Count);
                 var firstChild = (TransitionDocNode)nodeGroup.Children[0];
                 if (nodeGroup.TransitionGroup.LabelType.IsLight)
-                    Assume.AreEqual(-1, firstChild.Transition.MassIndex);
+                    Assert.AreEqual(-1, firstChild.Transition.MassIndex);
                 else
-                    Assume.IsTrue(-1 > firstChild.Transition.MassIndex);
+                    Assert.IsTrue(-1 > firstChild.Transition.MassIndex);
             }
             AssertEx.Serializable(docIsotopesLowP0, AssertEx.Cloned);
 
             // Test a document with variable and heavy modifications, which caused problems for
             // the original implementation
             var docVariable = ResultsUtil.DeserializeDocument("HeavyVariable.sky", GetType());
-            Assume.IsFalse(docVariable.MoleculeTransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist == null));
+            Assert.IsFalse(docVariable.MoleculeTransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist == null));
 
             foreach (var nodeGroup in docVariable.MoleculeTransitionGroups)
             {
                 var isotopePeaks = nodeGroup.IsotopeDist;
-                Assume.IsNotNull(isotopePeaks);
+                Assert.IsNotNull(isotopePeaks);
                 // The peaks should always includ at least M-1
-                Assume.IsTrue(isotopePeaks.MassIndexToPeakIndex(0) > 0);
+                Assert.IsTrue(isotopePeaks.MassIndexToPeakIndex(0) > 0);
                 // Precursor mass and m/z values are expected to match exactly (well, within XML roundtrip tolerance anyway)
                 var mzI = nodeGroup.IsotopeDist.GetMZI(0);
-                Assume.AreEqual(nodeGroup.PrecursorMz, mzI, SequenceMassCalc.MassTolerance);
+                Assert.AreEqual(nodeGroup.PrecursorMz, mzI, SequenceMassCalc.MassTolerance);
 
                 // Check isotope distribution masses
                 for (int i = 1; i < isotopePeaks.CountPeaks; i++)
                 {
                     int massIndex = isotopePeaks.PeakIndexToMassIndex(i);
-                    Assume.IsTrue(isotopePeaks.GetMZI(massIndex - 1) < isotopePeaks.GetMZI(massIndex));
+                    Assert.IsTrue(isotopePeaks.GetMZI(massIndex - 1) < isotopePeaks.GetMZI(massIndex));
                     double massDelta = GetMassDelta(isotopePeaks, massIndex);
                     bool containsSulfur = nodeGroup.TransitionGroup.Peptide.IsCustomMolecule
                         ? (nodeGroup.CustomMolecule.Formula.IndexOfAny("S".ToCharArray()) != -1)
@@ -629,15 +629,15 @@ namespace pwiz.SkylineTestData.Results
                         double expectedDelta = (isotopePeaks.GetProportionI(massIndex - 1) == 0
                                                     ? GetMassDelta(isotopePeaks, massIndex + 1)
                                                     : 1.0017);
-                        Assume.AreEqual(expectedDelta, massDelta, 0.001);
+                        Assert.AreEqual(expectedDelta, massDelta, 0.001);
                     }
                     else if (!containsSulfur || massIndex == 1)
                     {
-                        Assume.AreEqual(c13Delta, massDelta, 0.001);
+                        Assert.AreEqual(c13Delta, massDelta, 0.001);
                     }
                     else
                     {
-                        Assume.AreEqual(1.00075, massDelta, 0.001);
+                        Assert.AreEqual(1.00075, massDelta, 0.001);
                     }
                 }
             }
@@ -653,7 +653,7 @@ namespace pwiz.SkylineTestData.Results
         {
             // Note that we can't just run the lists in parallel - one of these is likely a small molecule conversion of the other,
             // and will have its transitions sorted differently
-            Assume.AreEqual(docA.MoleculeTransitionGroupCount, docB.MoleculeTransitionGroupCount);
+            Assert.AreEqual(docA.MoleculeTransitionGroupCount, docB.MoleculeTransitionGroupCount);
             foreach (var transGroupDocB in docB.MoleculeTransitionGroups)
             {
                 var transGroupDocA = docA.MoleculeTransitionGroups.FirstOrDefault(a =>
@@ -661,7 +661,7 @@ namespace pwiz.SkylineTestData.Results
                     Equals(a.TransitionCount, transGroupDocB.TransitionCount) &&
                     Equals(a.TransitionGroup.PrecursorAdduct.AdductCharge, transGroupDocB.TransitionGroup.PrecursorAdduct.AdductCharge) &&
                     Equals(a.TransitionGroup.LabelType, transGroupDocB.TransitionGroup.LabelType));
-                Assume.IsNotNull(transGroupDocA, "failed to find matching transition group");
+                Assert.IsNotNull(transGroupDocA, "failed to find matching transition group");
                 var docBTransitions = transGroupDocB.Transitions.ToArray();
                 var docBTransitionsMatched = new List<TransitionDocNode>();
                 // ReSharper disable once PossibleNullReferenceException
@@ -674,22 +674,30 @@ namespace pwiz.SkylineTestData.Results
                         ((a.Results == null)
                             ? (b.Results == null)
                             : (a.Results.Count == b.Results.Count)));
-                    Assume.IsNotNull(transDocB, "failed to find matching transition");
-                    Assume.IsFalse(docBTransitionsMatched.Contains(transDocB), "transition matched twice");
+                    Assert.IsNotNull(transDocB, "failed to find matching transition");
+                    Assert.IsFalse(docBTransitionsMatched.Contains(transDocB), "transition matched twice");
                     docBTransitionsMatched.Add(transDocB);
-                    // ReSharper disable PossibleNullReferenceException
-                    using (var docBChromInfos = transDocB.ChromInfos.GetEnumerator())
+                    for (int i = 0; i < (transDocA.HasResults ? transDocA.Results.Count : 0); i++)
                     {
-                        foreach (var infoDocA in transDocA.ChromInfos)
+                        var dictA = ToDict(docA, transDocA.Results[i]);
+                        var dictB = ToDict(docB, transDocB.Results[i]);
+
+                        Assert.AreEqual(dictA.Count, dictB.Count);
+                        foreach (var chromInfoAPair in dictA)
                         {
-                            Assume.IsTrue(docBChromInfos.MoveNext());
-                            var infoDocB = docBChromInfos.Current;
-                            Assume.IsTrue(infoDocA.Equals(infoDocB));
+                            TransitionChromInfo chromInfoB;
+                            Assert.IsTrue(dictB.TryGetValue(chromInfoAPair.Key, out chromInfoB));
+                            Assert.AreEqual(chromInfoAPair.Value, chromInfoB);
                         }
                     }
-                    // ReSharper restore PossibleNullReferenceException
                 }
             }
+        }
+
+        private IDictionary<MsDataFileUri, TransitionChromInfo> ToDict(SrmDocument doc, ChromInfoList<TransitionChromInfo> chromInfoList)
+        {
+            return chromInfoList.ToDictionary(c =>
+                doc.MeasuredResults.MSDataFileInfos.First(fi => ReferenceEquals(fi.FileId, c.FileId)).FilePath);
         }
     }
 }

@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public int IndexOffset { get; set; }
 
-        public int? TicChromatogramIndex { get; }
+        public int? TicChromatogramIndex { get; set; }
         public int? BpcChromatogramIndex { get; }
 
         public IList<int> GlobalChromatogramIndexes
@@ -169,11 +169,35 @@ namespace pwiz.Skyline.Model.Results
             }
             else if (index == TicChromatogramIndex || index == BpcChromatogramIndex)
             {
-                _dataFile.GetChromatogram(index, out string id, out times, out intensities);
+                _dataFile.GetChromatogram(index, out string id, out times, out intensities, true);
             }
             else
             {
                 times = intensities = null;
+            }
+
+            return times != null;
+        }
+
+        /// <summary>
+        /// Returns true if the TIC chromatogram present in the .raw file can be relied on
+        /// for the calculation of total MS1 ion current.
+        /// </summary>
+        public bool IsTicChromatogramUsable()
+        {
+            if (!TicChromatogramIndex.HasValue)
+            {
+                return false;
+            }
+
+            float[] times;
+            if (!GetChromatogram(TicChromatogramIndex.Value, out times, out _))
+            {
+                return false;
+            }
+
+            if (times.Length == 0)
+            {
                 return false;
             }
 
@@ -192,6 +216,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _hasMidasSpectra;
         private readonly bool _sourceHasNegativePolarityData;
         private readonly bool _sourceHasPositivePolarityData;
+        private readonly eIonMobilityUnits _ionMobilityUnits;
 
         /// <summary>
         /// The number of chromatograms read so far.
@@ -285,6 +310,8 @@ namespace pwiz.Skyline.Model.Results
             // CONSIDER(kaipot): Some way to support mzML files converted from MIDAS wiff files
             _hasMidasSpectra = (dataFile.IsABFile) && SpectraChromDataProvider.HasSpectrumData(dataFile);
 
+            _ionMobilityUnits = dataFile.IonMobilityUnits;
+
             SetPercentComplete(50);
         }
 
@@ -361,7 +388,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromIds; }
         }
 
-        public override eIonMobilityUnits IonMobilityUnits { get { return eIonMobilityUnits.none; } }
+        public override eIonMobilityUnits IonMobilityUnits { get { return _ionMobilityUnits; } }
 
         public override bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
         {

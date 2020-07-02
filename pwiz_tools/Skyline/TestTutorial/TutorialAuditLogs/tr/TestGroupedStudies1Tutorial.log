@@ -93,6 +93,12 @@ Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574,7844++ to 
 All Info  :
 Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574,7844++ to all
 
+Undo Redo : Transition Settings -- Integration > Integrate All changed to True
+Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
+All Info  :
+Transition Settings -- Integration > Integrate All changed to True
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
+
 Undo Redo : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 Summary   : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 All Info  :
@@ -200,7 +206,7 @@ Undo Redo : Pasted 72 values into the document grid
 Summary   : Pasted 72 values into the document grid
 All Info  :
 Pasted 72 values into the document grid
-Document grid > View name is "Replicates"
+Document grid > Report name is "Replicates"
 Set SubjectId of D_103_REP1 to "D102"
 Set BioReplicate of D_103_REP1 to "102"
 Set Condition of D_103_REP1 to "Diseased"
@@ -317,7 +323,7 @@ H162	162	Healthy
 H162	162	Healthy
 
 
-View name = "Replicates"
+Report name = "Replicates"
 
 Undo Redo : Annotation : "MissingData" was added
 Summary   : Settings > Document Settings -- Annotations : "MissingData" was added
@@ -327,35 +333,17 @@ Settings > Document Settings -- Annotations : "MissingData" was added
 Settings > Document Settings -- Annotations > "MissingData" > Applies to is "peptide"
 Settings > Document Settings -- Annotations > "MissingData" > Type is "True/False"
 
-Undo Redo : Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Summary   : Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Undo Redo : Set MissingData of DFATVYVDAVK to True
+Summary   : Set MissingData of DFATVYVDAVK to True
 All Info  :
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of DFATVYVDAVK to True
 
 Undo Redo : Pasted 149 values into the document grid
 Summary   : Pasted 149 values into the document grid
 All Info  :
 Pasted 149 values into the document grid
-Document grid > View name is "Truncated Precursors"
+Document grid > Report name is "Truncated Precursors"
 Document grid > Column settings > Column Sorts : contains { Column = "Count Truncated", Direction = "Descending" }
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
-Set MissingData of GSYNLQDLLAQAK to True
-Set MissingData of GSYNLQDLLAQAK to True
-Set MissingData of GSYNLQDLLAQAK to True
-Set MissingData of GSYNLQDLLAQAK to True
-Set MissingData of GSYNLQDLLAQAK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
-Set MissingData of DFATVYVDAVK to True
 Set MissingData of DFATVYVDAVK to True
 Set MissingData of DFATVYVDAVK to True
 Set MissingData of DFATVYVDAVK to True
@@ -366,124 +354,142 @@ Set MissingData of DYVSQFESSTLGK to True
 Set MissingData of DYVSQFESSTLGK to True
 Set MissingData of DYVSQFESSTLGK to True
 Set MissingData of DYVSQFESSTLGK to True
-Set MissingData of DYVSQFESSTLGK to True
-Set MissingData of DYVSQFESSTLGK to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
 Set MissingData of DYVSQFESSTLGK to True
 Set MissingData of TGTNLMDFLSR to True
 Set MissingData of TGTNLMDFLSR to True
 Set MissingData of TGTNLMDFLSR to True
 Set MissingData of TGTNLMDFLSR to True
-Set MissingData of TGTNLMDFLSR to True
-Set MissingData of TGTNLMDFLSR to True
-Set MissingData of LNDGSQITFEK to True
-Set MissingData of LNDGSQITFEK to True
-Set MissingData of LNDGSQITFEK to True
-Set MissingData of LNDGSQITFEK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of ATAQDNPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of GTITSIAALDDPK to True
-Set MissingData of IFPENNIK to True
-Set MissingData of IFPENNIK to True
-Set MissingData of SLLNSLEEAK to True
-Set MissingData of SLLNSLEEAK to True
 Set MissingData of SLLNSLEEAK to True
 Set MissingData of ASGIIDTLFQDR to True
 Set MissingData of ASGIIDTLFQDR to True
 Set MissingData of ASGIIDTLFQDR to True
 Set MissingData of ASGIIDTLFQDR to True
 Set MissingData of ASGIIDTLFQDR to True
-Set MissingData of ASGIIDTLFQDR to True
-Set MissingData of C[+57.021464]IVDGDDR to True
-Set MissingData of C[+57.021464]IVDGDDR to True
-Set MissingData of YLMFFAC[+57.021464]TILVPK to True
-Set MissingData of YLMFFAC[+57.021464]TILVPK to True
-Set MissingData of YLMFFAC[+57.021464]TILVPK to True
-Set MissingData of WVLTVAHC[+57.021464]FEGR to True
-Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
-Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
-Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
 Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
 Set MissingData of VFWIEVALFWR to True
 Set MissingData of VFWIEVALFWR to True
 Set MissingData of VFWIEVALFWR to True
-Set MissingData of VFWIEVALFWR to True
 Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
 Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
 Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
-Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
-Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
-Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
-Set MissingData of SFSC[+57.021464]EVEILEGDK to True
 Set MissingData of ENSSNILDNLLSR to True
-Set MissingData of TQEQAQALR to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of STAEPDDSHALYAK to True
+Set MissingData of FAEDHFAHEATK to True
+Set MissingData of FAEDHFAHEATK to True
+Set MissingData of FAEDHFAHEATK to True
+Set MissingData of TLNSINIAVFSK to True
+Set MissingData of TLNSINIAVFSK to True
+Set MissingData of DLTGFPQGADQR to True
+Set MissingData of DLTGFPQGADQR to True
+Set MissingData of WTNPDGTTSK to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of GSYNLQDLLAQAK to True
+Set MissingData of GSYNLQDLLAQAK to True
+Set MissingData of GSYNLQDLLAQAK to True
+Set MissingData of GSYNLQDLLAQAK to True
+Set MissingData of GSYNLQDLLAQAK to True
+Set MissingData of TGTNLMDFLSR to True
+Set MissingData of LNDGSQITFEK to True
+Set MissingData of LNDGSQITFEK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
+Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
+Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of WWGQEITELAQGPGR to True
+Set MissingData of AGDQILAINEINVK to True
+Set MissingData of AGSWQITMK to True
+Set MissingData of TYIWQIPER to True
+Set MissingData of ENLSPPLGEC[+57.021464]LLER to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of ATAQDNPK to True
+Set MissingData of IFPENNIK to True
+Set MissingData of SLLNSLEEAK to True
+Set MissingData of ASGIIDTLFQDR to True
+Set MissingData of C[+57.021464]IVDGDDR to True
+Set MissingData of SDFQVPC[+57.021464]QYSQQLK to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of ALIHC[+57.021464]LHMS to True
+Set MissingData of AFGMQNLFGPHR to True
+Set MissingData of TYIWQIPER to True
+Set MissingData of ENLSPPLGEC[+57.021464]LLER to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of DYVSQFESSTLGK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of IFPENNIK to True
+Set MissingData of C[+57.021464]IVDGDDR to True
+Set MissingData of YLMFFAC[+57.021464]TILVPK to True
+Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
 Set MissingData of YHGVTGLVVMDK to True
-Set MissingData of STAEPDDSHALYAK to True
-Set MissingData of STAEPDDSHALYAK to True
-Set MissingData of STAEPDDSHALYAK to True
-Set MissingData of STAEPDDSHALYAK to True
-Set MissingData of STAEPDDSHALYAK to True
-Set MissingData of STAEPDDSHALYAK to True
 Set MissingData of TAC[+57.021464]VLPAPAGPSQGK to True
 Set MissingData of ALIHC[+57.021464]LHMS to True
 Set MissingData of ALIHC[+57.021464]LHMS to True
 Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
-Set MissingData of ALIHC[+57.021464]LHMS to True
 Set MissingData of VLMSLLNLAR to True
-Set MissingData of WWGQEITELAQGPGR to True
-Set MissingData of LTTDHTPER to True
-Set MissingData of AGDQILAINEINVK to True
-Set MissingData of AFGMQNLFGPHR to True
-Set MissingData of AFGMQNLFGPHR to True
 Set MissingData of YGLDLGSLLVR to True
+Set MissingData of HGLLESAVLAR to True
+Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of DYVSQFESSTLGK to True
+Set MissingData of TGTNLMDFLSR to True
+Set MissingData of LNDGSQITFEK to True
+Set MissingData of LNDGSQITFEK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of SLLNSLEEAK to True
+Set MissingData of YLMFFAC[+57.021464]TILVPK to True
+Set MissingData of HTNNGMIC[+57.021464]LTSLLR to True
+Set MissingData of AFGMQNLFGPHR to True
 Set MissingData of AGSWQITMK to True
-Set MissingData of AGSWQITMK to True
-Set MissingData of FAEDHFAHEATK to True
-Set MissingData of FAEDHFAHEATK to True
-Set MissingData of FAEDHFAHEATK to True
+Set MissingData of HGLLESAVLAR to True
+Set MissingData of TLNSINIAVFSK to True
+Set MissingData of AFMDC[+57.021464]C[+57.021464]NYITK to True
+Set MissingData of DFATVYVDAVK to True
+Set MissingData of GTITSIAALDDPK to True
+Set MissingData of YLMFFAC[+57.021464]TILVPK to True
+Set MissingData of WVLTVAHC[+57.021464]FEGR to True
+Set MissingData of VFWIEVALFWR to True
+Set MissingData of SFSC[+57.021464]EVEILEGDK to True
+Set MissingData of TQEQAQALR to True
+Set MissingData of LTTDHTPER to True
 Set MissingData of DVNEAIQWMEEK to True
 Set MissingData of HGLLESAVLAR to True
-Set MissingData of HGLLESAVLAR to True
-Set MissingData of HGLLESAVLAR to True
-Set MissingData of TLNSINIAVFSK to True
-Set MissingData of TLNSINIAVFSK to True
-Set MissingData of TLNSINIAVFSK to True
-Set MissingData of DLTGFPQGADQR to True
-Set MissingData of DLTGFPQGADQR to True
 Set MissingData of DLTGFPQGADQR to True
 Set MissingData of HFLIETGPK to True
-Set MissingData of WTNPDGTTSK to True
-Set MissingData of TYIWQIPER to True
-Set MissingData of TYIWQIPER to True
 Set MissingData of ENLSPPLGEC[+57.021464]LLER to True
-Set MissingData of ENLSPPLGEC[+57.021464]LLER to True
-Set MissingData of ENLSPPLGEC[+57.021464]LLER to True
-Set MissingData of AFMDC[+57.021464]C[+57.021464]NYITK to True
 Set MissingData of EEPSADALLPIDC[+57.021464]R to True
 Set MissingData of MSPVPDLVPGSFK to True
 Set MissingData of MSPVPDLVPGSFK to True
@@ -637,7 +643,7 @@ TRUE
 TRUE
 TRUE
 
-View name = "Truncated Precursors",
+Report name = "Truncated Precursors",
 Column settings = 
 {
     Column Sorts = 

@@ -296,6 +296,7 @@ namespace pwiz.Skyline.Util
             int i = RemoveExisting(item);
             if (i != -1 && i < index)
                 index--;
+            // ReSharper disable once PossibleNullReferenceException
             _dict.Add(item.GetKey(), item);
             base.InsertItem(index, item);
         }
@@ -314,6 +315,7 @@ namespace pwiz.Skyline.Util
             // from what is at this location currently, then any
             // existing value with the same key must be removed
             // from its current location.
+            // ReSharper disable once PossibleNullReferenceException
             if (!Equals(key, item.GetKey()))
             {
                 int i = RemoveExisting(item);
@@ -898,7 +900,7 @@ namespace pwiz.Skyline.Util
             
         }
 
-    /// <summary>
+        /// <summary>
         /// Enumerates two lists assigning references from the second list to
         /// entries in the first list, where they are equal.  Useful for maintaining
         /// reference equality when recalculating values. Similar to <see cref="Helpers.AssignIfEquals{T}"/>.
@@ -934,16 +936,39 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Use when you have more than just one other array to sort. Otherwise, consider using Linq
+        /// </summary>
+        public static void Sort<TItem>(TItem[] array, params TItem[][] secondaryArrays)
+        {
+            int[] sortIndexes;
+            Sort(array, out sortIndexes);
+            int len = array.Length;
+            TItem[] buffer = new TItem[len];
+            foreach (var secondaryArray in secondaryArrays.Where(a => a != null))
+                ApplyOrder(sortIndexes, secondaryArray, buffer);
+        }
+
+        /// <summary>
         /// Apply the ordering gotten from the sorting of an array (see Sort method above)
         /// to a new array.
         /// </summary>
         /// <typeparam name="TItem">Type of array elements</typeparam>
         /// <param name="sortIndexes">Array of indexes that recorded sort operations</param>
         /// <param name="array">Array to be reordered using the index array</param>
-        /// <returns></returns>
-        public static TItem[] ApplyOrder<TItem>(int[] sortIndexes, TItem[] array)
+        /// <param name="buffer">An optional buffer to use to avoid allocating a new array and force in-place sorting</param>
+        /// <returns>A sorted version of the original array</returns>
+        public static TItem[] ApplyOrder<TItem>(int[] sortIndexes, TItem[] array, TItem[] buffer = null)
         {
-            var ordered = new TItem[array.Length];
+            TItem[] ordered;
+            int len = array.Length;
+            if (buffer == null)
+                ordered = new TItem[len];
+            else
+            {
+                Array.Copy(array, buffer, len);
+                ordered = array;
+                array = buffer;
+            }
             for (int i = 0; i < array.Length; i++)
                 ordered[i] = array[sortIndexes[i]];
             return ordered;
@@ -1830,13 +1855,45 @@ namespace pwiz.Skyline.Util
 
 
         /// <summary>
-        /// Try an action the might throw an IOException.  If it fails, sleep for 500 milliseconds and try
-        /// again.  See the comments above for more detail about why this is necessary.
+        /// Try an action that might throw an exception commonly related to a file move or delete.
+        /// If it fails, sleep for the indicated period and try again.
+        /// 
+        /// N.B. "TryTwice" is a historical misnomer since it actually defaults to trying four times,
+        /// but the intent is clear: try more than once. Further historical note: formerly this only
+        /// handled IOException, but in looping tests we also see UnauthorizedAccessException as a result
+        /// of file locks that haven't been released yet.
         /// </summary>
         /// <param name="action">action to try</param>
-        public static void TryTwice(Action action)
+        /// <param name="loopCount">how many loops to try before failing</param>
+        /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
+        public static void TryTwice(Action action, int loopCount = 4, int milliseconds = 500)
         {
-            Try<IOException>(action);
+            for (int i = 1; i<loopCount; i++)
+            {
+                try
+                {
+                    action();
+                    return;
+                }
+                catch (IOException exIO)
+                {
+                    ReportExceptionForRetry(milliseconds, exIO, i, loopCount);
+                }
+                catch (UnauthorizedAccessException exUA)
+                {
+                    ReportExceptionForRetry(milliseconds, exUA, i, loopCount);
+                }
+            }
+
+            // Try the last time, and let the exception go.
+            action();
+        }
+
+        private static void ReportExceptionForRetry(int milliseconds, Exception x, int loopCount, int maxLoopCount)
+        {
+            Trace.WriteLine(string.Format(@"Encountered the following exception (attempt {0} of {1}):", loopCount, maxLoopCount));
+            Trace.WriteLine(x.Message);
+            Thread.Sleep(milliseconds);
         }
 
         /// <summary>
@@ -1860,8 +1917,7 @@ namespace pwiz.Skyline.Util
                 }
                 catch (TEx x)
                 {
-                    Trace.WriteLine(x.Message);
-                    Thread.Sleep(milliseconds);
+                    ReportExceptionForRetry(milliseconds, x, i, loopCount);
                 }
             }
 
@@ -1903,6 +1959,24 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public static class Assume
     {
+
+        public static bool InvokeDebuggerOnFail { get; private set; } // When set, we will invoke the debugger rather than fail.
+        public class DebugOnFail : IDisposable
+        {
+            private bool _pushPopInvokeDebuggerOnFail;
+
+            public DebugOnFail(bool invokeDebuggerOnFail = true)
+            {
+                _pushPopInvokeDebuggerOnFail = InvokeDebuggerOnFail; // Push
+                InvokeDebuggerOnFail = invokeDebuggerOnFail;
+            }
+
+            public void Dispose()
+            {
+                InvokeDebuggerOnFail = _pushPopInvokeDebuggerOnFail; // Pop
+            }
+        }
+
         public static void IsTrue(bool condition, string error = "")
         {
             if (!condition)
@@ -1947,6 +2021,39 @@ namespace pwiz.Skyline.Util
 
         public static void Fail(string error = "")
         {
+            if (InvokeDebuggerOnFail)
+            {
+                // Try to launch devenv with our solution sln so it presents in the list of debugger options.
+                // This makes for better code navigation and easier debugging.
+                try
+                {
+                    var path = @"\pwiz_tools\Skyline";
+                    var basedir = AppDomain.CurrentDomain.BaseDirectory;
+                    if (!string.IsNullOrEmpty(basedir))
+                    {
+                        var index = basedir.IndexOf(path, StringComparison.Ordinal);
+                        var solutionPath = basedir.Substring(0, index + path.Length);
+                        var skylineSln = Path.Combine(solutionPath, "Skyline.sln");
+                        // Try to give user a hint as to which debugger to pick
+                        var skylineTesterSln = Path.Combine(solutionPath, "USE THIS FOR ASSUME FAIL DEBUGGING.sln");
+                        if (File.Exists(skylineTesterSln))
+                            File.Delete(skylineTesterSln);
+                        File.Copy(skylineSln, skylineTesterSln);
+                        Process.Start(skylineTesterSln);
+                        Thread.Sleep(20000); // Wait for it to fire up sp it's offered in the list of debuggers
+                    }
+                }
+                // ReSharper disable once EmptyGeneralCatchClause
+                catch (Exception)
+                {
+                }
+
+                Console.WriteLine();
+                if (!string.IsNullOrEmpty(error))
+                    Console.WriteLine(error);
+                Console.WriteLine(@"error encountered, launching debugger as requested by Assume.DebugOnFail");
+                Debugger.Launch();
+            }
             throw new AssumptionException(error);
         }
 
@@ -2006,30 +2113,20 @@ namespace pwiz.Skyline.Util
             return ex.Message;
         }
 
-        public static string GetStackTraceText(Exception exception, StackTrace stackTraceExceptionCaughtAt = null, bool showMessage = true)
+        /// <summary>
+        /// Returns text to be used when reporting an unhandled exception to the Skyline.ms.
+        /// </summary>
+        public static string GetExceptionText(Exception exception, StackTrace stackTraceExceptionCaughtAt)
         {
-            StringBuilder stackTrace = new StringBuilder();
-            if (showMessage)
-                stackTrace.AppendLine(@"Stack trace:").AppendLine();
-
-            stackTrace.AppendLine(exception.StackTrace).AppendLine();
-
-            for (var x = exception.InnerException; x != null; x = x.InnerException)
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine(exception.ToString());
+            if (stackTraceExceptionCaughtAt != null)
             {
-                if (ReferenceEquals(x, exception.InnerException))
-                    stackTrace.AppendLine(@"Inner exceptions:");
-                else
-                    stackTrace.AppendLine(@"---------------------------------------------------------------");
-                stackTrace.Append(@"Exception type: ").Append(x.GetType().FullName).AppendLine();
-                stackTrace.Append(@"Error message: ").AppendLine(x.Message);
-                stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
+                stringBuilder.AppendLine(@"Exception caught at: ");
+                stringBuilder.AppendLine(stackTraceExceptionCaughtAt.ToString());
             }
-            if (null != stackTraceExceptionCaughtAt)
-            {
-                stackTrace.AppendLine(@"Exception caught at: ");
-                stackTrace.AppendLine(stackTraceExceptionCaughtAt.ToString());
-            }
-            return stackTrace.ToString();
+
+            return stringBuilder.ToString();
         }
     }
 

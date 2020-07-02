@@ -314,8 +314,13 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   <data name="ExcludeFromCalibration">
     <value>Whether the results in the replicate should be excluded from the peptide's calibration curve calculation.</value>
   </data>
+  <data name="ExplicitAnalyteConcentration">
+    <value>The concentration of this particular molecule or peptide in this particular replicate.
+If the Explicit Analyte Concentration is not specified then the concentration of the analyte is assumed 
+to be the Analyte Concentration from the Replicate times the Concentration Multiplier of the Peptide or Molecule.</value>
+  </data>
   <data name="ExplicitCollisionEnergy">
-    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</value>
+    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library or per-precursor explicit values.</value>
   </data>
   <data name="ExplicitCompensationVoltage">
     <value>The exact desired compensation voltage (ion mobility filter) to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</value>
@@ -485,6 +490,9 @@ ion in the matching library spectrum.</value>
     <value>The name of a MS/MS spectral library, if a MS/MS spectral library
 spectrum is associated with the precursor ion.</value>
   </data>
+  <data name="LibraryProbabilityScore">
+    <value>The probability score assigned to this match in the input files used to build the spectral library.</value>
+  </data>
   <data name="LibraryRank">
     <value>The rank based on LibraryIntensity of this transition among all transitions
 allowed by the transition Filter settings, shown in the user interface as “(rank #)”.</value>
@@ -540,6 +548,10 @@ The options for determining this value can be specified on the Quantification ta
   <data name="MaxBestRetentionTime">
     <value>Maximum of the precursor BestRetentionTime values</value>
   </data>
+  <data name="MaxDetectionQValue" xml:space="preserve">
+    <value>A  maximum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mPro
+phet model.</value>
+  </data>
   <data name="MaxEndTime">
     <value>Maximum EndTime of all transitions for a precursor. Unless manually
 edited all transitions for a precursor use the same integration boundaries.</value>
@@ -556,6 +568,9 @@ precursor.</value>
   </data>
   <data name="MaxRetentionTime">
     <value>Maximum of the transition RetentionTime values.</value>
+  </data>
+  <data name="Median">
+    <value>Median</value>
   </data>
   <data name="Mean">
     <value>Mean</value>
@@ -593,6 +608,9 @@ precursor.</value>
   <data name="MeanTotalAreaRatio">
     <value> Mean of the precursor TotalAreaRatio values.</value>
   </data>
+  <data name="MedianDetectionQValue" xml:space="preserve">
+    <value>A  median of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
+  </data>
   <data name="Min">
     <value>Min</value>
   </data>
@@ -604,6 +622,9 @@ precursor.</value>
   </data>
   <data name="MinRetentionTime">
     <value>Minimum of the transition RetentionTime values.</value>
+  </data>
+  <data name="MinDetectionQValue" xml:space="preserve">
+    <value>A  minimum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
   </data>
   <data name="MinStartTime">
     <value>Minimum StartTime of all transitions for a precursor. Unless manually
@@ -817,6 +838,9 @@ Edit menu</value>
   </data>
   <data name="PrecursorConcentration">
     <value>The concentration at which this precursor was spiked into the sample. This is used for generating Isotopolog Response Curves.</value>
+  </data>
+  <data name="PrecursorExplicitCollisionEnergy" xml:space="preserve">
+    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values. May in turn be overridden by per-transition Explicit Collision Energy.</value>
   </data>
   <data name="PrecursorIonFormula">
     <value>The formula of the precursor ion.</value>

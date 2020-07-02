@@ -120,12 +120,12 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             // Add all peptides
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(viewLibUI.AddAllPeptides);
             var docBefore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-            RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, addLibraryPepsDlg =>
-            {
-                addLibraryPepsDlg.Btn1Click();
-            });
             using (new CheckDocumentState(1, 8756, 10988, 43894))
             {
+                RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, addLibraryPepsDlg =>
+                {
+                    addLibraryPepsDlg.Btn1Click();
+                });
                 WaitForDocumentChange(docBefore);
             }
 

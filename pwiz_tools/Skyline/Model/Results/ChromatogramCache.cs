@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<MsDataFileUri> CachedFilePaths
         {
-            get { return CachedFiles.Select(cachedFile => cachedFile.FilePath); }
+            get { return CachedFiles.Select(cachedFile => cachedFile.FilePath.GetLocation()); } // Strip any "?combine_ims=true" etc decoration
         }
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private static bool IsCovered(MsDataFileUri path, IEnumerable<ChromatogramCache> caches)
         {
-            return caches.Any(cache => cache.CachedFilePaths.Contains(path));
+            return caches.Any(cache => cache.CachedFilePaths.Contains(path.GetLocation())); // Strip any "?combine_ims=true" etc decoration
         }
 
         public MsDataFileScanIds LoadMSDataFileScanIds(int fileIndex)
@@ -985,7 +985,10 @@ namespace pwiz.Skyline.Model.Results
             var cachedFileSerializer = cacheFormat.CachedFileSerializer();
             foreach (var cachedFile in chromCachedFiles)
             {
-                var filePathBytes = Encoding.UTF8.GetBytes(cachedFile.FilePath.ToString());
+                var filePath = cachedFile.FilePath;
+                if (formatVersion < CacheFormatVersion.Fourteen)
+                    filePath = filePath.RestoreLegacyParameters(cachedFile.UsedMs1Centroids, cachedFile.UsedMs2Centroids);
+                var filePathBytes = Encoding.UTF8.GetBytes(filePath.ToString());
                 var instrumentInfoBytes =
                     Encoding.UTF8.GetBytes(InstrumentInfoUtil.GetInstrumentInfoString(cachedFile.InstrumentInfoList));
                 var sampleIdBytes = Encoding.UTF8.GetBytes(cachedFile.SampleId ?? string.Empty);
@@ -1008,8 +1011,11 @@ namespace pwiz.Skyline.Model.Results
                 cachedFileSerializer.WriteItems(outStream, new []{cachedFileStruct});
                 // Write variable length buffers
                 outStream.Write(filePathBytes, 0, filePathBytes.Length);
-                outStream.Write(sampleIdBytes, 0, sampleIdBytes.Length);
-                outStream.Write(serialNumberBytes, 0, serialNumberBytes.Length);
+                if (formatVersion >= CacheFormatVersion.Fourteen)
+                {
+                    outStream.Write(sampleIdBytes, 0, sampleIdBytes.Length);
+                    outStream.Write(serialNumberBytes, 0, serialNumberBytes.Length);
+                }
                 outStream.Write(instrumentInfoBytes, 0, instrumentInfoBytes.Length);
             }
 
@@ -1075,7 +1081,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         Buffer.BlockCopy(bytes, offset, scanIds[source], 0, sizeArrayScanIds);
                         offset += sizeArrayScanIds;
-        }
+                    }
                 }
             }
         }

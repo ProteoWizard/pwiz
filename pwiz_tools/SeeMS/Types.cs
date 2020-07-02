@@ -222,7 +222,7 @@ namespace seems
 
             if( IsChromatogram )
             {
-                axis.Title.Text = "Time";
+                axis.Title.Text = "Time " + (Properties.Settings.Default.TimeInMinutes ? "(min)" : "(sec)");
             } else
             {
                 axis.Title.Text = "m/z";
@@ -297,7 +297,7 @@ namespace seems
         {
             source = metaChromatogram.source;
             this.chromatogramList = metaChromatogram.chromatogramList;
-            this.index = index;
+            this.index = chromatogram.index;
             Tag = metaChromatogram.Tag;
             AnnotationSettings = metaChromatogram.AnnotationSettings;
             //element = chromatogram;
@@ -346,7 +346,17 @@ namespace seems
             {
                 using( pwiz.CLI.msdata.Chromatogram element = chromatogramList.chromatogram( index, true ) )
                 {
-                    return new ZedGraph.PointPairList( element.binaryDataArrays[0].data, element.binaryDataArrays[1].data );
+                    var timeArray = element.getTimeArray();
+                    var timeArrayData = timeArray.data;
+                    var timeArrayUnits = timeArray.cvParam(CVID.MS_time_array).units;
+                    if (timeArrayUnits == CVID.UO_second && Properties.Settings.Default.TimeInMinutes)
+                        for (int i = 0; i < timeArrayData.Count; ++i)
+                            timeArrayData[i] /= 60;
+                    else if (timeArrayUnits == CVID.UO_minute && !Properties.Settings.Default.TimeInMinutes)
+                        for (int i = 0; i < timeArrayData.Count; ++i)
+                            timeArrayData[i] *= 60;
+
+                    return new ZedGraph.PointPairList(timeArrayData, element.binaryDataArrays[1].data );
                 }
             }
 		}
@@ -480,8 +490,31 @@ namespace seems
                     IList<double> intensityArray = element.getIntensityArray().data.Storage();
 
                     // only sort centroid spectra; profile spectra are assumed to already be sorted
-                    if (element.hasCVParam(CVID.MS_centroid_spectrum))
+                    if (element.hasCVParam(CVID.MS_centroid_spectrum) || element.id.StartsWith("merged="))
+                    {
                         mzArray.Sort(intensityArray);
+
+                        if (element.id.StartsWith("merged="))
+                        {
+                            var uniqueMz = new List<double>(mzArray.Count);
+                            var summedIntensity = new List<double>(mzArray.Count);
+                            uniqueMz.Add(mzArray[0]);
+                            summedIntensity.Add(intensityArray[0]);
+                            for (int i = 1; i < mzArray.Count; ++i)
+                            {
+                                if (mzArray[i] == uniqueMz[uniqueMz.Count - 1])
+                                    summedIntensity[uniqueMz.Count - 1] += intensityArray[i];
+                                else
+                                {
+                                    uniqueMz.Add(mzArray[i]);
+                                    summedIntensity.Add(intensityArray[i]);
+                                }
+                            }
+
+                            mzArray = uniqueMz;
+                            intensityArray = summedIntensity;
+                        }
+                    }
 
                     return new ZedGraph.PointPairList(mzArray, intensityArray);
                 }
@@ -569,7 +602,7 @@ namespace seems
         {
             string label = null;
             if( ShowXValues && ShowYValues )
-                label = String.Format( "{0]\n{1}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces), point.Y.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
+                label = String.Format( "{0}\n{1}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces), point.Y.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
             else if( ShowXValues )
                 label = String.Format( "{0}", point.X.ToString("f" + Properties.Settings.Default.DefaultDecimalPlaces));
             else if( ShowYValues )

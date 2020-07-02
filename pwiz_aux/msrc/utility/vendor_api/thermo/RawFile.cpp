@@ -62,6 +62,13 @@ namespace Thermo = ThermoFisher::CommonCore::Data::Business;
 #endif // WIN64
 
 
+#ifdef _WIN64
+const char* pwiz::vendor_api::Thermo::ControllerTypeStrings[] = { "MS", "Analog", "A/D Card", "UV", "PDA", "Other" };
+#else
+const char* pwiz::vendor_api::Thermo::ControllerTypeStrings[] = { "MS", "Analog", "A/D Card", "PDA", "UV", "Other" };
+#endif
+
+
 class RawFileImpl : public RawFile
 {
     public:
@@ -114,6 +121,7 @@ class RawFileImpl : public RawFile
     virtual ActivationType getActivationType(long scanNumber) const;
     virtual double getIsolationWidth(int scanSegment, int scanEvent) const;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel) const;
+    virtual double calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyWithOffset) const;
 
     virtual ErrorLogItem getErrorLogItem(long itemNumber) const;
     virtual std::vector<std::string> getInstrumentMethods() const;
@@ -158,8 +166,11 @@ class RawFileImpl : public RawFile
 
     string filename_;
     bool isTemporary_;
+
+#ifndef _WIN64
     ControllerType currentControllerType_;
     long currentControllerNumber_;
+#endif
 
     mutable InstrumentModelType instrumentModel_;
     mutable vector<IonizationType> ionSources_;
@@ -169,7 +180,14 @@ class RawFileImpl : public RawFile
     map<string, int> trailerExtraIndexByName;
     mutable map<int, map<int, double> > defaultIsolationWidthBySegmentAndMsLevel;
     mutable map<int, map<int, double> > isolationWidthBySegmentAndScanEvent;
-    map<string, double> isolationMzOffsetByScanDescription;
+
+    struct IsolationMzOffset
+    {
+        double offset;
+        bool reportedMassIsOffset;
+    };
+
+    map<string, IsolationMzOffset> isolationMzOffsetByScanDescription;
 
     void parseInstrumentMethod();
 };
@@ -219,6 +237,7 @@ class RawFileThreadImpl : public RawFile
     virtual ActivationType getActivationType(long scanNumber) const;
     virtual double getIsolationWidth(int scanSegment, int scanEvent) const;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel) const;
+    virtual double calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyOffset) const;
 
     virtual ErrorLogItem getErrorLogItem(long itemNumber) const;
     virtual std::vector<std::string> getInstrumentMethods() const;
@@ -258,9 +277,7 @@ class RawFileThreadImpl : public RawFile
 RawFileImpl::RawFileImpl(const string& filename)
 :   filename_(filename),
     isTemporary_(false),
-    instrumentModel_(InstrumentModelType_Unknown),
-    currentControllerType_(Controller_None),
-    currentControllerNumber_(-1)
+    instrumentModel_(InstrumentModelType_Unknown)
 {
     try
     {        
@@ -293,6 +310,11 @@ RawFileImpl::RawFileImpl(const string& filename)
         if (raw_->Open(bfs::path(filename_).native().c_str()))
             throw RawEgg("[RawFile::ctor] Unable to open file " + filename);
 
+        if (getNumberOfControllersOfType(Controller_MS) == 0)
+            return; // none of the following metadata stuff works for non-MS controllers as far as I can tell
+
+        currentControllerType_ = Controller_None;
+        currentControllerNumber_ = -1;
         setCurrentController(Controller_MS, 1);
 
 #else // is WIN64
@@ -304,6 +326,9 @@ RawFileImpl::RawFileImpl(const string& filename)
         // CONSIDER: throwing C++ exceptions in managed code may cause Wine to crash?
         if (raw_->IsError || raw_->InAcquisition)
             throw gcnew System::Exception("Corrupt RAW file " + managedFilename);
+
+        if (getNumberOfControllersOfType(Controller_MS) == 0)
+            return; // none of the following metadata stuff works for non-MS controllers as far as I can tell
 
         setCurrentController(Controller_MS, 1);
 
@@ -533,29 +558,34 @@ auto_ptr<LabelValueArray> RawFileImpl::getSequenceRowUserInfo()
 
 ControllerInfo RawFileImpl::getCurrentController() const
 {
+#ifndef _WIN64
     ControllerInfo result;
     result.type = currentControllerType_;
     result.controllerNumber = currentControllerNumber_;
     return result;
+#else
+    return getRawByThread(0)->getCurrentController();
+#endif
 }
 
 
 void RawFileImpl::setCurrentController(ControllerType type, long controllerNumber)
 {
+#ifndef _WIN64
     if (currentControllerType_ == type && currentControllerNumber_ == controllerNumber)
         return;
 
     try
     {
-#ifndef _WIN64
         checkResult(raw_->SetCurrentController(type, controllerNumber));
-#else
-        raw_->SelectInstrument((Thermo::Device) type, controllerNumber);
-#endif
         currentControllerType_ = type;
         currentControllerNumber_ = controllerNumber;
     }
     CATCH_AND_FORWARD
+#else
+    raw_->SelectInstrument((Thermo::Device) type, controllerNumber);
+    getRawByThread(0)->setCurrentController(type, controllerNumber);
+#endif
 }
 
 
@@ -689,9 +719,9 @@ std::string RawFileImpl::getSampleID() const
 
 std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& name) const
 {
+#ifndef _WIN64
     try
     {
-#ifndef _WIN64
         _variant_t v;
 
         try
@@ -719,22 +749,18 @@ std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& nam
             default:
                 throw RawEgg("[RawFileImpl::getTrailerExtraValue()] Unknown type.");
         }
-#else
-        auto findItr = trailerExtraIndexByName.find(name);
-        if (findItr == trailerExtraIndexByName.end())
-            return "";
-
-        return ToStdString(raw_->GetTrailerExtraValue(scanNumber, findItr->second)->ToString());
-#endif
     }
     CATCH_AND_FORWARD_EX(name)
+#else
+    return getRawByThread(0)->getTrailerExtraValue(scanNumber, name);
+#endif
 }
 
 double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& name) const
 {
+#ifndef _WIN64
     try
     {
-#ifndef _WIN64
         _variant_t v;
 
         try
@@ -753,23 +779,19 @@ double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& na
             default:
                 throw RawEgg("[RawFileImpl::getTrailerExtraValueDouble()] Unknown type.");
         }
-#else
-        auto findItr = trailerExtraIndexByName.find(name);
-        if (findItr == trailerExtraIndexByName.end())
-            return 0.0;
-        System::Object^ result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
-        return result == nullptr ? 0.0 : System::Convert::ToDouble(result);
-#endif
     }
     CATCH_AND_FORWARD_EX(name)
+#else
+    return getRawByThread(0)->getTrailerExtraValueDouble(scanNumber, name);
+#endif
 }
 
 
 long RawFileImpl::getTrailerExtraValueLong(long scanNumber, const string& name) const
 {
+#ifndef _WIN64
     try
     {
-#ifndef _WIN64
         _variant_t v;
 
         try
@@ -794,16 +816,11 @@ long RawFileImpl::getTrailerExtraValueLong(long scanNumber, const string& name) 
             default:
                 throw RawEgg("[RawFileImpl::getTrailerExtraValueLong()] Unknown type.");
         }
-#else
-        auto findItr = trailerExtraIndexByName.find(name);
-        if (findItr == trailerExtraIndexByName.end())
-            return 0;
-        
-        System::Object^ result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
-        return result == nullptr ? 0 : System::Convert::ToInt32(result);
-#endif
     }
     CATCH_AND_FORWARD_EX(name)
+#else
+    return getRawByThread(0)->getTrailerExtraValueLong(scanNumber, name);
+#endif
 }
 
 #ifndef _WIN64
@@ -939,12 +956,22 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
         if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
         {
             auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
-            ToBinaryData(centroidStream->Masses, result->mzArray);
-            ToBinaryData(centroidStream->Intensities, result->intensityArray);
+            if (centroidStream != nullptr && centroidStream->Length > 0)
+            {
+                ToBinaryData(centroidStream->Masses, result->mzArray);
+                ToBinaryData(centroidStream->Intensities, result->intensityArray);
+                return result;
+            }
         }
-        else if (centroidResult)
+
+        if (centroidResult)
         {
-            auto centroidScan = Thermo::Scan::ToCentroid(Thermo::Scan::FromFile(raw_.get(), scanNumber));
+            auto scan = Thermo::Scan::FromFile(raw_.get(), scanNumber);
+            if (scan->SegmentedScanAccess->Positions->Length == 0 || scan->ScanStatistics->BasePeakIntensity == 0)
+                return result;
+            auto centroidScan = Thermo::Scan::ToCentroid(scan);
+            if (centroidScan == nullptr || centroidScan->SegmentedScanAccess->Positions->Length == 0)
+                throw gcnew System::Exception("failed to centroid scan");
             ToBinaryData(centroidScan->SegmentedScanAccess->Positions, result->mzArray);
             ToBinaryData(centroidScan->SegmentedScanAccess->Intensities, result->intensityArray);
         }
@@ -1077,7 +1104,7 @@ class ScanInfoImpl : public ScanInfo
     virtual bool isSourceCID() const { return isSourceCID_; }
     virtual AccurateMassType accurateMassType() const { return accurateMassType_; }
 
-    virtual std::vector<PrecursorInfo> precursorInfo() const;
+    virtual const std::vector<PrecursorInfo>& precursorInfo() const;
     virtual long precursorCount() const {return precursorMZs_.size();}
     virtual long precursorCharge() const;
     virtual double precursorMZ(long index, bool preferMonoisotope) const;
@@ -1160,6 +1187,7 @@ class ScanInfoImpl : public ScanInfo
     bool supplementalActivation_;
     vector<double> precursorMZs_;
     vector<double> precursorActivationEnergies_;
+    vector<PrecursorInfo> precursorInfo_;
     vector<pair<double, double> > scanRanges_;
     bool isProfileScan_;
     bool isCentroidScan_;
@@ -1284,6 +1312,7 @@ void ScanInfoImpl::initialize()
         scanRanges_.clear();
         precursorMZs_.clear();
         precursorActivationEnergies_.clear();
+        precursorInfo_.clear();
         trailerExtraMap_.clear();
         spsMasses_.clear();
 
@@ -1340,7 +1369,9 @@ void ScanInfoImpl::initialize()
                 vector<string> tokens;
                 bal::split(tokens, spsMassesStr, bal::is_any_of(","));
 
-                // skip first 
+                double isolationWidth = precursorInfo_.back().isolationWidth;
+
+                // skip first SPS mass which has already been added to precursorMZs_ in parseFilterString()
                 for (size_t i = 1; i < tokens.size(); ++i)
                 {
                     bal::trim(tokens[i]);
@@ -1349,6 +1380,7 @@ void ScanInfoImpl::initialize()
                     spsMasses_.push_back(lexical_cast<double>(tokens[i]));
                     precursorMZs_.push_back(spsMasses_.back());
                     precursorActivationEnergies_.push_back(precursorActivationEnergies_.back());
+                    precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, spsMasses_.back(), spsMasses_.back(), isolationWidth, precursorActivationEnergies_.back(), activationType_, 0, 0 });
                 }
                 hasMultiplePrecursors_ = true;
                 isSPS_ = true;
@@ -1629,12 +1661,24 @@ void ScanInfoImpl::parseFilterString()
     }
     CATCH_AND_FORWARD_EX(ToStdString(filter_->ToString()))
 #endif
+
+    if (precursorMZs_.empty() || msLevel_ < 1)
+        return;
+
+    auto isolationWidths = getIsolationWidths();
+    for (size_t i = 0; i < msLevel_ - 1; ++i)
+        precursorInfo_.push_back(PrecursorInfo{ int(i+1), precursorMZs_[i], precursorMZs_[i], isolationWidths[i], precursorActivationEnergies_[i], activationType_, 0, 0 });
+
+    if (hasMultiplePrecursors_ && spsMasses_.empty()) // MSX mode means there can be more than 1 filter line m/z for the current ms level
+    {
+        for (size_t i = msLevel_ - 1; i < precursorMZs_.size(); ++i)
+            precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, precursorMZs_[i], precursorMZs_[i], isolationWidths.back(), precursorActivationEnergies_[i], activationType_, 0, 0 });
+    }
 }
 
-vector<PrecursorInfo> ScanInfoImpl::precursorInfo() const
+const vector<PrecursorInfo>& ScanInfoImpl::precursorInfo() const
 {
-    vector<PrecursorInfo> precursorInfo;
-    return precursorInfo;
+    return precursorInfo_;
 }
 
 long ScanInfoImpl::precursorCharge() const
@@ -1738,23 +1782,43 @@ double RawFileImpl::getPrecursorMass(long scanNumber, MSOrder msOrder) const
         double result = raw_->GetFilterForScanNumber(scanNumber)->GetMass((int) msOrder - 2);
         // raw_->GetFilterForScanNumber(scanNumber)->GetIsolationWidthOffset() ??
 #endif
-        if (!isolationMzOffsetByScanDescription.empty())
-        {
-            try
-            {
-                string scanDescription = getTrailerExtraValue(scanNumber, "Scan Description:");
-                auto findItr = isolationMzOffsetByScanDescription.find(scanDescription);
-                if (findItr != isolationMzOffsetByScanDescription.end())
-                    result += findItr->second;
-            }
-            catch (RawEgg&)
-            {
-            }
-        }
-
-        return result;
+        return calculateIsolationMzWithOffset(scanNumber, result);
     }
     CATCH_AND_FORWARD
+}
+
+double RawFileImpl::calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyWithOffset) const
+{
+    try
+    {
+        // if scan description is empty, scan can't be mapped back to instrument method, and thus reported mass is not known (could be either offset or original)
+        string scanDescription = getTrailerExtraValue(scanNumber, "Scan Description:");
+        if (bal::trim_copy(scanDescription).empty())
+        {
+            double monoMz = getTrailerExtraValueDouble(scanNumber, "Monoisotopic M/Z:");
+            if (monoMz > 0)
+            {
+                double offset = getTrailerExtraValueDouble(scanNumber, "MS2 Isolation Offset:");
+                double iw = getTrailerExtraValueDouble(scanNumber, "MS2 Isolation Width:");
+                if (iw - fabs(monoMz - isolationMzPossiblyWithOffset) < -fabs(offset)) // if true, reported mass is probably original
+                    isolationMzPossiblyWithOffset += offset;
+            }
+        }
+        else
+        {
+            if (isolationMzOffsetByScanDescription.empty())
+                return isolationMzPossiblyWithOffset;
+
+            auto findItr = isolationMzOffsetByScanDescription.find(scanDescription);
+            if (findItr != isolationMzOffsetByScanDescription.end() && !findItr->second.reportedMassIsOffset)
+                isolationMzPossiblyWithOffset += findItr->second.offset;
+        }
+    }
+    catch (RawEgg&)
+    {
+    }
+
+    return isolationMzPossiblyWithOffset;
 }
 
 
@@ -1827,6 +1891,7 @@ void RawFileImpl::parseInstrumentMethod()
     bool scanEventDetails = false;
     bool dataDependentSettings = false;
     double lastIsolationMzOffset = 0;
+    string lastReportedMassType = "Original"; // assume original for older instruments where reported mass is not given
 
 
     sregex scanSegmentRegex = sregex::compile("\\s*Segment (\\d+) Information\\s*");
@@ -1835,7 +1900,9 @@ void RawFileImpl::parseInstrumentMethod()
     sregex scanEventIsoWRegex = sregex::compile("\\s*MS.*:.*\\s+IsoW\\s+(\\S+)\\s*");
     sregex repeatedEventRegex = sregex::compile("\\s*Scan Event (\\d+) repeated for top (\\d+)\\s*");
     sregex defaultIsolationWidthRegex = sregex::compile("\\s*MS(\\d+) Isolation Width:\\s*(\\S+)\\s*");
+    sregex defaultIsolationWindowRegex = sregex::compile("\\s*Isolation Window \\(m/z\\) =\\s*(\\S+)\\s*");
     sregex isolationMzOffsetRegex = sregex::compile("\\s*Isolation m/z Offset =\\s*(\\S+)\\s*");
+    sregex reportedMassRegex = sregex::compile("\\s*Reported Mass =\\s*(\\S+) Mass\\s*");
     sregex scanDescriptionRegex = sregex::compile("\\s*Scan Description =\\s*(\\S+)\\s*");
 
     smatch what;
@@ -1893,7 +1960,7 @@ void RawFileImpl::parseInstrumentMethod()
         }
 
         // Data Dependent Settings:
-        if (bal::icontains(line, "Data Dependent Settings"))
+        if (bal::icontains(line, "Data Dependent Settings") || bal::icontains(line, "Scan DIAScan"))
         {
             dataDependentSettings = true;
             continue;
@@ -1909,6 +1976,13 @@ void RawFileImpl::parseInstrumentMethod()
                 defaultIsolationWidthBySegmentAndMsLevel[scanSegment][msLevel] = isolationWidth;
                 continue;
             }
+            
+            if (regex_match(line, what, defaultIsolationWindowRegex))
+            {
+                double isolationWidth = lexical_cast<double>(what[1]);
+                defaultIsolationWidthBySegmentAndMsLevel[scanSegment][2] = isolationWidth;
+                continue;
+            }
 
             if (bal::all(line, bal::is_space()))
                 dataDependentSettings = false;
@@ -1920,11 +1994,18 @@ void RawFileImpl::parseInstrumentMethod()
             continue;
         }
 
+        if (regex_match(line, what, reportedMassRegex))
+        {
+            lastReportedMassType = what[1];
+            continue;
+        }
+
         if (regex_match(line, what, scanDescriptionRegex) && lastIsolationMzOffset != 0)
         {
             string scanDescription = what[1];
-            isolationMzOffsetByScanDescription[scanDescription] = lastIsolationMzOffset;
+            isolationMzOffsetByScanDescription[scanDescription] = IsolationMzOffset{ lastIsolationMzOffset, lastReportedMassType == "Offset" };
             lastIsolationMzOffset = 0;
+            lastReportedMassType = "Original";
             continue;
         }
 
@@ -1935,19 +2016,20 @@ void RawFileImpl::parseInstrumentMethod()
 
 vector<double> ScanInfoImpl::getIsolationWidths() const
 {
-    vector<double> isolationWidths;
+    vector<double> isolationWidths(max(0l, msLevel_ - 1), 0);
 
     if (scanNumber_ == 0)
         return isolationWidths;
 
     if (!spsMasses_.empty())
     {
+        isolationWidths.clear();
 #ifndef _WIN64
         double isolationWidth;
-        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, 0, &isolationWidth));
+        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, msLevel_ - 1, &isolationWidth));
         isolationWidths.resize(precursorMZs_.size(), isolationWidth);
 #else
-        isolationWidths.resize(precursorMZs_.size(), filter_->GetIsolationWidth(0));
+        isolationWidths.resize(precursorMZs_.size(), filter_->GetIsolationWidth(filter_->MassCount - 1));
 #endif
         return isolationWidths;
     }
@@ -1960,11 +2042,10 @@ vector<double> ScanInfoImpl::getIsolationWidths() const
 
     long numMSOrders;
     checkResult(rawfile_->raw_->GetNumberOfMSOrdersFromScanNum(scanNumber_, &numMSOrders));
-    for (long i = 0; i < numMSOrders; i++)
+    isolationWidths.resize(max(numMSOrders, msLevel_ - 1));
+    for (long i = 0; i < isolationWidths.size(); i++)
     {
-        double isolationWidth;
-        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, i, &isolationWidth));
-        isolationWidths.push_back(isolationWidth);
+        checkResult(rawfile_->raw_->GetIsolationWidthForScanNum(scanNumber_, i, &isolationWidths[i]));
     }
 #else
     MSOrder msOrder = (MSOrder) filter_->MSOrder;
@@ -1972,9 +2053,10 @@ vector<double> ScanInfoImpl::getIsolationWidths() const
         return isolationWidths;
 
     long massCount = filter_->MassCount;
-    for (long i = 0; i < massCount; i++)
+    isolationWidths.resize(max(massCount, msLevel_ - 1));
+    for (long i = 0; i < isolationWidths.size(); i++)
     {
-        isolationWidths.push_back(filter_->GetIsolationWidth(i));
+        isolationWidths[i] = filter_->GetIsolationWidth(i);
     }
 #endif
     return isolationWidths;
@@ -2466,19 +2548,26 @@ std::string RawFileThreadImpl::getSampleID() const
 
 std::string RawFileThreadImpl::getTrailerExtraValue(long scanNumber, const string& name) const
 {
+    if (currentControllerType_ != Controller_MS)
+        return "";
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
         if (findItr == rawFile_->trailerExtraIndexByName.end())
             return "";
 
-        return ToStdString(raw_->GetTrailerExtraValue(scanNumber, findItr->second)->ToString());
+        auto result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
+        return result == nullptr ? "" : ToStdString(result->ToString());
     }
     CATCH_AND_FORWARD_EX(name)
 }
 
 double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const string& name) const
 {
+    if (currentControllerType_ != Controller_MS)
+        return 0.0;
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
@@ -2493,6 +2582,9 @@ double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const stri
 
 long RawFileThreadImpl::getTrailerExtraValueLong(long scanNumber, const string& name) const
 {
+    if (currentControllerType_ != Controller_MS)
+        return 0;
+
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
@@ -2530,7 +2622,7 @@ MassListPtr RawFileThreadImpl::getMassList(long scanNumber,
         if (centroidResult)
         {
             auto scan = Thermo::Scan::FromFile(raw_.get(), scanNumber);
-            if (scan->SegmentedScanAccess->Positions->Length == 0)
+            if (scan->SegmentedScanAccess->Positions->Length == 0 || scan->ScanStatistics->BasePeakIntensity == 0)
                 return result;
             auto centroidScan = Thermo::Scan::ToCentroid(scan);
             if (centroidScan == nullptr || centroidScan->SegmentedScanAccess->Positions->Length == 0)
@@ -2586,23 +2678,14 @@ double RawFileThreadImpl::getPrecursorMass(long scanNumber, MSOrder msOrder) con
         double result = raw_->GetFilterForScanNumber(scanNumber)->GetMass((int)msOrder - 2);
         // raw_->GetFilterForScanNumber(scanNumber)->GetIsolationWidthOffset() ??
 
-        if (!rawFile_->isolationMzOffsetByScanDescription.empty())
-        {
-            try
-            {
-                string scanDescription = getTrailerExtraValue(scanNumber, "Scan Description:");
-                auto findItr = rawFile_->isolationMzOffsetByScanDescription.find(scanDescription);
-                if (findItr != rawFile_->isolationMzOffsetByScanDescription.end())
-                    result += findItr->second;
-            }
-            catch (RawEgg&)
-            {
-            }
-        }
-
-        return result;
+        return calculateIsolationMzWithOffset(scanNumber, result);
     }
     CATCH_AND_FORWARD
+}
+
+double RawFileThreadImpl::calculateIsolationMzWithOffset(long scanNumber, double isolationMzPossiblyWithOffset) const
+{
+    return rawFile_->calculateIsolationMzWithOffset(scanNumber, isolationMzPossiblyWithOffset);
 }
 
 

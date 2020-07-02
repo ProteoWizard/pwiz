@@ -198,6 +198,8 @@ namespace pwiz.Skyline.Util
                 return breakIndex + wrapWidth;
             }
 
+            if (width <= 0)
+                return -1;
             if (text.Length <= width)
                 return -1;
 
@@ -227,7 +229,8 @@ namespace pwiz.Skyline.Util
                     hsb.Append(pos == DIVIDER_POS.ABOVE ? HORZ_DOWN : (pos == DIVIDER_POS.MIDDLE ? VERT_HORZ : HORZ_UP));
                 first = false;
 
-                hsb.Append(new string(HORIZONTAL, width));
+                if (width > 0)
+                    hsb.Append(new string(HORIZONTAL, width));
             }
             hsb.Append(pos == DIVIDER_POS.ABOVE ? DOWN_LEFT : (pos == DIVIDER_POS.MIDDLE ? VERT_LEFT : UP_LEFT));
             hsb.AppendLine();
@@ -312,6 +315,8 @@ namespace pwiz.Skyline.Util
                                                         - (widths.Length - 1) // cell separators
                                                         - (Borders ? 2 : 0);  // outside borders if applicable
             }
+            Assume.IsTrue(widths.All(w => w > 0));
+
             return widths;
         }
 

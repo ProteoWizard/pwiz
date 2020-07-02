@@ -116,10 +116,17 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                     return result;
 
                 CVID intensityUnits = ci.controllerType == Controller_MS ? MS_number_of_detector_counts : UO_microampere;
-                ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_TIC, "", 0, 0, 0, rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
+                ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_TIC, ci.filter, 0, 0, 0, rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
                 if (getBinaryData)
                 {
                     result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, intensityUnits);
+
+                    auto msLevelArray = boost::make_shared<IntegerDataArray>();
+                    result->integerDataArrayPtrs.emplace_back(msLevelArray);
+                    msLevelArray->set(MS_non_standard_data_array, "ms level", UO_dimensionless_unit);
+                    msLevelArray->data.resize(cd->times().size());
+                    for (size_t i = 0; i < cd->times().size(); ++i)
+                        msLevelArray->data[i] = rawfile_->getMSOrder(rawfile_->scanNumber(cd->times()[i]));
 
                     if (intensityUnits == UO_microampere)
                     {
@@ -277,7 +284,16 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
         long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
         for (long n=1; n <= numControllers; ++n)
         {
-            rawfile_->setCurrentController((ControllerType) controllerType, n);
+            try
+            {
+                rawfile_->setCurrentController((ControllerType)controllerType, n);
+            }
+            catch (exception& e)
+            {
+                // TODO: add warn_once for chromatograms
+                cerr << "[ChromatogramList_Thermo::createIndex] error setting controller to " << ControllerTypeStrings[controllerType] << ": " << e.what() << endl;
+                continue;
+            }
 
             // skip this controller if it has no spectra
             if (rawfile_->getLastScanNumber() == 0)
@@ -288,7 +304,8 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                 case Controller_MS:
                 {
                     // support file-level TIC for all file types
-                    addChromatogram("TIC", (ControllerType) controllerType, n, MS_TIC_chromatogram, "");
+                    string globalFilter = config_.globalChromatogramsAreMs1Only ? "Full ms" : "";
+                    addChromatogram("TIC", (ControllerType) controllerType, n, MS_TIC_chromatogram, globalFilter);
 
                     // for certain filter types, support additional chromatograms
                     vector<string> filterArray = rawfile_->getFilters();

@@ -214,7 +214,7 @@
     <value>0</value>
   </data>
   <data name="radioRTavg.Text" xml:space="preserve">
-    <value>平均保持時間を使用します</value>
+    <value>平均保持時間を使用</value>
   </data>
   <data name="&gt;&gt;radioRTavg.Name" xml:space="preserve">
     <value>radioRTavg</value>
@@ -241,7 +241,7 @@
     <value>1</value>
   </data>
   <data name="radioSingleDataSet.Text" xml:space="preserve">
-    <value>単一データセットからの値を使用する</value>
+    <value>単一データセットから値を使用</value>
   </data>
   <data name="&gt;&gt;radioSingleDataSet.Name" xml:space="preserve">
     <value>radioSingleDataSet</value>

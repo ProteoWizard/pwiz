@@ -516,4 +516,40 @@
   <data name="PeptideUniquenessConstraint_species" xml:space="preserve">
     <value>species</value>
   </data>
+  <data name="AreaCVNormalizationMethod_global_standards" xml:space="preserve">
+    <value>Global Standards</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_medians" xml:space="preserve">
+    <value>Medians</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_none" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
+    <value>Ratio</value>
+  </data>
+  <data name="AreaCVMsLevel_precursors" xml:space="preserve">
+    <value>Precursors</value>
+  </data>
+  <data name="AreaCVMsLevel_products" xml:space="preserve">
+    <value>Products</value>
+  </data>
+  <data name="AreaCVTransitions_all" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="AreaCVTransitions_best" xml:space="preserve">
+    <value>Best</value>
+  </data>
+  <data name="AreaCVTransitions_count" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="IrtRegressionType_linear" xml:space="preserve">
+    <value>Linear</value>
+  </data>
+  <data name="IrtRegressionType_lowess" xml:space="preserve">
+    <value>Lowess</value>
+  </data>
+  <data name="IrtRegressionType_logarithmic" xml:space="preserve">
+    <value>Logarithmic</value>
+  </data>
 </root>

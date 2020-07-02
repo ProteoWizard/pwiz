@@ -217,6 +217,7 @@ struct SpectrumImpl : public Spectrum
     double sumY, minX, maxX;
     vector<double> x, y;
     bool pointsAreContinuous;
+    ExperimentType experimentType;
 
     // precursor info
     double selectedMz, intensity;
@@ -564,7 +565,7 @@ void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times,
 {
     try
     {
-        if (index >= transitionCount)
+        if (index >= transitionCount+simCount)
             throw std::out_of_range("[Experiment::getSIC()] index out of range");
 
         ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
@@ -702,7 +703,8 @@ SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
     {
         spectrumInfo = experiment->msExperiment->GetMassSpectrumInfo(cycle-1);
 
-        pointsAreContinuous = !spectrumInfo->CentroidMode;
+        experimentType = experiment->getExperimentType();
+        pointsAreContinuous = !spectrumInfo->CentroidMode && experimentType != MRM && experimentType != SIM;
 
         sumY = experiment->cycleIntensities()[cycle-1];
         //minX = experiment->; // TODO Mass range?
@@ -761,6 +763,9 @@ size_t SpectrumImpl::getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints
 {
     try
     {
+        if (experimentType == MRM || experimentType == SIM)
+            return experiment->msExperiment->Details->MassRangeInfo->Length;
+
 #if __CLR_VER > 40000000 // .NET 4
         if (doCentroid)
         {
@@ -774,12 +779,9 @@ size_t SpectrumImpl::getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints
             {
                 spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
 #if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
+
                 if (!ignoreZeroIntensityPoints && pointsAreContinuous)
-                {
-                    ExperimentType experimentType = experiment->getExperimentType();
-                    if (experimentType != MRM && experimentType != SIM)
-                        experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
-                }
+                    experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
 #endif
             }
             return (size_t) spectrum->NumDataPoints;
@@ -815,15 +817,30 @@ void SpectrumImpl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, 
                 spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
 #if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
                 if (!ignoreZeroIntensityPoints && pointsAreContinuous)
-                {
-                    ExperimentType experimentType = experiment->getExperimentType();
-                    if (experimentType != MRM && experimentType != SIM)
-                        experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
-                }
+                    experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
 #endif
             }
 
-            ToBinaryData(spectrum->GetActualXValues(), mz);
+            // XValues are not m/z values for MRM and SIM experiments
+            if (experimentType == MRM || experimentType == SIM)
+            {
+                auto massRangeInfo = experiment->msExperiment->Details->MassRangeInfo;
+                if (massRangeInfo->Length != spectrum->NumDataPoints)
+                    throw std::runtime_error(ToStdString("[WiffFile::getData] MassRangeInfo length does not equal NumDataPoints for " +
+                                                         experiment->msExperiment->Details->ExperimentType.ToString() + " experiment"));
+                mz.resize(massRangeInfo->Length);
+                intensities.resize(mz.size());
+                if (experimentType == MRM)
+                    for (size_t i = 0; i < mz.size(); ++i)
+                        mz[i] = ((MRMMassRange^) massRangeInfo[i])->Q3Mass;
+                else
+                    for (size_t i = 0; i < mz.size(); ++i)
+                        mz[i] = ((SIMMassRange^) massRangeInfo[i])->Mass;
+            }
+            else
+                ToBinaryData(spectrum->GetActualXValues(), mz);
+
+            // YValues seem to be valid for all experiments
             ToBinaryData(spectrum->GetActualYValues(), intensities);
         }
     }

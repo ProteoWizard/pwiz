@@ -122,6 +122,8 @@ namespace pwiz.Skyline.SettingsUI
 
             if (!needExplicitTransitionGroupValues)
             {
+                labelPrecursorCollisionEnergy.Visible = false;
+                textBoxPrecursorCollisionEnergy.Visible = false;
                 labelCCS.Visible = false;
                 textBoxCCS.Visible = false;
                 labelIonMobility.Visible = false;
@@ -162,7 +164,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // We need to shift precursor-level items up to where retention time was
                     movers.AddRange(new Control[]{textBoxCCS, labelCCS, textIonMobility,
-                        labelIonMobility, comboBoxIonMobilityUnits, labelIonMobilityUnits
+                        labelIonMobility, comboBoxIonMobilityUnits, labelIonMobilityUnits, labelPrecursorCollisionEnergy, textBoxPrecursorCollisionEnergy
                     });
                     offset = labelIonMobility.Location.Y - (explicitRetentionTime == null ? labelRetentionTime.Location.Y : labelCollisionEnergy.Location.Y);
                     newHeight = explicitRetentionTime == null ? textSLens.Location.Y : textIonMobility.Location.Y;
@@ -178,7 +180,7 @@ namespace pwiz.Skyline.SettingsUI
                 groupBoxOptionalValues.Height = newHeight;
             }
 
-            ResultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(explicitTransitionGroupAttributes);
+            ResultExplicitTransitionGroupValues = explicitTransitionGroupAttributes ?? ExplicitTransitionGroupValues.EMPTY;
             ResultExplicitTransitionValues = new ExplicitTransitionValues(explicitTransitionAttributes);
 
             string labelAverage = !defaultCharge.IsEmpty
@@ -399,15 +401,16 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                var val = ExplicitTransitionGroupValues.Create(IonMobility, 
+                var val = ExplicitTransitionGroupValues.Create(PrecursorCollisionEnergy, 
+                    IonMobility,
                     IonMobilityUnits,
                     CollisionalCrossSectionSqA);
                 return val;
             }
             set
             {
-                // Use constructor to handle value == null
-                var resultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(value);
+                var resultExplicitTransitionGroupValues = value ?? ExplicitTransitionGroupValues.EMPTY;
+                PrecursorCollisionEnergy = resultExplicitTransitionGroupValues.CollisionEnergy;
                 IonMobility = resultExplicitTransitionGroupValues.IonMobility;
                 IonMobilityUnits = resultExplicitTransitionGroupValues.IonMobilityUnits;
                 CollisionalCrossSectionSqA = resultExplicitTransitionGroupValues.CollisionalCrossSectionSqA;
@@ -587,6 +590,12 @@ namespace pwiz.Skyline.SettingsUI
             set { comboBoxIonMobilityUnits.SelectedIndex = (int) value; }
         }
 
+        public double? PrecursorCollisionEnergy
+        {
+            get { return NullForEmpty(textBoxPrecursorCollisionEnergy.Text); }
+            set { textBoxPrecursorCollisionEnergy.Text = EmptyForNullOrNonPositive(value); }
+        }
+
         public double? CollisionalCrossSectionSqA
         {
             get { return NullForEmpty(textBoxCCS.Text); }
@@ -688,19 +697,29 @@ namespace pwiz.Skyline.SettingsUI
             // Did user change the list of heavy labels?
             if (_driverLabelType != null)
             {
-                PeptideModifications modifications = new PeptideModifications(
-                    _peptideSettings.Modifications.StaticModifications,
-                    _peptideSettings.Modifications.MaxVariableMods,
-                    _peptideSettings.Modifications.MaxNeutralLosses,
-                    _driverLabelType.GetHeavyModifications(), // This is the only thing the user may have altered
-                    _peptideSettings.Modifications.InternalStandardTypes);
-                var settings = _peptideSettings.ChangeModifications(modifications);
-                // Only update if anything changed
-                if (!Equals(settings, _peptideSettings))
+                // This is the only thing the user may have altered
+                var newHeavyMods = _driverLabelType.GetHeavyModifications().ToArray();
+                if (!ArrayUtil.EqualsDeep(newHeavyMods, _peptideSettings.Modifications.HeavyModifications))
                 {
+                    var labelTypes = _peptideSettings.Modifications.InternalStandardTypes.Where(t =>
+                        newHeavyMods.Any(m => Equals(m.LabelType, t))).ToArray();
+                    if (labelTypes.Length == 0)
+                        labelTypes = new[] {newHeavyMods.First().LabelType};
+
+                    PeptideModifications modifications = new PeptideModifications(
+                        _peptideSettings.Modifications.StaticModifications,
+                        _peptideSettings.Modifications.MaxVariableMods,
+                        _peptideSettings.Modifications.MaxNeutralLosses,
+                        newHeavyMods,
+                        labelTypes);
+                    var settings = _peptideSettings.ChangeModifications(modifications);
                     SrmSettings newSettings = _parent.DocumentUI.Settings.ChangePeptideSettings(settings);
                     if (!_parent.ChangeSettings(newSettings, true))
                     {
+                        // Not expected, since we checked for a change before calling
+                        // Otherwise, this is very confusing. The form just refuses to go away
+                        // We would prefer to get an unhandled exception and fix this
+                        Assume.Fail();
                         return;
                     }
                     _peptideSettings = newSettings.PeptideSettings;

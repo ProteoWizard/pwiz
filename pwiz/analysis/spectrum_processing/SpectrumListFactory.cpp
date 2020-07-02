@@ -39,6 +39,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_TitleMaker.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Demux.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_DiaUmpire.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ZeroSamplesFilter.hpp"
@@ -210,11 +211,15 @@ SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg, pwi
 {
     double scanTimeLow = 0;
     double scanTimeHigh = 0;
+    LocaleBool assumeSorted = true;
 
     istringstream iss(arg);
     char open='\0', comma='\0', close='\0';
     iss >> open >> scanTimeLow >> comma >> scanTimeHigh >> close;
-
+    
+    if (iss.good())
+        iss >> assumeSorted;
+    cout << assumeSorted << endl;
     if (open!='[' || comma!=',' || close!=']')
     {
         cerr << "scanTime filter argument does not have form \"[\"<startTime>,<endTime>\"]\", ignored." << endl;
@@ -223,7 +228,7 @@ SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg, pwi
 
     return SpectrumListPtr(new
         SpectrumList_Filter(msd.run.spectrumListPtr, 
-                            SpectrumList_FilterPredicate_ScanTimeRange(scanTimeLow, scanTimeHigh)));
+                            SpectrumList_FilterPredicate_ScanTimeRange(scanTimeLow, scanTimeHigh, assumeSorted)));
 }
 UsageInfo usage_scanTime = {"<scan_time_range>",
     "This filter selects only spectra within a given time range.\n"
@@ -243,10 +248,11 @@ SpectrumListPtr filterCreator_scanSummer(const MSData& msd, const string& carg, 
     double precursorTol = parseKeyValuePair<double>(arg, "precursorTol=", 0.05); // m/z
     double scanTimeTol = parseKeyValuePair<double>(arg, "scanTimeTol=", 10); // seconds
     double ionMobilityTol = parseKeyValuePair<double>(arg, "ionMobilityTol=", 0.01); // ms for drift time or vs/cm^2 for TIMS
+    bool sumMs1 = parseKeyValuePair<bool>(arg, "sumMs1", false);
     if (bal::icontains(arg, "="))
-        throw user_error("[SpectrumList_ScanSummer] unused argument (key=value) in " + arg);
+        throw user_error("[SpectrumList_ScanSummer] unused argument (key=value) in " + arg + "; supported arguments are precursorTol, scanTimeTol, ionMobilityTol, and sumMs1");
 
-    return SpectrumListPtr(new SpectrumList_ScanSummer(msd.run.spectrumListPtr, precursorTol, scanTimeTol, ionMobilityTol, ilr));
+    return SpectrumListPtr(new SpectrumList_ScanSummer(msd.run.spectrumListPtr, precursorTol, scanTimeTol, ionMobilityTol, sumMs1, ilr));
 }
 UsageInfo usage_scanSummer = {"[precursorTol=<precursor tolerance>] [scanTimeTol=<scan time tolerance in seconds>] [ionMobilityTol=<ion mobility tolerance>]",
     "This filter sums MS2 sub-scans whose precursors are within <precursor tolerance> (default: 0.05 m/z)"
@@ -263,6 +269,7 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
     bool preferCwt = false; 
     double mzTol = 0.1; // default value, minimum spacing between peaks
     double minSnr = 1.0; // for the cwt algorithm, default value is 1.01
+    bool centroid = false; // for the cwt algorithm, whether to centroid fitted peaks
     int fixedPeaksKeep = 0; // this will always be set to zero, except from charge determination algorithm
 
     string msLevelSets = "1-"; // peak-pick all MS levels by default
@@ -291,17 +298,17 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
 
             if ( boost::iequals(keyword,"snr") )
             {
-                try { lexical_cast<double>(paramVal); }
-                catch (...) { throw user_error("[SpectrumList_PeakPicker] A numeric value must follow the snr argument."); }
-                minSnr = lexical_cast<double>(paramVal);
+                minSnr = parseKeyValuePair<double>(nextStr, "snr=", 1.0);
                 if ( minSnr < 0 ) { throw user_error("[SpectrumList_PeakPicker] snr must be greater than or equal to zero."); }
             }
             else if ( boost::iequals(keyword,"peakSpace") ) 
             {
-                try { lexical_cast<double>(paramVal); }
-                catch (...) { throw user_error("[SpectrumList_PeakPicker] A numeric value must follow the peakSpace argument."); }
-                mzTol = lexical_cast<double>(paramVal);
+                mzTol = parseKeyValuePair<double>(nextStr, "peakSpace=");
                 if ( mzTol < 0 ) { throw user_error("[SpectrumList_PeakPicker] peakSpace must be greater than or equal to zero."); }
+            }
+            else if ( boost::iequals(keyword,"centroid") ) 
+            {
+                centroid = parseKeyValuePair<bool>(nextStr, "centroid=", false);
             }
             else if ( boost::iequals(keyword,"msLevel") )
             {
@@ -353,7 +360,7 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
     {
         return SpectrumListPtr(new 
             SpectrumList_PeakPicker(msd.run.spectrumListPtr,
-                                    PeakDetectorPtr(new CwtPeakDetector(minSnr,fixedPeaksKeep,mzTol)),
+                                    PeakDetectorPtr(new CwtPeakDetector(minSnr,fixedPeaksKeep,mzTol,centroid)),
                                     preferVendor,
                                     msLevelsToCentroid));
     }
@@ -793,6 +800,8 @@ SpectrumListPtr filterCreator_lockmassRefiner(const MSData& msd, const string& c
         cerr << "lockmassMz and lockmassTolerance must be positive real numbers" << endl;
         return SpectrumListPtr();
     }
+    else if (lockmassMzNegIons <= 0)
+        lockmassMzNegIons = lockmassMz;
 
     return SpectrumListPtr(new SpectrumList_LockmassRefiner(msd.run.spectrumListPtr, lockmassMz, lockmassMzNegIons, lockmassTolerance));
 }
@@ -841,6 +850,24 @@ UsageInfo usage_demux = {
     " interpolateRT=<bool (true)>"
     " minWindowSize=<real (0.2)>",
     "Separates overlapping or MSX multiplexed spectra into several demultiplexed spectra by inferring from adjacent multiplexed spectra. Optionally handles variable fill times (for Thermo)." };
+
+SpectrumListPtr filterCreator_diaUmpire(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    string arg = carg;
+
+    string paramsFilepath = parseKeyValuePair<string>(arg, "params=", "");
+    if (!bfs::exists(paramsFilepath))
+        throw user_error("[diaUmpire] params filepath is required (params=path/to/diaumpire.params)");
+
+    bal::trim(arg);
+    if (!arg.empty())
+        throw runtime_error("[demultiplex] unhandled text remaining in argument string: \"" + arg + "\"");
+
+    return SpectrumListPtr(new SpectrumList_DiaUmpire(msd, msd.run.spectrumListPtr, DiaUmpire::Config(paramsFilepath), ilr));
+}
+UsageInfo usage_diaUmpire = {
+    "params=<filepath to DiaUmpire .params file>",
+    "Separates DIA spectra into pseudo-DDA spectra using the DIA Umpire algorithm." };
 
 SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
@@ -1426,6 +1453,25 @@ UsageInfo usage_polarity = { "<polarity>",
     "   <polarity> is any one of \"positive\" \"negative\" \"+\" or \"-\"."
 };
 
+SpectrumListPtr filterCreator_collisionEnergy(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    string arg(carg);
+    double low = parseKeyValuePair<double>(arg, "low=", -1);
+    double high = parseKeyValuePair<double>(arg, "high=", -1);
+    if (low < 0 || high < 0)
+        throw user_error("[SpectrumListFactory::filterCreator_collisionEnergy] low and high CE both must be specified and greater than or equal to 0");
+
+    bool acceptNonCID = parseKeyValuePair<bool>(arg, "acceptNonCID=", true);
+    bool acceptMissingCE = parseKeyValuePair<bool>(arg, "acceptMissingCE=", false);
+    auto mode = parseKeyValuePair<SpectrumList_Filter::Predicate::FilterMode>(arg, "mode=", SpectrumList_Filter::Predicate::FilterMode_Include);
+
+    return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr, SpectrumList_FilterPredicate_CollisionEnergy(min(low, high), max(low, high), acceptNonCID, acceptMissingCE, mode), ilr));
+}
+UsageInfo usage_collisionEnergy = { "low=<real> high=<real> [mode=<include|exclude (include)>] [acceptNonCID=<true|false (true)] [acceptMissingCE=<true|false (false)]",
+    "Includes/excludes MSn spectra with CID collision energy within the specified range [<low>, <high>].\n"
+    "   Non-MS and MS1 spectra are always included. Non-CID MS2s and MS2s with missing CE are optionally included/excluded."
+};
+
 SpectrumListPtr filterCreator_thermoScanFilterFilter(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     istringstream parser(arg);
@@ -1518,9 +1564,11 @@ JumpTableEntry jumpTable_[] =
     {"chargeStatePredictor", usage_chargeStatePredictor, filterCreator_chargeStatePredictor},
     {"turbocharger", usage_chargeFromIsotope, filterCreator_chargeFromIsotope},
     {"activation", usage_activation, filterCreator_ActivationType},
+    {"collisionEnergy", usage_collisionEnergy, filterCreator_collisionEnergy},
     {"analyzer", usage_analyzerType, filterCreator_AnalyzerType},
     {"analyzerType", usage_analyzerTypeOld, filterCreator_AnalyzerType},
-    {"polarity", usage_polarity, filterCreator_polarityFilter}
+    {"polarity", usage_polarity, filterCreator_polarityFilter},
+    {"diaUmpire", usage_diaUmpire, filterCreator_diaUmpire}
 };
 
 
@@ -1586,8 +1634,7 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper, pwiz::util::I
     }
     if (entry == jumpTableEnd_)
     {
-        cerr << "[SpectrumListFactory] Ignoring wrapper: " << wrapper << endl;
-        return;
+        throw user_error("[SpectrumListFactory] Unknown wrapper: " + wrapper);
     }
 
     SpectrumListPtr filter = entry->creator(msd, arg, ilr);

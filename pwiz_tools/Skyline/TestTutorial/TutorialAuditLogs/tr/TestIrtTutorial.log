@@ -68,6 +68,12 @@ Add one new replicate = True,
 Replicate name = "Chromatograms",
 Files to import simultaneously = "Many"
 
+Undo Redo : Transition Settings -- Integration > Integrate All changed to True
+Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
+All Info  :
+Transition Settings -- Integration > Integrate All changed to True
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
+
 Undo Redo : Deleted target RBM39 > K.NSAQGNVYVK.C [467, 476]
 Summary   : Deleted target RBM39 > K.NSAQGNVYVK.C [467, 476]
 All Info  :

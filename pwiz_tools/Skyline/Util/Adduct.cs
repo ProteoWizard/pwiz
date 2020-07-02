@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -124,6 +125,28 @@ namespace pwiz.Skyline.Util
                     // Accept a bare "M+Na", but put it in canonical form "[M+Na]"
                     input = @"[" + input + @"]";
                 }
+
+                // Watch for strange construction from Agilent MP system e.g. (M+H)+ and (M+H)+[-H2O]
+                if (input.StartsWith(@"(") && input.Contains(@")") && input.Contains(@"M"))
+                {
+                    var parts = input.Split('['); // Break off water loss etc, if any
+                    if (parts.Length == 1 || input.IndexOf(')') < input.IndexOf('['))
+                    {
+                        var constructed = parts[0].Replace(@"(", @"[").Replace(@")", @"]");
+                        if (parts.Length > 1) // Deal with water loss etc
+                        {
+                            // Rearrange (M+H)+[-H2O] as [M-H2O+H]+
+                            var mod = parts[1].Split(']')[0]; // Trim end
+                            var mPos = input.IndexOf('M');
+                            constructed = constructed.Substring(0, mPos+1) + mod + constructed.Substring(mPos + 1);
+                        }
+                        if (TryParse(constructed, out _))
+                        {
+                            input = constructed; // Constructed string is parseable
+                        }
+                    }
+                }
+
 
                 // Check for implied positive ion mode - we see "MH", "MH+", "MNH4+" etc in the wild
                 // Also watch for for label-only like  "[M2Cl37]"
@@ -702,6 +725,24 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Splits a string which might be a formula and adduct (e.g. C12H5[M+H] returns "C12H5" and sets adduct to Adduct.M_PLUS_H)
+        /// </summary>
+        public static string SplitFormulaAndTrailingAdduct(string formulaAndAdductText, ADDUCT_TYPE adductType, out Adduct adduct)
+        {
+            if (string.IsNullOrEmpty(formulaAndAdductText))
+            {
+                adduct = EMPTY;
+                return string.Empty;
+            }
+            var parts = formulaAndAdductText.Split('[');
+            if (!Adduct.TryParse(formulaAndAdductText.Substring(parts[0].Length), out adduct, adductType))
+            {
+                adduct = EMPTY;
+            }
+            return parts[0];
+        }
+        
+        /// <summary>
         /// Replace, for example, the "2" in "[2M+H]"
         /// </summary>
         public Adduct ChangeMassMultiplier(int value)
@@ -1259,7 +1300,7 @@ namespace pwiz.Skyline.Util
                         {
                             resultDict[unlabeledSymbol] = unlabeledCount; // Number of remaining non-label atoms
                         }
-                        else if (unlabeledCount < 0) // Can't remove that which is not there
+                        else // Can't remove that which is not there
                         {
                             throw new InvalidOperationException(
                                 string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
@@ -1693,6 +1734,17 @@ namespace pwiz.Skyline.Util
         public bool IsName
         {
             get { return true; }
+        }
+
+        public bool IsValidProductAdduct(Adduct precursorAdduct, TransitionLosses losses)
+        {
+            int precursorCharge = precursorAdduct.AdductCharge;
+            if (losses != null)
+            {
+                precursorCharge -= losses.TotalCharge;
+            }
+
+            return Math.Abs(AdductCharge) <= Math.Abs(precursorCharge);
         }
     }
 }

@@ -24,11 +24,11 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -45,18 +45,15 @@ using pwiz.SkylineTestUtil;
 namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB download
 {
     [TestClass]
-    public class HiResMetabolomicsTutorialTest : AbstractFunctionalTest
+    public class HiResMetabolomicsTutorialTest : AbstractFunctionalTestEx
     {
-        protected override bool ShowStartPage
-        {
-            get { return true; }  // So we can point out the UI mode control
-        }
-
         [TestMethod]
         public void TestHiResMetabolomicsTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+//            IsPauseForScreenShots = true;
+//            IsPauseForCoverShot = true;
+            CoverShotName = "HiResMetabolomics";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
@@ -86,14 +83,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
         protected override void DoTest()
         {
-            // Setting the UI mode, p 2  
-            var startPage = WaitForOpenForm<StartPage>();
-            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
-            PauseForScreenShot<StartPage>("Start Window proteomic", 2);
-            RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
-            PauseForScreenShot<StartPage>("Start Window small molecule", 3);
-            RunUI(() => startPage.DoAction(skylineWindow => true));
-            WaitForOpenForm<SkylineWindow>();
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
 
             // Inserting a Transition List, p. 2
             {
@@ -125,7 +115,8 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
                     }.ToList();
                     RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
-                    WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
+                    TryWaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
+                    RunUI(() => AssertEx.AreEqualDeep(columnsOrdered, pasteDlg.GetColumnNames()));
                     if (retry == 0)
                         PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 4);
 
@@ -200,6 +191,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     // Full Scan Settings
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.FullScan;
                     transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
+                    transitionSettingsUI.Peaks = 2;
                     transitionSettingsUI.PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
                     transitionSettingsUI.PrecursorRes = 70000;
                     transitionSettingsUI.PrecursorResMz = 200;
@@ -222,7 +214,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(Path.Combine(TestFilesDirs.First().PersistentFilesDir, GetDataFolder()));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 6);
+                    PauseForScreenShot<ImportResultsDlg>("Import Results Files form", 6);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
                     OkDialog(importResultsDlg1,importResultsDlg1.OkDialog);
@@ -237,11 +229,9 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                 var expectedTransCount = new Dictionary<string, int[]>
                 {
-                    // transition groups, heavy transition groups, tranistions, heavy transitions
-                    {"ID31609_01_E749_4745_091517", new[] {3, 3, 3, 10, 9}},
-                    {"ID31627_01_E749_4745_091517", new[] {4, 4, 3, 12, 9}},
-                    {"ID31624_01_E749_4745_091517", new[] {4, 4, 3, 12, 9}},
-                    {"ID31653_01_E749_4745_091517", new[] {4, 4, 3, 12, 9}},
+                    // peptides, transition groups, heavy transition groups, tranistions, heavy transitions
+                    {"default", new[] {4, 4, 3, 8, 6}}, // Most have these values
+                    {"ID31609_01_E749_4745_091517", new[] {4, 4, 3, 7, 6}},
 
                 };
                 var msg = "";
@@ -249,7 +239,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 {
                     int[] transitions;
                     if (!expectedTransCount.TryGetValue(chromatogramSet.Name, out transitions))
-                        transitions = new[] {  4, 4, 3, 11, 9 }; // Most have this value
+                        transitions = expectedTransCount["default"];
                     try
                     {
                         AssertResult.IsDocumentResultsState(docResults, chromatogramSet.Name, transitions[0], transitions[1], transitions[2], transitions[3], transitions[4]);
@@ -269,8 +259,43 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     RunUI(() => SkylineWindow.ShowDocumentGrid(true));
                     documentGrid = FindOpenForm<DocumentGridForm>();
                 }
-                RunUI(() => documentGrid.ChooseView(Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification));
+                if (!IsPauseForCoverShot)
+                    RunUI(() => documentGrid.ChooseView(Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification));
+                else
+                {
+                    RunUI(() => documentGrid.DataboundGridControl.ChooseView(new ViewName(ViewGroup.BUILT_IN.Id,
+                        Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules)));
+                }
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 9);
+
+                if (IsPauseForCoverShot)
+                {
+                    RunUI(() =>
+                    {
+                        Settings.Default.ChromatogramFontSize = 14;
+                        Settings.Default.AreaFontSize = 14;
+                        SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
+                        SkylineWindow.AutoZoomBestPeak();
+                        SkylineWindow.ShowPeakAreaLegend(false);
+                        SkylineWindow.ShowRTLegend(false);
+                    });
+
+                    RestoreCoverViewOnScreen();
+
+                    RunUI(SkylineWindow.FocusDocument);
+
+                    ClickChromatogram("GW2_01", 1.148979, 209663764);
+
+                    // TODO: This doesn't exactly reproduce the screen shot. The profile curve does not get adjusted.
+                    RunUI(() => ZoomXAxis(SkylineWindow.GraphFullScan.ZedGraphControl, 332.25, 332.28));
+                    RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
+                    WaitForGraphs();
+                    RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
+                    WaitForGraphs();
+
+                    PauseForCoverShot();
+                    return;
+                }
 
                 using (new WaitDocumentChange(1, true))
                 {
@@ -292,7 +317,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 }
 
-               var documentGrid2 = FindOpenForm<DocumentGridForm>();
+                var documentGrid2 = FindOpenForm<DocumentGridForm>();
                 RunUI(() =>
                 {
                     documentGrid2.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates);
@@ -308,7 +333,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         if (row.Cells[0].Value.ToString().StartsWith("NIST"))
                         {
                             row.Cells[1].Value = SampleType.STANDARD;
-                            row.Cells[2].Value = 2838.0;
+                            row.Cells[2].Value = 1.0;
                         }
                         else if (row.Cells[0].Value.ToString().StartsWith("GW"))
                         {
@@ -333,16 +358,12 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 {
                     var gridView = documentGrid3.DataGridView;
                     var methods = ((DataGridViewComboBoxCell) gridView.Rows[0].Cells[6]).Items;
-                    var ratioToHeavy = ((Tuple<String, NormalizationMethod>)methods[3]).Item2;
                     var ratioToSurrogateHeavyDHA = ((Tuple<String, NormalizationMethod>)methods[6]).Item2;
-                    gridView.Rows[0].Cells[5].Value = 1.0;
-                    gridView.Rows[0].Cells[6].Value = ratioToHeavy; 
-                    gridView.Rows[1].Cells[5].Value = .0192;
+                    gridView.Rows[0].Cells[5].Value = 2838.0;
+                    gridView.Rows[1].Cells[5].Value = 54.0;
                     gridView.Rows[1].Cells[6].Value = ratioToSurrogateHeavyDHA;
-                    gridView.Rows[2].Cells[5].Value = .3467;
-                    gridView.Rows[2].Cells[6].Value = ratioToHeavy;
-                    gridView.Rows[3].Cells[5].Value = .0416;
-                    gridView.Rows[3].Cells[6].Value = ratioToHeavy;
+                    gridView.Rows[2].Cells[5].Value = 984.0;
+                    gridView.Rows[3].Cells[5].Value = 118.0;
                 });
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid - peptide quant again", 11);

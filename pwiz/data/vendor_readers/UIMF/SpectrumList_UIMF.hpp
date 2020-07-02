@@ -63,6 +63,7 @@ class PWIZ_API_DECL SpectrumList_UIMF : public SpectrumListIonMobilityBase
 
     virtual bool hasIonMobility() const;
     virtual bool canConvertIonMobilityAndCCS() const;
+    virtual bool hasCombinedIonMobility() const;
     virtual double ionMobilityToCCS(double driftTime, double mz, int charge) const;
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
 

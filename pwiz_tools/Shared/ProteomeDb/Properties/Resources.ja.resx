@@ -147,7 +147,7 @@
   </data>
   <data name="ProteinMetadata_DisplayText_" xml:space="preserve">
     <value>
-説明：{0}</value>
+表記：{0}</value>
   </data>
   <data name="ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_proteome_file_" xml:space="preserve">
     <value>{0}は、有効な「.protDB」バックグラウンドプロテオームファイルとして見なされません。</value>

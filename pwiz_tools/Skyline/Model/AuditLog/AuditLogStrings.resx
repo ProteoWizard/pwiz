@@ -357,10 +357,10 @@
     <value>Imported annotations from "{0}"</value>
   </data>
   <data name="set_excluded_standard" xml:space="preserve">
-    <value>Excluding peptide {0} in calibration of replicate {1}</value>
+    <value>Excluding peptide {0} replicate {1} from calibration curve</value>
   </data>
   <data name="set_included_standard" xml:space="preserve">
-    <value>Including peptide {0} in calibration of replicate {1}</value>
+    <value>Including peptide {0} replicate {1} in calibration curve</value>
   </data>
   <data name="canceled_import" xml:space="preserve">
     <value>Canceled import</value>
@@ -658,5 +658,11 @@ For reference, the audit log is located here: "{0}"</value>
   </data>
   <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
     <value>Error when loading document's audit log: {0}.</value>
+  </data>
+  <data name="changed_quantitative" xml:space="preserve">
+    <value>Changed quantitative on {0}</value>
+  </data>
+  <data name="SkylineWindow_ChangeQuantitative_0_transitions" xml:space="preserve">
+    <value>{0} transitions</value>
   </data>
 </root>

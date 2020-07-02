@@ -62,6 +62,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     virtual bool hasIonMobility() const;
     virtual bool canConvertIonMobilityAndCCS() const;
+    virtual bool hasCombinedIonMobility() const;
     virtual double ionMobilityToCCS(double ionMobility, double mz, int charge) const;
     virtual double ccsToIonMobility(double ccs, double mz, int charge) const;
 
@@ -95,17 +96,25 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
 
     vector<IndexEntry> index_;
     map<string, size_t> idToIndexMap_;
+    int maxMsLevel_; // determines which ms levels to keep in precursorCache
 
     void createIndex();
 
-    /// a cache mapping spectrum indices to SpectrumPtrs
-    struct CacheEntry { CacheEntry(size_t i, SpectrumPtr s) : index(i), spectrum(s) {}; size_t index; SpectrumPtr spectrum; };
+    /// a cache mapping spectrum indices to copies of the binary data (we have to keep copies because downstream filters could modify the data)
+    typedef pair<std::vector<double>, std::vector<double>> PrecursorBinaryData;
+    struct CacheEntry
+    {
+        CacheEntry(size_t i, const PrecursorBinaryData& b) : index(i), binaryData(b) {};
+        size_t index;
+        PrecursorBinaryData binaryData;
+    };
     typedef MemoryMRUCache<CacheEntry, BOOST_MULTI_INDEX_MEMBER(CacheEntry, size_t, index) > CacheType;
     mutable CacheType precursorCache_;
 
     size_t findPrecursorSpectrumIndex(RawFile* raw, int precursorMsLevel, double precursorIsolationMz, size_t index) const;
     double getPrecursorIntensity(int precursorSpectrumIndex, double isolationMz, double isolationHalfWidth, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     pwiz::vendor_api::Thermo::ScanInfoPtr findPrecursorZoomScan(RawFile* raw, int precursorMsLevel, double precursorIsolationMz, size_t index) const;
+    InstrumentConfigurationPtr findInstrumentConfiguration(const MSData& msd, CVID massAnalyzerType) const;
 
 #endif // PWIZ_READER_THERMO
 };

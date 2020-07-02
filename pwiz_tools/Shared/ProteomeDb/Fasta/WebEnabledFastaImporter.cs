@@ -169,7 +169,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                 {UNIPROTKB_TAG, 1}
             };
             const int ENTREZ_BATCHSIZE = 100; // they'd like 500, but it's really boggy at that size
-            const int UNIPROTKB_BATCHSIZE = 400;  // Enforcing sequence length uniqueness helps efficiency, we can make this pretty large
+            const int UNIPROTKB_BATCHSIZE = 200;  // Enforcing sequence length uniqueness helps efficiency, we can make this pretty large (was 400 before Sept 2019, but now they just close connection instead of issuing URL_TOO_LONG so start smaller)
             _maxBatchSize = new Dictionary<char, int>
             {
                 {GENINFO_TAG, ENTREZ_BATCHSIZE},
@@ -392,10 +392,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                         else
                         {
                             throw new ArgumentOutOfRangeException(
-                                // ReSharper disable LocalizableElement
-                                String.Format("Fasta RegEx failure in \'{0}\'",
-                                // ReSharper restore LocalizableElement
-                                    line.Substring(start)));
+                                $@"Fasta RegEx failure in '{line}'");
                         }
                     }
                     if (headerResult.GetProteinMetadata().HasMissingMetadata())

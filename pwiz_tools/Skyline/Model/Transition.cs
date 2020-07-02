@@ -21,7 +21,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -437,9 +439,10 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="group">The <see cref="TransitionGroup"/> which the transition represents</param>
         /// <param name="massIndex">Isotope mass shift</param>
+        /// <param name="productAdduct">Adduct on the transition</param>
         /// <param name="customMolecule">Non-null if this is a custom transition</param>
-        public Transition(TransitionGroup group, int massIndex, CustomMolecule customMolecule = null)
-            :this(group, IonType.precursor, group.Peptide.Length - 1, massIndex, group.PrecursorAdduct, null, customMolecule)
+        public Transition(TransitionGroup group, int massIndex, Adduct productAdduct, CustomMolecule customMolecule = null)
+            : this(group, IonType.precursor, group.Peptide.Length - 1, massIndex, productAdduct, null, customMolecule)
         {
         }
 
@@ -453,7 +456,8 @@ namespace pwiz.Skyline.Model
         {
         }
 
-        public Transition(TransitionGroup group, IonType type, int? offset, int? massIndex, Adduct adduct, int? decoyMassShift, CustomMolecule customMolecule = null)
+        public Transition(TransitionGroup group, IonType type, int? offset, int? massIndex, Adduct adduct,
+            int? decoyMassShift, CustomMolecule customMolecule = null)
         {
             _group = group;
 
@@ -711,6 +715,35 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public bool HasAnyCrosslinks(ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinks)
+        {
+            return HasAnyCrosslinks(IonType, CleavageOffset, crosslinks);
+        }
+
+        public static bool HasAnyCrosslinks(IonType ionType, int cleavageOffset,
+            ImmutableSortedList<ModificationSite, LinkedPeptide> crosslinks)
+        {
+            if (crosslinks == null || crosslinks.Count == 0)
+            {
+                return false;
+            }
+            switch (ionType)
+            {
+                case IonType.precursor:
+                    return true;
+                case IonType.a:
+                case IonType.b:
+                case IonType.c:
+                    return cleavageOffset >= crosslinks.Keys[0].IndexAa;
+                case IonType.x:
+                case IonType.y:
+                case IonType.z:
+                    return cleavageOffset < crosslinks.Keys[crosslinks.Count - 1].IndexAa;
+                default:
+                    return false;
+            }
+        }
+
         #region object overrides
 
         public bool Equals(Transition obj)
@@ -772,6 +805,7 @@ namespace pwiz.Skyline.Model
                 }
                 return text;
             }
+
             return string.Format(@"{0} - {1}{2}{3}{4}",
                                  AA,
                                  IonType.ToString().ToLowerInvariant(),
@@ -790,6 +824,7 @@ namespace pwiz.Skyline.Model
         {
             Transition = transition.Transition;
             Losses = losses;
+            ComplexFragmentIonName = transition.ComplexFragmentIon.GetName();
             if (Transition.IsCustom())
             {
                 if (!string.IsNullOrEmpty(transition.PrimaryCustomIonEquivalenceKey))
@@ -810,12 +845,14 @@ namespace pwiz.Skyline.Model
         public Transition Transition { get; private set; }
         public TransitionLosses Losses { get; private set; }
         public string CustomIonEquivalenceTestValue { get; private set;  }
+        public ComplexFragmentIonName ComplexFragmentIonName { get; private set; }
 
         public bool Equivalent(TransitionLossKey other)
         {
             return Equals(CustomIonEquivalenceTestValue, other.CustomIonEquivalenceTestValue) &&
                 other.Transition.Equivalent(Transition) &&
-                Equals(other.Losses, Losses);
+                Equals(other.Losses, Losses) &&
+                Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
         }
 
         #region object overrides
@@ -824,7 +861,8 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Transition, Transition) && Equals(other.Losses, Losses);
+            return Equals(other.Transition, Transition) && Equals(other.Losses, Losses) &&
+                   Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
         }
 
         public override bool Equals(object obj)
@@ -846,86 +884,6 @@ namespace pwiz.Skyline.Model
         public override string ToString()
         {
             return Transition + (Losses != null ? @" -" + Losses.Mass : string.Empty);
-        }
-
-        #endregion
-    }
-
-    public sealed class TransitionLossEquivalentKey
-    {
-        /// <summary>
-        /// In the case of small molecule transitions specified by mass only, position within 
-        /// the parent's list of transitions is the only meaningful key.  So we need to know our parent.
-        /// </summary>
-        public TransitionLossEquivalentKey(TransitionGroupDocNode parent, TransitionDocNode transition, TransitionLosses losses)
-        {
-            Key = new TransitionEquivalentKey(parent, transition);
-            Losses = losses;
-        }
-
-        public TransitionEquivalentKey Key { get; private set; }
-        public TransitionLosses Losses { get; private set; }
-
-        #region object overrides
-
-        public bool Equals(TransitionLossEquivalentKey other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Key, Key) && Equals(other.Losses, Losses);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(TransitionLossEquivalentKey)) return false;
-            return Equals((TransitionLossEquivalentKey)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (Key.GetHashCode() * 397) ^ (Losses != null ? Losses.GetHashCode() : 0);
-            }
-        }
-
-        #endregion
-    }
-
-    public sealed class TransitionEquivalentKey
-    {
-        private readonly Transition _nodeTran;
-        private readonly string _customIonEquivalenceTestText; // For use with small molecules
-
-        public TransitionEquivalentKey(TransitionGroupDocNode parent, TransitionDocNode nodeTran)
-        {
-            _nodeTran = nodeTran.Transition;
-            _customIonEquivalenceTestText = new TransitionLossKey(parent, nodeTran, null).CustomIonEquivalenceTestValue; 
-        }
-
-        #region object overrides
-
-        private bool Equals(TransitionEquivalentKey other)
-        {
-            return Equals(_customIonEquivalenceTestText, other._customIonEquivalenceTestText) &&
-                Transition.Equivalent(_nodeTran, other._nodeTran);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj is TransitionEquivalentKey && Equals((TransitionEquivalentKey) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (_customIonEquivalenceTestText == null ? 0 : _customIonEquivalenceTestText.GetHashCode() * 397) ^ Transition.GetEquivalentHashCode(_nodeTran);
-            }
         }
 
         #endregion

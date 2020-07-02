@@ -391,9 +391,9 @@ namespace pwiz.SkylineTestFunctional
             var expectedViewNames = new[] { AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo, AuditLogStrings.AuditLogForm_MakeAuditLogForm_Summary, AuditLogStrings.AuditLogForm_MakeAuditLogForm_All_Info };
             var expectedColumns = new[]
             {
-                new[] {"Time", "UndoRedoMessage"},
-                new[] {"Time", "SummaryMessage"},
-                new[] {"Time", "Details!*.AllInfoMessage"}
+                new[] {"Time", "UndoRedoMessage", "Reason"},
+                new[] {"Time", "SummaryMessage", "Reason"},
+                new[] {"Time", "Details!*.AllInfoMessage", "Reason" }
             };
             Assert.AreEqual(expectedViewNames.Length, builtInViews.Length);
 
@@ -749,21 +749,21 @@ namespace pwiz.SkylineTestFunctional
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, SrmDocument.DOCUMENT_TYPE.proteomic, false,
                     "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
-                    "\"None\"",
+                    "\"{2:None}\"",
                     "\"SCIEX\""),
                 new LogMessage(LogLevel.summary, MessageType.changed_from_to, SrmDocument.DOCUMENT_TYPE.proteomic, false,
                     "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
-                    "\"None\"",
+                    "\"{2:None}\"",
                     "\"SCIEX\""),
                 new[]
                 {
                     new DetailLogMessage(LogLevel.undo_redo, MessageType.changed_from_to, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, false,
                         "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
-                        "\"None\"",
+                        "\"{2:None}\"",
                         "\"SCIEX\""),
                     new DetailLogMessage(LogLevel.all_info, MessageType.changed_from_to, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
-                        "\"None\"",
+                        "\"{2:None}\"",
                         "\"SCIEX\""),
                     new DetailLogMessage(LogLevel.all_info, MessageType.is_, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}{2:PropertySeparator}{0:NamedRegressionLine_Intercept}",
@@ -882,18 +882,6 @@ namespace pwiz.SkylineTestFunctional
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}",
                         "{2:Missing}",
                         "\"SWATH (VW 64)\""),
-                    new DetailLogMessage(LogLevel.all_info, MessageType.is_, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrecursorFilter}",
-                        "{2:Missing}"),
-                    new DetailLogMessage(LogLevel.all_info, MessageType.is_, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_IsolationWidth}",
-                        "\"{6:IsolationWidthType_results}\""),
-                    new DetailLogMessage(LogLevel.all_info, MessageType.is_, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_SpecialHandling}",
-                        "\"None\""),
-                    new DetailLogMessage(LogLevel.all_info, MessageType.is_, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_WindowsPerScan}",
-                        "{2:Missing}"),
                     new DetailLogMessage(LogLevel.all_info, MessageType.contains, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_IsolationScheme}{2:PropertySeparator}{0:IsolationScheme_PrespecifiedIsolationWindows}",
                         "{ {0:IsolationWindow_Start} = {3:400}, {0:IsolationWindow_End} = {3:409}, {0:IsolationWindow_StartMargin} = {3:0.5}, {0:IsolationWindow_CERange} = {3:5} }"),

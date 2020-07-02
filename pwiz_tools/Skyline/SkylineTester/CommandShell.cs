@@ -57,14 +57,17 @@ namespace SkylineTester
 
         private string _workingDirectory;
         private readonly List<string> _commands = new List<string>();
+        private readonly HashSet<string> _commandsWithRetry = new HashSet<string>();
         private Action<bool> _doneAction;
         private Action _restartAction;
         private readonly StringBuilder _logBuffer = new StringBuilder();
         private bool _logEmpty;
         private Process _process;
+        private bool _restartOnProcessFailure;
         private string _processName;
         private bool _processKilled;
         private Timer _outputTimer;
+        private DateTime _lastOutputTime;
 
         #region Add/run commands
 
@@ -77,6 +80,13 @@ namespace SkylineTester
         {
             _commands.Add(command.With(args));
             return _commands.Count - 1;
+        }
+
+        public int AddWithRetry(string command, params object[] args)
+        {
+            var result = Add(command, args);
+            _commandsWithRetry.Add(_commands[result]);
+            return result;
         }
 
         public void AddImmediate(string command, params object[] args)
@@ -220,6 +230,7 @@ namespace SkylineTester
                 // Run a command in a separate process.
                 else
                 {
+                    _restartOnProcessFailure = _commandsWithRetry.Contains(line);
                     try
                     {
                         StartProcess(
@@ -233,7 +244,7 @@ namespace SkylineTester
                             Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! Command not found " + command);
                         else
                             Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! " + e);
-                        CommandsDone(EXIT_TYPE.error_stop);    // Quit if any command fails
+                        CommandsDone(_restartOnProcessFailure ? EXIT_TYPE.error_restart : EXIT_TYPE.error_stop);    // Quit if any command fails
                     }
                     _workingDirectory = DefaultDirectory;
                     return;
@@ -352,7 +363,7 @@ namespace SkylineTester
             _processName = _process.ProcessName;
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
-            LastOutputTime = DateTime.Now;
+            ResetLastOutputTime();
         }
 
         public int ProcessId
@@ -360,14 +371,18 @@ namespace SkylineTester
             get { return _process != null ? _process.Id : 0; }
         }
 
-        private DateTime LastOutputTime { get; set; }
-
+        private void ResetLastOutputTime() { _lastOutputTime = DateTime.UtcNow; }   // Use UtcNow to avoid hiccups with tests running during DST changeover
+ 
+        private TimeSpan ElapsedTimeSinceLastOutput
+        {
+            get { return DateTime.UtcNow - _lastOutputTime; }  // Use UtcNow to avoid hiccups with tests running during DST changeover
+        }
         /// <summary>
         /// Handle a line of output/error data from the process.
         /// </summary>
         private void HandleOutput(object sender, DataReceivedEventArgs e)
         {
-            LastOutputTime = DateTime.Now;
+            ResetLastOutputTime();
             Log(e.Data);
         }
 
@@ -387,7 +402,7 @@ namespace SkylineTester
                 if (IsRunning)
                 {
                     // If process has been quiet for a very long time, don't kill it, for forensic purposes
-                    if (preserveHungProcesses && (DateTime.Now - LastOutputTime).TotalMinutes > MAX_PROCESS_SILENCE_MINUTES)
+                    if (preserveHungProcesses && ElapsedTimeSinceLastOutput.TotalMinutes > MAX_PROCESS_SILENCE_MINUTES)
                     {
                         Log(string.Format("{0} has been silent for more than {1} minutes.  Leaving it running for forensic purposes.",
                            _process.Modules[0].FileName, MAX_PROCESS_SILENCE_MINUTES));
@@ -461,7 +476,7 @@ namespace SkylineTester
                 {
                     if (!processKilled)
                         Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + exitCode + Environment.NewLine);
-                    RunUI(() => CommandsDone(EXIT_TYPE.error_stop));
+                    RunUI(() => CommandsDone(_restartOnProcessFailure && !processKilled ? EXIT_TYPE.error_restart : EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause
                 catch (Exception)

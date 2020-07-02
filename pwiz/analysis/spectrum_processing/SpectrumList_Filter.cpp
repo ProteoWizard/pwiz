@@ -271,8 +271,8 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_ScanEventSet::a
 //
 
 
-PWIZ_API_DECL SpectrumList_FilterPredicate_ScanTimeRange::SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh)
-:   scanTimeLow_(scanTimeLow), scanTimeHigh_(scanTimeHigh)
+PWIZ_API_DECL SpectrumList_FilterPredicate_ScanTimeRange::SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh, bool assumeSorted)
+:   scanTimeLow_(scanTimeLow), scanTimeHigh_(scanTimeHigh), eos_(false), assumeSorted_(assumeSorted)
 {}
 
 
@@ -291,7 +291,14 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_ScanTimeRange::
     if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
     double time = param.timeInSeconds();
 
+    eos_ = assumeSorted_ && time > scanTimeHigh_;
     return (time>=scanTimeLow_ && time<=scanTimeHigh_);
+}
+
+
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_ScanTimeRange::done() const
+{
+    return eos_; // end of set
 }
 
 
@@ -622,6 +629,60 @@ boost::logic::tribool SpectrumList_FilterPredicate_ThermoScanFilter::accept(cons
     }
     if (inverse_) {filterPass = !filterPass;}
     return filterPass;
+}
+
+
+//
+// SpectrumList_FilterPredicate_CollisionEnergy
+//
+
+
+PWIZ_API_DECL SpectrumList_FilterPredicate_CollisionEnergy::SpectrumList_FilterPredicate_CollisionEnergy(double collisionEnergyLow, double collisionEnergyHigh, bool acceptNonCID, bool acceptMissingCE, FilterMode mode)
+    : ceLow_(collisionEnergyLow), ceHigh_(collisionEnergyHigh), acceptNonCID_(acceptNonCID), acceptMissingCE_(acceptMissingCE), mode_(mode) {}
+
+PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_CollisionEnergy::accept(const msdata::Spectrum& spectrum) const
+{
+    CVParam param = spectrum.cvParamChild(MS_spectrum_type);
+    if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
+    if (!cvIsA(param.cvid, MS_mass_spectrum))
+        return true; // activation filter doesn't affect non-MS spectra
+
+    param = spectrum.cvParam(MS_ms_level);
+    if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
+    int msLevel = param.valueAs<int>();
+
+    if (msLevel == 1)
+        return true; // activation filter doesn't affect MS1 spectra
+
+    if (spectrum.precursors.empty() ||
+        spectrum.precursors[0].selectedIons.empty() ||
+        spectrum.precursors[0].selectedIons[0].empty())
+        return boost::logic::indeterminate;
+
+    const Activation& activation = spectrum.precursors[0].activation;
+    auto dissociationMethods = activation.cvParamChildren(MS_dissociation_method);
+    if (dissociationMethods.empty())
+        return boost::logic::indeterminate;
+
+    bool hasCID = false;
+    for (const auto& dm : dissociationMethods)
+        if (cvIsA(dm.cvid, MS_collision_induced_dissociation))
+        {
+            hasCID = true;
+            break;
+        }
+    if (!hasCID)
+        return acceptNonCID_;
+
+    // at this point if CE is missing, assume it won't be present at any DetailLevel
+    CVParam ce = activation.cvParam(MS_collision_energy);
+    if (ce.empty())
+        return acceptMissingCE_;
+
+    double ceValue = ce.valueAs<double>();
+    if (ceValue >= ceLow_ && ceValue <= ceHigh_)
+        return mode_ == FilterMode_Include;
+    return mode_ == FilterMode_Exclude;
 }
 
 } // namespace analysis

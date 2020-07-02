@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Globalization;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Properties;
 
@@ -25,10 +26,10 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public class PeptideAnnotationPairFinder : AbstractFinder
     {
-        private readonly List<AreaCVGraphData.PeptideAnnotationPair> _pairs;
+        private readonly List<PeptideAnnotationPair> _pairs;
         private readonly double _displayCV;
 
-        public PeptideAnnotationPairFinder(List<AreaCVGraphData.PeptideAnnotationPair> pairs, double displayCV)
+        public PeptideAnnotationPairFinder(List<PeptideAnnotationPair> pairs, double displayCV)
         {
             _pairs = pairs;
             _displayCV = displayCV;
@@ -58,7 +59,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return null;
         }
 
-        public static string GetDisplayText(double cv, string annotation)
+        public static string GetDisplayText(double cv, object annotation)
         {
             // ReSharper disable LocalizableElement
             var cvString = (cv * AreaGraphController.GetAreaCVFactorToDecimal()).ToString(CultureInfo.CurrentCulture) + (Settings.Default.AreaCVShowDecimals ? "" : "%");

@@ -29,16 +29,16 @@ namespace SkylineNightly
 {
     public partial class SkylineNightly : Form
     {
-        public static readonly Nightly.RunMode[] RunModes = { Nightly.RunMode.trunk, Nightly.RunMode.perf, Nightly.RunMode.release, Nightly.RunMode.stress, Nightly.RunMode.integration, Nightly.RunMode.release_perf };
+        public static readonly Nightly.RunMode[] RunModes = 
+            { Nightly.RunMode.trunk, Nightly.RunMode.perf, Nightly.RunMode.release, Nightly.RunMode.stress, Nightly.RunMode.integration, Nightly.RunMode.release_perf, Nightly.RunMode.integration_perf };
 
         public SkylineNightly()
         {
             InitializeComponent();
 
             comboBoxOptions.SelectedIndex = Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode1, false));
-            // ReSharper disable LocalizableElement
-            comboBoxOptions2.SelectedIndex = Settings.Default.mode2 == "" ? 6 : Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode2, false)); //6 == None
-            // ReSharper restore LocalizableElement
+            comboBoxOptions2.SelectedIndex = 
+                Settings.Default.mode2 == string.Empty ? RunModes.Length : Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode2, false)); // RunModes.Count == None
 
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
@@ -56,11 +56,7 @@ namespace SkylineNightly
                 textBoxFolder.Text = Path.Combine(defaultDir);
             }
 
-            using (var ts = new TaskService())
-            {
-                var task = ts.FindTask(Nightly.NightlyTaskName) ?? ts.FindTask(Nightly.NightlyTaskNameWithUser);
-                enabled.Checked = (task != null);
-            }
+            enabled.Checked = Nightly.NightlyTask != null;
         }
 
         private void Cancel(object sender, EventArgs e)
@@ -86,9 +82,7 @@ namespace SkylineNightly
 
             Settings.Default.NightlyFolder = nightlyFolder;
             Settings.Default.mode1 = RunModes[comboBoxOptions.SelectedIndex].ToString();
-            // ReSharper disable LocalizableElement
-            Settings.Default.mode2 = comboBoxOptions2.SelectedIndex == 6 ? "" : RunModes[comboBoxOptions2.SelectedIndex].ToString(); //6 == None
-            // ReSharper restore LocalizableElement
+            Settings.Default.mode2 = comboBoxOptions2.SelectedIndex == RunModes.Length ? string.Empty : RunModes[comboBoxOptions2.SelectedIndex].ToString(); //RunModes.Length == None
 
             Settings.Default.Save();
 
@@ -160,19 +154,20 @@ namespace SkylineNightly
             int[] hours =
             {
                 Nightly.DEFAULT_DURATION_HOURS, Nightly.PERF_DURATION_HOURS, Nightly.DEFAULT_DURATION_HOURS, -1,
-                Nightly.DEFAULT_DURATION_HOURS, Nightly.PERF_DURATION_HOURS
+                Nightly.DEFAULT_DURATION_HOURS, Nightly.PERF_DURATION_HOURS, Nightly.PERF_DURATION_HOURS
             };
 
             result += RunModes[comboBoxOptions.SelectedIndex].ToString();
             durationHours += hours[comboBoxOptions.SelectedIndex];
 
-            if (comboBoxOptions2.SelectedIndex != 6 && comboBoxOptions2.SelectedIndex != -1) //!= none && != not selected
+            if (comboBoxOptions2.SelectedIndex != RunModes.Length && comboBoxOptions2.SelectedIndex != -1) //!= none && != not selected
             {
 				result += @" " + RunModes[comboBoxOptions2.SelectedIndex];
                 durationHours += hours[comboBoxOptions2.SelectedIndex];
             }
 
-            if (comboBoxOptions.SelectedIndex == 3 || comboBoxOptions2.SelectedIndex == 3) // 3 == Stress
+            var stress = Array.IndexOf(RunModes, Nightly.RunMode.stress);  // 3 == Stress
+            if (comboBoxOptions.SelectedIndex == stress || comboBoxOptions2.SelectedIndex == stress)
             {
                 durationHours = -1;
             }

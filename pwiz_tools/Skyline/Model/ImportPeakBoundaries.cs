@@ -184,6 +184,10 @@ namespace pwiz.Skyline.Model
 
         public static double GetMaxRt(SrmDocument document)
         {
+            if (!document.Settings.HasResults)
+            {
+                return 0;
+            }
             var chromFileInfos = document.Settings.MeasuredResults.MSDataFileInfos;
             double maxRt = chromFileInfos.Select(info => info.MaxRetentionTime).Max();
             return maxRt != 0 ? maxRt : 720;    // 12 hours as default maximum RT in minutes
@@ -301,7 +305,7 @@ namespace pwiz.Skyline.Model
                 }
                 // Add filename to second dictionary if not yet encountered
                 ChromSetFileMatch fileMatch;
-                if (!fileNameToFileMatch.TryGetValue(fileName, out fileMatch))
+                if (!fileNameToFileMatch.TryGetValue(fileName, out fileMatch) && Document.Settings.HasResults)
                 {
                     fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(fileName));
                     fileNameToFileMatch.Add(fileName, fileMatch);

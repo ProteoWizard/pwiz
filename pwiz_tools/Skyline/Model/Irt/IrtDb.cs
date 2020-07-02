@@ -23,10 +23,15 @@ using System.Data.SQLite;
 using System.Linq;
 using System.IO;
 using System.Threading;
+using System.Xml;
+using System.Xml.Serialization;
 using NHibernate;
+using pwiz.Common.Database;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -47,10 +52,7 @@ namespace pwiz.Skyline.Model.Irt
     {
         public const string EXT = ".irtdb";
 
-        public static string FILTER_IRTDB
-        {
-            get { return TextUtil.FileDialogFilter(Resources.IrtDb_FILTER_IRTDB_iRT_Database_Files, EXT); }
-        }
+        public static string FILTER_IRTDB => TextUtil.FileDialogFilter(Resources.IrtDb_FILTER_IRTDB_iRT_Database_Files, EXT);
 
         public const int SCHEMA_VERSION_CURRENT = 1;
 
@@ -116,14 +118,14 @@ namespace pwiz.Skyline.Model.Irt
 
         private IDictionary<Target, double> DictStandards
         {
-            get { return _dictStandards; }
-            set { _dictStandards = new TargetMap<double>(value); }
+            get => _dictStandards;
+            set => _dictStandards = new TargetMap<double>(value);
         }
 
         private IDictionary<Target, double> DictLibrary
         {
-            get { return _dictLibrary; }
-            set { _dictLibrary = new TargetMap<double>(value); }
+            get => _dictLibrary;
+            set => _dictLibrary = new TargetMap<double>(value);
         }
 
         private ISession OpenWriteSession()
@@ -131,45 +133,68 @@ namespace pwiz.Skyline.Model.Irt
             return new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, true);
         }
 
-        public IEnumerable<Target> StandardPeptides
-        {
-            get { return DictStandards.Keys; }
-        }
+        public IEnumerable<Target> StandardPeptides => DictStandards.Keys;
 
         public bool IsStandard(Target seq)
         {
             return DictStandards.ContainsKey(seq);
         }
 
-        public int StandardPeptideCount
-        {
-            get { return DictStandards.Count; }
-        }
+        public int StandardPeptideCount => DictStandards.Count;
 
-        public IEnumerable<Target> LibraryPeptides
-        {
-            get { return DictLibrary.Keys; }
-        }
+        public IEnumerable<Target> LibraryPeptides => DictLibrary.Keys;
 
-        public int LibraryPeptideCount
-        {
-            get { return DictLibrary.Count; }
-        }
+        public int LibraryPeptideCount => DictLibrary.Count;
+
+        public string DocumentXml { get; private set; }
+
+        public IrtRegressionType RegressionType { get; private set; }
 
         public double? ScoreSequence(Target seq)
         {
-            double irt;
-            if (seq != null && (DictStandards.TryGetValue(seq, out irt) || DictLibrary.TryGetValue(seq, out irt)))
+            if (seq != null && (DictStandards.TryGetValue(seq, out var irt) || DictLibrary.TryGetValue(seq, out irt)))
                 return irt;
             return null;
         }
 
         public IList<DbIrtPeptide> GetPeptides()
         {
-            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock,
-                    false, CancellationToken.None))
+            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
                 return session.CreateCriteria(typeof(DbIrtPeptide)).List<DbIrtPeptide>();
+            }
+        }
+
+        public string GetDocumentXml()
+        {
+            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock,
+                false, CancellationToken.None))
+            {
+                if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml"))
+                    return null;
+
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT Xml FROM DocumentXml";
+                    return Convert.ToString(cmd.ExecuteScalar());
+                }
+            }
+        }
+
+        public IrtRegressionType GetRegressionType()
+        {
+            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock,
+                false, CancellationToken.None))
+            {
+                if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml") ||
+                    !SqliteOperations.ColumnExists(session.Connection, @"DocumentXml", @"RegressionType"))
+                    return null;
+
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT RegressionType FROM DocumentXml";
+                    return IrtRegressionType.FromName(Convert.ToString(cmd.ExecuteScalar()));
+                }
             }
         }
 
@@ -178,7 +203,12 @@ namespace pwiz.Skyline.Model.Irt
         private IrtDb Load(IProgressMonitor loadMonitor, ProgressStatus status, out IList<DbIrtPeptide> dbPeptides)
         {
             var rawPeptides = dbPeptides = GetPeptides();
-            var result = ChangeProp(ImClone(this), im => im.LoadPeptides(rawPeptides));
+            var result = ChangeProp(ImClone(this), im =>
+            {
+                im.LoadPeptides(rawPeptides);
+                im.DocumentXml = GetDocumentXml();
+                im.RegressionType = GetRegressionType();
+            });
             // Not really possible to show progress, unless we switch to raw reading
             if (loadMonitor != null)
                 loadMonitor.UpdateProgress(status.ChangePercentComplete(100));
@@ -211,8 +241,8 @@ namespace pwiz.Skyline.Model.Irt
 
                 transaction.Commit();
             }
-            if (monitor != null)
-                monitor.UpdateProgress(status.Complete());
+
+            monitor?.UpdateProgress(status.Complete());
 
             return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides));
         }
@@ -238,9 +268,7 @@ namespace pwiz.Skyline.Model.Irt
                 // Add or update peptides that have changed from the old list
                 foreach (var peptideNew in newPeptides)
                 {
-                    DbIrtPeptide peptideOld;
-                    if (dictOld.TryGetValue(peptideNew.ModifiedTarget, out peptideOld) &&
-                            Equals(peptideNew, peptideOld))
+                    if (dictOld.TryGetValue(peptideNew.ModifiedTarget, out var peptideOld) && Equals(peptideNew, peptideOld))
                         continue;
 
                     // Create a new instance, because not doing this causes a BindingSource leak
@@ -336,15 +364,13 @@ namespace pwiz.Skyline.Model.Irt
         //Throws DatabaseOpeningException
         public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor)
         {
-            IList<DbIrtPeptide> dbPeptides;
-            return GetIrtDb(path, loadMonitor, out dbPeptides);
+            return GetIrtDb(path, loadMonitor, out _);
         }
 
         public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor, out IList<DbIrtPeptide> dbPeptides)
         {
             var status = new ProgressStatus(string.Format(Resources.IrtDb_GetIrtDb_Loading_iRT_database__0_, path));
-            if (loadMonitor != null)
-                loadMonitor.UpdateProgress(status);
+            loadMonitor?.UpdateProgress(status);
 
             try
             {
@@ -355,7 +381,7 @@ namespace pwiz.Skyline.Model.Irt
                     throw new DatabaseOpeningException(String.Format(Resources.IrtDb_GetIrtDb_The_file__0__does_not_exist_, path));
 
                 string message;
-                Exception xInner = null;
+                Exception xInner;
                 try
                 {
                     //Check for a valid SQLite file and that it has our schema
@@ -403,6 +429,158 @@ namespace pwiz.Skyline.Model.Irt
                 loadMonitor.UpdateProgress(status.ChangeErrorException(x));
                 dbPeptides = new DbIrtPeptide[0];
                 return null;
+            }
+        }
+
+        public static string GenerateDocumentXml(IEnumerable<Target> standards, SrmDocument doc, string oldXml)
+        {
+            if (doc == null)
+                return null;
+
+            // Minimize document to only the peptides we need
+            var minimalPeptides = standards.ToHashSet();
+
+            var oldPeptides = new Dictionary<Target, PeptideDocNode>();
+            if (!string.IsNullOrEmpty(oldXml))
+            {
+                try
+                {
+                    using (var reader = new StringReader(oldXml))
+                    {
+                        var oldDoc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(reader);
+                        oldPeptides = oldDoc.Molecules.Where(pep => minimalPeptides.Contains(pep.Target)).ToDictionary(pep => pep.Target, pep => pep);
+                    }
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+
+            var addPeptides = new List<PeptideDocNode>();
+            foreach (var nodePep in doc.Molecules.Where(pep => minimalPeptides.Contains(pep.Target)))
+            {
+                if (oldPeptides.TryGetValue(nodePep.Target, out var nodePepOld))
+                {
+                    addPeptides.Add(nodePep.Merge(nodePepOld));
+                    oldPeptides.Remove(nodePep.Target);
+                }
+                else
+                {
+                    addPeptides.Add(nodePep);
+                }
+            }
+            addPeptides.AddRange(oldPeptides.Values);
+
+            var peptides = new List<PeptideDocNode>();
+            foreach (var nodePep in addPeptides)
+            {
+                var precursors = new List<DocNode>();
+                foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
+                {
+                    var transitions = nodeTranGroup.Transitions.Where(tran => tran.ResultsRank.HasValue).OrderBy(tran => tran.ResultsRank.Value).Cast<DocNode>().ToList();
+                    if (transitions.Count > 0)
+                        precursors.Add(nodeTranGroup.ChangeChildren(transitions));
+                }
+                if (precursors.Count > 0)
+                    peptides.Add((PeptideDocNode)nodePep.ChangeChildren(precursors));
+            }
+            if (peptides.Count == 0)
+                return null;
+
+            peptides.Sort((nodePep1, nodePep2) => nodePep1.ModifiedTarget.CompareTo(nodePep2.ModifiedTarget));
+            doc = (SrmDocument)doc.ChangeChildren(new[] { new PeptideGroupDocNode(new PeptideGroup(), Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty, peptides.ToArray()) });
+
+            // Clear some settings to make the document smaller and so that they won't get imported into a document
+            // TODO: Convert all modifications to explicit?
+            doc = doc.ChangeMeasuredResults(null);
+            doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(libs => libs.ChangeLibraries(new List<LibrarySpec>(), new List<Library>())));
+
+            using (var writer = new StringWriter())
+            using (var writer2 = new XmlTextWriter(writer))
+            {
+                doc.Serialize(writer2, null, SkylineVersion.CURRENT, null);
+                return writer.ToString();
+            }
+        }
+
+        public IrtDb SetDocumentXml(SrmDocument doc, string oldXml)
+        {
+            var documentXml = GenerateDocumentXml(StandardPeptides, doc, oldXml);
+
+            using (var session = OpenWriteSession())
+            using (var transaction = session.BeginTransaction())
+            {
+                EnsureDocumentXmlTable(session);
+
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"UPDATE DocumentXml SET Xml = ?";
+                    cmd.Parameters.Add(new SQLiteParameter { Value = documentXml });
+                    cmd.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+            }
+
+            return ChangeProp(ImClone(this), im => im.DocumentXml = documentXml);
+        }
+
+        public IrtDb SetRegressionType(IrtRegressionType regressionType)
+        {
+            using (var session = OpenWriteSession())
+            using (var transaction = session.BeginTransaction())
+            {
+                EnsureDocumentXmlTable(session);
+
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = "UPDATE DocumentXml SET RegressionType = ?";
+                    cmd.Parameters.Add(new SQLiteParameter { Value = regressionType.Name });
+                    cmd.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+            }
+
+            return ChangeProp(ImClone(this), im => im.RegressionType = regressionType);
+        }
+
+        private static void EnsureDocumentXmlTable(ISession session)
+        {
+            if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml"))
+            {
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"CREATE TABLE IF NOT EXISTS DocumentXml (Xml TEXT, RegressionType TEXT)";
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            else if (!SqliteOperations.ColumnExists(session.Connection, @"DocumentXml", @"RegressionType"))
+            {
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"ALTER TABLE DocumentXml ADD COLUMN RegressionType TEXT";
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            // create row if it doesn't exist
+            bool rowExists;
+            using (var cmd = session.Connection.CreateCommand())
+            {
+                cmd.CommandText = @"SELECT COUNT(*) FROM DocumentXml";
+                rowExists = Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+            }
+            if (!rowExists)
+            {
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"INSERT INTO DocumentXml (Xml, RegressionType) VALUES (?, ?)";
+                    cmd.Parameters.Add(new SQLiteParameter {Value = null});
+                    cmd.Parameters.Add(new SQLiteParameter {Value = null});
+                    cmd.ExecuteNonQuery();
+                }
             }
         }
     }

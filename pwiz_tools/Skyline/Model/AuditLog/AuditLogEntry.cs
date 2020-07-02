@@ -503,6 +503,18 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return ReferenceEquals(this, ROOT); }
         }
 
+        public static AuditLogEntry SKIP = new AuditLogEntry { Count = -1, LogIndex = int.MinValue };
+
+        public static AuditLogEntry SkipChange(SrmDocumentPair pair)
+        {
+            return SKIP;
+        }
+
+        public bool IsSkip
+        {
+            get { return ReferenceEquals(this, SKIP); }
+        }
+
         private AuditLogEntry(DateTime timeStampUTC, string reason, SrmDocument.DOCUMENT_TYPE docType,
             string extraInfo = null) : this()
         {
@@ -741,6 +753,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 unloggedCount);
         }
 
+        /*
         private AuditLogEntry CreateUnloggedEntry(SrmDocument doc, out bool replace)
         {
             var countEntry = doc.AuditLog.AuditLogEntries;
@@ -753,11 +766,13 @@ namespace pwiz.Skyline.Model.AuditLog
                     .ChangeAllInfo(ImmutableList.Singleton(new MessageInfo(MessageType.log_unlogged_changes, 0)));
                 countEntry.CountEntryType = MessageType.log_unlogged_changes;
             }
-            return countEntry.ChangeUndoRedo(GetUnloggedMessages(int.Parse(countEntry.UndoRedo.Names[0]) + 1))
+
+            return countEntry?.ChangeUndoRedo(GetUnloggedMessages(int.Parse(countEntry.UndoRedo.Names[0]) + 1))
                 .ChangeSummary(GetUnloggedMessages(int.Parse(countEntry.Summary.Names[0]) + 1))
                 .ChangeAllInfo(ImmutableList.Singleton(GetUnloggedMessages(
                     int.Parse(countEntry._allInfoNoUndoRedo.First().Names[0]) + _allInfoNoUndoRedo.Count())));
         }
+        */
 
         public static AuditLogEntry GetAuditLoggingStartExistingDocEntry(SrmDocument doc, SrmDocument.DOCUMENT_TYPE defaultDocumentType)
         {

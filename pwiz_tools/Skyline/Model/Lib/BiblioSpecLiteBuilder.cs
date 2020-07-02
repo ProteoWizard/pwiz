@@ -32,7 +32,15 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib
 {
-    public sealed class BiblioSpecLiteBuilder : ILibraryBuilder
+    public interface IiRTCapableLibraryBuilder : ILibraryBuilder
+    {
+        string AmbiguousMatchesMessage { get; }
+        IrtStandard IrtStandard { get; }
+        string BuildCommandArgs { get; }
+        string BuildOutput { get; }
+    }
+
+    public sealed class BiblioSpecLiteBuilder : IiRTCapableLibraryBuilder
     {
         // ReSharper disable LocalizableElement
         public const string EXT_PEP_XML = ".pep.xml";
@@ -57,6 +65,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_MZTAB = ".mzTab";
         public const string EXT_MZTAB_TXT = "mztab.txt";
         public const string EXT_OPEN_SWATH = ".osw";
+        public const string EXT_SPECLIB = ".speclib";
         // ReSharper restore LocalizableElement
 
         private ReadOnlyCollection<string> _inputFiles;

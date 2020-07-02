@@ -31,53 +31,88 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RefineDlg));
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.btnOK = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabDocument = new System.Windows.Forms.TabPage();
             this.cbRemovePeptidesMissingLibrary = new System.Windows.Forms.CheckBox();
             this.cbAutoTransitions = new System.Windows.Forms.CheckBox();
             this.cbAutoPrecursors = new System.Windows.Forms.CheckBox();
             this.cbAutoPeptides = new System.Windows.Forms.CheckBox();
-            this.label7 = new System.Windows.Forms.Label();
             this.cbAdd = new System.Windows.Forms.CheckBox();
-            this.labelLabelType = new System.Windows.Forms.Label();
             this.comboRefineLabelType = new System.Windows.Forms.ComboBox();
             this.cbRemoveRepeatedPeptides = new System.Windows.Forms.CheckBox();
             this.cbRemoveDuplicatePeptides = new System.Windows.Forms.CheckBox();
             this.textMinTransitions = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
             this.textMinPeptides = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.tabResults = new System.Windows.Forms.TabPage();
             this.textMaxPepPeakRank = new System.Windows.Forms.TextBox();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
             this.comboReplicateUse = new System.Windows.Forms.ComboBox();
             this.cbPreferLarger = new System.Windows.Forms.CheckBox();
             this.textMaxPeakRank = new System.Windows.Forms.TextBox();
-            this.labelMaxPeakRank = new System.Windows.Forms.Label();
             this.textMaxPeakFoundRatio = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
             this.radioRemoveMissing = new System.Windows.Forms.RadioButton();
             this.radioIgnoreMissing = new System.Windows.Forms.RadioButton();
             this.textMinPeakFoundRatio = new System.Windows.Forms.TextBox();
+            this.textMinIdotProduct = new System.Windows.Forms.TextBox();
+            this.textMinDotProduct = new System.Windows.Forms.TextBox();
+            this.textRTRegressionThreshold = new System.Windows.Forms.TextBox();
+            this.btnOK = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabDocument = new System.Windows.Forms.TabPage();
+            this.label7 = new System.Windows.Forms.Label();
+            this.labelLabelType = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.tabResults = new System.Windows.Forms.TabPage();
+            this.cbMaxPrecursorOnly = new System.Windows.Forms.CheckBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.labelMaxPeakRank = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.groupLibCorr = new System.Windows.Forms.GroupBox();
-            this.textMinIdotProduct = new System.Windows.Forms.TextBox();
             this.labelMinIdotProduct = new System.Windows.Forms.Label();
-            this.textMinDotProduct = new System.Windows.Forms.TextBox();
             this.labelMinDotProduct = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.textRTRegressionThreshold = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.cbMaxPrecursorOnly = new System.Windows.Forms.CheckBox();
+            this.tabConsistency = new System.Windows.Forms.TabPage();
+            this.groupPeakArea = new System.Windows.Forms.GroupBox();
+            this.labelTransType = new System.Windows.Forms.Label();
+            this.comboTransType = new System.Windows.Forms.ComboBox();
+            this.labelTransitions = new System.Windows.Forms.Label();
+            this.comboTransitions = new System.Windows.Forms.ComboBox();
+            this.labelCV = new System.Windows.Forms.Label();
+            this.labelPercent = new System.Windows.Forms.Label();
+            this.textCVCutoff = new System.Windows.Forms.TextBox();
+            this.comboNormalizeTo = new System.Windows.Forms.ComboBox();
+            this.labelNormalize = new System.Windows.Forms.Label();
+            this.groupDetection = new System.Windows.Forms.GroupBox();
+            this.numericUpDownDetections = new System.Windows.Forms.NumericUpDown();
+            this.labelReplicates = new System.Windows.Forms.Label();
+            this.labelDetections = new System.Windows.Forms.Label();
+            this.labelQVal = new System.Windows.Forms.Label();
+            this.textQVal = new System.Windows.Forms.TextBox();
+            this.tabGroupComparisons = new System.Windows.Forms.TabPage();
+            this.comboMSGroupComparisons = new System.Windows.Forms.ComboBox();
+            this.labelFoldChangeUnit = new System.Windows.Forms.Label();
+            this.labelPValueUnit = new System.Windows.Forms.Label();
+            this.checkBoxLog = new System.Windows.Forms.CheckBox();
+            this.textFoldChange = new System.Windows.Forms.TextBox();
+            this.textPValue = new System.Windows.Forms.TextBox();
+            this.labelFoldChange = new System.Windows.Forms.Label();
+            this.labelPValue = new System.Windows.Forms.Label();
+            this.labelMSLevel = new System.Windows.Forms.Label();
+            this.labelGroupComparison = new System.Windows.Forms.Label();
+            this.btnEditGroupComparisons = new System.Windows.Forms.Button();
+            this.checkedListBoxGroupComparisons = new System.Windows.Forms.CheckedListBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
             this.tabResults.SuspendLayout();
             this.groupLibCorr.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.tabConsistency.SuspendLayout();
+            this.groupPeakArea.SuspendLayout();
+            this.groupDetection.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDetections)).BeginInit();
+            this.tabGroupComparisons.SuspendLayout();
             this.SuspendLayout();
             // 
             // helpTip
@@ -85,48 +120,6 @@
             this.helpTip.AutoPopDelay = 32767;
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
-            // 
-            // btnOK
-            // 
-            resources.ApplyResources(this.btnOK, "btnOK");
-            this.btnOK.Name = "btnOK";
-            this.btnOK.UseVisualStyleBackColor = true;
-            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
-            // 
-            // btnCancel
-            // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // tabControl1
-            // 
-            resources.ApplyResources(this.tabControl1, "tabControl1");
-            this.tabControl1.Controls.Add(this.tabDocument);
-            this.tabControl1.Controls.Add(this.tabResults);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            // 
-            // tabDocument
-            // 
-            this.tabDocument.Controls.Add(this.cbRemovePeptidesMissingLibrary);
-            this.tabDocument.Controls.Add(this.cbAutoTransitions);
-            this.tabDocument.Controls.Add(this.cbAutoPrecursors);
-            this.tabDocument.Controls.Add(this.cbAutoPeptides);
-            this.tabDocument.Controls.Add(this.label7);
-            this.tabDocument.Controls.Add(this.cbAdd);
-            this.tabDocument.Controls.Add(this.labelLabelType);
-            this.tabDocument.Controls.Add(this.comboRefineLabelType);
-            this.tabDocument.Controls.Add(this.cbRemoveRepeatedPeptides);
-            this.tabDocument.Controls.Add(this.cbRemoveDuplicatePeptides);
-            this.tabDocument.Controls.Add(this.textMinTransitions);
-            this.tabDocument.Controls.Add(this.label2);
-            this.tabDocument.Controls.Add(this.textMinPeptides);
-            this.tabDocument.Controls.Add(this.label1);
-            resources.ApplyResources(this.tabDocument, "tabDocument");
-            this.tabDocument.Name = "tabDocument";
-            this.tabDocument.UseVisualStyleBackColor = true;
             // 
             // cbRemovePeptidesMissingLibrary
             // 
@@ -156,11 +149,6 @@
             this.helpTip.SetToolTip(this.cbAutoPeptides, resources.GetString("cbAutoPeptides.ToolTip"));
             this.cbAutoPeptides.UseVisualStyleBackColor = true;
             // 
-            // label7
-            // 
-            resources.ApplyResources(this.label7, "label7");
-            this.label7.Name = "label7";
-            // 
             // cbAdd
             // 
             resources.ApplyResources(this.cbAdd, "cbAdd");
@@ -168,11 +156,6 @@
             this.helpTip.SetToolTip(this.cbAdd, resources.GetString("cbAdd.ToolTip"));
             this.cbAdd.UseVisualStyleBackColor = true;
             this.cbAdd.CheckedChanged += new System.EventHandler(this.cbAdd_CheckedChanged);
-            // 
-            // labelLabelType
-            // 
-            resources.ApplyResources(this.labelLabelType, "labelLabelType");
-            this.labelLabelType.Name = "labelLabelType";
             // 
             // comboRefineLabelType
             // 
@@ -202,16 +185,148 @@
             this.textMinTransitions.Name = "textMinTransitions";
             this.helpTip.SetToolTip(this.textMinTransitions, resources.GetString("textMinTransitions.ToolTip"));
             // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
-            // 
             // textMinPeptides
             // 
             resources.ApplyResources(this.textMinPeptides, "textMinPeptides");
             this.textMinPeptides.Name = "textMinPeptides";
             this.helpTip.SetToolTip(this.textMinPeptides, resources.GetString("textMinPeptides.ToolTip"));
+            // 
+            // textMaxPepPeakRank
+            // 
+            resources.ApplyResources(this.textMaxPepPeakRank, "textMaxPepPeakRank");
+            this.textMaxPepPeakRank.Name = "textMaxPepPeakRank";
+            this.helpTip.SetToolTip(this.textMaxPepPeakRank, resources.GetString("textMaxPepPeakRank.ToolTip"));
+            // 
+            // comboReplicateUse
+            // 
+            this.comboReplicateUse.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboReplicateUse.FormattingEnabled = true;
+            this.comboReplicateUse.Items.AddRange(new object[] {
+            resources.GetString("comboReplicateUse.Items"),
+            resources.GetString("comboReplicateUse.Items1")});
+            resources.ApplyResources(this.comboReplicateUse, "comboReplicateUse");
+            this.comboReplicateUse.Name = "comboReplicateUse";
+            this.helpTip.SetToolTip(this.comboReplicateUse, resources.GetString("comboReplicateUse.ToolTip"));
+            // 
+            // cbPreferLarger
+            // 
+            resources.ApplyResources(this.cbPreferLarger, "cbPreferLarger");
+            this.cbPreferLarger.Name = "cbPreferLarger";
+            this.helpTip.SetToolTip(this.cbPreferLarger, resources.GetString("cbPreferLarger.ToolTip"));
+            this.cbPreferLarger.UseVisualStyleBackColor = true;
+            // 
+            // textMaxPeakRank
+            // 
+            resources.ApplyResources(this.textMaxPeakRank, "textMaxPeakRank");
+            this.textMaxPeakRank.Name = "textMaxPeakRank";
+            this.helpTip.SetToolTip(this.textMaxPeakRank, resources.GetString("textMaxPeakRank.ToolTip"));
+            this.textMaxPeakRank.TextChanged += new System.EventHandler(this.textMaxPeakRank_TextChanged);
+            // 
+            // textMaxPeakFoundRatio
+            // 
+            resources.ApplyResources(this.textMaxPeakFoundRatio, "textMaxPeakFoundRatio");
+            this.textMaxPeakFoundRatio.Name = "textMaxPeakFoundRatio";
+            this.helpTip.SetToolTip(this.textMaxPeakFoundRatio, resources.GetString("textMaxPeakFoundRatio.ToolTip"));
+            // 
+            // radioRemoveMissing
+            // 
+            resources.ApplyResources(this.radioRemoveMissing, "radioRemoveMissing");
+            this.radioRemoveMissing.Name = "radioRemoveMissing";
+            this.radioRemoveMissing.TabStop = true;
+            this.helpTip.SetToolTip(this.radioRemoveMissing, resources.GetString("radioRemoveMissing.ToolTip"));
+            this.radioRemoveMissing.UseVisualStyleBackColor = true;
+            // 
+            // radioIgnoreMissing
+            // 
+            resources.ApplyResources(this.radioIgnoreMissing, "radioIgnoreMissing");
+            this.radioIgnoreMissing.Checked = true;
+            this.radioIgnoreMissing.Name = "radioIgnoreMissing";
+            this.radioIgnoreMissing.TabStop = true;
+            this.helpTip.SetToolTip(this.radioIgnoreMissing, resources.GetString("radioIgnoreMissing.ToolTip"));
+            this.radioIgnoreMissing.UseVisualStyleBackColor = true;
+            // 
+            // textMinPeakFoundRatio
+            // 
+            resources.ApplyResources(this.textMinPeakFoundRatio, "textMinPeakFoundRatio");
+            this.textMinPeakFoundRatio.Name = "textMinPeakFoundRatio";
+            this.helpTip.SetToolTip(this.textMinPeakFoundRatio, resources.GetString("textMinPeakFoundRatio.ToolTip"));
+            // 
+            // textMinIdotProduct
+            // 
+            resources.ApplyResources(this.textMinIdotProduct, "textMinIdotProduct");
+            this.textMinIdotProduct.Name = "textMinIdotProduct";
+            this.helpTip.SetToolTip(this.textMinIdotProduct, resources.GetString("textMinIdotProduct.ToolTip"));
+            // 
+            // textMinDotProduct
+            // 
+            resources.ApplyResources(this.textMinDotProduct, "textMinDotProduct");
+            this.textMinDotProduct.Name = "textMinDotProduct";
+            this.helpTip.SetToolTip(this.textMinDotProduct, resources.GetString("textMinDotProduct.ToolTip"));
+            // 
+            // textRTRegressionThreshold
+            // 
+            resources.ApplyResources(this.textRTRegressionThreshold, "textRTRegressionThreshold");
+            this.textRTRegressionThreshold.Name = "textRTRegressionThreshold";
+            this.helpTip.SetToolTip(this.textRTRegressionThreshold, resources.GetString("textRTRegressionThreshold.ToolTip"));
+            // 
+            // btnOK
+            // 
+            resources.ApplyResources(this.btnOK, "btnOK");
+            this.btnOK.Name = "btnOK";
+            this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            // 
+            // btnCancel
+            // 
+            resources.ApplyResources(this.btnCancel, "btnCancel");
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // tabControl1
+            // 
+            resources.ApplyResources(this.tabControl1, "tabControl1");
+            this.tabControl1.Controls.Add(this.tabDocument);
+            this.tabControl1.Controls.Add(this.tabResults);
+            this.tabControl1.Controls.Add(this.tabConsistency);
+            this.tabControl1.Controls.Add(this.tabGroupComparisons);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            // 
+            // tabDocument
+            // 
+            this.tabDocument.Controls.Add(this.cbRemovePeptidesMissingLibrary);
+            this.tabDocument.Controls.Add(this.cbAutoTransitions);
+            this.tabDocument.Controls.Add(this.cbAutoPrecursors);
+            this.tabDocument.Controls.Add(this.cbAutoPeptides);
+            this.tabDocument.Controls.Add(this.label7);
+            this.tabDocument.Controls.Add(this.cbAdd);
+            this.tabDocument.Controls.Add(this.labelLabelType);
+            this.tabDocument.Controls.Add(this.comboRefineLabelType);
+            this.tabDocument.Controls.Add(this.cbRemoveRepeatedPeptides);
+            this.tabDocument.Controls.Add(this.cbRemoveDuplicatePeptides);
+            this.tabDocument.Controls.Add(this.textMinTransitions);
+            this.tabDocument.Controls.Add(this.label2);
+            this.tabDocument.Controls.Add(this.textMinPeptides);
+            this.tabDocument.Controls.Add(this.label1);
+            resources.ApplyResources(this.tabDocument, "tabDocument");
+            this.tabDocument.Name = "tabDocument";
+            this.tabDocument.UseVisualStyleBackColor = true;
+            // 
+            // label7
+            // 
+            resources.ApplyResources(this.label7, "label7");
+            this.label7.Name = "label7";
+            // 
+            // labelLabelType
+            // 
+            resources.ApplyResources(this.labelLabelType, "labelLabelType");
+            this.labelLabelType.Name = "labelLabelType";
+            // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.Name = "label2";
             // 
             // label1
             // 
@@ -240,11 +355,11 @@
             this.tabResults.Name = "tabResults";
             this.tabResults.UseVisualStyleBackColor = true;
             // 
-            // textMaxPepPeakRank
+            // cbMaxPrecursorOnly
             // 
-            resources.ApplyResources(this.textMaxPepPeakRank, "textMaxPepPeakRank");
-            this.textMaxPepPeakRank.Name = "textMaxPepPeakRank";
-            this.helpTip.SetToolTip(this.textMaxPepPeakRank, resources.GetString("textMaxPepPeakRank.ToolTip"));
+            resources.ApplyResources(this.cbMaxPrecursorOnly, "cbMaxPrecursorOnly");
+            this.cbMaxPrecursorOnly.Name = "cbMaxPrecursorOnly";
+            this.cbMaxPrecursorOnly.UseVisualStyleBackColor = true;
             // 
             // label8
             // 
@@ -256,69 +371,15 @@
             resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
             // 
-            // comboReplicateUse
-            // 
-            this.comboReplicateUse.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboReplicateUse.FormattingEnabled = true;
-            this.comboReplicateUse.Items.AddRange(new object[] {
-            resources.GetString("comboReplicateUse.Items"),
-            resources.GetString("comboReplicateUse.Items1")});
-            resources.ApplyResources(this.comboReplicateUse, "comboReplicateUse");
-            this.comboReplicateUse.Name = "comboReplicateUse";
-            this.helpTip.SetToolTip(this.comboReplicateUse, resources.GetString("comboReplicateUse.ToolTip"));
-            // 
-            // cbPreferLarger
-            // 
-            resources.ApplyResources(this.cbPreferLarger, "cbPreferLarger");
-            this.cbPreferLarger.Name = "cbPreferLarger";
-            this.helpTip.SetToolTip(this.cbPreferLarger, resources.GetString("cbPreferLarger.ToolTip"));
-            this.cbPreferLarger.UseVisualStyleBackColor = true;
-            // 
-            // textMaxPeakRank
-            // 
-            resources.ApplyResources(this.textMaxPeakRank, "textMaxPeakRank");
-            this.textMaxPeakRank.Name = "textMaxPeakRank";
-            this.helpTip.SetToolTip(this.textMaxPeakRank, resources.GetString("textMaxPeakRank.ToolTip"));
-            this.textMaxPeakRank.TextChanged += new System.EventHandler(this.textMaxPeakRank_TextChanged);
-            // 
             // labelMaxPeakRank
             // 
             resources.ApplyResources(this.labelMaxPeakRank, "labelMaxPeakRank");
             this.labelMaxPeakRank.Name = "labelMaxPeakRank";
             // 
-            // textMaxPeakFoundRatio
-            // 
-            resources.ApplyResources(this.textMaxPeakFoundRatio, "textMaxPeakFoundRatio");
-            this.textMaxPeakFoundRatio.Name = "textMaxPeakFoundRatio";
-            this.helpTip.SetToolTip(this.textMaxPeakFoundRatio, resources.GetString("textMaxPeakFoundRatio.ToolTip"));
-            // 
             // label6
             // 
             resources.ApplyResources(this.label6, "label6");
             this.label6.Name = "label6";
-            // 
-            // radioRemoveMissing
-            // 
-            resources.ApplyResources(this.radioRemoveMissing, "radioRemoveMissing");
-            this.radioRemoveMissing.Name = "radioRemoveMissing";
-            this.radioRemoveMissing.TabStop = true;
-            this.helpTip.SetToolTip(this.radioRemoveMissing, resources.GetString("radioRemoveMissing.ToolTip"));
-            this.radioRemoveMissing.UseVisualStyleBackColor = true;
-            // 
-            // radioIgnoreMissing
-            // 
-            resources.ApplyResources(this.radioIgnoreMissing, "radioIgnoreMissing");
-            this.radioIgnoreMissing.Checked = true;
-            this.radioIgnoreMissing.Name = "radioIgnoreMissing";
-            this.radioIgnoreMissing.TabStop = true;
-            this.helpTip.SetToolTip(this.radioIgnoreMissing, resources.GetString("radioIgnoreMissing.ToolTip"));
-            this.radioIgnoreMissing.UseVisualStyleBackColor = true;
-            // 
-            // textMinPeakFoundRatio
-            // 
-            resources.ApplyResources(this.textMinPeakFoundRatio, "textMinPeakFoundRatio");
-            this.textMinPeakFoundRatio.Name = "textMinPeakFoundRatio";
-            this.helpTip.SetToolTip(this.textMinPeakFoundRatio, resources.GetString("textMinPeakFoundRatio.ToolTip"));
             // 
             // label5
             // 
@@ -335,22 +396,10 @@
             this.groupLibCorr.Name = "groupLibCorr";
             this.groupLibCorr.TabStop = false;
             // 
-            // textMinIdotProduct
-            // 
-            resources.ApplyResources(this.textMinIdotProduct, "textMinIdotProduct");
-            this.textMinIdotProduct.Name = "textMinIdotProduct";
-            this.helpTip.SetToolTip(this.textMinIdotProduct, resources.GetString("textMinIdotProduct.ToolTip"));
-            // 
             // labelMinIdotProduct
             // 
             resources.ApplyResources(this.labelMinIdotProduct, "labelMinIdotProduct");
             this.labelMinIdotProduct.Name = "labelMinIdotProduct";
-            // 
-            // textMinDotProduct
-            // 
-            resources.ApplyResources(this.textMinDotProduct, "textMinDotProduct");
-            this.textMinDotProduct.Name = "textMinDotProduct";
-            this.helpTip.SetToolTip(this.textMinDotProduct, resources.GetString("textMinDotProduct.ToolTip"));
             // 
             // labelMinDotProduct
             // 
@@ -365,22 +414,207 @@
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.TabStop = false;
             // 
-            // textRTRegressionThreshold
-            // 
-            resources.ApplyResources(this.textRTRegressionThreshold, "textRTRegressionThreshold");
-            this.textRTRegressionThreshold.Name = "textRTRegressionThreshold";
-            this.helpTip.SetToolTip(this.textRTRegressionThreshold, resources.GetString("textRTRegressionThreshold.ToolTip"));
-            // 
             // label3
             // 
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
             // 
-            // cbMaxPrecursorOnly
+            // tabConsistency
             // 
-            resources.ApplyResources(this.cbMaxPrecursorOnly, "cbMaxPrecursorOnly");
-            this.cbMaxPrecursorOnly.Name = "cbMaxPrecursorOnly";
-            this.cbMaxPrecursorOnly.UseVisualStyleBackColor = true;
+            this.tabConsistency.Controls.Add(this.groupPeakArea);
+            this.tabConsistency.Controls.Add(this.groupDetection);
+            resources.ApplyResources(this.tabConsistency, "tabConsistency");
+            this.tabConsistency.Name = "tabConsistency";
+            this.tabConsistency.UseVisualStyleBackColor = true;
+            // 
+            // groupPeakArea
+            // 
+            this.groupPeakArea.Controls.Add(this.labelTransType);
+            this.groupPeakArea.Controls.Add(this.comboTransType);
+            this.groupPeakArea.Controls.Add(this.labelTransitions);
+            this.groupPeakArea.Controls.Add(this.comboTransitions);
+            this.groupPeakArea.Controls.Add(this.labelCV);
+            this.groupPeakArea.Controls.Add(this.labelPercent);
+            this.groupPeakArea.Controls.Add(this.textCVCutoff);
+            this.groupPeakArea.Controls.Add(this.comboNormalizeTo);
+            this.groupPeakArea.Controls.Add(this.labelNormalize);
+            resources.ApplyResources(this.groupPeakArea, "groupPeakArea");
+            this.groupPeakArea.Name = "groupPeakArea";
+            this.groupPeakArea.TabStop = false;
+            // 
+            // labelTransType
+            // 
+            resources.ApplyResources(this.labelTransType, "labelTransType");
+            this.labelTransType.Name = "labelTransType";
+            // 
+            // comboTransType
+            // 
+            this.comboTransType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboTransType.FormattingEnabled = true;
+            resources.ApplyResources(this.comboTransType, "comboTransType");
+            this.comboTransType.Name = "comboTransType";
+            // 
+            // labelTransitions
+            // 
+            resources.ApplyResources(this.labelTransitions, "labelTransitions");
+            this.labelTransitions.Name = "labelTransitions";
+            // 
+            // comboTransitions
+            // 
+            this.comboTransitions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboTransitions.FormattingEnabled = true;
+            resources.ApplyResources(this.comboTransitions, "comboTransitions");
+            this.comboTransitions.Name = "comboTransitions";
+            // 
+            // labelCV
+            // 
+            resources.ApplyResources(this.labelCV, "labelCV");
+            this.labelCV.Name = "labelCV";
+            // 
+            // labelPercent
+            // 
+            resources.ApplyResources(this.labelPercent, "labelPercent");
+            this.labelPercent.Name = "labelPercent";
+            // 
+            // textCVCutoff
+            // 
+            resources.ApplyResources(this.textCVCutoff, "textCVCutoff");
+            this.textCVCutoff.Name = "textCVCutoff";
+            // 
+            // comboNormalizeTo
+            // 
+            this.comboNormalizeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboNormalizeTo.FormattingEnabled = true;
+            resources.ApplyResources(this.comboNormalizeTo, "comboNormalizeTo");
+            this.comboNormalizeTo.Name = "comboNormalizeTo";
+            // 
+            // labelNormalize
+            // 
+            resources.ApplyResources(this.labelNormalize, "labelNormalize");
+            this.labelNormalize.Name = "labelNormalize";
+            // 
+            // groupDetection
+            // 
+            this.groupDetection.Controls.Add(this.numericUpDownDetections);
+            this.groupDetection.Controls.Add(this.labelReplicates);
+            this.groupDetection.Controls.Add(this.labelDetections);
+            this.groupDetection.Controls.Add(this.labelQVal);
+            this.groupDetection.Controls.Add(this.textQVal);
+            resources.ApplyResources(this.groupDetection, "groupDetection");
+            this.groupDetection.Name = "groupDetection";
+            this.groupDetection.TabStop = false;
+            // 
+            // numericUpDownDetections
+            // 
+            resources.ApplyResources(this.numericUpDownDetections, "numericUpDownDetections");
+            this.numericUpDownDetections.Name = "numericUpDownDetections";
+            // 
+            // labelReplicates
+            // 
+            resources.ApplyResources(this.labelReplicates, "labelReplicates");
+            this.labelReplicates.Name = "labelReplicates";
+            // 
+            // labelDetections
+            // 
+            resources.ApplyResources(this.labelDetections, "labelDetections");
+            this.labelDetections.Name = "labelDetections";
+            // 
+            // labelQVal
+            // 
+            resources.ApplyResources(this.labelQVal, "labelQVal");
+            this.labelQVal.Name = "labelQVal";
+            // 
+            // textQVal
+            // 
+            resources.ApplyResources(this.textQVal, "textQVal");
+            this.textQVal.Name = "textQVal";
+            // 
+            // tabGroupComparisons
+            // 
+            this.tabGroupComparisons.Controls.Add(this.comboMSGroupComparisons);
+            this.tabGroupComparisons.Controls.Add(this.labelFoldChangeUnit);
+            this.tabGroupComparisons.Controls.Add(this.labelPValueUnit);
+            this.tabGroupComparisons.Controls.Add(this.checkBoxLog);
+            this.tabGroupComparisons.Controls.Add(this.textFoldChange);
+            this.tabGroupComparisons.Controls.Add(this.textPValue);
+            this.tabGroupComparisons.Controls.Add(this.labelFoldChange);
+            this.tabGroupComparisons.Controls.Add(this.labelPValue);
+            this.tabGroupComparisons.Controls.Add(this.labelMSLevel);
+            this.tabGroupComparisons.Controls.Add(this.labelGroupComparison);
+            this.tabGroupComparisons.Controls.Add(this.btnEditGroupComparisons);
+            this.tabGroupComparisons.Controls.Add(this.checkedListBoxGroupComparisons);
+            resources.ApplyResources(this.tabGroupComparisons, "tabGroupComparisons");
+            this.tabGroupComparisons.Name = "tabGroupComparisons";
+            this.tabGroupComparisons.UseVisualStyleBackColor = true;
+            // 
+            // comboMSGroupComparisons
+            // 
+            this.comboMSGroupComparisons.FormattingEnabled = true;
+            resources.ApplyResources(this.comboMSGroupComparisons, "comboMSGroupComparisons");
+            this.comboMSGroupComparisons.Name = "comboMSGroupComparisons";
+            // 
+            // labelFoldChangeUnit
+            // 
+            resources.ApplyResources(this.labelFoldChangeUnit, "labelFoldChangeUnit");
+            this.labelFoldChangeUnit.Name = "labelFoldChangeUnit";
+            // 
+            // labelPValueUnit
+            // 
+            resources.ApplyResources(this.labelPValueUnit, "labelPValueUnit");
+            this.labelPValueUnit.Name = "labelPValueUnit";
+            // 
+            // checkBoxLog
+            // 
+            resources.ApplyResources(this.checkBoxLog, "checkBoxLog");
+            this.checkBoxLog.Checked = true;
+            this.checkBoxLog.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxLog.Name = "checkBoxLog";
+            this.checkBoxLog.UseVisualStyleBackColor = true;
+            this.checkBoxLog.CheckedChanged += new System.EventHandler(this.checkBoxLog_CheckedChanged);
+            // 
+            // textFoldChange
+            // 
+            resources.ApplyResources(this.textFoldChange, "textFoldChange");
+            this.textFoldChange.Name = "textFoldChange";
+            // 
+            // textPValue
+            // 
+            resources.ApplyResources(this.textPValue, "textPValue");
+            this.textPValue.Name = "textPValue";
+            // 
+            // labelFoldChange
+            // 
+            resources.ApplyResources(this.labelFoldChange, "labelFoldChange");
+            this.labelFoldChange.Name = "labelFoldChange";
+            // 
+            // labelPValue
+            // 
+            resources.ApplyResources(this.labelPValue, "labelPValue");
+            this.labelPValue.Name = "labelPValue";
+            // 
+            // labelMSLevel
+            // 
+            resources.ApplyResources(this.labelMSLevel, "labelMSLevel");
+            this.labelMSLevel.Name = "labelMSLevel";
+            // 
+            // labelGroupComparison
+            // 
+            resources.ApplyResources(this.labelGroupComparison, "labelGroupComparison");
+            this.labelGroupComparison.Name = "labelGroupComparison";
+            // 
+            // btnEditGroupComparisons
+            // 
+            resources.ApplyResources(this.btnEditGroupComparisons, "btnEditGroupComparisons");
+            this.btnEditGroupComparisons.Name = "btnEditGroupComparisons";
+            this.btnEditGroupComparisons.UseVisualStyleBackColor = true;
+            this.btnEditGroupComparisons.Click += new System.EventHandler(this.btnEditGroupComparisons_Click);
+            // 
+            // checkedListBoxGroupComparisons
+            // 
+            this.checkedListBoxGroupComparisons.CheckOnClick = true;
+            this.checkedListBoxGroupComparisons.FormattingEnabled = true;
+            resources.ApplyResources(this.checkedListBoxGroupComparisons, "checkedListBoxGroupComparisons");
+            this.checkedListBoxGroupComparisons.Name = "checkedListBoxGroupComparisons";
             // 
             // RefineDlg
             // 
@@ -406,6 +640,14 @@
             this.groupLibCorr.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.tabConsistency.ResumeLayout(false);
+            this.groupPeakArea.ResumeLayout(false);
+            this.groupPeakArea.PerformLayout();
+            this.groupDetection.ResumeLayout(false);
+            this.groupDetection.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDetections)).EndInit();
+            this.tabGroupComparisons.ResumeLayout(false);
+            this.tabGroupComparisons.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -454,5 +696,35 @@
         private System.Windows.Forms.Label labelMinIdotProduct;
         private System.Windows.Forms.CheckBox cbRemovePeptidesMissingLibrary;
         private System.Windows.Forms.CheckBox cbMaxPrecursorOnly;
+        private System.Windows.Forms.TabPage tabConsistency;
+        private System.Windows.Forms.ComboBox comboNormalizeTo;
+        private System.Windows.Forms.GroupBox groupDetection;
+        private System.Windows.Forms.Label labelReplicates;
+        private System.Windows.Forms.Label labelDetections;
+        private System.Windows.Forms.Label labelQVal;
+        private System.Windows.Forms.TextBox textQVal;
+        private System.Windows.Forms.Label labelNormalize;
+        private System.Windows.Forms.Label labelCV;
+        private System.Windows.Forms.TextBox textCVCutoff;
+        private System.Windows.Forms.Label labelPercent;
+        private System.Windows.Forms.NumericUpDown numericUpDownDetections;
+        private System.Windows.Forms.GroupBox groupPeakArea;
+        private System.Windows.Forms.Label labelTransitions;
+        private System.Windows.Forms.ComboBox comboTransitions;
+        private System.Windows.Forms.Label labelTransType;
+        private System.Windows.Forms.ComboBox comboTransType;
+        private System.Windows.Forms.TabPage tabGroupComparisons;
+        private System.Windows.Forms.CheckedListBox checkedListBoxGroupComparisons;
+        private System.Windows.Forms.Button btnEditGroupComparisons;
+        private System.Windows.Forms.CheckBox checkBoxLog;
+        private System.Windows.Forms.TextBox textFoldChange;
+        private System.Windows.Forms.TextBox textPValue;
+        private System.Windows.Forms.Label labelFoldChange;
+        private System.Windows.Forms.Label labelPValue;
+        private System.Windows.Forms.Label labelMSLevel;
+        private System.Windows.Forms.Label labelGroupComparison;
+        private System.Windows.Forms.Label labelFoldChangeUnit;
+        private System.Windows.Forms.Label labelPValueUnit;
+        private System.Windows.Forms.ComboBox comboMSGroupComparisons;
     }
 }

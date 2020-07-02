@@ -158,9 +158,12 @@
       <DependentUpon>PauseAndContinueForm.cs</DependentUpon>
     </Compile>
     <Compile Include="PeakMatcherTestUtil.cs" />
+    <Compile Include="ProcessKiller.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResultsUtil.cs" />
     <Compile Include="AbstractUnitTest.cs" />
+    <Compile Include="Schemas\SchemaDocuments.cs" />
+    <Compile Include="ScreenshotManager.cs" />
     <Compile Include="StackTraceLogger.cs" />
     <Compile Include="TestDocumentContainer.cs" />
     <Compile Include="TestFilesDir.cs" />
@@ -187,6 +190,10 @@
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
       <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>
       <Name>ProteowizardWrapper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj">
+      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
+      <Name>ZedGraph</Name>
     </ProjectReference>
     <ProjectReference Include="..\Skyline.csproj">
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
@@ -379,6 +386,31 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Schemas\Skyline_19.1.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_20.1.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_20.11.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_20.12.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_20.13.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_Current.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>

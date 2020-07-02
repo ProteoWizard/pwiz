@@ -3,7 +3,7 @@ Summary   : 設定>ペプチド設定が変更されました
 All Info  :
 ペプチド設定が変更されました
 設定>ペプチド設定>バックグラウンドプロテオームは"None"から"Yeast"に変更されました
-設定>ペプチド設定>バックグラウンドプロテオーム>バックグラウンドプロテオーム用データベースのパスは"Yeast"です
+設定>ペプチド設定>バックグラウンドプロテオーム>バックグラウンドプロテオーム用データベースのパスは"Yeast.protdb"です
 設定>ペプチド設定－ライブラリ>ライブラリ："Yeast (Atlas)"が追加されました
 設定>ペプチド設定－ライブラリ>ライブラリ>"Yeast (Atlas)">パスは"Yeast_Atlas.blib"です
 
@@ -518,7 +518,7 @@ All Info  :
 ターゲット：YBL087Cが追加されました
 ターゲット>YBL087C>シークエンスは"MSGNGAQGTKFRISLGLPVGAIMNCADNSGARNLYIIAVKGSGSRLNRLPAASLGDMVMATVKKGKPELRKKVMPAIVVRQAKSWRRRDGVFLYFEDNAGVIANPKGEMKGSAITGPVGKECADLWPRVASNSGVVV"です
 ターゲット>YBL087C>名前は"YBL087C"です
-ターゲット>YBL087C>説明は"RPL23A SGDID:S000000183, Chr II from 60735-60694,60189-59818, reverse complement, Verified ORF, "Protein component of the large (60S) ribosomal subunit, identical to Rpl23Bp and has similarity to E. coli L14 and rat L23 ribosomal proteins""です
+ターゲット>YBL087C>表記は"RPL23A SGDID:S000000183, Chr II from 60735-60694,60189-59818, reverse complement, Verified ORF, "Protein component of the large (60S) ribosomal subunit, identical to Rpl23Bp and has similarity to E. coli L14 and rat L23 ribosomal proteins""です
 ターゲット>YBL087C：R.ISLGLPVGAIMNCADNSGAR.N [12, 31]（ランク2）が含まれています
 ターゲット>YBL087C：K.ECADLWPR.V [120, 127]（ランク1）が含まれています
 ターゲット>YBL087C：R.VASNSGVVV.- [128, 136]（ランク3）が含まれています
@@ -531,7 +531,7 @@ All Info  :
 ターゲット：YDR385Wが追加されました
 ターゲット>YDR385W>シークエンスは"MVAFTVDQMRSLMDKVTNVRNMSVIAHVDHGKSTLTDSLVQRAGIISAAKAGEARFTDTRKDEQERGITIKSTAISLYSEMSDEDVKEIKQKTDGNSFLINLIDSPGHVDFSSEVTAALRVTDGALVVVDTIEGVCVQTETVLRQALGERIKPVVVINKVDRALLELQVSKEDLYQTFARTVESVNVIVSTYADEVLGDVQVYPARGTVAFGSGLHGWAFTIRQFATRYAKKFGVDKAKMMDRLWGDSFFNPKTKKWTNKDTDAEGKPLERAFNMFILDPIFRLFTAIMNFKKDEIPVLLEKLEIVLKGDEKDLEGKALLKVVMRKFLPAADALLEMIVLHLPSPVTAQAYRAEQLYEGPADDANCIAIKNCDPKADLMLYVSKMVPTSDKGRFYAFGRVFAGTVKSGQKVRIQGPNYVPGKKDDLFIKAIQRVVLMMGRFVEPIDDCPAGNIIGLVGIDQFLLKTGTLTTSETAHNMKVMKFSVSPVVQVAVEVKNANDLPKLVEGLKRLSKSDPCVLTYMSESGEHIVAGTGELHLEICLQDLEHDHAGVPLKISPPVVAYRETVESESSQTALSKSPNKHNRIYLKAEPIDEEVSLAIENGIINPRDDFKARARIMADDYGWDVTDARKIWCFGPDGNGPNLVIDQTKAVQYLHEIKDSVVAAFQWATKEGPIFGEEMRSVRVNILDVTLHADAIHRGGGQIIPTMRRATYAGFLLADPKIQEPVFLVEIQCPEQAVGGIYSVLNKKRGQVVSEEQRPGTPLFTVKAYLPVNESFGFTGELRQATGGQAFPQMVFDHWSTLGSDPLDPTSKAGEIVLAARKRHGMKEEVPGWQEYYDKL"です
 ターゲット>YDR385W>名前は"YDR385W"です
-ターゲット>YDR385W>説明は"EFT2 SGDID:S000002793, Chr IV from 1243220-1245748, Verified ORF, "Elongation factor 2 (EF-2), also encoded by EFT1; catalyzes ribosomal translocation during protein synthesis; contains diphthamide, the unique posttranslationally modified histidine residue specifically ADP-ribosylated by diphtheria toxin""です
+ターゲット>YDR385W>表記は"EFT2 SGDID:S000002793, Chr IV from 1243220-1245748, Verified ORF, "Elongation factor 2 (EF-2), also encoded by EFT1; catalyzes ribosomal translocation during protein synthesis; contains diphthamide, the unique posttranslationally modified histidine residue specifically ADP-ribosylated by diphtheria toxin""です
 ターゲット>YDR385W：K.STAISLYSEMSDEDVK.E [71, 86]（ランク2）が含まれています
 ターゲット>YDR385W：R.AEQLYEGPADDANCIAIK.N [352, 369]（ランク1）が含まれています
 ターゲット>YDR385W：K.AYLPVNESFGFTGELR.Q [769, 784]（ランク3）が含まれています
@@ -567,13 +567,13 @@ Undo Redo : トランジションの設定が変更されました
 Summary   : 設定>トランジションの設定が変更されました
 All Info  :
 トランジションの設定が変更されました
-設定>トランジションの設定－予測>衝突エネルギーは"None"から"SCIEX"に変更されました
+設定>トランジションの設定－予測>衝突エネルギーは"なし"から"SCIEX"に変更されました
 設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "2", 傾き = "0.049", 切片 = "-1" }が含まれています
 設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "3", 傾き = "0.048", 切片 = "-2" }が含まれています
 設定>トランジションの設定－予測>衝突エネルギー>回帰パラメータ：{ 電荷 = "4", 傾き = "0.05", 切片 = "-2" }が含まれています
 設定>トランジションの設定－予測>衝突エネルギー>ステップサイズは"3"です
 設定>トランジションの設定－予測>衝突エネルギー>ステップ数は"3"です
-設定>トランジションの設定－予測>デクラスタリングポテンシャルは"None"から"SCIEX"に変更されました
+設定>トランジションの設定－予測>デクラスタリングポテンシャルは"なし"から"SCIEX"に変更されました
 設定>トランジションの設定－予測>デクラスタリングポテンシャル>切片は"80"です
 設定>トランジションの設定－予測>デクラスタリングポテンシャル>ステップサイズは"10"です
 設定>トランジションの設定－予測>デクラスタリングポテンシャル>ステップ数は"3"です

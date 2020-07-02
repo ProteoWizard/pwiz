@@ -45,7 +45,6 @@ DocumentChangeLogEntryDlg,TestAuditLogSaving
 DocumentGridForm,TestReportSummary
 DocumentSettingsDlg,TestAnnotations
 EditCEDlg,TestOptimization
-EditChorusAccountDlg,*
 EditCoVDlg,TestOptimization
 EditCustomMoleculeDlg,TestEditCustomMoleculeDlg
 EditCustomThemeDlg, TestEditCustomTheme
@@ -61,6 +60,7 @@ EditIsolationSchemeDlg,TestCalculateIsolationWindows
 EditIsotopeEnrichmentDlg,TestEditDialogs
 EditLabelTypeListDlg,TestExplicitMultiType
 EditLibraryDlg,TestRetentionTimeAlignment
+EditLinkedPeptideDlg,TestCrosslinking
 EditListDlg`2,TestEditStaticMod
 EditMeasuredIonDlg,TestEditDialogs
 EditNoteDlg,TestEditNote
@@ -77,7 +77,6 @@ EditStaticModDlg.IsotopeModView,TestEditStaticMod
 EditStaticModDlg.StructuralModView,TestEditStaticMod
 EmptyProteinsDlg,TestImportPeptideSearch
 ExportAnnotationsDlg,TestExportAnnotations
-ExportChorusRequestDlg,*
 ExportChromatogramDlg,TestExportChromatogram
 ExportLiveReportDlg,TestReportSummary
 ExportMethodDlg.IsolationListView,TestExportDiaList
@@ -155,8 +154,9 @@ PreviewReportDlg,TestReportSummaryWithOldReports
 PublishDocumentDlg,TestAccessServer
 PythonInstaller,TestPythonInstaller
 QuickFilterForm,TestLiveReportsFilter
-RecalibrateIrtDlg,IrtFunctionalTest
-RefineDlg,TestMethodEditTutorial
+RefineDlg.ConsistencyTab,TestMethodRefinementTutorial
+RefineDlg.DocumentTab,TestMethodEditTutorial
+RefineDlg.ResultsTab,TestMethodRefinementTutorial
 RefineListDlg,TestRefineListDlg
 RefineProteinListDlg,TestRefineProteinListDlg
 RegressionRTThresholdDlg,TestIrtTutorial

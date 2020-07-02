@@ -11,7 +11,7 @@ Undo Redo : 离子对设置 已更改
 Summary   : 设置 > 离子对设置 已更改
 All Info  :
 离子对设置 已更改
-设置 > 离子对设置 -- 预测 > 碰撞能量 从 "None" 更改到 "Waters Xevo"
+设置 > 离子对设置 -- 预测 > 碰撞能量 从 "无" 更改到 "Waters Xevo"
 设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "2", 斜率 = "0.037", 截距 = "-1.066" }
 设置 > 离子对设置 -- 预测 > 碰撞能量 > 回归参数 : 包含 { 电荷 = "3", 斜率 = "0.036", 截距 = "-1.328" }
 设置 > 离子对设置 -- 预测 > 最优化方法 从 "无" 更改到 "离子对"
@@ -145,209 +145,108 @@ All Info  :
 已将“DoubleBlank1”中的 DrugX > Drug > 283.0400+ 所有峰的开始时间从 2.85 更改到 2.94
 已将“DoubleBlank1”中的 DrugX > Drug > 283.0400+ 所有峰的结束时间从 2.86 更改到 2.94
 
-Undo Redo : 肽段设置 -- 定量 已更改
-Summary   : 设置 > 肽段设置 -- 定量 已更改
+Undo Redo : 分子设置 -- 定量 已更改
+Summary   : 设置 > 分子设置 -- 定量 已更改
 All Info  :
-肽段设置 -- 定量 已更改
-设置 > 肽段设置 -- 定量 > 回归加权 从 "无" 更改到 "1 / (x * x)"
-设置 > 肽段设置 -- 定量 > 回归拟合 从 "无" 更改到 "线性"
-设置 > 肽段设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于重的比率"
-设置 > 肽段设置 -- 定量 > 单位 从 缺失 更改到 "uM"
+分子设置 -- 定量 已更改
+设置 > 分子设置 -- 定量 > 回归加权 从 "无" 更改到 "1 / (x * x)"
+设置 > 分子设置 -- 定量 > 回归拟合 从 "无" 更改到 "线性"
+设置 > 分子设置 -- 定量 > 归一化方法 从 "无" 更改到 "相对于重的比率"
+设置 > 分子设置 -- 定量 > 单位 从 缺失 更改到 "uM"
 
-Undo Redo : 已将 23 值粘贴到文档网格
-Summary   : 已将 23 值粘贴到文档网格
+Undo Redo : 已将 52 值粘贴到文档网格
+Summary   : 已将 52 值粘贴到文档网格
 All Info  :
-已将 23 值粘贴到文档网格
+已将 52 值粘贴到文档网格
 文档网格 > 查看名称 是 "重复测定"
+将 Blank_01 的 样品类型 设定为 "空白"
+将 Blank_02 的 样品类型 设定为 "空白"
+将 Blank_03 的 样品类型 设定为 "空白"
+将 Cal_1_01 的 样品类型 设定为 "标准"
 将 Cal_1_01 的 分析物浓度 设定为 "10"
+将 Cal_1_02 的 样品类型 设定为 "标准"
 将 Cal_1_02 的 分析物浓度 设定为 "10"
+将 Cal_2_01 的 样品类型 设定为 "标准"
 将 Cal_2_01 的 分析物浓度 设定为 "20"
+将 Cal_2_02 的 样品类型 设定为 "标准"
 将 Cal_2_02 的 分析物浓度 设定为 "20"
+将 Cal_3_01 的 样品类型 设定为 "标准"
 将 Cal_3_01 的 分析物浓度 设定为 "100"
+将 Cal_3_02 的 样品类型 设定为 "标准"
 将 Cal_3_02 的 分析物浓度 设定为 "100"
+将 Cal_4_01 的 样品类型 设定为 "标准"
 将 Cal_4_01 的 分析物浓度 设定为 "200"
+将 Cal_4_02 的 样品类型 设定为 "标准"
 将 Cal_4_02 的 分析物浓度 设定为 "200"
+将 Cal_5_01 的 样品类型 设定为 "标准"
 将 Cal_5_01 的 分析物浓度 设定为 "400"
+将 Cal_5_02 的 样品类型 设定为 "标准"
 将 Cal_5_02 的 分析物浓度 设定为 "400"
+将 Cal_6_01 的 样品类型 设定为 "标准"
 将 Cal_6_01 的 分析物浓度 设定为 "600"
+将 Cal_6_02 的 样品类型 设定为 "标准"
 将 Cal_6_02 的 分析物浓度 设定为 "600"
+将 Cal_7_01 的 样品类型 设定为 "标准"
 将 Cal_7_01 的 分析物浓度 设定为 "800"
+将 Cal_7_02 的 样品类型 设定为 "标准"
 将 Cal_7_02 的 分析物浓度 设定为 "800"
+将 DoubleBlank1 的 样品类型 设定为 "双空白"
+将 DoubleBlank2 的 样品类型 设定为 "双空白"
+将 DoubleBlank3 的 样品类型 设定为 "双空白"
+将 QC_High_01 的 样品类型 设定为 "质量控制"
 将 QC_High_01 的 分析物浓度 设定为 "589"
+将 QC_High_02 的 样品类型 设定为 "质量控制"
 将 QC_High_02 的 分析物浓度 设定为 "589"
+将 QC_High_03 的 样品类型 设定为 "质量控制"
 将 QC_High_03 的 分析物浓度 设定为 "589"
+将 QC_Low_01 的 样品类型 设定为 "质量控制"
 将 QC_Low_01 的 分析物浓度 设定为 "121"
+将 QC_Low_02 的 样品类型 设定为 "质量控制"
 将 QC_Low_02 的 分析物浓度 设定为 "121"
+将 QC_Low_03 的 样品类型 设定为 "质量控制"
 将 QC_Low_03 的 分析物浓度 设定为 "121"
+将 QC_Mid_01 的 样品类型 设定为 "质量控制"
 将 QC_Mid_01 的 分析物浓度 设定为 "346"
+将 QC_Mid_02 的 样品类型 设定为 "质量控制"
 将 QC_Mid_02 的 分析物浓度 设定为 "346"
+将 QC_Mid_03 的 样品类型 设定为 "质量控制"
 将 QC_Mid_03 的 分析物浓度 设定为 "346"
-Extra Info: Blank_01	Blank	
-Blank_02	Blank	
-Blank_03	Blank	
-Cal_1_01	Standard	10
-Cal_1_02	Standard	10
-Cal_2_01	Standard	20
-Cal_2_02	Standard	20
-Cal_3_01	Standard	100
-Cal_3_02	Standard	100
-Cal_4_01	Standard	200
-Cal_4_02	Standard	200
-Cal_5_01	Standard	400
-Cal_5_02	Standard	400
-Cal_6_01	Standard	600
-Cal_6_02	Standard	600
-Cal_7_01	Standard	800
-Cal_7_02	Standard	800
-DoubleBlank1	Double Blank	
-DoubleBlank2	Double Blank	
-DoubleBlank3	Double Blank	
-QC_High_01	Quality Control	589
-QC_High_02	Quality Control	589
-QC_High_03	Quality Control	589
-QC_Low_01	Quality Control	121
-QC_Low_02	Quality Control	121
-QC_Low_03	Quality Control	121
-QC_Mid_01	Quality Control	346
-QC_Mid_02	Quality Control	346
-QC_Mid_03	Quality Control	346
-SPQC_01	Unknown	
-SPQC_02	Unknown	
-SPQC_03	Unknown	
+Extra Info: Blank_01	空白	
+Blank_02	空白	
+Blank_03	空白	
+Cal_1_01	标准	10
+Cal_1_02	标准	10
+Cal_2_01	标准	20
+Cal_2_02	标准	20
+Cal_3_01	标准	100
+Cal_3_02	标准	100
+Cal_4_01	标准	200
+Cal_4_02	标准	200
+Cal_5_01	标准	400
+Cal_5_02	标准	400
+Cal_6_01	标准	600
+Cal_6_02	标准	600
+Cal_7_01	标准	800
+Cal_7_02	标准	800
+DoubleBlank1	双空白	
+DoubleBlank2	双空白	
+DoubleBlank3	双空白	
+QC_High_01	质量控制	589
+QC_High_02	质量控制	589
+QC_High_03	质量控制	589
+QC_Low_01	质量控制	121
+QC_Low_02	质量控制	121
+QC_Low_03	质量控制	121
+QC_Mid_01	质量控制	346
+QC_Mid_02	质量控制	346
+QC_Mid_03	质量控制	346
+SPQC_01	未知	
+SPQC_02	未知	
+SPQC_03	未知	
 
 
 查看名称 = "重复测定"
 
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
 Undo Redo : 将 Drug 的 从校准中排除 设定为 真
 Summary   : 将 Drug 的 从校准中排除 设定为 真
 All Info  :
@@ -357,101 +256,6 @@ Undo Redo : 将 Drug 的 从校准中排除 设定为 真
 Summary   : 将 Drug 的 从校准中排除 设定为 真
 All Info  :
 将 Drug 的 从校准中排除 设定为 真
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
-
-Undo Redo : 将 Drug 的 从校准中排除 设定为 假
-Summary   : 将 Drug 的 从校准中排除 设定为 假
-All Info  :
-将 Drug 的 从校准中排除 设定为 假
 
 Undo Redo : 已从 66 文件导入结果
 Summary   : 已从 66 文件导入结果

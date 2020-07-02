@@ -21,7 +21,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -53,7 +55,9 @@ namespace pwiz.Skyline.Model
                 return false;
             // Skip sequences that can be created from the current settings.
             TransitionGroupDocNode nodeGroup;
-            while (CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out nodeGroup) != null)
+            // Check first if the sequence has any modifications, because creating doc nodes is expensive
+            while (!HasMods(_sequences.Current) ||
+                   CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out nodeGroup) != null)
             {
                 if (!_sequences.MoveNext())
                     return false;
@@ -63,22 +67,38 @@ namespace pwiz.Skyline.Model
 
         public override IEnumerable<AAModInfo> GetCurrentSequenceInfos()
         {
+            if (_sequences.Current != null)
+            {
+                CrosslinkLibraryKey crosslinkLibraryKey =
+                    CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(_sequences.Current, 0);
+                if (crosslinkLibraryKey != null)
+                {
+                    return crosslinkLibraryKey.PeptideLibraryKeys.SelectMany(peptideLibraryKey =>
+                        EnumerateAaModInfos(peptideLibraryKey.ModifiedSequence));
+                }
+            }
+
+            return EnumerateAaModInfos(_sequences.Current ?? string.Empty);
+        }
+
+        private IEnumerable<AAModInfo> EnumerateAaModInfos(string sequence)
+        {
             int prevIndexAA = -1;
             bool prevHeavy = false;
             int countModsPerAA = 0;
-            foreach (var info in EnumerateSequenceInfos(_sequences.Current ?? string.Empty, false))
+            foreach (var info in EnumerateSequenceInfos(sequence, false))
             {
                 int indexAA = info.IndexAA;
                 countModsPerAA = prevIndexAA != indexAA ? 1 : countModsPerAA + 1;
                 bool tooManyMods = countModsPerAA > 1 && prevHeavy == info.UserIndicatedHeavy;
                 prevIndexAA = indexAA;
                 prevHeavy = info.UserIndicatedHeavy;
-                if(!tooManyMods)
+                if (!tooManyMods)
                     yield return info;
                 else
                 {
                     var unmatchedSeq = GetSeqModUnmatchedStr(info.IndexAAInSeq);
-                    if(!UnmatchedSequences.Contains(unmatchedSeq))
+                    if (!UnmatchedSequences.Contains(unmatchedSeq))
                         UnmatchedSequences.Add(unmatchedSeq);
                 }
             }
@@ -348,7 +368,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public PeptideDocNode GetModifiedNode(string seq)
+        public override PeptideDocNode GetModifiedNode(string seq)
         {
             return GetModifiedNode(seq, null);
         }

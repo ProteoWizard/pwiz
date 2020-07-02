@@ -18,7 +18,9 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
@@ -38,6 +40,7 @@ namespace pwiz.SkylineTest
         public const string PATH_NIST_LIB_CACHE = @"C:\Libraries\NIST_yeast_v2.0_2008-07-11" + NistLibrary.EXT_CACHE;
         public const string PATH_HUNTER_LIB = @"C:\Libraries\yeast_cmp_20.hlf";
         public const string PATH_BIBLIOSPEC_LIB = @"C:\Libraries\yeast.lib";
+        public const string PATH_GMD_LIB = @"C:\Libraries\example_gmd.msp";
         // Cannot find a way to use anything but a file with SQLite
         // public const string _bibliospecLiteLibPath = @"C:\Libraries\yeast.blib";
 
@@ -55,7 +58,7 @@ namespace pwiz.SkylineTest
         public void NistLoadLibrary()
         {
             var streamManager = new MemoryStreamManager();
-            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST);
+            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE + LIB_TEXT_MONA);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
             var expectedFragmentAnnotations = new Dictionary<int, List<SpectrumPeakAnnotation>>
             {
@@ -87,12 +90,57 @@ namespace pwiz.SkylineTest
             CheckLibrary(lib2, 100);
             CheckLibrary(lib2, 46, KEYS_LIB_BICENE_NIST, expectedFragmentAnnotations);
 
-
             Assert.AreEqual(len, streamManager.BinaryFiles[PATH_NIST_LIB_CACHE].Length);
             Assert.IsTrue(lib1.IsSameLibrary(lib2));
             Assert.AreEqual(0, lib1.CompareRevisions(lib2));
+
+            // Check ability to infer adduct from mz and formula
+            var lib2Keys = lib2.Keys.ToArray();
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals("[M-H2O+H]", k.Adduct.AdductFormula)));
+
+            // Check ability to parse strangely decorated formula
+            Assert.AreEqual(2, lib2Keys.Count(k => Equals("[M+]", k.Adduct.AdductFormula)));
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals("C11H22NO4", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
+
+            // Check case insensitive regex use in  https://minedatabase.mcs.anl.gov/#/download
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals("C28H38O6", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
+
+            // Verify that we ignore zero intensity peaks on import
+            SpectrumHeaderInfo info;
+            var key = lib2Keys.First(k => Equals(Molecule.Parse("C27H42FeN9NaO12"), Molecule.Parse(k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
+            Assert.IsTrue(lib2.TryGetLibInfo(key, out info));
+            SpectrumPeaksInfo peaksInfo;
+            Assert.IsTrue(lib2.TryLoadSpectrum(key, out peaksInfo));
+            Assert.IsTrue(peaksInfo.Peaks.Length == 4); // Declared length is 6 but two are zero intensity
         }
 
+        [TestMethod]
+        public void GMDLoadLibrary()
+        {
+            var streamManager = new MemoryStreamManager();
+            streamManager.TextFiles.Add(PATH_GMD_LIB, TEXT_LIB_GMD);
+            var loader = new TestLibraryLoader {StreamManager = streamManager};
+
+            var librarySpec = new NistLibSpec("Example GMD", PATH_GMD_LIB);
+
+            Library lib = librarySpec.LoadLibrary(loader);
+
+            var key = new LibKey(SmallMoleculeLibraryAttributes.Create(
+                "M000880_A098001 - 101 - xxx_NA_0_FALSE_MDN35_ALK_Glycine, N, N - dimethyl - (1TMS)", "C7H17NO2Si",
+                "FFDGPVCHZBVARC-UHFFFAOYSA-N",
+                new Dictionary<string, string>()
+                {
+                    { MoleculeAccessionNumbers.TagCAS, "1118-68-9"},
+                    { MoleculeAccessionNumbers.TagKEGG, "C01026"},
+                    { MoleculeAccessionNumbers.TagInChI, "1S/C4H9NO2/c1-5(2)3-4(6)7/h3H2,1-2H3,(H,6,7)"}
+                }), Adduct.M_PLUS);
+
+            Assert.IsTrue(lib.TryLoadSpectrum(key, out var peaksInfo));
+            Assert.AreEqual(70.1, peaksInfo.MZs.FirstOrDefault(), 0.0001);
+            Assert.AreEqual(81.2, peaksInfo.Intensities.FirstOrDefault(), 0.0001);
+
+        }
+        
         [TestMethod]
         public void HunterLoadLibrary()
         {
@@ -258,7 +306,7 @@ namespace pwiz.SkylineTest
             TEXT_LIB_YEAST_NIST4;
 
         public const string TEXT_LIB_YEAST_NIST1 =
-            "Name: QQGPLEPTVGNSTAITEER/2\n" +
+            "NaMe: QQGPLEPTVGNSTAITEER/2\n" + // This particular strange capitalization not actually seen in the wild, but be ready
             "MW: 2028.012\n" +
             "Comment: Spec=Consensus Pep=Tryptic Fullname=K.QQGPLEPTVGNSTAITEER.R/2 Mods=0 Parent=1014.006 Inst=it Mz_diff=0.264 Mz_exact=1014.0062 Mz_av=1014.596 Protein=\"gi|6319311|ref|NP_009394.1| Fun14p [Saccharomyces cerevisiae]; gi|349745|gb|AAC04950.1| Fun14p [Saccharomyces cerevisiae]; gi|45269305|gb|AAS56033.1| YAL008W [Saccharomyces cerevisiae]; gi|629999|pir||S43447 FUN14 protein - yeast (Saccharomyces cerevisiae); gi|731265|sp|P18411|YAA8_YEAST Hypothetical 22.1 kDa protein in SPO7-ERP2 intergenic region\" Pseq=1 Organism=\"yeast\" Se=5^M1:sc=51.65/0,td=49.4/0,sr=24.94/0,sd=49.4/0,bs=24.94,bd=49.4^X6:ex=2.9e-011/8e-006,td=1.77e+011/1.324e+011,sd=0/0,hs=57.85/5.033,bs=4.9e-012,b2=5.9e-012,bd=1.61e+011^O5:ex=2.69e-006/1.486e-005,td=1.86e+007/1.956e+008,pr=2.89e-010/1.772e-009,bs=9.33e-008,b2=1.11e-007,bd=5.36e+008^S1:sc=3.16/0,pb=0.9994/0,dc=0.45/0,ps=454.9/0,pr=1/0,bs=0.9994,bd=0.45^P4:sc=27.4/3,dc=18.9/2.5,ps=3.43/0.275,bs=0 Sample=8/cbs00174_001_01_cam,1,1/cbs00174_001_02_cam,1,1/cbs00174_01_06_cam,1,1/cbs00174_01_07_cam,0,1/cbs00174_01_10_cam,1,1/cbs00175_02_05_cam,0,1/cbs00175_02_06_cam,1,1/yeast_comp12vs12standscx_cam,1,1 Nreps=6/9 Missing=0.0630/0.0510 Parent_med=1014.21/0.34 Max2med_orig=629.5/170.9 Dotfull=0.861/0.032 Dot_cons=0.936/0.042 Unassign_all=0.086 Unassigned=0.017 Dotbest=0.94 Flags=0,0,2 Naa=19 DUScorr=10/2/2.9 Dottheory=0.93 Pfin=6.1e+013 Probcorr=20 Tfratio=1.7e+010 Pfract=0.17 RetentionTime=4830.6\n" +
             "Num peaks: 178\n" +
@@ -834,6 +882,51 @@ namespace pwiz.SkylineTest
             new LibKey(SmallMoleculeLibraryAttributes.Create("N,N-Bis(2-hydroxyethyl)glycine", "C6H13NO4", "FSVCELGFZIQNCK-UHFFFAOYSA-N", MoleculeAccessionNumbers.TagCAS+":150-25-4" ), Adduct.M_PLUS_H),
         };
 
+        public const string TEXT_LIB_NO_ADDUCT =
+            "\n" +
+            "Name: C6:OH b\n" +
+            "PrecursorMz: 258.17001\n" + // No adduct declared, but this has to be [M-H2O+H] for the mz to make sense
+            "Precursor_type: \n" +
+            "Collision_energy: 30.0\n" +
+            "Ionization: ESI\n" +
+            "IonMode: positive\n" +
+            "RetentionTime: 1.52616\n" +
+            "InChiKey: \n" +
+            "Formula: C13 H25 N O5\n" +
+            "CASNo: \n" +
+            "Smiles: \n" +
+            "CompoundClass: OH\n" +
+            "Comment: \n" +
+            "Num peaks: 5\n" +
+            "55.0546 8078.07\n" +
+            "57.0339 7511.40\n" +
+            "60.0810 115745.10\n" +
+            "61.4383 3796.87\n" +
+            "64.3453 3654.89\n";
+
+        public const string TEXT_LIB_FORMULA_PLUS =
+            "\n" +
+            "Name: ACar 4:0\n" +
+            "Synon: [M]+\n" +
+            "Synon: $:00in-source\n" +
+            "DB#: LipidBlast000001\n" +
+            "InChIKey: QWYFHHGCZUCMBN-UHFFFAOYSA-O\n" +
+            "Precursor_type: [M]+\n" +
+            "Spectrum_type: MS2\n" +
+            "PrecursorMZ: 232.15433\n" +
+            "Instrument_type: in-silico QTOF\n" +
+            "Instrument: SCIEX 5600\n" +
+            "Ion_mode: P\n" +
+            "Collision_energy: 45 V\n" +
+            "Formula: [C11H22NO4]+\n" +
+            "MW: 232\n" +
+            "ExactMass: 232.1543346040907\n" +
+            // TODO(bspratt) - MoNA embeds a lot of information in Comments that we should pick out, like SMILES, InChIKey, retention time etc
+            "Comments: \"SMILES=CCCC(=O)OC(CC(O)=O)C[N+](C)(C)C\" \"compound class=ACar\" \"computed SMILES=O=C(O)CC(OC(=O)CCC)C[N+](C)(C)C\" \"computed InChI=InChI=1S/C11H21NO4/c1-5-6-11(15)16-9(7-10(13)14)8-12(2,3)4/h9H,5-8H2,1-4H3/p+1\" \"retention time=0.51\" \"collision energy spread=15 V\" \"author=Tobias Kind, Hiroshi Tsugawa\" \"computed mass accuracy=2.3431646471704717\" \"computed mass error=5.439758187435473E-4\" \"SPLASH=splash10-001r-7090000000-aa12589a2481560ea0d5\" \"submitter=Tobias Kind (University of California, Davis)\" \"MoNA Rating=3.6363636363636367\"\n" +
+            "Num Peaks: 2\n" +
+            "85.02841 80.080080\n" +
+            "232.1543 100.000000\n";
+
         public const string TEXT_LIB_BICINE_NIST =
             "\n" +
             "Name: N,N-Bis(2-hydroxyethyl)glycine\n" +
@@ -922,5 +1015,152 @@ namespace pwiz.SkylineTest
             "118.217 6.09 \"86/86\"\n" +
             "128.070 4.10 \"testfrag_next_to_last 83/86 \"\n" +
             "146.081 4.90 \"testfrag_last 85/86 note \"\n";
+
+        public const string TEXT_LIB_GMD =
+            "Name: M000000_A097001-101-xxx_NA_0_FALSE_MDN35_ALK_Unknown#bth-pae-001\n" +
+            "Synon: MST N: Unknown#bth-pae-001\n" +
+            "Synon: RI: 0\n" +
+            "Synon: RI MDN35 ALK: FALSE\n" +
+            "Synon: MST: A097001-101\n" +
+            "Synon: MST ISOTOPE: 101\n" +
+            "Synon: MST ID: A097001-101-xxx_\n" +
+            "Synon: MST SEL MASS: NA\n" +
+            "Synon: GMD LINK: http://gmd.mpimp-golm.mpg.de/Analytes/aea8340f-e606-48c2-8371-dcf3d7d18a77.aspx\n" +
+            "Synon: GMD VERS: 21.Nov.2011 21:54 hummel\n" +
+            "CAS#: NA\n" +
+            "Comment: consensus spectrum of 1 spectra per analyte, MPIMP ID and isotopomer, with majority threshold = 60%\n" +
+            "DB#: 16\n" +
+            "Num Peaks: 50\n" +
+            "70:10 76:35 77:1000 78:110 79:42 \n" +
+            "80:4 81:7 86:6 87:5 88:21 \n" +
+            "90:42 91:40 97:15 100:31 103:213 \n" +
+            "104:27 105:10 107:48 108:6 110:41 \n" +
+            "112:14 118:39 120:79 121:8 122:4 \n" +
+            "130:33 134:589 135:55 136:25 137:3 \n" +
+            "138:2 140:83 141:4 143:104 144:8 \n" +
+            "160:4 184:610 185:58 186:24 187:2 \n" +
+            "198:7 199:3 214:294 215:33 216:12 \n" +
+            "217:1 228:3 229:109 230:12 231:5 \n" +
+            "\n" +
+            "Name: M000880_A098001-101-xxx_NA_0_FALSE_MDN35_ALK_Glycine, N,N-dimethyl- (1TMS)\n" +
+            "Synon: MST N: Glycine, N,N-dimethyl- (1TMS)\n" +
+            "Synon: RI: 10,5\n" +
+            "Synon: RI MDN35 ALK: FALSE\n" +
+            "Synon: MST: A098001-101\n" +
+            "Synon: MST ISOTOPE: 101\n" +
+            "Synon: MST ID: A098001-101-xxx_\n" +
+            "Synon: MST SEL MASS: NA\n" +
+            "Synon: METB: M000880_NA_correct\n" +
+            "Synon: METB N: (dimethylamino)acetic acid\n" +
+            "Synon: METB N: (Dimethylamino)acetic acid\n" +
+            "Synon: METB N: 1,5-Dihydroxynaphthalene\n" +
+            "Synon: METB N: Dimethylglycine\n" +
+            "Synon: METB N: Glycine, N,N-dimethyl-\n" +
+            "Synon: METB N: N,N-dimethylglycine\n" +
+            "Synon: METB N: N,N-Dimethylglycine\n" +
+            "Synon: METB N: N,N-Dimethylglycine hydrochloride\n" +
+            "Synon: METB CAS: 1118-68-9\n" +
+            "Synon: METB KEGG: C01026\n" +
+            "Synon: METB InChI: InChI=1S/C4H9NO2/c1-5(2)3-4(6)7/h3H2,1-2H3,(H,6,7)\n" +
+            "Synon: METB InChIKey: FFDGPVCHZBVARC-UHFFFAOYSA-N\n" +
+            "Synon: GMD LINK: http://gmd.mpimp-golm.mpg.de/Analytes/f8adb36f-eeba-4d1d-a589-c6ebff81f8ea.aspx\n" +
+            "Synon: GMD VERS: 21.Nov.2011 21:54 hummel\n" +
+            "Formula: C7H17NO2Si\n" +
+            "MW: 175,301\n" +
+            "CAS#: NA\n" +
+            "Comment: consensus spectrum of 1 spectra per analyte, MPIMP ID and isotopomer, with majority threshold = 60%\n" +
+            "DB#: 17\n" +
+            "Num Peaks: 64\n" +
+            "70,1:81.2 71:109 72:255 76:122 77:264 \n" +
+            "78:50 79:93 80:87 81:3 82:2 \n" +
+            "83:2 84:155 85:25 86:96 87:10 \n" +
+            "88:56 89:34 90:3 91:2 92:4 \n" +
+            "93:12 95:0 96:0 98:0 99:3 \n" +
+            "100:34 101:110 102:182 103:291 104:30 \n" +
+            "105:3 107:4 108:0 110:0 113:0 \n" +
+            "114:37 115:14 116:129 117:179 118:15 \n" +
+            "120:0 126:1 127:3 128:4 129:2 \n" +
+            "130:254 131:18 132:148 133:7 134:8 \n" +
+            "144:9 145:0 146:31 158:0 160:1000 \n" +
+            "161:106 162:31 163:0 174:9 175:657 \n" +
+            "176:72 177:18 178:0 552:0 \n";
+
+        public const string TEXT_LIB_MINE = // As from https://minedatabase.mcs.anl.gov/#/download
+            "NAME: Withanone; PlaSMA ID-2558\n" +
+            "PRECURSORMZ: 471.27412\n" +
+            "PRECURSORTYPE: [M+H]+\n" +
+            "FORMULA: C28H38O6\n" +
+            "Ontology: Withanolides and derivatives\n" +
+            "INCHIKEY: FAZIYUIDUNHZRG-UHFFFAOYNA-N\n" +
+            "SMILES: CC(C1CC(C)=C(C)C(=O)O1)C1(O)CCC2C3C4OC4C4(O)CC=CC(=O)C4(C)C3CCC12C\n" +
+            "RETENTIONTIME: 6.82\n" +
+            "CCS: 220.9656493\n" +
+            "IONMODE: Positive\n" +
+            "COLLISIONENERGY: \n" +
+            "Comment: Annotation level-1; PlaSMA ID-2558; ID title-Withanone; Max plant tissue-Standard only\n" +
+            "NUM PEAKS: 11\n" +
+            "68.06053	24\n" +
+            "99.06053	0\n" +
+            "153.09654	20\n" +
+            "171.07501	20\n" +
+            "181.09505	21\n" +
+            "220.09355	22\n" +
+            "263.13885	18\n" +
+            "283.15988	31\n" +
+            "417.25351	27\n" +
+            "435.2543	24\n" +
+            "471.27539	57\n";
+
+        public const string LIB_TEXT_MONA =
+            "\n" +
+            "Name: 4-Trimethylammoniobutanoic acid\n" +
+            "Synon: $:00in-source\n" +
+            "DB#: FiehnHILIC000113\n" +
+            "InChIKey: JHPNVNIEXXLNTR-UHFFFAOYSA-O\n" +
+            "Precursor_type: [M]+\n" +
+            "Spectrum_type: MS2\n" +
+            "PrecursorMZ: 147.1204\n" +
+            "Instrument_type: LC-ESI-QFT\n" +
+            "Instrument: Thermo Q Exactive HF\n" +
+            "Ion_mode: P\n" +
+            "Collision_energy: HCD (NCE 20-30-40%)\n" +
+            "Formula: C7H16NO2+\n" +
+            "MW: 146\n" +
+            "ExactMass: 146.11755517209073\n" +
+            "Comments: \"computed SMILES=O=C(O)CCC[N+](C)(C)C\" \"computed InChI=InChI=1S/C7H15NO2/c1-8(2,3)6-4-5-7(9)10/h4-6H2,1-3H3/p+1\" \"isotope=M + 2\" \"scan number=1397\" \"retention time=7.66005\" \"author=Michael Sa and Megan Showalter\" \"column=Waters Acquity UPLC BEH Amide column (2.1 x 150mm: 1.7µm)\" \"computed mass accuracy=6820.219410895567\" \"computed mass error=1.00339340781872\" \"SPLASH=splash10-000j-9300000000-1f92b994aa228da7795a\" \"submitter=Megan Showalter (University of California, Davis)\" \"MoNA Rating=4.615384615384616\"\n" +
+            "Num Peaks: 11\n" +
+            "50.0114 0.517519\n" +
+            "60.08153 44.408092\n" +
+            "61.07857 3.670960\n" +
+            "61.08484 31.849958\n" +
+            "61.08778 1.362497\n" +
+            "87.04461 71.895759\n" +
+            "87.4569 0.561183\n" +
+            "88.04792 81.575568\n" +
+            "95.58894 0.640074\n" +
+            "147.09235 3.829274\n" +
+            "147.12108 100.000000\n" +
+            "\n" +
+            "Name: Ferrichrome\n" +
+            "Synon: $:00in-source\n" +
+            "DB#: CCMSLIB00000078897\n" +
+            "InChIKey: QNVPQTXXHKIFLL-UHFFFAOYSA-N\n" +
+            "Precursor_type: [M+Na]+\n" +
+            "Spectrum_type: MS2\n" +
+            "PrecursorMZ: 763.0\n" +
+            "Instrument: Hybrid FT\n" +
+            "Ion_mode: P\n" +
+            "Formula: [C27H42FeN9NaO12]+\n" +
+            "MW: 763\n" +
+            "ExactMass: 763.2194509840907\n" +
+            "Comments: \"cas number=15630-64-5\" \"pubmed id=27424\" \"SMILES=CC(=O)N(CCCC1C(=O)NC(C(=O)NC(C(=O)NCC(=O)NCC(=O)NCC(=O)N1)CCCN(C(=O)C)[O-])CCCN(C(=O)C)[O-])[O-].[Fe+3][Na+]\" \"computed SMILES=CC(=O)N(CCCC1C(=O)NCC(=O)NCC(=O)NCC(=O)NC(CCCN(C(=O)C)[O-])C(=O)NC(CCCN(C(=O)C)[O-])C(=O)N1)[O-].[Fe+3][Na+]\" \"computed InChI=InChI=1S/C27H42N9O12.Fe.Na/c1-16(37)34(46)10-4-7-19-25(43)30-14-23(41)28-13-22(40)29-15-24(42)31-20(8-5-11-35(47)17(2)38)26(44)33-21(27(45)32-19)9-6-12-36(48)18(3)39;;/h19-21H,4-15H2,1-3H3,(H,28,41)(H,29,40)(H,30,43)(H,31,42)(H,32,45)(H,33,44);;/q-3;+3;+1\" \"ion source=DI-ESI\" \"compound source=Commercial\" \"exact mass=763.219\" \"charge state=1\" \"source file=f.smascuch/Standards/STANDARD_Ferrichrome_FT01_50K_MS2_mz763.mzXML;\" \"origin=GNPS-LIBRARY\" \"author=smascuch, Michael Meehan &amp; Sam Mascuch, Pieter Dorrestein &amp; Lena Gerwick\" \"computed mass accuracy=30417.65266591188\" \"computed mass error=-23.208668984090764\" \"SPLASH=splash10-0f7a-0116957601-00f3c1f5e5d4de207a7e\" \"submitter=GNPS Team (University of California, San Diego)\" \"MoNA Rating=2.727272727272727\"\n" +
+            "Num Peaks: 6\n" +
+            "210.000992 0.000000\n" +
+            "262.147949 100.000000\n" +
+            "262.148865 0.000000\n" +
+            "262.149750 200.000000\n" +
+            "262.150665 300.000000\n" +
+            "262.177665 400.000000\n" +
+            "\n";
     }
 }

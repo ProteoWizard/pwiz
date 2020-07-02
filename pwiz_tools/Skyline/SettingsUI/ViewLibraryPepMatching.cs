@@ -319,6 +319,20 @@ namespace pwiz.Skyline.SettingsUI
                             filter.ChangeSmallMoleculePrecursorAdducts(new[] { charge }))
                             .ChangeAutoSelect(true))
                     .ChangeMeasuredResults(null);
+                var staticMods = settings.PeptideSettings.Modifications.StaticModifications.ToList();
+                foreach (var crosslinkMod in Properties.Settings.Default.StaticModList.Where(mod =>
+                    null != mod.CrosslinkerSettings))
+                {
+                    if (!staticMods.Any(mod => mod.Name == crosslinkMod.Name))
+                    {
+                        staticMods.Add(crosslinkMod);
+                    }
+                }
+
+                settings = settings.ChangePeptideSettings(
+                    settings.PeptideSettings.ChangeModifications(
+                        settings.PeptideSettings.Modifications.ChangeStaticModifications(staticMods)));
+
 
                 _chargeSettingsMap[charge] = settings;
             }
@@ -604,7 +618,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // Look for the protein in the document.
                     string name = protein.ProteinMetadata.Name;
-                    var peptideGroupDocNode = FindPeptideGroupDocNode(document, name);
+                    var peptideGroupDocNode = FindPeptideGroupDocNode(document, name, pepMatch.NodePep.Peptide.Sequence);
                     bool foundInDoc = peptideGroupDocNode != null;
                     bool foundInList = false;
                     if (!foundInDoc)
@@ -751,7 +765,7 @@ namespace pwiz.Skyline.SettingsUI
             var nodeName = hasSmallMolecules
                 ? Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules
                 : Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides;
-            var nodePepGroupNew = FindPeptideGroupDocNode(document, nodeName);
+            var nodePepGroupNew = FindPeptideGroupDocNode(document, nodeName, null);
             if(nodePepGroupNew != null)
             {
                 var newChildren = nodePepGroupNew.Children.ToList();
@@ -777,14 +791,29 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, String name)
+        /// <summary>
+        /// Returns the first PeptideGroupDocNode with a given name, and, optionally,
+        /// which also contains a particular peptide sequence.
+        /// </summary>
+        private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, string proteinName, string peptideSequence)
         {
             foreach (PeptideGroupDocNode peptideGroupDocNode in document.MoleculeGroups)
             {
-                if (peptideGroupDocNode.Name == name)
+                if (proteinName != peptideGroupDocNode.Name)
                 {
-                    return peptideGroupDocNode;
+                    continue;
                 }
+
+                if (peptideSequence != null)
+                {
+                    string proteinSequence = peptideGroupDocNode.Sequence;
+                    if (null == proteinSequence || proteinSequence.IndexOf(peptideSequence, StringComparison.Ordinal) < 0)
+                    {
+                        continue;
+                    }
+                }
+
+                return peptideGroupDocNode;
             }
             return null;
         }
