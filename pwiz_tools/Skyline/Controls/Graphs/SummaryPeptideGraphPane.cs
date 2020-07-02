@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
         {
-            if (0 <= barIndex || barIndex < _graphData.XScalePaths.Length)
+            if (0 <= barIndex && barIndex < _graphData.XScalePaths.Length)
                 return _graphData.XScalePaths[barIndex];
             return null;
         }
