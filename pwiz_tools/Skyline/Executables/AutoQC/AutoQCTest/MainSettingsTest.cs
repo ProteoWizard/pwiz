@@ -34,25 +34,6 @@ namespace AutoQCTest
             const string skyPath = "C:\\dummy\\path\\Test.sky";
             mainSettings.SkylineFilePath = skyPath;
             TestValidateMainSettings(mainSettings, string.Format("Skyline file {0} does not exist.", skyPath));
-
-
-//            mainSettingsTab = new MainSettingsTab(mainControl, logger);
-//            logger.Clear();
-//            Assert.IsFalse(mainSettingsTab.ValidateSettings());
-//            log = logger.GetLog();
-//            Assert.IsTrue(log.Contains(string.Format("Skyline file {0} does not exist.", skyPath)));
-//            Assert.IsTrue(log.Contains(string.Format("Folder {0} does not exist.", folderPath)));
-//            Assert.IsTrue(log.Contains(string.Format("Invalid value for \"Accumulation time window\": {0}.", accumWindow)));
-
-//            accumWindow = "-1";
-////            settings.ResultsWindowString = accumWindow;
-//            logger.Clear();
-//            mainSettingsTab = new MainSettingsTab(mainControl, logger);
-//            Assert.IsFalse(mainSettingsTab.ValidateSettings());
-//            log = logger.GetLog();
-//            Assert.IsTrue(
-//                log.Contains(string.Format("\"Accumulation time window\" cannot be less than {0} days.",
-//                    MainSettings.ACCUM_TIME_WINDOW)));
         }
 
         private void TestValidateMainSettings(MainSettings mainSettings, string expectedError)

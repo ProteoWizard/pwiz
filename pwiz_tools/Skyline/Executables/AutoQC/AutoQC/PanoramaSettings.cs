@@ -122,7 +122,7 @@ namespace AutoQC
         {
             if (!IsSelected() || (importContext.ImportExisting && !importContext.ImportingLast()))
             {
-                // Do not upload to Panorama if this we are importing existing documents and this is not the 
+                // Do not upload to Panorama if we are importing existing documents and this is not the 
                 // last file being imported.
                 return string.Empty;
             }
