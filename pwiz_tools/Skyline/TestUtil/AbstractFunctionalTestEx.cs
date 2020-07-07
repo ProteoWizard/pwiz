@@ -501,6 +501,7 @@ namespace pwiz.SkylineTestUtil
             RunUI(() =>
             {
                 graphChromatogram.TestMouseMove(x, y, paneKey);
+                Assert.IsTrue(graphChromatogram.IsOverHighlightPoint(x, y, paneKey));
                 graphChromatogram.TestMouseDown(x, y, paneKey);
             });
             WaitForGraphs();
