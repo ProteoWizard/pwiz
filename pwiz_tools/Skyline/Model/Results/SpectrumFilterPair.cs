@@ -176,6 +176,16 @@ namespace pwiz.Skyline.Model.Results
 
             var imRangeHelper = new IonMobilityRangeHelper(spectra, useIonMobilityHighEnergyOffset ? productFilters : null,
                 MinIonMobilityValue, MaxIonMobilityValue);
+            if (imRangeHelper.IndexFirst >= spectra.Length)
+            {
+                // No ion mobility match - record a zero intensity unless IM value is outside the
+                // machine's measured range, or if this is a polarity mismatch
+                if (!IsOutsideSpectraRangeIM(spectra, MinIonMobilityValue, MaxIonMobilityValue) && 
+                    spectra.Any(s => Equals(s.NegativeCharge, Q1.IsNegative)))
+                {
+                    spectrumCount++; // Our flag to process this as zero rather than null
+                }
+            }
 //            if (spectra.Length > 1)
 //                Console.Write(string.Empty);
             for (int specIndex = imRangeHelper.IndexFirst; specIndex < spectra.Length; specIndex++)
@@ -456,6 +466,18 @@ namespace pwiz.Skyline.Model.Results
         {
             return Ms1ProductFilters.Any(filter => 0 == filter.TargetMz.CompareTolerant(precursorMz, filter.FilterWidth));
         }
+
+        public bool IsOutsideSpectraRangeIM(MsDataSpectrum[] spectra, double? minIonMobilityValue, double? maxIonMobilityValue)
+        {
+            // For distinguishing zero IM values from not-measured IM values
+            return minIonMobilityValue.HasValue && maxIonMobilityValue.HasValue &&
+                   spectra.All(s =>
+                       (s.IonMobilityMeasurementRangeLow.HasValue &&
+                        s.IonMobilityMeasurementRangeLow > maxIonMobilityValue) ||
+                       (s.IonMobilityMeasurementRangeHigh.HasValue &&
+                        s.IonMobilityMeasurementRangeHigh < minIonMobilityValue));
+        }
+
     }
 
     internal class IonMobilityRangeHelper
