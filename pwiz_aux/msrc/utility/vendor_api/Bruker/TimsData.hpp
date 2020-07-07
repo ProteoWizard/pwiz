@@ -159,6 +159,7 @@ public:
 
     virtual bool isIonMobilitySpectrum() const { return oneOverK0() > 0; }
     virtual double oneOverK0() const;
+    virtual std::pair<double, double> getIonMobilityRange() const; // Gets the measured IM range
 
     void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const;
     size_t getCombinedSpectrumDataSize() const;

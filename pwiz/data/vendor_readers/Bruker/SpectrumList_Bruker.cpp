@@ -353,6 +353,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         IntegerSet scanNumbers = spectrum->getMergedScanNumbers();
         if (config_.combineIonMobilitySpectra && format_ == Reader_Bruker_Format_TDF)
         {
+            // Note the measured range
+            auto imRange = spectrum->getIonMobilityRange();
+            result->userParams.emplace_back("ion mobility lower limit", lexical_cast<string>(imRange.first), "xsd:double", MS_Vs_cm_2);
+            result->userParams.emplace_back("ion mobility upper limit", lexical_cast<string>(imRange.second), "xsd:double", MS_Vs_cm_2);
+
             result->scanList.set(MS_sum_of_spectra);
             if (scanNumbers.size() < 100)
             {
