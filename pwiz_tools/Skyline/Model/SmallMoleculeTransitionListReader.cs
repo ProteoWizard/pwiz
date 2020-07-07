@@ -769,6 +769,7 @@ namespace pwiz.Skyline.Model
         private bool ValidateCharge(int? charge, bool getPrecursorColumns, out string errMessage)
         {
             var absCharge = Math.Abs(charge ?? 0);
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse (in case we ever set min charge > 1)
             if (getPrecursorColumns && absCharge != 0 && (absCharge < TransitionGroup.MIN_PRECURSOR_CHARGE ||
                                                           absCharge > TransitionGroup.MAX_PRECURSOR_CHARGE))
             {
@@ -778,6 +779,7 @@ namespace pwiz.Skyline.Model
                 return false;
             }
             else if (!getPrecursorColumns && absCharge != 0 &&
+                     // ReSharper disable once ConditionIsAlwaysTrueOrFalse (in case we ever set min charge > 1)
                      (absCharge < Transition.MIN_PRODUCT_CHARGE || absCharge > Transition.MAX_PRODUCT_CHARGE))
             {
                 errMessage = String.Format(

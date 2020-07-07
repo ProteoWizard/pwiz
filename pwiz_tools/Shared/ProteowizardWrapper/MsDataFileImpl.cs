@@ -1673,7 +1673,7 @@ namespace pwiz.ProteowizardWrapper
         {
             unchecked
             {
-                int result = (Model != null ? Model.GetHashCode() : 0);
+                int result = Model != null ? Model.GetHashCode() : 0; // N.B. generated code starts with result = 0, which causes an inspection warning
                 result = (result * 397) ^ (Ionization != null ? Ionization.GetHashCode() : 0);
                 result = (result * 397) ^ (Analyzer != null ? Analyzer.GetHashCode() : 0);
                 result = (result * 397) ^ (Detector != null ? Detector.GetHashCode() : 0);

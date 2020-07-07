@@ -320,6 +320,7 @@ namespace AutoQCTest
         [TestMethod]
         public void TestMappedDrive()
         {
+            // TODO: Only works on Vagisha Sharma's computer!
             var dir = @"Y:\vsharma\AutoQCTests"; // \\skyline\data\tmp\vsharma
             var testDir = CreateDirectory(dir, "TestAutoQcFileSystemWatcher_MappedDrive");
 
@@ -334,6 +335,7 @@ namespace AutoQCTest
         [TestMethod]
         public void TestUncPaths()
         {
+            // TODO: Only works on Vagisha Sharma's computer!
             var dir = @"\\net-lab3\maccoss_shared\vsharma\AutoQCTests";
             var testDir = CreateDirectory(dir, "TestAutoQcFileSystemWatcher_UNC");
 

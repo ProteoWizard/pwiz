@@ -620,6 +620,7 @@ namespace pwiz.Skyline.Model
 
             protected override void InsertItem(int index, PeptideSchedule item)
             {
+                // ReSharper disable once PossibleNullReferenceException
                 TransitionCount += item.TransitionCount;
                 base.InsertItem(index, item);
             }
@@ -632,6 +633,7 @@ namespace pwiz.Skyline.Model
 
             protected override void SetItem(int index, PeptideSchedule item)
             {
+                // ReSharper disable once PossibleNullReferenceException
                 TransitionCount += item.TransitionCount - this[index].TransitionCount;
                 base.SetItem(index, item);
             }
