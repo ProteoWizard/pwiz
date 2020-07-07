@@ -488,7 +488,7 @@ void ExperimentImpl::initializeBPC() const
         
         initializedBPC_ = true;
     }
-    catch
+    catch (...)
     {
         try
         {
