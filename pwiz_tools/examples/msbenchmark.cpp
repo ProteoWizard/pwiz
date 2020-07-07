@@ -423,6 +423,16 @@ int main(int argc, char* argv[])
                 readerConfig.acceptZeroLengthSpectra = true;
                 --i;
             }
+            else if (argv[i] == string("--simAsSpectra"))
+            {
+                readerConfig.simAsSpectra = true;
+                --i;
+            }
+            else if (argv[i] == string("--srmAsSpectra"))
+            {
+                readerConfig.srmAsSpectra = true;
+                --i;
+            }
             else if (argv[i] == string("--loop"))
             {
                 loop = true;

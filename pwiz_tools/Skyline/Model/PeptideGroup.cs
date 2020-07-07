@@ -25,6 +25,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.Collections;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -153,6 +154,11 @@ namespace pwiz.Skyline.Model
                     return false;
             }
             return true;
+        }
+
+        public static bool IsValidPeptideSequence(string seq)
+        {
+            return IsExSequence(seq) || null != CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(seq, 0);
         }
 
         private readonly string _name;

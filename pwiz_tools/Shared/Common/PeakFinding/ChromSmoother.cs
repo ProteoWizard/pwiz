@@ -97,7 +97,7 @@ namespace pwiz.Common.PeakFinding
                         newWeights[hw - i] = tmp;
                     }
                 }
-                else if (derivative > 3)
+                else // if (derivative > 3) N.B. this causes an inspection warning
                 {
                     throw new Exception(@"gaussian derivative of greater than 3rd order not supported");
                 }

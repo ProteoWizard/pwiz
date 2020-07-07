@@ -138,9 +138,9 @@ class RawFileImpl : public RawFile
     virtual const vector<DetectorType>& getDetectors() const;
 
     virtual std::string getSampleID() const;
-    virtual std::string getTrailerExtraValue(long scanNumber, const std::string& name) const;
-    virtual double getTrailerExtraValueDouble(long scanNumber, const std::string& name) const;
-    virtual long getTrailerExtraValueLong(long scanNumber, const std::string& name) const;
+    virtual std::string getTrailerExtraValue(long scanNumber, const std::string& name, string valueIfMissing = "") const;
+    virtual double getTrailerExtraValueDouble(long scanNumber, const std::string& name, double valueIfMissing = 0) const;
+    virtual long getTrailerExtraValueLong(long scanNumber, const std::string& name, long valueIfMissing = 0) const;
 
     virtual ChromatogramDataPtr
     getChromatogramData(ChromatogramType traceType,
@@ -250,9 +250,9 @@ class RawFileThreadImpl : public RawFile
     virtual const vector<DetectorType>& getDetectors() const;
 
     virtual std::string getSampleID() const;
-    virtual std::string getTrailerExtraValue(long scanNumber, const std::string& name) const;
-    virtual double getTrailerExtraValueDouble(long scanNumber, const std::string& name) const;
-    virtual long getTrailerExtraValueLong(long scanNumber, const std::string& name) const;
+    virtual std::string getTrailerExtraValue(long scanNumber, const std::string& name, std::string valueIfMissing = "") const;
+    virtual double getTrailerExtraValueDouble(long scanNumber, const std::string& name, double valueIfMissing = 0) const;
+    virtual long getTrailerExtraValueLong(long scanNumber, const std::string& name, long valueIfMissing = 0) const;
 
     virtual ChromatogramDataPtr
         getChromatogramData(ChromatogramType traceType,
@@ -717,7 +717,7 @@ std::string RawFileImpl::getSampleID() const
 }
 
 
-std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& name) const
+std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& name, string valueIfMissing) const
 {
 #ifndef _WIN64
     try
@@ -730,7 +730,7 @@ std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& nam
         }
         catch (invalid_argument&)
         {
-            return "";
+            return valueIfMissing;
         }
 
         switch (v.vt)
@@ -756,7 +756,7 @@ std::string RawFileImpl::getTrailerExtraValue(long scanNumber, const string& nam
 #endif
 }
 
-double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& name) const
+double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& name, double valueIfMissing) const
 {
 #ifndef _WIN64
     try
@@ -769,7 +769,7 @@ double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& na
         }
         catch (invalid_argument&)
         {
-            return 0.0;
+            return valueIfMissing;
         }
 
         switch (v.vt)
@@ -787,7 +787,7 @@ double RawFileImpl::getTrailerExtraValueDouble(long scanNumber, const string& na
 }
 
 
-long RawFileImpl::getTrailerExtraValueLong(long scanNumber, const string& name) const
+long RawFileImpl::getTrailerExtraValueLong(long scanNumber, const string& name, long valueIfMissing) const
 {
 #ifndef _WIN64
     try
@@ -800,7 +800,7 @@ long RawFileImpl::getTrailerExtraValueLong(long scanNumber, const string& name) 
         }
         catch (invalid_argument&)
         {
-            return 0;
+            return valueIfMissing;
         }
 
         switch (v.vt)
@@ -2546,7 +2546,7 @@ std::string RawFileThreadImpl::getSampleID() const
 }
 
 
-std::string RawFileThreadImpl::getTrailerExtraValue(long scanNumber, const string& name) const
+std::string RawFileThreadImpl::getTrailerExtraValue(long scanNumber, const string& name, string valueIfMissing) const
 {
     if (currentControllerType_ != Controller_MS)
         return "";
@@ -2563,36 +2563,36 @@ std::string RawFileThreadImpl::getTrailerExtraValue(long scanNumber, const strin
     CATCH_AND_FORWARD_EX(name)
 }
 
-double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const string& name) const
+double RawFileThreadImpl::getTrailerExtraValueDouble(long scanNumber, const string& name, double valueIfMissing) const
 {
     if (currentControllerType_ != Controller_MS)
-        return 0.0;
+        return valueIfMissing;
 
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
         if (findItr == rawFile_->trailerExtraIndexByName.end())
-            return 0.0;
+            return valueIfMissing;
         System::Object^ result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
-        return result == nullptr ? 0.0 : System::Convert::ToDouble(result);
+        return result == nullptr ? valueIfMissing : System::Convert::ToDouble(result);
     }
     CATCH_AND_FORWARD_EX(name)
 }
 
 
-long RawFileThreadImpl::getTrailerExtraValueLong(long scanNumber, const string& name) const
+long RawFileThreadImpl::getTrailerExtraValueLong(long scanNumber, const string& name, long valueIfMissing) const
 {
     if (currentControllerType_ != Controller_MS)
-        return 0;
+        return valueIfMissing;
 
     try
     {
         auto findItr = rawFile_->trailerExtraIndexByName.find(name);
         if (findItr == rawFile_->trailerExtraIndexByName.end())
-            return 0;
+            return valueIfMissing;
 
         System::Object^ result = raw_->GetTrailerExtraValue(scanNumber, findItr->second);
-        return result == nullptr ? 0 : System::Convert::ToInt32(result);
+        return result == nullptr ? valueIfMissing : System::Convert::ToInt32(result);
     }
     CATCH_AND_FORWARD_EX(name)
 }
