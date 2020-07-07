@@ -45,7 +45,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     public partial class BuildPeptideSearchLibraryControl : UserControl
     {
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
-        private MsDataFileUri[] _ddaSearchDataSources;
+        private MsDataFileUri[] _ddaSearchDataSources = new MsDataFileUri[0];
 
         public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager)
         {
@@ -656,18 +656,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void radioDDASearch_CheckedChanged(object sender, EventArgs e)
         {
-
             UpdatePerformDDASearch();
         }
 
-        private const string DDA_SEARCH_CAPTION_TEXT = "Files to search:";
-        private const string BUILD_LIBRARY_CAPTION_TEXT = "Result files:";
         public void UpdatePerformDDASearch()
         {
             panelChooseFile.Visible = !PerformDDASearch;
-            lblFileCaption.Text = PerformDDASearch ? DDA_SEARCH_CAPTION_TEXT : BUILD_LIBRARY_CAPTION_TEXT;
+            lblFileCaption.Text = PerformDDASearch
+                ? Resources.BuildPeptideSearchLibraryControl_Files_to_search_
+                : Resources.BuildPeptideSearchLibraryControl_Result_files_;
             peptideSearchSplitContainer.Visible = PerformDDASearch;
-            FireInputFilesChanged();
+
+            if (PerformDDASearch)
+                DdaSearchDataSources = DdaSearchDataSources;
+            else
+                SearchFilenames = SearchFilenames;
         }
 
         public bool PerformDDASearch

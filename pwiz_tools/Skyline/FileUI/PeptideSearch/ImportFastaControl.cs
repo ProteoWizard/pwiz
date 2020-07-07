@@ -229,7 +229,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             try
             {
                 var fileInfo = new FileInfo(fastaFilePath);
-                if (fileInfo.Length > MAX_FASTA_TEXTBOX_LENGTH)
+                if (IsDDASearch || fileInfo.Length > MAX_FASTA_TEXTBOX_LENGTH)
                 {
                     _fastaFile = true;
                     tbxFasta.Text = fastaFilePath;

@@ -618,9 +618,6 @@
   <data name="&gt;&gt;radioButtonNewLibrary.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="radioExistingLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
   <data name="radioExistingLibrary.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>

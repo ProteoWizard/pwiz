@@ -461,15 +461,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                 Location = oldImportResultsControl.Location
                             };
                             getChromatogramsPage.Controls.Remove(oldImportResultsControl);
-                            getChromatogramsPage.Controls.Add((Control)ImportResultsControl);
+                            getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
                         }
-                        ImportResultsControl.ResultsFilesChanged += ImportResultsControl_OnResultsFilesChanged;
+
+                        if (!BuildPepSearchLibControl.PerformDDASearch)
+                            ImportResultsControl.ResultsFilesChanged += ImportResultsControl_OnResultsFilesChanged;
 
                         // Set up full scan settings page
                         TransitionSettingsControl.Initialize(WorkflowType);
                         FullScanSettingsControl.ModifyOptionsForImportPeptideSearchWizard(WorkflowType, BuildPepSearchLibControl.ImportPeptideSearch.DocLib);
 
-                        if (!MatchModificationsControl.Initialize(Document)&& !BuildPepSearchLibControl.PerformDDASearch)
+                        bool hasMatchedMods = MatchModificationsControl.Initialize(Document);
+                        if (!hasMatchedMods && !BuildPepSearchLibControl.PerformDDASearch)
                             _pagesToSkip.Add(Pages.match_modifications_page);
                         if (BuildPepSearchLibControl.FilterForDocumentPeptides && !BuildPepSearchLibControl.PerformDDASearch)
                             _pagesToSkip.Add(Pages.import_fasta_page);

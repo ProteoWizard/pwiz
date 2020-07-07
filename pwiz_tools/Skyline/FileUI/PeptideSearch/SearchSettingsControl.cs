@@ -17,6 +17,27 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitializeComponent();
             ImportPeptideSearch = importPeptideSearch;
             _documentContainer = documentContainer;
+
+            txtMS1Tolerance.LostFocus += txtMS1Tolerance_LostFocus;
+            txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
+        }
+
+        private void txtMS1Tolerance_LostFocus(object sender, EventArgs e)
+        {
+            if (cbMS1TolUnit.SelectedItem != null)
+                return;
+
+            if (double.TryParse(txtMS1Tolerance.Text, out double tmp))
+                cbMS1TolUnit.SelectedIndex = tmp <= 3 ? 0 : 1;
+        }
+
+        private void txtMS2Tolerance_LostFocus(object sender, EventArgs e)
+        {
+            if (cbMS2TolUnit.SelectedItem != null)
+                return;
+
+            if (double.TryParse(txtMS2Tolerance.Text, out double tmp))
+                cbMS2TolUnit.SelectedIndex = tmp <= 3 ? 0 : 1;
         }
 
         public void InitializeEngine()
@@ -39,7 +60,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void LoadMassUnitEntries()
         {
-            string[] entries = new string[] {"Da", "ppm"};
+            string[] entries = {"Da", "ppm"};
             cbMS1TolUnit.Items.AddRange(entries);
             cbMS2TolUnit.Items.AddRange(entries);
         }
@@ -47,6 +68,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void LoadFragmentIonEntries(){
             
             cbFragmentIons.Items.AddRange(ImportPeptideSearch.SearchEngine.FragmentIons);
+            ComboHelper.AutoSizeDropDown(cbFragmentIons);
+            cbFragmentIons.SelectedIndex = 0;
         }
     
         private Form WizardForm
@@ -106,14 +129,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void SetPrecursorTolerance(MzTolerance tolerance)
         {
-            txtMS1Tolerance.Text = tolerance.Value.ToString();
+            txtMS1Tolerance.Text = tolerance.Value.ToString(LocalizationHelper.CurrentCulture);
             cbMS1TolUnit.SelectedIndex = (int) tolerance.Unit;
             ImportPeptideSearch.SearchEngine.SetPrecursorMassTolerance(tolerance);
         }
 
         public void SetFragmentTolerance(MzTolerance tolerance)
         {
-            txtMS2Tolerance.Text = tolerance.Value.ToString();
+            txtMS2Tolerance.Text = tolerance.Value.ToString(LocalizationHelper.CurrentCulture);
             cbMS2TolUnit.SelectedIndex = (int) tolerance.Unit;
             ImportPeptideSearch.SearchEngine.SetFragmentIonMassTolerance(tolerance);
         }

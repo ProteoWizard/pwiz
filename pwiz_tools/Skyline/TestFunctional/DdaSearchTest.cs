@@ -24,9 +24,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -99,17 +101,38 @@ namespace pwiz.SkylineTestFunctional
             });
             */
 
-            // We're on the "Match Modifications" page. Select C57 and M16
+            // We're on the "Match Modifications" page. Add M+16 mod.
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
-                importPeptideSearchDlg.MatchModificationsControl.ChangeAll(true);
+            });
+
+            // In PerformDDASearch mode, ClickAddStructuralModification launches edit list dialog
+            var editListUI =
+                ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
+            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+            {
+                editModDlg.SetModification("Oxidation (M)", true); // Not L10N
+                editModDlg.OkDialog();
+            });
+            OkDialog(editListUI, editListUI.OkDialog);
+
+            // Test back/next buttons
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+
+                // We're on the "Match Modifications" page again.
+                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, false); // uncheck C+57
+                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(1, true); // check M=16
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
             // We're on the MS1 full scan settings page.
             RunUI(() =>
             {
+
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
@@ -147,30 +170,19 @@ namespace pwiz.SkylineTestFunctional
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 Assert.AreEqual(1131, proteinCount);
-                Assert.AreEqual(52, peptideCount);
-                Assert.AreEqual(52, precursorCount);
-                Assert.AreEqual(156, transitionCount);
+                Assert.AreEqual(61, peptideCount);
+                Assert.AreEqual(61, precursorCount);
+                Assert.AreEqual(183, transitionCount);
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                Assert.AreEqual(49, proteinCount);
-                Assert.AreEqual(52, peptideCount);
-                Assert.AreEqual(52, precursorCount);
-                Assert.AreEqual(156, transitionCount);
+                Assert.AreEqual(57, proteinCount);
+                Assert.AreEqual(61, peptideCount);
+                Assert.AreEqual(61, precursorCount);
+                Assert.AreEqual(183, transitionCount);
                 emptyProteinsDlg.OkDialog();
             });
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
-        }
-
-
-        private void VerifyDocumentLibraryBuilt(string path)
-        {
-            // Verify document library was built
-            string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(GetTestPath(path));
-            string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
-            Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
-            var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
-            Assert.IsTrue(librarySettings.HasDocumentLibrary);
         }
 
         private void PrepareDocument(string documentFile)

@@ -15,7 +15,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
-    public class MsgfPlusSearchEngine : AbstractDdaSearchEngine
+    public class MsgfPlusSearchEngine : AbstractDdaSearchEngine, IProgressMonitor
     {
         /*
          *  -s SpectrumFile (*.mzML, *.mzXML, *.mgf, *.ms2, *.pkl or *_dta.txt)
@@ -86,32 +86,61 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private MzTolerance precursorMzTolerance;
         private Tuple<double, double> isotopeErrorRange;
-        private bool automaticDecoySearch;
         private int fragmentationMethod;
         private int instrumentType;
         private int enzyme;
         private int protocol;
-        private int ntt, minPeptideLength, maxPeptideLength, minCharge, maxCharge, maxMissedCleavages, maxVariableMods;
-        private double chargeCarrierMass;
-        private string modsFile = System.IO.Path.GetTempFileName();
-
+        private int ntt, maxMissedCleavages;
+        //private int minPeptideLength, maxPeptideLength, minCharge, maxCharge;
+        //private double chargeCarrierMass;
+        private int maxVariableMods = 2;
+        private string modsFile = Path.GetTempFileName();
 
         public override string[] FragmentIons => FRAGMENTATION_METHODS;
-
         public override string EngineName => @"MS-GF+";
-
         public override Bitmap SearchEngineLogo => null;
-
         public override event NotificationEventHandler SearchProgressChanged;
 
+        public MsgfPlusSearchEngine()
+        {
+        }
         public override bool Run(CancellationTokenSource cancelToken)
         {
-            var pr = new ProcessRunner();
-            //var psi = new ProcessStartInfo("")
-            //pr.Run();
+
+            IProgressStatus status = new ProgressStatus();
+            //UpdateProgress(status);
+            bool success = true;
+            foreach (var spectrumFilename in SpectrumFileNames)
+            {
+                try
+                {
+                    var pr = new ProcessRunner();
+                    var psi = new ProcessStartInfo(@"java",
+                        @"-Xmx8G -jar MSGFPlus.jar " +
+                        $@"-s {spectrumFilename} -d {FastaFileNames[0]} -tda 1" +
+                        $@"-t {precursorMzTolerance} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
+                        $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages}");
+
+                    pr.Run(psi, string.Empty, this, ref status);
+                }
+                catch (OperationCanceledException)
+                {
+                    //Resources.DdaSearch_Search_is_canceled
+                    success = false;
+                }
+                catch (Exception ex)
+                {
+                    //helper.WriteMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message), true);
+                    success = false;
+                }
+
+                if (cancelToken.IsCancellationRequested)
+                    success = false;
+            }
+
             var deleteHelper = new DeleteTempHelper(modsFile);
             deleteHelper.DeletePath();
-            return true;
+            return success;
         }
 
         public override void SaveModifications(IList<StaticMod> fixedAndVariableModifs)
@@ -166,9 +195,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
-        public override void SetEnzyme(Enzyme enzyme, int maxMissedCleavages)
+        public override void SetEnzyme(Enzyme enz, int mmc)
         {
-            this.maxMissedCleavages = maxMissedCleavages;
+            enzyme = ENZYMES.IndexOf(o => string.Equals(o, enz.Name, StringComparison.InvariantCultureIgnoreCase));
+            ntt = enz.IsSemiCleaving ? 1 : 2;
+            maxMissedCleavages = mmc;
         }
 
         public override void SetFragmentIonMassTolerance(MzTolerance mzTolerance)
@@ -185,5 +216,14 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             precursorMzTolerance = mzTolerance;
         }
+
+        public bool IsCanceled { get; private set; }
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+        {
+            SearchProgressChanged?.Invoke(this, new MessageEventArgs {Message = status.Message});
+            return UpdateProgressResponse.normal;
+        }
+
+        public bool HasUI => false;
     }
 }

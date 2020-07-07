@@ -2931,6 +2931,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Files to search:.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_Files_to_search_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_Files_to_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred attempting to import the {0} library..
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_ {
@@ -2946,6 +2955,15 @@ namespace pwiz.Skyline.Properties {
         public static string BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library {
             get {
                 return ResourceManager.GetString("BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Result files:.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_Result_files_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_Result_files_", resourceCulture);
             }
         }
         
@@ -14978,7 +14996,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct com [rest of string was truncated]&quot;;.
+        ///Recognized adduct components  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -16454,6 +16472,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (fixed).
+        /// </summary>
+        public static string ListBoxModification_ToString__fixed_ {
+            get {
+                return ResourceManager.GetString("ListBoxModification_ToString__fixed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (isotopic label).
+        /// </summary>
+        public static string ListBoxModification_ToString__isotopic_label_ {
+            get {
+                return ResourceManager.GetString("ListBoxModification_ToString__isotopic_label_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (variable).
+        /// </summary>
+        public static string ListBoxModification_ToString__variable_ {
+            get {
+                return ResourceManager.GetString("ListBoxModification_ToString__variable_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No such list {0}.
         /// </summary>
         public static string ListColumnPropertyDescriptor_ChangeListData_No_such_list__0_ {
@@ -17181,6 +17226,33 @@ namespace pwiz.Skyline.Properties {
         public static string MatchModificationsControl_AddModification_Add__0__modification__1_ {
             get {
                 return ResourceManager.GetString("MatchModificationsControl_AddModification_Add__0__modification__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Edit modifications.
+        /// </summary>
+        public static string MatchModificationsControl_Initialize__Edit_modifications {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_Initialize__Edit_modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit &amp;heavy modifications....
+        /// </summary>
+        public static string MatchModificationsControl_Initialize_Edit__heavy_modifications___ {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_Initialize_Edit__heavy_modifications___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit &amp;structural modifications....
+        /// </summary>
+        public static string MatchModificationsControl_Initialize_Edit__structural_modifications___ {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_Initialize_Edit__structural_modifications___", resourceCulture);
             }
         }
         
@@ -19480,7 +19552,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {

@@ -165,14 +165,13 @@ namespace pwiz.Skyline.Model.DdaSearch
             SearchEngine.InitializeOutputMZ(mzID);
         }
     
-        private bool success = true;
         public override bool Run(CancellationTokenSource tokenSource)
         {
+            bool success = true;
             try
             {
                 using (var c = new CurrentCultureSetter(CultureInfo.InvariantCulture))
                 {
-                    List<Spectrum> spectra = new List<Spectrum>();
                     foreach (var rawFileName in SpectrumFileNames)
                     {
                         tokenSource.Token.ThrowIfCancellationRequested();
