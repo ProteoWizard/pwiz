@@ -931,6 +931,19 @@ namespace pwiz.ProteowizardWrapper
                 var param = spectrum.scanList.scans[0].userParam(@"windowGroup"); // For Bruker diaPASEF
                 msDataSpectrum.WindowGroup = param.empty() ? 0 : int.Parse(param.value);
             }
+
+            if (expectIonMobilityValue)
+            {
+                // Note the range actually measured (for zero vs missing value determination)
+                var param = spectrum.userParam(@"ion mobility lower limit");
+                if (!param.empty())
+                {
+                    msDataSpectrum.IonMobilityMeasurementRangeLow = param.value;
+                    param = spectrum.userParam(@"ion mobility upper limit");
+                    msDataSpectrum.IonMobilityMeasurementRangeHigh = param.value;
+                }
+            }
+
             if (spectrum.binaryDataArrays.Count <= 1)
             {
                 msDataSpectrum.Mzs = new double[0];
@@ -1544,6 +1557,12 @@ namespace pwiz.ProteowizardWrapper
             get { return _ionMobility ?? IonMobilityValue.EMPTY; }
             set { _ionMobility = value; }
         }
+
+        /// <summary>
+        /// The range of ion mobilities that were scanned (for zero vs missing value determination)
+        /// </summary>
+        public double? IonMobilityMeasurementRangeLow { get; set; }
+        public double? IonMobilityMeasurementRangeHigh { get; set; }
 
         public ImmutableList<MsPrecursor> GetPrecursorsByMsLevel(int level)
         {
