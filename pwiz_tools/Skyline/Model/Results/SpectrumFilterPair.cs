@@ -532,8 +532,6 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public bool OutsideInstrumentRange { get; private set; }
-
         public int IndexFirst { get; private set; }
 
         public int DirectionMultiplier { get { return _isDescending ? -1 : 1; } }

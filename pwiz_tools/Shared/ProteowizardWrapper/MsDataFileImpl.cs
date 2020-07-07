@@ -942,8 +942,8 @@ namespace pwiz.ProteowizardWrapper
                     param = spectrum.userParam(@"ion mobility upper limit");
                     msDataSpectrum.IonMobilityMeasurementRangeHigh = param.value;
                 }
-
             }
+
             if (spectrum.binaryDataArrays.Count <= 1)
             {
                 msDataSpectrum.Mzs = new double[0];
@@ -1067,7 +1067,6 @@ namespace pwiz.ProteowizardWrapper
                         if (!maxIonMobility.HasValue)
                             return null; 
                     }
-
                     if (!maxIonMobility.HasValue)
                     {
                         maxIonMobility = ionMobility.Mobility;
@@ -1545,7 +1544,6 @@ namespace pwiz.ProteowizardWrapper
     public sealed class MsDataSpectrum
     {
         private IonMobilityValue _ionMobility;
-        private double? _ionMobilityMeasurementRangeLow, _ionMobilityMeasurementRangeHigh; // The range actually measured (for zero vs missing value determination)
         public string Id { get; set; }
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any
@@ -1563,16 +1561,8 @@ namespace pwiz.ProteowizardWrapper
         /// <summary>
         /// The range of ion mobilities that were scanned (for zero vs missing value determination)
         /// </summary>
-        public double? IonMobilityMeasurementRangeLow
-        {
-            get { return _ionMobilityMeasurementRangeLow; }
-            set { _ionMobilityMeasurementRangeLow = value; }
-        }
-        public double? IonMobilityMeasurementRangeHigh
-        {
-            get { return _ionMobilityMeasurementRangeHigh; }
-            set { _ionMobilityMeasurementRangeHigh = value; }
-        }
+        public double? IonMobilityMeasurementRangeLow { get; set; }
+        public double? IonMobilityMeasurementRangeHigh { get; set; }
 
         public ImmutableList<MsPrecursor> GetPrecursorsByMsLevel(int level)
         {
