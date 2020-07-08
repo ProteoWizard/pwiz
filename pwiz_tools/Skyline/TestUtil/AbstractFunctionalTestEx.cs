@@ -494,12 +494,17 @@ namespace pwiz.SkylineTestUtil
         {
             WaitForGraphs();
             var graphChromatogram = GetGraphChrom(graphName);
-            RunUI(() =>
+            // Wait as long as 2 seconds for mouse move to produce a highlight point
+            bool overHighlight = false;
+            for (int i = 0; i < 20; i++)
             {
-                graphChromatogram.TestMouseMove(x, y, paneKey);
-                Assert.IsTrue(graphChromatogram.IsOverHighlightPoint(x, y, paneKey));
-                graphChromatogram.TestMouseDown(x, y, paneKey);
-            });
+                RunUI(() => graphChromatogram.TestMouseMove(x, y, paneKey));
+                RunUI(() => overHighlight = graphChromatogram.IsOverHighlightPoint(x, y, paneKey));
+                if (overHighlight)
+                    break;
+                Thread.Sleep(100);
+            }
+            RunUI(() => graphChromatogram.TestMouseDown(x, y, paneKey));
             WaitForGraphs();
             CheckFullScanSelection(graphName, x, y, paneKey);
         }
