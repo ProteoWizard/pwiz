@@ -23,6 +23,7 @@ using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
@@ -150,11 +151,19 @@ namespace TestPerf
             {
                 for (var loop = 0; loop < 2; loop++)
                 {
+                    var ids = new SerializableDictionary<string, string>
+                    {
+                        {MoleculeAccessionNumbers.TagInChiKey, loop==0 ? inchikeySulfamethizole : string.Empty},
+                        {MoleculeAccessionNumbers.TagInChI, loop==0 ? inchiSulfamethizole.Replace("InChI=", string.Empty) : string.Empty},
+                        {MoleculeAccessionNumbers.TagKEGG, loop==0 ? keggSulfamethizole : string.Empty},
+                        {MoleculeAccessionNumbers.TagSMILES, loop==0 ? smilesSulfamethizole : string.Empty},
+                        {MoleculeAccessionNumbers.TagHMDB, null}, // No HMDB values at all
+                        {MoleculeAccessionNumbers.TagCAS, loop == 1 ? casSulfadimidine : string.Empty}
+                    };
                     var cells = driftPredictor.MeasuredDriftTimes.Rows[loop*2].Cells;
-                    var expectedDetails = loop == 0 ?
-                            new[] { "C9H10N4O2S2", inchikeySulfamethizole, string.Empty, inchiSulfamethizole.Replace("InChI=", string.Empty), smilesSulfamethizole, keggSulfamethizole } :
-                            new[] { "C12H14N4O2S", string.Empty, casSulfadimidine, string.Empty, string.Empty, string.Empty };
-                    for (var i = 0; i < expectedDetails.Length; i++)
+                    var expectedDetails = MoleculeAccessionNumbers.PREFERRED_DISPLAY_ORDER.Where(tag => ids[tag]!=null).Select(tag => ids[tag]).ToList();
+                    expectedDetails.Insert(0,   loop == 0 ? "C9H10N4O2S2" : "C12H14N4O2S");
+                    for (var i = 0; i < expectedDetails.Count; i++)
                     {
                         AssertEx.AreEqual(expectedDetails[i], cells[i+5].FormattedValue);
                     }

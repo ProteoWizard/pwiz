@@ -46,14 +46,26 @@ namespace pwiz.Skyline.Model
         public string PrimaryAccessionType { get { return AccessionNumbers == null ? null : AccessionNumbers.Keys.FirstOrDefault(); } } // Type of key, if any, in first order of PREFERRED_ACCESSION_TYPE_ORDER
         public string PrimaryAccessionValue { get { return AccessionNumbers == null ? null : AccessionNumbers.Values.FirstOrDefault(); } } // Value of key, if any, in first order of PREFERRED_ACCESSION_TYPE_ORDER
 
-        // Familiar molecule ID formats, and our order of preference as primary key
-        public static readonly string[] PREFERRED_ACCESSION_TYPE_ORDER = { TagInChiKey, TagCAS, TagHMDB, TagInChI, TagSMILES, TagKEGG };
+        // Familiar molecule ID formats
         public const string TagInChiKey = "InChiKey";
         public const string TagCAS = "CAS";
         public const string TagHMDB = "HMDB";
         public const string TagInChI = "InChI";
         public const string TagSMILES = "SMILES";
         public const string TagKEGG = "KEGG";
+
+        // Our order of preference as primary key
+        public static readonly string[] PRIORITY_ORDER = { TagInChiKey, TagCAS, TagHMDB, TagInChI, TagSMILES, TagKEGG };
+
+        // Default display order, roughly in order of likely display length, with some logical grouping like InChiKey then InChi
+        public static readonly string[] PREFERRED_DISPLAY_ORDER = { TagCAS, TagKEGG, TagHMDB, TagInChiKey, TagInChI, TagSMILES };
+        // e.g. Glycineamideribotide:
+        // CAS 10074-18-7
+        // KEGG C03838
+        // HMDB HMDB0002022
+        // InChIKey OBQMLSFOUZUIOB-SHUUEZRQSA-N
+        // InChI InChI = 1S/C7H15N2O8P/c8-1-4(10)9-7-6(12)5(11)3(17-7)2-16-18(13,14)15/h3,5-7,11-12H,1-2,8H2,(H,9,10)(H2,13,14,15)/t3-,5-,6-,7-/m1/s1
+        // SMILES NCC(=O)N[C@@H]1O[C@H] (COP(O) (O)=O)[C@@H] (O)[C@H]1O
 
         public static MoleculeAccessionNumbers FromString(string tsv)
         {
@@ -118,8 +130,8 @@ namespace pwiz.Skyline.Model
             public int Compare(string left, string right)
             {
                 // Treat "cas" and "CAS" as identical lookups
-                var orderleft = PREFERRED_ACCESSION_TYPE_ORDER.IndexOf(s => StringComparer.OrdinalIgnoreCase.Compare(left, s) == 0);
-                var orderright = PREFERRED_ACCESSION_TYPE_ORDER.IndexOf(s => StringComparer.OrdinalIgnoreCase.Compare(right, s) == 0);
+                var orderleft = PRIORITY_ORDER.IndexOf(s => StringComparer.OrdinalIgnoreCase.Compare(left, s) == 0);
+                var orderright = PRIORITY_ORDER.IndexOf(s => StringComparer.OrdinalIgnoreCase.Compare(right, s) == 0);
                 if (orderleft >= 0)
                 {
                     return orderright >= 0 ? orderleft - orderright : -1;
@@ -209,7 +221,7 @@ namespace pwiz.Skyline.Model
             var result = string.Empty;
             if (AccessionNumbers != null && AccessionNumbers.Any())
             {
-                foreach (var key in PREFERRED_ACCESSION_TYPE_ORDER)
+                foreach (var key in PRIORITY_ORDER)
                 {
                     string value;
                     if (AccessionNumbers.TryGetValue(key, out value) && !string.IsNullOrEmpty(value))

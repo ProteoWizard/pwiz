@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Controls
             {
                 // No targets to inspect, assume we want all the detail columns
                 var dummy = @"dummy";
-                var otherKeys = MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER.ToDictionary(tag => tag, tag => dummy);
+                var otherKeys = MoleculeAccessionNumbers.PREFERRED_DISPLAY_ORDER.ToDictionary(tag => tag, tag => dummy);
                 smallMoleculeLibraryAttributes.Add(SmallMoleculeLibraryAttributes.Create(dummy, @"CH", dummy, otherKeys));
             }
 
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Controls
                 dataGridViewColumn.ReadOnly = ReadOnly;
             }
             AccessionColumnIndexes = new Dictionary<string, int>();
-            foreach (var tag in MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER)
+            foreach (var tag in MoleculeAccessionNumbers.PREFERRED_DISPLAY_ORDER)
             {
                 if (!gridView.Columns.Contains(tag) && 
                     ((Equals(tag, MoleculeAccessionNumbers.TagInChiKey) && smallMoleculeLibraryAttributes.Any(a => !string.IsNullOrEmpty(a.InChiKey)))

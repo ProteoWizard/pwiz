@@ -314,17 +314,24 @@ namespace pwiz.SkylineTestFunctional
                     driftTimePredictorDlg3.PasteMeasuredDriftTimes();
                 });
 
-                // Try pasting molecule data
+                // Try pasting molecule data - arrange in MoleculeAccessionNumbers.PREFERRED_DISPLAY_ORDER as expected by the small molecules column manager
                 string DescribeAsSmallMolecule(string s)
                 {
                     // N.B.the formula is correct but other details are from an unrelated molecule
-                    var inchikeySulfamethizole = "VACCAVUAMIDAGB-UHFFFAOYSA-N";
-                    var inchiSulfamethizole = "InChI=1S/C9H10N4O2S2/c1-6-11-12-9(16-6)13-17(14,15)8-4-2-7(10)3-5-8/h2-5H,10H2,1H3,(H,12,13)";
-                    var keggSulfamethizole = "D00870";
-                    var smilesSulfamethizole = "O=S(=O)(Nc1nnc(s1)C)c2ccc(N)cc2";
-                    var casSulfadimidine = "57-68-1";
-                    return string.Join("\t", "pep_" + s.Replace("\t5\t", "\tM+5H\t"), "C35H54N8O20", inchikeySulfamethizole,
-                        casSulfadimidine, "", inchiSulfamethizole, smilesSulfamethizole, keggSulfamethizole);
+                    var ids = new Dictionary<string, string>
+                    {
+                        {MoleculeAccessionNumbers.TagInChiKey, "VACCAVUAMIDAGB-UHFFFAOYSA-N"},
+                        {MoleculeAccessionNumbers.TagInChI, "InChI=1S/C9H10N4O2S2/c1-6-11-12-9(16-6)13-17(14,15)8-4-2-7(10)3-5-8/h2-5H,10H2,1H3,(H,12,13)"},
+                        {MoleculeAccessionNumbers.TagKEGG, "D00870"},
+                        {MoleculeAccessionNumbers.TagSMILES, "O=S(=O)(Nc1nnc(s1)C)c2ccc(N)cc2"},
+                        {MoleculeAccessionNumbers.TagHMDB, "0015522"},
+                        {MoleculeAccessionNumbers.TagCAS, "57-68-1"}
+                    };
+                    AssertEx.AreEqual(MoleculeAccessionNumbers.PREFERRED_DISPLAY_ORDER.Length, MoleculeAccessionNumbers.PRIORITY_ORDER.Length);
+                    AssertEx.AreEqual(MoleculeAccessionNumbers.PREFERRED_DISPLAY_ORDER.Length, ids.Count);
+
+                    return string.Join("\t", "pep_" + s.Replace("\t5\t", "\tM+5H\t"), "C35H54N8O20", 
+                        string.Join("\t", MoleculeAccessionNumbers.PREFERRED_DISPLAY_ORDER.Select(tag => ids[tag])));
                 }
 
                 var smallMolFiveCols = DescribeAsSmallMolecule(fiveCols);

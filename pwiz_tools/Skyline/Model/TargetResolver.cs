@@ -98,7 +98,6 @@ namespace pwiz.Skyline.Model
                     allTargets = allTargets.Concat(others);
                 }
             }
-
             return new TargetResolver(allTargets);
         }
 
