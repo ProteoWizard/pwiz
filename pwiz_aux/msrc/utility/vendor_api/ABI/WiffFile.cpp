@@ -485,10 +485,36 @@ void ExperimentImpl::initializeBPC() const
         basePeakMZs_.resize(cycleTimes_.size());
         for (size_t i = 0; i < cycleTimes_.size(); ++i)
             basePeakMZs_[i] = bpci->GetBasePeakMass(i);
-
+        
         initializedBPC_ = true;
     }
-    CATCH_AND_FORWARD
+    catch (...)
+    {
+        try
+        {
+            int numCycles = cycleTimes_.size() > 10 ? cycleTimes_.size() - 1 : cycleTimes_.size();
+                
+            BasePeakChromatogramSettings^ bpcs = gcnew BasePeakChromatogramSettings(0, nullptr, nullptr, 0, cycleTimes_[numCycles - 1]);
+            BasePeakChromatogram^ bpc = msExperiment->GetBasePeakChromatogram(bpcs);
+            BasePeakChromatogramInfo^ bpci = bpc->Info;
+
+            basePeakMZs_.resize(cycleTimes_.size());        
+            basePeakIntensities_.resize(cycleTimes_.size());
+            if (numCycles != cycleTimes_.size())
+            {
+                basePeakMZs_[cycleTimes_.size() - 1] = 0;
+                basePeakIntensities_[cycleTimes_.size() - 1] = 0;
+            }
+            for (size_t i = 0; i < numCycles; ++i)
+            {
+                basePeakMZs_[i] = bpci->GetBasePeakMass(i);
+                basePeakIntensities_[i] = bpc->GetYValue(i);
+            }
+
+            initializedBPC_ = true;
+        }
+        CATCH_AND_FORWARD
+    }
 }
 
 size_t ExperimentImpl::getSIMSize() const
