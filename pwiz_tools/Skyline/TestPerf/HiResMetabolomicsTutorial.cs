@@ -55,7 +55,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 //            IsPauseForCoverShot = true;
             CoverShotName = "HiResMetabolomics";
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics.pdf";
+            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-20_1.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
 
             TestFilesPersistent = new[] { ExtWatersRaw };
@@ -217,7 +217,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(Path.Combine(TestFilesDirs.First().PersistentFilesDir, GetDataFolder()));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<ImportResultsSamplesDlg>("Import Results Files form", 11);
+                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 11);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
                     OkDialog(importResultsDlg1,importResultsDlg1.OkDialog);
