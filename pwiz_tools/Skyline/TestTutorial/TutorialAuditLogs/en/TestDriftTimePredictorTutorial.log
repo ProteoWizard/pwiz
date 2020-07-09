@@ -75,7 +75,7 @@ Undo Redo : Transition Settings -- Full-Scan changed
 Summary   : Settings > Transition Settings -- Full-Scan changed
 All Info  :
 Transition Settings -- Full-Scan changed
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans withing time frame of predicted RT"
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans within time frame of predicted RT"
 Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "0" to "3"
 
 Undo Redo : Imported results from "Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d"
