@@ -1,6 +1,5 @@
 ﻿/*
- * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >,
- *                  MacCoss Lab, Department of Genome Sciences, UW
+ * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2020 University of Washington - Seattle, WA
  * 
@@ -23,6 +22,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -85,8 +85,12 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => new MsDataFilePath(o)).ToArray();
                 Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
+
+            // Remove prefix/suffix dialog pops up; accept default behavior
+            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            OkDialog(removeSuffix, () => removeSuffix.YesDialog());
+            WaitForDocumentLoaded();
 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the test results files are in the same directory as the 
@@ -132,7 +136,6 @@ namespace pwiz.SkylineTestFunctional
             // We're on the MS1 full scan settings page.
             RunUI(() =>
             {
-
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });

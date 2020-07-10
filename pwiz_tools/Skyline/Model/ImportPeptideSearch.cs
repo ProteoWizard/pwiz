@@ -392,10 +392,6 @@ namespace pwiz.Skyline.Model
             {
                 return document.Settings.ChangePeptideSettings(
                     document.Settings.PeptideSettings.ChangeModifications(modifications));
-
-                //todo add heavy modifications
-                //document.Settings.PeptideSettings.Modifications.ChangeModifications(IsotopeLabelType.heavy, modifications.HeavyModifications.)
-                //return document.Settings;
             }
         }
 

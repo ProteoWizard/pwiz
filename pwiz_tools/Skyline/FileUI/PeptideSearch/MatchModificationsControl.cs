@@ -141,48 +141,51 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public SrmSettings AddCheckedModifications(SrmDocument document)
         {
-            if (modificationsListBox.CheckedItems.Count == 0 && !ImportPeptideSearch.IsDDASearch)
+            // in the non-DDA case, AddCheckedModifications is only additive, so no checked items is a no-op
+            if (modificationsListBox.CheckedItems.Count == 0)
             {
                 if (!ImportPeptideSearch.IsDDASearch)
+                {
                     return document.Settings;
+                }
                 else
                 {
-                    //document.Settings.PeptideSettings.Modifications.StaticModifications.Clear();
-                    return document.Settings;
+                    // in DDA-case, return empty mod lists
+                    var emptyPeptideMods = document.Settings.PeptideSettings.Modifications
+                        .ChangeStaticModifications(new List<StaticMod>());
+                    emptyPeptideMods = emptyPeptideMods.ChangeModifications(IsotopeLabelType.heavy, new List<StaticMod>());
+                    return ImportPeptideSearch.AddModifications(document, emptyPeptideMods);
                 }
             }
 
-            // Find checked static mods
+            // Find checked mods
             List<StaticMod> structuralMods;
-            List<StaticMod> newHeavyMods; 
+            List<StaticMod> heavyMods; 
             if (ImportPeptideSearch.IsDDASearch)
             {
-                structuralMods = (from mod in Settings.Default.StaticModList
-                    from ListBoxModification checkedMod in modificationsListBox.CheckedItems
-                    where mod.Equivalent(checkedMod.Mod)
-                    select mod).ToList();
-                //TODO Check for amanda
-        
-                newHeavyMods = new List<StaticMod>();
+                var selectedMods = modificationsListBox.CheckedItems.Cast<ListBoxModification>().Select(o => o.Mod).ToList();
+                structuralMods = selectedMods.Where(o => o.LabelAtoms == LabelAtoms.None).ToList();
+                heavyMods = selectedMods.Where(o => o.LabelAtoms != LabelAtoms.None).ToList();
 
             }
             else
             {
-            structuralMods = (from mod in ImportPeptideSearch.MatcherPepMods.StaticModifications
-                from ListBoxModification checkedMod in modificationsListBox.CheckedItems
-                where mod.Equivalent(checkedMod.Mod)
-                select mod).ToList();
+                structuralMods = (from mod in ImportPeptideSearch.MatcherPepMods.StaticModifications
+                    from ListBoxModification checkedMod in modificationsListBox.CheckedItems
+                    where mod.Equivalent(checkedMod.Mod)
+                    select mod).ToList();
 
-            // Find checked heavy mods
-            newHeavyMods = (from mod in ImportPeptideSearch.MatcherHeavyMods
-                from ListBoxModification checkedMod in modificationsListBox.CheckedItems
-                where mod.Equivalent(checkedMod.Mod)
-                select mod).ToList();
-          }
+                // Find checked heavy mods
+                heavyMods = (from mod in ImportPeptideSearch.MatcherHeavyMods
+                    from ListBoxModification checkedMod in modificationsListBox.CheckedItems
+                    where mod.Equivalent(checkedMod.Mod)
+                    select mod).ToList();
+            }
 
             // Update document modifications
-            return ImportPeptideSearch.AddModifications(document,
-                new PeptideModifications(structuralMods, new[] {new TypedModifications(IsotopeLabelType.heavy, newHeavyMods)}));
+            var newPeptideMods = document.Settings.PeptideSettings.Modifications.ChangeStaticModifications(structuralMods);
+            newPeptideMods = newPeptideMods.ChangeModifications(IsotopeLabelType.heavy, heavyMods);
+            return ImportPeptideSearch.AddModifications(document, newPeptideMods);
         }
 
         private void FillLists(SrmDocument document)

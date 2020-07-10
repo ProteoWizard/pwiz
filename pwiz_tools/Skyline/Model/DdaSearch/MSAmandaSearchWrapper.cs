@@ -1,6 +1,23 @@
-﻿using System;
+﻿/*
+ * Original author: Viktoria Dorfer <viktoria.dorfer .at. fh-hagenberg.at>,
+ *                  Bioinformatics Research Group, University of Applied Sciences Upper Austria
+ *
+ * Copyright 2020 University of Applied Sciences Upper Austria
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -11,22 +28,20 @@ using MSAmanda.Core;
 using MSAmanda.Utils;
 using MSAmanda.InOutput;
 using MSAmanda.InOutput.Output;
+using MSAmandaSettings = MSAmanda.InOutput.Settings;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
-//using AmandaSettings = MSAmanda.InOutput.Settings;
 using OperationCanceledException = System.OperationCanceledException;
 using Thread = System.Threading.Thread;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
-    [Localizable(true)]
     public class MSAmandaSearchWrapper : AbstractDdaSearchEngine
     {
-        //public string[] FastaFiles { get; set; } = new string[0];
-        //public string[] SpectraFiles { get; set; } =  new string[0];
-        internal Settings Settings { get; private set; } = new Settings();
+        internal MSAmandaSettings Settings { get; private set; } = new MSAmandaSettings();
         private static MSHelper helper = new MSHelper();
         private SettingsFile AvailableSettings;
         private OutputMzid mzID;
@@ -70,13 +85,13 @@ namespace pwiz.Skyline.Model.DdaSearch
             using (var d = new CurrentDirectorySetter(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)))
             {
                 if (!AvailableSettings.ParseEnzymeFile(ENZYME_FILENAME, "", AvailableSettings.AllEnzymes))
-                    throw new Exception($"enzymes file '{ENZYME_FILENAME}' not found");
+                    throw new Exception(string.Format(Resources.DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found, ENZYME_FILENAME));
                 if (!AvailableSettings.ParseUnimodFile(UNIMOD_FILENAME, AvailableSettings.AllModifications))
-                    throw new Exception($"unimod file '{UNIMOD_FILENAME}' not found");
+                    throw new Exception(string.Format(Resources.DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found, UNIMOD_FILENAME));
                 if (!AvailableSettings.ParseOboFiles())
-                    throw new Exception("obo files (psi-ms.obo and unimod.obo) not found");
+                    throw new Exception(Resources.DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found);
                 if (!AvailableSettings.ReadInstrumentsFile(INSTRUMENTS_FILENAME))
-                    throw new Exception($"instruments file '{INSTRUMENTS_FILENAME}' not found");
+                    throw new Exception(string.Format(Resources.DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found, INSTRUMENTS_FILENAME));
             }
         }
 
@@ -95,10 +110,18 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
             else
             {
-                //todo construct new enzyme
+                MSAmandaEnzyme enz = new MSAmandaEnzyme() 
+                {
+                  Name = enzyme.Name,
+                  CleavageSites = enzyme.IsNTerm ? enzyme.CleavageN : enzyme.CleavageC,
+                  CleavageInhibitors = enzyme.IsNTerm ? enzyme.RestrictN : enzyme.RestrictC,
+                  Offset= enzyme.IsNTerm? 0 : 1,
+                  Specificity = enzyme.IsSemiCleaving ? MSAmandaEnzyme.CLEAVAGE_SPECIFICITY.SEMI : MSAmandaEnzyme.CLEAVAGE_SPECIFICITY.FULL
+                };
+                Settings.MyEnzyme = enz;
+                Settings.MissedCleavages = maxMissedCleavages;
             }
         }
-
 
         public override string[] FragmentIons
         {
@@ -128,8 +151,6 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
-        //private MSAmandaEngine amandaSearchEngine;
-
         private List<FastaDBFile> GetFastaFileList()
         {
             List<FastaDBFile> files = new List<FastaDBFile>();
@@ -140,10 +161,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                 file.NeatName = Path.GetFileNameWithoutExtension(f);
                 files.Add(new FastaDBFile() { fastaTarged = file});
             }
-
             return files;
         }
-
 
         private void InitializeEngine(CancellationTokenSource token, string spectrumFileName)
         {
@@ -175,14 +194,11 @@ namespace pwiz.Skyline.Model.DdaSearch
                     foreach (var rawFileName in SpectrumFileNames)
                     {
                         tokenSource.Token.ThrowIfCancellationRequested();
-
                         try
                         {
                             InitializeEngine(tokenSource, rawFileName.GetSampleLocator());
-
                             amandaInputParser = new MSAmandaSpectrumParser(rawFileName.GetSampleLocator(), Settings.ConsideredCharges, true);
                             SearchEngine.SetInputParser(amandaInputParser);
-
                             SearchEngine.PerformSearch(_outputParameters.DBFile);
                         }
                         finally
@@ -194,12 +210,12 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
             catch (OperationCanceledException)
             {
-                helper.WriteMessage("Canceling search", true);
+                helper.WriteMessage(Resources.DdaSearch_Search_is_canceled, true);
                 success = false;
             }
             catch (Exception ex)
             {
-                helper.WriteMessage($"Search failed: {ex.Message}", true);
+                helper.WriteMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message), true);
                 success = false;
             }
 
@@ -209,11 +225,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             return success;
         }
 
-        
-
-        
-
-        public override void SaveModifications(IList<StaticMod> modifications)
+        public override void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods)
         {
             Settings.SelectedModifications.Clear();
             foreach (var item in modifications)
@@ -228,26 +240,39 @@ namespace pwiz.Skyline.Model.DdaSearch
                         if (elem != null)
                         {
                             Modification modClone = new Modification(elem);
-                            modClone.Fixed = item.IsVariable;
+                            modClone.Fixed = !item.IsVariable;
                             Settings.SelectedModifications.Add(modClone);
                         }
                         else
                         {
-                            //Settings.SelectedModifications.Add(GenerateNewModification(item.Key, item.Value));
+                            Settings.SelectedModifications.Add(GenerateNewModification(item, aa));
                         }
                     }
                 }
                 else
                 {
-                    //Settings.SelectedModifications.Add(GenerateNewModification(item.Key, item.Value));
+                    Settings.SelectedModifications.AddRange(GenerateNewModificationsForEveryAA(item));
                 }
             }
         }
 
-        private Modification GenerateNewModification(StaticMod mod, bool isFixed)
+        private List<Modification> GenerateNewModificationsForEveryAA(StaticMod mod)
         {
-            //todo
-            return null;
+            List<Modification> mods = new List<Modification>();
+            foreach (var a in mod.AAs) {
+                mods.Add(GenerateNewModification(mod, a));
+       
+            }
+            return mods;
         }
-    }
+
+        private Modification GenerateNewModification(StaticMod mod, char a)
+        {
+            return new Modification(mod.ShortName, mod.Name, mod.MonoisotopicMass.HasValue ? mod.MonoisotopicMass.Value : 0.0,
+                mod.AverageMass.HasValue ? mod.AverageMass.Value : 0.0, a, !mod.IsVariable, mod.Losses.Select(l => l.MonoisotopicMass).ToArray(),
+                mod.Terminus.HasValue && mod.Terminus.Value == ModTerminus.N,
+                mod.Terminus.HasValue && mod.Terminus.Value == ModTerminus.C,
+                mod.UnimodId.HasValue ? mod.UnimodId.Value : 0, false);
+        }
+  }
 }

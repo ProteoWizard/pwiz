@@ -2,16 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Util;
 using System.IO;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -85,9 +82,9 @@ namespace pwiz.Skyline.Model.DdaSearch
         };
 
         private MzTolerance precursorMzTolerance;
-        private Tuple<double, double> isotopeErrorRange;
+        private Tuple<double, double> isotopeErrorRange = new Tuple<double, double>(0, 1);
         private int fragmentationMethod;
-        private int instrumentType;
+        private int instrumentType = 0;
         private int enzyme;
         private int protocol;
         private int ntt, maxMissedCleavages;
@@ -101,9 +98,6 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override Bitmap SearchEngineLogo => null;
         public override event NotificationEventHandler SearchProgressChanged;
 
-        public MsgfPlusSearchEngine()
-        {
-        }
         public override bool Run(CancellationTokenSource cancelToken)
         {
 
@@ -122,15 +116,17 @@ namespace pwiz.Skyline.Model.DdaSearch
                         $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages}");
 
                     pr.Run(psi, string.Empty, this, ref status);
+                    status = status.Complete().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done);
                 }
                 catch (OperationCanceledException)
                 {
-                    //Resources.DdaSearch_Search_is_canceled
+                    status = status.Cancel().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled);
                     success = false;
                 }
                 catch (Exception ex)
                 {
-                    //helper.WriteMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message), true);
+                    status = status.ChangeErrorException(ex).ChangeMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message));
+                    UpdateProgress(status);
                     success = false;
                 }
 
@@ -143,7 +139,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             return success;
         }
 
-        public override void SaveModifications(IList<StaticMod> fixedAndVariableModifs)
+        public override void SetModifications(IEnumerable<StaticMod> fixedAndVariableModifs, int maxVariableMods1)
         {
             /*  # Mass or CompositionStr, Residues, ModType, Position, Name (all the five fields are required).
                 # CompositionStr (C[Num]H[Num]N[Num]O[Num]S[Num]P[Num]Br[Num]Cl[Num]Fe[Num])
@@ -221,7 +217,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             SearchProgressChanged?.Invoke(this, new MessageEventArgs {Message = status.Message});
-            return UpdateProgressResponse.normal;
+            return status.IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
         }
 
         public bool HasUI => false;

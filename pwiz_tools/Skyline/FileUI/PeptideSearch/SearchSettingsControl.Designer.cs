@@ -44,6 +44,8 @@
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.lblMaxVariableMods = new System.Windows.Forms.Label();
+            this.cbMaxVariableMods = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).BeginInit();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -133,10 +135,35 @@
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
             // 
+            // lblMaxVariableMods
+            // 
+            resources.ApplyResources(this.lblMaxVariableMods, "lblMaxVariableMods");
+            this.lblMaxVariableMods.Name = "lblMaxVariableMods";
+            // 
+            // cbMaxVariableMods
+            // 
+            this.cbMaxVariableMods.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbMaxVariableMods.FormattingEnabled = true;
+            this.cbMaxVariableMods.Items.AddRange(new object[] {
+            resources.GetString("cbMaxVariableMods.Items"),
+            resources.GetString("cbMaxVariableMods.Items1"),
+            resources.GetString("cbMaxVariableMods.Items2"),
+            resources.GetString("cbMaxVariableMods.Items3"),
+            resources.GetString("cbMaxVariableMods.Items4"),
+            resources.GetString("cbMaxVariableMods.Items5"),
+            resources.GetString("cbMaxVariableMods.Items6"),
+            resources.GetString("cbMaxVariableMods.Items7"),
+            resources.GetString("cbMaxVariableMods.Items8"),
+            resources.GetString("cbMaxVariableMods.Items9")});
+            resources.ApplyResources(this.cbMaxVariableMods, "cbMaxVariableMods");
+            this.cbMaxVariableMods.Name = "cbMaxVariableMods";
+            // 
             // SearchSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.cbMaxVariableMods);
+            this.Controls.Add(this.lblMaxVariableMods);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.flowLayoutPanel1);
@@ -175,5 +202,7 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label lblMaxVariableMods;
+        private System.Windows.Forms.ComboBox cbMaxVariableMods;
     }
 }

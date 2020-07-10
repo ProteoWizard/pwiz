@@ -271,8 +271,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var selectedIndices = listSearchFiles.SelectedIndices;
             for (int i = selectedIndices.Count - 1; i >= 0; i--)
             {
-                listSearchFiles.Items.RemoveAt(i);
-                listSearchFilenames.RemoveAt(i);
+                listSearchFilenames.RemoveAt(selectedIndices[i]);
+                listSearchFiles.Items.RemoveAt(selectedIndices[i]); // this changes SelectedIndices
             }
 
             if (PerformDDASearch)
@@ -316,7 +316,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return;
                 }
 
-                DdaSearchDataSources = dataSources;
+                DdaSearchDataSources = DdaSearchDataSources.Union(dataSources).ToArray();
             }
             else
             {

@@ -51,11 +51,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             LoadMassUnitEntries();
             LoadFragmentIonEntries();
-        }
 
-        public void LoadModifications()
-        {
-            ///clbFixedModifs.Items.AddRange(_documentContainer.Document.Settings.PeptideSettings.Modifications.StaticModifications.Select(m => m.).ToArray());
+            var modSettings = _documentContainer.Document.Settings.PeptideSettings.Modifications;
+            cbMaxVariableMods.SelectedItem = modSettings.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
+            if (cbMaxVariableMods.SelectedIndex < 0)
+                cbMaxVariableMods.SelectedIndex = 2; // default max = 2
         }
 
         private void LoadMassUnitEntries()
@@ -65,8 +65,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             cbMS2TolUnit.Items.AddRange(entries);
         }
 
-        private void LoadFragmentIonEntries(){
-            
+        private void LoadFragmentIonEntries()
+        {
             cbFragmentIons.Items.AddRange(ImportPeptideSearch.SearchEngine.FragmentIons);
             ComboHelper.AutoSizeDropDown(cbFragmentIons);
             cbFragmentIons.SelectedIndex = 0;
@@ -91,7 +91,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             bool valid = ValidateEntries();
             if (!valid)
                 return false;
-            ImportPeptideSearch.SearchEngine.SaveModifications(_documentContainer.Document.Settings.PeptideSettings.Modifications.StaticModifications);
+
+            var modSettings = _documentContainer.Document.Settings.PeptideSettings.Modifications;
+            var allMods = modSettings.StaticModifications.Union(modSettings.AllHeavyModifications);
+            ImportPeptideSearch.SearchEngine.SetModifications(allMods, Convert.ToInt32(cbMaxVariableMods.SelectedItem));
             return true;
         }
 
