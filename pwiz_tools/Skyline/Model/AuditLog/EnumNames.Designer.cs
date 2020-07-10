@@ -1123,7 +1123,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use only scans withing time frame of MS/MS IDs.
+        ///   Looks up a localized string similar to Use only scans within time frame of MS/MS IDs.
         /// </summary>
         public static string RetentionTimeFilterType_ms2_ids {
             get {
@@ -1141,7 +1141,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use only scans withing time frame of predicted RT.
+        ///   Looks up a localized string similar to Use only scans within time frame of predicted RT.
         /// </summary>
         public static string RetentionTimeFilterType_scheduling_windows {
             get {

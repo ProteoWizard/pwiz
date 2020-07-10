@@ -30,7 +30,7 @@ Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed
 All Info  :
 Transition Settings changed
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans withing time frame of predicted RT"
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Include all matching scans" to "Use only scans within time frame of predicted RT"
 Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "0" to "3"
 Settings > Transition Settings -- Ion mobility > Ion mobility library changed from "None" to "BSA"
 Settings > Transition Settings -- Ion mobility > Ion mobility library > File path is "BSA.imsdb"
