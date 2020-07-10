@@ -286,7 +286,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to unknown.
+        ///   Looks up a localized string similar to Unknown.
         /// </summary>
         public static string eIonMobilityUnits_unknown {
             get {
@@ -552,6 +552,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string IsolationWidthType_fixed_width {
             get {
                 return ResourceManager.GetString("IsolationWidthType_fixed_width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string IsolationWidthType_none {
+            get {
+                return ResourceManager.GetString("IsolationWidthType_none", resourceCulture);
             }
         }
         

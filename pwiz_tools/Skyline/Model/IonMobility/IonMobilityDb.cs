@@ -46,8 +46,8 @@ namespace pwiz.Skyline.Model.IonMobility
 
     public class DbLibInfo
     {
-        public const int INITIAL_LIBRARY_REVISION = 1;
         public const int SCHEMA_VERSION_CURRENT = 1;
+        public virtual int Id { get; set; }
         public virtual string LibLSID { get; set; }
         public virtual string CreateTime { get; set; }
         /// <summary>
@@ -87,6 +87,7 @@ namespace pwiz.Skyline.Model.IonMobility
             _path = path;
             _sessionFactory = sessionFactory;
             _databaseLock = new ReaderWriterLock();
+            LastChange = IonMobilityLibraryChange.NONE;
         }
 
         public void Validate()
@@ -161,14 +162,82 @@ namespace pwiz.Skyline.Model.IonMobility
             return UpdateIonMobilities(list);
         }
 
+        // For audit logging
+        public class IonMobilityLibraryChange : IEquatable<IonMobilityLibraryChange>
+        {
+            public static IonMobilityLibraryChange NONE = new IonMobilityLibraryChange {Added = 0, Deleted = 0, LSID = string.Empty};
+            [Track]
+            public int Added { get; set; }
+            [Track]
+            public int Deleted { get; set; }
+            [Track]
+            public string LSID { get; set; }
+            [Track]
+            public string CreationTime { get; set; }
+
+            public bool Equals(IonMobilityLibraryChange other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                if (Added != other.Added)
+                    return false;
+                if (Deleted != other.Deleted)
+                    return false;
+                if (LSID != other.LSID)
+                    return false;
+                if (CreationTime != other.CreationTime)
+                    return false;
+                return true;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((IonMobilityLibraryChange) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = Added;
+                    hashCode = (hashCode * 397) ^ Deleted;
+                    hashCode = (hashCode * 397) ^ (LSID != null ? LSID.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (CreationTime != null ? CreationTime.GetHashCode() : 0);
+                    return hashCode;
+                }
+            }
+
+            public static bool operator ==(IonMobilityLibraryChange left, IonMobilityLibraryChange right)
+            {
+                return Equals(left, right);
+            }
+
+            public static bool operator !=(IonMobilityLibraryChange left, IonMobilityLibraryChange right)
+            {
+                return !Equals(left, right);
+            }
+
+            public override string ToString() // For debug, not user facing
+            {
+                return string.Format(@"{0} {1} added, {2} deleted, {3}", CreationTime, Added, Deleted, LSID);
+            }
+        }
+
+        public IonMobilityLibraryChange LastChange { get; private set; }
+
         public IonMobilityDb UpdateIonMobilities(IList<DbPrecursorAndIonMobility> newMobilities)
         {
-
+            var changeRecord = IonMobilityLibraryChange.NONE;
             using (var session = OpenWriteSession())
             {
                 var oldMoleculesSet = session.CreateCriteria<DbMolecule>().List<DbMolecule>();
                 var oldPrecursorsSet = session.CreateCriteria<DbPrecursorIon>().List<DbPrecursorIon>();
                 var oldMobilitiesSet = session.CreateCriteria<DbPrecursorAndIonMobility>().List<DbPrecursorAndIonMobility>();
+                var nDeleted = 0;
+                var nAdded = 0;
 
                 // Remove items that are no longer in the list
                 foreach (var mobilityOld in oldMobilitiesSet)
@@ -182,6 +251,7 @@ namespace pwiz.Skyline.Model.IonMobility
                             if (!newMobilities.Any(m => Equals(m.DbPrecursorIon.DbMolecule, mobilityOld.DbPrecursorIon.DbMolecule)))
                             {
                                 session.Delete(mobilityOld.DbPrecursorIon.DbMolecule);
+                                nDeleted++;
                             }
                         }
                     }
@@ -196,7 +266,10 @@ namespace pwiz.Skyline.Model.IonMobility
                     // Create a new instance, because not doing this causes a BindingSource leak
                     // Also we want to create a non-redundant set
                     if (!newMobilitiesSet.Any(m => m.EqualsIgnoreId(itemNew)))
+                    {
                         newMobilitiesSet.Add(new DbPrecursorAndIonMobility(itemNew));
+                        nAdded++;
+                    }
                     if (!newPrecursorsSet.Any(m => m.EqualsIgnoreId(itemNew.DbPrecursorIon)))
                         newPrecursorsSet.Add(new DbPrecursorIon(itemNew.DbPrecursorIon));
                     if (!newMoleculesSet.Any(m => m.EqualsIgnoreId(itemNew.DbPrecursorIon.DbMolecule)))
@@ -269,9 +342,33 @@ namespace pwiz.Skyline.Model.IonMobility
 
                     transaction.Commit();
                 }
+
+                if (nAdded > 0 || nDeleted > 0)
+                {
+                    var libInfo = session.CreateCriteria<DbLibInfo>().UniqueResult<DbLibInfo>();
+
+                    libInfo.MajorVersion = libInfo.MajorVersion + 1;
+                    libInfo.MinorVersion = DbLibInfo.SCHEMA_VERSION_CURRENT;
+
+                    // Make sure LSID has version number consistent with libInfo.MajorVersion
+                    var parts = libInfo.LibLSID.Split(':');
+                    parts[parts.Length - 1] = string.Format(@"{0}.{1}", libInfo.MajorVersion, libInfo.MinorVersion);
+                    libInfo.LibLSID = string.Join(@":", parts);
+                    libInfo.CreateTime = new TimeStampISO8601().ToString(); // Update timestamp
+                    session.Flush();
+
+                    changeRecord = new IonMobilityLibraryChange() // For audit logging
+                    {
+                        LSID = libInfo.LibLSID,
+                        CreationTime = libInfo.CreateTime,
+                        Added = nAdded,
+                        Deleted = nDeleted
+                    };
+                }
             }
 
-            return ChangeProp(ImClone(this), im => im.LoadIonMobilities());
+            var result= ChangeProp(ImClone(this), im => im.LoadIonMobilities());
+            return ChangeProp(ImClone(result), im => im.LastChange = changeRecord); // High level change description for audit logging
         }
 
         /// <summary>
@@ -346,7 +443,7 @@ namespace pwiz.Skyline.Model.IonMobility
         public static IonMobilityDb CreateIonMobilityDb(string path, string libraryName, bool minimized)
         {
             const string libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
-            const int majorVer = 1;
+            const int majorVer = 0; // This will increment when we add data
             const int minorVer = DbLibInfo.SCHEMA_VERSION_CURRENT;
             //CONSIDER(bspratt): some better means of showing provenance of values in library?
             string libLsid = string.Format(@"urn:lsid:{0}:ion_mobility_library:skyline:{1}{2}:{3}:{4}.{5}",
@@ -373,7 +470,6 @@ namespace pwiz.Skyline.Model.IonMobility
             }
 
             return GetIonMobilityDb(path, null);
-
         }
 
         public static IonMobilityDb CreateIonMobilityDb(string path, string libraryName, bool minimized, IList<PrecursorIonMobilities> ions)

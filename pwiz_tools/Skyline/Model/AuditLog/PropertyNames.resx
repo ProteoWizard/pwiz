@@ -563,6 +563,21 @@
   <data name="IonMobilityWindowWidthCalculator_PeakWidthAtIonMobilityValueZero" xml:space="preserve">
     <value>Width at Dt0</value>
   </data>
+  <data name="IonMobilityLibrary_Status" xml:space="preserve">
+    <value>Contents changed</value>
+  </data>
+  <data name="IonMobilityLibraryChange_Added" xml:space="preserve">
+    <value>Items added</value>
+  </data>
+  <data name="IonMobilityLibraryChange_Deleted" xml:space="preserve">
+    <value>Items deleted</value>
+  </data>
+  <data name="IonMobilityLibraryChange_LSID" xml:space="preserve">
+    <value>LSID</value>
+  </data>
+  <data name="IonMobilityLibraryChange_CreationTime" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
   <data name="RetentionTimeRegression_PeptideTimes" xml:space="preserve">
     <value>Measured peptides</value>
   </data>

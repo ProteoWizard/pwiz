@@ -34,6 +34,10 @@ All Info  :
 设置 > 离子对设置 -- 全扫描 > 保留时间过滤长度 从 "0" 更改到 "3"
 设置 > 离子对设置 -- Ion mobility > Ion mobility library 从 "None" 更改到 "BSA"
 设置 > 离子对设置 -- Ion mobility > Ion mobility library > File path 是 "BSA.imsdb"
+设置 > 离子对设置 -- Ion mobility > Ion mobility library > Contents changed > Items added 是 "38"
+设置 > 离子对设置 -- Ion mobility > Ion mobility library > Contents changed > Items deleted 是 "0"
+设置 > 离子对设置 -- Ion mobility > Ion mobility library > Contents changed > LSID 是 "urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:d8fa8124-69ea-4da7-b69d-302dd5663f71:1.1"
+设置 > 离子对设置 -- Ion mobility > Ion mobility library > Contents changed > Timestamp 是 "2020-07-10T10:45:00-07:00"
 设置 > 离子对设置 -- Ion mobility > Ion mobility filter window width calculation type 从 "None" 更改到 "Resolving power"
 设置 > 离子对设置 -- Ion mobility > 分辨能力 从 "0" 更改到 "50"
 

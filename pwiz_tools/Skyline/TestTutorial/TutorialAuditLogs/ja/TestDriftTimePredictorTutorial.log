@@ -34,6 +34,10 @@ All Info  :
 設定>トランジションの設定－フルスキャン>保持時間フィルタ長は"0"から"3"に変更されました
 設定>トランジションの設定－Ion mobility>Ion mobility libraryは"None"から"BSA"に変更されました
 設定>トランジションの設定－Ion mobility>Ion mobility library>File pathは"BSA.imsdb"です
+設定>トランジションの設定－Ion mobility>Ion mobility library>Contents changed>Items addedは"38"です
+設定>トランジションの設定－Ion mobility>Ion mobility library>Contents changed>Items deletedは"0"です
+設定>トランジションの設定－Ion mobility>Ion mobility library>Contents changed>LSIDは"urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:f05d02df-c70e-4800-87b5-950db1a11ea4:1.1"です
+設定>トランジションの設定－Ion mobility>Ion mobility library>Contents changed>Timestampは"2020-07-10T10:54:58-07:00"です
 設定>トランジションの設定－Ion mobility>Ion mobility filter window width calculation typeは"None"から"Resolving power"に変更されました
 設定>トランジションの設定－Ion mobility>分解能は"0"から"50"に変更されました
 

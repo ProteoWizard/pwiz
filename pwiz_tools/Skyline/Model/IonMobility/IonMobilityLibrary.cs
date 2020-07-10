@@ -58,6 +58,9 @@ namespace pwiz.Skyline.Model.IonMobility
             get { return _database == null ? null : _database.DictLibrary; }
         }
 
+        [TrackChildren]
+        public IonMobilityDb.IonMobilityLibraryChange Status { get { return _database == null ? IonMobilityDb.IonMobilityLibraryChange.NONE : _database.LastChange; } }
+
         public int Count { get { return _database == null || _database.DictLibrary == null ? -1 : _database.DictLibrary.Count; } }  // How many entries in library?
 
         public bool IsNone
@@ -355,6 +358,7 @@ namespace pwiz.Skyline.Model.IonMobility
             if (ReferenceEquals(this, other)) return true;
             if (!base.Equals(other))
                 return false;
+            // N.B. not comparing Status members, which exist only for the benefit of audit logging
             if (!Equals(other.FilePath, FilePath))
                 return false;
             if (!Equals(Count, other.Count))
@@ -389,7 +393,7 @@ namespace pwiz.Skyline.Model.IonMobility
             unchecked
             {
                 int result = base.GetHashCode();
-                result = (result*397) ^ FilePath.GetHashCode();
+                result = (result * 397) ^ FilePath.GetHashCode();
                 result = (result*397) ^ (_database != null ? _database.GetHashCode() : 0);
                 return result;
             }
