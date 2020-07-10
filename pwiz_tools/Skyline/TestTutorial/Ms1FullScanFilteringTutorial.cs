@@ -512,7 +512,7 @@ namespace pwiz.SkylineTestTutorial
             RevertDoc(undoIndex); // undo changes
 
             ActivateReplicate(TIP_NAME);
-            ClickChromatogram(TIP_NAME, 37.3, 164);
+            ClickChromatogram(TIP_NAME, 37.3, 142);
             PauseForScreenShot("MS1 spectrum graph 37.32 minutes", 28);
             ClickChromatogram(TIP_NAME, 33.2, 328.1);
             PauseForScreenShot("MS1 spectrum graph 33.19 minutes", 29);
