@@ -804,6 +804,28 @@ namespace pwiz.SkylineTestUtil
                         Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
                     if (lineTarget != lineActual)
                     {
+                        // If only difference appears to be a generated GUID, let it pass
+                        var regexLSID = new Regex(@"(.*)\:[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*\:(.*)");
+                        var matchTarget = regexLSID.Match(lineTarget ?? string.Empty);
+                        var matchActual = regexLSID.Match(lineActual ?? string.Empty);
+                        if (matchTarget.Success && matchActual.Success
+                                                && Equals(matchTarget.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                                && Equals(matchTarget.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+                        {
+                            continue;
+                        }
+
+                        // If only difference appears to be a generated ISO timestamp, let it pass
+                        var regexTimestamp = new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d[\-\+]\d\d\:\d\d("".*)");
+                        matchTarget = regexTimestamp.Match(lineTarget ?? string.Empty);
+                        matchActual = regexTimestamp.Match(lineActual ?? string.Empty);
+                        if (matchTarget.Success && matchActual.Success
+                                                && Equals(matchTarget.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                                && Equals(matchTarget.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+                        {
+                            continue;
+                        }
+                        
                         bool failed = true;
                         if (columnTolerances != null)
                         {
