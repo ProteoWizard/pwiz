@@ -929,7 +929,7 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(RawFile* ra
     if (numSpectraOfMSOrder(static_cast<MSOrder>(precursorMsLevel)) == 0)
         return size_;
 
-    long masterScan = raw->getTrailerExtraValueLong(index, "Master Scan:", -1);
+    long masterScan = raw->getTrailerExtraValueLong(index_[index].scan, "Master Scan Number:", -1);
 
     // return first scan with MSn-1 that matches the precursor isolation m/z
 
@@ -948,6 +948,7 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(RawFile* ra
             // master scan not in index (i.e. SIM scan without simAsSpectra)
             if (masterScan > ie.scan)
                 return size_;
+            continue;
         }
 
         if (static_cast<int>(ie.msOrder) == precursorMsLevel &&
