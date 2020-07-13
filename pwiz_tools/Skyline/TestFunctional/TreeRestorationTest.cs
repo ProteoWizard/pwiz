@@ -258,8 +258,10 @@ namespace pwiz.SkylineTestFunctional
                 // selections are equal (equivalency is used because the order of selected nodes in the list may differ when restored)
                 if (SkylineWindow.SelectedNode != null && _selectedNodeText != null)
                     Assert.AreEqual(_selectedNodeText, SkylineWindow.SelectedNode.Text);
-                else
-                    Assert.IsTrue(SkylineWindow.SelectedNode == null && _selectedNodeText == null);
+                else if (SkylineWindow.SelectedNode == null && _selectedNodeText != null)
+                    Assert.Fail("Expected node text '{0}', actual empty selection", _selectedNodeText);
+                else if (SkylineWindow.SelectedNode != null && _selectedNodeText == null)
+                    Assert.Fail("Expected empty selection, actual node text '{0}'", SkylineWindow.SelectedNode.Text);
                 Assert.AreEqual(_selectedNodes.Count, GetSelectedNodes().Count);
                 CollectionAssert.AreEquivalent(_selectedNodes.ToArray(), GetSelectedNodes().ToArray());
 
