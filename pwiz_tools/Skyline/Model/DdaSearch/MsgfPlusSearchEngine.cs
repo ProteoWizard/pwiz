@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private int fragmentationMethod;
         private int instrumentType = 0;
         private int enzyme;
-        private int protocol;
+        //private int protocol;
         private int ntt, maxMissedCleavages;
         //private int minPeptideLength, maxPeptideLength, minCharge, maxCharge;
         //private double chargeCarrierMass;

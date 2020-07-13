@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
@@ -60,7 +63,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void LoadMassUnitEntries()
         {
-            string[] entries = {"Da", "ppm"};
+            string[] entries = {@"Da", @"ppm"};
             cbMS1TolUnit.Items.AddRange(entries);
             cbMS2TolUnit.Items.AddRange(entries);
         }

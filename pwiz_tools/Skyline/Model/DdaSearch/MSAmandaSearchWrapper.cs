@@ -34,7 +34,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
 using OperationCanceledException = System.OperationCanceledException;
-using Thread = System.Threading.Thread;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DdaSearch
@@ -54,17 +53,10 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string UNIMOD_FILENAME = "Unimod.xml";
         private const string ENZYME_FILENAME = "enzymes.xml";
         private const string INSTRUMENTS_FILENAME = "Instruments.xml";
-        #region todo add as additional settings
-        private const string AMANDA_DB_DIRECTORY = "C:\\ProgramData\\MSAmanda2.0\\DB";
-        private const string AMANDA_SCRATCH_DIRECTORY = "C:\\ProgramData\\MSAmanda2.0\\Scratch";
-        private const double CORE_USE_PERCENTAGE = 100;
-        private const int MAX_NUMBER_PROTEINS = 10000;
-        private const int MAX_NUMBER_SPECTRA = 1000;
-        private const string AmandaResults = "AmandaResults";
-        private const string AmandaDB = "AmandaDB";
-        private const string AmandaMap = "AmandaMap";
-        private readonly string _baseDir = "C:\\ProgramData\\MSAmanda2.0";
-        #endregion
+        private const string AmandaMap = @"AmandaMap";
+
+        private readonly string _baseDir =
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MSAmanda2.0");
 
         public MSAmandaSearchWrapper()
         {
@@ -93,6 +85,13 @@ namespace pwiz.Skyline.Model.DdaSearch
                 if (!AvailableSettings.ReadInstrumentsFile(INSTRUMENTS_FILENAME))
                     throw new Exception(string.Format(Resources.DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found, INSTRUMENTS_FILENAME));
             }
+
+            AdditionalSettings = new Dictionary<string, string>
+            {
+                {@"CoreUsePercentage", @"100"},
+                {@"MaxNumberProteins", @"10000"},
+                {@"MaxNumberSpectra", @"1000"}
+            };
         }
 
         private void Helper_SearchProgressChanged(string message)
@@ -100,7 +99,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             SearchProgressChanged?.Invoke(this, new MessageEventArgs(){Message = message});
         }
 
-        public override void SetEnzyme(pwiz.Skyline.Model.DocSettings.Enzyme enzyme, int maxMissedCleavages)
+        public override void SetEnzyme(DocSettings.Enzyme enzyme, int maxMissedCleavages)
         {
             MSAmandaEnzyme e = AvailableSettings.AllEnzymes.Find(enz => enz.Name.ToUpper() == enzyme.Name.ToUpper());
             if (e != null)
@@ -130,7 +129,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override string EngineName { get { return @"MS Amanda"; } }
         public override Bitmap SearchEngineLogo
         {
-            get { return Properties.Resources.MSAmandaLogo; }
+            get { return Resources.MSAmandaLogo; }
         }
 
         public override void SetPrecursorMassTolerance(MzTolerance tol)

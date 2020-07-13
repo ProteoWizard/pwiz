@@ -40,7 +40,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             InitializeComponent();
             ImportPeptideSearch = importPeptideSearch;
-            UpdateUI = new UpdateUIDelegate(UpdateSearchEngineProgress);
+            UpdateUI = UpdateSearchEngineProgress;
         }
 
         private void UpdateSearchEngineProgress(string message)

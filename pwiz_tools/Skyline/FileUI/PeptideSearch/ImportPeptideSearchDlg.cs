@@ -36,7 +36,6 @@ using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -156,14 +155,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(18, 50)
             };
-            ddaSearchSettingsPage.Controls.Add((Control) SearchSettingsControl);
+            ddaSearchSettingsPage.Controls.Add(SearchSettingsControl);
 
             SearchControl = new DDASearchControl(ImportPeptideSearch)
             {
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(18, 50)
             };
-            ddaSearch.Controls.Add((Control) SearchControl);
+            ddaSearch.Controls.Add(SearchControl);
 
             _pagesToSkip = new HashSet<Pages>();
         }

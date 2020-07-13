@@ -1,11 +1,8 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using MSAmanda.InOutput.Input;
 using MSAmanda.Utils;
 using pwiz.ProteowizardWrapper;
@@ -42,7 +39,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             public static bool operator ==(MSDataRunPath lhs, MSDataRunPath rhs)
             {
-                return lhs.Filepath == rhs.Filepath && lhs.RunIndex == rhs.RunIndex;
+                return lhs?.Filepath == rhs?.Filepath && lhs?.RunIndex == rhs?.RunIndex;
             }
 
             public static bool operator !=(MSDataRunPath lhs, MSDataRunPath rhs)
@@ -57,13 +54,13 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             public override string ToString()
             {
-                return $"{Filepath}:{RunIndex}";
+                return $@"{Filepath}:{RunIndex}";
             }
         }
 
         private MsDataFileImpl spectrumFileReader;
-        private int specId = 0;
-        private int amandaId = 0;
+        private int specId;
+        private int amandaId;
         private List<int> consideredCharges;
         private bool useMonoIsotopicMass;
         private MSDataRunPath msdataRunPath;

@@ -20,10 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -37,6 +34,11 @@ namespace pwiz.Skyline.Model
         public abstract Bitmap SearchEngineLogo { get; }
         protected MsDataFileUri[] SpectrumFileNames { get; set; }
         protected string[] FastaFileNames { get; set; }
+
+        /// <summary>
+        /// Dictionary of available additional settings. May be null if SearchEngine implementation has no additional settings.
+        /// </summary>
+        public IDictionary<string, string> AdditionalSettings { get; set; }
 
         public abstract void SetPrecursorMassTolerance(MzTolerance mzTolerance);
         public abstract void SetFragmentIonMassTolerance(MzTolerance mzTolerance);
@@ -70,7 +72,7 @@ namespace pwiz.Skyline.Model
         public void SetFastaFiles(string fastFile)
         {
             //todo check multi-fasta support
-            FastaFileNames = new string[] {fastFile};
+            FastaFileNames = new[] {fastFile};
         }
 
         public abstract void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods);
