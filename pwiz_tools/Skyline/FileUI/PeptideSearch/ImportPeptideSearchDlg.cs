@@ -636,33 +636,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void ShowRemovePrefixDialog()
         {
             var foundResults = ImportResultsControl.FoundResultsFiles;
-            if (foundResults.Count > 1)
-            {
-                // Older Resharper code inspection implementations insist on warning here
-                // Resharper disable PossibleMultipleEnumeration
-                string[] resultNames = foundResults.Select(f => f.Name).ToArray();
-                string prefix = ImportResultsDlg.GetCommonPrefix(resultNames);
-                string suffix = ImportResultsDlg.GetCommonSuffix(resultNames);
-                // Resharper restore PossibleMultipleEnumeration
-                if (!string.IsNullOrEmpty(prefix) || !string.IsNullOrEmpty(suffix))
-                {
-                    using (var dlgName = new ImportResultsNameDlg(prefix, suffix, resultNames))
-                    {
-                        var result = dlgName.ShowDialog(this);
-                        if (result == DialogResult.Cancel)
-                        {
-                            return;
-                        }
-                        else if (dlgName.IsRemove)
-                        {
-                            ImportResultsControl.FoundResultsFiles = ImportResultsControl.FoundResultsFiles.Select(f =>
-                                new ImportPeptideSearch.FoundResultsFile(dlgName.ApplyNameChange(f.Name), f.Path)).ToList();
+            if (foundResults.Count <= 1)
+                return;
 
-                            ImportResultsControl.Prefix =
-                                string.IsNullOrEmpty(prefix) ? null : prefix;
-                            ImportResultsControl.Suffix =
-                                string.IsNullOrEmpty(suffix) ? null : suffix;
-                        }
+            // Older Resharper code inspection implementations insist on warning here
+            // Resharper disable PossibleMultipleEnumeration
+            string[] resultNames = foundResults.Select(f => f.Name).ToArray();
+            string prefix = ImportResultsDlg.GetCommonPrefix(resultNames);
+            string suffix = ImportResultsDlg.GetCommonSuffix(resultNames);
+            // Resharper restore PossibleMultipleEnumeration
+            if (!string.IsNullOrEmpty(prefix) || !string.IsNullOrEmpty(suffix))
+            {
+                using (var dlgName = new ImportResultsNameDlg(prefix, suffix, resultNames))
+                {
+                    var result = dlgName.ShowDialog(this);
+                    if (result != DialogResult.Cancel && dlgName.IsRemove)
+                    {
+                        ImportResultsControl.FoundResultsFiles = ImportResultsControl.FoundResultsFiles.Select(f =>
+                            new ImportPeptideSearch.FoundResultsFile(dlgName.ApplyNameChange(f.Name), f.Path)).ToList();
+
+                        ImportResultsControl.Prefix =
+                            string.IsNullOrEmpty(prefix) ? null : prefix;
+                        ImportResultsControl.Suffix =
+                            string.IsNullOrEmpty(suffix) ? null : suffix;
                     }
                 }
             }
