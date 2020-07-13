@@ -564,6 +564,10 @@ namespace pwiz.Skyline.Model
 
         public string AttributeGroupId { get; private set; }
 
+        public double? TargetIonRatio { get; private set; }
+
+        public double? IonRatioThreshold { get; private set; }
+
         #region Property change methods
 
         private PeptideDocNode UpdateModifiedSequence(SrmSettings settingsNew)
@@ -689,6 +693,16 @@ namespace pwiz.Skyline.Model
         {
             return ChangeProp(ImClone(this),
                 im => im.AttributeGroupId = string.IsNullOrEmpty(attributeGroupId) ? null : attributeGroupId);
+        }
+
+        public PeptideDocNode ChangeTargetIonRatio(double? targetIonRatio)
+        {
+            return ChangeProp(ImClone(this), im => im.TargetIonRatio = targetIonRatio);
+        }
+
+        public PeptideDocNode ChangeIonRatioThreshold(double? ionRatioThreshold)
+        {
+            return ChangeProp(ImClone(this), im => im.IonRatioThreshold = ionRatioThreshold);
         }
 
         #endregion
@@ -1979,16 +1993,18 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             var equal = base.Equals(other) &&
-                Equals(other.ExplicitMods, ExplicitMods) &&
-                Equals(other.SourceKey, SourceKey) &&
-                other.Rank.Equals(Rank) &&
-                Equals(other.Results, Results) &&
-                Equals(other.ExplicitRetentionTime, ExplicitRetentionTime) &&
-                other.BestResult == BestResult &&
-                Equals(other.InternalStandardConcentration, InternalStandardConcentration) &&
-                Equals(other.ConcentrationMultiplier, ConcentrationMultiplier) &&
-                Equals(other.NormalizationMethod, NormalizationMethod) &&
-                Equals(other.AttributeGroupId, AttributeGroupId);
+                        Equals(other.ExplicitMods, ExplicitMods) &&
+                        Equals(other.SourceKey, SourceKey) &&
+                        other.Rank.Equals(Rank) &&
+                        Equals(other.Results, Results) &&
+                        Equals(other.ExplicitRetentionTime, ExplicitRetentionTime) &&
+                        other.BestResult == BestResult &&
+                        Equals(other.InternalStandardConcentration, InternalStandardConcentration) &&
+                        Equals(other.ConcentrationMultiplier, ConcentrationMultiplier) &&
+                        Equals(other.NormalizationMethod, NormalizationMethod) &&
+                        Equals(other.AttributeGroupId, AttributeGroupId) &&
+                        Equals(other.IonRatioThreshold, IonRatioThreshold) &&
+                        Equals(other.TargetIonRatio, TargetIonRatio);
             return equal; // For debugging convenience
         }
 
