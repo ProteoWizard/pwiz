@@ -75,6 +75,8 @@ namespace pwiz.SkylineTest
         private void TestAdductOperators()
         {
             // Test some underlying formula handling for fanciful user-supplied values
+            AssertEx.AreEqual(Adduct.SINGLY_PROTONATED, Adduct.FromStringAssumeProtonated("(M+H)+") );
+            AssertEx.IsTrue(Adduct.FromStringAssumeProtonatedNonProteomic("[M-H2O+H]+").SameEffect(Adduct.FromStringAssumeProtonatedNonProteomic("(M+H)+[-H2O]")));
             Assert.IsTrue(Molecule.AreEquivalentFormulas("C10H30Si5O5H-CH4", "C9H27O5Si5"));
             Assert.AreEqual("C7H27O5Si4", BioMassCalc.MONOISOTOPIC.FindFormulaIntersection(new[] { "C8H30Si5O5H-CH4", "C9H27O5Si4", "C9H27O5Si5Na" }));
             Assert.AreEqual("C7H27O5Si4", BioMassCalc.MONOISOTOPIC.FindFormulaIntersectionUnlabeled(new[] { "C7C'H30Si5O5H-CH4", "C9H27O5Si4", "C9H25H'2O5Si5Na" }));

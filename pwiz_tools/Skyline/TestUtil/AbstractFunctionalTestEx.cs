@@ -494,11 +494,21 @@ namespace pwiz.SkylineTestUtil
         {
             WaitForGraphs();
             var graphChromatogram = GetGraphChrom(graphName);
-            RunUI(() =>
+            // Wait as long as 2 seconds for mouse move to produce a highlight point
+            bool overHighlight = false;
+            const int sleepCycles = 20;
+            const int sleepInterval = 100;
+            for (int i = 0; i < sleepCycles; i++)
             {
-                graphChromatogram.TestMouseMove(x, y, paneKey);
-                graphChromatogram.TestMouseDown(x, y, paneKey);
-            });
+                RunUI(() => graphChromatogram.TestMouseMove(x, y, paneKey));
+                RunUI(() => overHighlight = graphChromatogram.IsOverHighlightPoint(x, y, paneKey));
+                if (overHighlight)
+                    break;
+                Thread.Sleep(sleepInterval);
+            }
+            RunUI(() => Assert.IsTrue(graphChromatogram.IsOverHighlightPoint(x, y, paneKey),
+                string.Format("Full-scan dot not present after {0} tries in {1} seconds", sleepCycles, sleepInterval*sleepCycles/1000.0)));
+            RunUI(() => graphChromatogram.TestMouseDown(x, y, paneKey));
             WaitForGraphs();
             CheckFullScanSelection(graphName, x, y, paneKey);
         }

@@ -918,6 +918,8 @@ string BuildParser::getFilenameFromID(const string& idStr){
             // if the file attribute is quoted, end at tht next quote
             if (idStr[start] == '"'){
                 end = idStr.find_first_of('"', ++start);
+            } else if (idStr[start] == '~'){
+                end = idStr.find_first_of('~', ++start);
             } else {
                 // otherwise, end at the next comma
                 end = idStr.find_first_of(',', start);

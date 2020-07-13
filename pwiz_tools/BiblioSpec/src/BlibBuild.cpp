@@ -105,7 +105,6 @@ int main(int argc, char* argv[])
                 progress.increment();
             
                 if(has_extension(result_file, ".pep.xml") || 
-                   has_extension(result_file, ".pep.XML") ||
                    has_extension(result_file, ".pepXML")) {
                     PepXMLreader tmpXMLreader(builder, 
                                               result_file,

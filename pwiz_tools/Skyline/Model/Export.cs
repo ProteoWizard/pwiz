@@ -1256,42 +1256,44 @@ namespace pwiz.Skyline.Model
     public class ShimadzuMassListExporter : AbstractMassListExporter
     {
         public double? RunLength { get; set; }
-        private readonly Dictionary<GroupStepKey, int> _peptidesSeen = new Dictionary<GroupStepKey, int>();
         private int LastFileNumber { get; set; }
 
-        private struct GroupStepKey
+        private EventInfo _eventInfo;
+
+        private class EventInfo
         {
-            private readonly int _groupGlobalIndex;
-            private readonly int _step;
+            private const int MAX_TRANSITIONS_PER_EVENT = 32;
+            public int Id { get; set; }
+            public int PeptideId { get; set; }
+            private int TransitionsWritten { get; set; }
 
-            public GroupStepKey(int groupGlobalIndex, int step)
+            public EventInfo()
             {
-                _groupGlobalIndex = groupGlobalIndex;
-                _step = step;
+                Id = 0;
+                PeptideId = -1;
+                TransitionsWritten = 0;
             }
 
-            #region object overrides
-
-            private bool Equals(GroupStepKey other)
+            public void Write(TextWriter writer, int peptideId)
             {
-                return _groupGlobalIndex == other._groupGlobalIndex && _step == other._step;
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                return obj is GroupStepKey && Equals((GroupStepKey) obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
+                if (peptideId != PeptideId)
                 {
-                    return (_groupGlobalIndex*397) ^ _step;
+                    Next();
+                    PeptideId = peptideId;
+                }
+                writer.Write(Id);
+                TransitionsWritten++;
+                if (TransitionsWritten >= MAX_TRANSITIONS_PER_EVENT)
+                {
+                    Next();
                 }
             }
 
-            #endregion
+            private void Next()
+            {
+                Id++;
+                TransitionsWritten = 0;
+            }
         }
 
         public ShimadzuMassListExporter(SrmDocument document)
@@ -1343,23 +1345,15 @@ namespace pwiz.Skyline.Model
             {
                 // When generating multiple files, Shimadzu expects each one to start from ID 1,
                 // so reset if this is a new file
-                _peptidesSeen.Clear();
                 LastFileNumber = fileNumber;
+                _eventInfo = new EventInfo();
             }
-            var compound = GetCompound(nodePep, nodeTranGroup) +
-                  @"_" + nodeTranGroup.TransitionGroup.LabelType;
+            var compound = GetCompound(nodePep, nodeTranGroup) + @"_" + nodeTranGroup.TransitionGroup.LabelType;
             if (step != 0)
                 compound += (@"_" + step);
             writer.WriteDsvField(compound.Replace(' ', '_'), FieldSeparator);
             writer.Write(FieldSeparator);
-            int id;
-            var key = new GroupStepKey(nodeTranGroup.Id.GlobalIndex, step);
-            if (!_peptidesSeen.TryGetValue(key, out id))
-            {
-                id = _peptidesSeen.Count + 1;
-                _peptidesSeen.Add(key, id);
-            }
-            writer.Write(id);
+            _eventInfo.Write(writer, nodePep.Id.GlobalIndex);
             writer.Write(FieldSeparator);
             var istdTypes = Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
             writer.Write(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType)
