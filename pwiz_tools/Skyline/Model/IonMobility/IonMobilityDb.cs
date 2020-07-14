@@ -166,9 +166,9 @@ namespace pwiz.Skyline.Model.IonMobility
         public class IonMobilityLibraryChange : IEquatable<IonMobilityLibraryChange>
         {
             public static IonMobilityLibraryChange NONE = new IonMobilityLibraryChange {Added = 0, Deleted = 0, LSID = string.Empty};
-            [Track]
+            [Track(defaultValues: typeof(DefaultValuesZero))] // Makes no sense to report when nothing is added
             public int Added { get; set; }
-            [Track]
+            [Track(defaultValues: typeof(DefaultValuesZero))] // Makes no sense to report when nothing is deleted
             public int Deleted { get; set; }
             [Track]
             public string LSID { get; set; }
