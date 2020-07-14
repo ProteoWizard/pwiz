@@ -659,8 +659,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 else
                 {
-                    ObsoleteIonMobilityValues = obsoleteDriftTimePredictor.CreateTransitionIonMobilityFiltering(dir);
+                    ObsoleteIonMobilityValues = obsoleteDriftTimePredictor.CreateTransitionIonMobilityFiltering(dir); // Creates a .imsdb file in dir
                 }
+                ObsoleteIonMobilityValues = ObsoleteIonMobilityValues.ChangeUseSpectralLibraryIonMobilityValues(obsoleteUseSpectralLibraryDriftTimes);
                 if (ObsoleteIonMobilityValues.FilterWindowWidthCalculator.IsEmpty)
                 {
                     ObsoleteIonMobilityValues =
