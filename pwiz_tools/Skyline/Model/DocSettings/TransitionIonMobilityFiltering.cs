@@ -739,14 +739,20 @@ namespace pwiz.Skyline.Model.DocSettings
             var val = this;
             if (other.HasCollisionalCrossSection &&
                 !Equals(other.CollisionalCrossSectionSqA, CollisionalCrossSectionSqA))
+            {
                 val = ChangeProp(ImClone(this), im => im.CollisionalCrossSectionSqA = other.CollisionalCrossSectionSqA);
-            if (!Equals(other.IonMobility, IonMobility))
+            }
+            if (other.HasIonMobilityValue && 
+                !Equals(other.IonMobility, IonMobility))
+            {
                 val = ChangeProp(ImClone(this), im => im.IonMobility = IonMobility.Merge(other.IonMobility));
+            }
             if (other.HighEnergyIonMobilityValueOffset.HasValue &&
                 other.HighEnergyIonMobilityValueOffset != HighEnergyIonMobilityValueOffset)
+            {
                 val = ChangeProp(ImClone(this),
                     im => im.HighEnergyIonMobilityValueOffset = other.HighEnergyIonMobilityValueOffset);
-
+            }
             return val;
         }
 
