@@ -810,7 +810,7 @@ namespace pwiz.SkylineTestFunctional
                 messageDlg =>
                 {
                     AssertEx.AreComparableStrings(
-                        Resources.IonMobilityFinder_ProcessMSLevel_Problem_using_results_to_populate_ion_mobility_library_,
+                        Resources.IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_,
                         messageDlg.Message);
                     messageDlg.OkDialog();
                 });

@@ -322,9 +322,6 @@
   <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
     <value>针对 iRT 计算器的标准肽段仅可以在 iRT 计算器编辑器中设定。</value>
   </data>
-  <data name="DriftTimePredictorList_Label_Drift_Time_Predictor_" xml:space="preserve">
-    <value>漂移时间预测器：</value>
-  </data>
   <data name="EditIsolationSchemeDlg_OkDialog_The_isolation_scheme_named__0__already_exists" xml:space="preserve">
     <value>名为“{0}”的隔离方案已经存在。</value>
   </data>
@@ -1373,9 +1370,6 @@
   </data>
   <data name="FragmentLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\FragmentLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="IonMobilityLibraryList_AcceptList_The_drift_time_predictors_" xml:space="preserve">
-    <value>漂移时间预测器：</value>
   </data>
   <data name="ChromCacheJoiner_JoinNextPart_Joining_file__0__" xml:space="preserve">
     <value>加入文件{0}</value>
@@ -4399,9 +4393,6 @@
   <data name="BuildLibraryDlg_ValidateBuilder_The_directory__0__does_not_exist" xml:space="preserve">
     <value>目录{0}不存在。</value>
   </data>
-  <data name="DriftTimePredictorList_Title_Edit_Drift_Time_Predictors" xml:space="preserve">
-    <value>编辑漂移时间预测器</value>
-  </data>
   <data name="PeptideGroupTreeNode_RenderTip_Name" xml:space="preserve">
     <value>名称</value>
   </data>
@@ -5099,9 +5090,6 @@
   <data name="BackgroundWorker_UpdateStatistics_After_minimizing_the_cache_file_will_be_reduced_to__0__its_current_size" xml:space="preserve">
     <value>最小化后，缓存文件将减少到当前大小的 {0:0%}</value>
   </data>
-  <data name="EditIonMobilityLibraryDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility_library_" xml:space="preserve">
-    <value>漂移时间预测需要一个离子迁移库。</value>
-  </data>
   <data name="AddPeakCompareDlg_OkDialog_There_is_already_an_imported_file_with_the_current_name___Please_choose_another_name" xml:space="preserve">
     <value>已经存在拥有当前名称的导入文件。 请选择另一个名称</value>
   </data>
@@ -5401,9 +5389,6 @@
   </data>
   <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>无此蛋白质序列</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>具有名称{0}的漂移时间预测器已经存在。</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
     <value>错误：应用正则表达式后重复测定名称“{0}”重复。</value>

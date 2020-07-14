@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Model.Results
             }
             if (_dataFileScanHelperException != null)
             {
-                throw new IOException(TextUtil.LineSeparate(Resources.IonMobilityFinder_ProcessMSLevel_Problem_using_results_to_populate_ion_mobility_library_, _dataFileScanHelperException.Message), _dataFileScanHelperException);
+                throw new IOException(TextUtil.LineSeparate(Resources.IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_, _dataFileScanHelperException.Message), _dataFileScanHelperException);
             }
             if (_progressMonitor != null && !ReferenceEquals(nodeGroup, _currentDisplayedTransitionGroupDocNode))
             {

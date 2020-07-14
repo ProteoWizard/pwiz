@@ -8557,24 +8557,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Drift Time Predictor:.
-        /// </summary>
-        public static string DriftTimePredictorList_Label_Drift_Time_Predictor_ {
-            get {
-                return ResourceManager.GetString("DriftTimePredictorList_Label_Drift_Time_Predictor_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Edit Drift Time Predictors.
-        /// </summary>
-        public static string DriftTimePredictorList_Title_Edit_Drift_Time_Predictors {
-            get {
-                return ResourceManager.GetString("DriftTimePredictorList_Title_Edit_Drift_Time_Predictors", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Fixed window width must be non negative..
         /// </summary>
         public static string DriftTimeWindowWidthCalculator_Validate_Fixed_window_width_must_be_non_negative_ {
@@ -9172,16 +9154,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A drift time predictor with the name {0} already exists..
-        /// </summary>
-        public static string EditIonMobilityLibraryDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_ {
-            get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_A_drift_time_predictor_with_the_name__0__alrea" +
-                        "dy_exists_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to An ion mobility library with the name {0} already exists. Do you want to overwrite it?.
         /// </summary>
         public static string EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_ {
@@ -9217,16 +9189,6 @@ namespace pwiz.Skyline.Properties {
         public static string EditIonMobilityLibraryDlg_OkDialog_Do_you_want_to_change_it_ {
             get {
                 return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Do_you_want_to_change_it_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Drift time prediction requires an ion mobility library..
-        /// </summary>
-        public static string EditIonMobilityLibraryDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility_library_ {
-            get {
-                return ResourceManager.GetString("EditIonMobilityLibraryDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility" +
-                        "_library_", resourceCulture);
             }
         }
         
@@ -14995,21 +14957,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Problem using results to populate ion mobility library:.
+        ///   Looks up a localized string similar to Failed using results to populate ion mobility library:.
         /// </summary>
-        public static string IonMobilityFinder_ProcessMSLevel_Problem_using_results_to_populate_ion_mobility_library_ {
+        public static string IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_ {
             get {
-                return ResourceManager.GetString("IonMobilityFinder_ProcessMSLevel_Problem_using_results_to_populate_ion_mobility_l" +
-                        "ibrary_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The drift time predictors:.
-        /// </summary>
-        public static string IonMobilityLibraryList_AcceptList_The_drift_time_predictors_ {
-            get {
-                return ResourceManager.GetString("IonMobilityLibraryList_AcceptList_The_drift_time_predictors_", resourceCulture);
+                return ResourceManager.GetString("IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_li" +
+                        "brary_", resourceCulture);
             }
         }
         
