@@ -16,10 +16,12 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Deployment.Application;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Windows.Forms;
 using log4net;
 using log4net.Appender;
@@ -33,28 +35,18 @@ namespace AutoQC
         private static readonly ILog LOG = LogManager.GetLogger("AutoQC");
         private static string _version;
 
+        public const bool IsDaily = false;
+        public const string AutoQcStarter = IsDaily ? "AutoQCDailyStarter" : "AutoQCStarter";
+        public static readonly string AutoQcStarterExe = $"{AutoQcStarter}.exe";
+
         [STAThread]
         public static void Main(string[] args)
         {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-
-            // Initialize log4net -- global application logging
-            XmlConfigurator.Configure();
-
-            InitializeSecurityProtocol();
-
-            var form = new MainForm();
-            _version = ApplicationDeployment.IsNetworkDeployed
-                ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
-                : "DEV";
-            form.Text = Version();
-
-            //Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-            //Console.WriteLine("Local user config path: {0}", config.FilePath);
-
             // Handle exceptions on the UI thread.
             Application.ThreadException += ((sender, e) => LOG.Error(e.Exception));
-
             // Handle exceptions on the non-UI thread.
             AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
             {
@@ -63,17 +55,98 @@ namespace AutoQC
                     LOG.Error("AutoQC Loader encountered an unexpected error. ", (Exception)e.ExceptionObject);
                     MessageBox.Show("AutoQC Loader encountered an unexpected error. " +
                                     "Error details may be found in the AutoQCProgram.log file in this directory : "
-                                     + Path.GetDirectoryName(Application.ExecutablePath)
-                                    );
+                                    + Path.GetDirectoryName(Application.ExecutablePath)
+                    );
                 }
                 finally
                 {
                     Application.Exit();
                 }
-            }
-                );
+            });
 
-            Application.Run(form);       
+            using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
+            {
+                if (!mutex.WaitOne(TimeSpan.Zero))
+                {
+                    MessageBox.Show($"Another instance of {AppName()} is already running.", $"{AppName()} Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                InitializeSecurityProtocol();
+
+                // Initialize log4net -- global application logging
+                XmlConfigurator.Configure();
+
+                var form = new MainForm();
+
+                // CurrentDeployment is null if it isn't network deployed.
+                _version = ApplicationDeployment.IsNetworkDeployed
+                    ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
+                    : "";
+                form.Text = Version();
+
+                //var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+                //Console.WriteLine("Local user config path: {0}", config.FilePath);
+
+                var worker = new BackgroundWorker {WorkerSupportsCancellation = false, WorkerReportsProgress = false};
+                worker.DoWork += UpdateAutoQcStarter;
+                worker.RunWorkerCompleted += (o, eventArgs) =>
+                {
+                    if (eventArgs.Error != null)
+                    {
+                        LogError($"Unable to update {AutoQcStarter} shortcut.", eventArgs.Error);
+                        form.DisplayError($"{AutoQcStarter} Update Error", $"Unable to update {AutoQcStarter} shortcut.  Error was: {eventArgs.Error.ToString()}");
+                    }
+                };
+
+                worker.RunWorkerAsync();
+
+                Application.Run(form);
+
+                mutex.ReleaseMutex();
+            }
+        }
+
+        private static void UpdateAutoQcStarter(object sender, DoWorkEventArgs e)
+        {
+            if (!Properties.Settings.Default.KeepAutoQcRunning) return;
+
+            if (ApplicationDeployment.IsNetworkDeployed)
+            {
+                if (IsFirstRun())
+                {
+                    // First time running a newer version of the application
+                    LogInfo($"Updating {AutoQcStarterExe} shortcut.");
+                    StartupManager.UpdateAutoQcStarterInStartup();
+                }
+                else if (!StartupManager.IsAutoQcStarterRunning())
+                {
+                    // AutoQCStarter should be running but it is not
+                    LogInfo($"{AutoQcStarter} is not running. It should be running since Keep AutoQC Loader running is checked. Starting it up...");
+                    StartupManager.UpdateAutoQcStarterInStartup();
+                }
+            }
+        }
+
+        private static bool IsFirstRun()
+        {
+            if (!ApplicationDeployment.IsNetworkDeployed)
+                return false;
+
+            var currentVersion = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+            var installedVersion = Properties.Settings.Default.InstalledVersion ?? string.Empty;
+            if (!currentVersion.Equals(installedVersion))
+            {
+                LogInfo(string.Empty.Equals(installedVersion)
+                    ? $"This is a first install and run of version: {currentVersion}."
+                    : $"Current version: {currentVersion} is newer than the last installed version: {installedVersion}.");
+
+                Properties.Settings.Default.InstalledVersion = currentVersion;
+                Properties.Settings.Default.Save();
+                return true;
+            }
+            LogInfo($"Current version: {currentVersion} same as last installed version: {installedVersion}.");
+            return false;
         }
 
         public static void LogError(string message)
@@ -116,10 +189,15 @@ namespace AutoQC
 
         public static string Version()
         {
-            return MainForm.IS_DAILY ? string.Format("AutoQC Loader-daily {0}", _version) : string.Format("AutoQC Loader {0}", _version);
+            return $"{AppName()} {_version}";
         }
 
-        public static void InitializeSecurityProtocol()
+        private static string AppName()
+        {
+            return IsDaily ? "AutoQC Loader-daily" : "AutoQC Loader";
+        }
+
+        private static void InitializeSecurityProtocol()
         {
             // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);  

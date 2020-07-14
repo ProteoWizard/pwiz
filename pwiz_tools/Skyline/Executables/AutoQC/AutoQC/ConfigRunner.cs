@@ -144,7 +144,7 @@ namespace AutoQC
 
         public void ChangeStatus(RunnerStatus runnerStatus)
         {
-            lock (_lock) // TODO: not required?
+            lock (_lock)
             {
                 if (_runnerStatus == runnerStatus)
                 {
@@ -297,7 +297,7 @@ namespace AutoQC
             var inWait = false;
             while (true)
             {
-            if (_worker.CancellationPending)
+                if (_worker.CancellationPending)
                 {
                     e.Result = CANCELLED;
                     break;

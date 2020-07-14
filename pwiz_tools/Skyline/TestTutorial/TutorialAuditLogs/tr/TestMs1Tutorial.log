@@ -156,13 +156,6 @@ Picked child precursor [M+5] - 1067,1813++++ (irank 6) for sp|P24534|EF1B_HUMAN 
 Picked child precursor [M+6] - 1067,4320++++ (irank 7) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065,9279++++
 Picked child precursor [M+7] - 1067,6826++++ (irank 8) for sp|P24534|EF1B_HUMAN > K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] (missed 2) > 1065,9279++++
 
-Undo Redo : Changed peak bounds of sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757,3965++
-Summary   : Changed peak bounds of sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757,3965++
-All Info  :
-Changed peak bounds of sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757,3965++
-Changed start time of all peaks of sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757,3965++ in "5b_MCF7_TiTip3" from 35,54 to 35,72
-Changed end time of all peaks of sp|P07900|HS90A_HUMAN > R.GVVDSEDLPLNISR.E [386, 399] > 757,3965++ in "5b_MCF7_TiTip3" from 36,98 to 36,44
-
 Undo Redo : Peptide Settings -- Prediction > Time window changed to "10"
 Summary   : Settings > Peptide Settings -- Prediction > Time window changed to "10"
 All Info  :

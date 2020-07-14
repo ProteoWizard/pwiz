@@ -931,6 +931,19 @@ namespace pwiz.ProteowizardWrapper
                 var param = spectrum.scanList.scans[0].userParam(@"windowGroup"); // For Bruker diaPASEF
                 msDataSpectrum.WindowGroup = param.empty() ? 0 : int.Parse(param.value);
             }
+
+            if (expectIonMobilityValue)
+            {
+                // Note the range actually measured (for zero vs missing value determination)
+                var param = spectrum.userParam(@"ion mobility lower limit");
+                if (!param.empty())
+                {
+                    msDataSpectrum.IonMobilityMeasurementRangeLow = param.value;
+                    param = spectrum.userParam(@"ion mobility upper limit");
+                    msDataSpectrum.IonMobilityMeasurementRangeHigh = param.value;
+                }
+            }
+
             if (spectrum.binaryDataArrays.Count <= 1)
             {
                 msDataSpectrum.Mzs = new double[0];
@@ -1545,6 +1558,12 @@ namespace pwiz.ProteowizardWrapper
             set { _ionMobility = value; }
         }
 
+        /// <summary>
+        /// The range of ion mobilities that were scanned (for zero vs missing value determination)
+        /// </summary>
+        public double? IonMobilityMeasurementRangeLow { get; set; }
+        public double? IonMobilityMeasurementRangeHigh { get; set; }
+
         public ImmutableList<MsPrecursor> GetPrecursorsByMsLevel(int level)
         {
             if (PrecursorsByMsLevel == null || level > PrecursorsByMsLevel.Count)
@@ -1644,8 +1663,7 @@ namespace pwiz.ProteowizardWrapper
         {
             unchecked
             {
-                int result = 0;
-                result = (result * 397) ^ (Model != null ? Model.GetHashCode() : 0);
+                int result = Model != null ? Model.GetHashCode() : 0; // N.B. generated code starts with result = 0, which causes an inspection warning
                 result = (result * 397) ^ (Ionization != null ? Ionization.GetHashCode() : 0);
                 result = (result * 397) ^ (Analyzer != null ? Analyzer.GetHashCode() : 0);
                 result = (result * 397) ^ (Detector != null ? Detector.GetHashCode() : 0);
