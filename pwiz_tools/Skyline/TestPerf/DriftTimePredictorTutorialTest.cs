@@ -457,7 +457,5 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
         }
-
-
     }
 }
