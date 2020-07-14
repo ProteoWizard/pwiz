@@ -1050,10 +1050,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public enum SerializationElementType { TransitionChromInfo, TransitionGroupChromInfo, LegacyMeasuredIonMobility }
 
-        private double? PersistRound(double? val)
-        {
-            return val.HasValue ? Math.Round(val.Value, 6) : (double?)null;
-        }
         /// <summary>
         /// XML serialization with support for different element contexts, and
         /// backward compatibility doc formats where IM settings were in peptide
@@ -1070,23 +1066,23 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteAttributeNullable(skylineVersion < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY ? 
                         DocumentSerializer.ATTR.ion_mobility_ms1 :
                         DocumentSerializer.ATTR.ion_mobility, 
-                    PersistRound(IonMobilityAndCCS.IonMobility.Mobility));
+                    IonMobilityAndCCS.IonMobility.Mobility);
                 if (skylineVersion < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY)
                 {
                     var ion_mobility_fragment = IonMobilityAndCCS.IonMobility.Mobility.HasValue ?
                         (double?) (IonMobilityAndCCS.IonMobility.Mobility.Value + (IonMobilityAndCCS.HighEnergyIonMobilityValueOffset ?? 0)) :
                         null;
-                    writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_fragment, PersistRound(ion_mobility_fragment));
+                    writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_fragment, ion_mobility_fragment);
                 }
             }
             else
             {
                 // Express in terms of mobility and high energy offset
-                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility, PersistRound(IonMobilityAndCCS.IonMobility.Mobility));
+                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility, IonMobilityAndCCS.IonMobility.Mobility);
                 if ((IonMobilityAndCCS.HighEnergyIonMobilityValueOffset ?? 0) != 0)
-                    writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_high_energy_offset, PersistRound(IonMobilityAndCCS.HighEnergyIonMobilityValueOffset));
+                    writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_high_energy_offset, IonMobilityAndCCS.HighEnergyIonMobilityValueOffset);
             }
-            writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_window, PersistRound(IonMobilityExtractionWindowWidth));
+            writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_window, IonMobilityExtractionWindowWidth);
             writer.WriteAttributeNullable(DocumentSerializer.ATTR.ccs, CollisionalCrossSectionSqA);
             writer.WriteAttributeString(DocumentSerializer.ATTR.ion_mobility_type, IonMobilityUnits.ToString());
         }
