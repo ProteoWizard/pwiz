@@ -81,7 +81,6 @@ namespace pwiz.SkylineTestFunctional
             VerifyStringLocalization("{0:SEttings}", "{0:SEttings}");
 
             var unlocalizedMessageTypes = GetUnlocalizedMessageTypes();
-            var errMsgs = new List<string>();
             if (unlocalizedMessageTypes.Any())
                 Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalizedMessageTypes));
 
