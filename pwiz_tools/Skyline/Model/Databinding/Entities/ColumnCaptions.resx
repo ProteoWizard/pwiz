@@ -123,6 +123,9 @@
   <data name="AbsLog2FoldChange">
     <value>Absolute Log 2 Fold Change</value>
   </data>
+  <data name="AcceptanceCriteria">
+    <value>Acceptance Criteria</value>
+  </data>
   <data name="Accuracy">
     <value>Accuracy</value>
   </data>
@@ -469,6 +472,9 @@
   <data name="InterpolatedTimes">
     <value>Interpolated Times</value>
   </data>
+  <data name="IonFormula">
+    <value>Ion Formula</value>
+  </data>
   <data name="IonMobilityFragment">
     <value>Ion Mobility Fragment</value>
   </data>
@@ -484,8 +490,14 @@
   <data name="IonName">
     <value>Ion Name</value>
   </data>
-  <data name="IonFormula">
-    <value>Ion Formula</value>
+  <data name="IonRatio">
+    <value>Ion Ratio</value>
+  </data>
+  <data name="IonRatioStatus">
+    <value>Ion Ratio Status</value>
+  </data>
+  <data name="IonRatioThreshold">
+    <value>Ion Ratio Threshold</value>
   </data>
   <data name="IsDecoy">
     <value>Is Decoy</value>
@@ -939,6 +951,9 @@
   <data name="QuadraticCoefficient">
     <value>Quadratic Coefficient</value>
   </data>
+  <data name="QualitativeMeasurements">
+    <value>Qualitative Measurements</value>
+  </data>
   <data name="Quantification">
     <value>Quantification</value>
   </data>
@@ -1112,6 +1127,9 @@
   </data>
   <data name="SummaryMessage">
     <value>Summary Message</value>
+  </data>
+  <data name="TargetIonRatio">
+    <value>Target Ion Ratio</value>
   </data>
   <data name="ThreeLetterCodes"><value>Three Letter Codes</value></data>
   <data name="TicArea">

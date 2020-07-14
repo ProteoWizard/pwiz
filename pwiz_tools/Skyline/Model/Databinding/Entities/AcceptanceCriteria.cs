@@ -41,10 +41,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var parts = new List<string>();
             if (TargetIonRatio != null)
             {
-                String str = @"TargetIonRatio: " + TargetIonRatio;
+                String str = @"Target Ion Ratio: " + TargetIonRatio;
                 if (IonRatioThreshold.HasValue)
                 {
-                    str += @"+/-" + IonRatioThreshold.Value.ToString(@"%");
+                    str += @"+/-" + IonRatioThreshold.Value.ToString(@"#%");
                 }
                 parts.Add(str);
             }

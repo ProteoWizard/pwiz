@@ -172,6 +172,8 @@ namespace pwiz.Skyline.Model.Serialization
             public const string quantitative = "quantitative";
             public const string precursor_concentration = "precursor_concentration";
             public const string attribute_group_id = "attribute_group_id";
+            public const string target_ion_ratio = "target_ion_ratio";
+            public const string ion_ratio_threshold = "ion_ratio_threshold";
 
             // Results
             public const string replicate = "replicate";

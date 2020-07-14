@@ -79,6 +79,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Acceptance Criteria.
+        /// </summary>
+        public static string AcceptanceCriteria {
+            get {
+                return ResourceManager.GetString("AcceptanceCriteria", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Accuracy.
         /// </summary>
         public static string Accuracy {
@@ -1186,6 +1195,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion Ratio.
+        /// </summary>
+        public static string IonRatio {
+            get {
+                return ResourceManager.GetString("IonRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Ratio Status.
+        /// </summary>
+        public static string IonRatioStatus {
+            get {
+                return ResourceManager.GetString("IonRatioStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Ratio Threshold.
+        /// </summary>
+        public static string IonRatioThreshold {
+            get {
+                return ResourceManager.GetString("IonRatioThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Is Decoy.
         /// </summary>
         public static string IsDecoy {
@@ -2248,6 +2284,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Precursor Explicit Collision Energy.
+        /// </summary>
+        public static string PrecursorExplicitCollisionEnergy {
+            get {
+                return ResourceManager.GetString("PrecursorExplicitCollisionEnergy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor Ion Formula.
         /// </summary>
         public static string PrecursorIonFormula {
@@ -2595,6 +2640,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string QuadraticCoefficient {
             get {
                 return ResourceManager.GetString("QuadraticCoefficient", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Qualitative Measurements.
+        /// </summary>
+        public static string QualitativeMeasurements {
+            get {
+                return ResourceManager.GetString("QualitativeMeasurements", resourceCulture);
             }
         }
         
@@ -3126,6 +3180,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SummaryMessage {
             get {
                 return ResourceManager.GetString("SummaryMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target Ion Ratio.
+        /// </summary>
+        public static string TargetIonRatio {
+            get {
+                return ResourceManager.GetString("TargetIonRatio", resourceCulture);
             }
         }
         

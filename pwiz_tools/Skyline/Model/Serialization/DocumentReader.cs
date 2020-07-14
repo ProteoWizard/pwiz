@@ -904,6 +904,8 @@ namespace pwiz.Skyline.Model.Serialization
             var standardType = StandardType.FromName(reader.GetAttribute(ATTR.standard_type));
             double? importedRetentionTimeValue = reader.GetNullableDoubleAttribute(ATTR.explicit_retention_time);
             double? importedRetentionTimeWindow = reader.GetNullableDoubleAttribute(ATTR.explicit_retention_time_window);
+            double? targetIonRatio = reader.GetNullableDoubleAttribute(ATTR.target_ion_ratio);
+            double? ionRatioThreshold = reader.GetNullableDoubleAttribute(ATTR.ion_ratio_threshold);
             var importedRetentionTime = importedRetentionTimeValue.HasValue
                 ? new ExplicitRetentionTimeInfo(importedRetentionTimeValue.Value, importedRetentionTimeWindow)
                 : null;
@@ -980,7 +982,9 @@ namespace pwiz.Skyline.Model.Serialization
                 .ChangeConcentrationMultiplier(concentrationMultiplier)
                 .ChangeInternalStandardConcentration(internalStandardConcentration)
                 .ChangeNormalizationMethod(NormalizationMethod.FromName(normalizationMethod))
-                .ChangeAttributeGroupId(attributeGroupId);
+                .ChangeAttributeGroupId(attributeGroupId)
+                .ChangeTargetIonRatio(targetIonRatio)
+                .ChangeIonRatioThreshold(ionRatioThreshold);
 
             return peptideDocNode;
         }

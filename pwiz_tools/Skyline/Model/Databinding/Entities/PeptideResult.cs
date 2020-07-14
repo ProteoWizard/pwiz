@@ -41,11 +41,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         private readonly CachedValue<PeptideChromInfo> _chromInfo;
         private readonly CachedValue<QuantificationResult> _quantificationResult;
         private readonly CachedValue<CalibrationCurveFitter> _calibrationCurveFitter;
+        private readonly CachedValue<QualitativeMeasurements> _qualitativeMeasurements;
+
         public PeptideResult(Peptide peptide, ResultFile file) : base(peptide, file)
         {
             _chromInfo = CachedValue.Create(DataSchema, () => ResultFile.FindChromInfo(peptide.DocNode.Results));
             _quantificationResult = CachedValue.Create(DataSchema, GetQuantification);
             _calibrationCurveFitter = CachedValue.Create(DataSchema, GetCalibrationCurveFitter);
+            _qualitativeMeasurements = CachedValue.Create(DataSchema, () => new QualitativeMeasurements(this));
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
@@ -195,6 +198,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         skylineWindow.SelectedPath = Peptide.IdentityPath;
                     }
                 });
+            }
+        }
+
+        public QualitativeMeasurements QualitativeMeasurements
+        {
+            get
+            {
+                return _qualitativeMeasurements.Value;
             }
         }
 

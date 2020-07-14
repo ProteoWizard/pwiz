@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices.WindowsRuntime;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
@@ -59,18 +60,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return GetStatus()
-                var ionRatio = IonRatio;
-                if (!ionRatio.HasValue)
-                {
-                    return null;
-                }
-
-                var targetIonRatio = _peptideResult.Peptide.AcceptanceCriteria.TargetIonRatio;
-                if (!targetIonRatio.HasValue)
-                {
-                    return @"present";
-                }
+                return GetStatus(IonRatio, _peptideResult.Peptide.AcceptanceCriteria.TargetIonRatio,
+                    _peptideResult.Peptide.AcceptanceCriteria.IonRatioThreshold);
             }
         }
 
@@ -132,6 +123,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return @"fail";
+        }
+
+        public override string ToString()
+        {
+            var parts = new List<string>();
+            string ionRatioStatus = IonRatioStatus;
+            if (ionRatioStatus != null)
+            {
+                parts.Add("Ion Ratio: " + ionRatioStatus);
+            }
+
+            return TextUtil.SpaceSeparate(parts);
         }
     }
 }

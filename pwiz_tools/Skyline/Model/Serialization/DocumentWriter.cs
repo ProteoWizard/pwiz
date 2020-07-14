@@ -214,6 +214,8 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.explicit_retention_time, node.ExplicitRetentionTime.RetentionTime);
                 writer.WriteAttributeNullable(ATTR.explicit_retention_time_window, node.ExplicitRetentionTime.RetentionTimeWindow);
             }
+            writer.WriteAttributeNullable(ATTR.target_ion_ratio, node.TargetIonRatio);
+            writer.WriteAttributeNullable(ATTR.ion_ratio_threshold, node.IonRatioThreshold);
             double? scoreCalc = null;
 
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
