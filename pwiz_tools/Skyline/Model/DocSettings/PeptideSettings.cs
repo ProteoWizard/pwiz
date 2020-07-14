@@ -653,15 +653,20 @@ namespace pwiz.Skyline.Model.DocSettings
                 obsoleteUseSpectralLibraryDriftTimes)
             {
                 var dir =string.IsNullOrEmpty(reader.BaseURI) ? Directory.GetCurrentDirectory() : Path.GetDirectoryName(reader.BaseURI);
-                ObsoleteIonMobilityValues =
-                    (obsoleteDriftTimePredictor == null
-                        ? TransitionIonMobilityFiltering.EMPTY
-                        : obsoleteDriftTimePredictor.CreateTransitionIonMobilityFiltering(dir))
-                    .ChangeUseSpectralLibraryIonMobilityValues(obsoleteUseSpectralLibraryDriftTimes);
+                if (obsoleteDriftTimePredictor == null)
+                {
+                    ObsoleteIonMobilityValues = TransitionIonMobilityFiltering.EMPTY;
+                }
+                else
+                {
+                    ObsoleteIonMobilityValues = obsoleteDriftTimePredictor.CreateTransitionIonMobilityFiltering(dir);
+                }
                 if (ObsoleteIonMobilityValues.FilterWindowWidthCalculator.IsEmpty)
+                {
                     ObsoleteIonMobilityValues =
                         ObsoleteIonMobilityValues.ChangeFilterWindowWidthCalculator(
                             obsoleteSpectralLibraryIonMobilityWindowWidthCalculator);
+                }
             }
             DoValidate();
         }
