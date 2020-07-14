@@ -83,13 +83,13 @@ namespace pwiz.Common.Chemistry
         }
         public IonMobilityValue ChangeIonMobilityUnits(eIonMobilityUnits units)
         {
-            if (units == eIonMobilityUnits.none)
-            {
-                return EMPTY;
-            }
             if (Equals(units, Units))
             {
                 return this;
+            }
+            if (Equals(units, eIonMobilityUnits.none))
+            {
+                return EMPTY;
             }
             return ChangeProp(ImClone(this), im => im.Units = units);
         }
