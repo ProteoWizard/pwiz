@@ -1327,7 +1327,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     new Dictionary<Type, int>(),
                     new byte[0],
                     new ChromCachedFile[0],
-                    new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.IonMobility.Mobility??0), (float)(driftTimeFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
+                    new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.IonMobilityAndCCS.IonMobility.Mobility??0), (float)(driftTimeFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
                     peaks,
                     null) { TimeIntensitiesGroup = TimeIntensitiesGroup.Singleton(timeIntensities) };
 

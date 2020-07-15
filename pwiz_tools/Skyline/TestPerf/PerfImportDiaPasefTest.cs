@@ -25,7 +25,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -97,7 +96,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var results = doc1.Settings.MeasuredResults;
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
-                Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
+                AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
                     tolerance, true, out var chromGroupInfo));
 
                 foreach (var chromGroup in chromGroupInfo)
@@ -108,7 +107,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     }
                 }
             }
-            Assert.AreEqual(205688.75, maxHeight, 1); 
+            AssertEx.AreEqual(205688.75, maxHeight, 1); 
 
             // Test isolation scheme import (combined mode only)
             if (!MsDataFileImpl.ForceUncombinedIonMobility)
@@ -126,7 +125,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
 
             // Does CCS show up in reports?
-            TestReports(doc1);
+            TestReports();
 
         }
 
@@ -142,13 +141,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             RunUI(() =>
             {
                 var listIsolationWindows = isoEditor.GetIsolationWindows();
-                Assert.AreEqual(windowCount, listIsolationWindows.Count);
+                AssertEx.AreEqual(windowCount, listIsolationWindows.Count);
                 foreach (var isolationWindow in listIsolationWindows)
                 {
-                    Assert.AreEqual(windowWidth, isolationWindow.End - isolationWindow.Start, 
+                    AssertEx.AreEqual(windowWidth, isolationWindow.End - isolationWindow.Start, 
                         string.Format("Range {0} to {1} does not have width {2}", isolationWindow.Start, isolationWindow.End, windowWidth));
-                    Assert.AreEqual(margin, isolationWindow.StartMargin);
-                    Assert.AreEqual(margin, isolationWindow.EndMargin);
+                    AssertEx.AreEqual(margin, isolationWindow.StartMargin);
+                    AssertEx.AreEqual(margin, isolationWindow.EndMargin);
                 }
             });
         }
@@ -169,30 +168,20 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
 
-        private void TestReports(SrmDocument doc1, string msg = null)
+        private void TestReports(string msg = null)
         {
             // Verify reports working for CCS
             var row = 0;
-            var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-            EnableDocumentGridColumns(documentGrid,
-                Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List,
-                doc1.PeptideTransitionCount,
-                new[]
-                {
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CollisionalCrossSection",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityMS1",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityFragment",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityUnits",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityWindow"
-                });
-            CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, 1.1732, msg);
-            CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityFragment", row, 1.1732, msg); 
-            CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
-            CheckFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.12, msg);
-            CheckFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 473.2742, msg);
+            var documentGrid = EnableDocumentGridIonMobilityResultsColumns();
+            var imPrecursor = 1.1732;
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityMS1", row, imPrecursor, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "TransitionResult.IonMobilityFragment", row, imPrecursor, msg); // Document is all precursors
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityUnits", row, IonMobilityFilter.IonMobilityUnitsL10NString(eIonMobilityUnits.inverse_K0_Vsec_per_cm2), msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.IonMobilityWindow", row, 0.12, msg);
+            CheckDocumentResultsGridFieldByName(documentGrid, "PrecursorResult.CollisionalCrossSection", row, 473.2742, msg);
             EnableDocumentGridColumns(documentGrid,
                 Resources.ReportSpecList_GetDefaults_Peptide_RT_Results,
-                doc1.PeptideCount * doc1.MeasuredResults.Chromatograms.Count, null);
+                SkylineWindow.Document.PeptideCount * SkylineWindow.Document.MeasuredResults.Chromatograms.Count);
             foreach (var rt in new[] {
                 14.35, 14.34, 14.33, 14.33, 14.15, 14.12, 14.11, 14.11, 14.63, 14.61, 14.61, 14.61, 14.75, 14.74, 14.72, 14.73, 14.06, 14.04,
                 14.03, 14.03, 14.43, 14.43, 14.42, 14.43, 14.36, 14.37, 14.35, 14.35, 14.31, 14.31, 14.29, 14.28, 14.48, 14.49, 14.47, 14.48,
@@ -204,43 +193,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 14.62, 14.61, 14.12, 14.1, 14.1, 14.1, 14.23, 14.21, 14.2, 14.2
             })
             {
-                CheckFieldByName(documentGrid, "PeptideRetentionTime", row++, rt, msg, true);
+                CheckDocumentResultsGridFieldByName(documentGrid, "PeptideRetentionTime", row++, rt, msg, IsRecordMode);
             }
 
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
         }
 
-        private static int ValuesRecordedCount;
-
-        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null, bool recordValues = false)
-        {
-            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
-            RunUI(() =>
-            {
-                // By checking the 1th row we check both the single file and two file cases
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as double?;
-                Assert.AreEqual(expected.HasValue, val.HasValue, name + (msg ?? string.Empty));
-                if (!IsRecordMode || !recordValues)
-                    Assert.AreEqual(expected ?? 0, val ?? 0, 0.005, name + (msg ?? string.Empty));
-                else
-                {
-                    Console.Write(@"{0:0.##}, ", val);
-                    if (++ValuesRecordedCount % 18 == 0)
-                        Console.WriteLine();
-                }
-            });
-        }
-
-        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null)
-        {
-            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value." + name);
-            RunUI(() =>
-            {
-                // By checking the 1th row we check both the single file and two file cases
-                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
-                Assert.AreEqual(expected, val, name + (msg ?? string.Empty));
-            });
-        }
     }
 }

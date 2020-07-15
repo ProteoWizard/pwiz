@@ -3180,9 +3180,9 @@ namespace pwiz.Skyline.Model
 
             double? ionMobility = null;
             var windowIM = 0.4;
-            if (prediction.IonMobilityPredictor != null)
+            if (Document.Settings.TransitionSettings.IonMobilityFiltering != null)
             {
-                var result = Document.Settings.GetIonMobility(nodePep, nodeTranGroup, nodeTran, null, null, 1.2, out windowIM);
+                var result = Document.Settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, null, null, 1.2);
                 if (result.HasIonMobilityValue)
                     ionMobility = result.IonMobility.Mobility.Value;
             }
