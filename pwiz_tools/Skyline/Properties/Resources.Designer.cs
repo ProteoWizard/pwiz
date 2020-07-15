@@ -24594,6 +24594,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Additional Settings.
+        /// </summary>
+        public static string SearchSettingsControl_Additional_Settings {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_Additional_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to save your current settings before switching?.
         /// </summary>
         public static string SelectSettingsHandler_ToolStripMenuItemClick_Do_you_want_to_save_your_current_settings_before_switching {

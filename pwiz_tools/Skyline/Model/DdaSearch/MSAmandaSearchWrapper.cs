@@ -86,11 +86,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                     throw new Exception(string.Format(Resources.DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found, INSTRUMENTS_FILENAME));
             }
 
-            AdditionalSettings = new Dictionary<string, string>
+            AdditionalSettings = new Dictionary<string, Setting>
             {
-                {@"CoreUsePercentage", @"100"},
-                {@"MaxNumberProteins", @"10000"},
-                {@"MaxNumberSpectra", @"1000"}
+                {@"MaxLoadedProteinsAtOnce", new Setting(@"MaxLoadedProteinsAtOnce", 10000, 10, int.MaxValue)},
+                {@"MaxLoadedSpectraAtOnce", new Setting(@"MaxLoadedSpectraAtOnce", 1000, 100, int.MaxValue)}
             };
         }
 
@@ -181,6 +180,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             mzID.Settings = Settings;
             SearchEngine = new MSAmandaSearch(helper, _baseDir, _outputParameters, Settings, token);
             SearchEngine.InitializeOutputMZ(mzID);
+            Settings.LoadedProteinsAtOnce = (int) AdditionalSettings[@"MaxLoadedProteinsAtOnce"].Value;
+            Settings.LoadedSpectraAtOnce = (int) AdditionalSettings[@"MaxLoadedSpectraAtOnce"].Value;
         }
     
         public override bool Run(CancellationTokenSource tokenSource)

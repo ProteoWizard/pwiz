@@ -16,14 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Threading;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -36,9 +39,86 @@ namespace pwiz.Skyline.Model
         protected string[] FastaFileNames { get; set; }
 
         /// <summary>
+        /// A string or numeric variable with a default value and, for numeric types, min and max values.
+        /// </summary>
+        public class Setting
+        {
+            public Setting(string name, int defaultValue, int minValue, int maxValue)
+            {
+                Name = name;
+                _value = defaultValue;
+                MinValue = minValue;
+                MaxValue = maxValue;
+            }
+
+            public Setting(string name, double defaultValue, double minValue, double maxValue)
+            {
+                Name = name;
+                _value = defaultValue;
+                MinValue = minValue;
+                MaxValue = maxValue;
+            }
+
+            public Setting(string name, string defaultValue = null)
+            {
+                Name = name;
+                _value = string.Empty;
+            }
+
+            public string Name { get; }
+            public object MinValue { get; }
+            public object MaxValue { get; }
+
+            private object _value;
+            public object Value
+            {
+                get { return _value; }
+                set { _value = Validate(value); }
+            }
+
+            public object Validate(object value)
+            {
+                // incoming value must either be a string or value type must stay the same
+                Assume.IsTrue(value is string || value?.GetType() == _value?.GetType());
+
+                // CONSIDER: worth an extra case to handle incoming values that are already int/double?
+                switch (MinValue)
+                {
+                    case string s:
+                        return value;
+
+                    case int minValue:
+                        if (!int.TryParse(value.ToString(), out int tmpi32))
+                            throw new ArgumentException(string.Format(
+                                Resources.ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_,
+                                value, Name));
+                        if (tmpi32 < minValue || tmpi32 > (int) MaxValue)
+                            throw new ArgumentOutOfRangeException(string.Format(
+                                Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
+                                value, Name, minValue, MaxValue));
+                        return tmpi32;
+
+                    case double minValue:
+                        if (!double.TryParse(value.ToString(), out double tmpd))
+                            throw new ArgumentException(string.Format(
+                                Resources.ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_,
+                                value, Name));
+                        if (tmpd < minValue || tmpd > (double) MaxValue)
+                            throw new ArgumentOutOfRangeException(string.Format(
+                                Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
+                                value, Name, minValue, MaxValue));
+                        return tmpd;
+
+                    default:
+                        throw new InvalidOperationException(@"unsupported setting type");
+                }
+            }
+        }
+
+        /// <summary>
         /// Dictionary of available additional settings. May be null if SearchEngine implementation has no additional settings.
         /// </summary>
-        public IDictionary<string, string> AdditionalSettings { get; set; }
+        public IDictionary<string, Setting> AdditionalSettings { get; set; }
 
         public abstract void SetPrecursorMassTolerance(MzTolerance mzTolerance);
         public abstract void SetFragmentIonMassTolerance(MzTolerance mzTolerance);

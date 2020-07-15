@@ -10941,4 +10941,7 @@ Invalid peptide sequence at position 18
   <data name="MatchModificationsControl_Initialize_Edit__heavy_modifications___" xml:space="preserve">
     <value>Edit &amp;heavy modifications...</value>
   </data>
+  <data name="SearchSettingsControl_Additional_Settings" xml:space="preserve">
+    <value>Additional Settings</value>
+  </data>
 </root>

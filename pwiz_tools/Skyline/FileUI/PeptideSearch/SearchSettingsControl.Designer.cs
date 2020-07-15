@@ -101,6 +101,7 @@
             resources.ApplyResources(this.btnAdditionalSettings, "btnAdditionalSettings");
             this.btnAdditionalSettings.Name = "btnAdditionalSettings";
             this.btnAdditionalSettings.UseVisualStyleBackColor = true;
+            this.btnAdditionalSettings.Click += new System.EventHandler(this.btnAdditionalSettings_Click);
             // 
             // lblSearchEngineName
             // 
