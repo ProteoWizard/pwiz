@@ -816,7 +816,8 @@ namespace pwiz.SkylineTestUtil
                         }
 
                         // If only difference appears to be a generated ISO timestamp, let it pass
-                        var regexTimestamp = new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d[\-\+]\d\d\:\d\d("".*)");
+                        // e.g. 2020-07-10T10:40:03Z or 2020-07-10T10:40:03-07:00 etc
+                        var regexTimestamp = new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d(?:Z|(?:[\-\+]\d\d\:\d\d))("".*)");
                         matchTarget = regexTimestamp.Match(lineTarget ?? string.Empty);
                         matchActual = regexTimestamp.Match(lineActual ?? string.Empty);
                         if (matchTarget.Success && matchActual.Success
