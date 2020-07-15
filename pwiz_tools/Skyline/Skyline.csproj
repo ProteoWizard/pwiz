@@ -216,6 +216,7 @@
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\KeyValueGridDlg.cs" />
     <Compile Include="Alerts\NoModeUIDlg.cs">
       <SubType>Form</SubType>
     </Compile>
