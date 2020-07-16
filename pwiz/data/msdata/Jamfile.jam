@@ -46,6 +46,7 @@ lib pwiz_data_msdata
         BinaryDataEncoder.cpp
         ChromatogramList_mzML.cpp
         [ mz5-build ChromatogramList_mz5.cpp ]
+		[ mz5-build ChromatogramList_triMS5.cpp ]
         DefaultReaderList.cpp
         Diff.cpp
         IO.cpp
@@ -60,6 +61,7 @@ lib pwiz_data_msdata
         Serializer_MGF.cpp
         Serializer_MSn.cpp
         [ mz5-build Serializer_mz5.cpp ]
+		[ mz5-build Serializer_triMS5.cpp ]
         SpectrumInfo.cpp
         SpectrumIterator.cpp
         SpectrumList_mzML.cpp
@@ -68,6 +70,7 @@ lib pwiz_data_msdata
         SpectrumList_MSn.cpp
         SpectrumList_BTDX.cpp
         [ mz5-build SpectrumList_mz5.cpp ]
+		[ mz5-build SpectrumList_triMS5.cpp ]
         SpectrumListBase.cpp
         SpectrumListCache.cpp
         RAMPAdapter.cpp
@@ -86,6 +89,7 @@ lib pwiz_data_msdata
         <library>/ext/boost//thread
         <library>/ext/zlib//z
         [ mz5-build <library>mz5//pwiz_data_msdata_mz5 ]
+		[ mz5-build <library>triMS5//pwiz_data_msdata_triMS5 ]
     : # default-build
     : # usage-requirements
         <library>pwiz_data_msdata_version
@@ -98,6 +102,7 @@ lib pwiz_data_msdata
         <library>/ext/boost//thread
         <library>/ext/zlib//z
         [ mz5-build <library>mz5//pwiz_data_msdata_mz5 ]
+		[ mz5-build <library>triMS5//pwiz_data_msdata_triMS5 ]
     ;
 
 
@@ -137,6 +142,9 @@ if ! [ without-mz5 ]
 	unit-test-if-exists Serializer_mz5_Test : Serializer_mz5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 	unit-test-if-exists SpectrumList_mz5_Test : SpectrumList_mz5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 	unit-test-if-exists ChromatogramList_mz5_Test : ChromatogramList_mz5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
+	unit-test-if-exists Serializer_triMS5_Test : Serializer_triMS5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
+	unit-test-if-exists SpectrumList_triMS5_Test : SpectrumList_triMS5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
+	unit-test-if-exists ChromatogramList_triMS5_Test : ChromatogramList_triMS5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 }
 unit-test-if-exists MSnReaderTest : MSnReaderTest.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
 unit-test-if-exists MSDataFileTest : MSDataFileTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;

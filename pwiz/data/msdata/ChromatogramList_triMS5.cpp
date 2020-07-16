@@ -265,7 +265,7 @@ namespace pwiz {
 							const DataSetIdPairToSizeMap& fields = conn_->getAvailableDataSets();
 
 							//find first ChromatogramTime data set
-							unsigned int presetIndex = 1;
+							int presetIndex = 1;
 							auto it = fields.find({ DataSetType_triMS5::ChromatogramTime, presetIndex });
 							while (it != conn_->getAvailableDataSets().end())
 							{

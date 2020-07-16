@@ -37,154 +37,7 @@ namespace pwiz {
 
 			using namespace pwiz::msdata::mz5;
 
-			pwiz::util::IterationListener::Status ReferenceWrite_triMS5::readAndWriteSpectra(Connection_triMS5& connection, std::vector<BinaryDataMZ5>& bdl, std::vector<SpectrumMZ5>& spl, int presetScanConfiguration, const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
-			{
-				pwiz::util::IterationListener::Status status = pwiz::util::IterationListener::Status_Ok;
 
-				pwiz::msdata::SpectrumListPtr sl_old = ref_mz5_.msd_.run.spectrumListPtr;
-
-				//if there is more than one cluster - we perform the filterting step to achieve scan type specific spectrum lists
-				boost::shared_ptr<SpectrumList_Filter_triMS5> sl_filtered = boost::make_shared<SpectrumList_Filter_triMS5>(sl_old, SpectrumList_FilterPredicate_ScanEventSet_triMS5(pwiz::util::IntegerSet(presetScanConfiguration)));
-
-				pwiz::msdata::SpectrumListPtr sl = sl_filtered->empty() ? sl_old : boost::static_pointer_cast<pwiz::msdata::SpectrumList>(sl_filtered);
-
-
-				SpectrumWorkerThreads spectrumWorkers(*sl, true);
-
-				std::vector<unsigned long> sindex;
-				sindex.reserve(sl->size());
-				unsigned long accIndex = 0;
-
-				pwiz::msdata::SpectrumPtr sp;
-				pwiz::msdata::BinaryDataArrayPtr bdap;
-				std::vector<double> mz;
-
-				std::map<double, std::vector<unsigned long>> mz_unique;
-				unsigned long datapoints = 0;
-
-				std::set<double> rtAxis;
-
-				///TODO
-				std::set<double> dtAxis;
-
-
-				for (size_t i = 0; i < sl->size(); i++)
-				{
-					status = pwiz::util::IterationListener::Status_Ok;
-					if (iterationListenerRegistry)
-						status = iterationListenerRegistry->broadcastUpdateMessage(pwiz::util::IterationListener::UpdateMessage(i, sl->size()));
-					if (status == pwiz::util::IterationListener::Status_Cancel)
-						break;
-
-					sp = spectrumWorkers.processBatch(i);
-					mz.clear();
-					if (sp.get())
-					{
-				//		spl.push_back(SpectrumMZ5(*sp.get(), ref_mz5_));
-						if (sp->getMZArray().get() && sp->getIntensityArray().get())
-						{
-							mz = sp->getMZArray().get()->data;
-					//		bdl.push_back(BinaryDataMZ5(*sp->getMZArray().get(), *sp->getIntensityArray().get(), ref_mz5_));
-
-							if (mz.size() > 0)
-							{
-								accIndex += static_cast<unsigned long>(mz.size());
-								connection.extendData(sp->getIntensityArray().get()->data, DataSetType_triMS5::SpectrumIntensity, presetScanConfiguration);
-
-								//add data to axis dictionary 
-								for (size_t j = 0; j < mz.size(); j++)
-								{
-									mz_unique[mz[j]].push_back(datapoints);
-									datapoints++;
-								}
-							}
-						}
-
-		/*				else
-						{
-							bdl.push_back(BinaryDataMZ5());
-						}*/
-						////get the chromatogram time:
-						//for (auto e : sp->scanList.scans)
-						//{
-						//	//if we found the retention time
-						//	if (e.hasCVParam(CVID::MS_scan_start_time))
-						//	{
-						//		double rt = e.cvParam(CVID::MS_scan_start_time).valueAs<double>();
-						//		rtAxis.insert(rt);
-						//	}
-						//	///TODO: search for different dt bins
-
-						//	if (e.hasCVParam(CVID::MS_ion_mobility_drift_time) || e.hasCVParam(CVID::MS_inverse_reduced_ion_mobility))
-						//	{
-						//		double dt = e.hasCVParam(CVID::MS_ion_mobility_drift_time) ? e.cvParam(CVID::MS_ion_mobility_drift_time).valueAs<double>() : e.cvParam(CVID::MS_inverse_reduced_ion_mobility).valueAs<double>();
-						//		dtAxis.insert(dt);
-						//	}
-						//}
-
-						sindex.push_back(accIndex);
-					}
-				}
-
-				//reconstruct mass axis and mass indices data sets
-				auto it = mz_unique.begin();
-				std::vector<double> massAxis(mz_unique.size());
-				std::vector<unsigned long> massIndices(datapoints);
-				for (size_t i = 0; i < mz_unique.size(); i++)
-				{
-					massAxis[i] = (*it).first; //add mass value to axis
-					for (auto e : (*it).second)
-					{
-						massIndices[e] = i;
-					}
-					it++;
-				}
-
-
-				//write mass indices in one step
-				if (massIndices.size() > 0)
-					connection.createAndWrite1DDataSet(massIndices.size(), massIndices.data(), DataSetType_triMS5::SpectrumMassIndices, presetScanConfiguration);
-
-
-				//write massAxis
-				if (massAxis.size() > 0)
-					connection.createAndWrite1DDataSet(massAxis.size(), massAxis.data(), DataSetType_triMS5::SpectrumMassAxis, presetScanConfiguration);
-
-				//write rtAxis
-				if (rtAxis.size() > 0)
-				{
-					std::vector<double> time(rtAxis.size()); //we need a vector not a set
-					std::copy(rtAxis.begin(), rtAxis.end(), time.begin());
-					connection.createAndWrite1DDataSet(time.size(), time.data(), DataSetType_triMS5::ChromatogramTime, presetScanConfiguration);
-				}
-
-				///TODO write DT Axis
-
-				//write attributes
-				connection.writeAttributesToGroup(GroupType_triMS5::Spectrum, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "NumberOfRawDataPoints", datapoints);
-				connection.writeAttributesToGroup(GroupType_triMS5::Spectrum, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "MassAxisLength", massAxis.size());
-				connection.writeAttributesToGroup(GroupType_triMS5::Chromatogram, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "ChromatogramLength", rtAxis.size());
-				connection.writeAttributesToGroup(GroupType_triMS5::Spectrum, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "NumberOfDTbins", dtAxis.size());
-
-				if (sindex.size() > 0)
-					connection.createAndWrite1DDataSet(sindex.size(), sindex.data(), DataSetType_triMS5::SpectrumIndex, presetScanConfiguration);
-
-				if (spl.size() > 0)
-					connection.createAndWrite1DDataSet(spl.size(), spl.data(), DataSetType_triMS5::SpectrumMetaData, presetScanConfiguration);
-
-				if (bdl.size() > 0)
-					connection.createAndWrite1DDataSet(bdl.size(), bdl.data(), DataSetType_triMS5::SpectrumBinaryMetaData, presetScanConfiguration);
-
-				spl.clear();
-				bdl.clear();
-
-				//write chromatogram index
-				std::vector<unsigned long> cindex;
-				cindex.push_back(rtAxis.size());
-				connection.createAndWrite1DDataSet(cindex.size(), cindex.data(), DataSetType_triMS5::ChromatogramIndex, presetScanConfiguration);
-
-				return status;
-			}
 
 
 
@@ -349,6 +202,155 @@ namespace pwiz {
 				return status;
 			}
 
+			pwiz::util::IterationListener::Status ReferenceWrite_triMS5::readAndWriteSpectra(Connection_triMS5& connection, std::vector<BinaryDataMZ5>& bdl, std::vector<SpectrumMZ5>& spl, int presetScanConfiguration, const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
+			{
+				pwiz::util::IterationListener::Status status = pwiz::util::IterationListener::Status_Ok;
+
+				pwiz::msdata::SpectrumListPtr sl_old = ref_mz5_.msd_.run.spectrumListPtr;
+
+				//if there is more than one cluster - we perform the filterting step to achieve scan type specific spectrum lists
+				boost::shared_ptr<SpectrumList_Filter_triMS5> sl_filtered = boost::make_shared<SpectrumList_Filter_triMS5>(sl_old, SpectrumList_FilterPredicate_ScanEventSet_triMS5(pwiz::util::IntegerSet(presetScanConfiguration)));
+
+				pwiz::msdata::SpectrumListPtr sl = sl_filtered->empty() ? sl_old : boost::static_pointer_cast<pwiz::msdata::SpectrumList>(sl_filtered);
+
+
+				SpectrumWorkerThreads spectrumWorkers(*sl, true);
+
+				std::vector<unsigned long> sindex;
+				sindex.reserve(sl->size());
+				unsigned long accIndex = 0;
+
+				pwiz::msdata::SpectrumPtr sp;
+				pwiz::msdata::BinaryDataArrayPtr bdap;
+				std::vector<double> mz;
+
+				std::map<double, std::vector<unsigned long>> mz_unique;
+				unsigned long datapoints = 0;
+
+				std::set<double> rtAxis;
+
+				///TODO
+				std::set<double> dtAxis;
+
+
+				for (size_t i = 0; i < sl->size(); i++)
+				{
+					status = pwiz::util::IterationListener::Status_Ok;
+					if (iterationListenerRegistry)
+						status = iterationListenerRegistry->broadcastUpdateMessage(pwiz::util::IterationListener::UpdateMessage(i, sl->size()));
+					if (status == pwiz::util::IterationListener::Status_Cancel)
+						break;
+
+					sp = spectrumWorkers.processBatch(i);
+					mz.clear();
+					if (sp.get())
+					{
+						spl.push_back(SpectrumMZ5(*sp.get(), ref_mz5_));
+						if (sp->getMZArray().get() && sp->getIntensityArray().get())
+						{
+							mz = sp->getMZArray().get()->data;
+							bdl.push_back(BinaryDataMZ5(*sp->getMZArray().get(), *sp->getIntensityArray().get(), ref_mz5_));
+
+							if (mz.size() > 0)
+							{
+								accIndex += static_cast<unsigned long>(mz.size());
+								connection.extendData(sp->getIntensityArray().get()->data, DataSetType_triMS5::SpectrumIntensity, presetScanConfiguration);
+
+								//add data to axis dictionary 
+								for (size_t j = 0; j < mz.size(); j++)
+								{
+									mz_unique[mz[j]].push_back(datapoints);
+									datapoints++;
+								}
+							}
+						}
+
+						else
+						{
+							bdl.push_back(BinaryDataMZ5());
+						}
+
+						//get the chromatogram time:
+						for (auto e : sp->scanList.scans)
+						{
+							//if we found the retention time
+							if (e.hasCVParam(CVID::MS_scan_start_time))
+							{
+								double rt = e.cvParam(CVID::MS_scan_start_time).valueAs<double>();
+								rtAxis.insert(rt);
+							}
+							///TODO: search for different dt bins
+
+							if (e.hasCVParam(CVID::MS_ion_mobility_drift_time) || e.hasCVParam(CVID::MS_inverse_reduced_ion_mobility))
+							{
+								double dt = e.hasCVParam(CVID::MS_ion_mobility_drift_time) ? e.cvParam(CVID::MS_ion_mobility_drift_time).valueAs<double>() : e.cvParam(CVID::MS_inverse_reduced_ion_mobility).valueAs<double>();
+								dtAxis.insert(dt);
+							}
+						}
+
+						sindex.push_back(accIndex);
+					}
+				}
+
+				//reconstruct mass axis and mass indices data sets
+				auto it = mz_unique.begin();
+				std::vector<double> massAxis(mz_unique.size());
+				std::vector<unsigned long> massIndices(datapoints);
+				for (size_t i = 0; i < mz_unique.size(); i++)
+				{
+					massAxis[i] = (*it).first; //add mass value to axis
+					for (auto e : (*it).second)
+					{
+						massIndices[e] = i;
+					}
+					it++;
+				}
+
+
+				//write mass indices in one step
+				if (massIndices.size() > 0)
+					connection.createAndWrite1DDataSet(massIndices.size(), massIndices.data(), DataSetType_triMS5::SpectrumMassIndices, presetScanConfiguration);
+
+
+				//write massAxis
+				if (massAxis.size() > 0)
+					connection.createAndWrite1DDataSet(massAxis.size(), massAxis.data(), DataSetType_triMS5::SpectrumMassAxis, presetScanConfiguration);
+
+				//write rtAxis
+				if (rtAxis.size() > 0)
+				{
+					std::vector<double> time(rtAxis.size()); //we need a vector not a set
+					std::copy(rtAxis.begin(), rtAxis.end(), time.begin());
+					connection.createAndWrite1DDataSet(time.size(), time.data(), DataSetType_triMS5::ChromatogramTime, presetScanConfiguration);
+				}
+
+				///TODO write DT Axis
+
+				//write attributes
+				connection.writeAttributesToGroup(GroupType_triMS5::Spectrum, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "NumberOfRawDataPoints", datapoints);
+				connection.writeAttributesToGroup(GroupType_triMS5::Spectrum, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "MassAxisLength", massAxis.size());
+				connection.writeAttributesToGroup(GroupType_triMS5::Chromatogram, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "ChromatogramLength", rtAxis.size());
+				connection.writeAttributesToGroup(GroupType_triMS5::Spectrum, presetScanConfiguration, H5::PredType::NATIVE_ULONG, "NumberOfDTbins", dtAxis.size());
+
+				if (sindex.size() > 0)
+					connection.createAndWrite1DDataSet(sindex.size(), sindex.data(), DataSetType_triMS5::SpectrumIndex, presetScanConfiguration);
+
+				if (spl.size() > 0)
+					connection.createAndWrite1DDataSet(spl.size(), spl.data(), DataSetType_triMS5::SpectrumMetaData, presetScanConfiguration);
+
+				if (bdl.size() > 0)
+					connection.createAndWrite1DDataSet(bdl.size(), bdl.data(), DataSetType_triMS5::SpectrumBinaryMetaData, presetScanConfiguration);
+
+				spl.clear();
+				bdl.clear();
+
+				//write chromatogram index
+				std::vector<unsigned long> cindex;
+				cindex.push_back(rtAxis.size());
+				connection.createAndWrite1DDataSet(cindex.size(), cindex.data(), DataSetType_triMS5::ChromatogramIndex, presetScanConfiguration);
+
+				return status;
+			}
 
 			int ReferenceWrite_triMS5::init(std::set<int>& presetScanConfigurationIndices_, std::vector<std::pair<int, unsigned long>>& global)
 			{

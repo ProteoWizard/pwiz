@@ -99,13 +99,13 @@ namespace msdata {
 			
 			root.close();
 
-			createAndWriteGroup(GroupType_triMS5::MetaData, config_.getNameFor(GroupType_triMS5::MetaData),0);
-			createAndWriteGroup(GroupType_triMS5::RawData, config_.getNameFor(GroupType_triMS5::RawData),0);
+			createAndWriteGroup(GroupType_triMS5::MetaData, config_.getNameFor(GroupType_triMS5::MetaData), 0);
+			createAndWriteGroup(GroupType_triMS5::RawData, config_.getNameFor(GroupType_triMS5::RawData), 0);
 
 			std::string cluster = config_.getNameFor(GroupType_triMS5::Cluster) + "_";
 			for (int i = 1; i <= numberOfClusters; i++)
 			{
-				createAndWriteGroup(GroupType_triMS5::Cluster, cluster + std::to_string(i) + "/",i);
+				createAndWriteGroup(GroupType_triMS5::Cluster, cluster + std::to_string(i) + "/", i);
 				createAndWriteGroup(GroupType_triMS5::Spectrum, config_.getNameFor(GroupType_triMS5::Spectrum), i);
 				createAndWriteGroup(GroupType_triMS5::Chromatogram, config_.getNameFor(GroupType_triMS5::Chromatogram), i);
 			}
@@ -255,7 +255,7 @@ namespace msdata {
 		{
 			/*find the triMS5Attribut at the root group --> used to distinguish mz5 and triMS5 files
 			*/
-			H5::Group root = openGroup(GroupType_triMS5::Root, 1);
+			H5::Group root = openGroup(GroupType_triMS5::Root, 0);
 			if (root.getNumAttrs() > 0)
 			{
 				//try to open the triMS5 attribute
@@ -274,7 +274,7 @@ namespace msdata {
 					size_t dsend = 0;
 					if (it != availDataSets_.end()) 
 					{
-						FileInformation_triMS5* fi = (FileInformation_triMS5*)readDataSet(DataSetType_triMS5::FileInformation, dsend, 0);
+						FileInformation_triMS5* fi = (FileInformation_triMS5*) readDataSet(DataSetType_triMS5::FileInformation, dsend, 0);
 						fileInfo_.majorVersion = fi->majorVersion;
 						fileInfo_.minorVersion = fi->minorVersion;
 						fileInfo_.didFiltering = 0;
