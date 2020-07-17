@@ -55,6 +55,9 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string INSTRUMENTS_FILENAME = "Instruments.xml";
         private const string AmandaMap = @"AmandaMap";
 
+        private const string MAX_LOADED_PROTEINS_AT_ONCE = "MaxLoadedProteinsAtOnce";
+        private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
+
         private readonly string _baseDir =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MSAmanda2.0");
 
@@ -88,8 +91,8 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             AdditionalSettings = new Dictionary<string, Setting>
             {
-                {@"MaxLoadedProteinsAtOnce", new Setting(@"MaxLoadedProteinsAtOnce", 10000, 10, int.MaxValue)},
-                {@"MaxLoadedSpectraAtOnce", new Setting(@"MaxLoadedSpectraAtOnce", 1000, 100, int.MaxValue)}
+                {MAX_LOADED_PROTEINS_AT_ONCE, new Setting(MAX_LOADED_PROTEINS_AT_ONCE, 10000, 10, int.MaxValue)},
+                {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 1000, 100, int.MaxValue)}
             };
         }
 
@@ -180,8 +183,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             mzID.Settings = Settings;
             SearchEngine = new MSAmandaSearch(helper, _baseDir, _outputParameters, Settings, token);
             SearchEngine.InitializeOutputMZ(mzID);
-            Settings.LoadedProteinsAtOnce = (int) AdditionalSettings[@"MaxLoadedProteinsAtOnce"].Value;
-            Settings.LoadedSpectraAtOnce = (int) AdditionalSettings[@"MaxLoadedSpectraAtOnce"].Value;
+            Settings.LoadedProteinsAtOnce = (int) AdditionalSettings[MAX_LOADED_PROTEINS_AT_ONCE].Value;
+            Settings.LoadedSpectraAtOnce = (int) AdditionalSettings[MAX_LOADED_SPECTRA_AT_ONCE].Value;
         }
     
         public override bool Run(CancellationTokenSource tokenSource)
@@ -240,7 +243,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         if (elem != null)
                         {
                             Modification modClone = new Modification(elem);
-                            modClone.Fixed = !item.IsVariable;
+                            modClone.Fixed = !item.IsVariable && item.LabelAtoms == LabelAtoms.None;
                             Settings.SelectedModifications.Add(modClone);
                         }
                         else

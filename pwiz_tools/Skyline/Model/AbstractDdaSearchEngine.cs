@@ -81,6 +81,9 @@ namespace pwiz.Skyline.Model
                 // incoming value must either be a string or value type must stay the same
                 Assume.IsTrue(value is string || value?.GetType() == _value?.GetType());
 
+                if (value == null)
+                    return null;
+
                 // CONSIDER: worth an extra case to handle incoming values that are already int/double?
                 switch (MinValue)
                 {
