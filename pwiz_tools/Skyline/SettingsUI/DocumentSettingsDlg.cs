@@ -247,5 +247,26 @@ namespace pwiz.Skyline.SettingsUI
                     .Append(PersistedViews.MainGroup.Id.ViewName(newView.Name));
             }
         }
+
+        private void btnAddResultFileRule_Click(object sender, System.EventArgs e)
+        {
+            AddResultFileRule();
+        }
+
+        public void EditResultFileRuleList()
+        {
+
+        }
+
+        public void AddResultFileRule()
+        {
+            using (var dlg = new DefineExtractedMetadataDlg(DocumentContainer))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+
+                }
+            }
+        }
     }
 }

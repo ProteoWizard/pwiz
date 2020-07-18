@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
@@ -80,6 +81,19 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [Track]
         public Uri PanoramaPublishUri { get; private set; }
+
+        [TrackChildren]
+        public ImmutableList<ExtractedMetadataDef> ExtractedMetadata
+        {
+            get;
+            private set;
+        }
+
+        public DataSettings ChangeExtractedMetadata(IEnumerable<ExtractedMetadataDef> extractedMetadata)
+        {
+            return ChangeProp(ImClone(this),
+                im => im.ExtractedMetadata = ImmutableList.ValueOfOrEmpty(extractedMetadata));
+        }
 
         /// <summary>
         /// True if audit logging is enabled for this document. ModifyDocument calls will generate audit log entries that can be viewed in the
@@ -221,6 +235,7 @@ namespace pwiz.Skyline.Model.DocSettings
             _groupComparisonDefs = MakeReadOnly(allElements.OfType<GroupComparisonDef>());
             ViewSpecList = allElements.OfType<ViewSpecList>().FirstOrDefault() ?? ViewSpecList.EMPTY;
             Lists= ImmutableList.ValueOf(allElements.OfType<ListData>());
+            ExtractedMetadata = ImmutableList.ValueOf(allElements.OfType<ExtractedMetadataDef>());
         }
 
         private enum Attr

@@ -630,6 +630,117 @@
   <data name="&gt;&gt;tabPageReports.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="btnAddResultFileRule.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAddResultFileRule.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnAddResultFileRule.Location" type="System.Drawing.Point, System.Drawing">
+    <value>540, 31</value>
+  </data>
+  <data name="btnAddResultFileRule.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnAddResultFileRule.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="btnAddResultFileRule.Text" xml:space="preserve">
+    <value>&amp;Add...</value>
+  </data>
+  <data name="&gt;&gt;btnAddResultFileRule.Name" xml:space="preserve">
+    <value>btnAddResultFileRule</value>
+  </data>
+  <data name="&gt;&gt;btnAddResultFileRule.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddResultFileRule.Parent" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;btnAddResultFileRule.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnEditResultFileRuleList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnEditResultFileRuleList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnEditResultFileRuleList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>540, 60</value>
+  </data>
+  <data name="btnEditResultFileRuleList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnEditResultFileRuleList.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="btnEditResultFileRuleList.Text" xml:space="preserve">
+    <value>&amp;Edit List...</value>
+  </data>
+  <data name="&gt;&gt;btnEditResultFileRuleList.Name" xml:space="preserve">
+    <value>btnEditResultFileRuleList</value>
+  </data>
+  <data name="&gt;&gt;btnEditResultFileRuleList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnEditResultFileRuleList.Parent" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;btnEditResultFileRuleList.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="checkedListBoxResultFileRules.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="checkedListBoxResultFileRules.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 31</value>
+  </data>
+  <data name="checkedListBoxResultFileRules.Size" type="System.Drawing.Size, System.Drawing">
+    <value>526, 199</value>
+  </data>
+  <data name="checkedListBoxResultFileRules.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxResultFileRules.Name" xml:space="preserve">
+    <value>checkedListBoxResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxResultFileRules.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxResultFileRules.Parent" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxResultFileRules.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabPageResultFileRules.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageResultFileRules.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageResultFileRules.Size" type="System.Drawing.Size, System.Drawing">
+    <value>622, 260</value>
+  </data>
+  <data name="tabPageResultFileRules.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="tabPageResultFileRules.Text" xml:space="preserve">
+    <value>Result File Rules</value>
+  </data>
+  <data name="&gt;&gt;tabPageResultFileRules.Name" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;tabPageResultFileRules.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageResultFileRules.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabPageResultFileRules.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>
   </data>
@@ -730,12 +841,12 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.123, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.176, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>DocumentSettingsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.123, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.176, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

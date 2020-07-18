@@ -323,5 +323,17 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             }
             skylineObject.SetAnnotation(annotationDef, value);
         }
+
+        public IEnumerable<MetadataTarget> GetResultFileMetadataTargets()
+        {
+            var targets = Enumerable.Empty<MetadataTarget>();
+            targets = targets.Concat(_elementHandlers[ResultFileRef.PROTOTYPE.Name].GetMetadataTargets());
+            targets = targets.Concat(_elementHandlers[ReplicateRef.PROTOTYPE.Name].GetMetadataTargets().Select(target =>
+            {
+                return new MetadataTarget.Chained(PropertyPath.Root.Property(nameof(ResultFile.Replicate)),
+                    o => ((ResultFile) o).Replicate, target);
+            }));
+            return targets;
+        }
     }
 }

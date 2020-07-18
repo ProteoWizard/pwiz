@@ -87,6 +87,13 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                     new TransitionResultHandler(dataSchema)
             };
         }
+
+        public virtual IEnumerable<MetadataTarget> GetMetadataTargets()
+        {
+            return Enumerable.Empty<MetadataTarget>()
+                .Concat(Properties.Select(prop => new MetadataTarget.Property(prop)))
+                .Concat(Annotations.Select(annotation => new MetadataTarget.Annotation(annotation)));
+        }
     }
 
     public abstract class AbstractElementHandler<TSkylineObject> : ElementHandler where TSkylineObject : SkylineObject

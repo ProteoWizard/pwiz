@@ -44,18 +44,23 @@ namespace pwiz.Skyline.SettingsUI
             this.btnEditGroupComparisonList = new System.Windows.Forms.Button();
             this.checkedListBoxGroupComparisons = new System.Windows.Forms.CheckedListBox();
             this.tabPageReports = new System.Windows.Forms.TabPage();
+            this.btnAddReport = new System.Windows.Forms.Button();
             this.btnEditReportList = new System.Windows.Forms.Button();
             this.labelReports = new System.Windows.Forms.Label();
             this.chooseViewsControl = new pwiz.Common.DataBinding.Controls.Editor.ChooseViewsControl();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.btnAddReport = new System.Windows.Forms.Button();
+            this.tabPageResultFileRules = new System.Windows.Forms.TabPage();
+            this.btnAddResultFileRule = new System.Windows.Forms.Button();
+            this.btnEditResultFileRuleList = new System.Windows.Forms.Button();
+            this.checkedListBoxResultFileRules = new System.Windows.Forms.CheckedListBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPageAnnotations.SuspendLayout();
             this.tabPageLists.SuspendLayout();
             this.tabPageGroupComparisons.SuspendLayout();
             this.tabPageReports.SuspendLayout();
+            this.tabPageResultFileRules.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
@@ -65,6 +70,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControl.Controls.Add(this.tabPageLists);
             this.tabControl.Controls.Add(this.tabPageGroupComparisons);
             this.tabControl.Controls.Add(this.tabPageReports);
+            this.tabControl.Controls.Add(this.tabPageResultFileRules);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
             // 
@@ -174,6 +180,13 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPageReports.Name = "tabPageReports";
             this.tabPageReports.UseVisualStyleBackColor = true;
             // 
+            // btnAddReport
+            // 
+            resources.ApplyResources(this.btnAddReport, "btnAddReport");
+            this.btnAddReport.Name = "btnAddReport";
+            this.btnAddReport.UseVisualStyleBackColor = true;
+            this.btnAddReport.Click += new System.EventHandler(this.btnAddReport_Click);
+            // 
             // btnEditReportList
             // 
             resources.ApplyResources(this.btnEditReportList, "btnEditReportList");
@@ -211,12 +224,34 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
-            // btnAddReport
+            // tabPageResultFileRules
             // 
-            resources.ApplyResources(this.btnAddReport, "btnAddReport");
-            this.btnAddReport.Name = "btnAddReport";
-            this.btnAddReport.UseVisualStyleBackColor = true;
-            this.btnAddReport.Click += new System.EventHandler(this.btnAddReport_Click);
+            this.tabPageResultFileRules.Controls.Add(this.btnAddResultFileRule);
+            this.tabPageResultFileRules.Controls.Add(this.btnEditResultFileRuleList);
+            this.tabPageResultFileRules.Controls.Add(this.checkedListBoxResultFileRules);
+            resources.ApplyResources(this.tabPageResultFileRules, "tabPageResultFileRules");
+            this.tabPageResultFileRules.Name = "tabPageResultFileRules";
+            this.tabPageResultFileRules.UseVisualStyleBackColor = true;
+            // 
+            // btnAddResultFileRule
+            // 
+            resources.ApplyResources(this.btnAddResultFileRule, "btnAddResultFileRule");
+            this.btnAddResultFileRule.Name = "btnAddResultFileRule";
+            this.btnAddResultFileRule.UseVisualStyleBackColor = true;
+            this.btnAddResultFileRule.Click += new System.EventHandler(this.btnAddResultFileRule_Click);
+            // 
+            // btnEditResultFileRuleList
+            // 
+            resources.ApplyResources(this.btnEditResultFileRuleList, "btnEditResultFileRuleList");
+            this.btnEditResultFileRuleList.Name = "btnEditResultFileRuleList";
+            this.btnEditResultFileRuleList.UseVisualStyleBackColor = true;
+            // 
+            // checkedListBoxResultFileRules
+            // 
+            resources.ApplyResources(this.checkedListBoxResultFileRules, "checkedListBoxResultFileRules");
+            this.checkedListBoxResultFileRules.CheckOnClick = true;
+            this.checkedListBoxResultFileRules.FormattingEnabled = true;
+            this.checkedListBoxResultFileRules.Name = "checkedListBoxResultFileRules";
             // 
             // DocumentSettingsDlg
             // 
@@ -238,6 +273,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPageLists.ResumeLayout(false);
             this.tabPageGroupComparisons.ResumeLayout(false);
             this.tabPageReports.ResumeLayout(false);
+            this.tabPageResultFileRules.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -265,5 +301,9 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.CheckedListBox checkedListBoxLists;
         private System.Windows.Forms.Button btnEditReportList;
         private System.Windows.Forms.Button btnAddReport;
+        private System.Windows.Forms.TabPage tabPageResultFileRules;
+        private System.Windows.Forms.Button btnAddResultFileRule;
+        private System.Windows.Forms.Button btnEditResultFileRuleList;
+        private System.Windows.Forms.CheckedListBox checkedListBoxResultFileRules;
     }
 }
