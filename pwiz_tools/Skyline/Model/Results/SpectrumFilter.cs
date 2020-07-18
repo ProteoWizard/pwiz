@@ -1307,6 +1307,10 @@ namespace pwiz.Skyline.Model.Results
             int labelMassDelta = 0;
 
             var lightSequence = ModifiedSequence.GetModifiedSequence(settings, peptideDocNode, IsotopeLabelType.light);
+            if (lightSequence == null)
+            {
+                return null;
+            }
             var lightModificationNames = lightSequence.GetModifications().Select(mod => mod.Name).ToHashSet();
             foreach (var labelType in settings.PeptideSettings.Modifications.GetHeavyModificationTypes())
             {
