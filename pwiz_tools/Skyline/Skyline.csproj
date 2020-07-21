@@ -392,18 +392,6 @@
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
-    <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
-      <DependentUpon>DDASearchControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.Designer.cs">
-      <DependentUpon>SearchSettingsControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="Model\AbstractDdaSearchEngine.cs" />
     <Compile Include="Model\AreaCVRefinementData.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
@@ -3538,9 +3526,6 @@
     <EmbeddedResource Include="SettingsUI\SaveSettingsDlg.zh-CHS.resx">
       <DependentUpon>SaveSettingsDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.resx">
-      <DependentUpon>SearchSettingsControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\StartPageSettingsUI.ja.resx">
       <DependentUpon>StartPageSettingsUI.cs</DependentUpon>
     </EmbeddedResource>
@@ -3754,9 +3739,6 @@
     <EmbeddedResource Include="Controls\GroupComparison\CreateMatchExpressionDlg.resx">
       <DependentUpon>CreateMatchExpressionDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.resx">
-      <DependentUpon>DDASearchControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.ja.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
