@@ -426,6 +426,7 @@ namespace pwiz.Skyline
             int numTools = toolList.Count;
             const int endValue = 100;
             int progressValue = 0;
+            // ReSharper disable once UselessBinaryOperation (in case we decide to start at progress>0 for display purposes)
             int increment = (endValue - progressValue)/(numTools +1);
 
             foreach (var tool in toolList)

@@ -322,9 +322,6 @@
   <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
     <value>针对 iRT 计算器的标准肽段仅可以在 iRT 计算器编辑器中设定。</value>
   </data>
-  <data name="DriftTimePredictorList_Label_Drift_Time_Predictor_" xml:space="preserve">
-    <value>漂移时间预测器：</value>
-  </data>
   <data name="EditIsolationSchemeDlg_OkDialog_The_isolation_scheme_named__0__already_exists" xml:space="preserve">
     <value>名为“{0}”的隔离方案已经存在。</value>
   </data>
@@ -516,9 +513,6 @@
   </data>
   <data name="LoadingTooSlowlyException_LoadingTooSlowlyException_Data_import_expected_to_consume__0__minutes_with_maximum_of__1__mintues" xml:space="preserve">
     <value>导入的数据预计消耗 {0} 分钟，最多 {1} 分钟</value>
-  </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_high_energy_drift_time_offset_on_line__1__" xml:space="preserve">
-    <value>第 {1} 行上的高能漂移时间偏置为无效数字格式{0}。</value>
   </data>
   <data name="EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
     <value>报告离子质量必须大于或等于 {0}。</value>
@@ -1377,9 +1371,6 @@
   <data name="FragmentLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\FragmentLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="IonMobilityLibraryList_AcceptList_The_drift_time_predictors_" xml:space="preserve">
-    <value>漂移时间预测器：</value>
-  </data>
   <data name="ChromCacheJoiner_JoinNextPart_Joining_file__0__" xml:space="preserve">
     <value>加入文件{0}</value>
   </data>
@@ -1872,7 +1863,7 @@
   <data name="EditCoVDlg_btnOk_Click_The_compensation_voltage_parameters___0___already_exist_" xml:space="preserve">
     <value>补偿电压参数“{0}”已存在。</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope_" xml:space="preserve">
     <value>值 {0} 不是有效的斜率。</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_" xml:space="preserve">
@@ -2018,9 +2009,6 @@
   </data>
   <data name="PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank" xml:space="preserve">
     <value>肽段序列不能为空。</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_pasted_text_must_have_three_columns_" xml:space="preserve">
-    <value>粘贴的文本必须有三列。</value>
   </data>
   <data name="AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__" xml:space="preserve">
     <value>采集离子对的数目 {0} 超出最大值 {1}</value>
@@ -2367,9 +2355,6 @@
   </data>
   <data name="DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence" xml:space="preserve">
     <value>随机序列</value>
-  </data>
-  <data name="ValidatingIonMobilityPeptide_ValidateHighEnergyDriftTimeOffsetMsec_High_energy_drift_time_offsets_should_be_empty__or_a__usually_negative__value_for_the_relative_drift_time_in_msec_for_high_collision_energy_scans_" xml:space="preserve">
-    <value>针对高碰撞能量扫描，高能漂移时间偏置应为空，或为一个以毫秒为单位的相对漂移时间（通常为负）值。</value>
   </data>
   <data name="ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again" xml:space="preserve">
     <value>运行安装工具{0}出错。文件之一可能出错。请重新安装工具并重试</value>
@@ -2754,9 +2739,6 @@
   <data name="ImportPeptideSearchDlg_NextPage_Finish" xml:space="preserve">
     <value>完成(&amp;F)</value>
   </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_added_list_contains__0__charged_peptides_with_inconsistent_ion_mobility_values_" xml:space="preserve">
-    <value>添加的列表包含 {0} 个具有不一致的离子迁移值的带电肽段。</value>
-  </data>
   <data name="RetentionTimeRegression_RetentionTimeRegression_Slope_and_intercept_must_both_have_values_or_both_not_have_values" xml:space="preserve">
     <value>斜率和截距必须同时具有值或同时没有值</value>
   </data>
@@ -2960,9 +2942,6 @@
   <data name="ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
     <value>当前文档包含的肽段不具有足够信息，无法对离子对进行排名以触发采集。</value>
   </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_A_modified_peptide_sequence_is_required_for_each_entry_" xml:space="preserve">
-    <value>每个条目都需要修饰肽段序列。</value>
-  </data>
   <data name="BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist" xml:space="preserve">
     <value>冗余库{0}不存在。</value>
   </data>
@@ -3002,11 +2981,8 @@
   <data name="Delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\delete.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateCell_A_value_is_required_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateCell_A_value_is_required_" xml:space="preserve">
     <value>需要一个值。</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_sequence__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
-    <value>序列 {0} 不是有效的修饰肽段序列。</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_Importing__0__" xml:space="preserve">
     <value>导入{0}</value>
@@ -3080,7 +3056,7 @@
   <data name="ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__" xml:space="preserve">
     <value>针对{0}的命令可能不存在于那个位置。您是否想要编辑它？</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_Do_you_want_to_change_it_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_OkDialog_Do_you_want_to_change_it_" xml:space="preserve">
     <value>您是否想要改变？</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click__0__Method" xml:space="preserve">
@@ -3307,9 +3283,6 @@
   </data>
   <data name="CompensationVoltageList_Label_Compensation__Voltage_Parameters_" xml:space="preserve">
     <value>补偿电压参数(&amp;V)：</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
-    <value>条目 {0} 不是有效的电荷数。母离子电荷必须是 1 至 {1} 之间的整数值。</value>
   </data>
   <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__" xml:space="preserve">
     <value>母离子质荷比 {0:F04} 超出了仪器范围 {1} 到 {2}。</value>
@@ -4420,9 +4393,6 @@
   <data name="BuildLibraryDlg_ValidateBuilder_The_directory__0__does_not_exist" xml:space="preserve">
     <value>目录{0}不存在。</value>
   </data>
-  <data name="DriftTimePredictorList_Title_Edit_Drift_Time_Predictors" xml:space="preserve">
-    <value>编辑漂移时间预测器</value>
-  </data>
   <data name="PeptideGroupTreeNode_RenderTip_Name" xml:space="preserve">
     <value>名称</value>
   </data>
@@ -4623,9 +4593,6 @@
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
     <value>错误：如要导出预定方法，您必须首先在肽段设置/预测中选择一个保留时间预测器。</value>
-  </data>
-  <data name="DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__" xml:space="preserve">
-    <value>使用结果填入漂移时间库有问题：</value>
   </data>
   <data name="TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_" xml:space="preserve">
     <value>CSV （以逗号分隔）</value>
@@ -4871,7 +4838,7 @@
   <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_q_Q_plot" xml:space="preserve">
     <value>添加模型/文件来比较，以查看 q-Q 图</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept_" xml:space="preserve">
     <value>值 {0} 不是有效的截距。</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_" xml:space="preserve">
@@ -4990,9 +4957,6 @@
   </data>
   <data name="SrmTreeNodeParent_ShowPickList_An_error_occurred_creating_options_" xml:space="preserve">
     <value>创建选项时出现错误。</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_" xml:space="preserve">
-    <value>值 {0} 不是有效的漂移时间。</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_The_current_file_or_model_has_no_q_values_or_scores_to_analyze___Either_q_values_or_scores_are_necessary_to_compare_peak_picking_tools_" xml:space="preserve">
     <value>当前文件或模型没有需要分析的 q 值或得分。 q 值或得分都不是比较峰值拣选工具所必需的。</value>
@@ -5125,9 +5089,6 @@
   </data>
   <data name="BackgroundWorker_UpdateStatistics_After_minimizing_the_cache_file_will_be_reduced_to__0__its_current_size" xml:space="preserve">
     <value>最小化后，缓存文件将减少到当前大小的 {0:0%}</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility_library_" xml:space="preserve">
-    <value>漂移时间预测需要一个离子迁移库。</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_There_is_already_an_imported_file_with_the_current_name___Please_choose_another_name" xml:space="preserve">
     <value>已经存在拥有当前名称的导入文件。 请选择另一个名称</value>
@@ -5428,9 +5389,6 @@
   </data>
   <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>无此蛋白质序列</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>具有名称{0}的漂移时间预测器已经存在。</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
     <value>错误：应用正则表达式后重复测定名称“{0}”重复。</value>
@@ -5844,7 +5802,7 @@
   <data name="CommandArgs_ParseArgsInternal_Warning__Invalid_max_transitions_per_injection_parameter___0___" xml:space="preserve">
     <value>警告：无效的每次进样参数最大离子对数目({0})。</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
     <value>值 {0} 不是有效的电荷。电荷必须是 1 至 {1} 之间的整数值。</value>
   </data>
   <data name="EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
@@ -6363,9 +6321,6 @@
   </data>
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
     <value>更改酶解设置</value>
-  </data>
-  <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_ion_mobility_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__" xml:space="preserve">
-    <value>无法针对序列 {0} 导入测量的离子迁移率：未针对电荷态 {1} 提供任何碰撞横截面转换参数。</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist" xml:space="preserve">
     <value>文件{0}不存在。</value>
@@ -6892,7 +6847,7 @@
   <data name="WatersMethodExporter_EnsureLibraries_Waters_method_creation_software_may_not_be_installed_correctly" xml:space="preserve">
     <value>Waters 方法创建软件可能安装不正确。</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_On_line__0___1_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_On_line__0___1_" xml:space="preserve">
     <value>在第{0} {1}行 上</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Loading__0__library" xml:space="preserve">
@@ -7343,10 +7298,10 @@
   <data name="AbstractChromGraphItem_CustomizeYAxis_Intensity" xml:space="preserve">
     <value>强度</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateCell_The_entry__0__is_not_valid_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateCell_The_entry__0__is_not_valid_" xml:space="preserve">
     <value>条目{0}无效。</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_" xml:space="preserve">
     <value>分辨力必须大于 0。</value>
   </data>
   <data name="ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available" xml:space="preserve">
@@ -7432,9 +7387,6 @@
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_prediction_calculator_is_unable_to_score" xml:space="preserve">
     <value>保留时间预测计算器无法评分。</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_following_peptides_appear_in_the_added_list_with_inconsistent_ion_mobility_values_" xml:space="preserve">
-    <value>下列肽段在添加的列表中显示为具有不一致的离子迁移值。</value>
   </data>
   <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__" xml:space="preserve">
     <value>查询背景蛋白质组{0}失败。</value>
@@ -7772,9 +7724,6 @@
   <data name="ImportFastaHelper_AddFasta___0___is_not_a_capital_letter_that_corresponds_to_an_amino_acid_" xml:space="preserve">
     <value>“{0}”不是对应氨基酸的大写字母。</value>
   </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_at_least_two_columns_" xml:space="preserve">
-    <value>粘贴的文本必须至少有两列。</value>
-  </data>
   <data name="ViewLibraryDlg_MatchModifications_No" xml:space="preserve">
     <value>否</value>
   </data>
@@ -7897,9 +7846,6 @@
   </data>
   <data name="Ions_Z" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Ions_Z.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_peptide__0__has_inconsistent_ion_mobility_values_in_the_added_list_" xml:space="preserve">
-    <value>肽段{0}在添加的列表中具有不一致的离子迁移值。</value>
   </data>
   <data name="UndoManager_BeginTransaction_Undo_transaction_may_not_be_started_in_undo_redo" xml:space="preserve">
     <value>撤销处理不可以在撤销/恢复中开始。</value>
@@ -9050,12 +8996,6 @@
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_" xml:space="preserve">
     <value>无效的碰撞横截面值 {0}</value>
   </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_collisional_cross_section_" xml:space="preserve">
-    <value>值 {0} 不是有效的碰撞横截面。</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_" xml:space="preserve">
-    <value>值 {0} 不是有效的高能偏置。</value>
-  </data>
   <data name="IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from__0_" xml:space="preserve">
     <value>正在读取 {0} 的隔离方案</value>
   </data>
@@ -9624,12 +9564,6 @@
   <data name="FileProgressControl_SetStatus_warning" xml:space="preserve">
     <value>警告</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks" xml:space="preserve">
-    <value>查找峰的离子迁移值</value>
-  </data>
-  <data name="IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_" xml:space="preserve">
-    <value>使用离子迁移库的离子迁移预测器必须提供针对库的文件名称。</value>
-  </data>
   <data name="IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_" xml:space="preserve">
     <value>使用离子迁移库的离子迁移预测器必须包含基于每个电荷的回归值。</value>
   </data>
@@ -9784,13 +9718,10 @@
   <data name="Columns_Columns_Missing_column___0__" xml:space="preserve">
     <value>缺失列“{0}”</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>名称为 {0} 的离子迁移预测器已存在。</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Molecule" xml:space="preserve">
     <value>分子</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct" xml:space="preserve">
     <value>加合物</value>
   </data>
   <data name="ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___" xml:space="preserve">

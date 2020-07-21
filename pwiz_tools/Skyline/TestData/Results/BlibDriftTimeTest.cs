@@ -53,11 +53,14 @@ namespace pwiz.SkylineTestData.Results
                 // Use the bare drift times in the spectral library
                 var librarySpec = new BiblioSpecLiteSpec("drift test",
                                                     testFilesDir.GetTestPath("BlibDriftTimeTest.blib"));
+                var ionMobility = doc.Settings.TransitionSettings.IonMobilityFiltering
+                    .ChangeFilterWindowWidthCalculator(
+                        new IonMobilityWindowWidthCalculator(
+                            IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, 20, 0, 0, 0))
+                    .ChangeUseSpectralLibraryIonMobilityValues(true);
                 doc = doc.ChangeSettings(
                     doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
-                    ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesWindowWidthCalculator(new IonMobilityWindowWidthCalculator(IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 20, 0, 0))).
-                    ChangePeptidePrediction(p => p.ChangeUseLibraryIonMobilityValues(true))
-                    );
+                        ChangeTransitionSettings(t => t.ChangeIonMobilityFiltering(ionMobility)));
 
                 // Import an mz5 file that needs drift info that's in the original data set, 
                 // but preserved in the .blib file associated with a different raw source

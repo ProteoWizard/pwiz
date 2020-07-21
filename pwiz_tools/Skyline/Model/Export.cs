@@ -3180,9 +3180,9 @@ namespace pwiz.Skyline.Model
 
             double? ionMobility = null;
             var windowIM = 0.4;
-            if (prediction.IonMobilityPredictor != null)
+            if (Document.Settings.TransitionSettings.IonMobilityFiltering != null)
             {
-                var result = Document.Settings.GetIonMobility(nodePep, nodeTranGroup, nodeTran, null, null, 1.2, out windowIM);
+                var result = Document.Settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, null, null, 1.2);
                 if (result.HasIonMobilityValue)
                     ionMobility = result.IonMobility.Mobility.Value;
             }
@@ -3516,6 +3516,12 @@ namespace pwiz.Skyline.Model
 
     public class WatersMassListExporter : AbstractMassListExporter
     {
+        // Hack to workaround limitation of 32 transitions per function
+        protected readonly Dictionary<Tuple<string, int>, int> _compoundCounts = new Dictionary<Tuple<string, int>, int>();
+        protected const int MAX_COMPOUND_NAME = 32;
+
+        protected bool USE_COMPOUND_COUNT_WORKAROUND { get { return true; } }
+
         public WatersMassListExporter(SrmDocument document)
             : this(document, null)
         {
@@ -3590,15 +3596,34 @@ namespace pwiz.Skyline.Model
             // and this allows for 512 peptide charge states and not just 512 precursors.
 //            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
 //                nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods));
+
             var compound = GetCompound(nodePep, nodeTranGroup);
             compound += '.';
             compound += nodeTranGroup.PrecursorAdduct.AsFormulaOrInt();
+
+            if (USE_COMPOUND_COUNT_WORKAROUND)
+            {
+                var key = Tuple.Create(compound, step);
+                if (!_compoundCounts.ContainsKey(key))
+                {
+                    _compoundCounts[key] = 0;
+                }
+                else
+                {
+                    int compoundStep = ++_compoundCounts[key] / MAX_COMPOUND_NAME + 1;
+                    if (compoundStep > 1)
+                        compound += '.' + compoundStep.ToString(CultureInfo);
+                }
+            }
+
             if (step != 0)
             {
                 compound += '.';
                 compound += step.ToString(CultureInfo);
             }
+
             writer.WriteDsvField(compound, FieldSeparator, FieldSeparatorReplacement);
+
             writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);

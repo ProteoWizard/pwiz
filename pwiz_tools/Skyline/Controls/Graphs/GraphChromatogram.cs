@@ -3483,6 +3483,12 @@ namespace pwiz.Skyline.Controls.Graphs
             HandleMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)mouse.X, (int)mouse.Y, 0));
         }
 
+        public bool IsOverHighlightPoint(double x, double y, PaneKey? paneKey)
+        {
+            var mouse = TransformCoordinates(x, y, paneKey);
+            return IsOverHighlightPoint(mouse);
+        }
+
         public void TestMouseDown(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);

@@ -111,7 +111,7 @@ Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespe
 Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "1110,1", End = "1200", Margin = "0,5" }
 Import Peptide Search > Configure Full-Scan Settings > Product mass analyzer is "Centroided"
 Import Peptide Search > Configure Full-Scan Settings > Mass accuracy is "20"
-Import Peptide Search > Configure Full-Scan Settings > Retention time filter type is "Use only scans withing time frame of predicted RT"
+Import Peptide Search > Configure Full-Scan Settings > Retention time filter type is "Use only scans within time frame of predicted RT"
 Import Peptide Search > Import FASTA > FASTA file is "target_protein_sequences.fasta"
 Import Peptide Search > Import FASTA > Decoy generation method is "Shuffle Sequence"
 Import Peptide Search > Import FASTA > Decoys per target is "1"
@@ -471,7 +471,7 @@ Configure Full-Scan Settings =
     },
     Product mass analyzer = "Centroided",
     Mass accuracy = "20",
-    Retention time filter type = "Use only scans withing time frame of predicted RT"
+    Retention time filter type = "Use only scans within time frame of predicted RT"
 },
 Import FASTA = 
 {

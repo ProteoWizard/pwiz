@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -111,6 +112,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
                 RunUI(() => importPeptideSearchDlg.ClickNextButton());
                 // Modifications are already set up, so that page should get skipped.
+
+                // Make sure we're set up for ion mobility filtering - these settings should come from skyline file
+                AssertEx.IsTrue(importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.IsUseSpectralLibraryIonMobilities);
+                AssertEx.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.WindowWidthType);
+                AssertEx.AreEqual(50, importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.IonMobilityFilterResolvingPower);
+
                 // Accept the full scan settings, lockmass correction dialog should appear
                 var lockmassDlg = ShowDialog<ImportResultsLockMassDlg>(() => importPeptideSearchDlg.ClickNextButton()); 
                 /* Lockmass correction for IMS data added to Waters DLL limitations Oct 2016, but this data does not need it

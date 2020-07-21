@@ -1904,8 +1904,8 @@ namespace pwiz.Skyline.Model.Results
 
         public Target Target { get; private set; }  // Modified sequence or custom ion id
         public SignedMz Precursor { get; private set; }
-        public double? CollisionalCrossSectionSqA { get { return IonMobilityFilter == null ? null : IonMobilityFilter.CollisionalCrossSectionSqA; }  }
-        public eIonMobilityUnits IonMobilityUnits { get { return IonMobilityFilter == null ? eIonMobilityUnits.none : IonMobilityFilter.IonMobility.Units; } }
+        public double? CollisionalCrossSectionSqA { get { return IonMobilityFilter.CollisionalCrossSectionSqA; }  }
+        public eIonMobilityUnits IonMobilityUnits { get { return IonMobilityFilter.IonMobilityUnits; } }
         public IonMobilityFilter IonMobilityFilter { get; private set; }
         public SignedMz Product { get; private set; }
         public float CollisionEnergy { get; private set; }
@@ -2720,7 +2720,10 @@ namespace pwiz.Skyline.Model.Results
 
         public IonMobilityFilter GetIonMobilityFilter()
         {
-            return IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(IonMobility, Header.IonMobilityUnits), IonMobilityExtractionWidth, _groupInfo.PrecursorCollisionalCrossSection);
+            return IonMobilityFilter.GetIonMobilityFilter(
+                IonMobilityAndCCS.GetIonMobilityAndCCS(
+                    IonMobilityValue.GetIonMobilityValue(IonMobility, Header.IonMobilityUnits),
+                    _groupInfo.PrecursorCollisionalCrossSection, null), IonMobilityExtractionWidth);
         }
 
         private static double? FloatToNullableDouble(float value)

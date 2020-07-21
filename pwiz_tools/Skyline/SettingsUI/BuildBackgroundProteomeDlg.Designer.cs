@@ -59,6 +59,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.textPath, "textPath");
             this.textPath.Name = "textPath";
+            this.textPath.ReadOnly = true;
             this.textPath.TextChanged += new System.EventHandler(this.textPath_TextChanged);
             // 
             // textName
