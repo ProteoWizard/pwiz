@@ -327,8 +327,8 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         public IEnumerable<MetadataTarget> GetResultFileMetadataTargets()
         {
             var targets = Enumerable.Empty<MetadataTarget>();
-            targets = targets.Concat(_elementHandlers[ResultFileRef.PROTOTYPE.Name].GetMetadataTargets());
-            targets = targets.Concat(_elementHandlers[ReplicateRef.PROTOTYPE.Name].GetMetadataTargets().Select(target =>
+            targets = targets.Concat(_elementHandlers[ResultFileRef.PROTOTYPE.ElementType].GetMetadataTargets());
+            targets = targets.Concat(_elementHandlers[ReplicateRef.PROTOTYPE.ElementType].GetMetadataTargets().Select(target =>
             {
                 return new MetadataTarget.Chained(PropertyPath.Root.Property(nameof(ResultFile.Replicate)),
                     o => ((ResultFile) o).Replicate, target);

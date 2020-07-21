@@ -1,20 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using EnvDTE;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -28,43 +21,82 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
             _dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
             _documentAnnotations = new DocumentAnnotations(_dataSchema);
-            var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(ResultFile));
-            availableFieldsTree2.RootColumn = rootColumn;
+            comboMetadataTarget.Items.AddRange(_documentAnnotations.GetResultFileMetadataTargets().Cast<object>().ToArray());
         }
 
-        private class TargetDataSchema : SkylineDataSchema
+        public class ResultRow
         {
-            public TargetDataSchema(IDocumentContainer documentContainer, DataSchemaLocalizer dataSchemaLocalizer): 
-                base(documentContainer, dataSchemaLocalizer)
-            {
+            public string FileName { get; set; }
+            public string SourceText { get; set; }
+            public bool Match { get; set; }
+            public object ExtractedValue { get; set; }
+        }
 
-            }
-
-            public override IEnumerable<PropertyDescriptor> GetPropertyDescriptors(Type type)
+        public void UpdateRows()
+        {
+            var resultRows = new List<ResultRow>();
+            Regex regex = null;
+            if (!string.IsNullOrEmpty(tbxRegularExpression.Text))
             {
-                foreach (var propertyDescriptor in base.GetPropertyDescriptors(type))
+                try
                 {
-                    if (propertyDescriptor.IsReadOnly)
+                    regex = new Regex(tbxRegularExpression.Text);
+                    ShowRegexError(null);
+                }
+                catch (Exception x)
+                {
+                    ShowRegexError(x);
+                }
+            }  
+            foreach (var resultFileEntry in _dataSchema.ResultFileList)
+            {
+                var resultFile = resultFileEntry.Value;
+                var resultRow = new ResultRow
+                {
+                    FileName = resultFile.FileName,
+                    SourceText = resultFile.FileName,
+                };
+                if (regex != null)
+                {
+                    var match = regex.Match(resultRow.SourceText);
+                    string matchValue;
+                    if (match.Success)
                     {
-                        if (typeof(IEnumerable).IsAssignableFrom(propertyDescriptor.PropertyType))
+                        resultRow.Match = true;
+                        if (match.Groups.Count > 0)
                         {
-                            continue;
+                            matchValue = match.Groups[0].ToString();
+                        }
+                        else
+                        {
+                            matchValue = match.ToString();
                         }
 
-                        if (!typeof(SkylineObject).IsAssignableFrom(propertyDescriptor.PropertyType))
-                        {
-                            continue;
-                        }
+                        resultRow.ExtractedValue = matchValue;
                     }
-
-                    yield return propertyDescriptor;
+                    else
+                    {
+                        resultRow.Match = false;
+                    }
                 }
             }
+        }
 
-            public override bool IsRootTypeSelectable(Type type)
+        public void ShowRegexError(Exception e)
+        {
+            if (e == null)
             {
-                return false;
+                tbxRegularExpression.BackColor = SystemColors.Window;
             }
+            else
+            {
+                tbxRegularExpression.BackColor = Color.Red;
+            }
+        }
+
+        private void tbxRegularExpression_Leave(object sender, EventArgs e)
+        {
+            UpdateRows();
         }
     }
 }
