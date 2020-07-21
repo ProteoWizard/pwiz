@@ -599,6 +599,11 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return PropertyPath.Root.Property("Files").LookupAllItems();
             }
+
+            if (rowType == typeof(Protein))
+            {
+                return PropertyPath.Root.Property(nameof(Protein.ProteinResults)).LookupAllItems();
+            }
             return PropertyPath.Root.Property("Results").LookupAllItems();
         }
         // ReSharper restore LocalizableElement

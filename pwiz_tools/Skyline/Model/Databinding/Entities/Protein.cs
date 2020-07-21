@@ -24,7 +24,9 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -37,11 +39,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private readonly CachedValue<Peptide[]> _peptides;
         private readonly CachedValue<IDictionary<ResultKey, ResultFile>> _results;
+        private readonly CachedValue<IDictionary<ResultKey, ProteinResult>> _proteinResults;
+        private readonly CachedValue<IDictionary<int, Tuple<double, bool>>> _proteinAbundances;
         public Protein(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
         {
             _peptides = CachedValue.Create(dataSchema, () => DocNode.Children
                 .Select(node => new Peptide(DataSchema, new IdentityPath(IdentityPath, node.Id))).ToArray());
             _results = CachedValue.Create(dataSchema, MakeResults);
+            _proteinResults = CachedValue.Create(dataSchema, MakeProteinResults);
+            _proteinAbundances = CachedValue.Create(dataSchema, CalculateProteinAbundances);
         }
 
         [OneToMany(ForeignKey = "Protein")]
@@ -55,11 +61,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        /// <summary>
+        /// Hidden column which is used by <see cref="DocumentViewTransformer"/> when
+        /// references to Result Files 
+        /// </summary>
         [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(SkylineDocument), typeof(FoldChangeBindingSource.FoldChangeRow)})]
-        [Obsolete]
+        [Hidden]
         public IDictionary<ResultKey, ResultFile> Results
         {
             get { return _results.Value; }
+        }
+
+        [InvariantDisplayName("MoleculeListResults")]
+        [ProteomicDisplayName("ProteinResults")]
+        public IDictionary<ResultKey, ProteinResult> ProteinResults
+        {
+            get { return _proteinResults.Value; }
         }
 
         private IDictionary<ResultKey, ResultFile> MakeResults()
@@ -80,6 +97,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
             }
             return dict;
+        }
+
+
+        private IDictionary<ResultKey, ProteinResult> MakeProteinResults()
+        {
+            return DataSchema.ReplicateList.ToDictionary(entry => entry.Key,
+                entry => new ProteinResult(this, entry.Value));
         }
 
         public bool IsNonProteomic()
@@ -212,5 +236,69 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [ProteomicDisplayName("ProteinLocator")]
         [InvariantDisplayName("MoleculeListLocator")]
         public string Locator { get { return GetLocator(); } }
+
+        /// <summary>
+        /// Returns a map of replicate number to a tuple containing:
+        /// Item1: abundance value
+        /// Item2: boolean indicating which is true if transitions were missing in the abundance calculation making it
+        /// not suitable for comparing between replicates
+        /// </summary>
+        /// <returns></returns>
+        public IDictionary<int, Tuple<double, bool>> GetProteinAbundances()
+        {
+            return _proteinAbundances.Value;
+        }
+
+        private IDictionary<int, Tuple<double, bool>> CalculateProteinAbundances()
+        {
+            var allTransitionIdentityPaths = new HashSet<IdentityPath>();
+            var quantifiers = Peptides.Select(peptide => peptide.GetPeptideQuantifier()).ToList();
+            int replicateCount = SrmDocument.Settings.HasResults
+                ? SrmDocument.Settings.MeasuredResults.Chromatograms.Count : 0;
+            var abundances = new Dictionary<int, Tuple<double, int>>();
+            var srmSettings = SrmDocument.Settings;
+            bool allowMissingTransitions =
+                srmSettings.PeptideSettings.Quantification.NormalizationMethod is NormalizationMethod.RatioToLabel;
+            for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
+            {
+                double totalNumerator = 0;
+                double totalDenomicator = 0;
+                int transitionCount = 0;
+                foreach (var peptideQuantifier in quantifiers)
+                {
+                    foreach (var entry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, iReplicate,
+                        false))
+                    {
+                        totalNumerator += Math.Max(entry.Value.Intensity, 1.0);
+                        totalDenomicator += Math.Max(entry.Value.Denominator, 1.0);
+                        allTransitionIdentityPaths.Add(entry.Key);
+                        transitionCount++;
+                    }
+                }
+
+                if (transitionCount != 0)
+                {
+                    var abundance = totalNumerator / totalDenomicator;
+                    abundances.Add(iReplicate, Tuple.Create(abundance, transitionCount));
+                }
+            }
+
+            var proteinAbundanceRecords = new Dictionary<int, Tuple<double, bool>>();
+            foreach (var entry in abundances)
+            {
+                bool incomplete;
+                if (allowMissingTransitions)
+                {
+                    incomplete = true;
+                }
+                else
+                {
+                    incomplete = entry.Value.Item2 != allTransitionIdentityPaths.Count;
+                }
+                proteinAbundanceRecords.Add(entry.Key, Tuple.Create(entry.Value.Item1, incomplete));
+            }
+
+            return proteinAbundanceRecords;
+        }
     }
 }
