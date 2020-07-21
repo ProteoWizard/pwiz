@@ -1848,17 +1848,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to True if any transitions that were used to calculate the Molecule List Abundance had missing values,
-        ///  indicating that the Molecule List Abundance should not be compared between replicates.
-        ///  If the Normalization Method is ratio to a label then missing transitions do not cause the Molecule List Abundance to be incomplete..
-        /// </summary>
-        public static string MoleculeListAbundanceIncomplete {
-            get {
-                return ResourceManager.GetString("MoleculeListAbundanceIncomplete", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unique identifier of the molecule list within the document. This begins with &quot;MoleculeGroup:&quot;..
         /// </summary>
         public static string MoleculeListLocator {
@@ -2623,17 +2612,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ProteinAbundance {
             get {
                 return ResourceManager.GetString("ProteinAbundance", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to True if any transitions that were used to calculate the Protein Abundance had missing values,
-        ///  indicating that the Protein Abundance should not be compared between replicates.
-        ///  If the Normalization Method is ratio to a label then missing transitions do not cause the Protein Abundance to be incomplete..
-        /// </summary>
-        public static string ProteinAbundanceIncomplete {
-            get {
-                return ResourceManager.GetString("ProteinAbundanceIncomplete", resourceCulture);
             }
         }
         

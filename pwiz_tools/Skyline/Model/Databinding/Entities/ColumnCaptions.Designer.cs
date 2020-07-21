@@ -1789,15 +1789,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Molecule List Abundance Incomplete.
-        /// </summary>
-        public static string MoleculeListAbundanceIncomplete {
-            get {
-                return ResourceManager.GetString("MoleculeListAbundanceIncomplete", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Molecule List Locator.
         /// </summary>
         public static string MoleculeListLocator {
@@ -2541,15 +2532,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ProteinAbundance {
             get {
                 return ResourceManager.GetString("ProteinAbundance", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Protein Abundance Incomplete.
-        /// </summary>
-        public static string ProteinAbundanceIncomplete {
-            get {
-                return ResourceManager.GetString("ProteinAbundanceIncomplete", resourceCulture);
             }
         }
         

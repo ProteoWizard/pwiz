@@ -602,7 +602,8 @@ namespace pwiz.Skyline.Model.Databinding
 
             if (rowType == typeof(Protein))
             {
-                return PropertyPath.Root.Property(nameof(Protein.ProteinResults)).LookupAllItems();
+                return PropertyPath.Root.Property(nameof(Protein.Results)).LookupAllItems().Property("Value")
+                    .Property(nameof(Replicate.Files));
             }
             return PropertyPath.Root.Property("Results").LookupAllItems();
         }

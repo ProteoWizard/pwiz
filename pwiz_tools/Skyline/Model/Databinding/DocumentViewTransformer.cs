@@ -20,7 +20,7 @@ namespace pwiz.Skyline.Model.Databinding
         private static readonly PropertyPath Proteins = PropertyPath.Root.Property("Proteins").LookupAllItems();
 
         private static readonly PropertyPath ProteinResults 
-            = Proteins.Property(nameof(Protein.ProteinResults)).LookupAllItems().Property("Value");
+            = Proteins.Property(nameof(Protein.Results)).LookupAllItems().Property("Value");
         private static readonly PropertyPath Peptides 
             = Proteins.Property("Peptides").LookupAllItems();
 
@@ -192,10 +192,9 @@ namespace pwiz.Skyline.Model.Databinding
         // ReSharper disable LocalizableElement
         private static IList<KeyValuePair<PropertyPath, PropertyPath>> MappingFromProteins()
         {
-            PropertyPath resultFiles = PropertyPath.Root.Property(nameof(Protein.Results)).LookupAllItems().Property("Value");
-            PropertyPath proteinResults = PropertyPath.Root.Property(nameof(Protein.ProteinResults)).LookupAllItems()
-                .Property("Value");
+            PropertyPath proteinResults = PropertyPath.Root.Property(nameof(Protein.Results)).LookupAllItems().Property("Value");
             PropertyPath replicates = proteinResults.Property(nameof(ProteinResult.Replicate));
+            PropertyPath resultFiles = replicates.Property(nameof(Replicate.Files));
             return new List<KeyValuePair<PropertyPath, PropertyPath>>
             {
                 Kvp(replicates, Replicates),

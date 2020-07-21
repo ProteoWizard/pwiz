@@ -669,11 +669,6 @@ modified on disk</value>
     <value>A number representing the abundance of the molecule list. This number is obtained by averaging the normalized areas of all of the transitions under this Molecule List.
   The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.</value>
   </data>
-  <data name="MoleculeListAbundanceIncomplete">
-    <value>True if any transitions that were used to calculate the Molecule List Abundance had missing values,
-  indicating that the Molecule List Abundance should not be compared between replicates.
-  If the Normalization Method is ratio to a label then missing transitions do not cause the Molecule List Abundance to be incomplete.</value>
-  </data>
   <data name="MoleculeListLocator">
       <value>Unique identifier of the molecule list within the document. This begins with "MoleculeGroup:".</value>
     <comment>Do not translate "MoleculeGroup:".</comment>
@@ -953,11 +948,6 @@ the decoy m/z.</value>
     <value>A number representing the abundance of the protein in the particular replicate.
   The Protein Abundance is calculated by taking the average of the normalized areas of all of the Transitions under the Protein.
   The Transition Areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.</value>
-  </data>
-  <data name="ProteinAbundanceIncomplete">
-    <value>True if any transitions that were used to calculate the Protein Abundance had missing values,
-  indicating that the Protein Abundance should not be compared between replicates.
-  If the Normalization Method is ratio to a label then missing transitions do not cause the Protein Abundance to be incomplete.</value>
   </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>

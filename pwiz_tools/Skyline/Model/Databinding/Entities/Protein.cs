@@ -24,7 +24,6 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
@@ -38,15 +37,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class Protein : SkylineDocNode<PeptideGroupDocNode>
     {
         private readonly CachedValue<Peptide[]> _peptides;
-        private readonly CachedValue<IDictionary<ResultKey, ResultFile>> _results;
-        private readonly CachedValue<IDictionary<ResultKey, ProteinResult>> _proteinResults;
+        private readonly CachedValue<IDictionary<ResultKey, ProteinResult>> _results;
         private readonly CachedValue<IDictionary<int, Tuple<double, bool>>> _proteinAbundances;
         public Protein(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
         {
             _peptides = CachedValue.Create(dataSchema, () => DocNode.Children
                 .Select(node => new Peptide(DataSchema, new IdentityPath(IdentityPath, node.Id))).ToArray());
-            _results = CachedValue.Create(dataSchema, MakeResults);
-            _proteinResults = CachedValue.Create(dataSchema, MakeProteinResults);
+            _results = CachedValue.Create(dataSchema, MakeProteinResults);
             _proteinAbundances = CachedValue.Create(dataSchema, CalculateProteinAbundances);
         }
 
@@ -61,44 +58,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        /// <summary>
-        /// Hidden column which is used by <see cref="DocumentViewTransformer"/> when
-        /// references to Result Files 
-        /// </summary>
-        [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(SkylineDocument), typeof(FoldChangeBindingSource.FoldChangeRow)})]
-        [Hidden]
-        public IDictionary<ResultKey, ResultFile> Results
+        [InvariantDisplayName("MoleculeListResults")]
+        [ProteomicDisplayName("ProteinResults")]
+        public IDictionary<ResultKey, ProteinResult> Results
         {
             get { return _results.Value; }
         }
-
-        [InvariantDisplayName("MoleculeListResults")]
-        [ProteomicDisplayName("ProteinResults")]
-        public IDictionary<ResultKey, ProteinResult> ProteinResults
-        {
-            get { return _proteinResults.Value; }
-        }
-
-        private IDictionary<ResultKey, ResultFile> MakeResults()
-        {
-            var dict = new Dictionary<ResultKey, ResultFile>();
-            var document = SrmDocument;
-            if (document.Settings.HasResults)
-            {
-                for (int iResult = 0; iResult < document.Settings.MeasuredResults.Chromatograms.Count; iResult++)
-                {
-                    var replicate = new Replicate(DataSchema, iResult);
-                    var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[iResult];
-                    for (int iFile = 0; iFile < chromatogramSet.MSDataFileInfos.Count; iFile++)
-                    {
-                        var resultFile = new ResultFile(replicate, chromatogramSet.MSDataFileInfos[iFile].FileId, 0);
-                        dict.Add(new ResultKey(replicate, iFile), resultFile);
-                    }
-                }
-            }
-            return dict;
-        }
-
 
         private IDictionary<ResultKey, ProteinResult> MakeProteinResults()
         {
