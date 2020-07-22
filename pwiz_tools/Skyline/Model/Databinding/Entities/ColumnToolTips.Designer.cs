@@ -1848,6 +1848,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Indicates that one or more transitions had to be excluded from the calculation and the Molecule List Abundance for this replicate 
+        ///cannot be reliably compared to the other replicates..
+        /// </summary>
+        public static string MoleculeListAbundanceIncomplete {
+            get {
+                return ResourceManager.GetString("MoleculeListAbundanceIncomplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unique identifier of the molecule list within the document. This begins with &quot;MoleculeGroup:&quot;..
         /// </summary>
         public static string MoleculeListLocator {
@@ -2616,6 +2626,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Indicates that one or more transitions had to be excluded from the calculation and the Protein Abundance for this replicate
+        ///cannot be reliably compared to the other replicates..
+        /// </summary>
+        public static string ProteinAbundanceIncomplete {
+            get {
+                return ResourceManager.GetString("ProteinAbundanceIncomplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein Accession.
         /// </summary>
         public static string ProteinAccession {
@@ -3029,15 +3049,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ResultFileLocator {
             get {
                 return ResourceManager.GetString("ResultFileLocator", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Results.
-        /// </summary>
-        public static string Results {
-            get {
-                return ResourceManager.GetString("Results", resourceCulture);
             }
         }
         

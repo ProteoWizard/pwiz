@@ -64,6 +64,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [InvariantDisplayName("MoleculeListAbundanceIncomplete")]
+        [ProteomicDisplayName("ProteinAbundanceIncomplete")]
+        public bool AbundanceIncomplete
+        {
+            get
+            {
+                Tuple<double, bool> record;
+                if (!Protein.GetProteinAbundances().TryGetValue(Replicate.ReplicateIndex, out record))
+                {
+                    return false;
+                }
+                return record.Item2;
+            }
+        }
+
         EventHandler ILinkValue.ClickEventHandler
         {
             get { return LinkValueOnClick; }

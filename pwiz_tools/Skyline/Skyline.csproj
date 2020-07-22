@@ -424,8 +424,8 @@
     <Compile Include="Model\Crosslinking\ModificationSite.cs" />
     <Compile Include="Model\Crosslinking\LinkedPeptide.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
-      <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">

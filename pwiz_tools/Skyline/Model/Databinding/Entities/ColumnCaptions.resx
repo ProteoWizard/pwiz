@@ -672,6 +672,9 @@
   <data name="MoleculeListAbundance">
     <value>Molecule List Abundance</value>
   </data>
+  <data name="MoleculeListAbundanceIncomplete">
+    <value>Molecule List Abundance Incomplete</value>
+  </data>
   <data name="MoleculeListLocator">
     <value>Molecule List Locator</value>
   </data>
@@ -915,6 +918,9 @@
   <data name="ProteinAbundance">
     <value>Protein Abundance</value>
   </data>
+  <data name="ProteinAbundanceIncomplete">
+    <value>Protein Abundance Incomplete</value>
+  </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
   </data>
@@ -1049,9 +1055,6 @@
   </data>
   <data name="ResultFileLocator">
     <value>Result File Locator</value>
-  </data>
-  <data name="Results">
-    <value>Results</value>
   </data>
   <data name="RetentionTime">
     <value>Retention Time</value>
