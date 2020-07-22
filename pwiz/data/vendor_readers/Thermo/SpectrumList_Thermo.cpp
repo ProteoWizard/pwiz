@@ -627,7 +627,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                         // to last isolation m/z of the current scan;
                         // i.e. MS3 with filter "234.56@cid30.00 123.45@cid30.00" matches to MS2 with filter "234.56@cid30.00"
                         double precursorIsolationMz = i > 0 ? scanInfo->precursorMZ(i - 1, false) : 0;
-                        size_t precursorScanIndex = findPrecursorSpectrumIndex(raw, msLevel - 1, precursorIsolationMz, index);
+                        size_t precursorScanIndex = findPrecursorSpectrumIndex(raw, msLevel - 1, isolationMz, precursorIsolationMz, index);
                         if (precursorScanIndex < index_.size())
                         {
                             precursor.spectrumID = index_[precursorScanIndex].id;
@@ -923,11 +923,13 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 }
 
 
-PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(RawFile* raw, int precursorMsLevel, double precursorIsolationMz, size_t index) const
+PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(RawFile* raw, int precursorMsLevel, double isolationMz, double precursorIsolationMz, size_t index) const
 {
     // exit early if the precursor MS level doesn't exist (i.e. targeted MSn runs)
     if (numSpectraOfMSOrder(static_cast<MSOrder>(precursorMsLevel)) == 0)
         return size_;
+
+    long masterScan = raw->getTrailerExtraValueLong(index_[index].scan, "Master Scan Number:", -1);
 
     // return first scan with MSn-1 that matches the precursor isolation m/z
 
@@ -938,23 +940,41 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(RawFile* ra
         if (ie.msOrder < MSOrder_MS)
             continue;
 
+        if (masterScan > -1)
+        {
+            if (masterScan == ie.scan)
+                return index;
+
+            // master scan not in index (i.e. SIM scan without simAsSpectra)
+            if (masterScan > ie.scan)
+                return size_;
+            continue;
+        }
+
         if (static_cast<int>(ie.msOrder) == precursorMsLevel &&
             (precursorIsolationMz == 0 ||
              precursorIsolationMz == ie.isolationMz))
         {
-            // if potential precursor scan is a zoom scan, make sure the precursorIsolationMz is in the scan window
-            if (ie.scanType == ScanType_Zoom)
+            // make sure the precursorIsolationMz (for zoom scans) or isolationMz (for other MSn scans) is in the scan window
+            double isolationMzToFind = ie.scanType == ScanType_Zoom ? precursorIsolationMz : isolationMz;
+            bool mzInRange = false;
+            auto scanInfo = raw->getScanInfo(ie.scan);
+            size_t scanRangeCount = scanInfo->scanRangeCount();
+            if ((ie.scanType == ScanType_SIM || ie.scanType == ScanType_SRM) && scanRangeCount > 1)
             {
-                auto zoomScanInfo = raw->getScanInfo(ie.scan);
-                bool mzInRange = false;
-                for (size_t i = 0, end = zoomScanInfo->scanRangeCount(); i < end && !mzInRange; ++i)
+                for (size_t i = 0; i < scanRangeCount && !mzInRange; ++i)
                 {
-                    auto scanRange = zoomScanInfo->scanRange(i);
-                    mzInRange = precursorIsolationMz >= scanRange.first && precursorIsolationMz <= scanRange.second;
+                    const pair<double, double>& scanRange = scanInfo->scanRange(i);
+                    mzInRange = isolationMzToFind >= scanRange.first && isolationMzToFind <= scanRange.second;
                 }
-                if (!mzInRange)
-                    continue;
             }
+            else
+            {
+                mzInRange = isolationMzToFind >= scanInfo->lowMass() && isolationMzToFind <= scanInfo->highMass();
+            }
+
+            if (!mzInRange)
+                continue;
 
             return index;
         }

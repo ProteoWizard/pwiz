@@ -682,16 +682,16 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
-        /// Returns true if Skyline can handle the structure of the crosslinks in this CrosslinkLibraryKey
+        /// Returns true if Skyline can handle the structure of the crosslinks in this CrosslinkLibraryKey.
         /// </summary>
-        /// <returns></returns>
         public bool IsSupportedBySkyline()
         {
-            var queue = new List<ImmutableList<int>>();
-            var remainingCrosslinks = new List<List<int>>();
+            var queue = new List<int>();
+            var remainingCrosslinks = new List<ImmutableList<int>>();
+            var consumedPeptides = new HashSet<int>();
             foreach (var crosslink in Crosslinks)
             {
-                var peptideIndexesWithLinks = crosslink.PeptideIndexesWithLinks.ToList();
+                var peptideIndexesWithLinks = ImmutableList.ValueOf(crosslink.PeptideIndexesWithLinks);
                 if (peptideIndexesWithLinks.Count == 1)
                 {
                     if (crosslink.AaIndexes[peptideIndexesWithLinks[0]].Count() != 2)
@@ -707,7 +707,8 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     if (peptideIndexesWithLinks.Contains(0))
                     {
-                        queue.Add(ImmutableList.ValueOf(peptideIndexesWithLinks));
+                        Assume.AreEqual(peptideIndexesWithLinks[0], 0);
+                        queue.Add(peptideIndexesWithLinks[1]);
                     }
                     else
                     {
@@ -720,34 +721,34 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
+            consumedPeptides.Add(0);
+
             while (queue.Count != 0)
             {
-                var entry = queue[0];
+                int currentPeptideIndex = queue[0];
                 queue.RemoveAt(0);
-                int currentPeptideIndex = entry[entry.Count - 1];
+                if (!consumedPeptides.Add(currentPeptideIndex))
+                {
+                    return false;
+                }
                 for (int iCrosslink = remainingCrosslinks.Count - 1; iCrosslink >= 0; iCrosslink--)
                 {
                     var crosslinkIndexes = remainingCrosslinks[iCrosslink];
-                    if (crosslinkIndexes.Remove(currentPeptideIndex))
+                    if (!crosslinkIndexes.Contains(currentPeptideIndex))
                     {
-                        remainingCrosslinks.RemoveAt(iCrosslink);
-                        Assume.AreEqual(1, crosslinkIndexes.Count);
-                        var otherPeptideIndex = crosslinkIndexes[0];
-                        if (entry.Contains(otherPeptideIndex))
-                        {
-                            // Circular references between peptides are not supported
-                            return false;
-                        }
-                        queue.Add(ImmutableList.ValueOf(entry.Append(otherPeptideIndex)));
+                        continue;
                     }
+
+                    int otherPeptideIndex = crosslinkIndexes.Except(new[] {currentPeptideIndex}).First();
+                    queue.Add(otherPeptideIndex);
+                    remainingCrosslinks.RemoveAt(iCrosslink);
                 }
             }
 
-            if (remainingCrosslinks.Count != 0)
+            if (consumedPeptides.Count != PeptideLibraryKeys.Count)
             {
                 return false;
             }
-
             return true;
         }
     }

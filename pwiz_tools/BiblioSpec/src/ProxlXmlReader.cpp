@@ -131,7 +131,7 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
             curProxlPsm_->charge = getIntRequiredAttrValue("precursor_charge", attr);
             curProxlPsm_->specKey = getIntRequiredAttrValue("scan_number", attr);
             curProxlPsm_->score = numeric_limits<double>::max();
-            curProxlPsm_->linkerMass_ = getDoubleRequiredAttrValue("linker_mass", attr);
+            curProxlPsm_->linkerMass_ = proxlMatches_.back().linkType_ != LinkType::Unlinked ? getDoubleRequiredAttrValue("linker_mass", attr) : 0;
         }
         break;
     case PSM_STATE:

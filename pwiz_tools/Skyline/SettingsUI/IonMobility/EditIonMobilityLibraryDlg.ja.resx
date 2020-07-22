@@ -435,10 +435,10 @@
   <data name="addSpectralLibraryContextMenuItem.Text" xml:space="preserve">
     <value>スペクトルライブラリを追加(&amp;L)...</value>
   </data>
-  <data name="addIRTDatabaseContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="addIonMobilityDatabaseContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>222, 24</value>
   </data>
-  <data name="addIRTDatabaseContextMenuItem.Text" xml:space="preserve">
+  <data name="addIonMobilityDatabaseContextMenuItem.Text" xml:space="preserve">
     <value>iRTデータベースを追加(&amp;D)...</value>
   </data>
   <data name="contextMenuAdd.Size" type="System.Drawing.Size, System.Drawing">
@@ -483,25 +483,25 @@
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="gridViewMeasuredPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="gridViewIonMobilities.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <metadata name="columnLibrarySequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <metadata name="columnTarget.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="columnLibrarySequence.HeaderText" xml:space="preserve">
+  <data name="columnTarget.HeaderText" xml:space="preserve">
     <value>修飾シークエンス</value>
   </data>
-  <data name="columnLibrarySequence.Width" type="System.Int32, mscorlib">
+  <data name="columnTarget.Width" type="System.Int32, mscorlib">
     <value>260</value>
   </data>
-  <metadata name="columnLibraryCollisionalCrossSection.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <metadata name="columnCollisionalCrossSection.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="columnLibraryCollisionalCrossSection.HeaderText" xml:space="preserve">
+  <data name="columnCollisionalCrossSection.HeaderText" xml:space="preserve">
     <value>衝突断面積</value>
   </data>
-  <data name="columnLibraryCollisionalCrossSection.Width" type="System.Int32, mscorlib">
+  <data name="columnCollisionalCrossSection.Width" type="System.Int32, mscorlib">
     <value>135</value>
   </data>
   <metadata name="columnHighEnergyDriftTimeOffsetMsec.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -513,37 +513,37 @@
   <data name="columnHighEnergyDriftTimeOffsetMsec.Width" type="System.Int32, mscorlib">
     <value>135</value>
   </data>
-  <data name="gridViewMeasuredPeptides.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="gridViewIonMobilities.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 210</value>
   </data>
-  <data name="gridViewMeasuredPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="gridViewIonMobilities.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
   </data>
-  <data name="gridViewMeasuredPeptides.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="gridViewIonMobilities.Size" type="System.Drawing.Size, System.Drawing">
     <value>573, 323</value>
   </data>
-  <data name="gridViewMeasuredPeptides.TabIndex" type="System.Int32, mscorlib">
+  <data name="gridViewIonMobilities.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
   <metadata name="toolTipMeasuredPeptidesGrid.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>536, 4</value>
   </metadata>
-  <data name="gridViewMeasuredPeptides.ToolTip" xml:space="preserve">
+  <data name="gridViewIonMobilities.ToolTip" xml:space="preserve">
     <value>測定された衝突断面積値の表をここに貼り付け</value>
   </data>
-  <data name="gridViewMeasuredPeptides.ToolTip1" xml:space="preserve">
+  <data name="gridViewIonMobilities.ToolTip1" xml:space="preserve">
     <value>外部ファイルから衝突断面積値をインポート</value>
   </data>
-  <data name="&gt;&gt;gridViewMeasuredPeptides.Name" xml:space="preserve">
-    <value>gridViewMeasuredPeptides</value>
+  <data name="&gt;&gt;gridViewIonMobilities.Name" xml:space="preserve">
+    <value>gridViewIonMobilities</value>
   </data>
-  <data name="&gt;&gt;gridViewMeasuredPeptides.Type" xml:space="preserve">
+  <data name="&gt;&gt;gridViewIonMobilities.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;gridViewMeasuredPeptides.Parent" xml:space="preserve">
+  <data name="&gt;&gt;gridViewIonMobilities.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;gridViewMeasuredPeptides.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;gridViewIonMobilities.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -594,10 +594,10 @@
   <data name="&gt;&gt;addSpectralLibraryContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;addIRTDatabaseContextMenuItem.Name" xml:space="preserve">
-    <value>addIRTDatabaseContextMenuItem</value>
+  <data name="&gt;&gt;addIonMobilityDatabaseContextMenuItem.Name" xml:space="preserve">
+    <value>addIonMobilityDatabaseContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;addIRTDatabaseContextMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;addIonMobilityDatabaseContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolTipImportBtn.Name" xml:space="preserve">
@@ -612,16 +612,16 @@
   <data name="&gt;&gt;toolTipMeasuredPeptidesGrid.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;columnLibrarySequence.Name" xml:space="preserve">
-    <value>columnLibrarySequence</value>
+  <data name="&gt;&gt;columnTarget.Name" xml:space="preserve">
+    <value>columnTarget</value>
   </data>
-  <data name="&gt;&gt;columnLibrarySequence.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnTarget.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;columnLibraryCollisionalCrossSection.Name" xml:space="preserve">
-    <value>columnLibraryCollisionalCrossSection</value>
+  <data name="&gt;&gt;columnCollisionalCrossSection.Name" xml:space="preserve">
+    <value>columnCollisionalCrossSection</value>
   </data>
-  <data name="&gt;&gt;columnLibraryCollisionalCrossSection.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnCollisionalCrossSection.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnHighEnergyDriftTimeOffsetMsec.Name" xml:space="preserve">

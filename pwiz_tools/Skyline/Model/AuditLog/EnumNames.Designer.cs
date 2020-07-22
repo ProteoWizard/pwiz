@@ -286,6 +286,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string eIonMobilityUnits_unknown {
+            get {
+                return ResourceManager.GetString("eIonMobilityUnits_unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DDA.
         /// </summary>
         public static string FullScanAcquisitionMethod_DDA {
@@ -475,6 +484,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fixed width.
+        /// </summary>
+        public static string IonMobilityWindowWidthType_fixed_width {
+            get {
+                return ResourceManager.GetString("IonMobilityWindowWidthType_fixed_width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Linear range.
+        /// </summary>
+        public static string IonMobilityWindowWidthType_linear_range {
+            get {
+                return ResourceManager.GetString("IonMobilityWindowWidthType_linear_range", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string IonMobilityWindowWidthType_none {
+            get {
+                return ResourceManager.GetString("IonMobilityWindowWidthType_none", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resolving power.
+        /// </summary>
+        public static string IonMobilityWindowWidthType_resolving_power {
+            get {
+                return ResourceManager.GetString("IonMobilityWindowWidthType_resolving_power", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Linear.
         /// </summary>
         public static string IrtRegressionType_linear {
@@ -507,6 +552,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string IsolationWidthType_fixed_width {
             get {
                 return ResourceManager.GetString("IsolationWidthType_fixed_width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string IsolationWidthType_none {
+            get {
+                return ResourceManager.GetString("IsolationWidthType_none", resourceCulture);
             }
         }
         
@@ -1078,7 +1132,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use only scans withing time frame of MS/MS IDs.
+        ///   Looks up a localized string similar to Use only scans within time frame of MS/MS IDs.
         /// </summary>
         public static string RetentionTimeFilterType_ms2_ids {
             get {
@@ -1096,7 +1150,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use only scans withing time frame of predicted RT.
+        ///   Looks up a localized string similar to Use only scans within time frame of predicted RT.
         /// </summary>
         public static string RetentionTimeFilterType_scheduling_windows {
             get {

@@ -31,7 +31,7 @@ Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed fr
 Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "70000"
 Settings > Transition Settings -- Full-Scan > Resolving power m/z changed from Missing to "200"
 Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "Default"
-Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans withing time frame of MS/MS IDs" to "Include all matching scans"
+Settings > Transition Settings -- Full-Scan > Retention time filter type changed from "Use only scans within time frame of MS/MS IDs" to "Include all matching scans"
 Settings > Transition Settings -- Full-Scan > Retention time filter length changed from "5" to "0"
 
 Undo Redo : Imported results from 16 files

@@ -775,6 +775,19 @@ double TimsSpectrum::oneOverK0() const
     }
 }
 
+// Get the measured ion mobility range
+std::pair<double, double> TimsSpectrum::getIonMobilityRange() const
+{
+    if (!isCombinedScans())
+    {
+        return make_pair(frame_.oneOverK0_[scanBegin_], frame_.oneOverK0_[scanBegin_]);
+    }
+    else
+    {
+        return make_pair(frame_.oneOverK0_[scanEnd()], frame_.oneOverK0_[scanBegin_]);
+    }
+}
+
 
 void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const
 {
