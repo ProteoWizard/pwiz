@@ -254,6 +254,12 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     /// returns true if the source is TIMS PASEF data
     virtual bool hasPASEFData() const;
 
+    virtual bool canConvertOneOverK0AndCCS() const;
+
+    virtual double oneOverK0ToCCS(double oneOverK0, double mz, int charge) const;
+
+    virtual double ccsToOneOverK0(double ccs, double mz, int charge) const;
+
     /// returns the number of spectra available from the MS source
     virtual size_t getMSSpectrumCount() const;
 
