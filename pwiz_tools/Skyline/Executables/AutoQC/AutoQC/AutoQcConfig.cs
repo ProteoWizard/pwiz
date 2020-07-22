@@ -38,9 +38,7 @@ namespace AutoQC
         {
             Name = reader.GetAttribute(ATTR.name);
             
-            // TODO: Configurations shouldn't start automatically when the program starts up. 
-            //       Remove this attribute from the config XML?
-            IsEnabled = false; // reader.GetBoolAttribute(ATTR.is_enabled);
+            IsEnabled = reader.GetBoolAttribute(ATTR.is_enabled);
             User = reader.GetAttribute(ATTR.user);
             DateTime dateTime;
             DateTime.TryParse(reader.GetAttribute(ATTR.created), out dateTime);
@@ -74,6 +72,7 @@ namespace AutoQC
         {
             writer.WriteStartElement("autoqc_config");
             writer.WriteAttribute(ATTR.name, Name);
+            writer.WriteAttribute(ATTR.is_enabled, IsEnabled);
             writer.WriteAttributeIfString(ATTR.user, User);
             writer.WriteAttributeIfString(ATTR.created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
             writer.WriteAttributeIfString(ATTR.modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());

@@ -25,6 +25,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -91,36 +92,63 @@ namespace pwiz.SkylineTestData.Results
                 Assert.IsTrue(docContainer.SetDocument(docResults, docOriginal, true));
                 docContainer.AssertComplete();
                 var document = docContainer.Document;
-                document = document.ChangeSettings(document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, IonMobilityPredictor.EMPTY)));
+
+                // Clear out any current settings
+                document = document.ChangeSettings(document.Settings.ChangeTransitionIonMobilityFiltering(s => TransitionIonMobilityFiltering.EMPTY));
 
                 // Verify ability to extract predictions from raw data
-                var newPred = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
-                        document, docContainer.DocumentFilePath, true);
-                var result = newPred.MeasuredMobilityIons;
+                var libraryName0 = "test0";
+                var dbPath0 = testFilesDir.GetTestPath(libraryName0 + IonMobilityDb.EXT);
+                var newIMFiltering = document.Settings.TransitionSettings.IonMobilityFiltering.ChangeLibrary(
+                    IonMobilityLibrary.CreateFromResults(
+                        document, docContainer.DocumentFilePath, true,
+                        libraryName0, dbPath0));
+                var result = newIMFiltering.IonMobilityLibrary.GetIonMobilityLibKeyMap().AsDictionary();
                 Assert.AreEqual(1, result.Count);
-                const double expectedDT = 4.0019;
+                var expectedDT = 4.0019;
                 var expectedOffset = .4829;
-                Assert.AreEqual(expectedDT, result.Values.First().IonMobility.Mobility.Value, .001);
-                Assert.AreEqual(expectedOffset, result.Values.First().HighEnergyIonMobilityValueOffset, .001);
+                Assert.AreEqual(expectedDT, result.Values.First().First().IonMobility.Mobility.Value, .001);
+                Assert.AreEqual(expectedOffset, result.Values.First().First().HighEnergyIonMobilityValueOffset??0, .001);
 
                 // Check ability to update, and to preserve unchanged
-                var revised = new Dictionary<LibKey, IonMobilityAndCCS>();
+                var revised = new List<PrecursorIonMobilities>();
                 var libKey = result.Keys.First();
-                revised.Add(libKey, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(4, eIonMobilityUnits.drift_time_msec), null, 0.234));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
-                var libKey2 = new LibKey("DEADEELS", asSmallMolecules ? Adduct.NonProteomicProtonatedFromCharge(2) : Adduct.DOUBLY_PROTONATED);
-                revised.Add(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, eIonMobilityUnits.drift_time_msec), null, 0.123));
-                document =
-                    document.ChangeSettings(
-                        document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new IonMobilityPredictor("test", revised, null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0))));
-                newPred = document.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(
-                    document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
-                        document, docContainer.DocumentFilePath, true)).IonMobilityPredictor;
-                result = newPred.MeasuredMobilityIons;
+                revised.Add(new PrecursorIonMobilities(libKey, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(expectedDT=4, eIonMobilityUnits.drift_time_msec), null, expectedOffset=0.234)));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
+                var pepSequence = "DEADEELS";
+                var libKey2 = asSmallMolecules ?
+                    new LibKey(SmallMoleculeLibraryAttributes.Create(pepSequence, "C12H5", null, null, null, null), Adduct.M_PLUS_2H) : 
+                    new LibKey(pepSequence, Adduct.DOUBLY_PROTONATED);
+                revised.Add(new PrecursorIonMobilities(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, eIonMobilityUnits.drift_time_msec), null, 0.123)));
+                var libraryName = "test";
+                var dbPath = testFilesDir.GetTestPath(libraryName+IonMobilityDb.EXT);
+                var imsdb = IonMobilityDb.CreateIonMobilityDb(dbPath, libraryName, false, revised);
+                var newLibIM = new IonMobilityLibrary(libraryName, dbPath, imsdb);
+                var ionMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(
+                    IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, 40, 0, 0, 0);
+                var calculator = ionMobilityWindowWidthCalculator;
+                document = document.ChangeSettings(
+                    document.Settings.ChangeTransitionIonMobilityFiltering(
+                        imf => imf.ChangeFilterWindowWidthCalculator(calculator).
+                            ChangeLibrary(newLibIM)));
+                result = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.GetIonMobilityLibKeyMap().AsDictionary();
                 Assert.AreEqual(2, result.Count);
-                Assert.AreEqual(expectedDT, result[libKey].IonMobility.Mobility.Value, .001);
-                Assert.AreEqual(expectedOffset, result[libKey].HighEnergyIonMobilityValueOffset, .001);
-                Assert.AreEqual(5, result[libKey2].IonMobility.Mobility.Value, .001);
-                Assert.AreEqual(0.123, result[libKey2].HighEnergyIonMobilityValueOffset, .001);
+                Assert.AreEqual(expectedDT, result[libKey].First().IonMobility.Mobility.Value, .001);
+                Assert.AreEqual(expectedOffset, result[libKey].First().HighEnergyIonMobilityValueOffset??0, .001);
+                Assert.AreEqual(5, result[libKey2].First().IonMobility.Mobility.Value, .001);
+                Assert.AreEqual(0.123, result[libKey2].First().HighEnergyIonMobilityValueOffset??0, .001);
+
+                ionMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(
+                    IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width, 40, 0, 0, 100);
+                document = document.ChangeSettings(
+                    document.Settings.ChangeTransitionIonMobilityFiltering(
+                        imf => imf.ChangeFilterWindowWidthCalculator(ionMobilityWindowWidthCalculator).
+                            ChangeLibrary(newLibIM)));
+                result = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.GetIonMobilityLibKeyMap().AsDictionary();
+                Assert.AreEqual(2, result.Count);
+                Assert.AreEqual(expectedDT, result[libKey].First().IonMobility.Mobility.Value, .001);
+                Assert.AreEqual(expectedOffset, result[libKey].First().HighEnergyIonMobilityValueOffset??0, .001);
+                Assert.AreEqual(5, result[libKey2].First().IonMobility.Mobility.Value, .001);
+                Assert.AreEqual(0.123, result[libKey2].First().HighEnergyIonMobilityValueOffset??0, .001);
             }
         }
     }

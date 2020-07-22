@@ -79,7 +79,7 @@ namespace AutoQC
             {
                 if (drive.Name.StartsWith(driveInfo.DriveLetter) && drive.IsReady)
                 {
-                    // Program.LogInfo(string.Format("Network Drive is mapped {0}. Config: {1}", driveInfo.DriveLetter, configName)); // TODO - remove
+                    // Program.LogInfo(string.Format("Network Drive is mapped {0}. Config: {1}", driveInfo.DriveLetter, configName));
                     return true;
                 }
             }

@@ -87,6 +87,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public bool Coeluting { get { return !ChromInfo.IsForcedIntegration; } }
 
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? IonMobilityFragment 
+        {
+            get
+            {
+                return IonMobilityFilter.IsNullOrEmpty(ChromInfo.IonMobility) ? null
+                    : ChromInfo.IonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility();
+            }
+        }
+
         public Chromatogram Chromatogram
         {
             get { return _chromatogram.Value; }

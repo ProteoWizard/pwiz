@@ -44,10 +44,5 @@ namespace AutoQC
         /// <param name="importContext"></param>
         /// <returns></returns>
         ProcessInfo RunAfter(ImportContext importContext);
-
-//        void LogOutput(string message, params object[] args);
-//        void LogErrorOutput(string error, params object[] args);
-//        void Log(string message, params object[] args);
-//        void LogError(string message, params object[] args);
     }
 }

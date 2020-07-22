@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Model.Results
 {
     /// <summary>
     /// Finds ion mobilities by examining loaded results in a document.
+    /// N.B. does not attempt to find multiple conformers
     /// </summary>
     public class IonMobilityFinder : IDisposable
     {
@@ -127,7 +128,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var dt in _ms1IonMobilities)
                 {
                     // Choose the ion mobility which gave the largest signal
-                    // CONSIDER: average IM and CCS values that fall "near" the IM of largest signal?
+                    // CONSIDER: average IM and CCS values that fall "near" the IM of largest signal? Or consider them multiple conformers?
                     var ms1IonMobility = dt.Value.OrderByDescending(p => p.Intensity).First().IonMobility;
                     // Check for MS2 data to use for high energy offset
                     List<IonMobilityIntensityPair> listDt;
@@ -328,7 +329,7 @@ namespace pwiz.Skyline.Model.Results
             }
             if (_dataFileScanHelperException != null)
             {
-                throw new IOException(TextUtil.LineSeparate(Resources.DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__, _dataFileScanHelperException.Message), _dataFileScanHelperException);
+                throw new IOException(TextUtil.LineSeparate(Resources.IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_, _dataFileScanHelperException.Message), _dataFileScanHelperException);
             }
             if (_progressMonitor != null && !ReferenceEquals(nodeGroup, _currentDisplayedTransitionGroupDocNode))
             {

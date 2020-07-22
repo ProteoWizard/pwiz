@@ -49,7 +49,6 @@ EditCoVDlg,TestOptimization
 EditCustomMoleculeDlg,TestEditCustomMoleculeDlg
 EditCustomThemeDlg, TestEditCustomTheme
 EditDPDlg,TestEditDialogs
-EditDriftTimePredictorDlg,TestIonMobility
 EditEnzymeDlg,TestEditSettingsTypes
 EditExclusionDlg,TestEditDialogs
 EditFragmentLossDlg,TestNeutralLoss
@@ -192,6 +191,7 @@ ToolUpdatesDlg,TestToolUpdates
 TransitionSettingsUI.FilterTab,TestMethodEditTutorial
 TransitionSettingsUI.FullScanTab,TestExportDiaList
 TransitionSettingsUI.InstrumentTab,TestExistingExperimentsTutorial
+TransitionSettingsUI.IonMobilityTab,TestDriftTimePredictorTutorial
 TransitionSettingsUI.LibraryTab,TestMethodEditTutorial
 TransitionSettingsUI.PredictionTab,TestMethodEditTutorial
 UndoRedoList,*

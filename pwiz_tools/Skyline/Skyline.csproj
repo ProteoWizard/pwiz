@@ -450,7 +450,9 @@
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
     <Compile Include="Model\DocSettings\DocumentAnnotationUpdater.cs" />
+    <Compile Include="Model\DocSettings\DriftTimePredictor.cs" />
     <Compile Include="Model\ElementLocators\AuditLogRef.cs" />
+    <Compile Include="Model\DocSettings\TransitionIonMobilityFiltering.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ListRef.cs" />
     <Compile Include="Model\DocSettings\FullScanAcquisitionMethod.cs" />
@@ -478,6 +480,8 @@
     <Compile Include="Model\ExplicitTransitionValues.cs" />
     <Compile Include="Model\FragmentedMolecule.cs" />
     <Compile Include="Model\GroupComparisonRefinementData.cs" />
+    <Compile Include="Model\IonMobility\DbPrecursorAndIonMobility.cs" />
+    <Compile Include="Model\IonMobility\ValidatingIonMobilityPrecursor.cs" />
     <Compile Include="Model\Irt\IrtPeptidePicker.cs" />
     <Compile Include="Model\Irt\Regression.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
@@ -573,6 +577,7 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
+    <Compile Include="Model\TransitionGroupIonMobilityInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -586,6 +591,12 @@
     <Compile Include="ProtocolBuffers\GeneratedCode\Tensor.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\TensorShape.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\Types.cs" />
+    <Compile Include="SettingsUI\IonMobility\IonMobilityFilteringUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\IonMobility\IonMobilityFilteringUserControl.Designer.cs">
+      <DependentUpon>IonMobilityFilteringUserControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\Irt\UseCurrentCalculatorDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -593,12 +604,6 @@
       <DependentUpon>UseCurrentCalculatorDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\UiModes.cs" />
-    <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.Designer.cs">
-      <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="ToolsUI\ColorGrid.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1220,8 +1225,6 @@
     <Compile Include="Model\ImportAssayLibrary.cs" />
     <Compile Include="Model\ImportPeakBoundaries.cs" />
     <Compile Include="Model\ImportPeptideSearch.cs" />
-    <Compile Include="Model\IonMobility\DbIonMobilityPeptide.cs" />
-    <Compile Include="Model\IonMobility\DbVersionInfo.cs" />
     <Compile Include="Model\IonMobility\IonMobilityLibraryManager.cs" />
     <Compile Include="Model\IonMobility\IonMobilityDb.cs" />
     <Compile Include="Model\IonMobility\IonMobilityLibrary.cs" />
@@ -1534,7 +1537,6 @@
     <Compile Include="Model\TransitionDocNode.cs" />
     <Compile Include="Model\TransitionGroup.cs" />
     <Compile Include="Model\TransitionGroupDocNode.cs" />
-    <Compile Include="Model\TransitionGroupIonMobilityInfo.cs" />
     <Compile Include="Model\Undo.cs" />
     <Compile Include="Controls\UndoRedoButtons.cs" />
     <Compile Include="Model\V01\Sequence.cs" />
@@ -1595,7 +1597,6 @@
     <Compile Include="SettingsUI\FormulaBox.Designer.cs">
       <DependentUpon>FormulaBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\IonMobility\ChargeRegressionTable.cs" />
     <Compile Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1607,12 +1608,6 @@
     </Compile>
     <Compile Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.designer.cs">
       <DependentUpon>EditIonMobilityLibraryDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.designer.cs">
-      <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\EditOptimizationLibraryDlg.cs">
       <SubType>Form</SubType>
@@ -3267,14 +3262,6 @@
     <EmbeddedResource Include="SettingsUI\FormulaBox.zh-CHS.resx">
       <DependentUpon>FormulaBox.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.ja.resx">
-      <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.zh-CHS.resx">
-      <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.ja.resx">
       <DependentUpon>EditIonMobilityLibraryDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -3294,10 +3281,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\EditIonMobilityLibraryDlg.resx">
       <DependentUpon>EditIonMobilityLibraryDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\EditDriftTimePredictorDlg.resx">
-      <DependentUpon>EditDriftTimePredictorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditEnzymeDlg.ja.resx">
@@ -3396,15 +3379,10 @@
       <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.ja.resx">
-      <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.resx">
-      <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
+    <EmbeddedResource Include="SettingsUI\IonMobility\IonMobilityFilteringUserControl.resx">
+      <DependentUpon>IonMobilityFilteringUserControl.cs</DependentUpon>
+      <LastGenOutput>IonMobilityFilteringUserControl1.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\IonMobility\UseSpectralLibraryIonMobilityValuesControl.zh-CHS.resx">
-      <DependentUpon>UseSpectralLibraryIonMobilityValuesControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.ja.resx">
       <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>

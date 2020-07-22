@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model
                 if (Document.Settings.HasOptimizationLibraryPersisted)
                     zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath);
                 if (Document.Settings.HasIonMobilityLibraryPersisted)
-                    zip.AddFile(pepSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.PersistencePath);
+                    zip.AddFile(transitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath);
                     
                 var libfiles = new HashSet<string>();
                 foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
@@ -300,8 +300,8 @@ namespace pwiz.Skyline.Model
                     // Minimize any persistable ion mobility predictor
                     if (tempDir == null)
                         tempDir = new TemporaryDirectory();
-                    string tempDbPath = Document.Settings.PeptideSettings.Prediction.IonMobilityPredictor
-                        .IonMobilityLibrary.PersistMinimized(tempDir.DirPath, Document, null);
+                    string tempDbPath = Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary
+                        .PersistMinimized(tempDir.DirPath, Document, null, out _);
                     if (tempDbPath != null)
                         zip.AddFile(tempDbPath);
                 }

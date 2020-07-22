@@ -136,7 +136,13 @@ namespace pwiz.Skyline.SettingsUI
 
             // Initialise the ion mobility units dropdown with L10N values
             foreach (eIonMobilityUnits t in Enum.GetValues(typeof(eIonMobilityUnits)))
-                comboBoxIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString(t));
+            {
+                var displayString = IonMobilityFilter.IonMobilityUnitsL10NString(t);
+                if (displayString != null) // Special value eIonMobilityUnits.unknown must not appear in list
+                {
+                    comboBoxIonMobilityUnits.Items.Add(displayString);
+                }
+            }
 
             if (needOptionalValuesBox)
             {

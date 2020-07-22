@@ -322,9 +322,6 @@
   <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
     <value>iRTカルキュレータの標準ペプチドは、iRTカルキュレータエディタでのみ設定可能です。</value>
   </data>
-  <data name="DriftTimePredictorList_Label_Drift_Time_Predictor_" xml:space="preserve">
-    <value>ドリフト時間予測：</value>
-  </data>
   <data name="EditIsolationSchemeDlg_OkDialog_The_isolation_scheme_named__0__already_exists" xml:space="preserve">
     <value>「{0}」という名前の単離スキームが既に存在しています。</value>
   </data>
@@ -516,9 +513,6 @@
   </data>
   <data name="LoadingTooSlowlyException_LoadingTooSlowlyException_Data_import_expected_to_consume__0__minutes_with_maximum_of__1__mintues" xml:space="preserve">
     <value>データのインポートには{0}分（最大{1}分）かかることが予測されます</value>
-  </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_high_energy_drift_time_offset_on_line__1__" xml:space="preserve">
-    <value>行{1}目の高エネルギードリフト時間オフセットに対する無効な番号形式{0}。</value>
   </data>
   <data name="EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
     <value>レポーターイオン質量は{0}以上でなければなりません。</value>
@@ -1377,9 +1371,6 @@
   <data name="FragmentLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\FragmentLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="IonMobilityLibraryList_AcceptList_The_drift_time_predictors_" xml:space="preserve">
-    <value>ドリフト時間予測：</value>
-  </data>
   <data name="ChromCacheJoiner_JoinNextPart_Joining_file__0__" xml:space="preserve">
     <value>ファイル{0}の結合中</value>
   </data>
@@ -1872,9 +1863,6 @@
   <data name="EditCoVDlg_btnOk_Click_The_compensation_voltage_parameters___0___already_exist_" xml:space="preserve">
     <value>補償電圧パラメータ'{0}'はすでに存在しています。</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope_" xml:space="preserve">
-    <value>値{0}は有効な勾配ではありません。</value>
-  </data>
   <data name="ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_" xml:space="preserve">
     <value>エラー： {0}には有効な{1}属性が含まれていません。</value>
   </data>
@@ -2018,9 +2006,6 @@
   </data>
   <data name="PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank" xml:space="preserve">
     <value>ペプチドシークエンスは空にできません。</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_pasted_text_must_have_three_columns_" xml:space="preserve">
-    <value>貼り付けたテキストは3列でなければなりません。</value>
   </data>
   <data name="AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__" xml:space="preserve">
     <value>必要なトランジション数{0}が最大数{1}を超えています</value>
@@ -2367,9 +2352,6 @@
   </data>
   <data name="DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence" xml:space="preserve">
     <value>シークエンスのシャッフル</value>
-  </data>
-  <data name="ValidatingIonMobilityPeptide_ValidateHighEnergyDriftTimeOffsetMsec_High_energy_drift_time_offsets_should_be_empty__or_a__usually_negative__value_for_the_relative_drift_time_in_msec_for_high_collision_energy_scans_" xml:space="preserve">
-    <value>高エネルギードリフト時間オフセットは空にするか、または高衝突エネルギースキャンに対するミリ秒単位の相対ドリフト時間の（通常負数）値にしてください。</value>
   </data>
   <data name="ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again" xml:space="preserve">
     <value>インストールされたツール{0}の実行エラー。ファイルの1つにエラーがあるようです。ツールを再インストールしてからもう一度お試しください</value>
@@ -2754,9 +2736,6 @@
   <data name="ImportPeptideSearchDlg_NextPage_Finish" xml:space="preserve">
     <value>完了(&amp;F)</value>
   </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_added_list_contains__0__charged_peptides_with_inconsistent_ion_mobility_values_" xml:space="preserve">
-    <value>追加リストには一貫性のないイオン移動値を持つ{0}電荷ペプチドが含まれています。</value>
-  </data>
   <data name="RetentionTimeRegression_RetentionTimeRegression_Slope_and_intercept_must_both_have_values_or_both_not_have_values" xml:space="preserve">
     <value>勾配と切片は、共に値を持つか、共に値を持たないようにしなければなりません</value>
   </data>
@@ -2960,9 +2939,6 @@
   <data name="ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
     <value>現在のドキュメントには、トリガーされた取得のトランジションをランクするのに十分な情報のないペプチドが含まれています。</value>
   </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_A_modified_peptide_sequence_is_required_for_each_entry_" xml:space="preserve">
-    <value>各エントリには修飾ペプチドシークエンスが必要です。</value>
-  </data>
   <data name="BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist" xml:space="preserve">
     <value>冗長ライブラリ{0}は存在しません。</value>
   </data>
@@ -3002,11 +2978,8 @@
   <data name="Delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\delete.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateCell_A_value_is_required_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateCell_A_value_is_required_" xml:space="preserve">
     <value>値が必要です。</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_sequence__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
-    <value>シークエンス{0}は有効な修飾ペプチドシークエンスではありません。</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_Importing__0__" xml:space="preserve">
     <value>{0}のインポート中</value>
@@ -3080,7 +3053,7 @@
   <data name="ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__" xml:space="preserve">
     <value>{0}のコマンドがその場所に存在しない可能性があります。編集しますか？</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_Do_you_want_to_change_it_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_OkDialog_Do_you_want_to_change_it_" xml:space="preserve">
     <value>変更しますか？</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click__0__Method" xml:space="preserve">
@@ -3307,9 +3280,6 @@
   </data>
   <data name="CompensationVoltageList_Label_Compensation__Voltage_Parameters_" xml:space="preserve">
     <value>補償電圧パラメータ：(&amp;V)</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
-    <value>エントリ{0}は有効な電荷ではありません。プリカーサー電荷は1と{1}の間の整数でなければなりません。</value>
   </data>
   <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__" xml:space="preserve">
     <value>プリカーサーm/z{0:F04}は、{1}～{2}の装置範囲外です。</value>
@@ -4420,9 +4390,6 @@
   <data name="BuildLibraryDlg_ValidateBuilder_The_directory__0__does_not_exist" xml:space="preserve">
     <value>ディレクトリ{0}が存在していません。</value>
   </data>
-  <data name="DriftTimePredictorList_Title_Edit_Drift_Time_Predictors" xml:space="preserve">
-    <value>ドリフト時間予測を編集</value>
-  </data>
   <data name="PeptideGroupTreeNode_RenderTip_Name" xml:space="preserve">
     <value>名前</value>
   </data>
@@ -4623,9 +4590,6 @@
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
     <value>エラー：スケジュールメソッドをエクスポートするには、まず [ペプチド設定/予測] で保持時間予測を選択する必要があります。</value>
-  </data>
-  <data name="DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__" xml:space="preserve">
-    <value>ドリフト時間ライブラリ自動入力のための結果の利用に問題：</value>
   </data>
   <data name="TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_" xml:space="preserve">
     <value>CSV（カンマ区切り）</value>
@@ -4871,7 +4835,7 @@
   <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_q_Q_plot" xml:space="preserve">
     <value>q-Qプロットを確認するために比較用のモデル/ファイルを追加</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept_" xml:space="preserve">
     <value>値{0}は有効な切片ではありません。</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_" xml:space="preserve">
@@ -4990,9 +4954,6 @@
   </data>
   <data name="SrmTreeNodeParent_ShowPickList_An_error_occurred_creating_options_" xml:space="preserve">
     <value>オプション作成中に発生したエラー。</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_" xml:space="preserve">
-    <value>値{0}は有効なドリフト時間ではありません。</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_The_current_file_or_model_has_no_q_values_or_scores_to_analyze___Either_q_values_or_scores_are_necessary_to_compare_peak_picking_tools_" xml:space="preserve">
     <value>現在のファイルまたはモデルには分析するためのq値かスコアがありません。 ピーク選択ツールを比較するためにq値またはスコアのどちらかが必要です。</value>
@@ -5125,9 +5086,6 @@
   </data>
   <data name="BackgroundWorker_UpdateStatistics_After_minimizing_the_cache_file_will_be_reduced_to__0__its_current_size" xml:space="preserve">
     <value>最小化後、キャッシュファイルは現在のサイズの{0:0%}に縮小されます</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility_library_" xml:space="preserve">
-    <value>ドリフト時間予測にはイオン移動度ライブラリが必要です。</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_There_is_already_an_imported_file_with_the_current_name___Please_choose_another_name" xml:space="preserve">
     <value>現在の名前を持つインポートされたファイルが既にあります。 別の名前を選択してください</value>
@@ -5428,9 +5386,6 @@
   </data>
   <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>このタンパク質にはシークエンスがありません</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>{0}という名前のドリフト時間予測は既に存在します。</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
     <value>エラー： 正規表現の適用後に繰り返し測定名'{0}'が重複しています。</value>
@@ -5844,7 +5799,7 @@
   <data name="CommandArgs_ParseArgsInternal_Warning__Invalid_max_transitions_per_injection_parameter___0___" xml:space="preserve">
     <value>警告： インジェクションパラメータ毎の無効な最大トランジション ({0})。</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
     <value>値{0}は有効な電荷ではありません。電荷は1と{1}の間の整数でなければなりません。</value>
   </data>
   <data name="EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
@@ -6363,9 +6318,6 @@
   </data>
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
     <value>消化設定を変更</value>
-  </data>
-  <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_ion_mobility_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__" xml:space="preserve">
-    <value>シークエンス{0}用に測定されたイオン移動度をインポートできません。荷電状態{1}に対する衝突断面積変換パラメータが提供されていません。</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist" xml:space="preserve">
     <value>ファイル{0}は存在しません。</value>
@@ -6892,7 +6844,7 @@
   <data name="WatersMethodExporter_EnsureLibraries_Waters_method_creation_software_may_not_be_installed_correctly" xml:space="preserve">
     <value>Watersメソッド作成ソフトウェアが正しくインストールされていない可能性があります。</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_On_line__0___1_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_On_line__0___1_" xml:space="preserve">
     <value>{0}{1}行</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Loading__0__library" xml:space="preserve">
@@ -7343,10 +7295,10 @@
   <data name="AbstractChromGraphItem_CustomizeYAxis_Intensity" xml:space="preserve">
     <value>強度</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateCell_The_entry__0__is_not_valid_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateCell_The_entry__0__is_not_valid_" xml:space="preserve">
     <value>エントリ{0}が有効ではありません。</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_" xml:space="preserve">
     <value>分解能は0より大きくなければなりません。</value>
   </data>
   <data name="ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available" xml:space="preserve">
@@ -7432,9 +7384,6 @@
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_prediction_calculator_is_unable_to_score" xml:space="preserve">
     <value>保持時間予測カルキュレータではスコアすることができません。</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_following_peptides_appear_in_the_added_list_with_inconsistent_ion_mobility_values_" xml:space="preserve">
-    <value>以下のペプチドが一貫性のないイオン移動値を持つ追加リストに表示されます。</value>
   </data>
   <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__" xml:space="preserve">
     <value>バックグラウンドプロテオーム{0}のクエリ実行に失敗しました。</value>
@@ -7772,9 +7721,6 @@
   <data name="ImportFastaHelper_AddFasta___0___is_not_a_capital_letter_that_corresponds_to_an_amino_acid_" xml:space="preserve">
     <value>「{0}」はアミノ酸に対応する大文字ではありません。</value>
   </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_at_least_two_columns_" xml:space="preserve">
-    <value>貼り付けたテキストは最低2列なければなりません。</value>
-  </data>
   <data name="ViewLibraryDlg_MatchModifications_No" xml:space="preserve">
     <value>いいえ</value>
   </data>
@@ -7897,9 +7843,6 @@
   </data>
   <data name="Ions_Z" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Ions_Z.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_peptide__0__has_inconsistent_ion_mobility_values_in_the_added_list_" xml:space="preserve">
-    <value>ペプチド{0}には追加リスト内に一貫性のないイオン移動度値があります。</value>
   </data>
   <data name="UndoManager_BeginTransaction_Undo_transaction_may_not_be_started_in_undo_redo" xml:space="preserve">
     <value>トランザクションを元に戻すは、元に戻す/やり直し操作で開始することはできません。</value>
@@ -9050,12 +8993,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_" xml:space="preserve">
     <value>無効な衝突断面積値{0}</value>
   </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_collisional_cross_section_" xml:space="preserve">
-    <value>値{0}は有効な衝突断面積ではありません。</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_" xml:space="preserve">
-    <value>値{0}は有効な高エネルギーオフセットではありません。</value>
-  </data>
   <data name="IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from__0_" xml:space="preserve">
     <value>{0}から単離スキームを読み出しています</value>
   </data>
@@ -9619,11 +9556,8 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="FileProgressControl_SetStatus_warning" xml:space="preserve">
     <value>警告</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks" xml:space="preserve">
     <value>ピークに対するイオン移動度値を検索中です</value>
-  </data>
-  <data name="IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_" xml:space="preserve">
-    <value>イオン移動ライブラリを使用するイオン移動度予測にはライブラリに対するファイル名を入力しなければなりません。</value>
   </data>
   <data name="IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_" xml:space="preserve">
     <value>イオン移動ライブラリを使用するイオン移動度予測には電荷毎の回帰値を含まなければなりません。</value>
@@ -9776,13 +9710,10 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="Columns_Columns_Missing_column___0__" xml:space="preserve">
     <value>列「{0}」がありません</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>{0}という名前のイオン移動度予測は既に存在します。</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Molecule" xml:space="preserve">
     <value>分子</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct" xml:space="preserve">
     <value>付加物</value>
   </data>
   <data name="ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___" xml:space="preserve">
