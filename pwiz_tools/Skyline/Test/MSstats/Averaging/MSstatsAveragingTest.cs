@@ -128,10 +128,7 @@ namespace pwiz.SkylineTest.MSstats.Averaging
 
                 AssertEx.AreEqual(expectedFoldChange, actualFoldChange, .01);
             }
-
         }
-
-
 
         private SrmDocument LoadRatPlasmaDocument()
         {
