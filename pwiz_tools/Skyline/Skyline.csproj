@@ -445,8 +445,10 @@
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
     <Compile Include="Model\DocSettings\DocumentAnnotationUpdater.cs" />
     <Compile Include="Model\DocSettings\DriftTimePredictor.cs" />
-    <Compile Include="Model\DocSettings\ExtractedMetadataDef.cs" />
-    <Compile Include="Model\ElementLocators\ExportAnnotations\MetadataTarget.cs" />
+    <Compile Include="Model\DocSettings\ExtractedMetadataRule.cs" />
+    <Compile Include="Model\ElementLocators\ExportAnnotations\MetadataExtractor.cs" />
+    <Compile Include="Model\ElementLocators\ExportAnnotations\ExtractedMetadataResult.cs" />
+    <Compile Include="Model\ElementLocators\ExportAnnotations\TextColumnWrapper.cs" />
     <Compile Include="Model\ElementLocators\AuditLogRef.cs" />
     <Compile Include="Model\DocSettings\TransitionIonMobilityFiltering.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />

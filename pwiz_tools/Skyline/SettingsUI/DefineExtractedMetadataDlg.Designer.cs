@@ -30,11 +30,6 @@
         {
             this.components = new System.ComponentModel.Container();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.colResultFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colSource = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMatch = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.colExtractedValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.panelButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
@@ -47,9 +42,15 @@
             this.comboSourceText = new System.Windows.Forms.ComboBox();
             this.lblPreview = new System.Windows.Forms.Label();
             this.linkLabelRegularExpression = new System.Windows.Forms.LinkLabel();
+            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
+            this.colResultFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colSource = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMatch = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.colExtractedValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTarget = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             this.panelButtons.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView1
@@ -65,43 +66,16 @@
             this.colResultFile,
             this.colSource,
             this.colMatch,
-            this.colExtractedValue});
+            this.colExtractedValue,
+            this.colTarget});
             this.dataGridView1.DataSource = this.bindingSource1;
             this.dataGridView1.Location = new System.Drawing.Point(3, 199);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(463, 203);
+            this.dataGridView1.Size = new System.Drawing.Size(568, 203);
             this.dataGridView1.TabIndex = 8;
-            // 
-            // colResultFile
-            // 
-            this.colResultFile.DataPropertyName = "FileName";
-            this.colResultFile.HeaderText = "Result File";
-            this.colResultFile.Name = "colResultFile";
-            this.colResultFile.ReadOnly = true;
-            // 
-            // colSource
-            // 
-            this.colSource.DataPropertyName = "SourceText";
-            this.colSource.HeaderText = "Source Text";
-            this.colSource.Name = "colSource";
-            this.colSource.ReadOnly = true;
-            // 
-            // colMatch
-            // 
-            this.colMatch.DataPropertyName = "Match";
-            this.colMatch.HeaderText = "Match";
-            this.colMatch.Name = "colMatch";
-            this.colMatch.ReadOnly = true;
-            // 
-            // colExtractedValue
-            // 
-            this.colExtractedValue.DataPropertyName = "ExtractedValue";
-            this.colExtractedValue.HeaderText = "Extracted Value";
-            this.colExtractedValue.Name = "colExtractedValue";
-            this.colExtractedValue.ReadOnly = true;
-            this.colExtractedValue.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colExtractedValue.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.dataGridView1.CellErrorTextNeeded += new System.Windows.Forms.DataGridViewCellErrorTextNeededEventHandler(this.dataGridView1_CellErrorTextNeeded);
+            this.dataGridView1.RowErrorTextNeeded += new System.Windows.Forms.DataGridViewRowErrorTextNeededEventHandler(this.dataGridView1_RowErrorTextNeeded);
             // 
             // panelButtons
             // 
@@ -111,7 +85,7 @@
             this.panelButtons.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
             this.panelButtons.Location = new System.Drawing.Point(0, 421);
             this.panelButtons.Name = "panelButtons";
-            this.panelButtons.Size = new System.Drawing.Size(478, 29);
+            this.panelButtons.Size = new System.Drawing.Size(583, 29);
             this.panelButtons.TabIndex = 9;
             // 
             // btnCancel
@@ -119,7 +93,7 @@
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnCancel.Location = new System.Drawing.Point(400, 3);
+            this.btnCancel.Location = new System.Drawing.Point(505, 3);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -131,7 +105,7 @@
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnOK.Location = new System.Drawing.Point(319, 3);
+            this.btnOK.Location = new System.Drawing.Point(424, 3);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 0;
@@ -179,6 +153,7 @@
             this.comboMetadataTarget.Name = "comboMetadataTarget";
             this.comboMetadataTarget.Size = new System.Drawing.Size(268, 21);
             this.comboMetadataTarget.TabIndex = 7;
+            this.comboMetadataTarget.SelectedIndexChanged += new System.EventHandler(this.comboMetadataTarget_SelectedIndexChanged);
             // 
             // lblSourceText
             // 
@@ -219,11 +194,48 @@
             this.linkLabelRegularExpression.Text = "Regular expression:";
             this.linkLabelRegularExpression.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelRegularExpression_LinkClicked);
             // 
+            // colResultFile
+            // 
+            this.colResultFile.DataPropertyName = "ResultFile";
+            this.colResultFile.HeaderText = "Result File";
+            this.colResultFile.Name = "colResultFile";
+            this.colResultFile.ReadOnly = true;
+            // 
+            // colSource
+            // 
+            this.colSource.DataPropertyName = "SourceText";
+            this.colSource.HeaderText = "Source";
+            this.colSource.Name = "colSource";
+            this.colSource.ReadOnly = true;
+            // 
+            // colMatch
+            // 
+            this.colMatch.DataPropertyName = "Match";
+            this.colMatch.HeaderText = "Match";
+            this.colMatch.Name = "colMatch";
+            this.colMatch.ReadOnly = true;
+            // 
+            // colExtractedValue
+            // 
+            this.colExtractedValue.DataPropertyName = "ExtractedText";
+            this.colExtractedValue.HeaderText = "Extracted Value";
+            this.colExtractedValue.Name = "colExtractedValue";
+            this.colExtractedValue.ReadOnly = true;
+            this.colExtractedValue.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colExtractedValue.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // colTarget
+            // 
+            this.colTarget.DataPropertyName = "TargetValue";
+            this.colTarget.HeaderText = "Target";
+            this.colTarget.Name = "colTarget";
+            this.colTarget.ReadOnly = true;
+            // 
             // DefineExtractedMetadataDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(478, 450);
+            this.ClientSize = new System.Drawing.Size(583, 450);
             this.Controls.Add(this.linkLabelRegularExpression);
             this.Controls.Add(this.lblPreview);
             this.Controls.Add(this.comboSourceText);
@@ -238,8 +250,8 @@
             this.Name = "DefineExtractedMetadataDlg";
             this.Text = "Result File Metadata Rule";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
             this.panelButtons.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -255,14 +267,15 @@
         private System.Windows.Forms.TextBox tbxRegularExpression;
         private System.Windows.Forms.Label lblTarget;
         private System.Windows.Forms.ComboBox comboMetadataTarget;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colResultFile;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colSource;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn colMatch;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colExtractedValue;
-        private System.Windows.Forms.BindingSource bindingSource1;
         private System.Windows.Forms.Label lblSourceText;
         private System.Windows.Forms.ComboBox comboSourceText;
         private System.Windows.Forms.Label lblPreview;
         private System.Windows.Forms.LinkLabel linkLabelRegularExpression;
+        private System.Windows.Forms.BindingSource bindingSource1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colResultFile;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colSource;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn colMatch;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colExtractedValue;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTarget;
     }
 }

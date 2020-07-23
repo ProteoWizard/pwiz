@@ -1,49 +1,40 @@
-﻿using System.Xml;
+﻿using System;
+using System.Collections.Generic;
+using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
-    [XmlRoot("extracted_metadata")]
-    public class ExtractedMetadataDef : XmlNamedElement, IXmlSerializable
+    [XmlRoot("extracted_metadata_rule")]
+    public class ExtractedMetadataRule : Immutable, IXmlSerializable
     {
         public string SourceColumn { get; private set; }
 
-        public ExtractedMetadataDef ChangeSourceColumn(string value)
+        public ExtractedMetadataRule ChangeSourceColumn(string value)
         {
             return ChangeProp(ImClone(this), im => im.SourceColumn = value);
         }
 
         public string MatchRegularExpression { get; private set; }
 
-        public ExtractedMetadataDef ChangeMatchRegularExpression(string value)
+        public ExtractedMetadataRule ChangeMatchRegularExpression(string value)
         {
             return ChangeProp(ImClone(this), im => im.MatchRegularExpression = value);
         }
-        public string ValueIfMatch { get; private set; }
-
-        public ExtractedMetadataDef ChangeValueIfMatch(string value)
-        {
-            return ChangeProp(ImClone(this), im => im.ValueIfMatch = value);
-        }
-        public string ValueIfNoMatch { get; private set; }
-
-        public ExtractedMetadataDef ChangeValueIfNoMatch(string value)
-        {
-            return ChangeProp(ImClone(this), im => im.ValueIfNoMatch = value);
-        }
         public string TargetColumn { get; private set; }
 
-        public ExtractedMetadataDef ChangeTargetColumn(string value)
+        public ExtractedMetadataRule ChangeTargetColumn(string value)
         {
             return ChangeProp(ImClone(this), im => im.TargetColumn = value);
         }
-        protected bool Equals(ExtractedMetadataDef other)
+        protected bool Equals(ExtractedMetadataRule other)
         {
-            return SourceColumn == other.SourceColumn && MatchRegularExpression == other.MatchRegularExpression &&
-                   ValueIfMatch == other.ValueIfMatch &&
-                   ValueIfNoMatch == other.ValueIfNoMatch && TargetColumn == other.TargetColumn;
+            return SourceColumn == other.SourceColumn && MatchRegularExpression == other.MatchRegularExpression && TargetColumn == other.TargetColumn;
         }
 
         public override bool Equals(object obj)
@@ -51,7 +42,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((ExtractedMetadataDef) obj);
+            return Equals((ExtractedMetadataRule)obj);
         }
 
         public override int GetHashCode()
@@ -60,8 +51,6 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var hashCode = (MatchRegularExpression != null ? MatchRegularExpression.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (SourceColumn != null ? SourceColumn.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (ValueIfMatch != null ? ValueIfMatch.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (ValueIfNoMatch != null ? ValueIfNoMatch.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (TargetColumn != null ? TargetColumn.GetHashCode() : 0);
                 return hashCode;
             }
@@ -72,8 +61,6 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             source_column,
             match_regular_expression,
-            value_if_match,
-            value_if_no_match,
             target_column,
         }
 
@@ -82,34 +69,68 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
-        public override void ReadXml(XmlReader reader)
+        public void ReadXml(XmlReader reader)
         {
-            base.ReadXml(reader);
+            if (null != SourceColumn)
+            {
+                throw new InvalidOperationException();
+            }
             MatchRegularExpression = reader.GetAttribute(ATTR.match_regular_expression);
-            ValueIfMatch = reader.GetAttribute(ATTR.value_if_match);
-            ValueIfNoMatch = reader.GetAttribute(ATTR.value_if_no_match);
             SourceColumn = reader.GetAttribute(ATTR.source_column);
             TargetColumn = reader.GetAttribute(ATTR.target_column);
         }
 
-        public override void WriteXml(XmlWriter writer)
+        public void WriteXml(XmlWriter writer)
         {
-            base.WriteXml(writer);
             writer.WriteAttributeIfString(ATTR.source_column, SourceColumn);
             writer.WriteAttributeIfString(ATTR.match_regular_expression, MatchRegularExpression);
-
-            writer.WriteAttributeIfString(ATTR.value_if_match, ValueIfMatch);
-            writer.WriteAttributeIfString(ATTR.value_if_no_match, ValueIfNoMatch);
             writer.WriteAttribute(ATTR.target_column, TargetColumn);
         }
 
-        public static ExtractedMetadataDef Deserialize(XmlReader reader)
+        public static ExtractedMetadataRule Deserialize(XmlReader reader)
         {
-            var extractedMetadataDef = new ExtractedMetadataDef();
-            ((IXmlSerializable) extractedMetadataDef).ReadXml(reader);
+            var extractedMetadataDef = new ExtractedMetadataRule();
+            ((IXmlSerializable)extractedMetadataDef).ReadXml(reader);
             return extractedMetadataDef;
         }
 
         #endregion Serialization
+
+    }
+    [XmlRoot("extracted_metadata_rules")]
+    public class ExtractedMetadataRuleSet : Immutable, IXmlSerializable
+    {
+        public ExtractedMetadataRuleSet(string rowSource, IEnumerable<ExtractedMetadataRule> rules)
+        {
+            RowSource = rowSource;
+            Rules = ImmutableList.ValueOfOrEmpty(rules);
+        }
+
+        public string RowSource { get; private set; }
+        public ImmutableList<ExtractedMetadataRule> Rules { get; private set; }
+
+        private enum ATTR
+        {
+            rowsource,
+        }
+
+        XmlSchema IXmlSerializable.GetSchema()
+        {
+            return null;
+        }
+
+        void IXmlSerializable.ReadXml(XmlReader reader)
+        {
+            if (Rules != null)
+            {
+                throw new InvalidOperationException();
+            }
+            
+        }
+
+        void IXmlSerializable.WriteXml(XmlWriter writer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
