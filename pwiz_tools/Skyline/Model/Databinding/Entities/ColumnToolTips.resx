@@ -368,6 +368,9 @@ to be the Analyte Concentration from the Replicate times the Concentration Multi
   <data name="FileName">
     <value>The name of the file from which the data was imported</value>
   </data>
+  <data name="FilePath">
+    <value>The full path and file name of the file from which the data was imported.</value>
+  </data>
   <data name="Files">
     <value>Files</value>
   </data>

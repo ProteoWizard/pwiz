@@ -1,8 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Globalization;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 {
@@ -20,6 +22,11 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
         public abstract void SetValue(CultureInfo cultureInfo, object component, string value);
 
+        public abstract bool IsImportable
+        {
+            get;
+        }
+
 
         public override string ToString()
         {
@@ -28,28 +35,43 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
         public class Property : MetadataTarget
         {
+            private PropertyDescriptor _propertyDescriptor;
             private ImportablePropertyInfo _propertyInfo;
 
-            public Property(ImportablePropertyInfo propertyInfo) : base (PropertyPath.Root.Property(propertyInfo.PropertyDescriptor.Name))
+            public Property(ImportablePropertyInfo importablePropertyInfo) : this (importablePropertyInfo.PropertyDescriptor)
             {
-                _propertyInfo = propertyInfo;
+                _propertyInfo = importablePropertyInfo;
+            }
+
+            public Property(PropertyDescriptor propertyDescriptor) : base (PropertyPath.Root.Property(propertyDescriptor.Name))
+            {
+                _propertyDescriptor = propertyDescriptor;
             }
 
             public override string DisplayName
             {
-                get { return _propertyInfo.PropertyDescriptor.DisplayName; }
+                get { return _propertyDescriptor.DisplayName; }
             }
 
             public override string GetFormattedValue(CultureInfo cultureInfo, object component)
             {
-                return _propertyInfo.FormatPropertyValue(cultureInfo,
-                    _propertyInfo.PropertyDescriptor.GetValue(component));
+                var value = _propertyDescriptor.GetValue(component);
+                if (_propertyInfo != null)
+                {
+                    return _propertyInfo.FormatPropertyValue(cultureInfo, value);
+                }
+                return FormatValue(cultureInfo, value);
             }
 
             public override void SetValue(CultureInfo cultureInfo, object component, string strValue)
             {
                 object value = _propertyInfo.ParsePropertyValue(cultureInfo, strValue);
                 _propertyInfo.PropertyDescriptor.SetValue(component, value);
+            }
+
+            public override bool IsImportable
+            {
+                get { return _propertyInfo != null; }
             }
         }
 
@@ -71,23 +93,17 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             {
                 SkylineObject skylineObject = (SkylineObject) component;
                 object value = skylineObject.GetAnnotation(_annotationDef);
-                if (value == null)
-                {
-                    return string.Empty;
-                }
-
-                var iFormattable = value as IFormattable;
-                if (iFormattable != null)
-                {
-                    return iFormattable.ToString(null, cultureInfo);
-                }
-
-                return value.ToString();
+                return FormatValue(cultureInfo, value);
             }
 
             public override void SetValue(CultureInfo cultureInfo, object component, string value)
             {
                 throw new NotImplementedException();
+            }
+
+            public override bool IsImportable
+            {
+                get { return true; }
             }
         }
 
@@ -129,6 +145,24 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
                 _child.SetValue(cultureInfo, childComponent, value);
             }
+
+            public override bool IsImportable
+            {
+                get { return _child.IsImportable; }
+            }
+        }
+
+        public static string FormatValue(CultureInfo cultureInfo, object value)
+        {
+            if (value == null)
+            {
+                return string.Empty;
+            }
+            if (value is double d)
+            {
+                return d.ToString(Formats.RoundTrip, cultureInfo);
+            }
+            return (string)Convert.ChangeType(value, typeof(string), cultureInfo);
         }
     }
 }

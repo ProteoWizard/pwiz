@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             _elementHandlers = ElementHandler.GetElementHandlers(DataSchema).ToDictionary(handler => handler.Name);
         }
 
-        public DocumentAnnotations(SrmDocument document) : this (SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT))
+        public DocumentAnnotations(SrmDocument document) : this (SkylineDataSchema.MemoryDataSchema(document, SkylineDataSchema.GetLocalizedSchemaLocalizer()))
         {
         }
 
@@ -324,16 +324,81 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             skylineObject.SetAnnotation(annotationDef, value);
         }
 
-        public IEnumerable<MetadataTarget> GetResultFileMetadataTargets()
+        public IEnumerable<MetadataTarget> GetImportableResultFileMetadataTargets()
         {
-            var targets = Enumerable.Empty<MetadataTarget>();
-            targets = targets.Concat(_elementHandlers[ResultFileRef.PROTOTYPE.ElementType].GetMetadataTargets());
-            targets = targets.Concat(_elementHandlers[ReplicateRef.PROTOTYPE.ElementType].GetMetadataTargets().Select(target =>
+            foreach (var property in _elementHandlers[ResultFileRef.PROTOTYPE.ElementType].Properties)
             {
-                return new MetadataTarget.Chained(PropertyPath.Root.Property(nameof(ResultFile.Replicate)),
-                    o => ((ResultFile) o).Replicate, target);
-            }));
-            return targets;
+                yield return new MetadataTarget.Property(property);
+            }
+
+            var replicateHandler = _elementHandlers[ReplicateRef.PROTOTYPE.ElementType];
+            Func<object, object> getReplicateFunc = o => ((ResultFile) o).Replicate;
+            PropertyPath propertyPathReplicate = PropertyPath.Root.Property(nameof(ResultFile.Replicate));
+            foreach (var property in replicateHandler.Properties)
+            {
+                yield return new MetadataTarget.Chained(propertyPathReplicate,
+                    getReplicateFunc,
+                    new MetadataTarget.Property(property));
+            }
+
+            foreach (var annotation in replicateHandler.Annotations)
+            {
+                yield return new MetadataTarget.Chained(propertyPathReplicate, getReplicateFunc, new MetadataTarget.Annotation(annotation));
+            }
+        }
+
+        public IEnumerable<MetadataTarget> GetResultFileMetadataSources()
+        {
+            HashSet<Type> typeStack = new HashSet<Type>();
+            return RemoveDuplicates(GetImportableResultFileMetadataTargets()
+                    .Concat(RecurseProperties(typeof(ResultFile), typeStack)))
+                .Where(metadataTarget => !metadataTarget.IsImportable)
+                .Where(metadataTarget => !nameof(ResultFile.Locator).Equals(metadataTarget.PropertyPath.Name))
+                .OrderBy(target => target.PropertyPath);
+        }
+
+        private IEnumerable<MetadataTarget> RecurseProperties(Type type, HashSet<Type> typeStack)
+        {
+            foreach (var propertyDescriptor in DataSchema.GetPropertyDescriptors(type))
+            {
+                var collectionInfo = CollectionInfo.ForType(propertyDescriptor.PropertyType);
+                if (collectionInfo != null)
+                {
+                    continue;
+                }
+                yield return new MetadataTarget.Property(propertyDescriptor);
+                if (typeStack.Add(propertyDescriptor.PropertyType))
+                {
+                    try
+                    {
+                        Func<object, object> getChildFunc = null;
+                        foreach (var childProperty in RecurseProperties(propertyDescriptor.PropertyType, typeStack))
+                        {
+                            if (getChildFunc == null)
+                            {
+                                getChildFunc = o => o == null ? null : propertyDescriptor.GetValue(o);
+                            }
+                            yield return new MetadataTarget.Chained(PropertyPath.Root.Property(propertyDescriptor.Name), getChildFunc, childProperty);
+                        }
+                    }
+                    finally
+                    {
+                        typeStack.Remove(propertyDescriptor.PropertyType);
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<MetadataTarget> RemoveDuplicates(IEnumerable<MetadataTarget> targets)
+        {
+            var propertyPaths = new HashSet<PropertyPath>();
+            foreach (var target in targets)
+            {
+                if (propertyPaths.Add(target.PropertyPath))
+                {
+                    yield return target;
+                }
+            }
         }
     }
 }
