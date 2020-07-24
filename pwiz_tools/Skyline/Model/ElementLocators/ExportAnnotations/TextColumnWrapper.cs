@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
@@ -43,6 +44,19 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         }
 
         public ColumnDescriptor ColumnDescriptor { get; private set; }
+
+        public AnnotationDef AnnotationDef
+        {
+            get
+            {
+                var reflectedPropertyDescriptor = ColumnDescriptor.ReflectedPropertyDescriptor;
+                if (reflectedPropertyDescriptor is AnnotationPropertyDescriptor annotationPropertyDescriptor)
+                {
+                    return annotationPropertyDescriptor.AnnotationDef;
+                }
+                return null;
+            }
+        }
 
         public string Name
         {

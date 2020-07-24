@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
@@ -13,6 +12,7 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("extracted_metadata_rule")]
     public class ExtractedMetadataRule : Immutable, IXmlSerializable
     {
+        public static ExtractedMetadataRule EMPTY = new ExtractedMetadataRule();
         public string SourceColumn { get; private set; }
 
         public ExtractedMetadataRule ChangeSourceColumn(string value)

@@ -83,13 +83,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public Uri PanoramaPublishUri { get; private set; }
 
         [TrackChildren]
-        public ImmutableList<ExtractedMetadataRule.ExtractedMetadataRuleSet> ExtractedMetadata
+        public ImmutableList<ExtractedMetadataRuleSet> ExtractedMetadata
         {
             get;
             private set;
         }
 
-        public DataSettings ChangeExtractedMetadata(IEnumerable<ExtractedMetadataRule> extractedMetadata)
+        public DataSettings ChangeExtractedMetadata(IEnumerable<ExtractedMetadataRuleSet> extractedMetadata)
         {
             return ChangeProp(ImClone(this),
                 im => im.ExtractedMetadata = ImmutableList.ValueOfOrEmpty(extractedMetadata));
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Model.DocSettings
             _groupComparisonDefs = MakeReadOnly(allElements.OfType<GroupComparisonDef>());
             ViewSpecList = allElements.OfType<ViewSpecList>().FirstOrDefault() ?? ViewSpecList.EMPTY;
             Lists= ImmutableList.ValueOf(allElements.OfType<ListData>());
-            ExtractedMetadata = ImmutableList.ValueOf(allElements.OfType<ExtractedMetadataRule>());
+            ExtractedMetadata = ImmutableList.ValueOf(allElements.OfType<ExtractedMetadataRuleSet>());
         }
 
         private enum Attr
