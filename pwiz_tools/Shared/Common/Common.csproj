@@ -265,6 +265,7 @@
     <Compile Include="DataBinding\FilterInfo.cs" />
     <Compile Include="DataBinding\FilterOperation.cs" />
     <Compile Include="DataBinding\FilterPredicate.cs" />
+    <Compile Include="DataBinding\IErrorTextProvider.cs" />
     <Compile Include="DataBinding\Internal\AbstractQuery.cs" />
     <Compile Include="DataBinding\Internal\BackgroundQuery.cs" />
     <Compile Include="DataBinding\Internal\BindingListView.cs" />

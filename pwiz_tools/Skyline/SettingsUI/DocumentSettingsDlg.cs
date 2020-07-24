@@ -260,7 +260,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddResultFileRule()
         {
-            using (var dlg = new DefineExtractedMetadataDlg(DocumentContainer))
+            using (var dlg = new MetadataRuleSetEditor(DocumentContainer))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {

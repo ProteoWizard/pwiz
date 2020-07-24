@@ -109,6 +109,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public string RowSource { get; private set; }
         public ImmutableList<ExtractedMetadataRule> Rules { get; private set; }
 
+        public ExtractedMetadataRuleSet ChangeRules(IEnumerable<ExtractedMetadataRule> rules)
+        {
+            return ChangeProp(ImClone(this), im => im.Rules = ImmutableList.ValueOf(rules));
+        }
+
         private enum ATTR
         {
             rowsource,

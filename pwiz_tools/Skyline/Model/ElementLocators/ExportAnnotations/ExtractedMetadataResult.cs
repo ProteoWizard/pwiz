@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             RuleResults.Add(result);
             if (columnKey != null && result.Match && !Values.ContainsKey(columnKey))
             {
-                Values.Add(columnKey, new ExtractedMetadataResultColumn(result.Rule, columnKey.DisplayName, result.TargetValue));
+                Values.Add(columnKey, new ExtractedMetadataResultColumn(result.Rule, columnKey.DisplayName, result.TargetValue, result.ErrorText));
             }
         }
 
@@ -62,20 +62,27 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         }
     }
 
-    public class ExtractedMetadataResultColumn
+    public class ExtractedMetadataResultColumn : IErrorTextProvider
     {
-        public ExtractedMetadataResultColumn(ExtractedMetadataRule rule, string columnName, object value)
+        public ExtractedMetadataResultColumn(ExtractedMetadataRule rule, string columnName, object value, string errorText)
         {
             Rule = rule;
             ColumnName = columnName;
             Value = value;
+            ErrorText = errorText;
         }
         public string ColumnName { get; private set; }
         public object Value { get; private set; }
+        public string ErrorText { get; private set; }
         public ExtractedMetadataRule Rule { get; private set; }
+
+        public string GetErrorText(string columnName)
+        {
+            return ErrorText;
+        }
     }
 
-    public class ExtractedMetadataRuleResult
+    public class ExtractedMetadataRuleResult : IErrorTextProvider
     {
         public ExtractedMetadataRuleResult(ExtractedMetadataRule rule, string source, bool match, string extractedText,
             object target, string errorText)
@@ -95,5 +102,15 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         public object TargetValue { get; private set; }
 
         public string ErrorText { get; private set; }
+
+        public string GetErrorText(string columnName)
+        {
+            if (columnName == nameof(ExtractedText))
+            {
+                return ErrorText;
+            }
+
+            return null;
+        }
     }
 }

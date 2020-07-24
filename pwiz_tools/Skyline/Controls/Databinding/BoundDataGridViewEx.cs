@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -38,6 +40,30 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             OnKeyDown(keyEventArgs);
             OnKeyUp(keyEventArgs);
+        }
+
+        protected override void OnCellErrorTextNeeded(DataGridViewCellErrorTextNeededEventArgs e)
+        {
+            var column = Columns[e.ColumnIndex];
+            var bindingSource = DataSource as BindingListSource;
+            if (bindingSource != null)
+            {
+                var propertyDescriptor =
+                    bindingSource.FindDataProperty(column.DataPropertyName) as ColumnPropertyDescriptor;
+                var parentColumn = propertyDescriptor?.DisplayColumn?.ColumnDescriptor?.Parent;
+                if (parentColumn == null || !typeof(IErrorTextProvider).IsAssignableFrom(parentColumn.PropertyType))
+                {
+                    return;
+                }
+
+                var parentValue = parentColumn.GetPropertyValue((RowItem)bindingSource[e.RowIndex], null) as IErrorTextProvider;
+                if (parentValue != null)
+                {
+                    e.ErrorText = parentValue.GetErrorText(propertyDescriptor.DisplayColumn.PropertyPath.Name);
+                }
+
+            }
+            base.OnCellErrorTextNeeded(e);
         }
     }
 }

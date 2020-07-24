@@ -589,11 +589,11 @@
     <Compile Include="ProtocolBuffers\GeneratedCode\Tensor.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\TensorShape.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\Types.cs" />
-    <Compile Include="SettingsUI\DefineExtractedMetadataDlg.cs">
+    <Compile Include="SettingsUI\MetadataRuleEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingsUI\DefineExtractedMetadataDlg.Designer.cs">
-      <DependentUpon>DefineExtractedMetadataDlg.cs</DependentUpon>
+    <Compile Include="SettingsUI\MetadataRuleEditor.Designer.cs">
+      <DependentUpon>MetadataRuleEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\IonMobility\IonMobilityFilteringUserControl.cs">
       <SubType>UserControl</SubType>
@@ -606,6 +606,12 @@
     </Compile>
     <Compile Include="SettingsUI\Irt\UseCurrentCalculatorDlg.Designer.cs">
       <DependentUpon>UseCurrentCalculatorDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\MetadataRuleSetEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\MetadataRuleSetEditor.Designer.cs">
+      <DependentUpon>MetadataRuleSetEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
@@ -3185,8 +3191,8 @@
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.zh-CHS.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\DefineExtractedMetadataDlg.resx">
-      <DependentUpon>DefineExtractedMetadataDlg.cs</DependentUpon>
+    <EmbeddedResource Include="SettingsUI\MetadataRuleEditor.resx">
+      <DependentUpon>MetadataRuleEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DiaIsolationWindowsGraphForm.ja.resx">
       <DependentUpon>DiaIsolationWindowsGraphForm.cs</DependentUpon>
@@ -3442,6 +3448,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\UseCurrentCalculatorDlg.resx">
       <DependentUpon>UseCurrentCalculatorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\MetadataRuleSetEditor.resx">
+      <DependentUpon>MetadataRuleSetEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>

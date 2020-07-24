@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.SettingsUI
 {
-    partial class DefineExtractedMetadataDlg
+    partial class MetadataRuleEditor
     {
         /// <summary>
         /// Required designer variable.
@@ -32,8 +32,6 @@
             this.panelButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.lblName = new System.Windows.Forms.Label();
-            this.tbxRuleName = new System.Windows.Forms.TextBox();
             this.tbxRegularExpression = new System.Windows.Forms.TextBox();
             this.lblTarget = new System.Windows.Forms.Label();
             this.comboMetadataTarget = new System.Windows.Forms.ComboBox();
@@ -42,7 +40,8 @@
             this.lblPreview = new System.Windows.Forms.Label();
             this.linkLabelRegularExpression = new System.Windows.Forms.LinkLabel();
             this.bindingListSource1 = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
-            this.boundDataGridView1 = new pwiz.Common.DataBinding.Controls.BoundDataGridView();
+            this.boundDataGridView1 = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelButtons.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView1)).BeginInit();
@@ -57,7 +56,7 @@
             this.panelButtons.Location = new System.Drawing.Point(0, 421);
             this.panelButtons.Name = "panelButtons";
             this.panelButtons.Size = new System.Drawing.Size(583, 29);
-            this.panelButtons.TabIndex = 9;
+            this.panelButtons.TabIndex = 8;
             // 
             // btnCancel
             // 
@@ -83,84 +82,68 @@
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             // 
-            // lblName
-            // 
-            this.lblName.AutoSize = true;
-            this.lblName.Location = new System.Drawing.Point(12, 9);
-            this.lblName.Name = "lblName";
-            this.lblName.Size = new System.Drawing.Size(70, 13);
-            this.lblName.TabIndex = 0;
-            this.lblName.Text = "Name of rule:";
-            // 
-            // tbxRuleName
-            // 
-            this.tbxRuleName.Location = new System.Drawing.Point(12, 25);
-            this.tbxRuleName.Name = "tbxRuleName";
-            this.tbxRuleName.Size = new System.Drawing.Size(166, 20);
-            this.tbxRuleName.TabIndex = 1;
-            // 
             // tbxRegularExpression
             // 
-            this.tbxRegularExpression.Location = new System.Drawing.Point(12, 115);
+            this.tbxRegularExpression.Location = new System.Drawing.Point(12, 66);
             this.tbxRegularExpression.Name = "tbxRegularExpression";
             this.tbxRegularExpression.Size = new System.Drawing.Size(268, 20);
-            this.tbxRegularExpression.TabIndex = 5;
+            this.tbxRegularExpression.TabIndex = 3;
             this.tbxRegularExpression.Leave += new System.EventHandler(this.tbxRegularExpression_Leave);
             // 
             // lblTarget
             // 
             this.lblTarget.AutoSize = true;
-            this.lblTarget.Location = new System.Drawing.Point(12, 139);
+            this.lblTarget.Location = new System.Drawing.Point(12, 101);
             this.lblTarget.Name = "lblTarget";
             this.lblTarget.Size = new System.Drawing.Size(41, 13);
-            this.lblTarget.TabIndex = 6;
+            this.lblTarget.TabIndex = 4;
             this.lblTarget.Text = "Target:";
             // 
             // comboMetadataTarget
             // 
             this.comboMetadataTarget.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboMetadataTarget.FormattingEnabled = true;
-            this.comboMetadataTarget.Location = new System.Drawing.Point(12, 155);
+            this.comboMetadataTarget.Location = new System.Drawing.Point(12, 117);
             this.comboMetadataTarget.Name = "comboMetadataTarget";
             this.comboMetadataTarget.Size = new System.Drawing.Size(268, 21);
-            this.comboMetadataTarget.TabIndex = 7;
+            this.comboMetadataTarget.TabIndex = 5;
             this.comboMetadataTarget.SelectedIndexChanged += new System.EventHandler(this.comboMetadataTarget_SelectedIndexChanged);
             // 
             // lblSourceText
             // 
             this.lblSourceText.AutoSize = true;
-            this.lblSourceText.Location = new System.Drawing.Point(12, 48);
+            this.lblSourceText.Location = new System.Drawing.Point(12, 10);
             this.lblSourceText.Name = "lblSourceText";
             this.lblSourceText.Size = new System.Drawing.Size(73, 13);
-            this.lblSourceText.TabIndex = 2;
+            this.lblSourceText.TabIndex = 0;
             this.lblSourceText.Text = "Source value:";
             // 
             // comboSourceText
             // 
             this.comboSourceText.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboSourceText.FormattingEnabled = true;
-            this.comboSourceText.Location = new System.Drawing.Point(12, 64);
+            this.comboSourceText.Location = new System.Drawing.Point(12, 26);
             this.comboSourceText.Name = "comboSourceText";
             this.comboSourceText.Size = new System.Drawing.Size(268, 21);
-            this.comboSourceText.TabIndex = 3;
+            this.comboSourceText.TabIndex = 1;
             this.comboSourceText.SelectedIndexChanged += new System.EventHandler(this.comboSourceText_SelectedIndexChanged);
             // 
             // lblPreview
             // 
             this.lblPreview.AutoSize = true;
-            this.lblPreview.Location = new System.Drawing.Point(14, 181);
+            this.lblPreview.Location = new System.Drawing.Point(14, 141);
             this.lblPreview.Name = "lblPreview";
             this.lblPreview.Size = new System.Drawing.Size(48, 13);
-            this.lblPreview.TabIndex = 10;
+            this.lblPreview.TabIndex = 6;
             this.lblPreview.Text = "Preview:";
             // 
             // linkLabelRegularExpression
             // 
             this.linkLabelRegularExpression.AutoSize = true;
-            this.linkLabelRegularExpression.Location = new System.Drawing.Point(14, 99);
+            this.linkLabelRegularExpression.Location = new System.Drawing.Point(12, 50);
             this.linkLabelRegularExpression.Name = "linkLabelRegularExpression";
             this.linkLabelRegularExpression.Size = new System.Drawing.Size(100, 13);
-            this.linkLabelRegularExpression.TabIndex = 11;
+            this.linkLabelRegularExpression.TabIndex = 2;
             this.linkLabelRegularExpression.TabStop = true;
             this.linkLabelRegularExpression.Text = "Regular expression:";
             this.linkLabelRegularExpression.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelRegularExpression_LinkClicked);
@@ -171,17 +154,20 @@
             // 
             // boundDataGridView1
             // 
+            this.boundDataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.boundDataGridView1.AutoGenerateColumns = false;
             this.boundDataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.boundDataGridView1.DataSource = this.bindingListSource1;
-            this.boundDataGridView1.Location = new System.Drawing.Point(12, 197);
+            this.boundDataGridView1.Location = new System.Drawing.Point(12, 157);
             this.boundDataGridView1.MaximumColumnCount = 2000;
             this.boundDataGridView1.Name = "boundDataGridView1";
-            this.boundDataGridView1.Size = new System.Drawing.Size(551, 208);
-            this.boundDataGridView1.TabIndex = 12;
+            this.boundDataGridView1.Size = new System.Drawing.Size(551, 248);
+            this.boundDataGridView1.TabIndex = 7;
             this.boundDataGridView1.CellErrorTextNeeded += new System.Windows.Forms.DataGridViewCellErrorTextNeededEventHandler(this.dataGridView1_CellErrorTextNeeded);
             // 
-            // DefineExtractedMetadataDlg
+            // MetadataRuleEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -194,11 +180,10 @@
             this.Controls.Add(this.comboMetadataTarget);
             this.Controls.Add(this.lblTarget);
             this.Controls.Add(this.tbxRegularExpression);
-            this.Controls.Add(this.tbxRuleName);
-            this.Controls.Add(this.lblName);
             this.Controls.Add(this.panelButtons);
-            this.Name = "DefineExtractedMetadataDlg";
+            this.Name = "MetadataRuleEditor";
             this.Text = "Result File Metadata Rule";
+            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelButtons.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView1)).EndInit();
@@ -211,8 +196,6 @@
         private System.Windows.Forms.FlowLayoutPanel panelButtons;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
-        private System.Windows.Forms.Label lblName;
-        private System.Windows.Forms.TextBox tbxRuleName;
         private System.Windows.Forms.TextBox tbxRegularExpression;
         private System.Windows.Forms.Label lblTarget;
         private System.Windows.Forms.ComboBox comboMetadataTarget;
@@ -221,6 +204,6 @@
         private System.Windows.Forms.Label lblPreview;
         private System.Windows.Forms.LinkLabel linkLabelRegularExpression;
         private Common.DataBinding.Controls.BindingListSource bindingListSource1;
-        private Common.DataBinding.Controls.BoundDataGridView boundDataGridView1;
+        private pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx boundDataGridView1;
     }
 }

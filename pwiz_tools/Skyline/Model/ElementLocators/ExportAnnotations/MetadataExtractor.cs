@@ -8,6 +8,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 {
@@ -15,6 +16,12 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
     {
         private IDictionary<PropertyPath, TextColumnWrapper> _textColumns;
         private ColumnDescriptor _rootColumn;
+
+        public MetadataExtractor(SkylineDataSchema dataSchema, Type sourceObjectType) 
+            : this(dataSchema, sourceObjectType, new ExtractedMetadataRuleSet(sourceObjectType.FullName, new ExtractedMetadataRule[0]))
+        {
+
+        }
         public MetadataExtractor(SkylineDataSchema dataSchema, Type sourceObjectType, ExtractedMetadataRuleSet ruleSet)
         {
             DataSchema = dataSchema;
@@ -94,7 +101,11 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                     }
                     catch (Exception x)
                     {
-                        strErrorText = x.Message;
+                        string message = TextUtil.LineSeparate(
+                            string.Format("Error converting '{0}' to '{1}':", strExtractedValue,
+                                rule.Target.DisplayName),
+                            x.Message);
+                        strErrorText = message;
                     }
                 }
             }
@@ -105,6 +116,17 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             return new ExtractedMetadataRuleResult(rule.Def, sourceText, isMatch, strExtractedValue, targetValue, strErrorText);
         }
 
+        public TextColumnWrapper FindColumn(string name)
+        {
+            try
+            {
+                return ResolveColumn(null, name);
+            }
+            catch
+            {
+                return null;
+            }
+        }
 
         private TextColumnWrapper ResolveColumn(string propertyName, string strPropertyPath)
         {
