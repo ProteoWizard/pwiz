@@ -26,6 +26,12 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.MatchRegularExpression = value);
         }
+        public string Replacement { get; private set; }
+
+        public ExtractedMetadataRule ChangeReplacement(string replacement)
+        {
+            return ChangeProp(ImClone(this), im => im.Replacement = replacement);
+        }
         public string TargetColumn { get; private set; }
 
         public ExtractedMetadataRule ChangeTargetColumn(string value)
@@ -34,7 +40,8 @@ namespace pwiz.Skyline.Model.DocSettings
         }
         protected bool Equals(ExtractedMetadataRule other)
         {
-            return SourceColumn == other.SourceColumn && MatchRegularExpression == other.MatchRegularExpression && TargetColumn == other.TargetColumn;
+            return SourceColumn == other.SourceColumn && MatchRegularExpression == other.MatchRegularExpression &&
+                   TargetColumn == other.TargetColumn && Replacement == other.Replacement;
         }
 
         public override bool Equals(object obj)
@@ -50,6 +57,7 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 var hashCode = (MatchRegularExpression != null ? MatchRegularExpression.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Replacement != null ? Replacement.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (SourceColumn != null ? SourceColumn.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (TargetColumn != null ? TargetColumn.GetHashCode() : 0);
                 return hashCode;
@@ -61,6 +69,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             source_column,
             match_regular_expression,
+            replacement,
             target_column,
         }
 
@@ -76,6 +85,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidOperationException();
             }
             MatchRegularExpression = reader.GetAttribute(ATTR.match_regular_expression);
+            Replacement = reader.GetAttribute(ATTR.replacement);
             SourceColumn = reader.GetAttribute(ATTR.source_column);
             TargetColumn = reader.GetAttribute(ATTR.target_column);
         }
@@ -84,6 +94,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             writer.WriteAttributeIfString(ATTR.source_column, SourceColumn);
             writer.WriteAttributeIfString(ATTR.match_regular_expression, MatchRegularExpression);
+            writer.WriteAttributeIfString(ATTR.replacement, Replacement);
             writer.WriteAttribute(ATTR.target_column, TargetColumn);
         }
 

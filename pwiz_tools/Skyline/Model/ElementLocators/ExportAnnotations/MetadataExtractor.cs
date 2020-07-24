@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
             var targetColumn = ResolveColumn(nameof(extractedMetadataRule.TargetColumn),
                 extractedMetadataRule.TargetColumn);
-            return new Rule(extractedMetadataRule, sourceColumn, regex, targetColumn);
+            return new Rule(extractedMetadataRule, sourceColumn, regex, extractedMetadataRule.Replacement, targetColumn);
         }
 
         public CultureInfo CultureInfo { get; set; }
@@ -69,40 +69,58 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
             string sourceText = rule.Source.GetTextValue(CultureInfo, sourceObject);
             bool isMatch;
-            string strExtractedValue;
+            string strMatchedValue;
+            string strReplacedValue;
+
             if (rule.Regex!= null)
             {
                 var match = rule.Regex.Match(sourceText);
                 if (match.Success)
                 {
-                    strExtractedValue = match.Groups[Math.Min(match.Groups.Count - 1, 1)].ToString();
+                    strMatchedValue = match.ToString();
+                    if (!string.IsNullOrEmpty(rule.Replacement))
+                    {
+                        strReplacedValue = match.Result(rule.Replacement);
+                    }
+                    else
+                    {
+                        strReplacedValue = strMatchedValue;
+                    }
                 }
                 else
                 {
-                    strExtractedValue = null;
+                    strReplacedValue = strMatchedValue = null;
                 }
             }
             else
             {
-                strExtractedValue = sourceText;
+                strMatchedValue = sourceText;
+                if (string.IsNullOrEmpty(rule.Replacement))
+                {
+                    strReplacedValue = strMatchedValue;
+                }
+                else
+                {
+                    strReplacedValue = rule.Replacement;
+                }
             }
 
             object targetValue = null;
             string strErrorText = null;
 
-            if (strExtractedValue != null)
+            if (strReplacedValue != null)
             {
                 isMatch = true;
                 if (rule.Target != null)
                 {
                     try
                     {
-                        targetValue = rule.Target.ParseTextValue(CultureInfo, strExtractedValue);
+                        targetValue = rule.Target.ParseTextValue(CultureInfo, strReplacedValue);
                     }
                     catch (Exception x)
                     {
                         string message = TextUtil.LineSeparate(
-                            string.Format("Error converting '{0}' to '{1}':", strExtractedValue,
+                            string.Format("Error converting '{0}' to '{1}':", strReplacedValue,
                                 rule.Target.DisplayName),
                             x.Message);
                         strErrorText = message;
@@ -113,7 +131,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             {
                 isMatch = false;
             }
-            return new ExtractedMetadataRuleResult(rule.Def, sourceText, isMatch, strExtractedValue, targetValue, strErrorText);
+            return new ExtractedMetadataRuleResult(rule.Def, sourceText, isMatch, strMatchedValue, strReplacedValue, targetValue, strErrorText);
         }
 
         public TextColumnWrapper FindColumn(string name)
@@ -200,18 +218,20 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
         public class Rule
         {
-            public static readonly Rule EMPTY = new Rule(ExtractedMetadataRule.EMPTY, null, null, null);
-            public Rule(ExtractedMetadataRule def, TextColumnWrapper source, Regex regex, TextColumnWrapper target)
+            public static readonly Rule EMPTY = new Rule(ExtractedMetadataRule.EMPTY, null, null, null, null);
+            public Rule(ExtractedMetadataRule def, TextColumnWrapper source, Regex regex, string replacement, TextColumnWrapper target)
             {
                 Def = def;
                 Source = source;
                 Regex = regex;
+                Replacement = replacement;
                 Target = target;
             }
 
             public ExtractedMetadataRule Def { get; private set; }
             public TextColumnWrapper Source { get; private set; }
 
+            public string Replacement { get; private set; }
             public Regex Regex { get; private set; }
             public TextColumnWrapper Target { get; private set; }
         }

@@ -41,6 +41,8 @@
             this.linkLabelRegularExpression = new System.Windows.Forms.LinkLabel();
             this.bindingListSource1 = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.boundDataGridView1 = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
+            this.lblReplacement = new System.Windows.Forms.Label();
+            this.tbxReplacement = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelButtons.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource1)).BeginInit();
@@ -93,7 +95,7 @@
             // lblTarget
             // 
             this.lblTarget.AutoSize = true;
-            this.lblTarget.Location = new System.Drawing.Point(12, 101);
+            this.lblTarget.Location = new System.Drawing.Point(12, 128);
             this.lblTarget.Name = "lblTarget";
             this.lblTarget.Size = new System.Drawing.Size(41, 13);
             this.lblTarget.TabIndex = 4;
@@ -103,7 +105,7 @@
             // 
             this.comboMetadataTarget.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboMetadataTarget.FormattingEnabled = true;
-            this.comboMetadataTarget.Location = new System.Drawing.Point(12, 117);
+            this.comboMetadataTarget.Location = new System.Drawing.Point(12, 144);
             this.comboMetadataTarget.Name = "comboMetadataTarget";
             this.comboMetadataTarget.Size = new System.Drawing.Size(268, 21);
             this.comboMetadataTarget.TabIndex = 5;
@@ -131,7 +133,7 @@
             // lblPreview
             // 
             this.lblPreview.AutoSize = true;
-            this.lblPreview.Location = new System.Drawing.Point(14, 141);
+            this.lblPreview.Location = new System.Drawing.Point(12, 168);
             this.lblPreview.Name = "lblPreview";
             this.lblPreview.Size = new System.Drawing.Size(48, 13);
             this.lblPreview.TabIndex = 6;
@@ -160,18 +162,36 @@
             this.boundDataGridView1.AutoGenerateColumns = false;
             this.boundDataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.boundDataGridView1.DataSource = this.bindingListSource1;
-            this.boundDataGridView1.Location = new System.Drawing.Point(12, 157);
+            this.boundDataGridView1.Location = new System.Drawing.Point(12, 184);
             this.boundDataGridView1.MaximumColumnCount = 2000;
             this.boundDataGridView1.Name = "boundDataGridView1";
-            this.boundDataGridView1.Size = new System.Drawing.Size(551, 248);
+            this.boundDataGridView1.Size = new System.Drawing.Size(551, 221);
             this.boundDataGridView1.TabIndex = 7;
             this.boundDataGridView1.CellErrorTextNeeded += new System.Windows.Forms.DataGridViewCellErrorTextNeededEventHandler(this.dataGridView1_CellErrorTextNeeded);
+            // 
+            // lblReplacement
+            // 
+            this.lblReplacement.AutoSize = true;
+            this.lblReplacement.Location = new System.Drawing.Point(12, 89);
+            this.lblReplacement.Name = "lblReplacement";
+            this.lblReplacement.Size = new System.Drawing.Size(73, 13);
+            this.lblReplacement.TabIndex = 9;
+            this.lblReplacement.Text = "Replacement:";
+            // 
+            // tbxReplacement
+            // 
+            this.tbxReplacement.Location = new System.Drawing.Point(12, 105);
+            this.tbxReplacement.Name = "tbxReplacement";
+            this.tbxReplacement.Size = new System.Drawing.Size(268, 20);
+            this.tbxReplacement.TabIndex = 10;
             // 
             // MetadataRuleEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(583, 450);
+            this.Controls.Add(this.tbxReplacement);
+            this.Controls.Add(this.lblReplacement);
             this.Controls.Add(this.boundDataGridView1);
             this.Controls.Add(this.linkLabelRegularExpression);
             this.Controls.Add(this.lblPreview);
@@ -205,5 +225,7 @@
         private System.Windows.Forms.LinkLabel linkLabelRegularExpression;
         private Common.DataBinding.Controls.BindingListSource bindingListSource1;
         private pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx boundDataGridView1;
+        private System.Windows.Forms.Label lblReplacement;
+        private System.Windows.Forms.TextBox tbxReplacement;
     }
 }

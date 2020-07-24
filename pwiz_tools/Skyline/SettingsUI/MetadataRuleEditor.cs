@@ -50,6 +50,11 @@ namespace pwiz.Skyline.SettingsUI
                     rule = rule.ChangeMatchRegularExpression(tbxRegularExpression.Text);
                 }
 
+                if (!string.IsNullOrEmpty(tbxReplacement.Text))
+                {
+                    rule = rule.ChangeReplacement(tbxReplacement.Text);
+                }
+
                 var target = comboMetadataTarget.SelectedItem as TextColumnWrapper;
                 if (target != null)
                 {
@@ -87,25 +92,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void UpdateRows()
         {
-            var rule = new ExtractedMetadataRule();
-            var sourceItem = comboSourceText.SelectedItem as TextColumnWrapper;
-            if (sourceItem != null)
-            {
-                rule = rule.ChangeSourceColumn(sourceItem.PropertyPath.ToString());
-            }
-
-            if (!string.IsNullOrEmpty(tbxRegularExpression.Text))
-            {
-                rule = rule.ChangeMatchRegularExpression(tbxRegularExpression.Text);
-            }
-            var targetItem = comboMetadataTarget.SelectedItem as TextColumnWrapper;
-            if (targetItem != null)
-            {
-                rule = rule.ChangeTargetColumn(targetItem.PropertyPath.ToString());
-            }
-            var ruleSet = new ExtractedMetadataRuleSet(typeof(ResultFile).FullName, new []{rule});
-            var metadataExtractor = new MetadataExtractor(_dataSchema, typeof(ResultFile), ruleSet);
-            var resolvedRule = metadataExtractor.ResolveRule(rule);
+            var metadataExtractor = new MetadataExtractor(_dataSchema, typeof(ResultFile));
+            var resolvedRule = metadataExtractor.ResolveRule(ExtractedMetadataRule);
             var rows = new List<ExtractedMetadataResultRow>();
             foreach (var resultFile in _dataSchema.ResultFileList.Values)
             {
@@ -129,7 +117,8 @@ namespace pwiz.Skyline.SettingsUI
                 columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.Match))));
             }
 
-            columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.ExtractedText))));
+            columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.MatchedValue))));
+            columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.ReplacedValue))));
             if (resolvedRule.Target != null)
             {
                 columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.TargetValue))).SetCaption(resolvedRule.Target.DisplayName));
@@ -155,9 +144,14 @@ namespace pwiz.Skyline.SettingsUI
                 columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.Match))));
             }
 
-            if (rows.Any(NeedsExtractedTextColumn))
+            if (rows.Any(ShowMatchedValueColumn))
             {
-                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.ExtractedText))));
+                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.MatchedValue))));
+            }
+
+            if (rows.Any(ShowReplacedValueColumn))
+            {
+                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.ReplacedValue))));
             }
 
             if (resolvedRule.Target != null)
@@ -170,26 +164,20 @@ namespace pwiz.Skyline.SettingsUI
             return new ViewInfo(rootColumn, viewSpec);
         }
 
-        public bool NeedsExtractedTextColumn(ExtractedMetadataResultRow row)
+        public bool ShowMatchedValueColumn(ExtractedMetadataResultRow row)
         {
             return row.RuleResults.Any(result =>
             {
-                if (!string.IsNullOrEmpty(result.ErrorText))
-                {
-                    return true;
-                }
-
                 if (!result.Match)
                 {
                     return false;
                 }
 
-                if (result.ExtractedText == result.Source)
+                if (result.MatchedValue == result.Source)
                 {
                     return false;
                 }
-
-                if (result.ExtractedText == Convert.ToString(result.TargetValue))
+                if (result.ReplacedValue == result.MatchedValue && result.MatchedValue == Convert.ToString(result.TargetValue))
                 {
                     return false;
                 }
@@ -197,6 +185,35 @@ namespace pwiz.Skyline.SettingsUI
                 return true;
             });
         }
+
+        public bool ShowReplacedValueColumn(ExtractedMetadataResultRow row)
+        {
+            if (!ShowMatchedValueColumn(row))
+            {
+                return false;
+            }
+
+            return row.RuleResults.Any(result =>
+            {
+                if (!string.IsNullOrEmpty(result.ErrorText))
+                {
+                    return true;
+                }
+
+                if (result.MatchedValue == result.ReplacedValue)
+                {
+                    return false;
+                }
+
+                if (result.ReplacedValue == Convert.ToString(result.TargetValue))
+                {
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
         public void ShowRegexError(Exception e)
         {
             if (e == null)

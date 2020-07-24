@@ -84,13 +84,14 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
     public class ExtractedMetadataRuleResult : IErrorTextProvider
     {
-        public ExtractedMetadataRuleResult(ExtractedMetadataRule rule, string source, bool match, string extractedText,
+        public ExtractedMetadataRuleResult(ExtractedMetadataRule rule, string source, bool match, string matchedValue, string replacedValue,
             object target, string errorText)
         {
             Rule = rule;
             Source = source;
             Match = match;
-            ExtractedText = extractedText;
+            MatchedValue = matchedValue;
+            ReplacedValue = replacedValue;
             TargetValue = target;
             ErrorText = errorText;
         }
@@ -98,14 +99,15 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         public ExtractedMetadataRule Rule { get; private set; }
         public string Source { get; private set; }
         public bool Match { get; private set; }
-        public string ExtractedText { get; private set; }
+        public string MatchedValue { get; private set; }
+        public string ReplacedValue { get; private set; }
         public object TargetValue { get; private set; }
 
         public string ErrorText { get; private set; }
 
         public string GetErrorText(string columnName)
         {
-            if (columnName == nameof(ExtractedText))
+            if (columnName == nameof(ReplacedValue))
             {
                 return ErrorText;
             }
