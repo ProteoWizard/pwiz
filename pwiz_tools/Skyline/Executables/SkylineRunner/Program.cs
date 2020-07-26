@@ -127,14 +127,13 @@ namespace pwiz.SkylineRunner
             }
         }
 
-
         private bool WaitForConnection(NamedPipeServerStream serverStream, string inPipeName)
         {
             Thread connector = new Thread(() =>
             {
                 serverStream.WaitForConnection();
                 lock (SERVER_CONNECTION_LOCK)
-                {         
+                {
                     _connected = true;
                     Monitor.Pulse(SERVER_CONNECTION_LOCK);
                 }
