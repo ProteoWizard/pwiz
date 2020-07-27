@@ -130,7 +130,7 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
             // Set sequence/mods at reported_peptide end tag
             curProxlPsm_->charge = getIntRequiredAttrValue("precursor_charge", attr);
             curProxlPsm_->specKey = getIntRequiredAttrValue("scan_number", attr);
-            curProxlPsm_->score = numeric_limits<double>::max();
+            curProxlPsm_->score = 1;
             curProxlPsm_->linkerMass_ = proxlMatches_.back().linkType_ != LinkType::Unlinked ? getDoubleRequiredAttrValue("linker_mass", attr) : 0;
         }
         break;
@@ -337,8 +337,9 @@ void ProxlXmlReader::calcPsms() {
 void ProxlXmlReader::applyStaticMods(const string& sequence, vector<SeqMod>& mods, int crosslinkPosition) {
     size_t varModCount = mods.size();
     for (int i = 0; i < sequence.length(); i++) {
-        if (i + 1 == crosslinkPosition) // skip all static mods on crosslink position (e.g. C+57)
-            continue;
+        // CONSIDER: what is correct behavior for static mods on crosslink positions?
+        //if (i + 1 == crosslinkPosition) // skip all static mods on crosslink position (e.g. C+57)
+        //    continue;
 
         map< char, vector<double> >::const_iterator lookup = staticMods_.find(sequence[i]);
         if (lookup == staticMods_.end())
