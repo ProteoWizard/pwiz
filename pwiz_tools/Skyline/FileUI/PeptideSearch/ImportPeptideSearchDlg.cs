@@ -338,8 +338,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private bool FastaOptional
         {
-            get { return (!BuildPepSearchLibControl.FilterForDocumentPeptides && Document.PeptideCount > 0)||
-                       BuildPepSearchLibControl.PerformDDASearch; }
+            get { return (!BuildPepSearchLibControl.FilterForDocumentPeptides && Document.PeptideCount > 0) &&
+                         !BuildPepSearchLibControl.PerformDDASearch; }
         }
 
         private Pages LastPage

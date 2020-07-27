@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MSAmanda.Utils;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 
@@ -30,7 +31,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     {
         private ImportPeptideSearch ImportPeptideSearch;
 
-        public delegate void UpdateUIDelegate(string message);
+        public delegate void UpdateUIDelegate(IProgressStatus status);
         public UpdateUIDelegate UpdateUI;
 
         public delegate void SearchFinishedDelegate(bool success);
@@ -43,10 +44,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             UpdateUI = UpdateSearchEngineProgress;
         }
 
-        private void UpdateSearchEngineProgress(string message)
+        protected virtual void UpdateTaskbarProgress(TaskbarProgress.TaskbarStates state, int? percentComplete)
         {
-            txtSearchProgress.Text += message + "\r\n";
-            txtSearchProgress.ScrollToCaret();
+            if (Program.MainWindow != null)
+                Program.MainWindow.UpdateTaskbarProgress(state, percentComplete);
+        }
+
+        private void UpdateSearchEngineProgress(IProgressStatus status)
+        {
+            txtSearchProgress.AppendText(status.Message + Environment.NewLine);
+            UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, status.PercentComplete);
         }
 
         private InstrumentSetting GenerateIntrumentSettings()
@@ -66,30 +73,35 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             txtSearchProgress.Text = string.Empty;
             btnCancel.Enabled = true;
-            UpdateSearchEngineProgress(Resources.DDASearchControl_SearchProgress_Starting_search);
+
+            ProgressStatus status = new ProgressStatus(Resources.DDASearchControl_SearchProgress_Starting_search);
+
+            UpdateSearchEngineProgress(status);
             cancelToken = new CancellationTokenSource();
             t = Task<bool>.Factory.StartNew(() => ImportPeptideSearch.SearchEngine.Run(cancelToken),cancelToken.Token);
             await t;
             if (cancelToken.IsCancellationRequested)
             {
-                UpdateSearchEngineProgress(Resources.DDASearchControl_SearchProgress_Search_canceled);
-            } else if (!t.Result)
+                UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled));
+            }
+            else if (!t.Result)
             {
-                UpdateSearchEngineProgress(Resources.DDASearchControl_SearchProgress_Search_failed);
+                UpdateSearchEngineProgress(status.ChangeWarningMessage(Resources.DDASearchControl_SearchProgress_Search_failed));
             }
             else
             {
-                UpdateSearchEngineProgress(Resources.DDASearchControl_SearchProgress_Search_done);
+                UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done).Complete());
             }
+            UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, 0);
             btnCancel.Enabled = false;
             OnSearchFinished?.Invoke(t.Result);
         }
 
-        private void SearchEngine_MessageNotificationEvent(object sender, AbstractDdaSearchEngine.MessageEventArgs e)
+        private void SearchEngine_MessageNotificationEvent(object sender, IProgressStatus status)
         {
             if (InvokeRequired)
             {
-                Invoke(UpdateUI, e.Message);
+                Invoke(UpdateUI, status);
             }
         }
 

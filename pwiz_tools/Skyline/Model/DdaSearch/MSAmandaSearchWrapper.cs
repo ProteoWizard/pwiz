@@ -48,6 +48,9 @@ namespace pwiz.Skyline.Model.DdaSearch
         private OutputParameters _outputParameters;
         private MSAmandaSpectrumParser amandaInputParser;
 
+        public int CurrentFile { get; private set; }
+        public int TotalFiles => SpectrumFileNames.Length;
+
         public override event NotificationEventHandler SearchProgressChanged;
 
         private const string UNIMOD_FILENAME = "Unimod.xml";
@@ -94,11 +97,15 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {MAX_LOADED_PROTEINS_AT_ONCE, new Setting(MAX_LOADED_PROTEINS_AT_ONCE, 10000, 10, int.MaxValue)},
                 {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 1000, 100, int.MaxValue)}
             };
+
+            CurrentFile = 0;
         }
 
         private void Helper_SearchProgressChanged(string message)
         {
-            SearchProgressChanged?.Invoke(this, new MessageEventArgs(){Message = message});
+            int percentProgress = CurrentFile * 100 / TotalFiles;
+            percentProgress += amandaInputParser.CurrentSpectrum * 100 / amandaInputParser.TotalSpectra / TotalFiles;
+            SearchProgressChanged?.Invoke(this, new ProgressStatus(message).ChangePercentComplete(percentProgress));
         }
 
         public override void SetEnzyme(DocSettings.Enzyme enzyme, int maxMissedCleavages)
@@ -203,6 +210,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                             amandaInputParser = new MSAmandaSpectrumParser(rawFileName.GetSampleLocator(), Settings.ConsideredCharges, true);
                             SearchEngine.SetInputParser(amandaInputParser);
                             SearchEngine.PerformSearch(_outputParameters.DBFile);
+                            CurrentFile++;
                         }
                         finally
                         {

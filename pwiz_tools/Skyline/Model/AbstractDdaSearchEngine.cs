@@ -23,6 +23,7 @@ using System.Drawing;
 using System.IO;
 using System.Threading;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -128,13 +129,8 @@ namespace pwiz.Skyline.Model
         public abstract void SetFragmentIons(string ions);
         public abstract void SetEnzyme(Enzyme enzyme, int maxMissedCleavages);
 
-        public delegate void NotificationEventHandler(object sender, MessageEventArgs e);
+        public delegate void NotificationEventHandler(object sender, IProgressStatus status);
         public abstract event NotificationEventHandler SearchProgressChanged;
-
-        public class MessageEventArgs : EventArgs
-        {
-            public string Message { get; set; }
-        }
 
         public abstract bool Run(CancellationTokenSource cancelToken);
 

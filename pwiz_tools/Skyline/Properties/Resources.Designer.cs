@@ -11111,6 +11111,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a recognized Unimod name..
+        /// </summary>
+        public static string EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_ {
+            get {
+                return ResourceManager.GetString("EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;Show all...&gt;.
         /// </summary>
         public static string EditStaticModDlg_UpdateListAvailableMods_Show_all {

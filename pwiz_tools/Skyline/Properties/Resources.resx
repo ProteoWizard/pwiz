@@ -10944,4 +10944,7 @@ Invalid peptide sequence at position 18
   <data name="SearchSettingsControl_Additional_Settings" xml:space="preserve">
     <value>Additional Settings</value>
   </data>
+  <data name="EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_" xml:space="preserve">
+    <value>'{0}' is not a recognized Unimod name.</value>
+  </data>
 </root>

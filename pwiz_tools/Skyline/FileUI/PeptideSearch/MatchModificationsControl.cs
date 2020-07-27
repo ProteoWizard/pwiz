@@ -203,7 +203,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 ImportPeptideSearch.UpdateModificationMatches(document);
                 modsToAdd = ImportPeptideSearch.GetMatchedMods().ToList();
-                modsToCheck = modsToAdd;
+                modsToCheck = new List<StaticMod>(); // don't check any mods
             }
 
             modificationsListBox.Items.Clear();

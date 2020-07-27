@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public bool IsCanceled { get; private set; }
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
-            SearchProgressChanged?.Invoke(this, new MessageEventArgs {Message = status.Message});
+            SearchProgressChanged?.Invoke(this, status);
             return status.IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
         }
 

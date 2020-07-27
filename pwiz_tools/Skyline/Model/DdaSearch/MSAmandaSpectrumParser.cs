@@ -29,6 +29,14 @@ namespace pwiz.Skyline.Model.DdaSearch
     {
         public class MSDataRunPath
         {
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((MSDataRunPath) obj);
+            }
+
             public MSDataRunPath(string filepathPossiblyWithRunIndexSuffix)
             {
                 var match = Regex.Match(filepathPossiblyWithRunIndexSuffix, @"(.+):(\d+)");
@@ -53,9 +61,14 @@ namespace pwiz.Skyline.Model.DdaSearch
             public string Filepath { get; }
             public int RunIndex { get; }
 
+            public bool Equals(MSDataRunPath other)
+            {
+                return string.Equals(Filepath, other.Filepath) && RunIndex == other.RunIndex;
+            }
+
             public static bool operator ==(MSDataRunPath lhs, MSDataRunPath rhs)
             {
-                return lhs?.Filepath == rhs?.Filepath && lhs?.RunIndex == rhs?.RunIndex;
+                return lhs?.Equals(rhs) ?? rhs is null;
             }
 
             public static bool operator !=(MSDataRunPath lhs, MSDataRunPath rhs)
@@ -82,6 +95,9 @@ namespace pwiz.Skyline.Model.DdaSearch
         private MSDataRunPath msdataRunPath;
         public Dictionary<int, string> SpectTitleMap { get; }
 
+        public int CurrentSpectrum { get; private set; }
+        public int TotalSpectra { get; private set; }
+
         public MSAmandaSpectrumParser(string file, List<int> charges, bool mono)
         {
             consideredCharges = charges;
@@ -92,6 +108,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             msdataRunPath = new MSDataRunPath(file);
             SpectTitleMap = new Dictionary<int, string>();
+            CurrentSpectrum = 0;
         }
         public void Dispose()
         {
@@ -135,6 +152,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                 ++nrOfParsed;
                 
             }
+
+            CurrentSpectrum += nrOfParsed;
 
             return spectra;
         }
@@ -181,7 +200,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             if (new MSDataRunPath(spectraFile) != msdataRunPath)
                 return 0;
             MsDataFileImpl filereader = new MsDataFileImpl(msdataRunPath.Filepath, msdataRunPath.RunIndex, preferOnlyMsLevel: 2);
-            return filereader.SpectrumCount;
+            TotalSpectra = filereader.SpectrumCount;
+            return TotalSpectra;
         }
     }
 }
