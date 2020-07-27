@@ -1311,6 +1311,7 @@ namespace pwiz.Skyline.Model
 
             private static string RemoveSequenceNotes(string seq)
             {
+                seq = RemoveSpectronautQuoting(seq);
                 string seqClean = FastaSequence.StripModifications(seq);
                 int dotIndex = seqClean.IndexOf('.');
                 if (dotIndex != -1 || (dotIndex = seqClean.IndexOf('_')) != -1)
@@ -1319,9 +1320,18 @@ namespace pwiz.Skyline.Model
                 return seqClean;
             }
 
+            private static string RemoveSpectronautQuoting(string seq)
+            {
+                // Spectronaut adds underscores to the beginning and the end of most of its sequence column text
+                if (seq.StartsWith(@"_") && seq.EndsWith(@"_"))
+                    seq = seq.Substring(1, seq.Length - 2);
+                return seq;
+            }
+
             private static string RemoveModifiedSequenceNotes(string seq)
             {
-                // Find all occurances of . and _
+                seq = RemoveSpectronautQuoting(seq);
+                // Find all occurrences of . and _
                 var dotIndices = new List<int>();
                 for (int i = 0; i < seq.Length; ++i)
                 {
@@ -1331,10 +1341,14 @@ namespace pwiz.Skyline.Model
                     }
                 }
                 var matches = FastaSequence.RGX_ALL.Matches(seq);
+                int precedingNtermModLength = 0;
                 foreach (Match match in matches)
                 {
                     int start = match.Groups[0].Index;
                     int end = start + match.Groups[0].Length - 1;
+                    // Detect the case where an N-terminal modification is specified before the first AA
+                    if (start == 0)
+                        precedingNtermModLength = end + 1;
                     // Ignore instances of . or _ that are within a modification tag
                     dotIndices = dotIndices.Where(index => index < start || end < index).ToList();
                 }
@@ -1345,6 +1359,12 @@ namespace pwiz.Skyline.Model
                     seq = seq.Substring(0, dotIndices.First());
                 }
                 seq = seq.TrimEnd('+');
+                // If an N-terminal mod at the start, move it to after the first AA
+                if (precedingNtermModLength > 0 && precedingNtermModLength < seq.Length)
+                {
+                    seq = seq.ElementAt(precedingNtermModLength) + seq.Substring(0, precedingNtermModLength) +
+                          seq.Substring(precedingNtermModLength + 1);
+                }
                 return FastaSequence.NormalizeNTerminalMod(seq);  // Make sure any n-terminal mod gets moved to after the first AA
             }
 
