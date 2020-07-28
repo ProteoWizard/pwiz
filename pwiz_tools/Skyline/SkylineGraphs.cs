@@ -5957,7 +5957,7 @@ namespace pwiz.Skyline
 
         private void BuildDetectionsGraphMenu(GraphSummary graph, ToolStrip menuStrip)
         {
-            // Store original menuitems in an array, and insert a separator
+            // Store original menu items in an array, and insert a separator
             ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
             int iUnzoom = -1;
             for (int i = 0; i < items.Length; i++)
@@ -5972,7 +5972,6 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iUnzoom, detectionsToolStripSeparator1); 
 
             // Insert skyline specific menus
-            var set = Settings.Default;
             int iInsert = 0;
             var graphType = graph.Type;
 
@@ -5980,7 +5979,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, detectionsTargetToolStripMenuItem);
 
             menuStrip.Items.Insert(iInsert++, detectionsToolStripSeparator2);
-            menuStrip.Items.Insert(iInsert++, detectionsShowToolStripMenuItem);
+            if(graphType == GraphTypeSummary.detections)
+                menuStrip.Items.Insert(iInsert++, detectionsShowToolStripMenuItem);
             menuStrip.Items.Insert(iInsert++, detectionsYScaleToolStripMenuItem);
             menuStrip.Items.Insert(iInsert++, detectionsPropertiesToolStripMenuItem);
             detectionsPropertiesToolStripMenuItem.Tag = graph;
@@ -6003,10 +6003,9 @@ namespace pwiz.Skyline
             foreach (var item in new[]
             {
                 detectionsYScaleOneToolStripMenuItem,
-                detectionsYScaleHundredToolStripMenuItem,
-                detectionsYScaleThousandToolStripMenuItem
+                detectionsYScalePercentToolStripMenuItem
             })
-                item.Checked = ((int)item.Tag) == DetectionsGraphController.Settings.YScaleFactor.Value;
+               item.Checked = ((int)item.Tag) == DetectionsGraphController.Settings.YScaleFactor.Value;
 
 
             foreach (var item in new[]
@@ -6043,17 +6042,6 @@ namespace pwiz.Skyline
             UpdateDetectionsGraph();
         }
 
-        private void detectionsYScaleHundredToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DetectionsGraphController.Settings.YScaleFactor = DetectionsGraphController.YScaleFactorType.HUNDRED;
-            UpdateDetectionsGraph();
-        }
-
-        private void detectionsYScaleThousandToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DetectionsGraphController.Settings.YScaleFactor = DetectionsGraphController.YScaleFactorType.THOUSAND;
-            UpdateDetectionsGraph();
-        }
         private void detectionsYScalePercentToolStripMenuItem_Click(object sender, EventArgs e)
         {
             DetectionsGraphController.Settings.YScaleFactor = DetectionsGraphController.YScaleFactorType.PERCENT;

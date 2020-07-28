@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public override string ToString()
             {
-                return Label;
+                return String.Format(Label, Settings.TargetType);
             }
 
             public static IEnumerable<T> GetValues<T>() where T : IntLabeledValue
@@ -107,17 +107,15 @@ namespace pwiz.Skyline.Controls.Graphs
             private YScaleFactorType(int value, Func<string> getLabelFunc) : base(value, getLabelFunc) { }
 
             public static readonly YScaleFactorType ONE = new YScaleFactorType(1, () => Resources.DetectionPlot_YScale_One);
-            public static readonly YScaleFactorType HUNDRED = new YScaleFactorType(100, () => Resources.DetectionPlot_YScale_Hundred);
-            public static readonly YScaleFactorType THOUSAND = new YScaleFactorType(1000, () => Resources.DetectionPlot_YScale_Thousand);
             public static readonly YScaleFactorType PERCENT = new YScaleFactorType(0, () => Resources.DetectionPlot_YScale_Percent);
 
             public static IEnumerable<YScaleFactorType> GetValues()
             {
-                return new[] { ONE, HUNDRED, THOUSAND, PERCENT };
+                return new[] { ONE, PERCENT };
             }
             public static YScaleFactorType GetDefaultValue()
             {
-                return THOUSAND;
+                return ONE;
             }
         }
 
@@ -220,7 +218,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         bool GraphSummary.IController.HandleKeyDownEvent(object sender, KeyEventArgs e)
         {
-            return false;
+            if(e.KeyCode == Keys.Escape)
+                DetectionPlotData.DataCache.Cancel();
+            return true;
         }
 
         bool GraphSummary.IControllerSplit.IsPeptidePane(SummaryGraphPane pane)
@@ -246,6 +246,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_controllerInterface.GraphSummary.Type == GraphTypeSummary.detections ||
                 _controllerInterface.GraphSummary.Type == GraphTypeSummary.detections_histogram)
             {
+                //purge the cache and start data retrieval in advance
+                //DetectionPlotData.DataCache.TryGet(newDocument, Settings.QValueCutoff, null, out var temp);
             }
         }
 

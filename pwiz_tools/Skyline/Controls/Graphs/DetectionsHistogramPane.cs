@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 using Settings = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.Settings;
@@ -33,16 +26,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void UpdateGraph(bool selectionChanged)
         {
-            if (!_detectionData.IsValid)
+            GraphObjList.Clear();
+            CurveList.Clear();
+            Legend.IsVisible = false;
+
+            if (!DetectionPlotData.DataCache.TryGet(
+                GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff, this.DataCallback,
+                out _detectionData))
                 return;
-            _detectionData = DetectionPlotData.DataCache.Get(GraphSummary.DocumentUIContainer.DocumentUI);
+            AddLabels();
 
             BarSettings.Type = BarType.SortedOverlay;
             BarSettings.MinClusterGap = 0.3f;
 
-            GraphObjList.Clear();
-            CurveList.Clear();
-            Legend.IsVisible = false;
             //draw bars
             var countPoints = new PointPairList(Enumerable.Range(0, _detectionData.ReplicateCount)
                 .Select(i => new PointPair(i, TargetData.Histogram[i] / YScale)).ToList());
@@ -54,15 +50,10 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Scale.Max = TargetData.Histogram.Max() / YScale * 1.15;
         }
 
-        public void Dispose()
-        {
-            _detectionData.Dispose();
-        }
-
         protected override void PopulateTooltip(int index)
         {
             ToolTip.ClearData();
-            DetectionPlotData.DataSet targetData = _detectionData.GetData(Settings.TargetType);
+            DetectionPlotData.DataSet targetData = _detectionData.GetTargetData(Settings.TargetType);
 
             ToolTip.AddLine(Resources.DetectionHistogramPane_Tooltip_ReplicateCount,
                 index.ToString( CultureInfo.CurrentCulture));
@@ -72,12 +63,13 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         protected override void HandleMouseClick(int index) { }
 
-        protected override void AddLabels(Graphics g)
+        protected override void AddLabels()
         {
-            base.AddLabels(g);
-            YAxis.Title.Text = Resources.DetectionHistogramPane_YAxis_Name;
-            if (Settings.YScaleFactor != DetectionsGraphController.YScaleFactorType.ONE)
-                YAxis.Title.Text += @" (" + Settings.YScaleFactor.Label + @")";
+            if (_detectionData.IsValid)
+            {
+                YAxis.Title.Text = Resources.DetectionHistogramPane_YAxis_Name;
+            }
+            base.AddLabels();
         }
 
         #region Functional Test Support

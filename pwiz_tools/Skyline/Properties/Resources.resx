@@ -9547,6 +9547,12 @@ Here are the {0} pairs with multiple entries:
   <data name="Extensions_CustomToString_Scheduling" xml:space="preserve">
     <value>Scheduling</value>
   </data>
+  <data name="Extensions_CustomToString_Detections_Replicates" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="Extensions_CustomToString_Detections_Histogram" xml:space="preserve">
+    <value>Histogram</value>
+  </data>
   <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_" xml:space="preserve">
     <value>The file {0} is missing.</value>
   </data>
@@ -10870,19 +10876,13 @@ Invalid peptide sequence at position 18
     <value>Peptide</value>
   </data>
   <data name="DetectionPlot_YScale_One" xml:space="preserve">
-    <value>One</value>
+    <value>{0} Count</value>
   </data>
   <data name="DetectionPlot_YScale_Percent" xml:space="preserve">
-    <value>%</value>
-  </data>
-  <data name="DetectionPlot_YScale_Hundred" xml:space="preserve">
-    <value>Hundreds</value>
-  </data>
-  <data name="DetectionPlot_YScale_Thousand" xml:space="preserve">
-    <value>Thousands</value>
+    <value>% of all {0}s</value>
   </data>
   <data name="SkylineWindow_CreateGraphDetections_Counts" xml:space="preserve">
-    <value>Detection Counts</value>
+    <value>Detection</value>
   </data>
   <data name="DetectionToolbarProperties_AtLeastNReplicates" xml:space="preserve">
     <value>At least {0} replicates</value>
@@ -10915,16 +10915,25 @@ Invalid peptide sequence at position 18
     <value>all runs</value>
   </data>
   <data name="DetectionPlotPane_AtLeastLine_Name" xml:space="preserve">
-    <value>at least {0} (of {1}) - {2:F1}</value>
+    <value>at least {0} (of {1}) - {2:#,##0}</value>
   </data>
   <data name="DetectionPlotPane_Label_Mean" xml:space="preserve">
-    <value>  Mean: {0:F1}</value>
+    <value>  Mean: {0:#,##0}</value>
   </data>
   <data name="DetectionPlotPane_Label_Stddev" xml:space="preserve">
-    <value>  Stddev:{1:F1}</value>
+    <value>  Stddev:{1:#,##0}</value>
+  </data>
+  <data name="DetectionPlotPane_WaitingForData_Label" xml:space="preserve">
+    <value>Calculating (Esc to cancel)...</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlotError_Label" xml:space="preserve">
+    <value>Error when retrieving plot data.</value>
   </data>
   <data name="DetectionPlotPane_EmptyPlot_Label" xml:space="preserve">
-    <value>No valid data for this plot.</value>
+    <value>No data available for this plot.</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlotCanceled_Label" xml:space="preserve">
+    <value>Operation canceled.</value>
   </data>
   <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
     <value>Replicate Count</value>

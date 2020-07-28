@@ -3669,7 +3669,7 @@ first occurrence of any peptide.</value>
     <value>216, 26</value>
   </data>
   <data name="detectionsYScaleOneToolStripMenuItem.Text" xml:space="preserve">
-    <value>Ones</value>
+    <value>Peptide Count</value>
   </data>
   <data name="detectionsYScaleHundredToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>216, 26</value>

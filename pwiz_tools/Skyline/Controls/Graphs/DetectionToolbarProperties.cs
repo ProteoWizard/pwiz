@@ -92,5 +92,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 Resources.DetectionToolbarProperties_AtLeastNReplicates, tbAtLeastN.Value);
         }
 
+        private void cmbTargetType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Settings.TargetType = IntLabeledValue.GetValue(cmbTargetType, Settings.TargetType);
+            IntLabeledValue.PopulateCombo(cmbCountMultiple, Settings.YScaleFactor);
+        }
     }
 }

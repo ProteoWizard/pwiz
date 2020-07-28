@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.SeqNode;
@@ -138,9 +136,83 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
         }
+
+        protected class ProgressBarImplementation : IDisposable
+        {
+            LineObj _left = new LineObj()
+            {
+                IsClippedToChartRect = true,
+                Line = new Line() { Width = 4, Color = Color.Green, Style = DashStyle.Solid },
+                Location = new Location(0,0, CoordType.PaneFraction)
+            };
+            LineObj _right = new LineObj()
+            {
+                IsClippedToChartRect = true,
+                Line = new Line() { Width = 4, Color = Color.LightGreen, Style = DashStyle.Solid },
+                Location = new Location(0, 0, CoordType.PaneFraction)
+            };
+            SizeF _titleSize;
+            private PointF _barLocation;
+            private DetectionsPlotPane _parent;
+
+            public ProgressBarImplementation(DetectionsPlotPane parent)
+            {
+                _parent = parent;
+                var scaleFactor = parent.CalcScaleFactor();
+                using (Graphics g = parent.GraphSummary.CreateGraphics())
+                {
+                    _titleSize = parent.Title.FontSpec.BoundingBox(g, parent.Title.Text, scaleFactor);
+                }
+                _barLocation = new PointF(
+                    (parent.Rect.Left + parent.Rect.Right - _titleSize.Width) / (2 * parent.Rect.Width),
+                    (parent.Rect.Top + parent.Margin.Top * (1+scaleFactor) + _titleSize.Height)/ parent.Rect.Height
+                    );
+                //_barLocation = new PointF(0.4f, 0.5f);
+                _left.Location.X = _barLocation.X;
+                _left.Location.Y = _barLocation.Y;
+                _left.Location.Width = 0;
+                _left.Location.Height = 0;
+                _right.Location.X = _barLocation.X;
+                _right.Location.Y = _barLocation.Y;
+                _right.Location.Width = _titleSize.Width/ parent.Rect.Width;
+                _right.Location.Height = 0;
+                parent.GraphObjList.Add(_left);
+                parent.GraphObjList.Add(_right);
+            }
+
+            public void Dispose()
+            {
+                _parent.GraphObjList.Remove(_left);
+                _parent.GraphObjList.Remove(_right);
+            }
+
+            public void UpdateBar(int progress)
+            {
+                if(_parent.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _left)) == null)
+                    _parent.GraphObjList.Add(_left);
+                if (_parent.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _right)) == null)
+                    _parent.GraphObjList.Add(_right);
+
+                var len1 = _titleSize.Width * progress / 100 / _parent.Rect.Width;
+
+                _left.Location.X = _barLocation.X;
+                _left.Location.Y = _barLocation.Y;
+                _left.Location.Width = len1;
+                _left.Location.Height = 0;
+                _right.Location.X = _barLocation.X + len1;
+                _right.Location.Y = _barLocation.Y;
+                _right.Location.Width = _titleSize.Width/ _parent.Rect.Width - len1;
+                _right.Location.Height = 0;
+
+                
+                _parent.GraphSummary.GraphControl.Invalidate();
+                _parent.GraphSummary.GraphControl.Update();
+            }
+        }
+
         protected DetectionPlotData _detectionData = DetectionPlotData.INVALID;
         public int MaxRepCount { get; private set; }
-        protected DetectionPlotData.DataSet TargetData => _detectionData.GetData(Settings.TargetType);
+        protected DetectionPlotData.DataSet TargetData => _detectionData.GetTargetData(Settings.TargetType);
         protected float YScale {
             get
             {
@@ -153,6 +225,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
 
         protected ToolTipImplementation ToolTip { get; private set; }
+        protected ProgressBarImplementation ProgressBar { get; private set; }
 
         protected DetectionsPlotPane(GraphSummary graphSummary) : base(graphSummary)
         {
@@ -162,14 +235,33 @@ namespace pwiz.Skyline.Controls.Graphs
             if (GraphSummary.Toolbar is DetectionsToolbar toolbar)
                 toolbar.UpdateUI();
 
-            if (GraphSummary.DocumentUIContainer.DocumentUI.Settings.HasResults)
-            {
-                _detectionData = DetectionPlotData.DataCache.Get(graphSummary.DocumentUIContainer.DocumentUI);
-            }
-
             XAxis.Scale.Min = YAxis.Scale.Min = 0;
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
             ToolTip = new ToolTipImplementation(this);
+
+            DetectionPlotData.DataCache.ReportProgress += (progress) =>
+                {
+                    if(GraphSummary.GraphControl.IsHandleCreated)
+                        GraphSummary.GraphControl.Invoke((Action) (() => { ProgressBar?.UpdateBar(progress); }));
+                };
+            DetectionPlotData.DataCache.StatusChange += (status) =>
+                {
+                    if (GraphSummary.GraphControl.IsHandleCreated)
+                        GraphSummary.GraphControl.Invoke((Action) (() =>
+                        {
+                            AddLabels();
+                            if (status == DetectionPlotData.DetectionDataCache.CacheStatus.processing)
+                                ProgressBar = new ProgressBarImplementation(this);
+                            else
+                            {
+                                ProgressBar?.Dispose();
+                                ProgressBar = null;
+                            }
+
+                            GraphSummary.GraphControl.Invalidate();
+                            GraphSummary.GraphControl.Update();
+                        }));
+                };
         }
 
         public override bool HasToolbar { get { return true; } }
@@ -229,12 +321,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void Draw(Graphics g)
         {
             AxisChange(g);
-            AddLabels(g);
 
             base.Draw(g);
         }
 
-        public void DataCallback(AreaCVGraphData data)
+        public void DataCallback(DetectionPlotData data)
         {
             GraphSummary.GraphControl.BeginInvoke((Action)(() => { GraphSummary.UpdateUI(); }));
         }
@@ -250,14 +341,31 @@ namespace pwiz.Skyline.Controls.Graphs
             };
         }
 
-        protected virtual void AddLabels(Graphics g)
+        protected virtual void AddLabels()
         {
             if (!_detectionData.IsValid)
-                Title.Text = Resources.DetectionPlotPane_EmptyPlot_Label;
+                switch (DetectionPlotData.DataCache.Status)
+                {
+                    case DetectionPlotData.DetectionDataCache.CacheStatus.processing:
+                        Title.Text = Resources.DetectionPlotPane_WaitingForData_Label;
+                        break;
+                    case DetectionPlotData.DetectionDataCache.CacheStatus.idle:
+                        Title.Text = Resources.DetectionPlotPane_EmptyPlot_Label;
+                        break;
+                    case DetectionPlotData.DetectionDataCache.CacheStatus.canceled:
+                        Title.Text = Resources.DetectionPlotPane_EmptyPlotCanceled_Label;
+                        break;
+                    case DetectionPlotData.DetectionDataCache.CacheStatus.error:
+                        Title.Text = Resources.DetectionPlotPane_EmptyPlotError_Label;
+                        break;
+                }
             else
+            {
                 Title.Text = string.Empty;
-        }
+                YAxis.Title.Text += @" (" + String.Format(CultureInfo.CurrentCulture, Settings.YScaleFactor.Label, Settings.TargetType.Label) + @")";
 
+            }
+        }
 
         protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
         {

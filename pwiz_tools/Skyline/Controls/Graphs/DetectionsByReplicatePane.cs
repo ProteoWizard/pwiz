@@ -21,10 +21,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
-using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -47,7 +44,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void PopulateTooltip(int index)
         {
             ToolTip.ClearData();
-            DetectionPlotData.DataSet targetData = _detectionData.GetData(Settings.TargetType);
+            DetectionPlotData.DataSet targetData = _detectionData.GetTargetData(Settings.TargetType);
             ToolTip.AddLine(Resources.DetectionPlotPane_Tooltip_Replicate,
                 _detectionData.ReplicateNames[index]);
             ToolTip.AddLine(String.Format(Resources.DetectionPlotPane_Tooltip_Count, Settings.TargetType.Label),
@@ -76,15 +73,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void UpdateGraph(bool selectionChanged)
         {
-            if (!_detectionData.IsValid)
-                return;
-            _detectionData = DetectionPlotData.DataCache.Get(GraphSummary.DocumentUIContainer.DocumentUI);
-
-            BarSettings.Type = BarType.SortedOverlay;
-            BarSettings.MinClusterGap = 0.3f;
-
             GraphObjList.Clear();
             CurveList.Clear();
+            Legend.IsVisible = false;
+
+            if (!DetectionPlotData.DataCache.TryGet(
+                GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff, this.DataCallback,
+                out _detectionData))
+                return;
+
+            AddLabels();
+            BarSettings.Type = BarType.SortedOverlay;
+            BarSettings.MinClusterGap = 0.3f;
             Legend.IsVisible = Settings.ShowLegend;
 
             var emptySymbol = new Symbol(SymbolType.None, Color.Transparent);
@@ -99,9 +99,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 .Select(i => new PointPair(i, counts[i] / YScale)).ToList());
             CurveList.Insert(1, 
                 new LineItem(Resources.DetectionPlotPane_CumulativeLine_Name)
-                {  Points = cumulativePoints,
-                   Symbol = emptySymbol,
-                   Line = new Line() { Color = Color.Coral, Width = 2}
+                {   Points = cumulativePoints,
+                    Symbol = emptySymbol,
+                    Line = new Line() { Color = Color.Coral, Width = 2}
 
                 });
             //draw inclusive curve
@@ -110,14 +110,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 .Select(i => new PointPair(i, counts[i] / YScale)).ToList());
             CurveList.Insert(2, 
                 new LineItem(Resources.DetectionPlotPane_AllRunsLine_Name)
-                    { Symbol = emptySymbol,
-                      Points = allPoints,
-                      Line = new Line() { Color = Color.Black, Width = 2}
-                    });
+                { Symbol = emptySymbol,
+                    Points = allPoints,
+                    Line = new Line() { Color = Color.Black, Width = 2}
+                });
 
             //axes formatting
             XAxis.Scale.Max = _detectionData.ReplicateCount + 1;
-            YAxis.Scale.Max = _detectionData.GetData(Settings.TargetType).MaxCount/ YScale * 1.15;
+            YAxis.Scale.Max = _detectionData.GetTargetData(Settings.TargetType).MaxCount/ YScale * 1.15;
 
             if (Settings.ShowAtLeastN)
             {
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             Resources.DetectionPlotPane_Label_Mean ,
                             Resources.DetectionPlotPane_Label_Stddev
                         }
-                        ), 
+                    ), 
                     stats.Mean(), stats.StdDev());
                 GraphObjList.Add(new TextObj(labelText, 0.1, YAxis.Scale.Max,
                     CoordType.AxisXYScale, AlignH.Left, AlignV.Top)
@@ -176,15 +176,14 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        protected override void AddLabels(Graphics g)
+        protected override void AddLabels()
         {
-            base.AddLabels(g);
-
-            XAxis.Scale.TextLabels = _detectionData.ReplicateNames.ToArray();
-            YAxis.Title.Text = Resources.DetectionPlotPane_YAxis_Name;
-            if (Settings.YScaleFactor != DetectionsGraphController.YScaleFactorType.ONE)
-                YAxis.Title.Text += @" (" + Settings.YScaleFactor.Label + @")";
-
+            if (_detectionData.IsValid)
+            {
+                YAxis.Title.Text = Resources.DetectionPlotPane_YAxis_Name;
+                XAxis.Scale.TextLabels = _detectionData.ReplicateNames.ToArray();
+            }
+            base.AddLabels();
         }
 
 

@@ -583,8 +583,6 @@ namespace pwiz.Skyline
             this.detectionsShowAtLeastNToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsYScaleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsYScaleOneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.detectionsYScaleHundredToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.detectionsYScaleThousandToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
@@ -4512,8 +4510,6 @@ namespace pwiz.Skyline
             // 
             this.detectionsYScaleToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.detectionsYScaleOneToolStripMenuItem,
-            this.detectionsYScaleHundredToolStripMenuItem,
-            this.detectionsYScaleThousandToolStripMenuItem,
             this.detectionsYScalePercentToolStripMenuItem});
             this.detectionsYScaleToolStripMenuItem.Name = "detectionsYScaleToolStripMenuItem";
             resources.ApplyResources(this.detectionsYScaleToolStripMenuItem, "detectionsYScaleToolStripMenuItem");
@@ -4525,19 +4521,12 @@ namespace pwiz.Skyline
             this.detectionsYScaleOneToolStripMenuItem.Tag = 1;
             this.detectionsYScaleOneToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScaleOneToolStripMenuItem_Click);
             // 
-            // detectionsYScaleHundredToolStripMenuItem
+            // detectionsYScalePercentToolStripMenuItem
             // 
-            this.detectionsYScaleHundredToolStripMenuItem.Name = "detectionsYScaleHundredToolStripMenuItem";
-            resources.ApplyResources(this.detectionsYScaleHundredToolStripMenuItem, "detectionsYScaleHundredToolStripMenuItem");
-            this.detectionsYScaleHundredToolStripMenuItem.Tag = 100;
-            this.detectionsYScaleHundredToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScaleHundredToolStripMenuItem_Click);
-            // 
-            // detectionsYScaleThousandToolStripMenuItem
-            // 
-            this.detectionsYScaleThousandToolStripMenuItem.Name = "detectionsYScaleThousandToolStripMenuItem";
-            resources.ApplyResources(this.detectionsYScaleThousandToolStripMenuItem, "detectionsYScaleThousandToolStripMenuItem");
-            this.detectionsYScaleThousandToolStripMenuItem.Tag = 1000;
-            this.detectionsYScaleThousandToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScaleThousandToolStripMenuItem_Click);
+            this.detectionsYScalePercentToolStripMenuItem.Name = "detectionsYScalePercentToolStripMenuItem";
+            resources.ApplyResources(this.detectionsYScalePercentToolStripMenuItem, "detectionsYScalePercentToolStripMenuItem");
+            this.detectionsYScalePercentToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScalePercentToolStripMenuItem_Click);
+            this.detectionsYScalePercentToolStripMenuItem.Tag = 0;
             // 
             // detectionsToolStripSeparator2
             // 
@@ -4554,12 +4543,6 @@ namespace pwiz.Skyline
             // 
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
-            // 
-            // detectionsYScalePercentToolStripMenuItem
-            // 
-            this.detectionsYScalePercentToolStripMenuItem.Name = "detectionsYScalePercentToolStripMenuItem";
-            resources.ApplyResources(this.detectionsYScalePercentToolStripMenuItem, "detectionsYScalePercentToolStripMenuItem");
-            this.detectionsYScalePercentToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScalePercentToolStripMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -5145,8 +5128,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem detectionsShowAtLeastNToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectionsYScaleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectionsYScaleOneToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem detectionsYScaleHundredToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem detectionsYScaleThousandToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator detectionsToolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem detectionsPropertiesToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator detectionsToolStripSeparator3;

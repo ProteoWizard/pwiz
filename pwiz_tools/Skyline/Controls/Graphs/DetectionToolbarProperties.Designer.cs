@@ -59,7 +59,7 @@
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnCancel.Location = new System.Drawing.Point(351, 67);
+            this.btnCancel.Location = new System.Drawing.Point(360, 67);
             this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(100, 28);
@@ -70,7 +70,7 @@
             // btnOk
             // 
             this.btnOk.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnOk.Location = new System.Drawing.Point(351, 31);
+            this.btnOk.Location = new System.Drawing.Point(360, 31);
             this.btnOk.Margin = new System.Windows.Forms.Padding(4);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(100, 28);
@@ -97,13 +97,14 @@
             "Peptides"});
             this.cmbTargetType.Location = new System.Drawing.Point(16, 34);
             this.cmbTargetType.Name = "cmbTargetType";
-            this.cmbTargetType.Size = new System.Drawing.Size(123, 24);
+            this.cmbTargetType.Size = new System.Drawing.Size(138, 24);
             this.cmbTargetType.TabIndex = 1;
+            this.cmbTargetType.SelectedIndexChanged += new System.EventHandler(this.cmbTargetType_SelectedIndexChanged);
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(154, 14);
+            this.label2.Location = new System.Drawing.Point(164, 14);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(69, 17);
             this.label2.TabIndex = 5;
@@ -119,7 +120,7 @@
             "normal",
             "large",
             "x-large"});
-            this.cmbFontSize.Location = new System.Drawing.Point(157, 34);
+            this.cmbFontSize.Location = new System.Drawing.Point(167, 34);
             this.cmbFontSize.Name = "cmbFontSize";
             this.cmbFontSize.Size = new System.Drawing.Size(175, 24);
             this.cmbFontSize.TabIndex = 6;
@@ -129,9 +130,9 @@
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(13, 211);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(101, 17);
+            this.label3.Size = new System.Drawing.Size(83, 17);
             this.label3.TabIndex = 3;
-            this.label3.Text = "Count &multiple:";
+            this.label3.Text = "&Y axis units:";
             // 
             // groupBox1
             // 
@@ -141,7 +142,7 @@
             this.groupBox1.Controls.Add(this.rbQValue01);
             this.groupBox1.Location = new System.Drawing.Point(16, 75);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(123, 133);
+            this.groupBox1.Size = new System.Drawing.Size(138, 133);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Q value cutoff";
@@ -161,7 +162,7 @@
             // 
             this.txtQValueCustom.Location = new System.Drawing.Point(30, 102);
             this.txtQValueCustom.Name = "txtQValueCustom";
-            this.txtQValueCustom.Size = new System.Drawing.Size(68, 22);
+            this.txtQValueCustom.Size = new System.Drawing.Size(93, 22);
             this.txtQValueCustom.TabIndex = 3;
             this.txtQValueCustom.Enter += new System.EventHandler(this.txtQValueCustom_Enter);
             // 
@@ -197,7 +198,7 @@
             "Thousands"});
             this.cmbCountMultiple.Location = new System.Drawing.Point(16, 231);
             this.cmbCountMultiple.Name = "cmbCountMultiple";
-            this.cmbCountMultiple.Size = new System.Drawing.Size(123, 24);
+            this.cmbCountMultiple.Size = new System.Drawing.Size(138, 24);
             this.cmbCountMultiple.TabIndex = 4;
             // 
             // groupBox2
@@ -206,7 +207,7 @@
             this.groupBox2.Controls.Add(this.cbShowSelection);
             this.groupBox2.Controls.Add(this.cbShowMeanStd);
             this.groupBox2.Controls.Add(this.cbShowAtLeastN);
-            this.groupBox2.Location = new System.Drawing.Point(157, 75);
+            this.groupBox2.Location = new System.Drawing.Point(167, 75);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(175, 133);
             this.groupBox2.TabIndex = 7;
@@ -267,7 +268,7 @@
             // gbAtLeastN
             // 
             this.gbAtLeastN.Controls.Add(this.tbAtLeastN);
-            this.gbAtLeastN.Location = new System.Drawing.Point(157, 214);
+            this.gbAtLeastN.Location = new System.Drawing.Point(167, 214);
             this.gbAtLeastN.Name = "gbAtLeastN";
             this.gbAtLeastN.Size = new System.Drawing.Size(175, 79);
             this.gbAtLeastN.TabIndex = 8;
@@ -280,7 +281,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(468, 307);
+            this.ClientSize = new System.Drawing.Size(474, 307);
             this.ControlBox = false;
             this.Controls.Add(this.gbAtLeastN);
             this.Controls.Add(this.groupBox2);

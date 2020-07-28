@@ -571,6 +571,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     return Resources.Extensions_CustomToString_Histogram;
                 case GraphTypeSummary.histogram2d:
                     return Resources.Extensions_CustomToString__2D_Histogram;
+                case GraphTypeSummary.detections:
+                    return Resources.Extensions_CustomToString_Detections_Replicates;
+                case GraphTypeSummary.detections_histogram:
+                    return Resources.Extensions_CustomToString_Detections_Histogram;
                 default:
                     return string.Empty;
             }
