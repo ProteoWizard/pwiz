@@ -293,7 +293,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public bool TryGet(SrmDocument doc, float qValue, Action<DetectionPlotData> callback,  out DetectionPlotData data)
             {
-                Debug.WriteLine($@"Received request for q {qValue}");
+                //Debug.WriteLine($@"Received request for q {qValue}");
                 data = DetectionPlotData.INVALID;
                 var request = new DataRequest() { qValue = qValue};
                 if (ReferenceEquals(doc, _document))
@@ -301,17 +301,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     data = Get(request) ?? DetectionPlotData.INVALID;
                     if (data.IsValid)
                     {
-                        Debug.WriteLine($@"Found cached data for q {qValue}");
+                        //Debug.WriteLine($@"Found cached data for q {qValue}");
                         return true;
                     }
-                    Debug.WriteLine($@"No cached data for q {qValue}, adding to the queue");
+                    //Debug.WriteLine($@"No cached data for q {qValue}, adding to the queue");
                     _callback = callback;
                     _stackWorker.Add(request);
                 }
                 else
                 {
                     _document = doc;
-                    Debug.WriteLine($@"New document request for q {qValue}, starting cancel.");
+                    //Debug.WriteLine($@"New document request for q {qValue}, starting cancel.");
                     new Task(CancelWorker, new object[] { request, false }).Start(); 
                 }
 
@@ -329,12 +329,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 bool userCancel = (bool)((object[]) param)[1];
                 //signal cancel to other workers and wait
                 _tokenSource.Cancel();
-                Debug.WriteLine($@"Cancel requested.");
+                //Debug.WriteLine($@"Cancel requested.");
                 var oldTokenSource = _tokenSource;
                 _tokenSource = new CancellationTokenSource();
                 lock (_statusLock)  //Wait for the current worker to complete
                 {
-                    Debug.WriteLine($@"Cancel complete.");
+                    //Debug.WriteLine($@"Cancel complete.");
                     oldTokenSource.Dispose();
                     //purge the queue
                     var queueLength = _datas.Count;
@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 //if provided, add the new request to the queue after cancellation is complete
                 if (((object[])param)[0] is DataRequest req)
                 {
-                    Debug.WriteLine($@"Adding new document request for q {req.qValue}");
+                    //Debug.WriteLine($@"Adding new document request for q {req.qValue}");
                     _stackWorker.Add(req);
                 }
 
@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     lock (_statusLock)
                     {
-                        Debug.WriteLine($@"Worker: Starting thread for request for q {request.qValue}");
+                        //Debug.WriteLine($@"Worker: Starting thread for request for q {request.qValue}");
                         //first make sure it hasn't been retrieved already
                         //and calculate the queue size
                         int currentSize = 0;
@@ -383,30 +383,30 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         if (res != null)
                         {
-                            Debug.WriteLine($@"Worker: Found cached data for request for q {request.qValue}");
+                            //Debug.WriteLine($@"Worker: Found cached data for request for q {request.qValue}");
                             return;
                         }
-                        Debug.WriteLine($@"Worker: No cached data for request for q {request.qValue}, retrieving data.");
+                        //Debug.WriteLine($@"Worker: No cached data for request for q {request.qValue}, retrieving data.");
                         Status = CacheStatus.processing;
                         res = new DetectionPlotData(_document, request.qValue, _tokenSource.Token, ReportProgress);
                         Status = CacheStatus.idle;
 
                         if (res.IsValid)
                         {
-                            Debug.WriteLine($@"Worker: Data retrieval successful for request for q {request.qValue}.");
+                            //Debug.WriteLine($@"Worker: Data retrieval successful for request for q {request.qValue}.");
                             if (currentSize + res.ReplicateCount >= CACHE_CAPACITY) _datas.TryDequeue(out var dump);
                             _datas.Enqueue(res);
                             _callback.Invoke(res);
                         }
                         else
                         {
-                            Debug.WriteLine($@"Worker: Data retrieval failed for request for q {request.qValue}.");
+                            //Debug.WriteLine($@"Worker: Data retrieval failed for request for q {request.qValue}.");
                         }
                     }
                 }
                 catch (Exception)
                 {
-                    Debug.WriteLine($@"Worker: Exception for request for q {request.qValue}.");
+                    //Debug.WriteLine($@"Worker: Exception for request for q {request.qValue}.");
                     Status = CacheStatus.error;
                     throw;
                 }
