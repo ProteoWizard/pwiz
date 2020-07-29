@@ -117,6 +117,8 @@
             this.textMaxMz = new System.Windows.Forms.TextBox();
             this.textMinMz = new System.Windows.Forms.TextBox();
             this.tabFullScan = new System.Windows.Forms.TabPage();
+            this.tabIonMobility = new System.Windows.Forms.TabPage();
+            this.ionMobilityFilteringControl = new pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -131,6 +133,7 @@
             this.tabLibrary.SuspendLayout();
             this.panelPick.SuspendLayout();
             this.tabInstrument.SuspendLayout();
+            this.tabIonMobility.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -155,6 +158,7 @@
             this.tabControl1.Controls.Add(this.tabLibrary);
             this.tabControl1.Controls.Add(this.tabInstrument);
             this.tabControl1.Controls.Add(this.tabFullScan);
+            this.tabControl1.Controls.Add(this.tabIonMobility);
             this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "TransitionSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.TransitionSettingsTab;
@@ -758,6 +762,20 @@
             this.tabFullScan.Name = "tabFullScan";
             this.tabFullScan.UseVisualStyleBackColor = true;
             // 
+            // tabIonMobility
+            // 
+            this.tabIonMobility.Controls.Add(this.ionMobilityFilteringControl);
+            resources.ApplyResources(this.tabIonMobility, "tabIonMobility");
+            this.tabIonMobility.Name = "tabIonMobility";
+            this.tabIonMobility.UseVisualStyleBackColor = true;
+            // 
+            // ionMobilityFilteringControl
+            // 
+            this.ionMobilityFilteringControl.IonMobilityFilterResolvingPower = null;
+            this.ionMobilityFilteringControl.IsUseSpectralLibraryIonMobilities = false;
+            resources.ApplyResources(this.ionMobilityFilteringControl, "ionMobilityFilteringControl");
+            this.ionMobilityFilteringControl.Name = "ionMobilityFilteringControl";
+            // 
             // helpTip
             // 
             this.helpTip.AutoPopDelay = 32767;
@@ -807,6 +825,7 @@
             this.panelPick.PerformLayout();
             this.tabInstrument.ResumeLayout(false);
             this.tabInstrument.PerformLayout();
+            this.tabIonMobility.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -835,6 +854,8 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.CheckBox cbAutoSelect;
         private System.Windows.Forms.TabPage tabInstrument;
+        private IonMobility.IonMobilityFilteringUserControl ionMobilityFilteringControl;
+        private System.Windows.Forms.TabPage tabIonMobility;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.TextBox textMaxMz;

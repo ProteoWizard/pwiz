@@ -353,6 +353,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         IntegerSet scanNumbers = spectrum->getMergedScanNumbers();
         if (config_.combineIonMobilitySpectra && format_ == Reader_Bruker_Format_TDF)
         {
+            // Note the measured range
+            auto imRange = spectrum->getIonMobilityRange();
+            result->userParams.emplace_back("ion mobility lower limit", lexical_cast<string>(imRange.first), "xsd:double", MS_Vs_cm_2);
+            result->userParams.emplace_back("ion mobility upper limit", lexical_cast<string>(imRange.second), "xsd:double", MS_Vs_cm_2);
+
             result->scanList.set(MS_sum_of_spectra);
             if (scanNumbers.size() < 100)
             {
@@ -741,28 +746,14 @@ PWIZ_API_DECL bool SpectrumList_Bruker::hasCombinedIonMobility() const
     return format_ == Reader_Bruker_Format_TDF && config_.combineIonMobilitySpectra;
 }
 
-// Per email thread Aug 22 2017 bpratt, mattc, Bruker's SvenB:
-// The gas is nitrogen(14.0067 AMU) and the temperature is(according to Sven) assumed to be 305K.
-// Turns out it's N2, actually, which seems obvious in retrospect (bpratt Dec 2 2019)
-static const double ccs_conversion_factor = 18509.863216340458;
-static const double MolWeightGas =  2.0 * 14.0067;
-static const double Temperature = 305;
-
 PWIZ_API_DECL double SpectrumList_Bruker::ionMobilityToCCS(double inverseK0, double mz, int charge) const
 {
-    double MolWeight = mz * abs(charge) + chemistry::Electron * charge;
-    double ReducedMass = MolWeight * MolWeightGas / (MolWeight + MolWeightGas);
-    double K0 = (inverseK0 == 0) ? 0 : (1.0 / inverseK0);
-    double ccs = ccs_conversion_factor * abs(charge) / (sqrt(ReducedMass * Temperature) * K0);
-    return ccs;    // in Angstrom^2
+    return compassDataPtr_->oneOverK0ToCCS(inverseK0, mz, charge);
 }
 
 PWIZ_API_DECL double SpectrumList_Bruker::ccsToIonMobility(double ccs, double mz, int charge) const
 {
-    double MolWeight = mz * abs(charge) + chemistry::Electron * charge;
-    double ReducedMass = MolWeight * MolWeightGas / (MolWeight + MolWeightGas);
-    double K0 = ccs_conversion_factor * abs(charge) / (sqrt(ReducedMass * Temperature) * ccs);
-    return K0 == 0 ? 0 : 1 / K0;    // in Vs/cm^2
+    return compassDataPtr_->ccsToOneOverK0(ccs, mz, charge);
 }
 
 
