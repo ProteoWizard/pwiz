@@ -174,6 +174,7 @@ namespace pwiz.Skyline.Model.Results
                     _completed(result, x == null ? _status : _status.ChangeErrorException(x));
                 }
                 catch (Exception x2)
+
                 {
                     _completed(null, _status.ChangeErrorException(x2));
                 }

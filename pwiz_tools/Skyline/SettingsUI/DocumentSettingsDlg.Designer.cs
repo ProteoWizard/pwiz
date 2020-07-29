@@ -48,12 +48,13 @@ namespace pwiz.Skyline.SettingsUI
             this.btnEditReportList = new System.Windows.Forms.Button();
             this.labelReports = new System.Windows.Forms.Label();
             this.chooseViewsControl = new pwiz.Common.DataBinding.Controls.Editor.ChooseViewsControl();
+            this.tabPageResultFileRules = new System.Windows.Forms.TabPage();
+            this.btnEditRule = new System.Windows.Forms.Button();
+            this.btnAddRule = new System.Windows.Forms.Button();
+            this.btnDeleteRules = new System.Windows.Forms.Button();
+            this.checkedListBoxRuleSets = new System.Windows.Forms.CheckedListBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.tabPageResultFileRules = new System.Windows.Forms.TabPage();
-            this.btnAddResultFileRule = new System.Windows.Forms.Button();
-            this.btnEditResultFileRuleList = new System.Windows.Forms.Button();
-            this.checkedListBoxResultFileRules = new System.Windows.Forms.CheckedListBox();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPageAnnotations.SuspendLayout();
@@ -210,6 +211,44 @@ namespace pwiz.Skyline.SettingsUI
             this.chooseViewsControl.ShowCheckboxes = false;
             this.chooseViewsControl.ShowGroupChooser = false;
             // 
+            // tabPageResultFileRules
+            // 
+            this.tabPageResultFileRules.Controls.Add(this.btnEditRule);
+            this.tabPageResultFileRules.Controls.Add(this.btnAddRule);
+            this.tabPageResultFileRules.Controls.Add(this.btnDeleteRules);
+            this.tabPageResultFileRules.Controls.Add(this.checkedListBoxRuleSets);
+            resources.ApplyResources(this.tabPageResultFileRules, "tabPageResultFileRules");
+            this.tabPageResultFileRules.Name = "tabPageResultFileRules";
+            this.tabPageResultFileRules.UseVisualStyleBackColor = true;
+            // 
+            // btnEditRule
+            // 
+            resources.ApplyResources(this.btnEditRule, "btnEditRule");
+            this.btnEditRule.Name = "btnEditRule";
+            this.btnEditRule.UseVisualStyleBackColor = true;
+            this.btnEditRule.Click += new System.EventHandler(this.btnEditRule_Click);
+            // 
+            // btnAddRule
+            // 
+            resources.ApplyResources(this.btnAddRule, "btnAddRule");
+            this.btnAddRule.Name = "btnAddRule";
+            this.btnAddRule.UseVisualStyleBackColor = true;
+            this.btnAddRule.Click += new System.EventHandler(this.btnAddRuleSet_Click);
+            // 
+            // btnDeleteRules
+            // 
+            resources.ApplyResources(this.btnDeleteRules, "btnDeleteRules");
+            this.btnDeleteRules.Name = "btnDeleteRules";
+            this.btnDeleteRules.UseVisualStyleBackColor = true;
+            this.btnDeleteRules.Click += new System.EventHandler(this.btnDeleteRules_Click);
+            // 
+            // checkedListBoxRuleSets
+            // 
+            resources.ApplyResources(this.checkedListBoxRuleSets, "checkedListBoxRuleSets");
+            this.checkedListBoxRuleSets.FormattingEnabled = true;
+            this.checkedListBoxRuleSets.Name = "checkedListBoxRuleSets";
+            this.checkedListBoxRuleSets.SelectedIndexChanged += new System.EventHandler(this.checkedListBoxResultFileRules_SelectedIndexChanged);
+            // 
             // btnCancel
             // 
             resources.ApplyResources(this.btnCancel, "btnCancel");
@@ -223,35 +262,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
-            // 
-            // tabPageResultFileRules
-            // 
-            this.tabPageResultFileRules.Controls.Add(this.btnAddResultFileRule);
-            this.tabPageResultFileRules.Controls.Add(this.btnEditResultFileRuleList);
-            this.tabPageResultFileRules.Controls.Add(this.checkedListBoxResultFileRules);
-            resources.ApplyResources(this.tabPageResultFileRules, "tabPageResultFileRules");
-            this.tabPageResultFileRules.Name = "tabPageResultFileRules";
-            this.tabPageResultFileRules.UseVisualStyleBackColor = true;
-            // 
-            // btnAddResultFileRule
-            // 
-            resources.ApplyResources(this.btnAddResultFileRule, "btnAddResultFileRule");
-            this.btnAddResultFileRule.Name = "btnAddResultFileRule";
-            this.btnAddResultFileRule.UseVisualStyleBackColor = true;
-            this.btnAddResultFileRule.Click += new System.EventHandler(this.btnAddResultFileRule_Click);
-            // 
-            // btnEditResultFileRuleList
-            // 
-            resources.ApplyResources(this.btnEditResultFileRuleList, "btnEditResultFileRuleList");
-            this.btnEditResultFileRuleList.Name = "btnEditResultFileRuleList";
-            this.btnEditResultFileRuleList.UseVisualStyleBackColor = true;
-            // 
-            // checkedListBoxResultFileRules
-            // 
-            resources.ApplyResources(this.checkedListBoxResultFileRules, "checkedListBoxResultFileRules");
-            this.checkedListBoxResultFileRules.CheckOnClick = true;
-            this.checkedListBoxResultFileRules.FormattingEnabled = true;
-            this.checkedListBoxResultFileRules.Name = "checkedListBoxResultFileRules";
             // 
             // DocumentSettingsDlg
             // 
@@ -302,8 +312,9 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnEditReportList;
         private System.Windows.Forms.Button btnAddReport;
         private System.Windows.Forms.TabPage tabPageResultFileRules;
-        private System.Windows.Forms.Button btnAddResultFileRule;
-        private System.Windows.Forms.Button btnEditResultFileRuleList;
-        private System.Windows.Forms.CheckedListBox checkedListBoxResultFileRules;
+        private System.Windows.Forms.Button btnAddRule;
+        private System.Windows.Forms.Button btnDeleteRules;
+        private System.Windows.Forms.CheckedListBox checkedListBoxRuleSets;
+        private System.Windows.Forms.Button btnEditRule;
     }
 }

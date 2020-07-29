@@ -1,19 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Util;
 
@@ -22,29 +19,33 @@ namespace pwiz.Skyline.SettingsUI
     public partial class MetadataRuleSetEditor : FormEx
     {
         private SkylineDataSchema _dataSchema;
-        private ExtractedMetadataRuleSet _ruleSet;
+        private MetadataRuleSet _ruleSet;
         private bool _inChangeRuleSet;
         private MetadataExtractor _metadataExtractor;
-        public MetadataRuleSetEditor(IDocumentContainer documentContainer)
+        private ImmutableList<MetadataRuleSet> _existing;
+        private string _originalName;
+        public MetadataRuleSetEditor(IDocumentContainer documentContainer, MetadataRuleSet ruleSet, IEnumerable<MetadataRuleSet> existing)
         {
             InitializeComponent();
             DocumentContainer = documentContainer;
+            _originalName = ruleSet.Name;
             _dataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(ExtractedMetadataResultRow));
             var viewInfo = new ViewInfo(rootColumn, GetDefaultViewSpec());
             var skylineViewContext= new SkylineViewContext(rootColumn, new StaticRowSource(new ExtractedMetadataRuleResult[0]));
             bindingListSource1.SetViewContext(skylineViewContext, viewInfo);
             _metadataExtractor = new MetadataExtractor(_dataSchema, typeof(ResultFile));
-            RuleSet = new ExtractedMetadataRuleSet(typeof(ResultFile).FullName, new ExtractedMetadataRule[0]);
+            RuleSet = ruleSet;
+            _existing = ImmutableList.ValueOfOrEmpty(existing);
         }
 
         public IDocumentContainer DocumentContainer { get; private set; }
 
-        public ExtractedMetadataRuleSet RuleSet
+        public MetadataRuleSet RuleSet
         {
             get
             {
-                return _ruleSet;
+                return _ruleSet.ChangeName(tbxName.Text);
             }
             set
             {
@@ -53,6 +54,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     _inChangeRuleSet = true;
                     _ruleSet = value;
+                    tbxName.Text = _ruleSet.Name;
                     UpdateRuleSet();
                 }
                 finally
@@ -62,20 +64,27 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private void MoveRules(bool upwards)
+        {
+            var selectedIndexes = listViewRules.SelectedIndices.Cast<int>().ToArray();
+            RuleSet = RuleSet.ChangeRules(ListViewHelper.MoveItems(RuleSet.Rules, selectedIndexes, upwards));
+            ListViewHelper.SelectIndexes(listViewRules, ListViewHelper.MoveSelectedIndexes(listViewRules.Items.Count, selectedIndexes, upwards));
+        }
+
         private void BtnUpOnClick(object sender, EventArgs e)
         {
-
+            MoveRules(true);
         }
 
         private void BtnDownOnClick(object sender, EventArgs e)
         {
-
+            MoveRules(false);
         }
 
         private void UpdateRuleSet()
         {
             ListViewHelper.ReplaceItems(listViewRules, RuleSet.Rules.Select(MakeListViewItem).ToList());
-            var rules = new List<MetadataExtractor.Rule>();
+            var rules = new List<ResolvedMetadataRule>();
             foreach (var rule in RuleSet.Rules)
             {
                 rules.Add(_metadataExtractor.ResolveRule(rule));
@@ -97,19 +106,29 @@ namespace pwiz.Skyline.SettingsUI
                 rows.Add(row);
             }
             bindingListSource1.RowSource = new StaticRowSource(rows);
+            UpdateButtons();
         }
 
-        public ListViewItem MakeListViewItem(ExtractedMetadataRule rule)
+        public void UpdateButtons()
         {
-            ListViewItem item = new ListViewItem(GetColumnDescription(rule.SourceColumn));
-            item.SubItems.Add(new ListViewItem.ListViewSubItem(item, rule.MatchRegularExpression));
-            item.SubItems.Add(new ListViewItem.ListViewSubItem(item, GetColumnDescription(rule.TargetColumn)));
+            btnUp.Enabled = ListViewHelper.IsMoveUpEnabled(listViewRules);
+            btnDown.Enabled = ListViewHelper.IsMoveDownEnabled(listViewRules);
+            btnRemove.Enabled = listViewRules.SelectedIndices.Count != 0;
+            btnEdit.Enabled = listViewRules.SelectedIndices.Count == 1;
+        }
+
+        public ListViewItem MakeListViewItem(MetadataRule rule)
+        {
+            ListViewItem item = new ListViewItem(GetColumnDescription(rule.Source));
+            item.SubItems.Add(new ListViewItem.ListViewSubItem(item, rule.Pattern));
+            item.SubItems.Add(new ListViewItem.ListViewSubItem(item, rule.Replacement));
+            item.SubItems.Add(new ListViewItem.ListViewSubItem(item, GetColumnDescription(rule.Target)));
             return item;
         }
 
-        public String GetColumnDescription(string column)
+        public String GetColumnDescription(PropertyPath column)
         {
-            if (string.IsNullOrEmpty(column))
+            if (column == null)
             {
                 return string.Empty;
             }
@@ -120,7 +139,7 @@ namespace pwiz.Skyline.SettingsUI
                 return textColumn.DisplayName;
             }
 
-            return column;
+            return column.ToString();
         }
 
         public static ViewSpec GetDefaultViewSpec()
@@ -136,13 +155,89 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnAddNewRule_Click(object sender, EventArgs e)
         {
+            var newRule = ShowRuleEditor(null);
+            if (newRule != null)
+            {
+                RuleSet = RuleSet.ChangeRules(RuleSet.Rules.Append(newRule));
+            }
+        }
+
+        public MetadataRule ShowRuleEditor(MetadataRule rule)
+        {
             using (var dlg = new MetadataRuleEditor(DocumentContainer))
             {
+                if (rule != null)
+                {
+                    dlg.MetadataRule = rule;
+                }
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    RuleSet = RuleSet.ChangeRules(RuleSet.Rules.Append(dlg.ExtractedMetadataRule));
+                    return dlg.MetadataRule;
                 }
             }
+
+            return null;
+        }
+
+        public void EditRule(int ruleIndex)
+        {
+            if (ruleIndex < 0 || ruleIndex >= RuleSet.Rules.Count)
+            {
+                return;
+            }
+
+            var newRule = ShowRuleEditor(RuleSet.Rules[ruleIndex]);
+            if (newRule == null)
+            {
+                return;
+            }
+
+            RuleSet = RuleSet.ChangeRules(RuleSet.Rules.ReplaceAt(ruleIndex, newRule));
+        }
+
+        public void OkDialog()
+        {
+            var helper = new MessageBoxHelper(this);
+            string name;
+            if (!helper.ValidateNameTextBox(tbxName, out name))
+            {
+                return;
+            }
+
+            if (name != _originalName && _existing.Any(ruleSet=>ruleSet.Name == name))
+            {
+                helper.ShowTextBoxError(tbxName, string.Format("There is already a metadata rule set named '{0}'.", name));
+                return;
+            }
+
+            DialogResult = DialogResult.OK;
+        }
+
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
+
+        private void btnRemove_Click(object sender, EventArgs e)
+        {
+            var selectedIndices = listViewRules.SelectedIndices.Cast<int>().ToHashSet();
+            RuleSet = RuleSet.ChangeRules(Enumerable.Range(0, RuleSet.Rules.Count)
+                .Where(i => !selectedIndices.Contains(i)).Select(i => RuleSet.Rules[i]));
+        }
+
+        private void btnEdit_Click(object sender, EventArgs e)
+        {
+            EditRule(listViewRules.SelectedIndices.Cast<int>().FirstOrDefault());
+        }
+
+        private void listViewRules_ItemActivate(object sender, EventArgs e)
+        {
+            EditRule(listViewRules.FocusedItem.Index);
+        }
+
+        private void listViewRules_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateButtons();
         }
     }
 }

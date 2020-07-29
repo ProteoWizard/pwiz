@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Model.DocSettings;
 
-namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
+namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
 {
     public class ExtractedMetadataResultRow
     {
@@ -64,7 +63,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
     public class ExtractedMetadataResultColumn : IErrorTextProvider
     {
-        public ExtractedMetadataResultColumn(ExtractedMetadataRule rule, string columnName, object value, string errorText)
+        public ExtractedMetadataResultColumn(MetadataRule rule, string columnName, object value, string errorText)
         {
             Rule = rule;
             ColumnName = columnName;
@@ -74,7 +73,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         public string ColumnName { get; private set; }
         public object Value { get; private set; }
         public string ErrorText { get; private set; }
-        public ExtractedMetadataRule Rule { get; private set; }
+        public MetadataRule Rule { get; private set; }
 
         public string GetErrorText(string columnName)
         {
@@ -84,7 +83,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
     public class ExtractedMetadataRuleResult : IErrorTextProvider
     {
-        public ExtractedMetadataRuleResult(ExtractedMetadataRule rule, string source, bool match, string matchedValue, string replacedValue,
+        public ExtractedMetadataRuleResult(MetadataRule rule, string source, bool match, string matchedValue, string replacedValue,
             object target, string errorText)
         {
             Rule = rule;
@@ -96,7 +95,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             ErrorText = errorText;
         }
 
-        public ExtractedMetadataRule Rule { get; private set; }
+        public MetadataRule Rule { get; private set; }
         public string Source { get; private set; }
         public bool Match { get; private set; }
         public string MatchedValue { get; private set; }

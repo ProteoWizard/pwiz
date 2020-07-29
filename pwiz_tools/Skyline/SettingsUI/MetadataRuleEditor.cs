@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -34,20 +38,20 @@ namespace pwiz.Skyline.SettingsUI
             FormatCultureInfo = CultureInfo.InvariantCulture;
         }
 
-        public ExtractedMetadataRule ExtractedMetadataRule
+        public MetadataRule MetadataRule
         {
             get
             {
-                var rule = new ExtractedMetadataRule();
+                var rule = new MetadataRule();
                 var source = comboSourceText.SelectedItem as TextColumnWrapper;
                 if (source != null)
                 {
-                    rule = rule.ChangeSourceColumn(source.PropertyPath.ToString());
+                    rule = rule.ChangeSource(source.PropertyPath);
                 }
 
                 if (!string.IsNullOrEmpty(tbxRegularExpression.Text))
                 {
-                    rule = rule.ChangeMatchRegularExpression(tbxRegularExpression.Text);
+                    rule = rule.ChangePattern(tbxRegularExpression.Text);
                 }
 
                 if (!string.IsNullOrEmpty(tbxReplacement.Text))
@@ -58,16 +62,17 @@ namespace pwiz.Skyline.SettingsUI
                 var target = comboMetadataTarget.SelectedItem as TextColumnWrapper;
                 if (target != null)
                 {
-                    rule = rule.ChangeTargetColumn(target.PropertyPath.ToString());
+                    rule = rule.ChangeTarget(target.PropertyPath);
                 }
 
                 return rule;
             }
             set
             {
-                SelectItem(comboSourceText, PropertyPath.Parse(value.SourceColumn));
-                tbxRegularExpression.Text = value.MatchRegularExpression ?? string.Empty;
-                SelectItem(comboMetadataTarget, PropertyPath.Parse(value.TargetColumn));
+                SelectItem(comboSourceText, value.Source);
+                tbxRegularExpression.Text = value.Pattern;
+                tbxReplacement.Text = value.Replacement;
+                SelectItem(comboMetadataTarget, value.Target);
             }
         }
 
@@ -93,7 +98,7 @@ namespace pwiz.Skyline.SettingsUI
         public void UpdateRows()
         {
             var metadataExtractor = new MetadataExtractor(_dataSchema, typeof(ResultFile));
-            var resolvedRule = metadataExtractor.ResolveRule(ExtractedMetadataRule);
+            var resolvedRule = metadataExtractor.ResolveRule(MetadataRule);
             var rows = new List<ExtractedMetadataResultRow>();
             foreach (var resultFile in _dataSchema.ResultFileList.Values)
             {
@@ -103,40 +108,19 @@ namespace pwiz.Skyline.SettingsUI
                 rows.Add(row);
             }
 
-            var columns = new List<ColumnSpec>();
-            var ruleResults = PropertyPath.Root.Property(nameof(ExtractedMetadataResultRow.RuleResults))
-                .LookupAllItems();
-            columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(ExtractedMetadataResultRow.SourceObject))).SetCaption(ColumnCaptions.ResultFile));
-            if (resolvedRule.Source != null)
-            {
-                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.Source))).SetCaption(resolvedRule.Source.DisplayName));
-            }
-
-            if (rows.Any(row => !row.RuleResults.FirstOrDefault()?.Match == true))
-            {
-                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.Match))));
-            }
-
-            columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.MatchedValue))));
-            columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.ReplacedValue))));
-            if (resolvedRule.Target != null)
-            {
-                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.TargetValue))).SetCaption(resolvedRule.Target.DisplayName));
-            }
-
             var viewInfo = GetDefaultViewInfo(resolvedRule, rows);
             bindingListSource1.SetView(viewInfo, new StaticRowSource(rows));
         }
 
-        public ViewInfo GetDefaultViewInfo(MetadataExtractor.Rule resolvedRule, ICollection<ExtractedMetadataResultRow> rows)
+        public ViewInfo GetDefaultViewInfo(ResolvedMetadataRule resolvedMetdataRule, ICollection<ExtractedMetadataResultRow> rows)
         {
             var columns = new List<ColumnSpec>();
             var ruleResults = PropertyPath.Root.Property(nameof(ExtractedMetadataResultRow.RuleResults))
                 .LookupAllItems();
             columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(ExtractedMetadataResultRow.SourceObject))).SetCaption(ColumnCaptions.ResultFile));
-            if (resolvedRule.Source != null)
+            if (resolvedMetdataRule.Source != null)
             {
-                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.Source))).SetCaption(resolvedRule.Source.DisplayName));
+                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.Source))).SetCaption(resolvedMetdataRule.Source.DisplayName));
             }
 
             if (rows.Any(row => !row.RuleResults.FirstOrDefault()?.Match == true))
@@ -154,9 +138,9 @@ namespace pwiz.Skyline.SettingsUI
                 columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.ReplacedValue))));
             }
 
-            if (resolvedRule.Target != null)
+            if (resolvedMetdataRule.Target != null)
             {
-                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.TargetValue))).SetCaption(resolvedRule.Target.DisplayName));
+                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.TargetValue))).SetCaption(resolvedMetdataRule.Target.DisplayName));
             }
 
             var viewSpec = new ViewSpec().SetColumns(columns).SetSublistId(ruleResults);
@@ -285,27 +269,41 @@ namespace pwiz.Skyline.SettingsUI
             UpdateRows();
         }
 
-        private void dataGridView1_RowErrorTextNeeded(object sender, DataGridViewRowErrorTextNeededEventArgs e)
+        public void OkDialog()
         {
-        }
-
-        private void dataGridView1_CellErrorTextNeeded(object sender, DataGridViewCellErrorTextNeededEventArgs e)
-        {
-            return;
-            var column = boundDataGridView1.Columns[e.ColumnIndex];
-            var propertyDescriptor =
-                bindingListSource1.ItemProperties.FirstOrDefault(pd => pd.Name == column.DataPropertyName) as ColumnPropertyDescriptor;
-            var parentColumn = propertyDescriptor?.DisplayColumn?.ColumnDescriptor?.Parent;
-            if (parentColumn == null || !typeof(IErrorTextProvider).IsAssignableFrom(parentColumn.PropertyType))
+            var helper = new MessageBoxHelper(this);
+            if (!(comboSourceText.SelectedItem is TextColumnWrapper))
             {
+                helper.ShowTextBoxError(comboSourceText, Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty);
                 return;
             }
 
-            var parentValue = parentColumn.GetPropertyValue((RowItem) bindingListSource1[e.RowIndex], null) as IErrorTextProvider;
-            if (parentValue != null)
+            if (!string.IsNullOrEmpty(tbxRegularExpression.Text))
             {
-                e.ErrorText = parentValue.GetErrorText(propertyDescriptor.Name);
+                try
+                {
+                    var _ = new Regex(tbxRegularExpression.Text);
+                }
+                catch (Exception)
+                {
+                    helper.ShowTextBoxError(tbxRegularExpression,
+                        "{0} must either be a valid regular expression or blank");
+                    return;
+                }
             }
+
+            if (!(comboMetadataTarget.SelectedItem is TextColumnWrapper))
+            {
+                helper.ShowTextBoxError(comboMetadataTarget, Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty);
+                return;
+            }
+
+            DialogResult = DialogResult.OK;
+        }
+
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            OkDialog();
         }
     }
 }

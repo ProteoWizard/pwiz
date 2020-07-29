@@ -630,89 +630,125 @@
   <data name="&gt;&gt;tabPageReports.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="btnAddResultFileRule.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="btnEditRule.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnAddResultFileRule.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="btnEditRule.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnEditRule.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="btnAddResultFileRule.Location" type="System.Drawing.Point, System.Drawing">
-    <value>540, 31</value>
+  <data name="btnEditRule.Location" type="System.Drawing.Point, System.Drawing">
+    <value>521, 45</value>
   </data>
-  <data name="btnAddResultFileRule.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+  <data name="btnEditRule.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 23</value>
   </data>
-  <data name="btnAddResultFileRule.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+  <data name="btnEditRule.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
   </data>
-  <data name="btnAddResultFileRule.Text" xml:space="preserve">
-    <value>&amp;Add...</value>
+  <data name="btnEditRule.Text" xml:space="preserve">
+    <value>&amp;Edit...</value>
   </data>
-  <data name="&gt;&gt;btnAddResultFileRule.Name" xml:space="preserve">
-    <value>btnAddResultFileRule</value>
+  <data name="&gt;&gt;btnEditRule.Name" xml:space="preserve">
+    <value>btnEditRule</value>
   </data>
-  <data name="&gt;&gt;btnAddResultFileRule.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnEditRule.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnAddResultFileRule.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnEditRule.Parent" xml:space="preserve">
     <value>tabPageResultFileRules</value>
   </data>
-  <data name="&gt;&gt;btnAddResultFileRule.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnEditRule.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="btnEditResultFileRuleList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="btnAddRule.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="btnEditResultFileRuleList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="btnAddRule.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="btnEditResultFileRuleList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>540, 60</value>
+  <data name="btnAddRule.Location" type="System.Drawing.Point, System.Drawing">
+    <value>521, 16</value>
   </data>
-  <data name="btnEditResultFileRuleList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+  <data name="btnAddRule.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 23</value>
   </data>
-  <data name="btnEditResultFileRuleList.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+  <data name="btnAddRule.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
   </data>
-  <data name="btnEditResultFileRuleList.Text" xml:space="preserve">
-    <value>&amp;Edit List...</value>
+  <data name="btnAddRule.Text" xml:space="preserve">
+    <value>New...</value>
   </data>
-  <data name="&gt;&gt;btnEditResultFileRuleList.Name" xml:space="preserve">
-    <value>btnEditResultFileRuleList</value>
+  <data name="&gt;&gt;btnAddRule.Name" xml:space="preserve">
+    <value>btnAddRule</value>
   </data>
-  <data name="&gt;&gt;btnEditResultFileRuleList.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnAddRule.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;btnEditResultFileRuleList.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnAddRule.Parent" xml:space="preserve">
     <value>tabPageResultFileRules</value>
   </data>
-  <data name="&gt;&gt;btnEditResultFileRuleList.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnAddRule.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="checkedListBoxResultFileRules.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="btnDeleteRules.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
-  <data name="checkedListBoxResultFileRules.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 31</value>
+  <data name="btnDeleteRules.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
-  <data name="checkedListBoxResultFileRules.Size" type="System.Drawing.Size, System.Drawing">
-    <value>526, 199</value>
+  <data name="btnDeleteRules.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="checkedListBoxResultFileRules.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+  <data name="btnDeleteRules.Location" type="System.Drawing.Point, System.Drawing">
+    <value>521, 74</value>
   </data>
-  <data name="&gt;&gt;checkedListBoxResultFileRules.Name" xml:space="preserve">
-    <value>checkedListBoxResultFileRules</value>
+  <data name="btnDeleteRules.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 23</value>
   </data>
-  <data name="&gt;&gt;checkedListBoxResultFileRules.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="btnDeleteRules.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
   </data>
-  <data name="&gt;&gt;checkedListBoxResultFileRules.Parent" xml:space="preserve">
+  <data name="btnDeleteRules.Text" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="&gt;&gt;btnDeleteRules.Name" xml:space="preserve">
+    <value>btnDeleteRules</value>
+  </data>
+  <data name="&gt;&gt;btnDeleteRules.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnDeleteRules.Parent" xml:space="preserve">
     <value>tabPageResultFileRules</value>
   </data>
-  <data name="&gt;&gt;checkedListBoxResultFileRules.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnDeleteRules.ZOrder" xml:space="preserve">
     <value>2</value>
+  </data>
+  <data name="checkedListBoxRuleSets.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="checkedListBoxRuleSets.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 16</value>
+  </data>
+  <data name="checkedListBoxRuleSets.Size" type="System.Drawing.Size, System.Drawing">
+    <value>507, 214</value>
+  </data>
+  <data name="checkedListBoxRuleSets.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxRuleSets.Name" xml:space="preserve">
+    <value>checkedListBoxRuleSets</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxRuleSets.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxRuleSets.Parent" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxRuleSets.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="tabPageResultFileRules.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -841,12 +877,12 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.176, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.203, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>DocumentSettingsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.176, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.203, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

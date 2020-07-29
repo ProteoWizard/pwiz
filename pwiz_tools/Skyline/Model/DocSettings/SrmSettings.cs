@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -1610,6 +1611,14 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!defSet.GroupComparisonDefList.Contains(groupComparisonDef))
                 {
                     defSet.GroupComparisonDefList.SetValue(groupComparisonDef);
+                }
+            }
+
+            foreach (var metadataRuleSet in DataSettings.MetadataRuleSets)
+            {
+                if (!defSet.MetadataRuleSets.Contains(metadataRuleSet))
+                {
+                    defSet.MetadataRuleSets.SetValue(metadataRuleSet);
                 }
             }
             var mainViewSpecList = defSet.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);

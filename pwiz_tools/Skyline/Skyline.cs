@@ -69,6 +69,7 @@ using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Prosit.Communication;
@@ -3815,7 +3816,9 @@ namespace pwiz.Skyline
                             var dataSettingsNew = dlg.GetDataSettings(doc.Settings.DataSettings);
                             if (Equals(dataSettingsNew, doc.Settings.DataSettings))
                                 return doc;
-                            return doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
+                            doc = doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
+                            doc = MetadataExtractor.ApplyRules(doc, null, out _);
+                            return doc;
                         },
                         AuditLogEntry.SettingsLogFunction);
                     StoreNewSettings(DocumentUI.Settings);

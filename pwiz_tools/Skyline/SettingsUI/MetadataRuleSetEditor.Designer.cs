@@ -39,12 +39,13 @@
             this.listViewRules = new System.Windows.Forms.ListView();
             this.columnHeaderSource = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderRegex = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeaderReplacement = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderTarget = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.toolStripColumns = new System.Windows.Forms.ToolStrip();
+            this.toolStripRules = new System.Windows.Forms.ToolStrip();
             this.btnRemove = new System.Windows.Forms.ToolStripButton();
             this.btnUp = new System.Windows.Forms.ToolStripButton();
             this.btnDown = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+            this.btnEdit = new System.Windows.Forms.ToolStripButton();
             this.boundDataGridViewEx1 = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource1 = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.panelButtons = new System.Windows.Forms.FlowLayoutPanel();
@@ -56,7 +57,7 @@
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.panel1.SuspendLayout();
-            this.toolStripColumns.SuspendLayout();
+            this.toolStripRules.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridViewEx1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource1)).BeginInit();
             this.panelButtons.SuspendLayout();
@@ -108,7 +109,7 @@
             // 
             this.tbxName.Location = new System.Drawing.Point(15, 40);
             this.tbxName.Name = "tbxName";
-            this.tbxName.Size = new System.Drawing.Size(130, 20);
+            this.tbxName.Size = new System.Drawing.Size(154, 20);
             this.tbxName.TabIndex = 2;
             // 
             // lblName
@@ -126,7 +127,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.listViewRules);
-            this.panel1.Controls.Add(this.toolStripColumns);
+            this.panel1.Controls.Add(this.toolStripRules);
             this.panel1.Location = new System.Drawing.Point(12, 79);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(772, 126);
@@ -137,15 +138,18 @@
             this.listViewRules.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeaderSource,
             this.columnHeaderRegex,
+            this.columnHeaderReplacement,
             this.columnHeaderTarget});
             this.listViewRules.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listViewRules.HideSelection = false;
             this.listViewRules.Location = new System.Drawing.Point(0, 0);
             this.listViewRules.Name = "listViewRules";
-            this.listViewRules.Size = new System.Drawing.Size(748, 126);
+            this.listViewRules.Size = new System.Drawing.Size(740, 126);
             this.listViewRules.TabIndex = 0;
             this.listViewRules.UseCompatibleStateImageBehavior = false;
             this.listViewRules.View = System.Windows.Forms.View.Details;
+            this.listViewRules.ItemActivate += new System.EventHandler(this.listViewRules_ItemActivate);
+            this.listViewRules.SelectedIndexChanged += new System.EventHandler(this.listViewRules_SelectedIndexChanged);
             // 
             // columnHeaderSource
             // 
@@ -157,26 +161,31 @@
             this.columnHeaderRegex.Text = "Filter";
             this.columnHeaderRegex.Width = 180;
             // 
+            // columnHeaderReplacement
+            // 
+            this.columnHeaderReplacement.Text = "Replacement";
+            this.columnHeaderReplacement.Width = 140;
+            // 
             // columnHeaderTarget
             // 
             this.columnHeaderTarget.Text = "Target";
             this.columnHeaderTarget.Width = 200;
             // 
-            // toolStripColumns
+            // toolStripRules
             // 
-            this.toolStripColumns.Dock = System.Windows.Forms.DockStyle.Right;
-            this.toolStripColumns.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStripColumns.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripRules.Dock = System.Windows.Forms.DockStyle.Right;
+            this.toolStripRules.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStripRules.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnRemove,
             this.btnUp,
             this.btnDown,
-            this.toolStripButton1});
-            this.toolStripColumns.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
-            this.toolStripColumns.Location = new System.Drawing.Point(748, 0);
-            this.toolStripColumns.Name = "toolStripColumns";
-            this.toolStripColumns.Size = new System.Drawing.Size(24, 126);
-            this.toolStripColumns.TabIndex = 4;
-            this.toolStripColumns.Text = "toolStrip1";
+            this.btnEdit});
+            this.toolStripRules.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
+            this.toolStripRules.Location = new System.Drawing.Point(740, 0);
+            this.toolStripRules.Name = "toolStripRules";
+            this.toolStripRules.Size = new System.Drawing.Size(32, 126);
+            this.toolStripRules.TabIndex = 4;
+            this.toolStripRules.Text = "toolStrip1";
             // 
             // btnRemove
             // 
@@ -184,8 +193,9 @@
             this.btnRemove.Image = global::pwiz.Skyline.Properties.Resources.Delete;
             this.btnRemove.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnRemove.Name = "btnRemove";
-            this.btnRemove.Size = new System.Drawing.Size(21, 20);
+            this.btnRemove.Size = new System.Drawing.Size(29, 20);
             this.btnRemove.Text = "Remove";
+            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
             // 
             // btnUp
             // 
@@ -193,8 +203,9 @@
             this.btnUp.Image = global::pwiz.Skyline.Properties.Resources.up_pro32;
             this.btnUp.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnUp.Name = "btnUp";
-            this.btnUp.Size = new System.Drawing.Size(21, 20);
+            this.btnUp.Size = new System.Drawing.Size(29, 20);
             this.btnUp.Text = "Up";
+            this.btnUp.Click += new System.EventHandler(this.BtnUpOnClick);
             // 
             // btnDown
             // 
@@ -202,17 +213,19 @@
             this.btnDown.Image = global::pwiz.Skyline.Properties.Resources.down_pro32;
             this.btnDown.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnDown.Name = "btnDown";
-            this.btnDown.Size = new System.Drawing.Size(21, 20);
+            this.btnDown.Size = new System.Drawing.Size(29, 20);
             this.btnDown.Text = "Down";
+            this.btnDown.Click += new System.EventHandler(this.BtnDownOnClick);
             // 
-            // toolStripButton1
+            // btnEdit
             // 
-            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
-            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(21, 19);
-            this.toolStripButton1.Text = "...";
+            this.btnEdit.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnEdit.Image = ((System.Drawing.Image)(resources.GetObject("btnEdit.Image")));
+            this.btnEdit.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnEdit.Name = "btnEdit";
+            this.btnEdit.Size = new System.Drawing.Size(29, 19);
+            this.btnEdit.Text = "...";
+            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
             // 
             // boundDataGridViewEx1
             // 
@@ -256,7 +269,6 @@
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.btnOK.Location = new System.Drawing.Point(641, 3);
             this.btnOK.Name = "btnOK";
@@ -264,6 +276,7 @@
             this.btnOK.TabIndex = 0;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // MetadataRuleSetEditor
             // 
@@ -273,6 +286,8 @@
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panelButtons);
             this.Name = "MetadataRuleSetEditor";
+            this.ShowIcon = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "MetadataRuleSetEditor";
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -282,8 +297,8 @@
             this.splitContainer1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            this.toolStripColumns.ResumeLayout(false);
-            this.toolStripColumns.PerformLayout();
+            this.toolStripRules.ResumeLayout(false);
+            this.toolStripRules.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridViewEx1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource1)).EndInit();
             this.panelButtons.ResumeLayout(false);
@@ -297,7 +312,7 @@
         private System.Windows.Forms.Label lblName;
         private System.Windows.Forms.TextBox tbxName;
         private System.Windows.Forms.Label lblRules;
-        private System.Windows.Forms.ToolStrip toolStripColumns;
+        private System.Windows.Forms.ToolStrip toolStripRules;
         private System.Windows.Forms.ToolStripButton btnRemove;
         private System.Windows.Forms.ToolStripButton btnUp;
         private System.Windows.Forms.ToolStripButton btnDown;
@@ -309,9 +324,10 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
         private Common.DataBinding.Controls.BindingListSource bindingListSource1;
-        private System.Windows.Forms.ToolStripButton toolStripButton1;
+        private System.Windows.Forms.ToolStripButton btnEdit;
         private System.Windows.Forms.ColumnHeader columnHeaderSource;
         private System.Windows.Forms.ColumnHeader columnHeaderRegex;
         private System.Windows.Forms.ColumnHeader columnHeaderTarget;
+        private System.Windows.Forms.ColumnHeader columnHeaderReplacement;
     }
 }

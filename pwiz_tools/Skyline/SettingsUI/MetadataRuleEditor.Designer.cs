@@ -75,7 +75,6 @@
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.btnOK.Location = new System.Drawing.Point(424, 3);
             this.btnOK.Name = "btnOK";
@@ -83,6 +82,7 @@
             this.btnOK.TabIndex = 0;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // tbxRegularExpression
             // 
@@ -167,7 +167,6 @@
             this.boundDataGridView1.Name = "boundDataGridView1";
             this.boundDataGridView1.Size = new System.Drawing.Size(551, 221);
             this.boundDataGridView1.TabIndex = 7;
-            this.boundDataGridView1.CellErrorTextNeeded += new System.Windows.Forms.DataGridViewCellErrorTextNeededEventHandler(this.dataGridView1_CellErrorTextNeeded);
             // 
             // lblReplacement
             // 
@@ -202,6 +201,8 @@
             this.Controls.Add(this.tbxRegularExpression);
             this.Controls.Add(this.panelButtons);
             this.Name = "MetadataRuleEditor";
+            this.ShowIcon = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Result File Metadata Rule";
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelButtons.ResumeLayout(false);
