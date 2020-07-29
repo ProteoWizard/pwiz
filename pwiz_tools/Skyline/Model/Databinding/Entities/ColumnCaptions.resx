@@ -672,9 +672,6 @@
   <data name="MoleculeListAbundance">
     <value>Molecule List Abundance</value>
   </data>
-  <data name="MoleculeListAbundanceIncomplete">
-    <value>Molecule List Abundance Incomplete</value>
-  </data>
   <data name="MoleculeListLocator">
     <value>Molecule List Locator</value>
   </data>
@@ -917,9 +914,6 @@
   </data>
   <data name="ProteinAbundance">
     <value>Protein Abundance</value>
-  </data>
-  <data name="ProteinAbundanceIncomplete">
-    <value>Protein Abundance Incomplete</value>
   </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>

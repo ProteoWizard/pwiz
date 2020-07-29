@@ -60,22 +60,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 Tuple<double, bool> record;
                 Protein.GetProteinAbundances().TryGetValue(Replicate.ReplicateIndex, out record);
-                return record?.Item1;
-            }
-        }
-
-        [InvariantDisplayName("MoleculeListAbundanceIncomplete")]
-        [ProteomicDisplayName("ProteinAbundanceIncomplete")]
-        public bool AbundanceIncomplete
-        {
-            get
-            {
-                Tuple<double, bool> record;
-                if (!Protein.GetProteinAbundances().TryGetValue(Replicate.ReplicateIndex, out record))
+                if (record == null || record.Item2)
                 {
-                    return false;
+                    return null;
                 }
-                return record.Item2;
+                return record.Item1;
             }
         }
 

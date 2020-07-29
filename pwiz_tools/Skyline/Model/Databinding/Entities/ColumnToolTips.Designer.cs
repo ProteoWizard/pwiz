@@ -1839,21 +1839,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         
         /// <summary>
         ///   Looks up a localized string similar to A number representing the abundance of the molecule list. This number is obtained by averaging the normalized areas of all of the transitions under this Molecule List.
-        ///  The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings..
+        ///The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
+        ///The Molecule List Abundance will be blank if any transitions have missing values in this replicate, unless the normalization method is ratio to a label..
         /// </summary>
         public static string MoleculeListAbundance {
             get {
                 return ResourceManager.GetString("MoleculeListAbundance", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Indicates that one or more transitions had to be excluded from the calculation and the Molecule List Abundance for this replicate 
-        ///cannot be reliably compared to the other replicates..
-        /// </summary>
-        public static string MoleculeListAbundanceIncomplete {
-            get {
-                return ResourceManager.GetString("MoleculeListAbundanceIncomplete", resourceCulture);
             }
         }
         
@@ -2616,22 +2607,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         
         /// <summary>
         ///   Looks up a localized string similar to A number representing the abundance of the protein in the particular replicate.
-        ///  The Protein Abundance is calculated by taking the average of the normalized areas of all of the Transitions under the Protein.
-        ///  The Transition Areas are normalized according to the Normalization Method specified in the Peptide Quantification settings..
+        ///The Protein Abundance is calculated by taking the average of the normalized areas of all of the Transitions under the Protein.
+        ///The Transition Areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
+        ///The Protein Abundance will be blank if any transitions have missing peak areas in the Replicate, unless the normalization method is ratio to a label..
         /// </summary>
         public static string ProteinAbundance {
             get {
                 return ResourceManager.GetString("ProteinAbundance", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Indicates that one or more transitions had to be excluded from the calculation and the Protein Abundance for this replicate
-        ///cannot be reliably compared to the other replicates..
-        /// </summary>
-        public static string ProteinAbundanceIncomplete {
-            get {
-                return ResourceManager.GetString("ProteinAbundanceIncomplete", resourceCulture);
             }
         }
         
