@@ -261,6 +261,9 @@
         <reported_peptide reported_peptide_string="TLSDYNIQKESTLHLVLR(9)--AVTKYTSAK(4)" type="crosslink">
             <peptides>
                 <peptide sequence="TLSDYNIQKESTLHLVLR" unique_id="1">
+                    <modifications>
+                        <modification mass="-0.98" position="8" isMonolink="true"/>
+                    </modifications>
                     <linked_positions>
                         <linked_position position="9"/>
                     </linked_positions>
@@ -319,12 +322,12 @@
         </reported_peptide>
         <reported_peptide reported_peptide_string="VLKQVHPDTGISSK(3)--TKQTAR(2)" type="crosslink">
             <peptides>
-                <peptide sequence="VLKQVHPDTGISSK" unique_id="1">
+                <peptide sequence="VLCQVHPDTGISSK" unique_id="1">
                     <linked_positions>
                         <linked_position position="3"/>
                     </linked_positions>
                 </peptide>
-                <peptide sequence="TKQTAR" unique_id="2">
+                <peptide sequence="TCQTAR" unique_id="2">
                     <linked_positions>
                         <linked_position position="2"/>
                     </linked_positions>
@@ -555,7 +558,10 @@
         </reported_peptide>
         <reported_peptide reported_peptide_string="KTESHHKACGK(7)--HAVSEGTKAVTK(8)" type="crosslink">
             <peptides>
-                <peptide sequence="KTESHHKACGK" unique_id="1">
+                <peptide sequence="KTESHHKACMK" unique_id="1">
+                    <modifications>
+                        <modification mass="15.9949146" position="10" isMonolink="true"/>
+                    </modifications>
                     <linked_positions>
                         <linked_position position="7"/>
                     </linked_positions>
@@ -1800,6 +1806,9 @@
                     </linked_positions>
                 </peptide>
                 <peptide sequence="MQIFVK" unique_id="2">
+                    <modifications>
+                        <modification mass="15.9949146" position="1" isMonolink="true"/>
+                    </modifications>
                     <linked_positions>
                         <linked_position position="1"/>
                     </linked_positions>
@@ -2738,7 +2747,10 @@
         </reported_peptide>
         <reported_peptide reported_peptide_string="KTESHHKACGK(7)--KQLATKAAR(6)" type="crosslink">
             <peptides>
-                <peptide sequence="KTESHHKACGK" unique_id="1">
+                <peptide sequence="KTESHHKMCGK" unique_id="1">
+                    <modifications>
+                        <modification mass="15.9949146" position="8" isMonolink="true"/>
+                    </modifications>
                     <linked_positions>
                         <linked_position position="7"/>
                     </linked_positions>
@@ -7404,7 +7416,7 @@
                         <linked_position position="7"/>
                     </linked_positions>
                 </peptide>
-                <peptide sequence="KTESHHKACGK" unique_id="2">
+                <peptide sequence="KTESHHKMCGK" unique_id="2">
                     <linked_positions>
                         <linked_position position="7"/>
                     </linked_positions>
