@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Model.Results
         {
             var progressDictionary = Status.ProgressList.ToDictionary(status => status.FilePath);
             document = MetadataExtractor.ApplyRules(document, progressDictionary.Keys.ToHashSet(),
-                out CommonException<MetadataExtractor.RuleSetError> error);
+                out CommonException<MetadataExtractor.RuleError> error);
             if (error != null)
             {
                 ChangeStatus(

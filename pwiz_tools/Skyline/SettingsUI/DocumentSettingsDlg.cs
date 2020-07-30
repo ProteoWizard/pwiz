@@ -27,7 +27,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
         private readonly SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
         private readonly SettingsListBoxDriver<ListData> _listsListBoxDriver;
-        private XmlMappedList<string, MetadataRuleSet> _ruleSets;
+        private XmlMappedList<string, MetadataRule> _ruleSets;
         private DataSettings _originalSettings;
 
         public DocumentSettingsDlg(IDocumentUIContainer documentContainer)
@@ -53,7 +53,7 @@ namespace pwiz.Skyline.SettingsUI
             chooseViewsControl.ShowCheckboxes = true;
             chooseViewsControl.CheckedViews = dataSettings.ViewSpecList.ViewSpecs.Select(
                 viewSpec => PersistedViews.MainGroup.Id.ViewName(viewSpec.Name));
-            _ruleSets = new XmlMappedList<string, MetadataRuleSet>();
+            _ruleSets = new XmlMappedList<string, MetadataRule>();
             _ruleSets.AddRange(Settings.Default.MetadataRuleSets);
             _ruleSets.AddRange(dataSettings.MetadataRuleSets);
             _originalSettings = dataSettings;
@@ -202,7 +202,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             var document = DocumentContainer.DocumentUI;
             document = document.ChangeSettings(document.Settings.ChangeDataSettings(newDataSettings));
-            MetadataExtractor.ApplyRules(document, null, out CommonException<MetadataExtractor.RuleSetError> error);
+            MetadataExtractor.ApplyRules(document, null, out CommonException<MetadataExtractor.RuleError> error);
             if (error != null)
             {
                 string message =
@@ -320,7 +320,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddResultFileRule()
         {
-            var newRule = ShowRuleSetEditor(new MetadataRuleSet(typeof(ResultFile)));
+            var newRule = ShowRuleSetEditor(new MetadataRule(typeof(ResultFile)));
             if (newRule == null)
             {
                 return;
@@ -333,13 +333,13 @@ namespace pwiz.Skyline.SettingsUI
             UpdateRuleSets(checkedNames);
         }
 
-        public MetadataRuleSet ShowRuleSetEditor(MetadataRuleSet ruleSet)
+        public MetadataRule ShowRuleSetEditor(MetadataRule ruleSet)
         {
-            using (var dlg = new MetadataRuleSetEditor(DocumentContainer, ruleSet, _ruleSets))
+            using (var dlg = new MetadataRuleEditor(DocumentContainer, ruleSet, _ruleSets))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    return dlg.RuleSet;
+                    return dlg.MetadataRule;
                 }
                 else
                 {

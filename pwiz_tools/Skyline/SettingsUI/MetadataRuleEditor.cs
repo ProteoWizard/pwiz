@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using JetBrains.Annotations;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
-using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -21,282 +21,278 @@ namespace pwiz.Skyline.SettingsUI
     public partial class MetadataRuleEditor : FormEx
     {
         private SkylineDataSchema _dataSchema;
-
-        public MetadataRuleEditor(IDocumentContainer documentContainer)
+        private List<RuleRow> _ruleRowList;
+        private bool _inChangeRuleSet;
+        private MetadataExtractor _metadataExtractor;
+        private ImmutableList<MetadataRule> _existing;
+        private string _originalName;
+        public MetadataRuleEditor(IDocumentContainer documentContainer, MetadataRule metadataRule, IEnumerable<MetadataRule> existing)
         {
             InitializeComponent();
+            DocumentContainer = documentContainer;
+            _originalName = metadataRule.Name;
             _dataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(ResultFile));
-            var viewContext =
-                new SkylineViewContext(rootColumn, new StaticRowSource(new ExtractedMetadataResultRow[0]));
-            bindingListSource1.SetViewContext(viewContext);
-            var allColumns = GetAllTextColumnWrappers(rootColumn).ToList();
-            var sources = allColumns.Where(IsSource).ToArray();
-            comboSourceText.Items.AddRange(sources);
-            comboMetadataTarget.Items.AddRange(allColumns.Where(IsTarget).ToArray());
-            SelectItem(comboSourceText, PropertyPath.Root.Property(nameof(ResultFile.FileName)));
-            FormatCultureInfo = CultureInfo.InvariantCulture;
+            var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(ExtractedMetadataResultRow));
+            var viewInfo = new ViewInfo(rootColumn, GetDefaultViewSpec());
+            var skylineViewContext= new MetadataResultViewContext(rootColumn, new StaticRowSource(new MetadataStepResult[0]));
+            bindingListSourceResults.SetViewContext(skylineViewContext, viewInfo);
+            _metadataExtractor = new MetadataExtractor(_dataSchema, typeof(ResultFile));
+            _ruleRowList = new List<RuleRow>();
+            bindingSourceRules.DataSource = new BindingList<RuleRow>(_ruleRowList);
+            MetadataRule = metadataRule;
+            _existing = ImmutableList.ValueOfOrEmpty(existing);
         }
+
+        public IDocumentContainer DocumentContainer { get; private set; }
 
         public MetadataRule MetadataRule
         {
             get
             {
-                var rule = new MetadataRule();
-                var source = comboSourceText.SelectedItem as TextColumnWrapper;
-                if (source != null)
-                {
-                    rule = rule.ChangeSource(source.PropertyPath);
-                }
-
-                if (!string.IsNullOrEmpty(tbxRegularExpression.Text))
-                {
-                    rule = rule.ChangePattern(tbxRegularExpression.Text);
-                }
-
-                if (!string.IsNullOrEmpty(tbxReplacement.Text))
-                {
-                    rule = rule.ChangeReplacement(tbxReplacement.Text);
-                }
-
-                var target = comboMetadataTarget.SelectedItem as TextColumnWrapper;
-                if (target != null)
-                {
-                    rule = rule.ChangeTarget(target.PropertyPath);
-                }
-
-                return rule;
+                return new MetadataRule(typeof(ResultFile))
+                    .ChangeName(tbxName.Text)
+                    .ChangeSteps(Enumerable.Range(0, StepCount).Select(i=>_ruleRowList[i].Rule));
             }
             set
             {
-                SelectItem(comboSourceText, value.Source);
-                tbxRegularExpression.Text = value.Pattern;
-                tbxReplacement.Text = value.Replacement;
-                SelectItem(comboMetadataTarget, value.Target);
-            }
-        }
-
-        private void SelectItem(ComboBox combo, PropertyPath propertyPath)
-        {
-            if (propertyPath != null && !propertyPath.IsRoot)
-            {
-                for (int i = 0; i < combo.Items.Count; i++)
+                bool inChangeRuleOld = _inChangeRuleSet;
+                try
                 {
-                    var item = (TextColumnWrapper)combo.Items[i];
-                    if (Equals(item.PropertyPath, propertyPath))
-                    {
-                        combo.SelectedIndex = i;
-                        return;
-                    }
+                    _inChangeRuleSet = true;
+                    _ruleRowList.Clear();
+                    _ruleRowList.AddRange(value.Steps.Select(rule=>new RuleRow(rule)));
+                    tbxName.Text = value.Name;
+                    UpdateRuleSet();
+                    bindingSourceRules.ResetBindings(false);
+                }
+                finally
+                {
+                    _inChangeRuleSet = inChangeRuleOld;
                 }
             }
-            combo.SelectedIndex = -1;
         }
 
-        public CultureInfo FormatCultureInfo { get; set; }
-
-        public void UpdateRows()
+        public int StepCount
         {
-            var metadataExtractor = new MetadataExtractor(_dataSchema, typeof(ResultFile));
-            var resolvedRule = metadataExtractor.ResolveRule(MetadataRule);
+            get
+            {
+                int ruleCount = _ruleRowList.Count;
+                if (ruleCount > 0 && dataGridViewRules.RowCount >= ruleCount && 
+                    dataGridViewRules.Rows[ruleCount - 1].IsNewRow)
+                {
+                    ruleCount--;
+                }
+
+                return ruleCount;
+            }
+        }
+
+        private void MoveSteps(bool upwards)
+        {
+            var selectedIndexes = GetSelectedRuleRowIndexes().ToList();
+            var ruleSet = MetadataRule;
+            int ruleCount = ruleSet.Steps.Count;
+            ruleSet = ruleSet.ChangeSteps(ListViewHelper.MoveItems(ruleSet.Steps, selectedIndexes, upwards));
+            MetadataRule = ruleSet;
+            var newSelectedIndexes = ListViewHelper.MoveSelectedIndexes(ruleCount, selectedIndexes, upwards).ToList();
+            SelectRows(dataGridViewRules, newSelectedIndexes);
+            var currentCell = dataGridViewRules.CurrentCellAddress;
+            if (!newSelectedIndexes.Contains(currentCell.Y))
+            {
+                dataGridViewRules.CurrentCell = dataGridViewRules.Rows[newSelectedIndexes.First()].Cells[currentCell.X];
+            }
+        }
+
+        private void BtnUpOnClick(object sender, EventArgs e)
+        {
+            MoveSteps(true);
+        }
+
+        private void BtnDownOnClick(object sender, EventArgs e)
+        {
+            MoveSteps(false);
+        }
+
+        public void UpdateRuleSet()
+        {
+            var emptyTuple = Tuple.Create(string.Empty, (PropertyPath) null);
+            colTarget.DisplayMember = colSource.DisplayMember = nameof(emptyTuple.Item1);
+            colTarget.ValueMember = colSource.ValueMember = nameof(emptyTuple.Item2);
+            var sources = _metadataExtractor.GetSourceColumns().Select(col => Tuple.Create(col.DisplayName, col.PropertyPath))
+                .ToList();
+            var sourceNames = sources.Select(tuple => tuple.Item2).ToHashSet();
+            var targets = _metadataExtractor.GetTargetColumns()
+                .Select(col => Tuple.Create(col.DisplayName, col.PropertyPath)).ToList();
+            var targetNames = targets.Select(tuple => tuple.Item2).ToHashSet();
+            foreach (var rule in _ruleRowList)
+            {
+                if (rule.Source != null && sourceNames.Add(rule.Source))
+                {
+                    sources.Add(Tuple.Create(rule.Source.ToString(), rule.Source));
+                }
+
+                if (rule.Target != null && targetNames.Add(rule.Target))
+                {
+                    targets.Add(Tuple.Create(rule.Target.ToString(), rule.Target));
+                }
+            }
+            sources.Insert(0, emptyTuple);
+            targets.Insert(0, emptyTuple);
+
+            if (!sources.SequenceEqual(colSource.Items.Cast<object>()))
+            {
+                colSource.Items.Clear();
+                colSource.Items.AddRange(sources.ToArray());
+            }
+
+            if (!targets.SequenceEqual(colTarget.Items.Cast<object>()))
+            {
+                colTarget.Items.Clear();
+                colTarget.Items.AddRange(targets.ToArray());
+            }
+            UpdateResults();
+        }
+
+        public void UpdateResults()
+        {
+            var rules = MetadataRule.Steps.Select(rule => _metadataExtractor.ResolveStep(rule, null)).ToList();
             var rows = new List<ExtractedMetadataResultRow>();
             foreach (var resultFile in _dataSchema.ResultFileList.Values)
             {
                 var row = new ExtractedMetadataResultRow(resultFile);
-                var result = metadataExtractor.ApplyRule(resultFile, resolvedRule);
-                row.AddRuleResult(null, result);
+                foreach (var rule in rules)
+                {
+                    ExtractedMetadataResultRow.ColumnKey columnKey = null;
+                    if (rule.Target != null)
+                    {
+                        columnKey = new ExtractedMetadataResultRow.ColumnKey(rule.Target.PropertyPath, rule.Target.DisplayName);
+                    }
+                    row.AddRuleResult(columnKey, _metadataExtractor.ApplyStep(resultFile, rule));
+                }
                 rows.Add(row);
             }
-
-            var viewInfo = GetDefaultViewInfo(resolvedRule, rows);
-            bindingListSource1.SetView(viewInfo, new StaticRowSource(rows));
+            bindingListSourceResults.RowSource = new StaticRowSource(rows);
+            UpdateButtons();
         }
 
-        public ViewInfo GetDefaultViewInfo(ResolvedMetadataRule resolvedMetdataRule, ICollection<ExtractedMetadataResultRow> rows)
+        public void UpdateButtons()
+        {
+            var rowIndexes = GetSelectedRuleRowIndexes().ToList();
+            btnUp.Enabled = ListViewHelper.IsMoveEnabled(_ruleRowList.Count, rowIndexes, true);
+            btnDown.Enabled = ListViewHelper.IsMoveEnabled(_ruleRowList.Count, rowIndexes, false);
+            btnEdit.Enabled = rowIndexes.Count == 1;
+            btnRemove.Enabled = rowIndexes.Count > 0;
+        }
+
+        public IEnumerable<int> GetSelectedRuleRowIndexes()
+        {
+            int ruleCount = StepCount;
+            return dataGridViewRules.SelectedRows.OfType<DataGridViewRow>()
+                .Select(row => row.Index)
+                .Where(i => i < ruleCount);
+        }
+
+        public static ViewSpec GetDefaultViewSpec()
         {
             var columns = new List<ColumnSpec>();
-            var ruleResults = PropertyPath.Root.Property(nameof(ExtractedMetadataResultRow.RuleResults))
-                .LookupAllItems();
             columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(ExtractedMetadataResultRow.SourceObject))).SetCaption(ColumnCaptions.ResultFile));
-            if (resolvedMetdataRule.Source != null)
-            {
-                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.Source))).SetCaption(resolvedMetdataRule.Source.DisplayName));
-            }
-
-            if (rows.Any(row => !row.RuleResults.FirstOrDefault()?.Match == true))
-            {
-                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.Match))));
-            }
-
-            if (rows.Any(ShowMatchedValueColumn))
-            {
-                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.MatchedValue))));
-            }
-
-            if (rows.Any(ShowReplacedValueColumn))
-            {
-                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.ReplacedValue))));
-            }
-
-            if (resolvedMetdataRule.Target != null)
-            {
-                columns.Add(new ColumnSpec(ruleResults.Property(nameof(ExtractedMetadataRuleResult.TargetValue))).SetCaption(resolvedMetdataRule.Target.DisplayName));
-            }
-
-            var viewSpec = new ViewSpec().SetColumns(columns).SetSublistId(ruleResults);
-            var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(ExtractedMetadataResultRow));
-            return new ViewInfo(rootColumn, viewSpec);
+            columns.Add(new ColumnSpec(
+                PropertyPath.Root.Property(nameof(ExtractedMetadataResultRow.Values)).LookupAllItems()
+                    .Property("Value").Property(nameof(ExtractedMetadataResultColumn.ExtractedValue))
+            ));
+            return new ViewSpec().SetColumns(columns);
         }
 
-        public bool ShowMatchedValueColumn(ExtractedMetadataResultRow row)
+        private void btnAddNewRule_Click(object sender, EventArgs e)
         {
-            return row.RuleResults.Any(result =>
+            var newRule = ShowRuleEditor(null);
+            if (newRule != null)
             {
-                if (!result.Match)
+                MetadataRule = MetadataRule.ChangeSteps(MetadataRule.Steps.Append(newRule));
+            }
+        }
+
+        public MetadataRuleStep ShowRuleEditor(MetadataRuleStep rule)
+        {
+            using (var dlg = new MetadataRuleStepEditor(DocumentContainer))
+            {
+                if (rule != null)
                 {
-                    return false;
+                    dlg.MetadataRuleStep = rule;
                 }
-
-                if (result.MatchedValue == result.Source)
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    return false;
+                    return dlg.MetadataRuleStep;
                 }
-                if (result.ReplacedValue == result.MatchedValue && result.MatchedValue == Convert.ToString(result.TargetValue))
-                {
-                    return false;
-                }
-
-                return true;
-            });
-        }
-
-        public bool ShowReplacedValueColumn(ExtractedMetadataResultRow row)
-        {
-            if (!ShowMatchedValueColumn(row))
-            {
-                return false;
             }
 
-            return row.RuleResults.Any(result =>
+            return null;
+        }
+
+        public void EditRule(int ruleIndex)
+        {
+            if (ruleIndex < 0 || ruleIndex >= MetadataRule.Steps.Count)
             {
-                if (!string.IsNullOrEmpty(result.ErrorText))
-                {
-                    return true;
-                }
-
-                if (result.MatchedValue == result.ReplacedValue)
-                {
-                    return false;
-                }
-
-                if (result.ReplacedValue == Convert.ToString(result.TargetValue))
-                {
-                    return false;
-                }
-
-                return true;
-            });
-        }
-
-        public void ShowRegexError(Exception e)
-        {
-            if (e == null)
-            {
-                tbxRegularExpression.BackColor = SystemColors.Window;
-            }
-            else
-            {
-                tbxRegularExpression.BackColor = Color.Red;
-            }
-        }
-
-        private void tbxRegularExpression_Leave(object sender, EventArgs e)
-        {
-            UpdateRows();
-        }
-
-        private void comboSourceText_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdateRows();
-        }
-
-        private void linkLabelRegularExpression_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            WebHelpers.OpenRegexDocLink(this);
-        }
-
-        public IEnumerable<TextColumnWrapper> GetAllTextColumnWrappers(ColumnDescriptor columnDescriptor)
-        {
-            var columns = Enumerable.Empty<TextColumnWrapper>();
-            if (columnDescriptor.CollectionInfo != null || columnDescriptor.IsAdvanced)
-            {
-                return columns;
+                return;
             }
 
-            if (!typeof(SkylineObject).IsAssignableFrom(columnDescriptor.PropertyType)
-                && !@"Locator".Equals(columnDescriptor.PropertyPath.Name))
+            var newRule = ShowRuleEditor(MetadataRule.Steps[ruleIndex]);
+            if (newRule == null)
             {
-                columns = columns.Append(new TextColumnWrapper(columnDescriptor));
+                return;
             }
 
-            columns = columns.Concat(columnDescriptor.GetChildColumns().SelectMany(GetAllTextColumnWrappers));
-
-            return columns;
-        }
-
-        public bool IsSource(TextColumnWrapper column)
-        {
-            return !IsTarget(column);
-        }
-
-        public bool IsTarget(TextColumnWrapper column)
-        {
-            if (column.IsImportable)
-            {
-                return true;
-            }
-
-            if (column.PropertyPath.Name.StartsWith(AnnotationDef.ANNOTATION_PREFIX))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private void comboMetadataTarget_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdateRows();
+            MetadataRule = MetadataRule.ChangeSteps(MetadataRule.Steps.ReplaceAt(ruleIndex, newRule));
         }
 
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
-            if (!(comboSourceText.SelectedItem is TextColumnWrapper))
+            string name;
+            if (!helper.ValidateNameTextBox(tbxName, out name))
             {
-                helper.ShowTextBoxError(comboSourceText, Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty);
                 return;
             }
 
-            if (!string.IsNullOrEmpty(tbxRegularExpression.Text))
+            if (name != _originalName && _existing.Any(existingRuleSet=>existingRuleSet.Name == name))
             {
-                try
+                helper.ShowTextBoxError(tbxName, string.Format("There is already a metadata rule set named '{0}'.", name));
+                return;
+            }
+
+            var ruleSet = MetadataRule;
+            for (int rowIndex = 0; rowIndex < ruleSet.Steps.Count; rowIndex++)
+            {
+                var rule = ruleSet.Steps[rowIndex];
+                if (rule.Source == null)
                 {
-                    var _ = new Regex(tbxRegularExpression.Text);
+                    MessageDlg.Show(this, string.Format("{0} cannot be blank", colSource.HeaderText));
+                    SelectCell(dataGridViewRules, colSource, rowIndex);
+                    return;
                 }
-                catch (Exception)
+
+                if (!string.IsNullOrEmpty(rule.Pattern))
                 {
-                    helper.ShowTextBoxError(tbxRegularExpression,
-                        "{0} must either be a valid regular expression or blank");
+                    try
+                    {
+                        var _ = new Regex(rule.Pattern);
+                    }
+                    catch (Exception exception)
+                    {
+                        MessageDlg.ShowWithException(this, "This is not a valid regular expression.", exception);
+                        SelectCell(dataGridViewRules, colFilter, rowIndex);
+                        return;
+                    }
+                }
+
+                if (rule.Target == null)
+                {
+                    MessageDlg.Show(this, string.Format("{0} cannot be blank", colTarget.HeaderText));
+                    SelectCell(dataGridViewRules, colTarget, rowIndex);
                     return;
                 }
             }
 
-            if (!(comboMetadataTarget.SelectedItem is TextColumnWrapper))
-            {
-                helper.ShowTextBoxError(comboMetadataTarget, Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty);
-                return;
-            }
 
             DialogResult = DialogResult.OK;
         }
@@ -304,6 +300,156 @@ namespace pwiz.Skyline.SettingsUI
         private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void btnRemove_Click(object sender, EventArgs e)
+        {
+            var selectedIndices = GetSelectedRuleRowIndexes().ToHashSet();
+            var ruleSet = MetadataRule;
+            MetadataRule = ruleSet.ChangeSteps(Enumerable.Range(0, ruleSet.Steps.Count)
+                .Where(i => !selectedIndices.Contains(i)).Select(i => ruleSet.Steps[i]));
+        }
+
+        private void btnEdit_Click(object sender, EventArgs e)
+        {
+            EditRule(dataGridViewRules.CurrentCellAddress.Y);
+        }
+
+        public class RuleRow
+        {
+            [UsedImplicitly]
+            public RuleRow() : this(new MetadataRuleStep().ChangeSource(PropertyPath.Root.Property(nameof(ResultFile.FileName))))
+            {
+
+            }
+            public RuleRow(MetadataRuleStep rule)
+            {
+                Rule = rule;
+            }
+
+            public MetadataRuleStep Rule { get; private set; }
+
+            public PropertyPath Source
+            {
+                get
+                {
+                    return Rule.Source;
+                }
+                set
+                {
+                    Rule = Rule.ChangeSource(value);
+                }
+            }
+
+            public string Filter
+            {
+                get
+                {
+                    return Rule.Pattern;
+                }
+                set
+                {
+                    Rule = Rule.ChangePattern(value);
+                }
+
+            }
+
+            public string Replacement
+            {
+                get
+                {
+                    return Rule.Replacement;
+                }
+                set
+                {
+                    Rule = Rule.ChangeReplacement(value);
+                }
+            }
+
+            public PropertyPath Target
+            {
+                get
+                {
+                    return Rule.Target;
+                }
+                set
+                {
+                    Rule = Rule.ChangeTarget(value);
+                }
+            }
+        }
+
+        private void bindingSourceRules_ListChanged(object sender, ListChangedEventArgs e)
+        {
+            if (_inChangeRuleSet)
+            {
+                return;
+            }
+            UpdateResults();
+        }
+
+        private void dataGridViewRules_CurrentCellChanged(object sender, EventArgs e)
+        {
+            UpdateButtons();
+        }
+
+        private class MetadataResultViewContext : SkylineViewContext
+        {
+            private static readonly PropertyPath propertyPathValues = PropertyPath.Root
+                .Property(nameof(ExtractedMetadataResultRow.Values))
+                .LookupAllItems();
+            private static readonly PropertyPath propertyPathNewValue = propertyPathValues
+                .Property(nameof(KeyValuePair<string, object>.Value))
+                .Property(nameof(ExtractedMetadataResultColumn.ExtractedValue));
+            public MetadataResultViewContext(ColumnDescriptor parentColumn, IRowSource rowSource) : base(parentColumn,
+                rowSource)
+            {
+            }
+
+            protected override TColumn InitializeColumn<TColumn>(TColumn column, PropertyDescriptor propertyDescriptor)
+            {
+                TColumn result = base.InitializeColumn(column, propertyDescriptor);
+                var columnPropertyDescriptor = propertyDescriptor as ColumnPropertyDescriptor;
+                // If we are showing the ExtractedValue column, change its caption to be just the DisplayName of the
+                // column it is going into
+                if (columnPropertyDescriptor != null &&
+                    Equals(columnPropertyDescriptor.DisplayColumn.PropertyPath, propertyPathNewValue))
+                {
+                    var columnKey = columnPropertyDescriptor.PivotKey.FindValue(propertyPathValues) 
+                        as ExtractedMetadataResultRow.ColumnKey;
+                    if (columnKey != null)
+                    {
+                        column.HeaderText = columnKey.DisplayName;
+                    }
+                }
+                return result;
+            }
+        }
+
+        private void dataGridViewRules_SelectionChanged(object sender, EventArgs e)
+        {
+            UpdateButtons();
+        }
+
+        public static void SelectCell(DataGridView dataGridView, DataGridViewColumn column, int rowIndex)
+        {
+            SelectRows(dataGridView, ImmutableList.Singleton(rowIndex));
+            dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[column.Index];
+            dataGridView.Focus();
+        }
+
+        public static void SelectRows(DataGridView dataGridView, ICollection<int> newRowIndexes)
+        {
+            var oldRowIndexes = dataGridView.SelectedRows.OfType<DataGridViewRow>().Select(row => row.Index).ToList();
+            foreach (var rowIndex in oldRowIndexes.Except(newRowIndexes))
+            {
+                dataGridView.Rows[rowIndex].Selected = false;
+            }
+
+            foreach (var rowIndex in newRowIndexes.Except(oldRowIndexes))
+            {
+                dataGridView.Rows[rowIndex].Selected = true;
+            }
         }
     }
 }

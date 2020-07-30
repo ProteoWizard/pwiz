@@ -38,9 +38,9 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestMetadataRuleSerialization()
         {
-            var ruleSet = new MetadataRuleSet("test", new []
+            var ruleSet = new MetadataRule("test", new []
             {
-                new MetadataRule().ChangeSource(PropertyPath.Parse("foo"))
+                new MetadataRuleStep().ChangeSource(PropertyPath.Parse("foo"))
                     .ChangePattern("[a-z]")
                     .ChangeReplacement("$0")
                     .ChangeTarget(PropertyPath.Parse("bar"))

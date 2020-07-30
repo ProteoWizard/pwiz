@@ -12,35 +12,35 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
 {
-    public class MetadataRule : Immutable
+    public class MetadataRuleStep : Immutable
     {
-        public static MetadataRule EMPTY = new MetadataRule();
+        public static MetadataRuleStep EMPTY = new MetadataRuleStep();
         public PropertyPath Source { get; private set; }
 
-        public MetadataRule ChangeSource(PropertyPath value)
+        public MetadataRuleStep ChangeSource(PropertyPath value)
         {
             return ChangeProp(ImClone(this), im => im.Source = value);
         }
 
         public string Pattern { get; private set; }
 
-        public MetadataRule ChangePattern(string value)
+        public MetadataRuleStep ChangePattern(string value)
         {
             return ChangeProp(ImClone(this), im => im.Pattern = value);
         }
         public string Replacement { get; private set; }
 
-        public MetadataRule ChangeReplacement(string replacement)
+        public MetadataRuleStep ChangeReplacement(string replacement)
         {
             return ChangeProp(ImClone(this), im => im.Replacement = replacement);
         }
         public PropertyPath Target { get; private set; }
 
-        public MetadataRule ChangeTarget(PropertyPath value)
+        public MetadataRuleStep ChangeTarget(PropertyPath value)
         {
             return ChangeProp(ImClone(this), im => im.Target = value);
         }
-        protected bool Equals(MetadataRule other)
+        protected bool Equals(MetadataRuleStep other)
         {
             return Equals(Source, other.Source) && Equals(Pattern, other.Pattern) &&
                    Equals(Target, other.Target) && Equals(Replacement, other.Replacement);
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((MetadataRule)obj);
+            return Equals((MetadataRuleStep)obj);
         }
 
         public override int GetHashCode()
@@ -67,32 +67,32 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
         }
 
     }
-    [XmlRoot("metadata_rules")]
-    public class MetadataRuleSet : Immutable, IXmlSerializable, IKeyContainer<string>
+    [XmlRoot("metadata_rule")]
+    public class MetadataRule : Immutable, IXmlSerializable, IKeyContainer<string>
     {
-        public MetadataRuleSet(Type rowType) : this(rowType.FullName, null)
+        public MetadataRule(Type rowType) : this(rowType.FullName, null)
         {
 
         }
-        public MetadataRuleSet(string rowSource, IEnumerable<MetadataRule> rules)
+        public MetadataRule(string rowSource, IEnumerable<MetadataRuleStep> rules)
         {
             RowSource = rowSource;
-            Rules = ImmutableList.ValueOfOrEmpty(rules);
+            Steps = ImmutableList.ValueOfOrEmpty(rules);
         }
 
         public string Name { get; private set; }
 
-        public MetadataRuleSet ChangeName(string name)
+        public MetadataRule ChangeName(string name)
         {
             return ChangeProp(ImClone(this), im => im.Name = name);
         }
 
         public string RowSource { get; private set; }
-        public ImmutableList<MetadataRule> Rules { get; private set; }
+        public ImmutableList<MetadataRuleStep> Steps { get; private set; }
 
-        public MetadataRuleSet ChangeRules(IEnumerable<MetadataRule> rules)
+        public MetadataRule ChangeSteps(IEnumerable<MetadataRuleStep> rules)
         {
-            return ChangeProp(ImClone(this), im => im.Rules = ImmutableList.ValueOf(rules));
+            return ChangeProp(ImClone(this), im => im.Steps = ImmutableList.ValueOf(rules));
         }
 
         private enum ATTR
@@ -107,17 +107,17 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
 
         private enum EL
         {
-            metadata_rule
+            step
         }
 
-        private MetadataRuleSet()
+        private MetadataRule()
         {
 
         }
 
         public void ReadXml(XmlReader reader)
         {
-            if (Rules != null)
+            if (Steps != null)
             {
                 throw new InvalidOperationException();
             }
@@ -125,10 +125,10 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             var xElement = (XElement) XNode.ReadFrom(reader);
             Name = xElement.Attribute(ATTR.name)?.Value;
             RowSource = xElement.Attribute(ATTR.rowsource)?.Value;
-            var rules = new List<MetadataRule>();
-            foreach (var child in xElement.Elements(EL.metadata_rule))
+            var rules = new List<MetadataRuleStep>();
+            foreach (var child in xElement.Elements(EL.step))
             {
-                var rule = new MetadataRule();
+                var rule = new MetadataRuleStep();
                 var attrSource = child.Attribute(ATTR.source);
                 if (attrSource != null)
                 {
@@ -144,16 +144,16 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                 }
                 rules.Add(rule);
             }
-            Rules = ImmutableList.ValueOf(rules);
+            Steps = ImmutableList.ValueOf(rules);
         }
 
         void IXmlSerializable.WriteXml(XmlWriter writer)
         {
             writer.WriteAttributeIfString(ATTR.name, Name);
             writer.WriteAttributeIfString(ATTR.rowsource, RowSource);
-            foreach (var rule in Rules)
+            foreach (var rule in Steps)
             {
-                writer.WriteStartElement(EL.metadata_rule);
+                writer.WriteStartElement(EL.step);
                 writer.WriteAttribute(ATTR.source, rule.Source, null);
                 writer.WriteAttributeIfString(ATTR.pattern, rule.Pattern);
                 writer.WriteAttributeIfString(ATTR.replacement, rule.Replacement);
@@ -172,14 +172,14 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             return Name;
         }
 
-        public static MetadataRuleSet Deserialize(XmlReader reader)
+        public static MetadataRule Deserialize(XmlReader reader)
         {
-            return reader.Deserialize(new MetadataRuleSet());
+            return reader.Deserialize(new MetadataRule());
         }
 
-        protected bool Equals(MetadataRuleSet other)
+        protected bool Equals(MetadataRule other)
         {
-            return Name == other.Name && RowSource == other.RowSource && Equals(Rules, other.Rules);
+            return Name == other.Name && RowSource == other.RowSource && Equals(Steps, other.Steps);
         }
 
         public override bool Equals(object obj)
@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((MetadataRuleSet) obj);
+            return Equals((MetadataRule) obj);
         }
 
         public override int GetHashCode()
@@ -196,15 +196,15 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             {
                 var hashCode = (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (RowSource != null ? RowSource.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Rules != null ? Rules.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Steps != null ? Steps.GetHashCode() : 0);
                 return hashCode;
             }
         }
     }
 
-    public class MetadataRuleSetList : SettingsListBase<MetadataRuleSet>
+    public class MetadataRuleSetList : SettingsListBase<MetadataRule>
     {
-        public override IEnumerable<MetadataRuleSet> GetDefaults(int revisionIndex)
+        public override IEnumerable<MetadataRule> GetDefaults(int revisionIndex)
         {
             yield break;
         }

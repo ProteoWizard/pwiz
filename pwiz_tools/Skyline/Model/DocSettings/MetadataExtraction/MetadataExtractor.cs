@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
@@ -31,11 +28,10 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
         }
 
         public SkylineDataSchema DataSchema { get; private set; }
-        public MetadataRuleSet RuleSet { get; private set; }
 
-        public ResolvedMetadataRule ResolveRule(MetadataRule extractedMetadataRule)
+        public Step ResolveStep(MetadataRuleStep extractedMetadataRule, List<CommonException<StepError>> errors)
         {
-            var sourceColumn = ResolveColumn(extractedMetadataRule, nameof(extractedMetadataRule.Source), extractedMetadataRule.Source);
+            var sourceColumn = ResolveColumn(extractedMetadataRule, nameof(extractedMetadataRule.Source), extractedMetadataRule.Source, errors);
             Regex regex = null;
             if (!string.IsNullOrEmpty(extractedMetadataRule.Pattern))
             {
@@ -45,41 +41,51 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                 }
                 catch (Exception x)
                 {
-                    throw CommonException.Create(new RuleError(
+                    errors?.Add(CommonException.Create(new StepError(
                         extractedMetadataRule,
                         nameof(extractedMetadataRule.Pattern),
-                        x.Message));
+                        x.Message), x));
                 }
             }
 
             var targetColumn = ResolveColumn(extractedMetadataRule, nameof(extractedMetadataRule.Target),
-                extractedMetadataRule.Target);
-            return new ResolvedMetadataRule(extractedMetadataRule, sourceColumn, regex, extractedMetadataRule.Replacement, targetColumn);
+                extractedMetadataRule.Target, errors);
+            return new Step(extractedMetadataRule, sourceColumn, regex, extractedMetadataRule.Replacement, targetColumn);
+        }
+
+        public IEnumerable<TextColumnWrapper> GetSourceColumns()
+        {
+            return _textColumns.Values.Where(IsSource);
+        }
+
+        public IEnumerable<TextColumnWrapper> GetTargetColumns()
+        {
+            return _textColumns.Values.Where(IsTarget);
         }
 
         public CultureInfo CultureInfo { get; set; }
 
-        public ExtractedMetadataRuleResult ApplyRule(object sourceObject, ResolvedMetadataRule metdataRule)
+        public MetadataStepResult ApplyStep(object sourceObject, Step step)
         {
-            if (metdataRule.Source == null)
+            if (step.Source == null)
             {
                 return null;
             }
 
-            string sourceText = metdataRule.Source.GetTextValue(CultureInfo, sourceObject);
+            string sourceText = step.Source.GetTextValue(CultureInfo, sourceObject);
             bool isMatch;
             string strMatchedValue;
             string strReplacedValue;
 
-            if (metdataRule.Regex!= null)
+            if (step.Regex!= null)
             {
-                var match = metdataRule.Regex.Match(sourceText);
+                var match = step.Regex.Match(sourceText);
                 if (match.Success)
                 {
                     strMatchedValue = match.ToString();
-                    if (!string.IsNullOrEmpty(metdataRule.Replacement))
+                    if (!string.IsNullOrEmpty(step.Replacement))
                     {
-                        strReplacedValue = match.Result(metdataRule.Replacement);
+                        strReplacedValue = match.Result(step.Replacement);
                     }
                     else
                     {
@@ -94,13 +100,13 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             else
             {
                 strMatchedValue = sourceText;
-                if (string.IsNullOrEmpty(metdataRule.Replacement))
+                if (string.IsNullOrEmpty(step.Replacement))
                 {
                     strReplacedValue = strMatchedValue;
                 }
                 else
                 {
-                    strReplacedValue = metdataRule.Replacement;
+                    strReplacedValue = step.Replacement;
                 }
             }
 
@@ -110,17 +116,17 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             if (strReplacedValue != null)
             {
                 isMatch = true;
-                if (metdataRule.Target != null)
+                if (step.Target != null)
                 {
                     try
                     {
-                        targetValue = metdataRule.Target.ParseTextValue(CultureInfo, strReplacedValue);
+                        targetValue = step.Target.ParseTextValue(CultureInfo, strReplacedValue);
                     }
                     catch (Exception x)
                     {
                         string message = TextUtil.LineSeparate(
                             string.Format("Error converting '{0}' to '{1}':", strReplacedValue,
-                                metdataRule.Target.DisplayName),
+                                step.Target.DisplayName),
                             x.Message);
                         strErrorText = message;
                     }
@@ -130,22 +136,15 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             {
                 isMatch = false;
             }
-            return new ExtractedMetadataRuleResult(metdataRule.Def, sourceText, isMatch, strMatchedValue, strReplacedValue, targetValue, strErrorText);
+            return new MetadataStepResult(step.Def, sourceText, isMatch, strMatchedValue, strReplacedValue, targetValue, strErrorText);
         }
 
         public TextColumnWrapper FindColumn(PropertyPath propertyPath)
         {
-            try
-            {
-                return ResolveColumn(null, null, propertyPath);
-            }
-            catch
-            {
-                return null;
-            }
+            return ResolveColumn(null, null, propertyPath, null);
         }
 
-        private TextColumnWrapper ResolveColumn(MetadataRule rule, string propertyName, PropertyPath propertyPath)
+        private TextColumnWrapper ResolveColumn(MetadataRuleStep rule, string propertyName, PropertyPath propertyPath, List<CommonException<StepError>> errors)
         {
             if (propertyPath == null)
             {
@@ -155,7 +154,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             TextColumnWrapper textColumn;
             if (!_textColumns.TryGetValue(propertyPath, out textColumn))
             {
-                throw CommonException.Create(new RuleError(rule, propertyName, "Unable to find column " + propertyPath));
+                errors?.Add(CommonException.Create(new StepError(rule, propertyName, "Unable to find column " + propertyPath)));
             }
 
             return textColumn;
@@ -205,10 +204,10 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             return false;
         }
 
-        public class RuleError
+        public class StepError
         {
-            public RuleError(
-                MetadataRule rule,
+            public StepError(
+                MetadataRuleStep rule,
                 string property, string message)
             {
                 Rule = rule;
@@ -216,7 +215,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                 Message = message;
             }
 
-            public MetadataRule Rule
+            public MetadataRuleStep Rule
             {
                 get;
                 private set;
@@ -230,9 +229,9 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             }
         }
 
-        public class RuleSetError
+        public class RuleError
         {
-            public RuleSetError(string ruleName, MsDataFileUri msDataFileUri, string message)
+            public RuleError(string ruleName, MsDataFileUri msDataFileUri, string message)
             {
                 RuleName = ruleName;
                 MsDataFileUri = msDataFileUri;
@@ -251,10 +250,10 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             }
         }
 
-        public void ApplyRules(MetadataRuleSet ruleSet, HashSet<MsDataFileUri> dataFileUris)
+        public void ApplyRule(MetadataRule ruleSet, HashSet<MsDataFileUri> dataFileUris)
         {
             var skylineDataSchema = (SkylineDataSchema) _rootColumn.DataSchema;
-            List<ResolvedMetadataRule> resolvedRules = null;
+            List<Step> resolvedRules = null;
             foreach (var resultFile in skylineDataSchema.ResultFileList.Values)
             {
                 if (dataFileUris != null && !dataFileUris.Contains(resultFile.ChromFileInfo.FilePath))
@@ -264,13 +263,20 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
 
                 if (resolvedRules == null)
                 {
-                    try
+                    var ruleErrors = new List<CommonException<StepError>>();
+                    resolvedRules = new List<Step>();
+                    foreach (var rule in ruleSet.Steps)
                     {
-                        resolvedRules = ruleSet.Rules.Select(ResolveRule).ToList();
-                    }
-                    catch (CommonException<RuleError> ruleError)
-                    {
-                        throw CommonException.Create(new RuleSetError(ruleSet.Name, resultFile.ChromFileInfo.FilePath, ruleError.Message));
+                        var resolvedRule = ResolveStep(rule, ruleErrors);
+                        if (ruleErrors.Count > 0)
+                        {
+                            var ruleError = ruleErrors[0];
+                            throw CommonException.Create(
+                                new RuleError(ruleSet.Name, resultFile.ChromFileInfo.FilePath, ruleError.Message),
+                                ruleError);
+
+                        }
+                        resolvedRules.Add(resolvedRule);
                     }
                 }
 
@@ -282,10 +288,10 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                         continue;
                     }
 
-                    var result = ApplyRule(resultFile, rule);
+                    var result = ApplyStep(resultFile, rule);
                     if (result.ErrorText != null)
                     {
-                        throw CommonException.Create(new RuleSetError(ruleSet.Name, resultFile.ChromFileInfo.FilePath, result.ErrorText));
+                        throw CommonException.Create(new RuleError(ruleSet.Name, resultFile.ChromFileInfo.FilePath, result.ErrorText));
                     }
                     if (!result.Match)
                     {
@@ -298,7 +304,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             }
         }
 
-        public static SrmDocument ApplyRules(SrmDocument document, HashSet<MsDataFileUri> dataFiles, out CommonException<RuleSetError> error)
+        public static SrmDocument ApplyRules(SrmDocument document, HashSet<MsDataFileUri> dataFiles, out CommonException<RuleError> error)
         {
             error = null;
             if (!document.Settings.DataSettings.MetadataRuleSets.Any())
@@ -312,17 +318,37 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                 foreach (var ruleSet in document.Settings.DataSettings.MetadataRuleSets)
                 {
                     var metadataExtractor = new MetadataExtractor(dataSchema, typeof(ResultFile));
-                    metadataExtractor.ApplyRules(ruleSet, dataFiles);
+                    metadataExtractor.ApplyRule(ruleSet, dataFiles);
                 }
 
                 dataSchema.CommitBatchModifyDocument(string.Empty, null);
                 return dataSchema.Document;
             }
-            catch (CommonException<RuleSetError> ex)
+            catch (CommonException<RuleError> ex)
             {
                 error = ex;
                 return document;
             }
         }
+        public class Step
+        {
+            public static readonly Step EMPTY = new Step(MetadataRuleStep.EMPTY, null, null, null, null);
+            public Step(MetadataRuleStep def, TextColumnWrapper source, Regex regex, string replacement, TextColumnWrapper target)
+            {
+                Def = def;
+                Source = source;
+                Regex = regex;
+                Replacement = replacement;
+                Target = target;
+            }
+
+            public MetadataRuleStep Def { get; private set; }
+            public TextColumnWrapper Source { get; private set; }
+
+            public string Replacement { get; private set; }
+            public Regex Regex { get; private set; }
+            public TextColumnWrapper Target { get; private set; }
+        }
+
     }
 }

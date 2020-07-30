@@ -646,7 +646,7 @@
     <value>94, 23</value>
   </data>
   <data name="btnEditRule.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>2</value>
   </data>
   <data name="btnEditRule.Text" xml:space="preserve">
     <value>&amp;Edit...</value>
@@ -676,7 +676,7 @@
     <value>94, 23</value>
   </data>
   <data name="btnAddRule.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>1</value>
   </data>
   <data name="btnAddRule.Text" xml:space="preserve">
     <value>New...</value>
@@ -709,7 +709,7 @@
     <value>94, 23</value>
   </data>
   <data name="btnDeleteRules.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>3</value>
   </data>
   <data name="btnDeleteRules.Text" xml:space="preserve">
     <value>Delete</value>
@@ -736,7 +736,7 @@
     <value>507, 214</value>
   </data>
   <data name="checkedListBoxRuleSets.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;checkedListBoxRuleSets.Name" xml:space="preserve">
     <value>checkedListBoxRuleSets</value>
@@ -763,7 +763,7 @@
     <value>4</value>
   </data>
   <data name="tabPageResultFileRules.Text" xml:space="preserve">
-    <value>Result File Rules</value>
+    <value>Metadata Rules</value>
   </data>
   <data name="&gt;&gt;tabPageResultFileRules.Name" xml:space="preserve">
     <value>tabPageResultFileRules</value>
