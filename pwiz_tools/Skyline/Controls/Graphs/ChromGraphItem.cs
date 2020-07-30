@@ -934,7 +934,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             var interpolatedTimeIntensities = chromatogramInfo.GetInterpolatedTimeIntensities();
-            int index = interpolatedTimeIntensities.IndexOfNearestTime((float)displayTime);
+            int index = interpolatedTimeIntensities.IndexOfNearestTime((float)measuredTime);
             return ScaleRetentionTime(interpolatedTimeIntensities.Times[index]);
         }
 
