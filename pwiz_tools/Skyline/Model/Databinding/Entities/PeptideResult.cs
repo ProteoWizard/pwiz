@@ -39,16 +39,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class PeptideResult : Result
     {
         private readonly CachedValue<PeptideChromInfo> _chromInfo;
-        private readonly CachedValue<QuantificationResult> _quantificationResult;
+        private readonly CachedValue<PeptideQuantificationResult> _quantificationResult;
         private readonly CachedValue<CalibrationCurveFitter> _calibrationCurveFitter;
-        private readonly CachedValue<QualitativeMeasurements> _qualitativeMeasurements;
 
         public PeptideResult(Peptide peptide, ResultFile file) : base(peptide, file)
         {
             _chromInfo = CachedValue.Create(DataSchema, () => ResultFile.FindChromInfo(peptide.DocNode.Results));
             _quantificationResult = CachedValue.Create(DataSchema, GetQuantification);
             _calibrationCurveFitter = CachedValue.Create(DataSchema, GetCalibrationCurveFitter);
-            _qualitativeMeasurements = CachedValue.Create(DataSchema, () => new QualitativeMeasurements(this));
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
@@ -184,11 +182,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public LinkValue<QuantificationResult> Quantification
+        public LinkValue<PeptideQuantificationResult> Quantification
         {
             get
             {
-                return new LinkValue<QuantificationResult>(_quantificationResult.Value, (sender, args) =>
+                return new LinkValue<PeptideQuantificationResult>(_quantificationResult.Value, (sender, args) =>
                 {
                     SkylineWindow skylineWindow = DataSchema.SkylineWindow;
                     if (skylineWindow != null)
@@ -201,17 +199,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public QualitativeMeasurements QualitativeMeasurements
+        private PeptideQuantificationResult GetQuantification()
         {
-            get
-            {
-                return _qualitativeMeasurements.Value;
-            }
-        }
-
-        private QuantificationResult GetQuantification()
-        {
-            return _calibrationCurveFitter.Value.GetQuantificationResult(ResultFile.Replicate.ReplicateIndex);
+            return _calibrationCurveFitter.Value.GetPeptideQuantificationResult(ResultFile.Replicate.ReplicateIndex);
         }
 
         public CalibrationCurveFitter GetCalibrationCurveFitter()

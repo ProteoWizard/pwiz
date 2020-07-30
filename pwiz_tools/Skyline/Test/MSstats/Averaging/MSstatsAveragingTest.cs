@@ -16,11 +16,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataAnalysis.Matrices;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.SkylineTestUtil;
 
@@ -54,7 +59,6 @@ namespace pwiz.SkylineTest.MSstats.Averaging
                         (expectedResult.StandardError + result.LinearFitResult.StandardError) * 2, peptide.Peptide.Sequence);
                 }
             }
-
         }
 
         private SrmDocument LoadRatPlasmaDocument()

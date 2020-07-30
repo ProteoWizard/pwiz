@@ -525,14 +525,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public AcceptanceCriteria AcceptanceCriteria
-        {
-            get
-            {
-                return new AcceptanceCriteria(this);
-            }
-        }
-
         protected override NodeRef NodeRefPrototype
         {
             get { return MoleculeRef.PROTOTYPE; }

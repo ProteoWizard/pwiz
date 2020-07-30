@@ -1322,7 +1322,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;tbxQuantUnits.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="comboQuantMsLevel.Items" xml:space="preserve">
     <value>All</value>
@@ -1355,7 +1355,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboQuantMsLevel.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 83</value>
@@ -1379,7 +1379,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>8</value>
   </data>
   <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -1403,7 +1403,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboRegressionFit.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>10</value>
   </data>
   <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 130</value>
@@ -1427,7 +1427,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboWeighting.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>12</value>
   </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -2506,6 +2506,84 @@ the lower limit of quantification (LOQ)</value>
   <data name="&gt;&gt;tabIntegration.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
+  <data name="label20.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label20.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
+    <value>128, 414</value>
+  </data>
+  <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
+    <value>15, 13</value>
+  </data>
+  <data name="label20.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="label20.Text" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="&gt;&gt;label20.Name" xml:space="preserve">
+    <value>label20</value>
+  </data>
+  <data name="&gt;&gt;label20.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label20.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tbxIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 411</value>
+  </data>
+  <data name="tbxIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="tbxIonRatioThreshold.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;tbxIonRatioThreshold.Name" xml:space="preserve">
+    <value>tbxIonRatioThreshold</value>
+  </data>
+  <data name="&gt;&gt;tbxIonRatioThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxIonRatioThreshold.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;tbxIonRatioThreshold.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lblIonRatioThreshold.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 395</value>
+  </data>
+  <data name="lblIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 13</value>
+  </data>
+  <data name="lblIonRatioThreshold.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="lblIonRatioThreshold.Text" xml:space="preserve">
+    <value>Ion ratio threshold:</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Name" xml:space="preserve">
+    <value>lblIonRatioThreshold</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="groupBoxFiguresOfMerit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -2648,7 +2726,7 @@ the lower limit of quantification (LOQ)</value>
     <value>7</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 281</value>
+    <value>16, 255</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Size" type="System.Drawing.Size, System.Drawing">
     <value>327, 137</value>
@@ -2669,7 +2747,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;groupBoxFiguresOfMerit.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>3</value>
   </data>
   <data name="lblQuantUnits.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2699,7 +2777,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblQuantUnits.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="lblMsLevel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2726,7 +2804,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblMsLevel.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>7</value>
   </data>
   <data name="lblNormalizationMethod.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2753,7 +2831,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>9</value>
   </data>
   <data name="lblRegressionFit.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2780,7 +2858,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionFit.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>11</value>
   </data>
   <data name="lblRegressionWeighting.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2807,7 +2885,7 @@ the lower limit of quantification (LOQ)</value>
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionWeighting.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>13</value>
   </data>
   <data name="tabQuantification.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -2920,6 +2998,9 @@ the lower limit of quantification (LOQ)</value>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>25</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -2936,7 +3017,7 @@ the lower limit of quantification (LOQ)</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.299, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.195, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2984,6 +3065,6 @@ the lower limit of quantification (LOQ)</value>
     <value>PeptideSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=19.1.1.299, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.195, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

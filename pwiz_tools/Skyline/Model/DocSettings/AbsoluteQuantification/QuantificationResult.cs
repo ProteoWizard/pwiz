@@ -97,4 +97,19 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return TextUtil.SpaceSeparate(calculatedConcentration.ToString(Formats.Concentration), units);
         }
     }
+
+    public class PeptideQuantificationResult : QuantificationResult
+    {
+        public double? IonRatio { get; private set; }
+        public string IonRatioStatus { get; private set; }
+
+        public PeptideQuantificationResult ChangeIonRatio(double? ionRatio, string ionRatioStatus)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.IonRatio = ionRatio;
+                im.IonRatioStatus = ionRatioStatus;
+            });
+        }
+    }
 }

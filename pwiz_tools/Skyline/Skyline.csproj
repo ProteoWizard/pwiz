@@ -434,7 +434,6 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\Entities\AcceptanceCriteria.cs" />
-    <Compile Include="Model\Databinding\Entities\QualitativeMeasurements.cs" />
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
@@ -446,6 +445,7 @@
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
     <Compile Include="Model\DocSettings\DocumentAnnotationUpdater.cs" />
+    <Compile Include="Model\DocSettings\IonRatio.cs" />
     <Compile Include="Model\ElementLocators\AuditLogRef.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
     <Compile Include="Model\ElementLocators\ListRef.cs" />

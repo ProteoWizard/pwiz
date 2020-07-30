@@ -142,6 +142,9 @@ namespace pwiz.Skyline.SettingsUI
             this.addIonMobilityLibraryContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editIonMobilityLibraryCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editIonMobilityLibraryListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lblIonRatioThreshold = new System.Windows.Forms.Label();
+            this.tbxIonRatioThreshold = new System.Windows.Forms.TextBox();
+            this.label20 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
@@ -858,6 +861,9 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabQuantification
             // 
+            this.tabQuantification.Controls.Add(this.label20);
+            this.tabQuantification.Controls.Add(this.tbxIonRatioThreshold);
+            this.tabQuantification.Controls.Add(this.lblIonRatioThreshold);
             this.tabQuantification.Controls.Add(this.groupBoxFiguresOfMerit);
             this.tabQuantification.Controls.Add(this.tbxQuantUnits);
             this.tabQuantification.Controls.Add(this.lblQuantUnits);
@@ -990,6 +996,21 @@ namespace pwiz.Skyline.SettingsUI
             this.editIonMobilityLibraryListContextMenuItem.Name = "editIonMobilityLibraryListContextMenuItem";
             resources.ApplyResources(this.editIonMobilityLibraryListContextMenuItem, "editIonMobilityLibraryListContextMenuItem");
             this.editIonMobilityLibraryListContextMenuItem.Click += new System.EventHandler(this.editIonMobilityLibraryListContextMenuItem_Click);
+            // 
+            // lblIonRatioThreshold
+            // 
+            resources.ApplyResources(this.lblIonRatioThreshold, "lblIonRatioThreshold");
+            this.lblIonRatioThreshold.Name = "lblIonRatioThreshold";
+            // 
+            // tbxIonRatioThreshold
+            // 
+            resources.ApplyResources(this.tbxIonRatioThreshold, "tbxIonRatioThreshold");
+            this.tbxIonRatioThreshold.Name = "tbxIonRatioThreshold";
+            // 
+            // label20
+            // 
+            resources.ApplyResources(this.label20, "label20");
+            this.label20.Name = "label20";
             // 
             // PeptideSettingsUI
             // 
@@ -1145,5 +1166,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button buttonEditListSmallMolInternalStandardTypes;
         private System.Windows.Forms.Label labelSmallMolInternalStandardTypes;
         private System.Windows.Forms.CheckedListBox listBoxSmallMolInternalStandardTypes;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.TextBox tbxIonRatioThreshold;
+        private System.Windows.Forms.Label lblIonRatioThreshold;
     }
 }

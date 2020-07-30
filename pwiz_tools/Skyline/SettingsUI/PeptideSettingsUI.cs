@@ -219,6 +219,7 @@ namespace pwiz.Skyline.SettingsUI
             comboLodMethod.SelectedItem = _peptideSettings.Quantification.LodCalculation;
             tbxMaxLoqBias.Text = _peptideSettings.Quantification.MaxLoqBias.ToString();
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
+            tbxIonRatioThreshold.Text = _peptideSettings.Quantification.IonRatioThreshold.ToString();
 
             UpdateLibraryDriftPeakWidthControls();
         }
@@ -630,6 +631,17 @@ namespace pwiz.Skyline.SettingsUI
                     return null;
                 }
                 quantification = quantification.ChangeMaxLoqCv(maxLoqCv);
+            }
+
+            if (!string.IsNullOrEmpty(tbxIonRatioThreshold.Text.Trim()))
+            {
+                double ionRatioThreshold;
+                if (!helper.ValidateDecimalTextBox(tbxIonRatioThreshold, 0, null, out ionRatioThreshold))
+                {
+                    return null;
+                }
+
+                quantification = quantification.ChangeIonRatioThreshold(ionRatioThreshold);
             }
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
