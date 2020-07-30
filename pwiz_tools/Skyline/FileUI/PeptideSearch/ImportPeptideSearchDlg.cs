@@ -31,7 +31,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -282,7 +281,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             : this(skylineWindow, libraryManager)
         {
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
-            var ionMobilityControlHeight = FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.Height + 2*label1.Height; // Might need real estate to ask about using ion mobility data found in imported spectral libraries
+            var ionMobilityControlHeight = FullScanSettingsControl.IonMobilityFiltering.Height + 2*label1.Height; // Might need real estate to ask about using ion mobility data found in imported spectral libraries
             var adjustedHeight = MinimumSize.Height + ionMobilityControlHeight;
             if (workflowType == Workflow.dda)
             {
@@ -724,11 +723,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var prediction = TransitionSettings.Prediction.ChangePrecursorMassType(precursorMassType);
             Helpers.AssignIfEquals(ref prediction, TransitionSettings.Prediction);
 
+            // Did user change the "use spectral library ion mobility" values?
+            var ionMobilityFilteringOriginal = Document.Settings.TransitionSettings.IonMobilityFiltering;
+            var ionMobilityFiltering = ionMobilityFilteringOriginal;
+            if (FullScanSettingsControl.IonMobilityFiltering.Visible)
+            {
+                try
+                {
+                    ionMobilityFiltering =
+                        FullScanSettingsControl.IonMobilityFiltering.ValidateIonMobilitySettings(true);
+                    if (ionMobilityFiltering == null)
+                    {
+                        return false;
+                    }
+
+                    Helpers.AssignIfEquals(ref ionMobilityFiltering, ionMobilityFilteringOriginal);
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+
             TransitionSettings transitionSettings;
             try
             {
                 transitionSettings = new TransitionSettings(prediction, filter,
-                    TransitionSettings.Libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan);
+                    TransitionSettings.Libraries, TransitionSettings.Integration, TransitionSettings.Instrument, fullScan, ionMobilityFiltering);
 
                 Helpers.AssignIfEquals(ref transitionSettings, TransitionSettings);
             }
@@ -738,31 +759,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
-            // Did user change the "use spectral library ion mobility" values?
-            var peptidePredictionOriginal = Document.Settings.PeptideSettings.Prediction;
-            var peptidePrediction = peptidePredictionOriginal;
-            if (FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.Visible)
-            {
-                try
-                {
-                    peptidePrediction =
-                        FullScanSettingsControl.UseSpectralLibraryIonMobilityValuesControl.ValidateNewSettings(true);
-                    if (peptidePrediction == null)
-                    {
-                        return false;
-                    }
-
-                    Helpers.AssignIfEquals(ref peptidePrediction, peptidePredictionOriginal);
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
-            }
-
             // Only update, if anything changed
-            if (ReferenceEquals(transitionSettings, TransitionSettings) &&
-                ReferenceEquals(peptidePrediction, peptidePredictionOriginal))
+            if (ReferenceEquals(transitionSettings, TransitionSettings))
                 return true;
 
             ModifyDocumentNoUndo(doc =>
@@ -770,8 +768,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 var settingsNew = doc.Settings;
                 if (!ReferenceEquals(transitionSettings, TransitionSettings))
                     settingsNew = settingsNew.ChangeTransitionSettings(transitionSettings);
-                if (!ReferenceEquals(peptidePrediction, peptidePredictionOriginal))
-                    settingsNew = settingsNew.ChangePeptidePrediction(pre => peptidePrediction);
                 return doc.ChangeSettings(settingsNew);
             });
             _fullScanSettingsChanged = true;

@@ -116,6 +116,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string explicit_drift_time_high_energy_offset_msec = "explicit_drift_time_high_energy_offset_msec"; // obsolete, replaced by the more general exolicit_ion_mobility_*
             public const string explicit_ion_mobility = "explicit_ion_mobility";
             public const string explicit_ion_mobility_units = "explicit_ion_mobility_units";
+            public const string ion_mobility_high_energy_offset = "ion_mobility_high_energy_offset";
             public const string explicit_ion_mobility_high_energy_offset = "explicit_ion_mobility_high_energy_offset";
             public const string explicit_ccs_sqa = "explicit_ccs_sqa";
             public const string drift_time_ms1 = "drift_time_ms1"; // Obsolete, replaced by ion_mobility_*

@@ -30,7 +30,6 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -76,17 +75,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             Stopwatch loadStopwatch = new Stopwatch();
             loadStopwatch.Start();
-
-            // Enable use of drift times in spectral library
-            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            bool useDriftTimes = true;
-            RunUI(() =>
-            {
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                peptideSettingsUI.IsUseSpectralLibraryDriftTimes = useDriftTimes;
-                peptideSettingsUI.SpectralLibraryDriftTimeResolvingPower = 50;
-            });
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
@@ -134,6 +122,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Modifications are already set up, so that page should get skipped.
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
+            // Enable use of drift times in spectral library
+            Assume.IsTrue(importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.Visible);
+            Assume.IsTrue(importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.Enabled);
+            var useDriftTimes = true; // For debugging convenience, if you want to see how this works without IM filtering
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.IsUseSpectralLibraryIonMobilities = useDriftTimes);
+            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.IonMobilityFilterResolvingPower = 50);
             RunUI(() => importPeptideSearchDlg.ClickNextButton()); // Accept the full scan settings
 
             // We're on the "Import FASTA" page of the wizard.

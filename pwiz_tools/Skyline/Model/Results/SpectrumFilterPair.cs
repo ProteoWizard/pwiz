@@ -367,13 +367,13 @@ namespace pwiz.Skyline.Model.Results
         {
             if (null != productFilters)
             {
-                var ionMobility = GetIonMobilityWindow();
+                var ionMobilityFilter = GetIonMobilityWindow();
                 foreach (var spectrumProductFilter in productFilters)
                 {
                     spectrumProductFilter.FilterId = listChromKeys.Count;
                     var key = new ChromKey(ModifiedSequence,
                         Q1,
-                        ionMobility.ApplyOffset(highEnergy ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
+                        ionMobilityFilter.ApplyOffset(highEnergy ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
                         spectrumProductFilter.TargetMz,
                         0,  // CE value (Shimadzu SRM only)
                         spectrumProductFilter.FilterWidth,
@@ -412,7 +412,7 @@ namespace pwiz.Skyline.Model.Results
                 // High energy (product ion) scans may have a faster ion mobility, as in Waters MsE, that gets applied elsewhere
                 var width = MaxIonMobilityValue.Value - MinIonMobilityValue.Value;
                 var center = MinIonMobilityValue.Value + 0.5*width;
-                return IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(center, IonMobilityInfo.IonMobility.Units), width, IonMobilityInfo.CollisionalCrossSectionSqA);
+                return IonMobilityFilter.GetIonMobilityFilter(center, IonMobilityInfo.IonMobility.Units, width, IonMobilityInfo.CollisionalCrossSectionSqA);
             }
             else
             {
