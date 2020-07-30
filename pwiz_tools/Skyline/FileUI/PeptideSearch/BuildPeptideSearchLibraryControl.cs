@@ -363,11 +363,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             foreach (string rawFile in ImportPeptideSearch.SearchFilenames)
             {
-                // TODO: MCC fix this to not use hardcoded extension
-                if (!Path.GetExtension(rawFile).ToUpper().Equals(".MGF"))
-                    ImportPeptideSearch.SpectrumSourceFiles.Add(rawFile, new ImportPeptideSearch.FoundResultsFilePossibilities(rawFile){ExactMatch = rawFile});
-                else
-                    ImportPeptideSearch.SpectrumSourceFiles.Add(rawFile, new ImportPeptideSearch.FoundResultsFilePossibilities(rawFile));
+                // TODO: MCC fix this to allow search file to differ from result file when OpenDataSourceDialog can open MS2-only files (mgf, ms2, filtered mzML)
+                ImportPeptideSearch.SpectrumSourceFiles.Add(rawFile, new ImportPeptideSearch.FoundResultsFilePossibilities(rawFile){ExactMatch = rawFile});
             }
 
             return true;

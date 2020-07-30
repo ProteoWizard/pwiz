@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             AdditionalSettings = new Dictionary<string, Setting>
             {
                 {MAX_LOADED_PROTEINS_AT_ONCE, new Setting(MAX_LOADED_PROTEINS_AT_ONCE, 10000, 10, int.MaxValue)},
-                {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 1000, 100, int.MaxValue)}
+                {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 10000, 100, int.MaxValue)}
             };
 
             CurrentFile = 0;

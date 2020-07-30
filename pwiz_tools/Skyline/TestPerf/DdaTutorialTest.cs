@@ -40,9 +40,15 @@ namespace TestPerf
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
+            //IsPauseForCoverShot = true;
             RunPerfTests = true;
 
-            TestFilesZip = @"C:\pwiz.git\pwiz\pwiz_tools\Skyline\TestPerf\DdaTutorialTest.zip";
+            TestFilesZipPaths = new[]
+            {
+                @"https://skyline.gs.washington.edu/tutorials/DdaTutorialTest.zip",
+                @"TestPerf/DdaTutorialViews.zip"
+            };
+
             TestFilesPersistent = new[]
             {
                 "QE_140221_01_UPS1_100fmolspiked.mz5",
@@ -57,12 +63,12 @@ namespace TestPerf
 
         private string GetTestPath(string path)
         {
-            return TestFilesDir.GetTestPath(path);
+            return TestFilesDirs[0].GetTestPath(path);
         }
 
         private IEnumerable<string> SearchFiles
         {
-            get { return TestFilesPersistent.Select(GetTestPath).Take(3); }
+            get { return TestFilesPersistent.Select(GetTestPath).Take(IsPauseForScreenShots ? 3 : 1); }
         }
 
         protected override void DoTest()
@@ -79,15 +85,16 @@ namespace TestPerf
 
             int tutorialPage = 2;
 
-            //RunUI(() => peptideSettingsUI.PickedStaticMods = new[] { OXIDATION_M, CAM_C });
-            //RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { HEAVY_K, HEAVY_R });
-            //RunUI(() => peptideSettingsUI.SelectedInternalStandardTypeName = Resources.LabelTypeComboDriver_LoadList_none);
-            //RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications);
-            //PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modifications tab", tutorialPage++);
+            // Set standard type to None
+            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
 
-            //var docBeforePeptideSettings = SkylineWindow.Document;
-            //OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-            //WaitForDocumentChangeLoaded(docBeforePeptideSettings);
+            RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications);
+            RunUI(() => peptideSettingsUI.SelectedInternalStandardTypeName = Resources.LabelTypeComboDriver_LoadList_none);
+            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modifications tab", tutorialPage++);
+
+            var docBeforePeptideSettings = SkylineWindow.Document;
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            WaitForDocumentChangeLoaded(docBeforePeptideSettings);
 
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
@@ -99,18 +106,23 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => new MsDataFilePath(o)).ToArray();
-                //importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
+                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = false;
                 Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - After Selecting DDA Files page", tutorialPage++);
 
-            // Remove prefix/suffix dialog pops up; accept default behavior
-            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
-            PauseForScreenShot<ImportResultsNameDlg>("Import Results - Common prefix form", tutorialPage++);
-            OkDialog(removeSuffix, () => removeSuffix.YesDialog());
-            WaitForDocumentLoaded();
+            if (IsPauseForScreenShots)
+            {
+                // Remove prefix/suffix dialog pops up; accept default behavior
+                var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                PauseForScreenShot<ImportResultsNameDlg>("Import Results - Common prefix form", tutorialPage++);
+                OkDialog(removeSuffix, () => removeSuffix.YesDialog());
+                WaitForDocumentLoaded();
+            }
+            else
+                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
-            // We're on the "Match Modifications" page. Use document modifications.
+            // We're on the "Match Modifications" page. Add SILAC mods and M+16
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
             PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Import Peptide Search - Add Modifications page", tutorialPage++);
 
@@ -187,30 +199,61 @@ namespace TestPerf
             WaitForConditionUI(60000 * 60, () => searchSucceeded.HasValue);
             Assert.IsTrue(searchSucceeded.Value);
 
-            var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            // clicking 'Finish' (Next) will run ImportFasta
+            var ambiguousDlg = ShowDialog<MessageDlg>(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             PauseForScreenShot<MessageDlg>("Import Peptide Search - Ambiguous Peptides dialog", tutorialPage++);
             RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                 Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
-            //OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
 
-            RunDlg<PeptidesPerProteinDlg>(ambiguousDlg.OkDialog, emptyProteinsDlg =>
+            var emptyProteinsDlg = ShowDialog<PeptidesPerProteinDlg>(() => ambiguousDlg.OkDialog());
+            RunUI(() =>
             {
                 emptyProteinsDlg.RemoveRepeatedPeptides = true;
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                Assert.AreEqual(18898, proteinCount);
-                Assert.AreEqual(46572, peptideCount);
-                Assert.AreEqual(92538, precursorCount);
-                Assert.AreEqual(277612, transitionCount);
+                if (!IsPauseForScreenShots)
+                {
+                    Assert.AreEqual(12343, proteinCount);
+                    Assert.AreEqual(27859, peptideCount);
+                    Assert.AreEqual(55327, precursorCount);
+                    Assert.AreEqual(165981, transitionCount);
+                }
+
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                Assert.AreEqual(6026, proteinCount);
-                Assert.AreEqual(12293, peptideCount);
-                Assert.AreEqual(24359, precursorCount);
-                Assert.AreEqual(73075, transitionCount);
-                emptyProteinsDlg.OkDialog();
-            }, IsPauseForScreenShots, 1000 * 60 * 10);
+                if (!IsPauseForScreenShots)
+                {
+                    Assert.AreEqual(3685, proteinCount);
+                    Assert.AreEqual(7053, peptideCount);
+                    Assert.AreEqual(13963, precursorCount);
+                    Assert.AreEqual(41889, transitionCount);
+                }
+            });
+            PauseForScreenShot("Import Peptide Search - Empty Proteins dialog", tutorialPage++);
+
+            OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
             WaitForDocumentLoaded();
+
             PauseForScreenShot("Main window with peptide search results", tutorialPage++);
+
+            if (IsPauseForCoverShot)
+            {
+                RunUI(() =>
+                {
+                    Settings.Default.ChromatogramFontSize = 14;
+                    Settings.Default.AreaFontSize = 14;
+                    SkylineWindow.AutoZoomBestPeak();
+                    SkylineWindow.ShowPeakAreaLegend(false);
+                    SkylineWindow.ShowChromatogramLegends(false);
+                });
+                RestoreCoverViewOnScreen();
+                
+                RunUI(() => SkylineWindow.SequenceTree.SelectPath(SkylineWindow.Document.MoleculeGroups.Skip(2).First().GetPathTo(2)));
+                WaitForGraphs();
+                RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
+                RunUI(SkylineWindow.FocusDocument);
+                PauseForCoverShot();
+                return;
+            }
 
             RunUI(() => SkylineWindow.SaveDocument());
         }
