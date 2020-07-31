@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 2019:09:10 09:30
+date: 2020:06:09 11:01
 
 saved-by: psi-pi_team
 default-namespace: UNIMOD
@@ -8032,7 +8032,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:405
 name: Phosphoadenosine
-def: "AMP." [RESID:AA0267, RESID:AA0203, RESID:AA0227, RESID:AA0371, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=405]
+def: "AMP." [RESID:AA0371, RESID:AA0227, RESID:AA0203, RESID:AA0267, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=405]
 xref: record_id "405"
 xref: delta_mono_mass "329.05252"
 xref: delta_avge_mass "329.2059"
@@ -8040,7 +8040,7 @@ xref: delta_composition "H(12) C(10) N(5) O(6) P"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2005-10-11 21:34:01"
-xref: date_time_modified "2015-05-01 13:24:04"
+xref: date_time_modified "2020-02-25 09:39:30"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -8062,6 +8062,11 @@ xref: spec_4_hidden "1"
 xref: spec_4_site "H"
 xref: spec_4_position "Anywhere"
 xref: spec_4_classification "Post-translational"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Post-translational"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -16787,7 +16792,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:947
 name: LG-pyrrole
-def: "Levuglandinyl-lysine pyrrole adduct." [PMID:10413514, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=947]
+def: "Levuglandinyl-lysine pyrrole adduct." [PMID:10413514, URL:http\://www.hmdb.ca/metabolites/HMDB0005079, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=947]
 xref: record_id "947"
 xref: delta_mono_mass "316.203845"
 xref: delta_avge_mass "316.4345"
@@ -16795,7 +16800,7 @@ xref: delta_composition "H(28) C(20) O(3)"
 xref: username_of_poster "wridenour"
 xref: group_of_poster ""
 xref: date_time_posted "2010-01-12 01:12:38"
-xref: date_time_modified "2011-06-08 18:01:50"
+xref: date_time_modified "2020-01-21 14:42:42"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -16807,6 +16812,12 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Any N-term"
 xref: spec_2_classification "Post-translational"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "C"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Post-translational"
+xref: spec_3_misc_notes "15-deoxy-PGJ2 (15d-PGJ2) influences multiple signaling pathways by covalently binding with key signaling molecules"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -24019,7 +24030,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1297
 name: Label:13C(3)15N(1)
-def: "13C3 15N1 label for SILAC." [URL:http\://www.pil.sdu.dk/silac_intro.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1297]
+def: "SILAC or AQUA label." [URL:http\://www.pil.sdu.dk/silac_intro.htm, URL:https\://www.thermofisher.com/order/catalog/product/A40010#/A40010, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1297]
 xref: record_id "1297"
 xref: delta_mono_mass "4.007099"
 xref: delta_avge_mass "3.9714"
@@ -24027,13 +24038,18 @@ xref: delta_composition "C(-3) 13C(3) N(-1) 15N"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2011-11-21 14:37:53"
-xref: date_time_modified "2011-11-21 14:37:53"
+xref: date_time_modified "2020-01-09 09:44:52"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "A"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "S"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -25702,7 +25718,8 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1385
 name: Hydroxamic_acid
-def: "Conversion of carboxylic acid to hydroxamic acid." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1385]
+def: "ADP-ribosylation followed by conversion to hydroxamic acid via hydroxylamine." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1385]
+synonym: "Conversion of carboxylic acid to hydroxamic acid" []
 xref: record_id "1385"
 xref: delta_mono_mass "15.010899"
 xref: delta_avge_mass "15.0146"
@@ -25710,7 +25727,7 @@ xref: delta_composition "H N"
 xref: username_of_poster "mbern"
 xref: group_of_poster ""
 xref: date_time_posted "2013-05-16 20:40:47"
-xref: date_time_modified "2013-05-31 15:58:22"
+xref: date_time_modified "2020-03-26 09:49:42"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -44052,37 +44069,43 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1979
 name: Unknown:420
-def: "Unidentified modification of 420.0506 found in open search." [URL:http\://www.matrixscience.com/blog/trying-to-illuminate-proteomics-dark-matter.html, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1979]
-synonym: "The elemental composition should be assumed incorrect" []
+def: "Unidentified modification of 420.0506 found in open search." [URL:http\://www.matrixscience.com/blog/results-round-up-for-the-dark-matter-challenge.html, URL:http\://www.matrixscience.com/blog/trying-to-illuminate-proteomics-dark-matter.html, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1979]
+synonym: "Probable non-covalent adduct of CAM-DTT-DTT-CAM" []
 xref: record_id "1979"
-xref: delta_mono_mass "420.050846"
-xref: delta_avge_mass "420.4049"
-xref: delta_composition "H(14) C(10) N(9) O(6) S(2)"
+xref: delta_mono_mass "420.051719"
+xref: delta_avge_mass "420.5888"
+xref: delta_composition "H(24) C(12) N(2) O(6) S(4)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2017-12-07 10:03:58"
-xref: date_time_modified "2017-12-07 10:03:58"
+xref: date_time_modified "2019-10-17 16:01:58"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
-xref: spec_1_site "D"
-xref: spec_1_position "Anywhere"
+xref: spec_1_site "C-term"
+xref: spec_1_position "Any C-term"
 xref: spec_1_classification "Artefact"
-xref: spec_1_group "1"
-xref: spec_1_hidden "1"
-xref: spec_1_site "E"
-xref: spec_1_position "Anywhere"
-xref: spec_1_classification "Artefact"
+xref: spec_1_neutral_loss_421_mono_mass "420.051719"
+xref: spec_1_neutral_loss_421_avge_mass "420.5888"
+xref: spec_1_neutral_loss_421_flag "false"
+xref: spec_1_neutral_loss_421_composition "H(24) C(12) N(2) O(6) S(4)"
+xref: spec_1_neutral_loss_0_mono_mass "0"
+xref: spec_1_neutral_loss_0_avge_mass "0"
+xref: spec_1_neutral_loss_0_flag "false"
+xref: spec_1_neutral_loss_0_composition "0"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
-xref: spec_2_site "C-term"
-xref: spec_2_position "Any C-term"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
 xref: spec_2_classification "Artefact"
-xref: spec_3_group "3"
-xref: spec_3_hidden "1"
-xref: spec_3_site "N-term"
-xref: spec_3_position "Any N-term"
-xref: spec_3_classification "Artefact"
+xref: spec_2_neutral_loss_0_mono_mass "0"
+xref: spec_2_neutral_loss_0_avge_mass "0"
+xref: spec_2_neutral_loss_0_flag "false"
+xref: spec_2_neutral_loss_0_composition "0"
+xref: spec_2_neutral_loss_421_mono_mass "420.051719"
+xref: spec_2_neutral_loss_421_avge_mass "420.5888"
+xref: spec_2_neutral_loss_421_flag "false"
+xref: spec_2_neutral_loss_421_composition "H(24) C(12) N(2) O(6) S(4)"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -44660,6 +44683,84 @@ xref: spec_6_hidden "1"
 xref: spec_6_site "T"
 xref: spec_6_position "Anywhere"
 xref: spec_6_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2022
+name: Kdo
+def: "Glycosylation with KDO." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2022]
+comment: Manuscript ; in preparation \"Protein O-sialylation by recombinant Gram-positive bacterial flagellin glycosyltransferases heterologously expressed in Escherichia coli\" by Aasawari Khairnar1, Sonali Sunsunwal1, Babu Ponnuswamy2, and T. N. C. Ramya1. rn1CSIR-Institute of Microbial Technology, Sector 39-A, Chandigarh 160036, INDIArn2Centre for Cellular and Molecular Platforms, Bengaluru, INDIArnThis is the primary reference and only report to our knowledge of KDO modification on protein. We will link this primary reference when published.
+synonym: "2-Keto-3-Deoxy-D-Mannooctanoic Acid 3-deoxy-D-manno-oct-2-ulosonic acid" []
+xref: record_id "2022"
+xref: delta_mono_mass "220.058303"
+xref: delta_avge_mass "220.1767"
+xref: delta_composition "H(12) C(8) O(7)"
+xref: username_of_poster "ramya"
+xref: group_of_poster ""
+xref: date_time_posted "2020-02-13 12:07:17"
+xref: date_time_modified "2020-03-20 08:56:20"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "T"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "O-linked glycosylation"
+xref: spec_1_neutral_loss_221_mono_mass "220.058303"
+xref: spec_1_neutral_loss_221_avge_mass "220.1767"
+xref: spec_1_neutral_loss_221_flag "false"
+xref: spec_1_neutral_loss_221_composition "H(12) C(8) O(7)"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "S"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "O-linked glycosylation"
+xref: spec_1_neutral_loss_221_mono_mass "220.058303"
+xref: spec_1_neutral_loss_221_avge_mass "220.1767"
+xref: spec_1_neutral_loss_221_flag "false"
+xref: spec_1_neutral_loss_221_composition "H(12) C(8) O(7)"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2025
+name: Andro-H2O
+def: "Andrographolide with the loss of H2O." [PMID:24445406, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2025]
+xref: record_id "2025"
+xref: delta_mono_mass "332.19876"
+xref: delta_avge_mass "332.4339"
+xref: delta_composition "H(28) C(20) O(4)"
+xref: username_of_poster "nekoooooo"
+xref: group_of_poster ""
+xref: date_time_posted "2020-05-18 08:48:39"
+xref: date_time_modified "2020-05-26 15:47:33"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2027
+name: His+O(2)
+def: "Photo-induced histidine adduct." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2027]
+xref: record_id "2027"
+xref: delta_mono_mass "169.048741"
+xref: delta_avge_mass "169.1381"
+xref: delta_composition "H(7) C(6) N(3) O(3)"
+xref: username_of_poster "tomp1808"
+xref: group_of_poster ""
+xref: date_time_posted "2020-06-01 16:45:37"
+xref: date_time_modified "2020-06-09 11:01:57"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "H"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
 is_a: UNIMOD:0 ! unimod root node
 
 
