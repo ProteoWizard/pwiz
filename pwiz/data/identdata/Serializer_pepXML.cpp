@@ -2040,6 +2040,7 @@ PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
             case MS_Formic_acid:            cut="D"; nocut=""; sense="C"; break;
             case MS_Lys_C:                  cut="K"; nocut="P"; sense="C"; break;
             case MS_Lys_C_P:                cut="K"; nocut=""; sense="C"; break;
+            case MS_Lys_N:                  cut="K"; nocut=""; sense="N"; break;
             case MS_PepsinA:                cut="FL"; nocut=""; sense="C"; break;
             case MS_TrypChymo:              cut="KRFYWL"; nocut="P"; sense="C"; break;
             case MS_Trypsin_P:              cut="KR"; nocut=""; sense="C"; break;
