@@ -169,6 +169,7 @@
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
     <Compile Include="LongWaitDlgResizeTest.cs" />
     <Compile Include="ProxlTest.cs" />
+    <Compile Include="QualitativeIonRatioTest.cs" />
     <Compile Include="ReimportPeakBoundariesTest.cs" />
     <Compile Include="RescoreImportDocumentTest.cs" />
     <Compile Include="RescoreRawChromatogramsTest.cs" />
@@ -481,6 +482,7 @@
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="ProxlTest.zip" />
+    <None Include="QualitativeIonRatioTest.zip" />
     <None Include="QuantitativeTest.zip" />
     <None Include="ReimportPeakBoundariesTest.zip" />
     <None Include="ReintegrateDlgTest.zip" />
