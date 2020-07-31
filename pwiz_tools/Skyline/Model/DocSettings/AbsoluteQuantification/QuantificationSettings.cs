@@ -97,8 +97,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         [Track]
         public double? MaxLoqCv { get; private set; }
 
-
-
         public QuantificationSettings ChangeMaxLoqBias(double? maxLoqBias)
         {
             return ChangeProp(ImClone(this), im => im.MaxLoqBias = maxLoqBias);

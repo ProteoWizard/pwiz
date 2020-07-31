@@ -101,9 +101,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     public class PeptideQuantificationResult : QuantificationResult
     {
         public double? IonRatio { get; private set; }
-        public string IonRatioStatus { get; private set; }
+        public ValueStatus IonRatioStatus { get; private set; }
 
-        public PeptideQuantificationResult ChangeIonRatio(double? ionRatio, string ionRatioStatus)
+        public PeptideQuantificationResult ChangeIonRatio(double? ionRatio, ValueStatus ionRatioStatus)
         {
             return ChangeProp(ImClone(this), im =>
             {

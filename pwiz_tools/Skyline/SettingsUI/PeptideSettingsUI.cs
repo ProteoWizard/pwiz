@@ -192,7 +192,6 @@ namespace pwiz.Skyline.SettingsUI
             tbxMaxLoqBias.Text = _peptideSettings.Quantification.MaxLoqBias.ToString();
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.IonRatioThreshold.ToString();
-
         }
 
         /// <summary>
@@ -1435,6 +1434,19 @@ namespace pwiz.Skyline.SettingsUI
                 return double.Parse(tbxMaxLoqCv.Text.Trim());
             }
             set { tbxMaxLoqCv.Text = value.ToString(); }
+        }
+
+        public double? IonRatioThreshold
+        {
+            get
+            {
+                var text = tbxIonRatioThreshold.Text.Trim();
+                return string.IsNullOrEmpty(text) ? (double?) null : double.Parse(text);
+            }
+            set
+            {
+                tbxIonRatioThreshold.Text = value.ToString();
+            }
         }
 
         public LodCalculation QuantLodMethod

@@ -287,12 +287,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public CalibrationCurve GetCalibrationCurve()
         {
-            var calibrationCurve = GetRawCalibrationCurve();
-            return calibrationCurve;
-        }
-
-        private CalibrationCurve GetRawCalibrationCurve()
-        {
             if (RegressionFit.NONE.Equals(QuantificationSettings.RegressionFit))
             {
                 if (HasInternalStandardConcentration())
@@ -651,7 +645,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             var ionRatio = PeptideQuantifier.GetQualitativeIonRatio(SrmSettings, replicateIndex);
             if (ionRatio.HasValue)
             {
-                string status = GetStatus(ionRatio, GetTargetIonRatio(),
+                var status = ValueStatus.GetStatus(ionRatio, GetTargetIonRatio(),
                     SrmSettings.PeptideSettings.Quantification.IonRatioThreshold / 100);
                 result = result.ChangeIonRatio(ionRatio, status);
             }
@@ -746,52 +740,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return srmSettings.HasResults &&
                    srmSettings.MeasuredResults.Chromatograms.Any(c => !string.IsNullOrEmpty(c.BatchName));
         }
-
-        public static string GetStatus(double? observedValue, double? targetValue, double? targetThreshold)
-        {
-            if (!observedValue.HasValue)
-            {
-                return null;
-            }
-
-            if (double.IsNaN(observedValue.Value) || double.IsNaN(observedValue.Value))
-            {
-                return @"undefined";
-            }
-
-            if (!targetValue.HasValue)
-            {
-                return @"present";
-            }
-
-            if (!targetThreshold.HasValue)
-            {
-                if (observedValue == targetValue)
-                {
-                    return @"equal";
-                }
-
-                if (observedValue < targetValue)
-                {
-                    return @"low";
-                }
-
-                if (observedValue > targetValue)
-                {
-                    return @"high";
-                }
-            }
-
-            if (observedValue >= targetValue - targetValue * targetThreshold &&
-                observedValue <= targetValue + targetValue * targetThreshold)
-            {
-                return @"pass";
-            }
-
-            return @"fail";
-        }
-
-
     }
 
     public struct CalibrationPoint

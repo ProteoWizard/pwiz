@@ -26,6 +26,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
@@ -132,6 +133,11 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(expectedIonRatio.Value, actualIonRatio.Value, message);
                     }
                 }
+            });
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
+            {
+                peptideSettingsUi.IonRatioThreshold = 20;
+                peptideSettingsUi.OkDialog();
             });
         }
 

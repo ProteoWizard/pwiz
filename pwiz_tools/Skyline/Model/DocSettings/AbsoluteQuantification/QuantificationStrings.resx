@@ -282,4 +282,25 @@
   <data name="CalibrationForm_GetFormTitle__All_Replicates_" xml:space="preserve">
     <value>(All Replicates)</value>
   </data>
+  <data name="ValueStatus_UNDEFINED_Undefined" xml:space="preserve">
+    <value>Undefined</value>
+  </data>
+  <data name="ValueStatus_PRESENT_Present" xml:space="preserve">
+    <value>Present</value>
+  </data>
+  <data name="ValueStatus_EQUAL_Equal" xml:space="preserve">
+    <value>Equal</value>
+  </data>
+  <data name="ValueStatus_LOW_Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="ValueStatus_HIGH_High" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="ValueStatus_PASS_Pass" xml:space="preserve">
+    <value>Pass</value>
+  </data>
+  <data name="ValueStatus_FAIL_Fail" xml:space="preserve">
+    <value>Fail</value>
+  </data>
 </root>

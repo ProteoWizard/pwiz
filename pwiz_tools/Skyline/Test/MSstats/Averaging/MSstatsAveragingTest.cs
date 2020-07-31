@@ -62,6 +62,7 @@ namespace pwiz.SkylineTest.MSstats.Averaging
                         (expectedResult.StandardError + result.LinearFitResult.StandardError) * 2, peptide.Peptide.Sequence);
                 }
             }
+
         }
 
         /// <summary>

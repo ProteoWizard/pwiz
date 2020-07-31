@@ -156,11 +156,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new ResultFileKey(Replicate.ReplicateIndex, ChromFileInfoId, OptimizationStep);
         }
 
-        public ResultKey ToResultKey()
-        {
-            return new ResultKey(Replicate, Replicate.ChromatogramSet.IndexOfId(ChromFileInfoId));
-        }
-
         [InvariantDisplayName("ResultFileLocator")]
         public string Locator
         {
