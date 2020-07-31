@@ -123,9 +123,6 @@
   <data name="AbsLog2FoldChange">
     <value>Absolute Log 2 Fold Change</value>
   </data>
-  <data name="AcceptanceCriteria">
-    <value>Acceptance Criteria</value>
-  </data>
   <data name="Accuracy">
     <value>Accuracy</value>
   </data>
@@ -200,6 +197,9 @@
   </data>
   <data name="BatchName">
     <value>Batch Name</value>
+  </data>
+  <data name="BatchTargetIonRatio">
+    <value>Batch Target Ion Ratio</value>
   </data>
   <data name="BeginPos">
     <value>Begin Pos</value>
@@ -495,9 +495,6 @@
   </data>
   <data name="IonRatioStatus">
     <value>Ion Ratio Status</value>
-  </data>
-  <data name="IonRatioThreshold">
-    <value>Ion Ratio Threshold</value>
   </data>
   <data name="IsDecoy">
     <value>Is Decoy</value>
@@ -968,9 +965,6 @@
   </data>
   <data name="QuadraticCoefficient">
     <value>Quadratic Coefficient</value>
-  </data>
-  <data name="QualitativeMeasurements">
-    <value>Qualitative Measurements</value>
   </data>
   <data name="Quantification">
     <value>Quantification</value>

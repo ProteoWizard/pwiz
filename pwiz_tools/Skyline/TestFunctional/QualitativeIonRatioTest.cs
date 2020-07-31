@@ -1,6 +1,23 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.Collections.Generic;
 using System.Linq;
-using System.Net.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -85,18 +102,68 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SequenceTree.SelectedPaths = identityPathsToSelect;
                 SkylineWindow.MarkQuantitative(false);
             });
-            WaitForConditionUI(() => documentGrid.IsComplete);
-            var ppIonRatio = PropertyPath.Root.Property(nameof(Peptide.Results))
-                .DictionaryValues()
-                .Property(nameof(PeptideResult.Quantification))
-                .Property(nameof(PeptideQuantificationResult.IonRatio));
-            var ppReplicate = PropertyPath.Root.Property(nameof(Peptide.Results))
-                .DictionaryValues()
             RunUI(() =>
             {
+                var ppPeptideResults = PropertyPath.Root.Property(nameof(Peptide.Results))
+                    .DictionaryValues();
+                var ppIonRatio = ppPeptideResults
+                    .Property(nameof(PeptideResult.Quantification))
+                    .Property(nameof(PeptideQuantificationResult.IonRatio));
+                var ppReplicate = ppPeptideResults.Property(nameof(PeptideResult.ResultFile))
+                    .Property(nameof(ResultFile.Replicate));
                 var colIonRatio = documentGrid.DataboundGridControl.FindColumn(ppIonRatio);
-                var colPeptide = 
+                var colPeptide = documentGrid.DataboundGridControl.FindColumn(PropertyPath.Root);
+                var colReplicate = documentGrid.DataboundGridControl.FindColumn(ppReplicate);
+                for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
+                {
+                    var row = documentGrid.DataGridView.Rows[iRow];
+                    var replicate = (Replicate) row.Cells[colReplicate.Index].Value;
+                    var peptide = (Peptide) row.Cells[colPeptide.Index].Value;
+                    var actualIonRatio = (double?) row.Cells[colIonRatio.Index].Value;
+                    var expectedIonRatio = CalculateIonRatio(replicate, peptide);
+                    string message = string.Format("Peptide: {0} Replicate: {1}", peptide, replicate);
+                    if (!expectedIonRatio.HasValue)
+                    {
+                        Assert.IsNull(actualIonRatio, message);
+                    }
+                    else
+                    {
+                        Assert.IsNotNull(actualIonRatio, message);
+                        Assert.AreEqual(expectedIonRatio.Value, actualIonRatio.Value, message);
+                    }
+                }
             });
+        }
+
+        public double? CalculateIonRatio(Replicate replicate, Peptide peptide)
+        {
+            var numerator = new List<double>();
+            var denominator = new List<double>();
+            foreach (var transition in peptide.Precursors.SelectMany(precursor=>precursor.Transitions))
+            {
+                var transitionDocNode = transition.DocNode;
+                var chromInfo = transitionDocNode.Results[replicate.ReplicateIndex].FirstOrDefault();
+                if (chromInfo == null || chromInfo.IsEmpty || chromInfo.IsTruncated.GetValueOrDefault())
+                {
+                    continue;
+                }
+
+                if (transition.Quantitative)
+                {
+                    denominator.Add(chromInfo.Area);
+                }
+                else
+                {
+                    numerator.Add(chromInfo.Area);
+                }
+            }
+
+            if (numerator.Count == 0 || denominator.Count == 0)
+            {
+                return null;
+            }
+
+            return numerator.Sum() / denominator.Sum();
         }
     }
 }
