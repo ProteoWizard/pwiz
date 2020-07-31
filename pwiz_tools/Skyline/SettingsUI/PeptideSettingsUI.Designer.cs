@@ -112,6 +112,9 @@ namespace pwiz.Skyline.SettingsUI
             this.tabIntegration = new System.Windows.Forms.TabPage();
             this.label36 = new System.Windows.Forms.Label();
             this.tabQuantification = new System.Windows.Forms.TabPage();
+            this.label20 = new System.Windows.Forms.Label();
+            this.tbxIonRatioThreshold = new System.Windows.Forms.TextBox();
+            this.lblIonRatioThreshold = new System.Windows.Forms.Label();
             this.groupBoxFiguresOfMerit = new System.Windows.Forms.GroupBox();
             this.lblCaclulateLodBy = new System.Windows.Forms.Label();
             this.lblMaxLoqBias = new System.Windows.Forms.Label();
@@ -127,9 +130,6 @@ namespace pwiz.Skyline.SettingsUI
             this.addCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.lblIonRatioThreshold = new System.Windows.Forms.Label();
-            this.tbxIonRatioThreshold = new System.Windows.Forms.TextBox();
-            this.label20 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
@@ -763,9 +763,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabQuantification
             // 
-            this.tabQuantification.Controls.Add(this.label20);
-            this.tabQuantification.Controls.Add(this.tbxIonRatioThreshold);
-            this.tabQuantification.Controls.Add(this.lblIonRatioThreshold);
             this.tabQuantification.Controls.Add(this.groupBoxFiguresOfMerit);
             this.tabQuantification.Controls.Add(this.tbxQuantUnits);
             this.tabQuantification.Controls.Add(this.lblQuantUnits);
@@ -781,10 +778,29 @@ namespace pwiz.Skyline.SettingsUI
             this.tabQuantification.Name = "tabQuantification";
             this.tabQuantification.UseVisualStyleBackColor = true;
             // 
+            // label20
+            // 
+            resources.ApplyResources(this.label20, "label20");
+            this.label20.Name = "label20";
+            // 
+            // tbxIonRatioThreshold
+            // 
+            resources.ApplyResources(this.tbxIonRatioThreshold, "tbxIonRatioThreshold");
+            this.tbxIonRatioThreshold.Name = "tbxIonRatioThreshold";
+            this.helpTip.SetToolTip(this.tbxIonRatioThreshold, resources.GetString("tbxIonRatioThreshold.ToolTip"));
+            // 
+            // lblIonRatioThreshold
+            // 
+            resources.ApplyResources(this.lblIonRatioThreshold, "lblIonRatioThreshold");
+            this.lblIonRatioThreshold.Name = "lblIonRatioThreshold";
+            // 
             // groupBoxFiguresOfMerit
             // 
             resources.ApplyResources(this.groupBoxFiguresOfMerit, "groupBoxFiguresOfMerit");
+            this.groupBoxFiguresOfMerit.Controls.Add(this.label20);
             this.groupBoxFiguresOfMerit.Controls.Add(this.tbxMaxLoqBias);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.tbxIonRatioThreshold);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblIonRatioThreshold);
             this.groupBoxFiguresOfMerit.Controls.Add(this.comboLodMethod);
             this.groupBoxFiguresOfMerit.Controls.Add(this.lblCaclulateLodBy);
             this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqBias);
@@ -871,21 +887,6 @@ namespace pwiz.Skyline.SettingsUI
             this.editCalculatorListContextMenuItem.Name = "editCalculatorListContextMenuItem";
             resources.ApplyResources(this.editCalculatorListContextMenuItem, "editCalculatorListContextMenuItem");
             this.editCalculatorListContextMenuItem.Click += new System.EventHandler(this.editCalculatorListContextMenuItem_Click);
-            // 
-            // lblIonRatioThreshold
-            // 
-            resources.ApplyResources(this.lblIonRatioThreshold, "lblIonRatioThreshold");
-            this.lblIonRatioThreshold.Name = "lblIonRatioThreshold";
-            // 
-            // tbxIonRatioThreshold
-            // 
-            resources.ApplyResources(this.tbxIonRatioThreshold, "tbxIonRatioThreshold");
-            this.tbxIonRatioThreshold.Name = "tbxIonRatioThreshold";
-            // 
-            // label20
-            // 
-            resources.ApplyResources(this.label20, "label20");
-            this.label20.Name = "label20";
             // 
             // PeptideSettingsUI
             // 
