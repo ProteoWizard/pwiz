@@ -665,6 +665,11 @@ modified on disk</value>
   <data name="MoleculeFormula">
     <value>An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</value>
   </data>
+  <data name="MoleculeListAbundance">
+    <value>A number representing the abundance of the molecule list. This number is obtained by averaging the normalized areas of all of the transitions under this Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
+The Molecule List Abundance will be blank if any transitions have missing values in this replicate, unless the normalization method is ratio to a label.</value>
+  </data>
   <data name="MoleculeListLocator">
       <value>Unique identifier of the molecule list within the document. This begins with "MoleculeGroup:".</value>
     <comment>Do not translate "MoleculeGroup:".</comment>
@@ -677,6 +682,12 @@ modified on disk</value>
   </data>
   <data name="MoleculeList">
     <value>A grouping of molecules in a Skyline document.</value>
+  </data>
+  <data name="MoleculeListResult">
+    <value>Molecule List Result</value>
+  </data>
+  <data name="MoleculeListResults">
+    <value>Molecule List Results</value>
   </data>
   <data name="MoleculeLists">
     <value>The top level set of the groupings of all of the molecules in a Skyline document.</value>
@@ -934,6 +945,12 @@ the decoy m/z.</value>
   <data name="Protein">
     <value>Protein</value>
   </data>
+  <data name="ProteinAbundance">
+    <value>A number representing the abundance of the protein in the particular replicate.
+The Protein Abundance is calculated by taking the average of the normalized areas of all of the Transitions under the Protein.
+The Transition Areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
+The Protein Abundance will be blank if any transitions have missing peak areas in the Replicate, unless the normalization method is ratio to a label.</value>
+  </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
   </data>
@@ -959,6 +976,12 @@ Edit menu</value>
   </data>
   <data name="ProteinPreferredName">
     <value>Protein Preferred Name</value>
+  </data>
+  <data name="ProteinResult">
+    <value>Protein Result</value>
+  </data>
+  <data name="ProteinResults">
+    <value>Protein Results</value>
   </data>
   <data name="Proteins">
     <value>Proteins</value>
@@ -1074,9 +1097,6 @@ If the Precursor Concentration is specified on any of the Precursors in this Pep
     <value>Unique identifier of the result file within the document. This begins with "ResultFile:/" followed by the replicate name. 
 This usually ends with the result filename, but may have additional attributes such as the full path if the filename is not unique within the replicate.</value>
     <comment>Do not translate "ResultFile:/".</comment>
-  </data>
-  <data name="Results">
-    <value>Results</value>
   </data>
   <data name="RetentionTime">
     <value>Retention time at the maximum intensity for a transition peak.</value>

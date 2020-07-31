@@ -681,8 +681,17 @@
   <data name="Molecule">
     <value>Molecule</value>
   </data>
+  <data name="MoleculeListAbundance">
+    <value>Molecule List Abundance</value>
+  </data>
   <data name="MoleculeListLocator">
     <value>Molecule List Locator</value>
+  </data>
+  <data name="MoleculeListResult">
+    <value>Molecule List Result</value>
+  </data>
+  <data name="MoleculeListResults">
+    <value>Molecule List Results</value>
   </data>
   <data name="MoleculeName">
     <value>Molecule Name</value>
@@ -915,6 +924,9 @@
   <data name="Protein">
     <value>Protein</value>
   </data>
+  <data name="ProteinAbundance">
+    <value>Protein Abundance</value>
+  </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
   </data>
@@ -935,6 +947,12 @@
   </data>
   <data name="ProteinPreferredName">
     <value>Protein Preferred Name</value>
+  </data>
+  <data name="ProteinResult">
+    <value>Protein Result</value>
+  </data>
+  <data name="ProteinResults">
+    <value>Protein Results</value>
   </data>
   <data name="Proteins">
     <value>Proteins</value>
@@ -1046,9 +1064,6 @@
   </data>
   <data name="ResultFileLocator">
     <value>Result File Locator</value>
-  </data>
-  <data name="Results">
-    <value>Results</value>
   </data>
   <data name="RetentionTime">
     <value>Retention Time</value>

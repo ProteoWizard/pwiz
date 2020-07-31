@@ -1816,6 +1816,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecule List Abundance.
+        /// </summary>
+        public static string MoleculeListAbundance {
+            get {
+                return ResourceManager.GetString("MoleculeListAbundance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Molecule List Locator.
         /// </summary>
         public static string MoleculeListLocator {
@@ -1839,6 +1848,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MoleculeListNote {
             get {
                 return ResourceManager.GetString("MoleculeListNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule List Result.
+        /// </summary>
+        public static string MoleculeListResult {
+            get {
+                return ResourceManager.GetString("MoleculeListResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule List Results.
+        /// </summary>
+        public static string MoleculeListResults {
+            get {
+                return ResourceManager.GetString("MoleculeListResults", resourceCulture);
             }
         }
         
@@ -2536,6 +2563,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Protein Abundance.
+        /// </summary>
+        public static string ProteinAbundance {
+            get {
+                return ResourceManager.GetString("ProteinAbundance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein Accession.
         /// </summary>
         public static string ProteinAccession {
@@ -2595,6 +2631,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ProteinPreferredName {
             get {
                 return ResourceManager.GetString("ProteinPreferredName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Result.
+        /// </summary>
+        public static string ProteinResult {
+            get {
+                return ResourceManager.GetString("ProteinResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Results.
+        /// </summary>
+        public static string ProteinResults {
+            get {
+                return ResourceManager.GetString("ProteinResults", resourceCulture);
             }
         }
         
@@ -2928,15 +2982,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ResultFileLocator {
             get {
                 return ResourceManager.GetString("ResultFileLocator", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Results.
-        /// </summary>
-        public static string Results {
-            get {
-                return ResourceManager.GetString("Results", resourceCulture);
             }
         }
         
