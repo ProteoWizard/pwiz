@@ -31,6 +31,14 @@
 #ifdef PWIZ_READER_THERMO
 #include "Reader_Thermo_Detail.hpp"
 #include <windows.h>
+
+string modelTypeToName(InstrumentModelType modelType)
+{
+    for (const auto& mapping : nameToModelMapping)
+        if (mapping.modelType == modelType)
+            return mapping.name;
+    return "Unknown";
+}
 #endif
 
 struct IsRawFile : public pwiz::util::TestPathPredicate
@@ -40,14 +48,6 @@ struct IsRawFile : public pwiz::util::TestPathPredicate
         return bal::to_lower_copy(BFS_STRING(bfs::path(rawpath).extension())) == ".raw";
     }
 };
-
-string modelTypeToName(InstrumentModelType modelType)
-{
-    for (const auto& mapping : nameToModelMapping)
-        if (mapping.modelType == modelType)
-            return mapping.name;
-    return "Unknown";
-}
 
 int main(int argc, char* argv[])
 {
