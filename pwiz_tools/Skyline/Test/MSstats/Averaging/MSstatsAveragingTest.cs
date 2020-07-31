@@ -16,12 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataAnalysis.Matrices;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.MSstats.Averaging
@@ -34,7 +42,7 @@ namespace pwiz.SkylineTest.MSstats.Averaging
         {
             var srmDocument = LoadRatPlasmaDocument();
             var documentContainer = new MemoryDocumentContainer();
-            documentContainer.SetDocument(documentContainer.Document, srmDocument);
+            documentContainer.SetDocument(srmDocument, documentContainer.Document);
             GroupComparisonModel model = new GroupComparisonModel(documentContainer, null);
             model.GroupComparisonDef = GroupComparisonDef.EMPTY.ChangeControlAnnotation("Condition")
                 .ChangeControlValue("Healthy")
@@ -55,6 +63,67 @@ namespace pwiz.SkylineTest.MSstats.Averaging
                 }
             }
 
+        }
+
+        /// <summary>
+        /// Tests that the Abundance value on the ProteinResult can be used to get the same fold change values
+        /// </summary>
+        [TestMethod]
+        public void TestProteinAbundance()
+        {
+            var srmDocument = LoadRatPlasmaDocument();
+            var documentContainer = new MemoryDocumentContainer();
+            documentContainer.SetDocument(srmDocument, documentContainer.Document);
+            var skylineDataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
+            GroupComparisonModel model = new GroupComparisonModel(documentContainer, null);
+            model.GroupComparisonDef = GroupComparisonDef.EMPTY.ChangeControlAnnotation("Condition")
+                .ChangeControlValue("Healthy")
+                .ChangeSummarizationMethod(SummarizationMethod.AVERAGING)
+                .ChangePerProtein(true);
+            var groupComparer = new GroupComparer(model.GroupComparisonDef, srmDocument, new QrFactorizationCache());
+            foreach (var moleculeGroup in srmDocument.MoleculeGroups)
+            {
+                if (moleculeGroup.Molecules.Any(mol => null != mol.GlobalStandardType))
+                {
+                    continue;
+                }
+                var foldChangeResult = groupComparer.CalculateFoldChange(new GroupComparisonSelector(moleculeGroup, null, IsotopeLabelType.light, null, new GroupIdentifier("Diseased")), null);
+                var xValues = new List<double>();
+                var yValues = new List<double>();
+                var protein = new Protein(skylineDataSchema, new IdentityPath(moleculeGroup.PeptideGroup));
+                foreach (var proteinResult in protein.Results.Values)
+                {
+                    var abundance = proteinResult.Abundance;
+                    if (!abundance.HasValue)
+                    {
+                        continue;
+                    }
+
+                    var condition = proteinResult.Replicate.ChromatogramSet.Annotations.GetAnnotation("Condition");
+                    if (condition == "Healthy")
+                    {
+                        xValues.Add(0);
+                    }
+                    else if (condition == "Diseased")
+                    {
+                        xValues.Add(1);
+                    }
+                    yValues.Add(Math.Log(abundance.Value));
+                }
+                Assert.AreEqual(xValues.Count, foldChangeResult.ReplicateCount);
+
+                if (!xValues.Any())
+                {
+                    continue;
+                }
+                var yStatistics = new Statistics(yValues);
+                var xStatistics = new Statistics(xValues);
+                var slope = yStatistics.Slope(xStatistics);
+                var actualFoldChange = Math.Exp(slope);
+                var expectedFoldChange = Math.Pow(2.0, foldChangeResult.LinearFitResult.EstimatedValue);
+
+                AssertEx.AreEqual(expectedFoldChange, actualFoldChange, .01);
+            }
         }
 
         private SrmDocument LoadRatPlasmaDocument()
