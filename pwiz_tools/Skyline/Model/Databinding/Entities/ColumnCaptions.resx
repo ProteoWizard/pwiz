@@ -198,8 +198,8 @@
   <data name="BatchName">
     <value>Batch Name</value>
   </data>
-  <data name="BatchTargetIonRatio">
-    <value>Batch Target Ion Ratio</value>
+  <data name="BatchTargetQualitativeIonRatio">
+    <value>Batch Target Qualitative Ion Ratio</value>
   </data>
   <data name="BeginPos">
     <value>Begin Pos</value>
@@ -489,12 +489,6 @@
   </data>
   <data name="IonName">
     <value>Ion Name</value>
-  </data>
-  <data name="IonRatio">
-    <value>Ion Ratio</value>
-  </data>
-  <data name="IonRatioStatus">
-    <value>Ion Ratio Status</value>
   </data>
   <data name="IsDecoy">
     <value>Is Decoy</value>
@@ -966,6 +960,12 @@
   <data name="QuadraticCoefficient">
     <value>Quadratic Coefficient</value>
   </data>
+  <data name="QualitativeIonRatio">
+    <value>Qualitative Ion Ratio</value>
+  </data>
+  <data name="QualitativeIonRatioStatus">
+    <value>Qualitative Ion Ratio Status</value>
+  </data>
   <data name="Quantification">
     <value>Quantification</value>
   </data>
@@ -1137,8 +1137,8 @@
   <data name="SummaryMessage">
     <value>Summary Message</value>
   </data>
-  <data name="TargetIonRatio">
-    <value>Target Ion Ratio</value>
+  <data name="TargetQualitativeIonRatio">
+    <value>Target Qualitative Ion Ratio</value>
   </data>
   <data name="ThreeLetterCodes"><value>Three Letter Codes</value></data>
   <data name="TicArea">

@@ -304,11 +304,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Batch Target Ion Ratio.
+        ///   Looks up a localized string similar to Batch Target Qualitative Ion Ratio.
         /// </summary>
-        public static string BatchTargetIonRatio {
+        public static string BatchTargetQualitativeIonRatio {
             get {
-                return ResourceManager.GetString("BatchTargetIonRatio", resourceCulture);
+                return ResourceManager.GetString("BatchTargetQualitativeIonRatio", resourceCulture);
             }
         }
         
@@ -1191,24 +1191,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string IonName {
             get {
                 return ResourceManager.GetString("IonName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ion Ratio.
-        /// </summary>
-        public static string IonRatio {
-            get {
-                return ResourceManager.GetString("IonRatio", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ion Ratio Status.
-        /// </summary>
-        public static string IonRatioStatus {
-            get {
-                return ResourceManager.GetString("IonRatioStatus", resourceCulture);
             }
         }
         
@@ -2689,6 +2671,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Qualitative Ion Ratio.
+        /// </summary>
+        public static string QualitativeIonRatio {
+            get {
+                return ResourceManager.GetString("QualitativeIonRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Qualitative Ion Ratio Status.
+        /// </summary>
+        public static string QualitativeIonRatioStatus {
+            get {
+                return ResourceManager.GetString("QualitativeIonRatioStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Quantification.
         /// </summary>
         public static string Quantification {
@@ -3211,11 +3211,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Target Ion Ratio.
+        ///   Looks up a localized string similar to Target Qualitative Ion Ratio.
         /// </summary>
-        public static string TargetIonRatio {
+        public static string TargetQualitativeIonRatio {
             get {
-                return ResourceManager.GetString("TargetIonRatio", resourceCulture);
+                return ResourceManager.GetString("TargetQualitativeIonRatio", resourceCulture);
             }
         }
         

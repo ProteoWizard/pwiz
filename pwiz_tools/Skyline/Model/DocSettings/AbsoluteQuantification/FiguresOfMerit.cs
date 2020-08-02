@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public string Units { get; private set; }
 
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? TargetIonRatio { get; private set; }
+        public double? TargetQualitativeIonRatio { get; private set; }
 
         public FiguresOfMerit ChangeLimitOfDetection(double? limitOfDetection)
         {
@@ -55,9 +55,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.Units = units);
         }
 
-        public FiguresOfMerit ChangeTargetIonRatio(double? targetIonRatio)
+        public FiguresOfMerit ChangeTargetQualitativeIonRatio(double? targetIonRatio)
         {
-            return ChangeProp(ImClone(this), im => im.TargetIonRatio = targetIonRatio);
+            return ChangeProp(ImClone(this), im => im.TargetQualitativeIonRatio = targetIonRatio);
         }
 
         public override string ToString()

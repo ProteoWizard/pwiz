@@ -359,7 +359,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 figuresOfMerit = figuresOfMerit.ChangeUnits(QuantificationSettings.Units);
             }
 
-            figuresOfMerit = figuresOfMerit.ChangeTargetIonRatio(GetTargetIonRatio());
+            figuresOfMerit = figuresOfMerit.ChangeTargetQualitativeIonRatio(GetTargetIonRatio());
             return figuresOfMerit;
         }
 
@@ -646,7 +646,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             if (ionRatio.HasValue)
             {
                 var status = ValueStatus.GetStatus(ionRatio, GetTargetIonRatio(),
-                    SrmSettings.PeptideSettings.Quantification.IonRatioThreshold / 100);
+                    SrmSettings.PeptideSettings.Quantification.QualitativeIonRatioThreshold / 100);
                 result = result.ChangeIonRatio(ionRatio, status);
             }
 

@@ -2716,6 +2716,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Qualitative ion ratio threshold.
+        /// </summary>
+        public static string QuantificationSettings_QualitativeIonRatioThreshold {
+            get {
+                return ResourceManager.GetString("QuantificationSettings_QualitativeIonRatioThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Regression fit.
         /// </summary>
         public static string QuantificationSettings_RegressionFit {
