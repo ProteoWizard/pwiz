@@ -599,6 +599,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         ImportPeptideSearch.SearchFilenames[i] = outFilePath;
                     }
                     BuildPepSearchLibControl.AddSearchFiles(ImportPeptideSearch.SearchFilenames);
+                    ImportPeptideSearch.SearchEngine.Dispose();
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
                     {

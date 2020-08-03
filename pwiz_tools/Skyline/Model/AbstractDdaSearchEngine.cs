@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public abstract class AbstractDdaSearchEngine
+    public abstract class AbstractDdaSearchEngine : IDisposable
     {
         public abstract string[] FragmentIons { get; }
         public abstract string EngineName { get; }
@@ -155,5 +155,7 @@ namespace pwiz.Skyline.Model
         }
 
         public abstract void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods);
+
+        public abstract void Dispose();
     }
 }

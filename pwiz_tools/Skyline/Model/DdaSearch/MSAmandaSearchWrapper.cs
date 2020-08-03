@@ -40,8 +40,8 @@ namespace pwiz.Skyline.Model.DdaSearch
 {
     public class MSAmandaSearchWrapper : AbstractDdaSearchEngine
     {
-        internal MSAmandaSettings Settings { get; private set; } = new MSAmandaSettings();
-        private static MSHelper helper = new MSHelper();
+        internal MSAmandaSettings Settings { get; }
+        private MSHelper helper;
         private SettingsFile AvailableSettings;
         private OutputMzid mzID;
         private MSAmandaSearch SearchEngine;
@@ -66,11 +66,9 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public MSAmandaSearchWrapper()
         {
-            if (!helper.IsInitialized())
-            {
-                helper.InitLogWriter(_baseDir);
-                
-            }
+            Settings = new MSAmandaSettings();
+            helper = new MSHelper();
+            helper.InitLogWriter(_baseDir);
             helper.SearchProgressChanged += Helper_SearchProgressChanged;
             var folderForMappings = Path.Combine(_baseDir, AmandaMap);
             // creates dir if not existing
@@ -94,11 +92,17 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             AdditionalSettings = new Dictionary<string, Setting>
             {
-                {MAX_LOADED_PROTEINS_AT_ONCE, new Setting(MAX_LOADED_PROTEINS_AT_ONCE, 10000, 10, int.MaxValue)},
+                {MAX_LOADED_PROTEINS_AT_ONCE, new Setting(MAX_LOADED_PROTEINS_AT_ONCE, 100000, 10, int.MaxValue)},
                 {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 10000, 100, int.MaxValue)}
             };
 
             CurrentFile = 0;
+        }
+
+        public override void Dispose()
+        {
+            helper.Dispose();
+            //AvailableSettings = new SettingsFile(null, Settings, mzID);
         }
 
         private void Helper_SearchProgressChanged(string message)
@@ -118,13 +122,15 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
             else
             {
-                MSAmandaEnzyme enz = new MSAmandaEnzyme() 
+                MSAmandaEnzyme enz = new MSAmandaEnzyme()
                 {
-                  Name = enzyme.Name,
-                  CleavageSites = enzyme.IsNTerm ? enzyme.CleavageN : enzyme.CleavageC,
-                  CleavageInhibitors = enzyme.IsNTerm ? enzyme.RestrictN : enzyme.RestrictC,
-                  Offset= enzyme.IsNTerm? 0 : 1,
-                  Specificity = enzyme.IsSemiCleaving ? MSAmandaEnzyme.CLEAVAGE_SPECIFICITY.SEMI : MSAmandaEnzyme.CLEAVAGE_SPECIFICITY.FULL
+                    Name = enzyme.Name,
+                    CleavageSites = enzyme.IsNTerm ? enzyme.CleavageN : enzyme.CleavageC,
+                    CleavageInhibitors = enzyme.IsNTerm ? enzyme.RestrictN : enzyme.RestrictC,
+                    Offset = enzyme.IsNTerm ? 0 : 1,
+                    Specificity = enzyme.IsSemiCleaving
+                        ? MSAmandaEnzyme.CLEAVAGE_SPECIFICITY.SEMI
+                        : MSAmandaEnzyme.CLEAVAGE_SPECIFICITY.FULL
                 };
                 Settings.MyEnzyme = enz;
                 Settings.MissedCleavages = maxMissedCleavages;
@@ -229,6 +235,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                 helper.WriteMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message), true);
                 success = false;
             }
+            finally
+            {
+                helper.Dispose();
+            }
 
             if (tokenSource.IsCancellationRequested)
                 success = false;
@@ -279,11 +289,11 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private Modification GenerateNewModification(StaticMod mod, char a)
         {
-            return new Modification(mod.ShortName, mod.Name, mod.MonoisotopicMass.HasValue ? mod.MonoisotopicMass.Value : 0.0,
-                mod.AverageMass.HasValue ? mod.AverageMass.Value : 0.0, a, !mod.IsVariable, mod.Losses.Select(l => l.MonoisotopicMass).ToArray(),
+            return new Modification(mod.ShortName, mod.Name, mod.MonoisotopicMass ?? 0.0,
+                mod.AverageMass ?? 0.0, a, !mod.IsVariable, mod.Losses.Select(l => l.MonoisotopicMass).ToArray(),
                 mod.Terminus.HasValue && mod.Terminus.Value == ModTerminus.N,
                 mod.Terminus.HasValue && mod.Terminus.Value == ModTerminus.C,
-                mod.UnimodId.HasValue ? mod.UnimodId.Value : 0, false);
+                mod.UnimodId ?? 0, false);
         }
   }
 }

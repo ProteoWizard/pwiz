@@ -41,7 +41,7 @@ namespace TestPerf
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
             //IsPauseForCoverShot = true;
-            RunPerfTests = true;
+            //RunPerfTests = true;
 
             TestFilesZipPaths = new[]
             {

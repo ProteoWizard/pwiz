@@ -32,6 +32,8 @@
             this.txtSearchProgress = new System.Windows.Forms.TextBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.lblProgress = new System.Windows.Forms.Label();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.showTimestampsCheckbox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // txtSearchProgress
@@ -53,10 +55,25 @@
             resources.ApplyResources(this.lblProgress, "lblProgress");
             this.lblProgress.Name = "lblProgress";
             // 
+            // progressBar
+            // 
+            resources.ApplyResources(this.progressBar, "progressBar");
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            // 
+            // showTimestampsCheckbox
+            // 
+            resources.ApplyResources(this.showTimestampsCheckbox, "showTimestampsCheckbox");
+            this.showTimestampsCheckbox.Name = "showTimestampsCheckbox";
+            this.showTimestampsCheckbox.UseVisualStyleBackColor = true;
+            this.showTimestampsCheckbox.CheckedChanged += new System.EventHandler(this.showTimestampsCheckbox_CheckedChanged);
+            // 
             // DDASearchControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.showTimestampsCheckbox);
+            this.Controls.Add(this.progressBar);
             this.Controls.Add(this.lblProgress);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.txtSearchProgress);
@@ -71,5 +88,7 @@
         private System.Windows.Forms.TextBox txtSearchProgress;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label lblProgress;
+        private System.Windows.Forms.ProgressBar progressBar;
+        private System.Windows.Forms.CheckBox showTimestampsCheckbox;
     }
 }

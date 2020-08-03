@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -37,6 +39,27 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public delegate void SearchFinishedDelegate(bool success);
         public event SearchFinishedDelegate OnSearchFinished;
 
+        private class ProgressEntry
+        {
+            public ProgressEntry(DateTime timestamp, string message)
+            {
+                Timestamp = timestamp;
+                Message = message;
+            }
+
+            public DateTime Timestamp { get; }
+            public string Message { get; }
+
+            public string ToString(bool showTimestamp)
+            {
+                // ReSharper disable LocalizableElement
+                return showTimestamp ? $"[{Timestamp.ToString("yyyy/MM/dd HH:mm:ss")}]  {Message}" : Message;
+                // ReSharper restore LocalizableElement
+            }
+        }
+
+        private List<ProgressEntry> _progressTextItems = new List<ProgressEntry>();
+
         public DDASearchControl(ImportPeptideSearch importPeptideSearch)
         {
             InitializeComponent();
@@ -52,8 +75,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void UpdateSearchEngineProgress(IProgressStatus status)
         {
-            txtSearchProgress.AppendText(status.Message + Environment.NewLine);
+            var newEntry = new ProgressEntry(DateTime.Now, status.Message);
+            _progressTextItems.Add(newEntry);
+            txtSearchProgress.AppendText($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
             UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, status.PercentComplete);
+            progressBar.Value = status.PercentComplete;
         }
 
         private InstrumentSetting GenerateIntrumentSettings()
@@ -72,9 +98,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 ImportPeptideSearch.SearchEngine.SearchProgressChanged += SearchEngine_MessageNotificationEvent;
             }
             txtSearchProgress.Text = string.Empty;
+            _progressTextItems.Clear();
             btnCancel.Enabled = true;
 
             ProgressStatus status = new ProgressStatus(Resources.DDASearchControl_SearchProgress_Starting_search);
+            progressBar.Visible = true;
 
             UpdateSearchEngineProgress(status);
             cancelToken = new CancellationTokenSource();
@@ -83,6 +111,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (cancelToken.IsCancellationRequested)
             {
                 UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled));
+                progressBar.Visible = false;
             }
             else if (!t.Result)
             {
@@ -109,6 +138,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             cancelToken.Cancel();
             btnCancel.Enabled = false;
+        }
+
+        private void showTimestampsCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            RefreshProgressTextbox();
+        }
+
+        private void RefreshProgressTextbox()
+        {
+            txtSearchProgress.Clear();
+            foreach (var entry in _progressTextItems)
+                txtSearchProgress.AppendText($@"{entry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
         }
     }
 }
