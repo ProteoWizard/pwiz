@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -295,11 +296,7 @@ namespace pwiz.Skyline.Util
                     {
                         if (!isDesired)
                         {
-                            parent.TabPages.Remove(tabPage);
-                            if (toolTipControls != null && toolTipControls.Count > 0)
-                            {
-                                PurgeToolTips(toolTipControls, tabPage);
-                            }
+                            FormUtil.RemoveTabPage(tabPage, toolTipControls);
                         }
                         return;
                     }
@@ -312,25 +309,6 @@ namespace pwiz.Skyline.Util
                 }
 
                 Assume.Fail();
-            }
-
-            /// <summary>
-            /// Set the tooltips for the control and all of its children to null.
-            /// The ToolTip control sometimes gets confused if any of the tooltips belong to
-            /// controls that are no longer part of the form.
-            /// (ToolTip.TopLevelControl sometimes gets set to a bogus value)
-            /// </summary>
-            public static void PurgeToolTips(IList<ToolTip> toolTipControls, Control control)
-            {
-                foreach (var toolTipControl in toolTipControls)
-                {
-                    toolTipControl.SetToolTip(control, null);
-                }
-
-                foreach (var child in control.Controls.OfType<Control>())
-                {
-                    PurgeToolTips(toolTipControls, child);
-                }
             }
 
             public void NoteModeUIInvariantComponent(IComponent component)
