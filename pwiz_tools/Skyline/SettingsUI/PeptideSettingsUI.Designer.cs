@@ -501,7 +501,6 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControl1.Controls.Add(this.tabQuantification);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.ControlRemoved += new System.Windows.Forms.ControlEventHandler(this.tabControl1_ControlRemoved);
             // 
             // tabDigestion
             // 

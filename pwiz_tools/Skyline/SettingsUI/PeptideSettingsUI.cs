@@ -1735,32 +1735,5 @@ namespace pwiz.Skyline.SettingsUI
             get { return (PeptidePick) comboMatching.SelectedIndex; }
             set { comboMatching.SelectedIndex = (int) value; }
         }
-
-        private void tabControl1_ControlRemoved(object sender, ControlEventArgs e)
-        {
-            var tooltipControls = components.Components.OfType<ToolTip>().ToList();
-            if (!tooltipControls.Any())
-            {
-                return;
-            }
-            PurgeTooltips(tooltipControls, e.Control);
-        }
-        /// <summary>
-        /// Null out the tooltips for all of the controls that are being removed from the Form.
-        /// <see cref="ToolTip"/> class may get confused if some of the controls with tips
-        /// are no longer attached to the form.
-        /// </summary>
-        private void PurgeTooltips(IList<ToolTip> tooltipControls, Control control)
-        {
-            foreach (var tooltip in tooltipControls)
-            {
-                tooltip.SetToolTip(control, null);
-            }
-
-            foreach (var child in control.Controls.OfType<Control>())
-            {
-                PurgeTooltips(tooltipControls, child);
-            }
-        }
     }
 }
