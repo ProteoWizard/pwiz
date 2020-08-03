@@ -2452,6 +2452,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (info.IsGoodPeak(Settings.TransitionSettings.Integration.IsIntegrateAll))
                         PeakCount++;
+                    
                     if (nodeTran.ExplicitQuantitative)
                     {
                         Area = (Area ?? 0) + info.Area;
@@ -2462,7 +2463,7 @@ namespace pwiz.Skyline.Model
                             massError += (info.MassError.Value - massError) * info.Area / Area.Value;
                             MassError = (float)massError;
                         }
-                        if (info.Height > MaxHeight)
+                        if (info.Height > MaxHeight || !RetentionTime.HasValue && info.Height >= MaxHeight)
                         {
                             MaxHeight = info.Height;
                             RetentionTime = info.RetentionTime;
