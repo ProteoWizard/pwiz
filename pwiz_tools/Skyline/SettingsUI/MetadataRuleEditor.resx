@@ -216,11 +216,11 @@
   <data name="colSource.HeaderText" xml:space="preserve">
     <value>Source</value>
   </data>
-  <metadata name="colFilter.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <metadata name="colPattern.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="colFilter.HeaderText" xml:space="preserve">
-    <value>Filter</value>
+  <data name="colPattern.HeaderText" xml:space="preserve">
+    <value>Pattern</value>
   </data>
   <metadata name="colReplacement.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -552,10 +552,10 @@
   <data name="&gt;&gt;colSource.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;colFilter.Name" xml:space="preserve">
-    <value>colFilter</value>
+  <data name="&gt;&gt;colPattern.Name" xml:space="preserve">
+    <value>colPattern</value>
   </data>
-  <data name="&gt;&gt;colFilter.Type" xml:space="preserve">
+  <data name="&gt;&gt;colPattern.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colReplacement.Name" xml:space="preserve">

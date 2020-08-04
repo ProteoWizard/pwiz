@@ -153,6 +153,8 @@
             this.Controls.Add(this.lblTarget);
             this.Controls.Add(this.tbxRegularExpression);
             this.Controls.Add(this.panelButtons);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "MetadataRuleStepEditor";
             this.ShowIcon = false;
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();

@@ -167,6 +167,7 @@
     <Compile Include="GroupComparisonRefineTest.cs" />
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
     <Compile Include="LongWaitDlgResizeTest.cs" />
+    <Compile Include="MetadataRuleTest.cs" />
     <Compile Include="ProxlTest.cs" />
     <Compile Include="ReimportPeakBoundariesTest.cs" />
     <Compile Include="RescoreImportDocumentTest.cs" />

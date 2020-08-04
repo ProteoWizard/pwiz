@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -7,6 +25,7 @@ using System.Windows.Forms;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -180,7 +199,7 @@ namespace pwiz.Skyline.SettingsUI
             var rowIndexes = GetSelectedRuleRowIndexes().ToList();
             btnUp.Enabled = ListViewHelper.IsMoveEnabled(_ruleRowList.Count, rowIndexes, true);
             btnDown.Enabled = ListViewHelper.IsMoveEnabled(_ruleRowList.Count, rowIndexes, false);
-            btnEdit.Enabled = rowIndexes.Count == 1;
+            btnEdit.Enabled = rowIndexes.Count <= 1;
             btnRemove.Enabled = rowIndexes.Count > 0;
         }
 
@@ -197,19 +216,11 @@ namespace pwiz.Skyline.SettingsUI
             var columns = new List<ColumnSpec>();
             columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(ExtractedMetadataResultRow.SourceObject))).SetCaption(ColumnCaptions.ResultFile));
             columns.Add(new ColumnSpec(
-                PropertyPath.Root.Property(nameof(ExtractedMetadataResultRow.Values)).LookupAllItems()
-                    .Property("Value").Property(nameof(ExtractedMetadataResultColumn.ExtractedValue))
+                PropertyPath.Root.Property(nameof(ExtractedMetadataResultRow.Values))
+                    .LookupAllItems()
+                    .Property(@"Value").Property(nameof(ExtractedMetadataResultColumn.ExtractedValue))
             ));
             return new ViewSpec().SetColumns(columns);
-        }
-
-        private void btnAddNewRule_Click(object sender, EventArgs e)
-        {
-            var newRule = ShowRuleEditor(null);
-            if (newRule != null)
-            {
-                MetadataRule = MetadataRule.ChangeSteps(MetadataRule.Steps.Append(newRule));
-            }
         }
 
         public MetadataRuleStep ShowRuleEditor(MetadataRuleStep rule)
@@ -231,18 +242,24 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditRule(int ruleIndex)
         {
-            if (ruleIndex < 0 || ruleIndex >= MetadataRule.Steps.Count)
+            if (ruleIndex < 0 || ruleIndex > MetadataRule.Steps.Count)
             {
                 return;
             }
 
-            var newRule = ShowRuleEditor(MetadataRule.Steps[ruleIndex]);
+            bool appendRule = ruleIndex == MetadataRule.Steps.Count;
+
+            var ruleStep = appendRule ? CreateNewStep():
+                MetadataRule.Steps[ruleIndex];
+            var newRule = ShowRuleEditor(ruleStep);
             if (newRule == null)
             {
                 return;
             }
 
-            MetadataRule = MetadataRule.ChangeSteps(MetadataRule.Steps.ReplaceAt(ruleIndex, newRule));
+            MetadataRule = MetadataRule.ChangeSteps(appendRule
+                ? MetadataRule.Steps.Append(newRule)
+                : MetadataRule.Steps.ReplaceAt(ruleIndex, newRule));
         }
 
         public void OkDialog()
@@ -280,7 +297,7 @@ namespace pwiz.Skyline.SettingsUI
                     catch (Exception exception)
                     {
                         MessageDlg.ShowWithException(this, "This is not a valid regular expression.", exception);
-                        SelectCell(dataGridViewRules, colFilter, rowIndex);
+                        SelectCell(dataGridViewRules, colPattern, rowIndex);
                         return;
                     }
                 }
@@ -315,10 +332,15 @@ namespace pwiz.Skyline.SettingsUI
             EditRule(dataGridViewRules.CurrentCellAddress.Y);
         }
 
+        private static MetadataRuleStep CreateNewStep()
+        {
+            return new MetadataRuleStep().ChangeSource(PropertyPath.Root.Property(nameof(ResultFile.FileName)));
+        }
+
         public class RuleRow
         {
             [UsedImplicitly]
-            public RuleRow() : this(new MetadataRuleStep().ChangeSource(PropertyPath.Root.Property(nameof(ResultFile.FileName))))
+            public RuleRow() : this(CreateNewStep())
             {
 
             }
@@ -341,7 +363,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            public string Filter
+            public string Pattern
             {
                 get
                 {
@@ -391,6 +413,25 @@ namespace pwiz.Skyline.SettingsUI
         private void dataGridViewRules_CurrentCellChanged(object sender, EventArgs e)
         {
             UpdateButtons();
+        }
+
+        public DataGridView DataGridViewSteps => dataGridViewRules;
+
+        public DataGridViewComboBoxColumn ColumnSource => colSource;
+
+        public DataGridViewComboBoxColumn ColumnTarget => colTarget;
+
+        public DataGridViewTextBoxColumn ColumnPattern => colPattern;
+
+        public DataGridViewTextBoxColumn ColumnReplacement => colReplacement;
+
+
+        public BoundDataGridView PreviewGrid
+        {
+            get
+            {
+                return boundDataGridViewEx1;
+            }
         }
 
         private class MetadataResultViewContext : SkylineViewContext
@@ -449,6 +490,18 @@ namespace pwiz.Skyline.SettingsUI
             foreach (var rowIndex in newRowIndexes.Except(oldRowIndexes))
             {
                 dataGridView.Rows[rowIndex].Selected = true;
+            }
+        }
+
+        public string RuleName
+        {
+            get
+            {
+                return tbxName.Text;
+            }
+            set
+            {
+                tbxName.Text = value;
             }
         }
     }

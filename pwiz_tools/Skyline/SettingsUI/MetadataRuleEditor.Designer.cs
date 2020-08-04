@@ -37,7 +37,7 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.dataGridViewRules = new pwiz.Skyline.Controls.DataGridViewEx();
             this.colSource = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colFilter = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colPattern = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colReplacement = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTarget = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.bindingSourceRules = new System.Windows.Forms.BindingSource(this.components);
@@ -110,7 +110,7 @@
             this.dataGridViewRules.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewRules.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colSource,
-            this.colFilter,
+            this.colPattern,
             this.colReplacement,
             this.colTarget});
             this.dataGridViewRules.DataSource = this.bindingSourceRules;
@@ -127,11 +127,11 @@
             resources.ApplyResources(this.colSource, "colSource");
             this.colSource.Name = "colSource";
             // 
-            // colFilter
+            // colPattern
             // 
-            this.colFilter.DataPropertyName = "Filter";
-            resources.ApplyResources(this.colFilter, "colFilter");
-            this.colFilter.Name = "colFilter";
+            this.colPattern.DataPropertyName = "Pattern";
+            resources.ApplyResources(this.colPattern, "colPattern");
+            this.colPattern.Name = "colPattern";
             // 
             // colReplacement
             // 
@@ -235,6 +235,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panelButtons);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "MetadataRuleEditor";
             this.ShowIcon = false;
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
@@ -275,7 +277,7 @@
         private Controls.DataGridViewEx dataGridViewRules;
         private System.Windows.Forms.BindingSource bindingSourceRules;
         private System.Windows.Forms.DataGridViewComboBoxColumn colSource;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colFilter;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colPattern;
         private System.Windows.Forms.DataGridViewTextBoxColumn colReplacement;
         private System.Windows.Forms.DataGridViewComboBoxColumn colTarget;
     }

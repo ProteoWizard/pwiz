@@ -23,7 +23,7 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class DocumentSettingsDlg : FormEx
     {
-        public enum TABS { annotations, lists, group_comparisons, reports }
+        public enum TABS { annotations, lists, group_comparisons, reports, metadata_rules }
         private readonly SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
         private readonly SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
         private readonly SettingsListBoxDriver<ListData> _listsListBoxDriver;
@@ -297,10 +297,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnAddRuleSet_Click(object sender, System.EventArgs e)
         {
-            AddResultFileRule();
+            AddMetadataRule();
         }
 
-        public void EditRuleSet()
+        public void EditMetadataRule()
         {
             var selectedIndex = checkedListBoxRuleSets.SelectedIndex;
             if (selectedIndex < 0)
@@ -308,7 +308,7 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            var editedRule = ShowRuleSetEditor(_ruleSets[selectedIndex]);
+            var editedRule = ShowMetadataRuleEditor(_ruleSets[selectedIndex]);
             if (editedRule == null)
             {
                 return;
@@ -318,9 +318,9 @@ namespace pwiz.Skyline.SettingsUI
             UpdateRuleSets(checkedListBoxRuleSets.CheckedIndices.Cast<int>().Select(i=>_ruleSets[i].Name).ToHashSet());
         }
 
-        public void AddResultFileRule()
+        public void AddMetadataRule()
         {
-            var newRule = ShowRuleSetEditor(new MetadataRule(typeof(ResultFile)));
+            var newRule = ShowMetadataRuleEditor(new MetadataRule(typeof(ResultFile)));
             if (newRule == null)
             {
                 return;
@@ -333,7 +333,7 @@ namespace pwiz.Skyline.SettingsUI
             UpdateRuleSets(checkedNames);
         }
 
-        public MetadataRule ShowRuleSetEditor(MetadataRule ruleSet)
+        public MetadataRule ShowMetadataRuleEditor(MetadataRule ruleSet)
         {
             using (var dlg = new MetadataRuleEditor(DocumentContainer, ruleSet, _ruleSets))
             {
@@ -346,6 +346,11 @@ namespace pwiz.Skyline.SettingsUI
                     return null;
                 }
             }
+        }
+
+        public void SelectMetadataRule(string ruleName)
+        {
+            checkedListBoxRuleSets.SelectedIndex = _ruleSets.IndexOf(item => item.Name == ruleName);
         }
 
         public void UpdateMetadataButtons()
@@ -361,7 +366,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnEditRule_Click(object sender, System.EventArgs e)
         {
-            EditRuleSet();
+            EditMetadataRule();
         }
 
         private void UpdateRuleSets(HashSet<string> checkedNames)
