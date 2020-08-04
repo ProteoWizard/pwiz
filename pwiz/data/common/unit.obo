@@ -3897,3 +3897,25 @@ is_a: UO:0000231 ! information unit
 created_by: gkoutos
 creation_date: 2014-04-09T01:35:23Z
 
+[Term]
+id: UO:0010048
+name: micromole
+namespace: unit.ontology
+def: "A substance unit which is equal to one millionth of a mole." [UOB:LTS]
+subset: unit_slim
+synonym: "mmol" EXACT []
+is_a: UO:0000006 ! substance unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010049
+name: gram per square meter
+namespace: unit.ontology
+def: "An area density unit which is equal to the mass of an object in grams divided by the surface area in meters squared." [NIST:NIST]
+subset: unit_slim
+synonym: "g/m^[2]" EXACT []
+synonym: "gram per square metre" EXACT []
+is_a: UO:0000054 ! area density unit
+created_by: Luke Slater
+
+

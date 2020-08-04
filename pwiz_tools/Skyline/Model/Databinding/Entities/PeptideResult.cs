@@ -153,7 +153,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return normalizedArea.Value / total;
         }
 
+        [HideWhen(AncestorOfType = typeof(Peptide))]
         public ResultFile ResultFile { get { return GetResultFile(); } }
+
+        [HideWhen(AncestorOfType = typeof(Peptide))]
+        public ProteinResult ProteinResult
+        {
+            get { return new ProteinResult(Peptide.Protein, ResultFile.Replicate); }
+        }
 
         [Obsolete]
         [InvariantDisplayName("PeptideResultDocumentLocation")]

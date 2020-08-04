@@ -601,18 +601,30 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.Contains(message,
                 string.Format(Resources.EditIonMobilityLibraryDlg_ValidateUniquePrecursors_This_list_contains__0__ions_with_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_,
                     22));
-            var IonMobilityFilteringUserControl = new IonMobilityFilteringUserControl();
-            AssertEx.Contains(IonMobilityFilteringUserControl.ValidateResolvingPower(-1), Resources.EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
-            AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateResolvingPower(1));
+            RunUI(() =>
+            {
+                using (var IonMobilityFilteringUserControl = new IonMobilityFilteringUserControl())
+                {
+                    AssertEx.Contains(IonMobilityFilteringUserControl.ValidateResolvingPower(-1),
+                        Resources
+                            .EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
+                    AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateResolvingPower(1));
 
-            AssertEx.Contains(IonMobilityFilteringUserControl.ValidateWidth(-1), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
-            AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateWidth(1));
-            AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateWidth(0));
-            AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateResolvingPower(0));
+                    AssertEx.Contains(IonMobilityFilteringUserControl.ValidateWidth(-1),
+                        Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
+                    AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateWidth(1));
+                    AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateWidth(0));
+                    AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateResolvingPower(0));
 
-            IonMobilityFilteringUserControl.ShowOnlyResolvingPowerControls(300); // In this mode, insist on non-negative width parameters
-            AssertEx.Contains(IonMobilityFilteringUserControl.ValidateWidth(-1), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
-            AssertEx.Contains(IonMobilityFilteringUserControl.ValidateResolvingPower(0), Resources.EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
+                    IonMobilityFilteringUserControl
+                        .ShowOnlyResolvingPowerControls(300); // In this mode, insist on non-negative width parameters
+                    AssertEx.Contains(IonMobilityFilteringUserControl.ValidateWidth(-1),
+                        Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
+                    AssertEx.Contains(IonMobilityFilteringUserControl.ValidateResolvingPower(0),
+                        Resources
+                            .EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
+                }
+            });
 
 
             TestParser(EditIonMobilityLibraryDlg.COLUMN_ADDUCT, "99",String.Format(
