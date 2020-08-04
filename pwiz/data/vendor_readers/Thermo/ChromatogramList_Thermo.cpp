@@ -404,7 +404,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                 case Controller_UV:
                 {
                     auto instrumentData = rawfile_->getInstrumentData();
-                    if (bal::ends_with(instrumentData.Units, "AbsorbanceUnits") && instrumentData.AxisLabelY.empty())
+                    if (bal::ends_with(instrumentData.Units, "AbsorbanceUnits") && (instrumentData.AxisLabelY.empty() || bal::starts_with(instrumentData.AxisLabelY, "UV")))
                     {
                         addChromatogram("UV " + lexical_cast<string>(n), (ControllerType)controllerType, n, MS_emission_chromatogram, "");
                     }

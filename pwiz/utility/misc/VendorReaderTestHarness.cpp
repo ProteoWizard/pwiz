@@ -301,6 +301,16 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         if (diff) cerr << headDiff(diff, 5000) << endl;
         unit_assert(!diff);
 
+        // test ion mobility conversion
+        auto imsl = boost::dynamic_pointer_cast<SpectrumListIonMobilityBase>(msd.run.spectrumListPtr);
+        if (imsl != nullptr && imsl->canConvertIonMobilityAndCCS())
+        {
+            double imTestValue = 0.832;
+            double ccs = imsl->ionMobilityToCCS(imTestValue, 678.9, 2);
+            double imValue = imsl->ccsToIonMobility(ccs, 678.9, 2);
+            unit_assert_equal(imValue, imTestValue, 1e-5); // some vendors use 32-bit float so accuracy can't be too stringent
+        }
+      
         // test that non-IMS peak picked data have unique m/z values
         if (config.peakPicking && !config.combineIonMobilitySpectra && msd.run.spectrumListPtr)
         {

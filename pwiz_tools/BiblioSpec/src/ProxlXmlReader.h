@@ -80,7 +80,7 @@ protected:
     static double calcMass(const std::string& sequence, const std::vector<SeqMod>& mods);
 
     void calcPsms();
-    void applyStaticMods(const std::string& sequence, std::vector<SeqMod>& mods);
+    void applyStaticMods(const std::string& sequence, std::vector<SeqMod>& mods, int crosslinkPosition);
 
     std::vector<STATE> state_;
     std::map< std::string, vector<PSM*> > fileToPsms_;

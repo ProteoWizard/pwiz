@@ -130,7 +130,7 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
             // Set sequence/mods at reported_peptide end tag
             curProxlPsm_->charge = getIntRequiredAttrValue("precursor_charge", attr);
             curProxlPsm_->specKey = getIntRequiredAttrValue("scan_number", attr);
-            curProxlPsm_->score = numeric_limits<double>::max();
+            curProxlPsm_->score = 1;
             curProxlPsm_->linkerMass_ = proxlMatches_.back().linkType_ != LinkType::Unlinked ? getDoubleRequiredAttrValue("linker_mass", attr) : 0;
         }
         break;
@@ -249,12 +249,12 @@ double ProxlXmlReader::calcMass(const string& sequence, const vector<SeqMod>& mo
 }
 
 void ProxlXmlReader::calcPsms() {
-    boost::format modSeqCrosslinkFormat("%s-%s-[+%.4f@%d,%d]");
-    boost::format modSeqLooplinkFormat("%s-[+%.4f@%d-%d]");
+    boost::format modSeqCrosslinkFormat("%s-%s-[%+.4f@%d,%d]");
+    boost::format modSeqLooplinkFormat("%s-[%+.4f@%d-%d]");
 
     for (auto& match : proxlMatches_) {
         for (auto& peptide : match.peptides_)
-            applyStaticMods(peptide.sequence_, peptide.mods_);
+            applyStaticMods(peptide.sequence_, peptide.mods_, peptide.links_.empty() ? -1 : peptide.links_[0]);
 
         for (auto& psmPair : match.psms_) {
             map< string, vector<PSM*> >::iterator lookup = fileToPsms_.find(psmPair.first);
@@ -334,8 +334,13 @@ void ProxlXmlReader::calcPsms() {
     }
 }
 
-void ProxlXmlReader::applyStaticMods(const string& sequence, vector<SeqMod>& mods) {
+void ProxlXmlReader::applyStaticMods(const string& sequence, vector<SeqMod>& mods, int crosslinkPosition) {
+    size_t varModCount = mods.size();
     for (int i = 0; i < sequence.length(); i++) {
+        // CONSIDER: what is correct behavior for static mods on crosslink positions?
+        //if (i + 1 == crosslinkPosition) // skip all static mods on crosslink position (e.g. C+57)
+        //    continue;
+
         map< char, vector<double> >::const_iterator lookup = staticMods_.find(sequence[i]);
         if (lookup == staticMods_.end())
             continue;
@@ -343,6 +348,10 @@ void ProxlXmlReader::applyStaticMods(const string& sequence, vector<SeqMod>& mod
             mods.push_back(SeqMod(i + 1, *j));
         }
     }
+
+    // if static mods were added, sort all mods by position
+    if (mods.size() > varModCount)
+        sort(mods.begin(), mods.end(), [](const auto& lhs, const auto& rhs) { return lhs.position < rhs.position; });
 }
 
 }

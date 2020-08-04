@@ -148,6 +148,10 @@ namespace pwiz.Skyline.Model
                     libs.Add(DocLib);
                 }
 
+                if (lib.RankId != null && !libSpec.PeptideRankIds.Contains(lib.RankId))
+                {
+                    lib = lib.ChangeRankId(null);
+                }
                 return lib.ChangeLibraries(libSpecs, libs);
             }));
         }

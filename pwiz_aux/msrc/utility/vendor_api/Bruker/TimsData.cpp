@@ -600,6 +600,19 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 bool TimsDataImpl::hasMSData() const { return true; }
 bool TimsDataImpl::hasLCData() const { return false; }
 bool TimsDataImpl::hasPASEFData() const { return hasPASEFData_; }
+
+bool TimsDataImpl::canConvertOneOverK0AndCCS() const { return true; }
+
+double TimsDataImpl::oneOverK0ToCCS(double oneOverK0, double mz, int charge) const
+{
+    return tims_oneoverk0_to_ccs_for_mz(oneOverK0, charge, mz);
+}
+
+double TimsDataImpl::ccsToOneOverK0(double ccs, double mz, int charge) const
+{
+    return tims_ccs_to_oneoverk0_for_mz(ccs, charge, mz);
+}
+
 size_t TimsDataImpl::getMSSpectrumCount() const { return spectra_.size(); }
 MSSpectrumPtr TimsDataImpl::getMSSpectrum(int scan, DetailLevel detailLevel) const { return spectra_[scan - 1]; }
 
