@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private HeatMapData _heatMapData;
         private double _maxMz;
         private double _maxIntensity;
-        private double _maxIonMobility;
+        private double _maxIonMobility; // Max ion mobility across the entire file, for scaling purposes
         private bool _zoomXAxis;
         private bool _zoomYAxis;
         private readonly MsDataFileScanHelper _msDataFileScanHelper;
@@ -443,7 +443,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 mzs = new List<double>();
                 intensities = new List<double>();
 
-                var fullScans = _msDataFileScanHelper.GetFilteredScans();
+                var fullScans = _msDataFileScanHelper.GetFilteredScans(out var ionMobilityFilterMin, out var ionMobilityFilterMax);
                 negativeScan = fullScans.Any() && fullScans.First().NegativeCharge;
 
                 double minMz;
@@ -451,7 +451,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 while ((minMz = FindMinMz(fullScans, indices)) < double.MaxValue)
                 {
                     mzs.Add(minMz);
-                    intensities.Add(SumIntensities(fullScans, minMz, indices));
+                    intensities.Add(SumIntensities(fullScans, minMz, indices, ionMobilityFilterMin, ionMobilityFilterMax));
                 }
             }
 
@@ -518,7 +518,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return minMz;
         }
 
-        private static double SumIntensities(MsDataSpectrum[] spectra, double mz, int[] indices)
+        private static double SumIntensities(MsDataSpectrum[] spectra, double mz, int[] indices, double ionMobilityFilterMin, double ionMobilityFilterMax)
         {
             double intensity = 0;
             for (int i = 0; i < indices.Length; i++)
@@ -528,6 +528,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Sometimes spectra have multiple intensities for a given m/z.  Sum all intensities for that m/z
                 for (indexMz = indices[i]; indexMz < scan.Mzs.Length && scan.Mzs[indexMz] == mz; indexMz++)
                 {
+                    if (scan.IonMobilities != null)
+                    {
+                        if (scan.IonMobilities[indexMz] < ionMobilityFilterMin || scan.IonMobilities[indexMz] > ionMobilityFilterMax)
+                        {
+                            continue;
+                        }
+                    }
                     intensity += scan.Intensities[indexMz];
                 }
                 indices[i] = indexMz;
@@ -537,16 +544,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void GetMaxMzIntensity(out double maxMz, out double maxIntensity)
         {
-            var fullScans = _msDataFileScanHelper.GetFilteredScans();
+            var fullScans = _msDataFileScanHelper.GetFilteredScans(out _, out _);
             maxMz = 0;
             maxIntensity = 0;
 
             double minMz;
             var indices = new int[fullScans.Length];
+            // Find the overall (unfiltered by ion mobility) mz,intensity range for scaling purposes
             while ((minMz = FindMinMz(fullScans, indices)) < double.MaxValue)
             {
                 maxMz = Math.Max(maxMz, minMz);
-                double intensity = SumIntensities(fullScans, minMz, indices);
+                double intensity = SumIntensities(fullScans, minMz, indices, double.MinValue, double.MaxValue);
                 maxIntensity = Math.Max(maxIntensity, intensity);
             }
         }
