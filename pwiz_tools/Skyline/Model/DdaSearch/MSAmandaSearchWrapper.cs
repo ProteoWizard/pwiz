@@ -102,6 +102,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override void Dispose()
         {
             helper.Dispose();
+            mzID.Dispose();
             //AvailableSettings = new SettingsFile(null, Settings, mzID);
         }
 
@@ -221,6 +222,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         finally
                         {
                             SearchEngine.Dispose();
+                            amandaInputParser.Dispose();
                         }
                     }
                 }
