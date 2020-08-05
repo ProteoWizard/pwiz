@@ -47,8 +47,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>32</ApplicationRevision>
-    <ApplicationVersion>20.1.1.32</ApplicationVersion>
+    <ApplicationRevision>213</ApplicationRevision>
+    <ApplicationVersion>20.1.1.213</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
