@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
@@ -15,7 +16,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public abstract class DetectionsPlotPane : SummaryReplicateGraphPane, IDisposable, ITipDisplayer
     {
-        protected class ToolTipImplementation : ITipProvider, IDisposable
+        public class ToolTipImplementation : ITipProvider, IDisposable
         {
 
             private DetectionsPlotPane _parent;
@@ -27,6 +28,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             //Location is in user coordinates. 
             public int ReplicateIndex { get; private set; }
+            public bool IsVisible => _isVisible;
 
             public ToolTipImplementation(DetectionsPlotPane parent)
             {
@@ -91,6 +93,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 _rt.Dispose();
             }
 
+            //used for testing only
+            public List<string> TipLines
+            {
+                get
+                {
+                    return _table.Select((rowDesc) =>
+                    {
+                        return Enumerable.Aggregate(
+                            rowDesc.Select((cellDesc) => cellDesc.Text), 
+                            (res, next) => res == null ? next : (res + @"\t" + next));
+                    }).ToList();
+                }
+            }
+
             private class UserPoint
             {
                 private GraphPane _graph;
@@ -139,35 +155,34 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected class ProgressBarImplementation : IDisposable
         {
-            LineObj _left = new LineObj()
+            readonly LineObj _left = new LineObj()
             {
                 IsClippedToChartRect = true,
                 Line = new Line() { Width = 4, Color = Color.Green, Style = DashStyle.Solid },
                 Location = new Location(0,0, CoordType.PaneFraction)
             };
-            LineObj _right = new LineObj()
+            readonly LineObj _right = new LineObj()
             {
                 IsClippedToChartRect = true,
                 Line = new Line() { Width = 4, Color = Color.LightGreen, Style = DashStyle.Solid },
                 Location = new Location(0, 0, CoordType.PaneFraction)
             };
-            SizeF _titleSize;
+            private SizeF _titleSize;
             private PointF _barLocation;
-            private DetectionsPlotPane _parent;
+            private readonly DetectionsPlotPane _parent;
 
             public ProgressBarImplementation(DetectionsPlotPane parent)
             {
                 _parent = parent;
                 var scaleFactor = parent.CalcScaleFactor();
-                using (Graphics g = parent.GraphSummary.CreateGraphics())
+                using (var g = parent.GraphSummary.CreateGraphics())
                 {
                     _titleSize = parent.Title.FontSpec.BoundingBox(g, parent.Title.Text, scaleFactor);
                 }
                 _barLocation = new PointF(
                     (parent.Rect.Left + parent.Rect.Right - _titleSize.Width) / (2 * parent.Rect.Width),
-                    (parent.Rect.Top + parent.Margin.Top * (1+scaleFactor) + _titleSize.Height)/ parent.Rect.Height
-                    );
-                //_barLocation = new PointF(0.4f, 0.5f);
+                    (parent.Rect.Top + parent.Margin.Top * (1+scaleFactor) + _titleSize.Height)/ parent.Rect.Height);
+
                 _left.Location.X = _barLocation.X;
                 _left.Location.Y = _barLocation.Y;
                 _left.Location.Width = 0;
@@ -224,7 +239,7 @@ namespace pwiz.Skyline.Controls.Graphs
         } 
 
 
-        protected ToolTipImplementation ToolTip { get; private set; }
+        public ToolTipImplementation ToolTip { get; private set; }
         protected ProgressBarImplementation ProgressBar { get; private set; }
 
         protected DetectionsPlotPane(GraphSummary graphSummary) : base(graphSummary)
@@ -239,29 +254,33 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
             ToolTip = new ToolTipImplementation(this);
 
-            DetectionPlotData.DataCache.ReportProgress += (progress) =>
-                {
-                    if(GraphSummary.GraphControl.IsHandleCreated)
-                        GraphSummary.GraphControl.Invoke((Action) (() => { ProgressBar?.UpdateBar(progress); }));
-                };
-            DetectionPlotData.DataCache.StatusChange += (status) =>
-                {
-                    if (GraphSummary.GraphControl.IsHandleCreated)
-                        GraphSummary.GraphControl.Invoke((Action) (() =>
-                        {
-                            AddLabels();
-                            if (status == DetectionPlotData.DetectionDataCache.CacheStatus.processing)
-                                ProgressBar = new ProgressBarImplementation(this);
-                            else
-                            {
-                                ProgressBar?.Dispose();
-                                ProgressBar = null;
-                            }
+            DetectionPlotData.DataCache.ReportProgress += UpdateProgressHandler;
+            DetectionPlotData.DataCache.StatusChange += UpdateStatusHandler;
+        }
 
-                            GraphSummary.GraphControl.Invalidate();
-                            GraphSummary.GraphControl.Update();
-                        }));
-                };
+        public void UpdateProgressHandler(int progress)
+        {
+            if(GraphSummary.GraphControl.IsHandleCreated)
+                GraphSummary.GraphControl.Invoke((Action) (() => { ProgressBar?.UpdateBar(progress); }));
+        }
+
+        public void UpdateStatusHandler(DetectionPlotData.DetectionDataCache.CacheStatus status)
+        {
+            if (GraphSummary.GraphControl.IsHandleCreated)
+                GraphSummary.GraphControl.Invoke((Action) (() =>
+                {
+                    AddLabels();
+                    if (status == DetectionPlotData.DetectionDataCache.CacheStatus.processing)
+                        ProgressBar = new ProgressBarImplementation(this);
+                    else
+                    {
+                        ProgressBar?.Dispose();
+                        ProgressBar = null;
+                    }
+
+                    GraphSummary.GraphControl.Invalidate();
+                    GraphSummary.GraphControl.Update();
+                }));
         }
 
         public override bool HasToolbar { get { return true; } }
@@ -270,12 +289,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void OnClose(EventArgs e)
         {
+            DetectionPlotData.DataCache.ReportProgress -= UpdateProgressHandler;
+            DetectionPlotData.DataCache.StatusChange -= UpdateStatusHandler;
             Dispose();
         }
 
         public void Dispose()
         {
-            _detectionData.Dispose();
             ToolTip?.Dispose();
         }
 
@@ -380,13 +400,29 @@ namespace pwiz.Skyline.Controls.Graphs
 
         Rectangle ITipDisplayer.RectToScreen(Rectangle r)
         {
-            return GraphSummary.GraphControl.RectangleToScreen(r);
+            if(!GraphSummary.GraphControl.IsDisposed)
+                return GraphSummary.GraphControl.RectangleToScreen(r);
+            else return new Rectangle();
         }
 
-        Rectangle ITipDisplayer.ScreenRect { get { return Screen.GetBounds(GraphSummary.GraphControl); } }
+        Rectangle ITipDisplayer.ScreenRect
+        {
+            get
+            {
+                if (!GraphSummary.GraphControl.IsDisposed)
+                    return Screen.GetBounds(GraphSummary.GraphControl);
+                else return new Rectangle();
+            }
+        }
 
         bool ITipDisplayer.AllowDisplayTip => true;
 
+        #region Functional Test Support
+
+        public DetectionPlotData CurrentData { get { return _detectionData; } }
+
+
+        #endregion
 
     }
 

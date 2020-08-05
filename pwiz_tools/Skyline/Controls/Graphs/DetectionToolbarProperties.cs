@@ -51,6 +51,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            OkDialog();
+        }
+
+        public void OkDialog()
+        { 
+
             var helper = new MessageBoxHelper(this);
 
             if (rbQValue01.Checked)
@@ -97,5 +103,22 @@ namespace pwiz.Skyline.Controls.Graphs
             Settings.TargetType = IntLabeledValue.GetValue(cmbTargetType, Settings.TargetType);
             IntLabeledValue.PopulateCombo(cmbCountMultiple, Settings.YScaleFactor);
         }
+
+        #region Functional test support
+
+        public void SetQValueTo(float qValue)
+        {
+            if (qValue == .01f)
+                rbQValue01.Select();
+            else if(qValue == .05f)
+                rbQValue05.Select();
+            else
+            {
+                rbQValueCustom.Select();
+                txtQValueCustom.Text = qValue.ToString(CultureInfo.CurrentCulture);
+            }
+
+        }
+        #endregion
     }
 }

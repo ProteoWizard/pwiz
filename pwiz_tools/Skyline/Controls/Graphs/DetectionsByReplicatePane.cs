@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void PopulateTooltip(int index)
         {
             ToolTip.ClearData();
-            DetectionPlotData.DataSet targetData = _detectionData.GetTargetData(Settings.TargetType);
+            var targetData = _detectionData.GetTargetData(Settings.TargetType);
             ToolTip.AddLine(Resources.DetectionPlotPane_Tooltip_Replicate,
                 _detectionData.ReplicateNames[index]);
             ToolTip.AddLine(String.Format(Resources.DetectionPlotPane_Tooltip_Count, Settings.TargetType.Label),
@@ -76,7 +76,6 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphObjList.Clear();
             CurveList.Clear();
             Legend.IsVisible = false;
-
             if (!DetectionPlotData.DataCache.TryGet(
                 GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff, this.DataCallback,
                 out _detectionData))
@@ -118,7 +117,6 @@ namespace pwiz.Skyline.Controls.Graphs
             //axes formatting
             XAxis.Scale.Max = _detectionData.ReplicateCount + 1;
             YAxis.Scale.Max = _detectionData.GetTargetData(Settings.TargetType).MaxCount/ YScale * 1.15;
-
             if (Settings.ShowAtLeastN)
             {
                 double lineY = TargetData.getCountForMinReplicates(Settings.RepCount);
@@ -185,13 +183,5 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             base.AddLabels();
         }
-
-
-        #region Functional Test Support
-
-        public DetectionPlotData CurrentData { get { return _detectionData; } }
-
-
-        #endregion
     }
 }

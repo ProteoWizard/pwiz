@@ -5955,6 +5955,8 @@ namespace pwiz.Skyline
             _listGraphDetections.ForEach(g => g.UpdateUI());
         }
 
+        public GraphSummary DetectionsPlot { get { return _listGraphDetections.FirstOrDefault(); } }
+
         private void BuildDetectionsGraphMenu(GraphSummary graph, ToolStrip menuStrip)
         {
             // Store original menu items in an array, and insert a separator
@@ -6005,7 +6007,11 @@ namespace pwiz.Skyline
                 detectionsYScaleOneToolStripMenuItem,
                 detectionsYScalePercentToolStripMenuItem
             })
-               item.Checked = ((int)item.Tag) == DetectionsGraphController.Settings.YScaleFactor.Value;
+            {
+                item.Checked = ((int) item.Tag) == DetectionsGraphController.Settings.YScaleFactor.Value;
+                item.Text = DetectionsGraphController.YScaleFactorType.GetValues()
+                    .First((e) => ((int) item.Tag) == e.Value).ToString();
+            }
 
 
             foreach (var item in new[]

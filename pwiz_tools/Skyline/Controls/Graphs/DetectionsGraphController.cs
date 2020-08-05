@@ -25,7 +25,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public override string ToString()
             {
-                return String.Format(Label, Settings.TargetType);
+                if (this is TargetType)
+                    return Label;
+                else
+                    return string.Format(Label, Settings.TargetType);
             }
 
             public static IEnumerable<T> GetValues<T>() where T : IntLabeledValue
@@ -42,8 +45,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public static T GetFromString<T>(string str) where T : IntLabeledValue
             {
-                var res = GetValues<T>().FirstOrDefault(
-                    (t) => t.Label.Equals(str));
+                T res;
+                if (typeof(T) == typeof(TargetType))
+                    res = GetValues<T>().FirstOrDefault(
+                        (t) => t.Label.Equals(str));
+                else
+                    res = GetValues<T>().FirstOrDefault(
+                        (t) => string.Format(t.Label, Settings.TargetType).Equals(str));
+
                 if (res == default(T))
                     return GetDefaultValue<T>();
                 else return res;
@@ -137,7 +146,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public static YScaleFactorType YScaleFactor
             {
                 get => IntLabeledValue.GetFromString<YScaleFactorType>(
-                        Properties.Settings.Default.DetectionsYScaleFactor);
+                    Properties.Settings.Default.DetectionsYScaleFactor);
                 set => Properties.Settings.Default.DetectionsYScaleFactor = value.ToString();
             }
 
@@ -195,16 +204,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         UniqueList<GraphTypeSummary> GraphSummary.IController.GraphTypes
         {
-            get { return Properties.Settings.Default.DetectionGraphTypes; }
-            set { Properties.Settings.Default.DetectionGraphTypes = value; }
+            get => Properties.Settings.Default.DetectionGraphTypes; 
+            set => Properties.Settings.Default.DetectionGraphTypes = value; 
         }
 
-        public IFormView FormView { get { return new GraphSummary.DetectionsGraphView(); } }
+        public IFormView FormView =>new GraphSummary.DetectionsGraphView(); 
 
-        string GraphSummary.IController.Text
-        {
-            get { return Resources.SkylineWindow_CreateGraphDetections_Counts; }
-        }
+        string GraphSummary.IController.Text => Resources.SkylineWindow_CreateGraphDetections_Counts;
 
         SummaryGraphPane GraphSummary.IControllerSplit.CreatePeptidePane(PaneKey key)
         {
@@ -223,15 +229,9 @@ namespace pwiz.Skyline.Controls.Graphs
             return true;
         }
 
-        bool GraphSummary.IControllerSplit.IsPeptidePane(SummaryGraphPane pane)
-        {
-            throw new NotImplementedException();
-        }
+        bool GraphSummary.IControllerSplit.IsPeptidePane(SummaryGraphPane pane) => false;
 
-        bool GraphSummary.IControllerSplit.IsReplicatePane(SummaryGraphPane pane)
-        {
-            throw new NotImplementedException();
-        }
+        bool GraphSummary.IControllerSplit.IsReplicatePane(SummaryGraphPane pane) => false;
 
         void GraphSummary.IController.OnActiveLibraryChanged()
         {
@@ -246,8 +246,6 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_controllerInterface.GraphSummary.Type == GraphTypeSummary.detections ||
                 _controllerInterface.GraphSummary.Type == GraphTypeSummary.detections_histogram)
             {
-                //purge the cache and start data retrieval in advance
-                //DetectionPlotData.DataCache.TryGet(newDocument, Settings.QValueCutoff, null, out var temp);
             }
         }
 
