@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -280,7 +281,7 @@ namespace pwiz.Skyline.Util
             }
 
 
-            public static void SetComponentEnabledStateForModeUI(Component component, bool isDesired)
+            public static void SetComponentEnabledStateForModeUI(Component component, IList<ToolTip> toolTipControls, bool isDesired)
             {
                 if (component is ToolStripMenuItem item)
                 {
@@ -295,7 +296,7 @@ namespace pwiz.Skyline.Util
                     {
                         if (!isDesired)
                         {
-                            parent.TabPages.Remove(tabPage);
+                            FormUtil.RemoveTabPage(tabPage, toolTipControls);
                         }
                         return;
                     }

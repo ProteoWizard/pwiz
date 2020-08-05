@@ -85,25 +85,12 @@ namespace pwiz.Skyline.EditUI
 
             if (!_settings.HasResults)
             {
-                // For some reason we need to preserve and then restore all the tool tips
-                // to keep them working in this case. Not sure why.
-                var listTips = new List<string>();
-                foreach (Control control in tabControl1.TabPages[0].Controls)
-                    listTips.Add(helpTip.GetToolTip(control));
-
-                tabControl1.TabPages.Remove(tabResults);
-
-                helpTip.RemoveAll();
-                foreach (Control control in tabControl1.TabPages[0].Controls)
-                {
-                    helpTip.SetToolTip(control, listTips[0]);
-                    listTips.RemoveAt(0);
-                }
+                FormUtil.RemoveTabPage(tabResults, helpTip);
             }
 
             if (!_settings.HasResults || _settings.MeasuredResults.Chromatograms.Count < 2)
             {
-                tabControl1.TabPages.Remove(tabConsistency);
+                FormUtil.RemoveTabPage(tabConsistency, helpTip);
             }
             else
             {
