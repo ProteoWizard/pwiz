@@ -180,6 +180,8 @@ OFX.Logging.dll
 OFX.Security.Core.dll
 ParallelExtensionsExtras.dll
 PeakItgLSS.dll
+PrmPasefScheduler.dll
+prmscheduler.dll
 ProteomeDb.dll
 ProteomeDb.pdb
 ProteowizardWrapper.dll
