@@ -3124,6 +3124,8 @@ namespace pwiz.Skyline.Model
         private readonly List<InputTarget> _targets;
         private readonly HashSet<LibKey> _missingIonMobility;
 
+        private double _oneOverK0UpperLimit = 1.2;
+
         public double RunLength { get; set; }
         public double Ms1RepetitionTime { get; set; }
 
@@ -3182,11 +3184,13 @@ namespace pwiz.Skyline.Model
             var windowIM = 0.4;
             if (Document.Settings.TransitionSettings.IonMobilityFiltering != null)
             {
-                var result = Document.Settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, null, null, 1.2);
+                var result = Document.Settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, null, null, _oneOverK0UpperLimit);
                 if (result.HasIonMobilityValue)
+                {
                     ionMobility = result.IonMobility.Mobility.Value;
-                if (result.IonMobilityExtractionWindowWidth.HasValue)
-                    windowIM = result.IonMobilityExtractionWindowWidth.Value;
+                    windowIM = Document.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator
+                        .WidthAt(ionMobility.Value, _oneOverK0UpperLimit);
+                }
             }
             if (!ionMobility.HasValue)
                 _missingIonMobility.Add(nodeTranGroup.GetLibKey(Document.Settings, nodePep));
@@ -3204,6 +3208,15 @@ namespace pwiz.Skyline.Model
         {
             if (templateName == null)
                 throw new IOException(Resources.BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_);
+
+            using (var s = new Scheduler(templateName))
+            {
+                var methodInfo = s.GetPrmMethodInfo();
+                if (methodInfo.Any())
+                {
+                    _oneOverK0UpperLimit = methodInfo[0].one_over_k0_upper_limit;
+                }
+            }
 
             _missingIonMobility.Clear();
             InitExport(fileName, progressMonitor);
