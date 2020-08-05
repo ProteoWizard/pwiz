@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private HeatMapData _heatMapData;
         private double _maxMz;
         private double _maxIntensity;
-        private double _maxIonMobility; // Max ion mobility across the entire file, for scaling purposes
+        private double _maxIonMobility;
         private bool _zoomXAxis;
         private bool _zoomYAxis;
         private readonly MsDataFileScanHelper _msDataFileScanHelper;
@@ -482,14 +482,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
                 if (transition.Source != _msDataFileScanHelper.Source)
                     continue;
-                var item = new SpectrumItem(pointLists[i], transition.Color, 2);
+                var item = new SpectrumItem(pointLists[i], transition.Color, _msDataFileScanHelper.ScanProvider.Transitions[i].Name, 2);
                 var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
                 curveItem.Label.IsVisible = false;
             }
 
             // Add points that aren't associated with a transition.
             {
-                var item = new SpectrumItem(defaultPointList, Color.Gray);
+                var item = new SpectrumItem(defaultPointList, Color.Gray, @"unmatched");
                 var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
                 curveItem.Label.IsVisible = false;
             }
@@ -497,7 +497,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Create curve for all points to provide shading behind stick graph.
             if (_msDataFileScanHelper.MsDataSpectra.Length > 0 && !_msDataFileScanHelper.MsDataSpectra[0].Centroided)
             {
-                var item = new SpectrumShadeItem(allPointList, Color.FromArgb(100, 225, 225, 150));
+                var item = new SpectrumShadeItem(allPointList, Color.FromArgb(100, 225, 225, 150), @"all");
                 var curveItem = _graphHelper.GraphControl.AddGraphItem(GraphPane, item, false);
                 curveItem.Label.IsVisible = false;
             }
@@ -544,17 +544,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void GetMaxMzIntensity(out double maxMz, out double maxIntensity)
         {
-            var fullScans = _msDataFileScanHelper.GetFilteredScans(out _, out _);
+            var fullScans = _msDataFileScanHelper.GetFilteredScans(out var minIonMobilityVal, out var maxIonMobilityVal);
             maxMz = 0;
             maxIntensity = 0;
 
             double minMz;
             var indices = new int[fullScans.Length];
-            // Find the overall (unfiltered by ion mobility) mz,intensity range for scaling purposes
             while ((minMz = FindMinMz(fullScans, indices)) < double.MaxValue)
             {
                 maxMz = Math.Max(maxMz, minMz);
-                double intensity = SumIntensities(fullScans, minMz, indices, double.MinValue, double.MaxValue);
+                double intensity = SumIntensities(fullScans, minMz, indices, minIonMobilityVal, maxIonMobilityVal);
                 maxIntensity = Math.Max(maxIntensity, intensity);
             }
         }
@@ -949,15 +948,17 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private readonly IPointList _points;
         private readonly Color _color;
+        private readonly string _title;
 
-        public SpectrumItem(IPointList points, Color color, float width = 1)
+        public SpectrumItem(IPointList points, Color color, string title, float width = 1)
         {
             _points = points;
             _color = color;
+            _title = title;
             LineWidth = Settings.Default.SpectrumLineWidth*width;
         }
 
-        public override string Title { get { return null; } }
+        public override string Title { get { return _title; } }
 
         public override Color Color
         {
@@ -984,8 +985,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public class SpectrumShadeItem : SpectrumItem
     {
-        public SpectrumShadeItem(IPointList points, Color color)
-            : base(points, color)
+        public SpectrumShadeItem(IPointList points, Color color, string title)
+            : base(points, color, title)
         {
         }
 
