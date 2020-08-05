@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public const int REPORTING_STEP = 3;
 
         public DetectionPlotData(SrmDocument document, float qValueCutoff, 
-            CancellationToken? cancellationToken = null, [CanBeNull] Action<int> progressReport = null)
+            CancellationToken cancellationToken = default(CancellationToken), [CanBeNull] Action<int> progressReport = null)
         {
             if (document == null || qValueCutoff == 0 || qValueCutoff == 1 ||
                 !document.Settings.HasResults) return;
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 //iterate over peptide's precursors
                 foreach (var precursor in peptide.TransitionGroups)
                 {
-                    if (cancellationToken.HasValue && cancellationToken.Value.IsCancellationRequested)
+                    if (cancellationToken.IsCancellationRequested)
                         return;
 
                     if (precursor.IsDecoy) continue;
@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             public DataSet(List<QData> data, int replicateCount, float qValueCutoff,
-                CancellationToken? cancellationToken = null, [CanBeNull] Action<int> progressReport = null)
+                CancellationToken cancellationToken = default(CancellationToken), [CanBeNull] Action<int> progressReport = null)
             {
                 TargetsCount = ImmutableList<int>.ValueOf(Enumerable.Range(0, replicateCount)
                     .Select(i => data.Count(t => t.QValues[i] < qValueCutoff)));
@@ -164,9 +164,9 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             private static void CancelOrReport(int percent,
-                CancellationToken? cancellationToken = null, [CanBeNull] Action<int> progressReport = null)
+                CancellationToken cancellationToken = default(CancellationToken), [CanBeNull] Action<int> progressReport = null)
             {
-                if (cancellationToken.HasValue && cancellationToken.Value.IsCancellationRequested)
+                if (cancellationToken.IsCancellationRequested)
                     throw new OperationCanceledException();
                 
                 progressReport?.Invoke(percent);
@@ -309,7 +309,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public void Cancel()
             {
                 new Task(CancelWorker, new object[]{null, true}).Start();
-
             }
 
             private void CancelWorker(object param)

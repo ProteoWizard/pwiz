@@ -26,16 +26,16 @@ namespace TestPerf
 
         private static readonly string[] TIP_TEXT =
         {
-            "Replicate	2_SW-B",
-            "Precursor Count	137",
-            "Cumulative Count	143",
-            "All Count	133",
-            "-log10 of Q-Value Median	6.0"
+            @"Replicate\t2_SW-B",
+            @"Precursor Count\t137",
+            @"Cumulative Count\t143",
+            @"All Count\t133",
+            @"-log10 of Q-Value Median\t6.0"
         };
         private static readonly string[] HISTOGRAM_TIP_TEXT =
         {
-            "Replicate Count	5",
-            "Precursor Count	119",
+            @"Replicate Count\t5",
+            @"Precursor Count\t119",
         };
 
         [TestMethod]
