@@ -23,6 +23,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
+using AutoQC.Properties;
 using log4net;
 using log4net.Appender;
 using log4net.Config;
@@ -77,6 +78,8 @@ namespace AutoQC
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
+                FirstStartExePath();
+
                 var form = new MainForm();
 
                 // CurrentDeployment is null if it isn't network deployed.
@@ -105,6 +108,72 @@ namespace AutoQC
 
                 mutex.ReleaseMutex();
             }
+        }
+
+        private static void FirstStartExePath()
+        {
+            // C:\Program Files\Skyline  
+            var AdminSkylineDir = Path.Combine("C:\\", "Program Files", "Skyline");
+            if (Directory.Exists(AdminSkylineDir))
+            {
+                var ExeFile = Path.Combine(AdminSkylineDir, "SkylineCmd.exe");
+                if (File.Exists(ExeFile)
+                    && (File.Exists(Path.Combine(AdminSkylineDir, "Skyline.exe"))
+                        || File.Exists(Path.Combine(AdminSkylineDir, "Skyline-daily.exe"))))
+                {
+                    Settings.Default.SkylineExePath = ExeFile;
+                    Settings.Default.ExeName = "SkylineCmd.exe";
+                }
+            }
+
+            // C:\Program Files\Skyline-daily
+            else if (Directory.Exists(AdminSkylineDir = Path.Combine("C:\\", "Program Files", "Skyline-daily")))
+            {
+                var ExeFile = Path.Combine(AdminSkylineDir, "SkylineCmd.exe");
+                if (File.Exists(ExeFile)
+                    && File.Exists(Path.Combine(AdminSkylineDir, "Skyline-daily.exe")))
+                {
+                    Settings.Default.SkylineExePath = ExeFile;
+                    Settings.Default.ExeName = "SkylineCmd.exe";
+                }
+            }
+
+            // ClickOnce Skyline installation   
+            else if (ListPossibleSkylineShortcutPaths("Skyline.exe").FirstOrDefault(File.Exists) != null)
+            {
+                string SkylineRunnerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                    "SkylineRunner.exe");
+                {
+                    Settings.Default.SkylineExePath = SkylineRunnerPath;
+                    Settings.Default.ExeName = "SkylineRunner.exe";
+                }
+            }
+
+            // ClickOnce Skyline-daily installation  
+            else if (ListPossibleSkylineShortcutPaths("Skyline-daily.exe").FirstOrDefault(File.Exists) != null)
+            {
+                string SkylineRunnerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                    "SkylineDailyRunner.exe");
+                {
+                    Settings.Default.SkylineExePath = SkylineRunnerPath;
+                    Settings.Default.ExeName = "SkylineDailyRunner.exe";
+                }
+            }
+            else
+            {
+                // ERROR MESSAGE
+            }
+        }
+
+        private static string[] ListPossibleSkylineShortcutPaths(string skylineAppName)
+        {
+            string programsFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
+            string shortcutFilename = skylineAppName + ".appref-ms"; // Not L10N
+            return new[]
+            {
+                Path.Combine(Path.Combine(programsFolderPath, "MacCoss Lab, UW"), shortcutFilename), // Not L10N
+                Path.Combine(Path.Combine(programsFolderPath, skylineAppName), shortcutFilename),
+            };
         }
 
         private static void UpdateAutoQcStarter(object sender, DoWorkEventArgs e)

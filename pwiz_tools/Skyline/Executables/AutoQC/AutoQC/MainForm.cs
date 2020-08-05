@@ -51,6 +51,9 @@ namespace AutoQC
 
         private IAutoQcLogger _currentAutoQcLogger;
 
+        // 
+        public string SklineCmd = "SkylineCmd.exe";
+
         public MainForm()
         {
             InitializeComponent();
@@ -61,6 +64,9 @@ namespace AutoQC
             btnCopy.Enabled = false;
             btnDelete.Enabled = false;
             btnEdit.Enabled = false;
+
+            UpdateSkylineTypeSettings();
+            UpdateSkylineInstallPathSettings();
 
             ReadSavedConfigurations();
 
@@ -74,9 +80,56 @@ namespace AutoQC
                 if (Settings.Default.KeepAutoQcRunning)
                 {
                     RunEnabledConfigurations();
+                    RunEnabledConfigurations();
                 }
             });
         }
+
+        private static string[] ListPossibleSkylineShortcutPaths(string skylineAppName)
+        {
+            string programsFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
+            string shortcutFilename = skylineAppName + ".appref-ms"; // Not L10N
+            return new[]
+            {
+                Path.Combine(Path.Combine(programsFolderPath, "MacCoss Lab, UW"), shortcutFilename), // Not L10N
+                Path.Combine(Path.Combine(programsFolderPath, skylineAppName), shortcutFilename),
+            };
+        }
+
+        private void UpdateSkylineTypeSettings()
+        {
+            switch (Settings.Default.SkylineType)
+            {
+                case "Skyline":
+                    radioButtonUseSkyline.Checked = true;
+                    break;
+                case "Skyline-daily":
+                    radioButtonUseSkylineDaily.Checked = true;
+                    break;
+            }
+        }
+
+        private void UpdateSkylineInstallPathSettings()
+        {
+            var SkylineRunnerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                (Settings.Default.SkylineType + ".exe"));
+            if (Settings.Default.SkylineExePath == SkylineRunnerPath)
+                radioButtonWebBasedSkylinePath.Checked = true;
+            else
+            {
+                radioButtonSpecifySkylinePath.Checked = true;
+                textBoxSkylineCmdPath.Text = Settings.Default.SkylineExePath;
+            }
+        }
+
+        public static Tuple<string,string> GetExePathName()
+        {
+            // CHECK THAT THE SETTINGS WORK WELL 
+
+            return new Tuple<string, string>(Settings.Default.SkylineExePath, Settings.Default.ExeName);
+        }
+
+        
 
         private void ReadSavedConfigurations()
         {
@@ -965,6 +1018,85 @@ namespace AutoQC
         {
             Settings.Default.MinimizeToSystemTray = cb_minimizeToSysTray.Checked;
             Settings.Default.Save();
+        }
+
+        private void ApplySkylinePath_Click(object sender, EventArgs e)
+        {
+            if (!radioButtonSpecifySkylinePath.Checked)
+            {
+                // SHOW ERROR MESSAGE
+            }
+            var skylineInstallDir = textBoxSkylineCmdPath.Text;
+            
+            if (Directory.Exists(skylineInstallDir))
+            {
+                var skyCmdPath = Path.Combine(skylineInstallDir, "SkylineCmd.exe");
+                if (File.Exists(skyCmdPath))
+                    Settings.Default.SkylineExePath = skyCmdPath;
+                else
+                {
+                    // ERROR MESSAGE
+                }
+            }
+            else
+            {
+                // ERROR MESSAGE
+            }
+
+        }
+
+        private void buttonFileDialogSkylineInstall_click(object sender, EventArgs e)
+        {
+            using (var openfiledlg = new OpenFileDialog())
+            {
+                if (openfiledlg.ShowDialog() == DialogResult.OK)
+                {
+                    textBoxSkylineCmdPath.Text = openfiledlg.FileName;
+                }
+            }
+        }
+
+        private void TypeSkyline_Click(object sender, EventArgs e)
+        {
+            Settings.Default.SkylineType = "Skyline";
+        }
+
+        private void TypeSkylineDaily_Click(object sender, EventArgs e)
+        {
+            Settings.Default.SkylineType = "Skyline-daily";
+        }
+
+        private void WebBasedInstall_Click(object sender, EventArgs e)
+        {
+            var possibleSkylinePaths = ListPossibleSkylineShortcutPaths(Settings.Default.SkylineType);
+            if (possibleSkylinePaths.FirstOrDefault(File.Exists) != null)
+            {
+                string SkylineRunnerPath = null;
+                if (Settings.Default.SkylineType == "Skyline")
+                {
+                    Settings.Default.ExeName = "SkylineRunner.exe";
+                     SkylineRunnerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                        (Settings.Default.ExeName));
+                }
+                else if (Settings.Default.SkylineType == "Skyline-daily")
+                {
+                    Settings.Default.ExeName = "SkylineDailyRunner.exe";
+                    SkylineRunnerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                        (Settings.Default.ExeName));
+                }
+
+                Settings.Default.SkylineExePath = SkylineRunnerPath;
+               
+            }
+            else
+            {
+                // SHOW ERROR MESSAGE
+            }
+        }
+
+        private void SpecifiyInstall_Click(object sender, EventArgs e)
+        {
+            
         }
     }
 

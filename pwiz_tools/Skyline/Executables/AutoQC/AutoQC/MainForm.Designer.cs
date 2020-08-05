@@ -53,6 +53,16 @@
             this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.comboConfigs = new System.Windows.Forms.ComboBox();
             this.tabSettings = new System.Windows.Forms.TabPage();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.buttonFileDialogSkylineInstall = new System.Windows.Forms.Button();
+            this.radioButtonWebBasedSkylinePath = new System.Windows.Forms.RadioButton();
+            this.buttonSkylinePathApply = new System.Windows.Forms.Button();
+            this.radioButtonSpecifySkylinePath = new System.Windows.Forms.RadioButton();
+            this.textBoxSkylineCmdPath = new System.Windows.Forms.TextBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.radioButtonUseSkylineDaily = new System.Windows.Forms.RadioButton();
+            this.radioButtonUseSkyline = new System.Windows.Forms.RadioButton();
+            this.label_Skylinecmd = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.cb_minimizeToSysTray = new System.Windows.Forms.CheckBox();
             this.cb_keepRunning = new System.Windows.Forms.CheckBox();
@@ -62,15 +72,16 @@
             this.tabFront.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.tabSettings.SuspendLayout();
+            this.groupBox3.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnEdit
             // 
-            this.btnEdit.Location = new System.Drawing.Point(904, 171);
-            this.btnEdit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnEdit.Location = new System.Drawing.Point(603, 111);
             this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Size = new System.Drawing.Size(112, 35);
+            this.btnEdit.Size = new System.Drawing.Size(75, 23);
             this.btnEdit.TabIndex = 2;
             this.btnEdit.Text = "Edit";
             this.btnEdit.UseVisualStyleBackColor = true;
@@ -78,10 +89,9 @@
             // 
             // btnDelete
             // 
-            this.btnDelete.Location = new System.Drawing.Point(904, 297);
-            this.btnDelete.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnDelete.Location = new System.Drawing.Point(603, 193);
             this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(112, 35);
+            this.btnDelete.Size = new System.Drawing.Size(75, 23);
             this.btnDelete.TabIndex = 3;
             this.btnDelete.Text = "Delete";
             this.btnDelete.UseVisualStyleBackColor = true;
@@ -89,10 +99,9 @@
             // 
             // btnCopy
             // 
-            this.btnCopy.Location = new System.Drawing.Point(904, 235);
-            this.btnCopy.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnCopy.Location = new System.Drawing.Point(603, 153);
             this.btnCopy.Name = "btnCopy";
-            this.btnCopy.Size = new System.Drawing.Size(112, 35);
+            this.btnCopy.Size = new System.Drawing.Size(75, 23);
             this.btnCopy.TabIndex = 4;
             this.btnCopy.Text = "Copy";
             this.btnCopy.UseVisualStyleBackColor = true;
@@ -103,20 +112,18 @@
             this.lblNoConfigs.AutoSize = true;
             this.lblNoConfigs.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblNoConfigs.ForeColor = System.Drawing.Color.Blue;
-            this.lblNoConfigs.Location = new System.Drawing.Point(122, 677);
-            this.lblNoConfigs.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblNoConfigs.Location = new System.Drawing.Point(81, 440);
             this.lblNoConfigs.Name = "lblNoConfigs";
-            this.lblNoConfigs.Size = new System.Drawing.Size(766, 25);
+            this.lblNoConfigs.Size = new System.Drawing.Size(521, 16);
             this.lblNoConfigs.TabIndex = 5;
             this.lblNoConfigs.Text = "There are no saved configurations. Click the button below to create a new configu" +
     "ration.";
             // 
             // btnNewConfig
             // 
-            this.btnNewConfig.Location = new System.Drawing.Point(390, 720);
-            this.btnNewConfig.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnNewConfig.Location = new System.Drawing.Point(260, 468);
             this.btnNewConfig.Name = "btnNewConfig";
-            this.btnNewConfig.Size = new System.Drawing.Size(303, 35);
+            this.btnNewConfig.Size = new System.Drawing.Size(202, 23);
             this.btnNewConfig.TabIndex = 6;
             this.btnNewConfig.Text = "Create a new configuration";
             this.btnNewConfig.UseVisualStyleBackColor = true;
@@ -131,11 +138,11 @@
             this.listViewCreated,
             this.listViewStatus});
             this.listViewConfigs.FullRowSelect = true;
-            this.listViewConfigs.Location = new System.Drawing.Point(88, 83);
-            this.listViewConfigs.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.listViewConfigs.HideSelection = false;
+            this.listViewConfigs.Location = new System.Drawing.Point(59, 54);
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
-            this.listViewConfigs.Size = new System.Drawing.Size(788, 572);
+            this.listViewConfigs.Size = new System.Drawing.Size(527, 373);
             this.listViewConfigs.TabIndex = 7;
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
@@ -167,19 +174,17 @@
             // labelSavedConfigurations
             // 
             this.labelSavedConfigurations.AutoSize = true;
-            this.labelSavedConfigurations.Location = new System.Drawing.Point(84, 54);
-            this.labelSavedConfigurations.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.labelSavedConfigurations.Location = new System.Drawing.Point(56, 35);
             this.labelSavedConfigurations.Name = "labelSavedConfigurations";
-            this.labelSavedConfigurations.Size = new System.Drawing.Size(162, 20);
+            this.labelSavedConfigurations.Size = new System.Drawing.Size(110, 13);
             this.labelSavedConfigurations.TabIndex = 8;
             this.labelSavedConfigurations.Text = "Saved configurations:";
             // 
             // btnViewLog1
             // 
-            this.btnViewLog1.Location = new System.Drawing.Point(904, 440);
-            this.btnViewLog1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnViewLog1.Location = new System.Drawing.Point(603, 286);
             this.btnViewLog1.Name = "btnViewLog1";
-            this.btnViewLog1.Size = new System.Drawing.Size(112, 35);
+            this.btnViewLog1.Size = new System.Drawing.Size(75, 23);
             this.btnViewLog1.TabIndex = 9;
             this.btnViewLog1.Text = "View log";
             this.btnViewLog1.UseVisualStyleBackColor = true;
@@ -190,11 +195,10 @@
             this.tabMain.Controls.Add(this.tabFront);
             this.tabMain.Controls.Add(this.tabLog);
             this.tabMain.Controls.Add(this.tabSettings);
-            this.tabMain.Location = new System.Drawing.Point(18, 18);
-            this.tabMain.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.tabMain.Location = new System.Drawing.Point(12, 12);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
-            this.tabMain.Size = new System.Drawing.Size(1108, 848);
+            this.tabMain.Size = new System.Drawing.Size(739, 551);
             this.tabMain.TabIndex = 10;
             // 
             // tabFront
@@ -210,20 +214,18 @@
             this.tabFront.Controls.Add(this.btnEdit);
             this.tabFront.Controls.Add(this.btnCopy);
             this.tabFront.Controls.Add(this.btnDelete);
-            this.tabFront.Location = new System.Drawing.Point(4, 29);
-            this.tabFront.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.tabFront.Location = new System.Drawing.Point(4, 22);
             this.tabFront.Name = "tabFront";
-            this.tabFront.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabFront.Size = new System.Drawing.Size(1100, 815);
+            this.tabFront.Padding = new System.Windows.Forms.Padding(3);
+            this.tabFront.Size = new System.Drawing.Size(731, 525);
             this.tabFront.TabIndex = 0;
             this.tabFront.Text = "Configurations";
             // 
             // btnImportConfigs
             // 
-            this.btnImportConfigs.Location = new System.Drawing.Point(904, 585);
-            this.btnImportConfigs.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnImportConfigs.Location = new System.Drawing.Point(603, 380);
             this.btnImportConfigs.Name = "btnImportConfigs";
-            this.btnImportConfigs.Size = new System.Drawing.Size(112, 35);
+            this.btnImportConfigs.Size = new System.Drawing.Size(75, 23);
             this.btnImportConfigs.TabIndex = 11;
             this.btnImportConfigs.Text = "Import...";
             this.toolTip_MainForm.SetToolTip(this.btnImportConfigs, "Import saved configurations...");
@@ -232,10 +234,9 @@
             // 
             // btnExportConfigs
             // 
-            this.btnExportConfigs.Location = new System.Drawing.Point(904, 523);
-            this.btnExportConfigs.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnExportConfigs.Location = new System.Drawing.Point(603, 340);
             this.btnExportConfigs.Name = "btnExportConfigs";
-            this.btnExportConfigs.Size = new System.Drawing.Size(112, 35);
+            this.btnExportConfigs.Size = new System.Drawing.Size(75, 23);
             this.btnExportConfigs.TabIndex = 10;
             this.btnExportConfigs.Text = "Export...";
             this.toolTip_MainForm.SetToolTip(this.btnExportConfigs, "Export saved configurations...");
@@ -250,20 +251,18 @@
             this.tabLog.Controls.Add(this.lblConfigSelect);
             this.tabLog.Controls.Add(this.textBoxLog);
             this.tabLog.Controls.Add(this.comboConfigs);
-            this.tabLog.Location = new System.Drawing.Point(4, 29);
-            this.tabLog.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.tabLog.Location = new System.Drawing.Point(4, 22);
             this.tabLog.Name = "tabLog";
-            this.tabLog.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabLog.Size = new System.Drawing.Size(1100, 815);
+            this.tabLog.Padding = new System.Windows.Forms.Padding(3);
+            this.tabLog.Size = new System.Drawing.Size(731, 525);
             this.tabLog.TabIndex = 1;
             this.tabLog.Text = "Log";
             // 
             // btnOpenFolder
             // 
-            this.btnOpenFolder.Location = new System.Drawing.Point(940, 29);
-            this.btnOpenFolder.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnOpenFolder.Location = new System.Drawing.Point(627, 19);
             this.btnOpenFolder.Name = "btnOpenFolder";
-            this.btnOpenFolder.Size = new System.Drawing.Size(122, 35);
+            this.btnOpenFolder.Size = new System.Drawing.Size(81, 23);
             this.btnOpenFolder.TabIndex = 5;
             this.btnOpenFolder.Text = "Open folder";
             this.btnOpenFolder.UseVisualStyleBackColor = true;
@@ -271,10 +270,9 @@
             // 
             // btnViewLog2
             // 
-            this.btnViewLog2.Location = new System.Drawing.Point(819, 29);
-            this.btnViewLog2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnViewLog2.Location = new System.Drawing.Point(546, 19);
             this.btnViewLog2.Name = "btnViewLog2";
-            this.btnViewLog2.Size = new System.Drawing.Size(112, 35);
+            this.btnViewLog2.Size = new System.Drawing.Size(75, 23);
             this.btnViewLog2.TabIndex = 4;
             this.btnViewLog2.Text = "View log";
             this.btnViewLog2.UseVisualStyleBackColor = true;
@@ -283,63 +281,171 @@
             // lblConfigSelect
             // 
             this.lblConfigSelect.AutoSize = true;
-            this.lblConfigSelect.Location = new System.Drawing.Point(32, 29);
-            this.lblConfigSelect.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblConfigSelect.Location = new System.Drawing.Point(21, 19);
             this.lblConfigSelect.Name = "lblConfigSelect";
-            this.lblConfigSelect.Size = new System.Drawing.Size(108, 20);
+            this.lblConfigSelect.Size = new System.Drawing.Size(72, 13);
             this.lblConfigSelect.TabIndex = 2;
             this.lblConfigSelect.Text = "Configuration:";
             // 
             // textBoxLog
             // 
-            this.textBoxLog.Location = new System.Drawing.Point(36, 91);
-            this.textBoxLog.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.textBoxLog.Location = new System.Drawing.Point(24, 59);
             this.textBoxLog.Name = "textBoxLog";
             this.textBoxLog.ReadOnly = true;
-            this.textBoxLog.Size = new System.Drawing.Size(1024, 684);
+            this.textBoxLog.Size = new System.Drawing.Size(684, 446);
             this.textBoxLog.TabIndex = 1;
             this.textBoxLog.Text = "";
             // 
             // comboConfigs
             // 
             this.comboConfigs.FormattingEnabled = true;
-            this.comboConfigs.Location = new System.Drawing.Point(171, 29);
-            this.comboConfigs.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.comboConfigs.Location = new System.Drawing.Point(114, 19);
             this.comboConfigs.Name = "comboConfigs";
-            this.comboConfigs.Size = new System.Drawing.Size(619, 28);
+            this.comboConfigs.Size = new System.Drawing.Size(414, 21);
             this.comboConfigs.TabIndex = 0;
             // 
             // tabSettings
             // 
             this.tabSettings.BackColor = System.Drawing.SystemColors.Control;
+            this.tabSettings.Controls.Add(this.groupBox3);
+            this.tabSettings.Controls.Add(this.groupBox2);
+            this.tabSettings.Controls.Add(this.label_Skylinecmd);
             this.tabSettings.Controls.Add(this.groupBox1);
-            this.tabSettings.Location = new System.Drawing.Point(4, 29);
-            this.tabSettings.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.tabSettings.Location = new System.Drawing.Point(4, 22);
             this.tabSettings.Name = "tabSettings";
-            this.tabSettings.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabSettings.Size = new System.Drawing.Size(1100, 815);
+            this.tabSettings.Padding = new System.Windows.Forms.Padding(3);
+            this.tabSettings.Size = new System.Drawing.Size(731, 525);
             this.tabSettings.TabIndex = 2;
             this.tabSettings.Text = "Settings";
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.buttonFileDialogSkylineInstall);
+            this.groupBox3.Controls.Add(this.radioButtonWebBasedSkylinePath);
+            this.groupBox3.Controls.Add(this.buttonSkylinePathApply);
+            this.groupBox3.Controls.Add(this.radioButtonSpecifySkylinePath);
+            this.groupBox3.Controls.Add(this.textBoxSkylineCmdPath);
+            this.groupBox3.Location = new System.Drawing.Point(53, 114);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(629, 135);
+            this.groupBox3.TabIndex = 9;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "groupBox3";
+            // 
+            // buttonFileDialogSkylineInstall
+            // 
+            this.buttonFileDialogSkylineInstall.Location = new System.Drawing.Point(566, 83);
+            this.buttonFileDialogSkylineInstall.Name = "buttonFileDialogSkylineInstall";
+            this.buttonFileDialogSkylineInstall.Size = new System.Drawing.Size(26, 20);
+            this.buttonFileDialogSkylineInstall.TabIndex = 11;
+            this.buttonFileDialogSkylineInstall.Text = "...";
+            this.buttonFileDialogSkylineInstall.UseVisualStyleBackColor = true;
+            this.buttonFileDialogSkylineInstall.Click += new System.EventHandler(this.buttonFileDialogSkylineInstall_click);
+            // 
+            // radioButtonWebBasedSkylinePath
+            // 
+            this.radioButtonWebBasedSkylinePath.AutoSize = true;
+            this.radioButtonWebBasedSkylinePath.CheckAlign = System.Drawing.ContentAlignment.TopLeft;
+            this.radioButtonWebBasedSkylinePath.Location = new System.Drawing.Point(14, 26);
+            this.radioButtonWebBasedSkylinePath.Name = "radioButtonWebBasedSkylinePath";
+            this.radioButtonWebBasedSkylinePath.Size = new System.Drawing.Size(188, 17);
+            this.radioButtonWebBasedSkylinePath.TabIndex = 9;
+            this.radioButtonWebBasedSkylinePath.TabStop = true;
+            this.radioButtonWebBasedSkylinePath.Text = "Use web-based Skyline installation";
+            this.radioButtonWebBasedSkylinePath.UseVisualStyleBackColor = true;
+            this.radioButtonWebBasedSkylinePath.CheckedChanged += new System.EventHandler(this.WebBasedInstall_Click);
+            // 
+            // buttonSkylinePathApply
+            // 
+            this.buttonSkylinePathApply.Location = new System.Drawing.Point(260, 109);
+            this.buttonSkylinePathApply.Name = "buttonSkylinePathApply";
+            this.buttonSkylinePathApply.Size = new System.Drawing.Size(75, 26);
+            this.buttonSkylinePathApply.TabIndex = 6;
+            this.buttonSkylinePathApply.Text = "Apply";
+            this.buttonSkylinePathApply.UseVisualStyleBackColor = true;
+            this.buttonSkylinePathApply.Click += new System.EventHandler(this.ApplySkylinePath_Click);
+            // 
+            // radioButtonSpecifySkylinePath
+            // 
+            this.radioButtonSpecifySkylinePath.AutoSize = true;
+            this.radioButtonSpecifySkylinePath.CheckAlign = System.Drawing.ContentAlignment.BottomLeft;
+            this.radioButtonSpecifySkylinePath.Location = new System.Drawing.Point(14, 49);
+            this.radioButtonSpecifySkylinePath.Name = "radioButtonSpecifySkylinePath";
+            this.radioButtonSpecifySkylinePath.Size = new System.Drawing.Size(192, 17);
+            this.radioButtonSpecifySkylinePath.TabIndex = 10;
+            this.radioButtonSpecifySkylinePath.TabStop = true;
+            this.radioButtonSpecifySkylinePath.Text = "Specify Skyline installation directory";
+            this.radioButtonSpecifySkylinePath.UseVisualStyleBackColor = true;
+            this.radioButtonSpecifySkylinePath.CheckedChanged += new System.EventHandler(this.SpecifiyInstall_Click);
+            // 
+            // textBoxSkylineCmdPath
+            // 
+            this.textBoxSkylineCmdPath.Location = new System.Drawing.Point(14, 83);
+            this.textBoxSkylineCmdPath.Name = "textBoxSkylineCmdPath";
+            this.textBoxSkylineCmdPath.Size = new System.Drawing.Size(546, 20);
+            this.textBoxSkylineCmdPath.TabIndex = 4;
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.radioButtonUseSkylineDaily);
+            this.groupBox2.Controls.Add(this.radioButtonUseSkyline);
+            this.groupBox2.Location = new System.Drawing.Point(53, 32);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(629, 59);
+            this.groupBox2.TabIndex = 8;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "groupBox2";
+            // 
+            // radioButtonUseSkylineDaily
+            // 
+            this.radioButtonUseSkylineDaily.AutoSize = true;
+            this.radioButtonUseSkylineDaily.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.radioButtonUseSkylineDaily.Location = new System.Drawing.Point(183, 19);
+            this.radioButtonUseSkylineDaily.Name = "radioButtonUseSkylineDaily";
+            this.radioButtonUseSkylineDaily.Size = new System.Drawing.Size(105, 17);
+            this.radioButtonUseSkylineDaily.TabIndex = 8;
+            this.radioButtonUseSkylineDaily.TabStop = true;
+            this.radioButtonUseSkylineDaily.Text = "Use Skyline-daily";
+            this.radioButtonUseSkylineDaily.UseVisualStyleBackColor = true;
+            this.radioButtonUseSkylineDaily.CheckedChanged += new System.EventHandler(this.TypeSkylineDaily_Click);
+            // 
+            // radioButtonUseSkyline
+            // 
+            this.radioButtonUseSkyline.AutoSize = true;
+            this.radioButtonUseSkyline.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.radioButtonUseSkyline.Location = new System.Drawing.Point(14, 19);
+            this.radioButtonUseSkyline.Name = "radioButtonUseSkyline";
+            this.radioButtonUseSkyline.Size = new System.Drawing.Size(81, 17);
+            this.radioButtonUseSkyline.TabIndex = 7;
+            this.radioButtonUseSkyline.TabStop = true;
+            this.radioButtonUseSkyline.Text = "Use Skyline";
+            this.radioButtonUseSkyline.UseVisualStyleBackColor = true;
+            this.radioButtonUseSkyline.CheckedChanged += new System.EventHandler(this.TypeSkyline_Click);
+            // 
+            // label_Skylinecmd
+            // 
+            this.label_Skylinecmd.AutoSize = true;
+            this.label_Skylinecmd.Location = new System.Drawing.Point(53, 147);
+            this.label_Skylinecmd.Name = "label_Skylinecmd";
+            this.label_Skylinecmd.Size = new System.Drawing.Size(0, 13);
+            this.label_Skylinecmd.TabIndex = 5;
             // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.cb_minimizeToSysTray);
             this.groupBox1.Controls.Add(this.cb_keepRunning);
-            this.groupBox1.Location = new System.Drawing.Point(80, 58);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox1.Location = new System.Drawing.Point(53, 277);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBox1.Size = new System.Drawing.Size(944, 125);
+            this.groupBox1.Size = new System.Drawing.Size(629, 81);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             // 
             // cb_minimizeToSysTray
             // 
             this.cb_minimizeToSysTray.AutoSize = true;
-            this.cb_minimizeToSysTray.Location = new System.Drawing.Point(21, 74);
-            this.cb_minimizeToSysTray.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cb_minimizeToSysTray.Location = new System.Drawing.Point(14, 48);
             this.cb_minimizeToSysTray.Name = "cb_minimizeToSysTray";
-            this.cb_minimizeToSysTray.Size = new System.Drawing.Size(320, 24);
+            this.cb_minimizeToSysTray.Size = new System.Drawing.Size(227, 17);
             this.cb_minimizeToSysTray.TabIndex = 2;
             this.cb_minimizeToSysTray.Text = "Minimize program to Windows System Tray";
             this.cb_minimizeToSysTray.UseVisualStyleBackColor = true;
@@ -347,10 +453,9 @@
             // cb_keepRunning
             // 
             this.cb_keepRunning.AutoSize = true;
-            this.cb_keepRunning.Location = new System.Drawing.Point(21, 29);
-            this.cb_keepRunning.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cb_keepRunning.Location = new System.Drawing.Point(14, 19);
             this.cb_keepRunning.Name = "cb_keepRunning";
-            this.cb_keepRunning.Size = new System.Drawing.Size(244, 24);
+            this.cb_keepRunning.Size = new System.Drawing.Size(165, 17);
             this.cb_keepRunning.TabIndex = 0;
             this.cb_keepRunning.Text = "Keep AutoQC Loader running\r\n";
             this.toolTip_MainForm.SetToolTip(this.cb_keepRunning, resources.GetString("cb_keepRunning.ToolTip"));
@@ -364,13 +469,12 @@
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1144, 885);
+            this.ClientSize = new System.Drawing.Size(763, 573);
             this.Controls.Add(this.tabMain);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.Text = " AutoQC";
@@ -382,6 +486,11 @@
             this.tabLog.ResumeLayout(false);
             this.tabLog.PerformLayout();
             this.tabSettings.ResumeLayout(false);
+            this.tabSettings.PerformLayout();
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -418,5 +527,15 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.CheckBox cb_keepRunning;
         private System.Windows.Forms.NotifyIcon systray_icon;
+        private System.Windows.Forms.Button buttonSkylinePathApply;
+        private System.Windows.Forms.Label label_Skylinecmd;
+        private System.Windows.Forms.TextBox textBoxSkylineCmdPath;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.Button buttonFileDialogSkylineInstall;
+        private System.Windows.Forms.RadioButton radioButtonSpecifySkylinePath;
+        private System.Windows.Forms.RadioButton radioButtonWebBasedSkylinePath;
+        private System.Windows.Forms.RadioButton radioButtonUseSkylineDaily;
+        private System.Windows.Forms.RadioButton radioButtonUseSkyline;
+        private System.Windows.Forms.GroupBox groupBox3;
     }
 }
