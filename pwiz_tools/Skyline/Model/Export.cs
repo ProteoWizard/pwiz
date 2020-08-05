@@ -3185,6 +3185,8 @@ namespace pwiz.Skyline.Model
                 var result = Document.Settings.GetIonMobilityFilter(nodePep, nodeTranGroup, nodeTran, null, null, 1.2);
                 if (result.HasIonMobilityValue)
                     ionMobility = result.IonMobility.Mobility.Value;
+                if (result.IonMobilityExtractionWindowWidth.HasValue)
+                    windowIM = result.IonMobilityExtractionWindowWidth.Value;
             }
             if (!ionMobility.HasValue)
                 _missingIonMobility.Add(nodeTranGroup.GetLibKey(Document.Settings, nodePep));
