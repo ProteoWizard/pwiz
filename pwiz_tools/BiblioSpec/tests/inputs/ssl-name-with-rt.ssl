@@ -1,0 +1,5 @@
+file	scan	charge	sequence	modifications	retention-time
+demo.mzML	controllerType=0 controllerNumber=1 scan=136	3	NFLETVELQVGLK	NFLETVELQVGLK	20.0
+demo.mzML	controllerType=0 controllerNumber=1 scan=140	3	ELESAAYDHAEPVQPEDAPQDIANDELK	ELESAAYDHAEPVQPEDAPQDIANDELK	
+demo.mzML	controllerType=0 controllerNumber=1 scan=142	3	NFLETVELQVGLK	NFLETVELQVGLK	60.0
+demo.mzML	controllerType=0 controllerNumber=1 scan=150	3	NFLETVELQVGLK	NFLETVELQVGLK	80.0
