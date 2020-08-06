@@ -27,26 +27,6 @@ namespace TestPerf
             new[] { 138, 136, 137, 136, 135, 135 }      //q = 0.001, Precursors, after update
         };
 
-        private static readonly string[] TIP_TEXT =
-        {
-            Resources.DetectionPlotPane_Tooltip_Replicate + TextUtil.SEPARATOR_TSV_STR + @"2_SW-B",
-            string.Format(Resources.DetectionPlotPane_Tooltip_Count, DetectionsGraphController.TargetType.PRECURSOR) + 
-            TextUtil.SEPARATOR_TSV_STR + 137.ToString( CultureInfo.CurrentCulture),
-            Resources.DetectionPlotPane_Tooltip_CumulativeCount + TextUtil.SEPARATOR_TSV_STR + 
-            143.ToString( CultureInfo.CurrentCulture),
-            Resources.DetectionPlotPane_Tooltip_AllCount + TextUtil.SEPARATOR_TSV_STR + 
-            133.ToString( CultureInfo.CurrentCulture),
-            Resources.DetectionPlotPane_Tooltip_QMedian + TextUtil.SEPARATOR_TSV_STR + 
-            6.0f.ToString(@"F1",CultureInfo.CurrentCulture)
-        };
-        private static readonly string[] HISTOGRAM_TIP_TEXT =
-        {
-            Resources.DetectionHistogramPane_Tooltip_ReplicateCount + TextUtil.SEPARATOR_TSV_STR + 
-            5.ToString( CultureInfo.CurrentCulture),
-            String.Format(Resources.DetectionHistogramPane_Tooltip_Count, DetectionsGraphController.TargetType.PRECURSOR) + 
-            TextUtil.SEPARATOR_TSV_STR + 119.ToString( CultureInfo.CurrentCulture),
-        };
-
         [TestMethod]
         public void TestDetectionsPlot()
         {
@@ -114,6 +94,18 @@ namespace TestPerf
             });
 
             Trace.WriteLine(this.GetType().Name + ": Display and hide tooltip");
+            string[] tipText =
+            {
+                Resources.DetectionPlotPane_Tooltip_Replicate + TextUtil.SEPARATOR_TSV_STR + @"2_SW-B",
+                string.Format(Resources.DetectionPlotPane_Tooltip_Count, DetectionsGraphController.TargetType.PRECURSOR) +
+                TextUtil.SEPARATOR_TSV_STR + 137.ToString( CultureInfo.CurrentCulture),
+                Resources.DetectionPlotPane_Tooltip_CumulativeCount + TextUtil.SEPARATOR_TSV_STR +
+                143.ToString( CultureInfo.CurrentCulture),
+                Resources.DetectionPlotPane_Tooltip_AllCount + TextUtil.SEPARATOR_TSV_STR +
+                133.ToString( CultureInfo.CurrentCulture),
+                Resources.DetectionPlotPane_Tooltip_QMedian + TextUtil.SEPARATOR_TSV_STR +
+                (6.0d).ToString(@"F1",CultureInfo.CurrentCulture)
+            };
             //display and hide tooltip
             var evt = FindBarPoint(pane, graph, 1);
             RunUI(() =>
@@ -122,7 +114,7 @@ namespace TestPerf
                 Assert.IsNotNull(pane.ToolTip);
                 WaitForConditionUI(() => pane.ToolTip.IsVisible);
                 //verify the tooltip text
-                CollectionAssert.AreEqual(TIP_TEXT, pane.ToolTip.TipLines);
+                CollectionAssert.AreEqual(tipText, pane.ToolTip.TipLines);
                 pane.HandleMouseMoveEvent(graph.GraphControl, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
                 Assert.IsFalse(pane.ToolTip.IsVisible);
             });
@@ -157,13 +149,20 @@ namespace TestPerf
             //display and hide tooltip
             evt = FindBarPoint(paneHistogram, graphHistogram, 5);
             Trace.WriteLine(this.GetType().Name + ": showing histogram tooltip.");
+            string[] histogramTipText =
+            {
+                Resources.DetectionHistogramPane_Tooltip_ReplicateCount + TextUtil.SEPARATOR_TSV_STR +
+                5.ToString( CultureInfo.CurrentCulture),
+                String.Format(Resources.DetectionHistogramPane_Tooltip_Count, DetectionsGraphController.TargetType.PRECURSOR) +
+                TextUtil.SEPARATOR_TSV_STR + 119.ToString( CultureInfo.CurrentCulture),
+            };
             RunUI(() =>
             {
                 paneHistogram.HandleMouseMoveEvent(graphHistogram.GraphControl, evt);
                 Assert.IsNotNull(paneHistogram.ToolTip, "No tooltip found.");
                 WaitForConditionUI(() => paneHistogram.ToolTip.IsVisible, "Tooltip is not visible.");
                 //verify the tooltip text
-                CollectionAssert.AreEqual(HISTOGRAM_TIP_TEXT, paneHistogram.ToolTip.TipLines);
+                CollectionAssert.AreEqual(histogramTipText, paneHistogram.ToolTip.TipLines);
                 
                 paneHistogram.HandleMouseMoveEvent(graphHistogram.GraphControl, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
                 Assert.IsFalse(paneHistogram.ToolTip.IsVisible);
@@ -211,7 +210,7 @@ namespace TestPerf
             using (var g = graph.CreateGraphics())
             {
                 var iterationCount = 0;
-                var randomInt = new Random();
+                var randomInt = new Random(0);
                 var evt = new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0);
                 while (!(pane.FindNearestObject(evt.Location, g, out var nearestObject, out var objectIndex) &&
                          nearestObject is BarItem && index == objectIndex))
