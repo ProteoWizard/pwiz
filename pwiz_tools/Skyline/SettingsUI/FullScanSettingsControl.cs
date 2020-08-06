@@ -50,6 +50,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             _documentContainer = documentContainer;
 
+            Initialize();
+        }
+
+        public void Initialize()
+        {
             InitializeComponent();
 
             InitializeMs1FilterUI();
