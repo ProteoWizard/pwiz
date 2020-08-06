@@ -7,6 +7,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
@@ -14,6 +15,7 @@ namespace pwiz.Skyline.Model.Irt
 {
     public class IrtStandard : XmlNamedElement
     {
+        public static readonly IrtStandard AUTO = new IrtStandard(Resources.IrtStandard_AUTO_Automatic, null, null, new DbIrtPeptide[0]);
         public static readonly IrtStandard EMPTY = new IrtStandard(AuditLogStrings.None, null, null, new DbIrtPeptide[0]);
 
         public static readonly IrtStandard BIOGNOSYS_10 = new IrtStandard(@"Biognosys-10 (iRT-C18)", @"Biognosys10.sky", null,
@@ -307,7 +309,7 @@ namespace pwiz.Skyline.Model.Irt
             });
 
         public static readonly ImmutableList<IrtStandard> ALL = ImmutableList.ValueOf(new[] {
-            EMPTY, BIOGNOSYS_10, BIOGNOSYS_11, PIERCE, REPLICAL, RTBEADS, SCIEX, SIGMA, APOA1, CIRT_SHORT
+            AUTO, EMPTY, BIOGNOSYS_10, BIOGNOSYS_11, PIERCE, REPLICAL, RTBEADS, SCIEX, SIGMA, APOA1, CIRT_SHORT
         });
 
         private static readonly HashSet<Target> ALL_TARGETS = new HashSet<Target>(ALL.SelectMany(l => l.Peptides.Select(p => p.ModifiedTarget)));
@@ -533,6 +535,53 @@ namespace pwiz.Skyline.Model.Irt
         public override string ToString()
         {
             return Name;
+        }
+
+        public static List<IrtStandard> BestMatch(IEnumerable<Target> targets)
+        {
+            var targetMap = new TargetMap<bool>(targets.Select(t => new KeyValuePair<Target, bool>(t, true)));
+            var matches = ALL.Where(s => s.Peptides.Count > 0 && s.Peptides.All(pep => targetMap.ContainsKey(pep.ModifiedTarget))).ToList();
+
+            if (matches.Contains(BIOGNOSYS_10) && matches.Contains(BIOGNOSYS_11))
+                matches.Remove(BIOGNOSYS_10);
+
+            return matches;
+        }
+
+        public static List<IrtStandard> BestMatch(ICollection<SpectrumMzInfo> targets)
+        {
+            var potentialMatches = BestMatch(targets.Select(t => t.Key.Target)).ToList();
+
+            var matches = new List<IrtStandard>();
+            foreach (var standard in potentialMatches)
+            {
+                var doc = standard.GetDocument();
+                if (doc == null || doc.Peptides.All(nodePep => nodePep.ExplicitModsHeavy.Count == 0))
+                {
+                    matches.Add(standard);
+                    continue;
+                }
+
+                // Compare precursor m/zs in document (heavy label check)
+                var docPeps = new TargetMap<PeptideDocNode>(doc.Peptides.Select(pep => new KeyValuePair<Target, PeptideDocNode>(pep.ModifiedTarget, pep)));
+                var matchTargets = doc.Peptides.Select(pep => pep.ModifiedTarget).ToHashSet();
+                foreach (var target in targets)
+                {
+                    if (!docPeps.TryGetValue(target.Key.Target, out var nodePep))
+                        continue;
+
+                    var nodeTranGroup = nodePep.TransitionGroups.FirstOrDefault(precursor => precursor.PrecursorCharge == target.Key.Charge);
+                    if (nodeTranGroup != null && Math.Abs(nodeTranGroup.PrecursorMz - target.PrecursorMz) < 1)
+                        matchTargets.Remove(nodePep.ModifiedTarget);
+                }
+                if (matchTargets.Count == 0)
+                    matches.Add(standard);
+            }
+
+            if (matches.Contains(BIOGNOSYS_10) && matches.Contains(BIOGNOSYS_11))
+                matches.Remove(BIOGNOSYS_10);
+
+            return matches;
         }
     }
 }

@@ -316,5 +316,84 @@ namespace pwiz.Skyline.Model.Irt
                 }
             }
         }
+
+        public static IEnumerable<DbIrtPeptide> Pick(IEnumerable<IRetentionTimeProvider> providers, int numPick)
+        {
+            double minRt = double.MaxValue;
+            double maxRt = double.MinValue;
+
+            var times = new Dictionary<Target, List<double>>();
+            foreach (var provider in providers)
+            {
+                foreach (var rt in provider.PeptideRetentionTimes)
+                {
+                    if (rt.RetentionTime < minRt)
+                        minRt = rt.RetentionTime;
+                    if (rt.RetentionTime > maxRt)
+                        maxRt = rt.RetentionTime;
+                    if (!times.ContainsKey(rt.PeptideSequence))
+                        times[rt.PeptideSequence] = new List<double>();
+                    times[rt.PeptideSequence].Add(rt.RetentionTime);
+                }
+            }
+
+            numPick = Math.Min(numPick, times.Keys.Count);
+            var targetStats = times.ToDictionary(pair => pair.Key, pair => new Statistics(pair.Value));
+
+            var binSize = (maxRt - minRt) / numPick;
+            var curBinLimit = minRt;
+            var picked = new List<DbIrtPeptide>();
+            while (targetStats.Count > 0)
+            {
+                Dictionary<Target, Statistics> curBinCandidates;
+                if (picked.Count < numPick - 1)
+                {
+                    curBinLimit += binSize;
+                    curBinCandidates = targetStats.Where(pair => pair.Value.Median() <= curBinLimit).ToDictionary(pair => pair.Key, pair => pair.Value);
+                    foreach (var target in curBinCandidates.Select(pair => pair.Key))
+                        targetStats.Remove(target);
+                }
+                else
+                {
+                    curBinCandidates = new Dictionary<Target, Statistics>(targetStats);
+                    targetStats.Clear();
+                }
+                var maxCount = curBinCandidates.Max(x => x.Value.Length);
+                curBinCandidates = curBinCandidates.Where(pair => pair.Value.Length == maxCount).ToDictionary(pair => pair.Key, pair => pair.Value);
+                if (curBinCandidates.Count == 0)
+                    continue;
+                Target best = null;
+                if (maxCount == 1)
+                {
+                    var minDiff = double.MaxValue;
+                    var binCenter = curBinLimit - binSize / 2;
+                    foreach (var target in curBinCandidates)
+                    {
+                        var diff = Math.Abs(target.Value.Mean() - binCenter);
+                        if (diff < minDiff)
+                        {
+                            minDiff = diff;
+                            best = target.Key;
+                        }
+                    }
+                }
+                else
+                {
+                    var minVariance = double.MaxValue;
+                    foreach (var target in curBinCandidates)
+                    {
+                        var variance = target.Value.Variance();
+                        if (variance < minVariance)
+                        {
+                            minVariance = variance;
+                            best = target.Key;
+                        }
+                    }
+                }
+                // ReSharper disable once AssignNullToNotNullAttribute
+                picked.Add(new DbIrtPeptide(best, curBinCandidates[best].Median(), true, TimeSource.peak));
+            }
+            return picked;
+        }
     }
 }
