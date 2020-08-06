@@ -90,14 +90,24 @@ namespace pwiz.Skyline.Model.Results
             return SourceNames[(int) source];
         }
 
-        public MsDataSpectrum[] GetFilteredScans()
+        public MsDataSpectrum[] GetFilteredScans(out double minIonMobilityVal, out double maxIonMobilityVal)
         {
             var fullScans = MsDataSpectra;
             double minIonMobility, maxIonMobility;
             if (Settings.Default.FilterIonMobilityFullScan && GetIonMobilityRange(out minIonMobility, out maxIonMobility, Source))
+            {
                 fullScans = fullScans.Where(s => minIonMobility <= s.IonMobility.Mobility && s.IonMobility.Mobility <= maxIonMobility // im-per-scan case
                                                  || minIonMobility <= s.MaxIonMobility && maxIonMobility >= s.MinIonMobility // 3-array case
                 ).ToArray();
+            }
+            else
+            {
+                minIonMobility = double.MinValue;
+                maxIonMobility = double.MaxValue;
+            }
+
+            minIonMobilityVal = minIonMobility;
+            maxIonMobilityVal = maxIonMobility;
             return fullScans;
         }
 

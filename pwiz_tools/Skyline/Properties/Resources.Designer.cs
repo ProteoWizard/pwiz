@@ -2931,6 +2931,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Files to search:.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_Files_to_search_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_Files_to_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred attempting to import the {0} library..
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_ {
@@ -2946,6 +2955,15 @@ namespace pwiz.Skyline.Properties {
         public static string BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library {
             get {
                 return ResourceManager.GetString("BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Result files:.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_Result_files_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_Result_files_", resourceCulture);
             }
         }
         
@@ -8021,6 +8039,132 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enzymes file {0} not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instruments file {0} not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Obo files (psi-ms.obo and unimod.obo) not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unimod file {0} not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search failed: {0}.
+        /// </summary>
+        public static string DdaSearch_Search_failed__0 {
+            get {
+                return ResourceManager.GetString("DdaSearch_Search_failed__0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search is being canceled..
+        /// </summary>
+        public static string DdaSearch_Search_is_canceled {
+            get {
+                return ResourceManager.GetString("DdaSearch_Search_is_canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment ions must be selected.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to fragmentIons value not found in ComboBox items.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS1 Tolerance incorrect.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS2 Tolerance incorrect.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search canceled..
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Search_canceled {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Search_canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search done..
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Search_done {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Search_done", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search failed..
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Search_failed {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Search_failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting search....
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Starting_search {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Starting_search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Declustering Potential Regressions:.
         /// </summary>
         public static string DeclusterPotentialList_Label_Declustering_Potential_Regressions {
@@ -10963,6 +11107,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("EditStaticModDlg_OkDialog_Variable_modifications_must_specify_amino_acid_or_termi" +
                         "nus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a recognized Unimod name..
+        /// </summary>
+        public static string EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_ {
+            get {
+                return ResourceManager.GetString("EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_", resourceCulture);
             }
         }
         
@@ -14371,6 +14524,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A FASTA file is required for the DDA search..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Finish.
         /// </summary>
         public static string ImportPeptideSearchDlg_NextPage_Finish {
@@ -14385,6 +14547,15 @@ namespace pwiz.Skyline.Properties {
         public static string ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_ {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import FASTA (required).
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_Import_FASTA__required_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Import_FASTA__required_", resourceCulture);
             }
         }
         
@@ -14834,7 +15005,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct com [rest of string was truncated]&quot;;.
+        ///Recognized adduct components  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -16310,6 +16481,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (fixed).
+        /// </summary>
+        public static string ListBoxModification_ToString__fixed_ {
+            get {
+                return ResourceManager.GetString("ListBoxModification_ToString__fixed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (isotopic label).
+        /// </summary>
+        public static string ListBoxModification_ToString__isotopic_label_ {
+            get {
+                return ResourceManager.GetString("ListBoxModification_ToString__isotopic_label_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (variable).
+        /// </summary>
+        public static string ListBoxModification_ToString__variable_ {
+            get {
+                return ResourceManager.GetString("ListBoxModification_ToString__variable_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No such list {0}.
         /// </summary>
         public static string ListColumnPropertyDescriptor_ChangeListData_No_such_list__0_ {
@@ -17037,6 +17235,42 @@ namespace pwiz.Skyline.Properties {
         public static string MatchModificationsControl_AddModification_Add__0__modification__1_ {
             get {
                 return ResourceManager.GetString("MatchModificationsControl_AddModification_Add__0__modification__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Edit modifications.
+        /// </summary>
+        public static string MatchModificationsControl_Initialize__Edit_modifications {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_Initialize__Edit_modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit &amp;heavy modifications....
+        /// </summary>
+        public static string MatchModificationsControl_Initialize_Edit__heavy_modifications___ {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_Initialize_Edit__heavy_modifications___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit &amp;structural modifications....
+        /// </summary>
+        public static string MatchModificationsControl_Initialize_Edit__structural_modifications___ {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_Initialize_Edit__structural_modifications___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify all modifications you want to include in the search:.
+        /// </summary>
+        public static string MatchModificationsControl_ModificationLabelText_DDA_Search {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_ModificationLabelText_DDA_Search", resourceCulture);
             }
         }
         
@@ -18129,6 +18363,16 @@ namespace pwiz.Skyline.Properties {
         public static string MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape {
             get {
                 return ResourceManager.GetString("MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MSAmandaLogo {
+            get {
+                object obj = ResourceManager.GetObject("MSAmandaLogo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -19317,7 +19561,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
@@ -24355,6 +24599,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SchedulingOptionsDlg_TrendsError_Using_trends_in_scheduling_requires_at_least__0_" +
                         "_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Additional Settings.
+        /// </summary>
+        public static string SearchSettingsControl_Additional_Settings {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_Additional_Settings", resourceCulture);
             }
         }
         
