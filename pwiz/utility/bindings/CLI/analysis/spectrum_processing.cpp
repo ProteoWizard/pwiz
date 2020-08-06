@@ -379,6 +379,11 @@ bool SpectrumList_PeakPicker::accept(msdata::SpectrumList^ inner)
     return b::SpectrumList_PeakPicker::accept(*inner->base_);
 }
 
+bool SpectrumList_PeakPicker::supportsVendorPeakPicking(System::String^ rawpath)
+{
+    return b::SpectrumList_PeakPicker::supportsVendorPeakPicking(ToStdString(rawpath));
+}
+
 
 
 

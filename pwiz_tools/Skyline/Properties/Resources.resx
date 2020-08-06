@@ -1674,6 +1674,9 @@
   <data name="LabKey" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\LabKey.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="MSAmandaLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\LogoAmanda_32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="ToolService_ImportFasta_Insert_proteins" xml:space="preserve">
     <value>Insert proteins</value>
   </data>
@@ -10946,6 +10949,87 @@ Invalid peptide sequence at position 18
   </data>
   <data name="DetectionHistogramPane_Tooltip_Count" xml:space="preserve">
     <value>{0} Count</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch" xml:space="preserve">
+    <value>A FASTA file is required for the DDA search.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Import_FASTA__required_" xml:space="preserve">
+    <value>Import FASTA (required)</value>
+  </data>
+  <data name="MatchModificationsControl_ModificationLabelText_DDA_Search" xml:space="preserve">
+    <value>Specify all modifications you want to include in the search:</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_canceled" xml:space="preserve">
+    <value>Search canceled.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_done" xml:space="preserve">
+    <value>Search done.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_failed" xml:space="preserve">
+    <value>Search failed.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Starting_search" xml:space="preserve">
+    <value>Starting search...</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found" xml:space="preserve">
+    <value>Enzymes file {0} not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found" xml:space="preserve">
+    <value>Instruments file {0} not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found" xml:space="preserve">
+    <value>Obo files (psi-ms.obo and unimod.obo) not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found" xml:space="preserve">
+    <value>Unimod file {0} not found</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox" xml:space="preserve">
+    <value>fragmentIons value not found in ComboBox items</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
+    <value>Fragment ions must be selected</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect" xml:space="preserve">
+    <value>MS1 Tolerance incorrect</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect" xml:space="preserve">
+    <value>MS2 Tolerance incorrect</value>
+  </data>
+  <data name="DdaSearch_Search_failed__0" xml:space="preserve">
+    <value>Search failed: {0}</value>
+  </data>
+  <data name="DdaSearch_Search_is_canceled" xml:space="preserve">
+    <value>Search is being canceled.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_Files_to_search_" xml:space="preserve">
+    <value>Files to search:</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_Result_files_" xml:space="preserve">
+    <value>Result files:</value>
+  </data>
+  <data name="ListBoxModification_ToString__variable_" xml:space="preserve">
+    <value>(variable)</value>
+  </data>
+  <data name="ListBoxModification_ToString__isotopic_label_" xml:space="preserve">
+    <value>(isotopic label)</value>
+  </data>
+  <data name="ListBoxModification_ToString__fixed_" xml:space="preserve">
+    <value>(fixed)</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize__Edit_modifications" xml:space="preserve">
+    <value>&amp;Edit modifications</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize_Edit__structural_modifications___" xml:space="preserve">
+    <value>Edit &amp;structural modifications...</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize_Edit__heavy_modifications___" xml:space="preserve">
+    <value>Edit &amp;heavy modifications...</value>
+  </data>
+  <data name="SearchSettingsControl_Additional_Settings" xml:space="preserve">
+    <value>Additional Settings</value>
+  </data>
+  <data name="EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_" xml:space="preserve">
+    <value>'{0}' is not a recognized Unimod name.</value>
   </data>
 </root>
 
