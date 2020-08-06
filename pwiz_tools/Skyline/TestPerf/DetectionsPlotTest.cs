@@ -190,10 +190,10 @@ namespace TestPerf
 
             if (record)
             {
-                Debug.WriteLine("Peptides");
+                Console.WriteLine("Peptides");
                 pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PEPTIDE).TargetsCount
                     .ForEach((cnt) => { Debug.Write($"{cnt}, "); });
-                Debug.WriteLine("\nPrecursors");
+                Console.WriteLine("\nPrecursors");
                 pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PRECURSOR).TargetsCount
                     .ForEach((cnt) => { Debug.Write($"{cnt}, "); });
             }
