@@ -80,6 +80,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.boundDataGridViewEx1);
+            resources.ApplyResources(this.splitContainer1.Panel2, "splitContainer1.Panel2");
             // 
             // lblRules
             // 
@@ -239,6 +240,7 @@
             this.MinimizeBox = false;
             this.Name = "MetadataRuleEditor";
             this.ShowIcon = false;
+            this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();

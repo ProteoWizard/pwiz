@@ -364,7 +364,7 @@
     <value>8</value>
   </data>
   <data name="lblPreview.Text" xml:space="preserve">
-    <value>Preview:</value>
+    <value>&amp;Preview:</value>
   </data>
   <data name="&gt;&gt;lblPreview.Name" xml:space="preserve">
     <value>lblPreview</value>
@@ -415,7 +415,7 @@
     <value>12, 184</value>
   </data>
   <data name="boundDataGridView1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>551, 221</value>
+    <value>568, 221</value>
   </data>
   <data name="boundDataGridView1.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>

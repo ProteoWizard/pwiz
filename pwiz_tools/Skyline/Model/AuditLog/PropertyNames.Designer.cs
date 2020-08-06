@@ -529,6 +529,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Metadata rule sets.
+        /// </summary>
+        public static string DataSettings_MetadataRuleSets {
+            get {
+                return ResourceManager.GetString("DataSettings_MetadataRuleSets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Panorama URL.
         /// </summary>
         public static string DataSettings_PanoramaPublishUri {
@@ -2082,6 +2091,69 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string MeasuredRetentionTime_RetentionTime {
             get {
                 return ResourceManager.GetString("MeasuredRetentionTime_RetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string MetadataRule_Name {
+            get {
+                return ResourceManager.GetString("MetadataRule_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Row source.
+        /// </summary>
+        public static string MetadataRule_RowSource {
+            get {
+                return ResourceManager.GetString("MetadataRule_RowSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Steps.
+        /// </summary>
+        public static string MetadataRule_Steps {
+            get {
+                return ResourceManager.GetString("MetadataRule_Steps", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pattern.
+        /// </summary>
+        public static string MetadataRuleStep_Pattern {
+            get {
+                return ResourceManager.GetString("MetadataRuleStep_Pattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replacement.
+        /// </summary>
+        public static string MetadataRuleStep_Replacement {
+            get {
+                return ResourceManager.GetString("MetadataRuleStep_Replacement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source.
+        /// </summary>
+        public static string MetadataRuleStep_Source {
+            get {
+                return ResourceManager.GetString("MetadataRuleStep_Source", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target.
+        /// </summary>
+        public static string MetadataRuleStep_Target {
+            get {
+                return ResourceManager.GetString("MetadataRuleStep_Target", resourceCulture);
             }
         }
         

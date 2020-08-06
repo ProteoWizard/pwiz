@@ -157,6 +157,7 @@
             this.MinimizeBox = false;
             this.Name = "MetadataRuleStepEditor";
             this.ShowIcon = false;
+            this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelButtons.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource1)).EndInit();

@@ -1550,4 +1550,31 @@
   <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
     <value>Library ion mobility values</value>
   </data>
+  <data name="DataSettings_MetadataRuleSets" xml:space="preserve">
+    <value>Metadata rule sets</value>
+  </data>
+  <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
+    <value>Library ion mobility values</value>
+  </data>
+  <data name="MetadataRuleStep_Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="MetadataRuleStep_Pattern" xml:space="preserve">
+    <value>Pattern</value>
+  </data>
+  <data name="MetadataRuleStep_Replacement" xml:space="preserve">
+    <value>Replacement</value>
+  </data>
+  <data name="MetadataRuleStep_Target" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="MetadataRule_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="MetadataRule_RowSource" xml:space="preserve">
+    <value>Row source</value>
+  </data>
+  <data name="MetadataRule_Steps" xml:space="preserve">
+    <value>Steps</value>
+  </data>
 </root>
