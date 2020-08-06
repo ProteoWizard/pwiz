@@ -2463,10 +2463,15 @@ namespace pwiz.Skyline.Model
                             massError += (info.MassError.Value - massError) * info.Area / Area.Value;
                             MassError = (float)massError;
                         }
-                        if (info.Height > MaxHeight || !RetentionTime.HasValue && info.Height >= MaxHeight)
+                        if (info.Height > MaxHeight)
                         {
                             MaxHeight = info.Height;
                             RetentionTime = info.RetentionTime;
+                        }
+                        else if(!RetentionTime.HasValue && info.Height >= MaxHeight)
+                        {
+                            MaxHeight = info.Height;
+                            RetentionTime = (info.StartRetentionTime + info.EndRetentionTime) / 2;
                         }
                         if (!info.IsFwhmDegenerate)
                             Fwhm = Math.Max(info.Fwhm, Fwhm ?? float.MinValue);
