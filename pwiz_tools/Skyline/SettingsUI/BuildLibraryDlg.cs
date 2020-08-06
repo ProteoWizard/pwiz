@@ -65,8 +65,8 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_MZTAB_TXT,
             BiblioSpecLiteBuilder.EXT_OPEN_SWATH,
             BiblioSpecLiteBuilder.EXT_SPECLIB,
-       };
-
+        };
+    
         private string[] _inputFileNames = new string[0];
         private string _dirInputRoot = string.Empty;
 
@@ -542,13 +542,13 @@ namespace pwiz.Skyline.SettingsUI
             InputFileNames = AddInputFiles(this, InputFileNames, fileNames);
         }
 
-        public static string[] AddInputFiles(Form parent, IEnumerable<string> inputFileNames, IEnumerable<string> fileNames)
+        public static string[] AddInputFiles(Form parent, IEnumerable<string> inputFileNames, IEnumerable<string> fileNames, bool performDDASearch = false)
         {
             var filesNew = new List<string>(inputFileNames);
             var filesError = new List<string>();
             foreach (var fileName in fileNames)
             {
-                if (IsValidInputFile(fileName))
+                if (IsValidInputFile(fileName, performDDASearch))
                 {
                     if (!filesNew.Contains(fileName))
                         filesNew.Add(fileName);
@@ -575,12 +575,17 @@ namespace pwiz.Skyline.SettingsUI
             return filesNew.ToArray();
         }
 
-        private static bool IsValidInputFile(string fileName)
+        private static bool IsValidInputFile(string fileName, bool performDDASearch = false)
         {
-            foreach (string extResult in RESULTS_EXTS)
+            if (performDDASearch)
+                return true; // these are validated in OpenFileDialog
+            else
             {
-                if (PathEx.HasExtension(fileName, extResult))
-                    return true;
+                foreach (string extResult in RESULTS_EXTS)
+                {
+                    if (PathEx.HasExtension(fileName, extResult))
+                        return true;
+                }
             }
             return fileName.EndsWith(BiblioSpecLiteSpec.EXT);
         }

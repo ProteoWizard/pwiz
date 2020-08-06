@@ -347,7 +347,7 @@ namespace pwiz.Skyline.Util
                     if (inappropriateComponents != null && 
                         inappropriateComponents.Contains(component))
                     {
-                        ModeUIAwareFormHelper.SetComponentEnabledStateForModeUI(ctrl, false);
+                        ModeUIAwareFormHelper.SetComponentEnabledStateForModeUI(ctrl, ToolTips, false);
                     }
 
                     ModeUIExtender.MODE_UI_HANDLING_TYPE handling;
