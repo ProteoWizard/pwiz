@@ -10,6 +10,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using ZedGraph;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using Settings = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.Settings;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -99,11 +100,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 get
                 {
                     return _table.Select((rowDesc) =>
-                    {
-                        return Enumerable.Aggregate(
-                            rowDesc.Select((cellDesc) => cellDesc.Text), 
-                            (res, next) => res == null ? next : (res + @"\t" + next));
-                    }).ToList();
+                        string.Join(TextUtil.SEPARATOR_TSV_STR, rowDesc.Select(cell => cell.Text))
+                    ).ToList();
                 }
             }
 

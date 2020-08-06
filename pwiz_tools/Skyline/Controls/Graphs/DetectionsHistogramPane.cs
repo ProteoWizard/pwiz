@@ -59,7 +59,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 index.ToString( CultureInfo.CurrentCulture));
             ToolTip.AddLine(String.Format(Resources.DetectionHistogramPane_Tooltip_Count, Settings.TargetType.Label),
                 targetData.Histogram[index].ToString(CultureInfo.CurrentCulture));
-
         }
         protected override void HandleMouseClick(int index) { }
 

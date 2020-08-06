@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var targetData = _detectionData.GetTargetData(Settings.TargetType);
             ToolTip.AddLine(Resources.DetectionPlotPane_Tooltip_Replicate,
                 _detectionData.ReplicateNames[index]);
-            ToolTip.AddLine(String.Format(Resources.DetectionPlotPane_Tooltip_Count, Settings.TargetType.Label),
+            ToolTip.AddLine(string.Format(Resources.DetectionPlotPane_Tooltip_Count, Settings.TargetType.Label),
                 targetData.TargetsCount[index].ToString(CultureInfo.CurrentCulture));
             ToolTip.AddLine(Resources.DetectionPlotPane_Tooltip_CumulativeCount,
                 targetData.TargetsCumulative[index].ToString(CultureInfo.CurrentCulture));

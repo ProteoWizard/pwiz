@@ -55,8 +55,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public void OkDialog()
-        { 
-
+        {
             var helper = new MessageBoxHelper(this);
 
             if (rbQValue01.Checked)
@@ -66,7 +65,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (rbQValueCustom.Checked)
             {
                 var qValueCutoff = double.NaN;
-                if (!string.IsNullOrEmpty(txtQValueCustom.Text) 
+                if (!string.IsNullOrEmpty(txtQValueCustom.Text)
                     && !helper.ValidateDecimalTextBox(txtQValueCustom, 0, 1, out qValueCutoff))
                     return;
                 else

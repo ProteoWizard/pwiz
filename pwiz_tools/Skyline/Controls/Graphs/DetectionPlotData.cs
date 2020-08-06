@@ -55,7 +55,6 @@ namespace pwiz.Skyline.Controls.Graphs
             ReplicateNames = (from chromatogram in document.MeasuredResults.Chromatograms
                 select chromatogram.Name).ToList();
 
-            var qs = new List<float>(ReplicateCount);
             var thisPeptideData = new List<List<float>>();
             var peptideCount = 0;
             var currentProgress = 0;
@@ -71,9 +70,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         return;
 
                     if (precursor.IsDecoy) continue;
-                    qs.Clear();
+                    var qs = new List<float>(ReplicateCount);
                     //get q-values for precursor replicates
-                    foreach (var i in Enumerable.Range(0, ReplicateCount).ToArray())
+                    foreach (var i in Enumerable.Range(0, ReplicateCount))
                     {
                         var chromInfo = precursor.GetSafeChromInfo(i).FirstOrDefault(c => c.OptimizationStep == 0);
                         if (chromInfo != null && chromInfo.QValue.HasValue)
@@ -83,7 +82,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
 
                     precursorData.Add(new QData(precursor.Id, qs));
-                    thisPeptideData.Add(qs.ToList());
+                    thisPeptideData.Add(qs);
                 }
 
                 if (thisPeptideData.Count > 0)
@@ -218,8 +217,8 @@ namespace pwiz.Skyline.Controls.Graphs
                             }
                             else
                             {
-                                mins[i] = (mins[i - 1] > qValues[i]) ? qValues[i] : mins[i - 1];
-                                maxes[i] = (maxes[i - 1] < qValues[i]) ? qValues[i] : maxes[i - 1];
+                                mins[i] = Math.Min(mins[i - 1], qValues[i]);
+                                maxes[i] = Math.Max(maxes[i - 1], qValues[i]);
                             }
                         }
                     }
@@ -292,28 +291,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     data = Get(request) ?? DetectionPlotData.INVALID;
                     if (data.IsValid)
-                    {
                         return true;
-                    }
                     _callback = callback;
                     _stackWorker.Add(request);
                 }
                 else
                 {
                     _document = doc;
-                    new Task(CancelWorker, new object[] { request, false }).Start(); 
+                    new Task(() => CancelWorker(request, false)).Start(); 
                 }
                 return false;
             }
 
             public void Cancel()
             {
-                new Task(CancelWorker, new object[]{null, true}).Start();
+                new Task(() => CancelWorker(null, true)).Start();
             }
 
-            private void CancelWorker(object param)
+            private void CancelWorker(DataRequest request, bool userCancel)
             {
-                bool userCancel = (bool)((object[]) param)[1];
                 //signal cancel to other workers and wait
                 _tokenSource.Cancel();
                 var oldTokenSource = _tokenSource;
@@ -335,9 +331,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         Status = CacheStatus.idle;
                 }
                 //if provided, add the new request to the queue after cancellation is complete
-                if (((object[])param)[0] is DataRequest req)
+                if (request != null)
                 {
-                    _stackWorker.Add(req);
+                    _stackWorker.Add(request);
                 }
             }
 
@@ -363,7 +359,8 @@ namespace pwiz.Skyline.Controls.Graphs
                             if (dat.IsValidFor(_document, request.qValue)) res = dat;
                         }
 
-                        if (res != null) return;
+                        if (res != null)
+                            return;
                         Status = CacheStatus.processing;
                         res = new DetectionPlotData(_document, request.qValue, _tokenSource.Token, ReportProgress);
                         Status = CacheStatus.idle;
@@ -374,6 +371,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             _datas.Enqueue(res);
                             _callback.Invoke(res);
                         }
+
                     }
                 }
                 catch (Exception)

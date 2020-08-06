@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
@@ -12,22 +11,18 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class DetectionsToolbar : GraphSummaryToolbar //UserControl GraphSummaryToolbar        
     {
         private Timer _timer;
-        public bool TimerComplete { get; private set; }
-
-        private static Bitmap _emptyBitmap = new Bitmap(1, 1);
 
         private Dictionary<ToolStripDropDown, ToolStripItem> _selectedItems =
             new Dictionary<ToolStripDropDown, ToolStripItem>(4);
 
         public override bool Visible => true;
+        public ToolStripComboBox CbLevel => cbLevel;
 
         public DetectionsToolbar(GraphSummary graphSummary) : base(graphSummary)
         {
             InitializeComponent();
             _timer = new Timer { Interval = 100 };
             _timer.Tick += Timer_OnTick;
-            TimerComplete = true;
-
             IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);
         }
 
@@ -35,7 +30,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             _graphSummary.UpdateUIWithoutToolbar();
             _timer.Stop();
-            TimerComplete = true;
         }
 
         public override void OnDocumentChanged(SrmDocument oldDocument, SrmDocument newDocument)
@@ -50,6 +44,16 @@ namespace pwiz.Skyline.Controls.Graphs
             base.OnHandleDestroyed(e);
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+                _timer.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
         public override void UpdateUI()
         {
             IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);
@@ -60,23 +64,20 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             using (var dlgProperties = new DetectionToolbarProperties(_graphSummary))
             {
+                _timer.Stop();
                 if (dlgProperties.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
                 {
                     this.UpdateUI();
-
-                    TimerComplete = false;
-                    _timer.Stop();
                     _timer.Start();
                 }
             }
         }
 
-        private void cbLevel_SelectedIndexChanged(object sender, EventArgs e)
+        public void cbLevel_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (cbLevel.Items.Count == 2)
             {
                 Settings.TargetType = IntLabeledValue.GetValue(cbLevel, Settings.TargetType);
-                TimerComplete = false;
                 _timer.Stop();
                 _timer.Start();
             }

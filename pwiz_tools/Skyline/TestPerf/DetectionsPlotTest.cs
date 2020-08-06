@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -7,6 +8,8 @@ using pwiz.Common.Collections;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace TestPerf
@@ -26,16 +29,22 @@ namespace TestPerf
 
         private static readonly string[] TIP_TEXT =
         {
-            @"Replicate\t2_SW-B",
-            @"Precursor Count\t137",
-            @"Cumulative Count\t143",
-            @"All Count\t133",
-            @"-log10 of Q-Value Median\t6.0"
+            Resources.DetectionPlotPane_Tooltip_Replicate + TextUtil.SEPARATOR_TSV_STR + @"2_SW-B",
+            string.Format(Resources.DetectionPlotPane_Tooltip_Count, DetectionsGraphController.TargetType.PRECURSOR) + 
+            TextUtil.SEPARATOR_TSV_STR + 137.ToString( CultureInfo.CurrentCulture),
+            Resources.DetectionPlotPane_Tooltip_CumulativeCount + TextUtil.SEPARATOR_TSV_STR + 
+            143.ToString( CultureInfo.CurrentCulture),
+            Resources.DetectionPlotPane_Tooltip_AllCount + TextUtil.SEPARATOR_TSV_STR + 
+            133.ToString( CultureInfo.CurrentCulture),
+            Resources.DetectionPlotPane_Tooltip_QMedian + TextUtil.SEPARATOR_TSV_STR + 
+            6.0f.ToString(@"F1",CultureInfo.CurrentCulture)
         };
         private static readonly string[] HISTOGRAM_TIP_TEXT =
         {
-            @"Replicate Count\t5",
-            @"Precursor Count\t119",
+            Resources.DetectionHistogramPane_Tooltip_ReplicateCount + TextUtil.SEPARATOR_TSV_STR + 
+            5.ToString( CultureInfo.CurrentCulture),
+            String.Format(Resources.DetectionHistogramPane_Tooltip_Count, DetectionsGraphController.TargetType.PRECURSOR) + 
+            TextUtil.SEPARATOR_TSV_STR + 119.ToString( CultureInfo.CurrentCulture),
         };
 
         [TestMethod]
@@ -59,6 +68,8 @@ namespace TestPerf
             GraphSummary graph = SkylineWindow.DetectionsPlot;
             var toolbar = graph.Toolbar as DetectionsToolbar;
             Assert.IsNotNull(toolbar);
+            RunUI(() => { toolbar.CbLevel.SelectedItem = DetectionsGraphController.TargetType.PRECURSOR; });
+            WaitForGraphs();
 
             DetectionsPlotPane pane;
             Assert.IsTrue(graph.TryGetGraphPane(out pane));
@@ -77,7 +88,8 @@ namespace TestPerf
                 Trace.WriteLine(this.GetType().Name + ": set Q-Value to 0.003");
             });
             OkDialog(propDialog, propDialog.OkDialog);
-            WaitForCondition(() =>((DetectionsToolbar)graph.Toolbar).TimerComplete);
+            Trace.WriteLine(this.GetType().Name + ": properties dialog for Q-Value to 0.003 has been processed.");
+            WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.003f));
             AssertDataCorrect(pane, 0, 0.003f);
 
             //use properties dialog to update the q-value
@@ -91,7 +103,7 @@ namespace TestPerf
                 Trace.WriteLine(this.GetType().Name + ": set Q-Value to 0.001");
             });
             OkDialog(propDialog, propDialog.OkDialog);
-            WaitForCondition(() => ((DetectionsToolbar)graph.Toolbar).TimerComplete);
+            WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.001f));
             AssertDataCorrect(pane, 2, 0.001f);
 
             //verify the number of the bars on the plot
@@ -110,7 +122,7 @@ namespace TestPerf
                 Assert.IsNotNull(pane.ToolTip);
                 WaitForConditionUI(() => pane.ToolTip.IsVisible);
                 //verify the tooltip text
-                Assert.IsTrue(TIP_TEXT.SequenceEqual(pane.ToolTip.TipLines));
+                CollectionAssert.AreEqual(TIP_TEXT, pane.ToolTip.TipLines);
                 pane.HandleMouseMoveEvent(graph.GraphControl, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
                 Assert.IsFalse(pane.ToolTip.IsVisible);
             });
@@ -151,7 +163,8 @@ namespace TestPerf
                 Assert.IsNotNull(paneHistogram.ToolTip, "No tooltip found.");
                 WaitForConditionUI(() => paneHistogram.ToolTip.IsVisible, "Tooltip is not visible.");
                 //verify the tooltip text
-                Assert.IsTrue(HISTOGRAM_TIP_TEXT.SequenceEqual(paneHistogram.ToolTip.TipLines));
+                CollectionAssert.AreEqual(HISTOGRAM_TIP_TEXT, paneHistogram.ToolTip.TipLines);
+                
                 paneHistogram.HandleMouseMoveEvent(graphHistogram.GraphControl, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0));
                 Assert.IsFalse(paneHistogram.ToolTip.IsVisible);
             });
