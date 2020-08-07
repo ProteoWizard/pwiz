@@ -64,6 +64,11 @@ namespace pwiz.Skyline.Model.Results
             return GetSampleName() ?? GetFileNameWithoutExtension();
         }
 
+        public string GetSampleLocator()
+        {
+            return GetSampleIndex() > 0 ? $@"{GetFilePath()}:{GetSampleIndex()}" : GetFilePath();
+        }
+
         public static MsDataFileUri Parse(string url)
         {
             if (url.StartsWith(UnifiUrl.UrlPrefix))

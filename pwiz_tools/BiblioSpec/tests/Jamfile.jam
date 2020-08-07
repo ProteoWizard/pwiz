@@ -192,6 +192,8 @@ blib-test-build ssl : --unicode -o : output/ssl.blib : ssl.check : $(TEST_INPUTS
 blib-test-build ssl-ex : -o : output/ssl-ex.blib : ssl-ex.check : $(TEST_INPUTS_PATH)/extra-cols.ssl ;
 blib-test-build duplicates : -o : output/duplicates.blib : duplicates.check : $(TEST_INPUTS_PATH)/three-duplicates.ssl ;
 blib-test-build ssl-rt : -o : output/ssl-rt.blib : ssl-rt.check : $(TEST_INPUTS_PATH)/ssl-with-rt.ssl ;
+blib-test-build ssl-index-rt : -o : output/ssl-index-rt.blib : ssl-index-rt.check : $(TEST_INPUTS_PATH)/ssl-index-with-rt.ssl ;
+blib-test-build ssl-name-rt : -o : output/ssl-name-rt.blib : ssl-name-rt.check : $(TEST_INPUTS_PATH)/ssl-name-with-rt.ssl ;
 blib-test-build ssl-small-mol : -o : output/ssl-small-mol.blib : ssl-small-mol.check : $(TEST_INPUTS_PATH)/ssl-small-mol.ssl ;
 
 # Test building with percolator XML files

@@ -176,7 +176,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverPeakScoringModel.LoadList(peakScoringModel != null ? peakScoringModel.Name : null);
 
             IsShowLibraryExplorer = false;
-            tabControl1.TabPages.Remove(tabIntegration);
+            FormUtil.RemoveTabPage(tabIntegration, helpTip);
             comboNormalizationMethod.Items.AddRange(
                 NormalizationMethod.ListNormalizationMethods(parent.DocumentUI).ToArray());
             comboNormalizationMethod.SelectedItem = _peptideSettings.Quantification.NormalizationMethod;
