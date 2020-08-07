@@ -112,7 +112,7 @@ namespace pwiz.Skyline.FileUI
         {
             if (PanoramaPublishClient == null)
                 PanoramaPublishClient = new WebPanoramaPublishClient();
-            var listErrorServers = new List<Server>();
+            var listErrorServers = new List<Tuple<Server, string>>();
             foreach (var server in _panoramaServers)
             {
                 JToken folders = null;
@@ -124,7 +124,17 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (ex is WebException || ex is PanoramaServerException)
                     {
-                        listErrorServers.Add(server);
+                        var error = ex.Message;
+                        if (Resources
+                            .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server
+                            .Equals(error))
+                        {
+                            error += Environment.NewLine + Resources
+                                         .PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_;
+
+                        }
+
+                        listErrorServers.Add(new Tuple<Server, string>(server, error));
                     }
                     else
                     {
@@ -142,9 +152,9 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private string ServersToString(IEnumerable<Server> servers)
+        private string ServersToString(IEnumerable<Tuple<Server, string>> servers)
         {
-            return TextUtil.LineSeparate(servers.Select(s => s.URI.ToString()));
+            return TextUtil.LineSeparate(servers.Select(t => string.Join(Environment.NewLine, t.Item1.URI.ToString(), t.Item2)));
         }
 
         private TreeViewStateRestorer ServerTreeStateRestorer { get; set; }
