@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<!-- possible values are "a", "b", "c", "x", "y", "z", "H2O", "NH3", "IMM", "z+1", "z+2", "INT" (for internal fragments) -->
+<!-- new values are "a+1","a-1","b+1","b-1","c+1","c-1","x+1","x-1","y+1","y-1","z-1" -->
+<instruments>
+  <setting name="b, y" />
+  <setting name="b, y, -H2O, -NH3" />
+  <setting name="a, b, y, -H2O, -NH3, Imm" />
+  <setting name="a, b, y, -H2O, -NH3" />
+  <setting name="a, b, y" />
+  <setting name="a, b, y, Imm" />
+  <setting name="a, b, y, z, -H2O, -NH3, Imm" />
+  <setting name="c, y, z+1, z+2" />
+  <setting name="b, c, y, z+1, z+2" />
+  <setting name="b, y, INT" />
+  <setting name="b, y, INT, Imm" />
+  <setting name="a, b, y, INT" />
+  <setting name="a, b, y, INT, IMM" />
+  <setting name="a, b, y, INT, IMM, -H2O" />
+  <setting name="a, b, y, INT, IMM, -H2O, -NH3" />
+  <setting name="a, b, y, INT, IMM, -NH3" />
+  <setting name="a, b, c, x, y, z" />
+  <setting name="a+1, x, y-1, z" />
+  <setting name="a+1, b, x, y-1, z" />
+  <setting name="a+1, b, x, y, y-1, z" />
+  <setting name="a, a+1, b, c, x, y, y-1, z" />
+  <setting name="a+1, x, y, y-1, z" />
+  <setting name="a, a+1, a-1, b, b+1, b-1, c, c+1, c-1, x, x+1, x-1, y, y+1, y-1, z, z+1, z-1" />
+</instruments>

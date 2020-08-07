@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<enzymes>
+  <enzyme>
+    <name>Trypsin</name>
+    <cleavage_sites>KR</cleavage_sites>
+    <inhibitors>P</inhibitors>
+    <!-- <position>after|before</position> -->
+    <position>after</position>
+  </enzyme>
+  <enzyme>
+    <name>Trypsin/P</name>
+    <cleavage_sites>KR</cleavage_sites>
+    <position>after</position>
+  </enzyme>
+  <enzyme>
+    <name>LysC</name>
+    <cleavage_sites>K</cleavage_sites>
+    <position>after</position>
+  </enzyme>
+  <enzyme>
+    <name>GluC</name>
+    <cleavage_sites>DE</cleavage_sites>
+    <position>after</position>
+  </enzyme>
+  <enzyme>
+    <name>No-Enzyme</name>
+    <cleavage_sites>X</cleavage_sites>
+  </enzyme>
+  <enzyme>
+    <name>No-Cleavage</name>
+    <cleavage_sites></cleavage_sites>
+  </enzyme>
+</enzymes>
