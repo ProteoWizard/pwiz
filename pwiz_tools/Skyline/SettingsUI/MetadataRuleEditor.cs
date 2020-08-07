@@ -314,7 +314,7 @@ namespace pwiz.Skyline.SettingsUI
 
             DialogResult = DialogResult.OK;
         }
-
+        
         private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
