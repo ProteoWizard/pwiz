@@ -304,6 +304,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Batch Target Qualitative Ion Ratio.
+        /// </summary>
+        public static string BatchTargetQualitativeIonRatio {
+            get {
+                return ResourceManager.GetString("BatchTargetQualitativeIonRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Begin Pos.
         /// </summary>
         public static string BeginPos {
@@ -2662,6 +2671,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Qualitative Ion Ratio.
+        /// </summary>
+        public static string QualitativeIonRatio {
+            get {
+                return ResourceManager.GetString("QualitativeIonRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Qualitative Ion Ratio Status.
+        /// </summary>
+        public static string QualitativeIonRatioStatus {
+            get {
+                return ResourceManager.GetString("QualitativeIonRatioStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Quantification.
         /// </summary>
         public static string Quantification {
@@ -3180,6 +3207,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SummaryMessage {
             get {
                 return ResourceManager.GetString("SummaryMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target Qualitative Ion Ratio.
+        /// </summary>
+        public static string TargetQualitativeIonRatio {
+            get {
+                return ResourceManager.GetString("TargetQualitativeIonRatio", resourceCulture);
             }
         }
         

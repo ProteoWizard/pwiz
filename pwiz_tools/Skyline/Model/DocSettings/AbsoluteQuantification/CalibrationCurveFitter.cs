@@ -358,7 +358,42 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 figuresOfMerit = figuresOfMerit.ChangeUnits(QuantificationSettings.Units);
             }
+
+            figuresOfMerit = figuresOfMerit.ChangeTargetQualitativeIonRatio(GetTargetIonRatio());
             return figuresOfMerit;
+        }
+
+        public double? GetTargetIonRatio()
+        {
+            var measuredResults = SrmSettings.MeasuredResults;
+            double totalQualitativeIonRatio = 0;
+            int qualitativeIonRatioCount = 0;
+            foreach (var replicateIndex in EnumerateReplicates())
+            {
+                if (IsExcluded(replicateIndex))
+                {
+                    continue;
+                }
+                var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
+                if (!SampleType.STANDARD.Equals(chromatogramSet.SampleType))
+                {
+                    continue;
+                }
+
+                var qualitativeIonRatio = PeptideQuantifier.GetQualitativeIonRatio(SrmSettings, replicateIndex);
+                if (qualitativeIonRatio.HasValue)
+                {
+                    totalQualitativeIonRatio += qualitativeIonRatio.Value;
+                    qualitativeIonRatioCount++;
+                }
+            }
+
+            if (qualitativeIonRatioCount != 0)
+            {
+                return totalQualitativeIonRatio / qualitativeIonRatioCount;
+            }
+
+            return null;
         }
 
         public double? GetLimitOfQuantification(CalibrationCurve calibrationCurve)
@@ -591,19 +626,30 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return PeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel;
         }
 
-        public QuantificationResult GetQuantificationResult(int replicateIndex)
+
+
+        public PeptideQuantificationResult GetPeptideQuantificationResult(int replicateIndex)
         {
-            QuantificationResult result = new QuantificationResult();
             CalibrationCurve calibrationCurve = GetCalibrationCurve();
-            result = result.ChangeNormalizedArea(GetNormalizedPeakArea(new CalibrationPoint(replicateIndex, null)));
+            PeptideQuantificationResult result = new PeptideQuantificationResult();
+            result = (PeptideQuantificationResult) result.ChangeNormalizedArea(GetNormalizedPeakArea(new CalibrationPoint(replicateIndex, null)));
             if (HasExternalStandards() || HasInternalStandardConcentration())
             {
                 double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, new CalibrationPoint(replicateIndex, null));
-                result = result.ChangeCalculatedConcentration(calculatedConcentration);
+                result = (PeptideQuantificationResult) result.ChangeCalculatedConcentration(calculatedConcentration);
                 double? expectedConcentration = GetPeptideConcentration(replicateIndex);
-                result = result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
-                result = result.ChangeUnits(QuantificationSettings.Units);
+                result = (PeptideQuantificationResult) result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
+                result = (PeptideQuantificationResult) result.ChangeUnits(QuantificationSettings.Units);
             }
+
+            var ionRatio = PeptideQuantifier.GetQualitativeIonRatio(SrmSettings, replicateIndex);
+            if (ionRatio.HasValue)
+            {
+                var status = ValueStatus.GetStatus(ionRatio, GetTargetIonRatio(),
+                    SrmSettings.PeptideSettings.Quantification.QualitativeIonRatioThreshold / 100);
+                result = result.ChangeIonRatio(ionRatio, status);
+            }
+
             return result;
         }
 
@@ -692,7 +738,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static bool AnyBatchNames(SrmSettings srmSettings)
         {
             return srmSettings.HasResults &&
-                srmSettings.MeasuredResults.Chromatograms.Any(c => !string.IsNullOrEmpty(c.BatchName));
+                   srmSettings.MeasuredResults.Chromatograms.Any(c => !string.IsNullOrEmpty(c.BatchName));
         }
     }
 

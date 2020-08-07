@@ -191,7 +191,7 @@ namespace pwiz.Skyline.SettingsUI
             comboLodMethod.SelectedItem = _peptideSettings.Quantification.LodCalculation;
             tbxMaxLoqBias.Text = _peptideSettings.Quantification.MaxLoqBias.ToString();
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
-
+            tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
         }
 
         /// <summary>
@@ -545,6 +545,17 @@ namespace pwiz.Skyline.SettingsUI
                     return null;
                 }
                 quantification = quantification.ChangeMaxLoqCv(maxLoqCv);
+            }
+
+            if (!string.IsNullOrEmpty(tbxIonRatioThreshold.Text.Trim()))
+            {
+                double ionRatioThreshold;
+                if (!helper.ValidateDecimalTextBox(tbxIonRatioThreshold, 0, null, out ionRatioThreshold))
+                {
+                    return null;
+                }
+
+                quantification = quantification.ChangeQualitativeIonRatioThreshold(ionRatioThreshold);
             }
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
@@ -1423,6 +1434,19 @@ namespace pwiz.Skyline.SettingsUI
                 return double.Parse(tbxMaxLoqCv.Text.Trim());
             }
             set { tbxMaxLoqCv.Text = value.ToString(); }
+        }
+
+        public double? IonRatioThreshold
+        {
+            get
+            {
+                var text = tbxIonRatioThreshold.Text.Trim();
+                return string.IsNullOrEmpty(text) ? (double?) null : double.Parse(text);
+            }
+            set
+            {
+                tbxIonRatioThreshold.Text = value.ToString();
+            }
         }
 
         public LodCalculation QuantLodMethod
