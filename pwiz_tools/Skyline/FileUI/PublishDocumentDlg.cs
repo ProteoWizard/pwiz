@@ -129,8 +129,8 @@ namespace pwiz.Skyline.FileUI
                             .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server
                             .Equals(error))
                         {
-                            error += Environment.NewLine + Resources
-                                         .PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_;
+                            error = TextUtil.LineSeparate(error, Resources
+                                .PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_);
 
                         }
 
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.FileUI
 
         private string ServersToString(IEnumerable<Tuple<Server, string>> servers)
         {
-            return TextUtil.LineSeparate(servers.Select(t => string.Join(Environment.NewLine, t.Item1.URI.ToString(), t.Item2)));
+            return TextUtil.LineSeparate(servers.Select(t => TextUtil.LineSeparate(t.Item1.URI.ToString(), t.Item2)));
         }
 
         private TreeViewStateRestorer ServerTreeStateRestorer { get; set; }
