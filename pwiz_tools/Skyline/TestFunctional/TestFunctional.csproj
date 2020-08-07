@@ -163,6 +163,7 @@
     <Compile Include="CrosslinkChromatogramTest.cs" />
     <Compile Include="CrosslinkingTest.cs" />
     <Compile Include="CrosslinkNeutralLossTest.cs" />
+    <Compile Include="DetectionsPlotTest.cs" />
     <Compile Include="DocumentFileLockingTest.cs" />
     <Compile Include="ExplicitAnalyteConcentrationTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />

@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ToolTip?.Dispose();
         }
 
-        protected abstract void PopulateTooltip(int index);
+        public abstract void PopulateTooltip(int index);
 
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
