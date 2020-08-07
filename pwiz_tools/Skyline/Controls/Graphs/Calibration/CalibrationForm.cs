@@ -411,7 +411,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
                 else
                 {
-                    quantificationResult = curveFitter.GetQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
+                    quantificationResult = curveFitter.GetPeptideQuantificationResult(selectionIdentifier.Value.ReplicateIndex);
                     calculatedConcentration = quantificationResult?.CalculatedConcentration;
                 }
                 if (calculatedConcentration.HasValue)

@@ -1577,4 +1577,7 @@
   <data name="MetadataRule_Steps" xml:space="preserve">
     <value>Steps</value>
   </data>
+  <data name="QuantificationSettings_QualitativeIonRatioThreshold">
+    <value>Qualitative ion ratio threshold</value>
+  </data>
 </root>
