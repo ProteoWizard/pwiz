@@ -1184,7 +1184,7 @@ namespace pwiz.Skyline.Model
                     // Choose precursor field candidates from the first row
                     if (sequenceCandidates == null)
                     {
-                        iLabelType = FindLabelType(fields, lines, separator);
+                        iLabelType = FindLabelType(fields, lines, separator, true);
 
                         // If no sequence column found, return null.  After this, all errors throw.
                         var newSeqCandidates = FindSequenceCandidates(fields);
@@ -1398,28 +1398,69 @@ namespace pwiz.Skyline.Model
                 return -1;
             }
 
-            private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
+          
+            // Used extensively in GeneralRowReader, causes errors if changed
+
+            private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator, bool lookHard)
+
             {
-                // Look for the first column containing just L or H
+                // Look for the first column containing just L, H, light or heavy
+
                 int iLabelType = -1;
+
                 for (int i = 0; i < fields.Length; i++)
                 {
-                    if (Equals(fields[i], @"H") || Equals(fields[i], @"L"))
+                    if (ContainsLabelType(fields[i], lookHard))
                     {
                         iLabelType = i;
                         break;
                     }
+
                 }
+
                 if (iLabelType == -1)
+
                     return -1;
-                // Make sure all other rows have just L or H in this column
+
+                // Make sure all other rows have just label types in this column
+
                 foreach (string line in lines)
                 {
                     string[] fieldsNext = line.ParseDsvFields(separator);
-                    if (!Equals(fieldsNext[iLabelType], @"H") && !Equals(fieldsNext[iLabelType], @"L"))
-                        return -1;
+
+                    if (!ContainsLabelType(fieldsNext[iLabelType], lookHard))
+
+                       return -1;
+
                 }
                 return iLabelType;
+            }
+
+         
+
+            // Helper method for FindLabelType
+
+            private static bool ContainsLabelType(string field, bool fullCheck)
+            {
+                field = field.ToLower();
+                if (fullCheck)
+                {
+                    if (Equals(field, IsotopeLabelType.LIGHT_NAME.Substring(0, 1)) || (Equals(field, IsotopeLabelType.HEAVY_NAME.Substring(0, 1)) || (Equals(field, IsotopeLabelType.LIGHT_NAME)) || (Equals(field, IsotopeLabelType.HEAVY_NAME))))
+                    {
+                        return true;
+                    }
+
+                }
+                else
+                {
+
+                    if (Equals(field, IsotopeLabelType.LIGHT_NAME.Substring(0, 1)) || (Equals(field, IsotopeLabelType.HEAVY_NAME.Substring(0, 1))))
+                    {
+                        return true;
+                    }
+
+                }               
+                return false;
             }
 
             private static void AddCount(string key, IDictionary<string, int> dict)
