@@ -55,6 +55,9 @@ namespace pwiz.Skyline.SettingsUI
             this.checkedListBoxRuleSets = new System.Windows.Forms.CheckedListBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            this.lblListsDescription = new System.Windows.Forms.Label();
+            this.lblGroupComparisonsDescription = new System.Windows.Forms.Label();
+            this.lblMetadataRulesDescription = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPageAnnotations.SuspendLayout();
@@ -113,6 +116,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPageLists
             // 
+            this.tabPageLists.Controls.Add(this.lblListsDescription);
             this.tabPageLists.Controls.Add(this.btnAddList);
             this.tabPageLists.Controls.Add(this.btnManageLists);
             this.tabPageLists.Controls.Add(this.checkedListBoxLists);
@@ -143,6 +147,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPageGroupComparisons
             // 
+            this.tabPageGroupComparisons.Controls.Add(this.lblGroupComparisonsDescription);
             this.tabPageGroupComparisons.Controls.Add(this.btnAddGroupComparison);
             this.tabPageGroupComparisons.Controls.Add(this.btnEditGroupComparisonList);
             this.tabPageGroupComparisons.Controls.Add(this.checkedListBoxGroupComparisons);
@@ -213,6 +218,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPageResultFileRules
             // 
+            this.tabPageResultFileRules.Controls.Add(this.lblMetadataRulesDescription);
             this.tabPageResultFileRules.Controls.Add(this.btnEditRule);
             this.tabPageResultFileRules.Controls.Add(this.btnAddRule);
             this.tabPageResultFileRules.Controls.Add(this.btnDeleteRules);
@@ -262,6 +268,21 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            // 
+            // lblListsDescription
+            // 
+            resources.ApplyResources(this.lblListsDescription, "lblListsDescription");
+            this.lblListsDescription.Name = "lblListsDescription";
+            // 
+            // lblGroupComparisonsDescription
+            // 
+            resources.ApplyResources(this.lblGroupComparisonsDescription, "lblGroupComparisonsDescription");
+            this.lblGroupComparisonsDescription.Name = "lblGroupComparisonsDescription";
+            // 
+            // lblMetadataRulesDescription
+            // 
+            resources.ApplyResources(this.lblMetadataRulesDescription, "lblMetadataRulesDescription");
+            this.lblMetadataRulesDescription.Name = "lblMetadataRulesDescription";
             // 
             // DocumentSettingsDlg
             // 
@@ -316,5 +337,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnDeleteRules;
         private System.Windows.Forms.CheckedListBox checkedListBoxRuleSets;
         private System.Windows.Forms.Button btnEditRule;
+        private System.Windows.Forms.Label lblListsDescription;
+        private System.Windows.Forms.Label lblGroupComparisonsDescription;
+        private System.Windows.Forms.Label lblMetadataRulesDescription;
     }
 }

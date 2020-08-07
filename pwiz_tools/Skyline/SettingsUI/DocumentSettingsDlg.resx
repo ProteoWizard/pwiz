@@ -267,6 +267,31 @@
   <data name="&gt;&gt;tabPageAnnotations.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="lblListsDescription.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="lblListsDescription.Size" type="System.Drawing.Size, System.Drawing">
+    <value>609, 40</value>
+  </data>
+  <data name="lblListsDescription.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="lblListsDescription.Text" xml:space="preserve">
+    <value>Lists can contain arbitrary data to be associated with the Skyline document. 
+You can associate list items with elements in the document by defining a lookup Annotation.</value>
+  </data>
+  <data name="&gt;&gt;lblListsDescription.Name" xml:space="preserve">
+    <value>lblListsDescription</value>
+  </data>
+  <data name="&gt;&gt;lblListsDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblListsDescription.Parent" xml:space="preserve">
+    <value>tabPageLists</value>
+  </data>
+  <data name="&gt;&gt;lblListsDescription.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="btnAddList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -274,7 +299,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>520, 31</value>
+    <value>520, 46</value>
   </data>
   <data name="btnAddList.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 23</value>
@@ -295,7 +320,7 @@
     <value>tabPageLists</value>
   </data>
   <data name="&gt;&gt;btnAddList.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnManageLists.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -304,7 +329,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnManageLists.Location" type="System.Drawing.Point, System.Drawing">
-    <value>520, 60</value>
+    <value>520, 75</value>
   </data>
   <data name="btnManageLists.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 23</value>
@@ -325,16 +350,16 @@
     <value>tabPageLists</value>
   </data>
   <data name="&gt;&gt;btnManageLists.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="checkedListBoxLists.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="checkedListBoxLists.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 31</value>
+    <value>8, 46</value>
   </data>
   <data name="checkedListBoxLists.Size" type="System.Drawing.Size, System.Drawing">
-    <value>506, 199</value>
+    <value>506, 184</value>
   </data>
   <data name="checkedListBoxLists.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -349,7 +374,7 @@
     <value>tabPageLists</value>
   </data>
   <data name="&gt;&gt;checkedListBoxLists.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tabPageLists.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -378,6 +403,33 @@
   <data name="&gt;&gt;tabPageLists.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="lblGroupComparisonsDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="lblGroupComparisonsDescription.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="lblGroupComparisonsDescription.Size" type="System.Drawing.Size, System.Drawing">
+    <value>609, 40</value>
+  </data>
+  <data name="lblGroupComparisonsDescription.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="lblGroupComparisonsDescription.Text" xml:space="preserve">
+    <value>Group comparisons specify the settings to use when comparing results from different subsets of the replicates to each other. Annotations are used to specify which replicates belong to which subset.</value>
+  </data>
+  <data name="&gt;&gt;lblGroupComparisonsDescription.Name" xml:space="preserve">
+    <value>lblGroupComparisonsDescription</value>
+  </data>
+  <data name="&gt;&gt;lblGroupComparisonsDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblGroupComparisonsDescription.Parent" xml:space="preserve">
+    <value>tabPageGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;lblGroupComparisonsDescription.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="btnAddGroupComparison.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -385,7 +437,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddGroupComparison.Location" type="System.Drawing.Point, System.Drawing">
-    <value>540, 31</value>
+    <value>540, 46</value>
   </data>
   <data name="btnAddGroupComparison.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -406,7 +458,7 @@
     <value>tabPageGroupComparisons</value>
   </data>
   <data name="&gt;&gt;btnAddGroupComparison.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnEditGroupComparisonList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -415,7 +467,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnEditGroupComparisonList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>540, 60</value>
+    <value>540, 75</value>
   </data>
   <data name="btnEditGroupComparisonList.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -436,16 +488,16 @@
     <value>tabPageGroupComparisons</value>
   </data>
   <data name="&gt;&gt;btnEditGroupComparisonList.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="checkedListBoxGroupComparisons.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="checkedListBoxGroupComparisons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 31</value>
+    <value>8, 46</value>
   </data>
   <data name="checkedListBoxGroupComparisons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>526, 199</value>
+    <value>526, 184</value>
   </data>
   <data name="checkedListBoxGroupComparisons.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -460,7 +512,7 @@
     <value>tabPageGroupComparisons</value>
   </data>
   <data name="&gt;&gt;checkedListBoxGroupComparisons.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tabPageGroupComparisons.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -630,6 +682,33 @@
   <data name="&gt;&gt;tabPageReports.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="lblMetadataRulesDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="lblMetadataRulesDescription.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="lblMetadataRulesDescription.Size" type="System.Drawing.Size, System.Drawing">
+    <value>609, 39</value>
+  </data>
+  <data name="lblMetadataRulesDescription.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="lblMetadataRulesDescription.Text" xml:space="preserve">
+    <value>Metadata rules specify annotations and other properties that should be automatically set when result files are imported into Skyline. The source of these values can be parts of the result file name as well as other attributes of the result files.</value>
+  </data>
+  <data name="&gt;&gt;lblMetadataRulesDescription.Name" xml:space="preserve">
+    <value>lblMetadataRulesDescription</value>
+  </data>
+  <data name="&gt;&gt;lblMetadataRulesDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMetadataRulesDescription.Parent" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;lblMetadataRulesDescription.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="btnEditRule.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -640,7 +719,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnEditRule.Location" type="System.Drawing.Point, System.Drawing">
-    <value>521, 45</value>
+    <value>521, 74</value>
   </data>
   <data name="btnEditRule.Size" type="System.Drawing.Size, System.Drawing">
     <value>94, 23</value>
@@ -661,7 +740,7 @@
     <value>tabPageResultFileRules</value>
   </data>
   <data name="&gt;&gt;btnEditRule.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnAddRule.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -670,7 +749,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddRule.Location" type="System.Drawing.Point, System.Drawing">
-    <value>521, 16</value>
+    <value>521, 45</value>
   </data>
   <data name="btnAddRule.Size" type="System.Drawing.Size, System.Drawing">
     <value>94, 23</value>
@@ -691,7 +770,7 @@
     <value>tabPageResultFileRules</value>
   </data>
   <data name="&gt;&gt;btnAddRule.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="btnDeleteRules.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -703,7 +782,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnDeleteRules.Location" type="System.Drawing.Point, System.Drawing">
-    <value>521, 74</value>
+    <value>521, 103</value>
   </data>
   <data name="btnDeleteRules.Size" type="System.Drawing.Size, System.Drawing">
     <value>94, 23</value>
@@ -724,16 +803,16 @@
     <value>tabPageResultFileRules</value>
   </data>
   <data name="&gt;&gt;btnDeleteRules.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="checkedListBoxRuleSets.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="checkedListBoxRuleSets.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 16</value>
+    <value>8, 46</value>
   </data>
   <data name="checkedListBoxRuleSets.Size" type="System.Drawing.Size, System.Drawing">
-    <value>507, 214</value>
+    <value>507, 184</value>
   </data>
   <data name="checkedListBoxRuleSets.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -748,7 +827,7 @@
     <value>tabPageResultFileRules</value>
   </data>
   <data name="&gt;&gt;checkedListBoxRuleSets.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="tabPageResultFileRules.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -877,12 +956,12 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.203, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>DocumentSettingsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.203, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

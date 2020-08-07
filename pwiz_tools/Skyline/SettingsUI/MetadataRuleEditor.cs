@@ -192,6 +192,14 @@ namespace pwiz.Skyline.SettingsUI
                 rows.Add(row);
             }
             bindingListSourceResults.RowSource = new StaticRowSource(rows);
+            if (rows.Count == 0)
+            {
+                splitContainer1.Panel2Collapsed = true;
+            }
+            else
+            {
+                splitContainer1.Panel2Collapsed = false;
+            }
             UpdateButtons();
         }
 
