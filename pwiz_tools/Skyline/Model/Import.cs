@@ -706,6 +706,9 @@ namespace pwiz.Skyline.Model
             protected int ProteinColumn { get { return Indices.ProteinColumn; } }
             protected int PeptideColumn { get { return Indices.PeptideColumn; } }
             protected int LabelTypeColumn { get { return Indices.LabelTypeColumn; } }
+
+            protected int FragmentNameColumn { get { return Indices.FragmentNameColumn; } }
+
             private int PrecursorColumn { get { return Indices.PrecursorColumn; } }
             protected double PrecursorMz { get { return ColumnMz(Fields, PrecursorColumn, FormatProvider); } }
             private int PrecursorChargeColumn { get { return Indices.PrecursorChargeColumn; } }
@@ -1172,7 +1175,7 @@ namespace pwiz.Skyline.Model
                 PrecursorCandidate[] sequenceCandidates = null;
                 int bestCandidateIndex = -1;
                 int iLabelType = -1;
-                int trueLabelType = -1;
+                int posFragmentName = -1;
 
                 double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
 
@@ -1185,8 +1188,9 @@ namespace pwiz.Skyline.Model
                     // Choose precursor field candidates from the first row
                     if (sequenceCandidates == null)
                     {
-                        iLabelType = FindLabelType(fields, lines, separator, false);
-                        trueLabelType = FindLabelType(fields, lines, separator, true);
+                        iLabelType = FindLabelType(fields, lines, separator);
+                        posFragmentName = FindFragmentName(fields, lines, separator);
+
 
                         // If no sequence column found, return null.  After this, all errors throw.
                         var newSeqCandidates = FindSequenceCandidates(fields);
@@ -1254,7 +1258,7 @@ namespace pwiz.Skyline.Model
                     iProt = FindProtein(fieldsFirstRow, iSequence, lines, indices.Headers, provider, separator);
 
 
-                indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, trueLabelType);
+                indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, posFragmentName);
 
                 return new GeneralRowReader(provider, separator, indices, settings, lines);
             }
@@ -1404,25 +1408,24 @@ namespace pwiz.Skyline.Model
           
             // lookHard = false is used extensively in GeneralRowReader, lookHard = true is used to automatically assign the Label Type column header
 
-            private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator, bool lookHard)
+            private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
 
             {
                 // Look for the first column containing just L, H, light or heavy
 
-                int iLabelType = -1;
+                int LabelTypePos = -1;
 
                 for (int i = 0; i < fields.Length; i++)
                 {
-                    if (ContainsLabelType(fields[i], lookHard))
+                    if (ContainsLabelType(fields[i]))
                     {
-                        iLabelType = i;
+                        LabelTypePos = i;
                         break;
                     }
 
                 }
 
-                if (iLabelType == -1)
-
+                if (LabelTypePos == -1)
                     return -1;
 
                 // Make sure all other rows have just label types in this column
@@ -1431,40 +1434,73 @@ namespace pwiz.Skyline.Model
                 {
                     string[] fieldsNext = line.ParseDsvFields(separator);
 
-                    if (!ContainsLabelType(fieldsNext[iLabelType], lookHard))
+                    if (!ContainsLabelType(fieldsNext[LabelTypePos]))
 
                        return -1;
 
                 }
-                return iLabelType;
+                return LabelTypePos;
             }
 
          
 
             // Helper method for FindLabelType
 
-            private static bool ContainsLabelType(string field, bool fullCheck)
+            private static bool ContainsLabelType(string field)
             {
                 field = field.ToLower();
-                if (fullCheck)
+                
+                if (Equals(field, IsotopeLabelType.LIGHT_NAME.Substring(0, 1)) || (Equals(field, IsotopeLabelType.HEAVY_NAME.Substring(0, 1)) || (Equals(field, IsotopeLabelType.LIGHT_NAME)) || (Equals(field, IsotopeLabelType.HEAVY_NAME))))
                 {
-                    if (Equals(field, IsotopeLabelType.LIGHT_NAME.Substring(0, 1)) || (Equals(field, IsotopeLabelType.HEAVY_NAME.Substring(0, 1)) || (Equals(field, IsotopeLabelType.LIGHT_NAME)) || (Equals(field, IsotopeLabelType.HEAVY_NAME))))
-                    {
-                        return true;
-                    }
-
+                    return true;
                 }
-                else
-                {
 
-                    if (Equals(field, IsotopeLabelType.LIGHT_NAME.Substring(0, 1)) || (Equals(field, IsotopeLabelType.HEAVY_NAME.Substring(0, 1))))
-                    {
-                        return true;
-                    }
-
-                }               
                 return false;
             }
+
+            private static int FindFragmentName(string[] fields, IEnumerable<string> lines, char separator)
+            {
+                int FragmentNamePos = -1;
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    if (ContainsFragmentName(fields[i]))
+                    {
+                        FragmentNamePos = i;
+                        break;
+                    }
+                }
+
+                if (FragmentNamePos == -1)
+                {
+                    return -1;
+                }
+
+                foreach (string line in lines)
+                {
+                    string[] fieldsNext = line.ParseDsvFields(separator);
+
+                    if (!ContainsFragmentName(fieldsNext[FragmentNamePos]))
+                    {
+                        return -1;
+                    }
+                        
+
+                }
+                return FragmentNamePos;
+            }
+
+            // Helper method for FindFragmentName
+            private static bool ContainsFragmentName(string field)
+            {
+                field = field.ToLower();
+                //detection needs to get a little more specific, too broad right now
+                if (char.IsLetter(field, 0) && char.IsDigit(field, 1))
+                {
+                    return true;
+                }
+                return false;
+            }
+
 
             private static void AddCount(string key, IDictionary<string, int> dict)
             {
@@ -1571,7 +1607,7 @@ namespace pwiz.Skyline.Model
                 if (iProduct == -1)
                     throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
 
-                indices.AssignDetected(iExPeptide, iExPeptide, iPrecursor, iProduct, iExPeptide);
+                indices.AssignDetected(iExPeptide, iExPeptide, iPrecursor, iProduct, iExPeptide, iExPeptide);
                 return new ExPeptideRowReader(provider, separator, indices, exPeptideRegex, settings, lines);
             }
 
@@ -1734,20 +1770,22 @@ namespace pwiz.Skyline.Model
         public ColumnIndices(int proteinColumn, int peptideColumn, int precursorColumn, int productColumn)
             :this()
         {
-            AssignDetected(proteinColumn, peptideColumn, precursorColumn, productColumn, -1);
+            AssignDetected(proteinColumn, peptideColumn, precursorColumn, productColumn, -1, -1);
         }
 
         public void AssignDetected(int proteinColumn,
             int peptideColumn,
             int precursorColumn,
             int productColumn,
-            int labelTypeColumn)
+            int labelTypeColumn,
+            int fragmentNameColumn)
         {
             ProteinColumn = proteinColumn;
             PeptideColumn = peptideColumn;
             PrecursorColumn = precursorColumn;
             ProductColumn = productColumn;
             LabelTypeColumn = labelTypeColumn;
+            FragmentNameColumn = fragmentNameColumn;
         }
 
         public string[] Headers { get; private set; }
@@ -1768,6 +1806,11 @@ namespace pwiz.Skyline.Model
         /// A column specifying whether a decoy is expected (optional)
         /// </summary>
         public int DecoyColumn { get; set; }
+
+        /// <summary>
+        /// A column specifying a fragment name (optional)
+        /// </summary>
+        public int FragmentNameColumn { get; set; }
 
         /// <summary>
         /// A column specifying an iRT value
@@ -1791,6 +1834,7 @@ namespace pwiz.Skyline.Model
             IrtColumn = -1;
             LibraryColumn = -1;
             LabelTypeColumn = -1;
+            FragmentNameColumn = -1;
         }
 
         public static ColumnIndices FromLine(string line, char separator, Func<string, Type> getColumnType)
@@ -1832,6 +1876,8 @@ namespace pwiz.Skyline.Model
                 ProductColumn = -1;
             if (ProteinColumn == index)
                 ProteinColumn = -1;
+            if (FragmentNameColumn == index)
+                FragmentNameColumn = -1;
         }
 
         /// <summary>
