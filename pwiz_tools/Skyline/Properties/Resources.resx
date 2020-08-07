@@ -10962,4 +10962,7 @@ Invalid peptide sequence at position 18
   <data name="MetadataRuleSetList_Label_Metadata_Rule" xml:space="preserve">
     <value>Metadata Rule</value>
   </data>
+  <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_" xml:space="preserve">
+    <value>Go to Tools &gt; Options &gt; Panorama tab to update the username and password.</value>
+  </data>
 </root>

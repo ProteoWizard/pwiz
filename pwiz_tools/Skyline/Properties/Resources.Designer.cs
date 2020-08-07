@@ -8642,26 +8642,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to delete the rule &apos;{0}&apos;?.
-        /// </summary>
-        public static string DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_the_rule___0___ {
-            get {
-                return ResourceManager.GetString("DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_the_rule" +
-                        "___0___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to delete these {0} rules?.
-        /// </summary>
-        public static string DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_these__0__rules_ {
-            get {
-                return ResourceManager.GetString("DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_these__0" +
-                        "__rules_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete those items from those lists?.
         /// </summary>
         public static string DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_ {
@@ -8698,16 +8678,6 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_th" +
                         "at_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_t" +
                         "o_delete_those_items_from_that_list_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An error occurred while applying the rule &apos;{0}&apos;. Do you want to continue with the change to the Document Settings?.
-        /// </summary>
-        public static string DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_ {
-            get {
-                return ResourceManager.GetString("DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_ru" +
-                        "le___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_", resourceCulture);
             }
         }
         
@@ -17650,33 +17620,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} cannot be blank.
-        /// </summary>
-        public static string MetadataRuleEditor_OkDialog__0__cannot_be_blank {
-            get {
-                return ResourceManager.GetString("MetadataRuleEditor_OkDialog__0__cannot_be_blank", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There is already a metadata rule named &apos;{0}&apos;..
-        /// </summary>
-        public static string MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___ {
-            get {
-                return ResourceManager.GetString("MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to This is not a valid regular expression..
-        /// </summary>
-        public static string MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_ {
-            get {
-                return ResourceManager.GetString("MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Metadata Rule.
         /// </summary>
         public static string MetadataRuleSetList_Label_Metadata_Rule {
@@ -22260,6 +22203,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_informati" +
                         "on_from_the_following_servers_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Go to Tools &gt; Options &gt; Panorama tab to update the username and password..
+        /// </summary>
+        public static string PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_ {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to" +
+                        "_update_the_username_and_password_", resourceCulture);
             }
         }
         
