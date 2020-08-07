@@ -33,6 +33,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -273,7 +274,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (name != _originalName && _existing.Any(existingRuleSet=>existingRuleSet.Name == name))
             {
-                helper.ShowTextBoxError(tbxName, string.Format("There is already a metadata rule set named '{0}'.", name));
+                helper.ShowTextBoxError(tbxName, string.Format(Resources.MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___, name));
                 return;
             }
 
@@ -283,7 +284,7 @@ namespace pwiz.Skyline.SettingsUI
                 var rule = ruleSet.Steps[rowIndex];
                 if (rule.Source == null)
                 {
-                    MessageDlg.Show(this, string.Format("{0} cannot be blank", colSource.HeaderText));
+                    MessageDlg.Show(this, string.Format(Resources.MetadataRuleEditor_OkDialog__0__cannot_be_blank, colSource.HeaderText));
                     SelectCell(dataGridViewRules, colSource, rowIndex);
                     return;
                 }
@@ -296,7 +297,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     catch (Exception exception)
                     {
-                        MessageDlg.ShowWithException(this, "This is not a valid regular expression.", exception);
+                        MessageDlg.ShowWithException(this, Resources.MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_, exception);
                         SelectCell(dataGridViewRules, colPattern, rowIndex);
                         return;
                     }
@@ -304,7 +305,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (rule.Target == null)
                 {
-                    MessageDlg.Show(this, string.Format("{0} cannot be blank", colTarget.HeaderText));
+                    MessageDlg.Show(this, string.Format(Resources.MetadataRuleEditor_OkDialog__0__cannot_be_blank, colTarget.HeaderText));
                     SelectCell(dataGridViewRules, colTarget, rowIndex);
                     return;
                 }

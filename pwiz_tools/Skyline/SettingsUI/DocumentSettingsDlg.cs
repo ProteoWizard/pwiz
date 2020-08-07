@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
@@ -207,7 +206,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 string message =
                     string.Format(
-                        "An error occurred while applying the rule '{0}'. Do you want to continue with the change to the Document Settings?",
+                        Resources.DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_,
                         error.ExceptionDetail.RuleName);
                 var alertDlg = new AlertDlg(message, MessageBoxButtons.OKCancel) { Exception = error };
                 if (alertDlg.ShowAndDispose(this) == DialogResult.Cancel)
@@ -407,11 +406,11 @@ namespace pwiz.Skyline.SettingsUI
             string message;
             if (namesToDelete.Count == 1)
             {
-                message = string.Format("Are you sure you want to delete the rule '{0}'?", namesToDelete.First());
+                message = string.Format(Resources.DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_the_rule___0___, namesToDelete.First());
             }
             else
             {
-                message = string.Format("Are you sure you want to delete these {0} rules?", namesToDelete.Count);
+                message = string.Format(Resources.DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_these__0__rules_, namesToDelete.Count);
             }
 
             if (DialogResult.OK != new AlertDlg(message, MessageBoxButtons.OKCancel).ShowAndDispose(this))
