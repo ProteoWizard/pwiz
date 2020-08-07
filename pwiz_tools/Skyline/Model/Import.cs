@@ -1172,6 +1172,7 @@ namespace pwiz.Skyline.Model
                 PrecursorCandidate[] sequenceCandidates = null;
                 int bestCandidateIndex = -1;
                 int iLabelType = -1;
+                int trueLabelType = -1;
 
                 double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
 
@@ -1184,7 +1185,8 @@ namespace pwiz.Skyline.Model
                     // Choose precursor field candidates from the first row
                     if (sequenceCandidates == null)
                     {
-                        iLabelType = FindLabelType(fields, lines, separator, true);
+                        iLabelType = FindLabelType(fields, lines, separator, false);
+                        trueLabelType = FindLabelType(fields, lines, separator, true);
 
                         // If no sequence column found, return null.  After this, all errors throw.
                         var newSeqCandidates = FindSequenceCandidates(fields);
@@ -1251,7 +1253,8 @@ namespace pwiz.Skyline.Model
                 if (iProt == -1)
                     iProt = FindProtein(fieldsFirstRow, iSequence, lines, indices.Headers, provider, separator);
 
-                indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType);
+
+                indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, trueLabelType);
 
                 return new GeneralRowReader(provider, separator, indices, settings, lines);
             }
@@ -1399,7 +1402,7 @@ namespace pwiz.Skyline.Model
             }
 
           
-            // Used extensively in GeneralRowReader, causes errors if changed
+            // lookHard = false is used extensively in GeneralRowReader, lookHard = true is used to automatically assign the Label Type column header
 
             private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator, bool lookHard)
 
