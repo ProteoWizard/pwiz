@@ -60,7 +60,6 @@ SslReader::SslReader(BlibBuilder& maker,
       PSM* curPSM = new PSM(static_cast<PSM &>(newPSM));
       curPSM->modifiedSeq.clear();
       curPSM->mods.clear();
-      curPSM->specIndex = -1;
 
       // parse the modified sequence
       parseModSeq(curPSM->mods, curPSM->unmodSeq);
@@ -85,7 +84,13 @@ SslReader::SslReader(BlibBuilder& maker,
 
       if (newPSM.retentionTime >= 0)
       {
-          overrideRt_[newPSM.specKey] = newPSM.retentionTime;
+          int identifier = newPSM.specKey;
+          if (newPSM.specIndex != -1) // not default value means scan id is index=<index>
+              identifier = newPSM.specIndex;
+          else if (newPSM.specKey == -1) // default value
+              identifier = std::hash<string>()(newPSM.specName);
+
+          overrideRt_[identifier] = newPSM.retentionTime;
       }
   }
 
@@ -140,11 +145,12 @@ SslReader::SslReader(BlibBuilder& maker,
       psms_ = fileIterator->second;
 
       // look at first psm for scanKey vs scanName
-      if( psms_.front()->specKey == -1 ){ // default value
-        lookUpBy_ = NAME_ID;
-      } else {
-        lookUpBy_ = SCAN_NUM_ID;
-      }
+      if (psms_.front()->specIndex != -1) // not default value means scan id is index=<index>
+          lookUpBy_ = INDEX_ID;
+      else if (psms_.front()->specKey == -1) // default value
+          lookUpBy_ = NAME_ID;
+      else
+          lookUpBy_ = SCAN_NUM_ID;
 
       buildTables(fileScoreTypes_[fileIterator->first]);
     }
@@ -153,14 +159,12 @@ SslReader::SslReader(BlibBuilder& maker,
     return true;
   }
 
+  
   bool SslReader::getSpectrum(int identifier,
                               SpecData& returnData,
                               SPEC_ID_TYPE type,
                               bool getPeaks) {
-    if (type != SCAN_NUM_ID) {
-      throw BlibException(false, "SslReader can only look up spectra by scan number"); // Should never happen
-    }
-    if (PwizReader::getSpectrum(identifier, returnData, SCAN_NUM_ID, getPeaks))
+    if (PwizReader::getSpectrum(identifier, returnData, type, getPeaks))
     {
       map<int, double>::const_iterator i = overrideRt_.find(identifier);
       if (i != overrideRt_.end()) {
@@ -174,7 +178,14 @@ SslReader::SslReader(BlibBuilder& maker,
   bool SslReader::getSpectrum(string identifier,
                               SpecData& returnData,
                               bool getPeaks) {
-    throw BlibException(false, "SslReader can only look up spectra by scan number"); // Should never happen
+    if (PwizReader::getSpectrum(identifier, returnData, getPeaks))
+    {
+        map<int, double>::const_iterator i = overrideRt_.find(std::hash<string>()(identifier));
+        if (i != overrideRt_.end()) {
+            returnData.retentionTime = i->second;
+        }
+        return true;
+    }
     return false;
   }
 
