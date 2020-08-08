@@ -179,6 +179,43 @@ namespace pwiz.Skyline.Model.GroupComparison
             return totalArea;
         }
 
+        public double? GetQualitativeIonRatio(SrmSettings settings, int replicateIndex)
+        {
+            double numerator = 0;
+            int numeratorCount = 0;
+            double denominator = 0;
+            int denominatorCount = 0;
+            foreach (var precursor in PeptideDocNode.TransitionGroups)
+            {
+                foreach (var transition in precursor.Transitions)
+                {
+                    var quantity = GetTransitionQuantity(settings, null, NormalizationMethod.NONE, replicateIndex,
+                        precursor, transition, false);
+                    if (quantity != null)
+                    {
+                        double value = quantity.Intensity / quantity.Denominator;
+                        if (transition.ExplicitQuantitative)
+                        {
+                            denominator += value;
+                            denominatorCount++;
+                        }
+                        else
+                        {
+                            numerator += value;
+                            numeratorCount++;
+                        }
+                    }
+                }
+            }
+
+            if (numeratorCount == 0 || denominatorCount == 0)
+            {
+                return null;
+            }
+
+            return numerator / denominator;
+        }
+
         private Quantity GetTransitionQuantity(
             SrmSettings srmSettings,
             IDictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> peptideStandards,

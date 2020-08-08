@@ -175,6 +175,9 @@ integration boundaries and the chromatogram for the transition peak.</value>
     <value>Name of the batch that this replicate belongs to. The calibration curve for a particular replicate
 will be calculated using the subset of external standards with the same batch name.</value>
   </data>
+  <data name="BatchTargetQualitativeIonRatio">
+    <value>Target Qualitative Ion Ratio calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</value>
+  </data>
   <data name="BeginPos">
     <value>The position of the first (N-terminal) amino acid of the peptide within its
 containing protein sequence, or #N/A if no protein sequence is available.
@@ -1000,6 +1003,14 @@ also when you hover over the protein name in the peptide tree view.</value>
   <data name="QuadraticCoefficient">
     <value>Coefficient of the x-squared term in a quadratic regression.</value>
   </data>
+  <data name="QualitativeIonRatio">
+    <value>Ratio of the sum of peak areas of the the non-quantitative transitions to the sum of the peak areas of the quantitative transitions under this molecule or peptide.</value>
+  </data>
+  <data name="QualitativeIonRatioStatus">
+    <value>Description of how the Qualitative Ion Ratio compares to the Target Qualitative Ion Ratio.
+If the Qualitative Ion Ratio Threshold has been specified in the Quantification Settings, then Qualitative Ion Ratio Status will be either "pass" or "fail".
+If the Qualitative Ion Ratio Threshold has not been specified then Qualitative Ion Ratio Status will be either "equal", "low", or "high", depending on how it compares to the Target Qualitative Ion Ratio.</value>
+  </data>
   <data name="Quantification">
     <value>Values related to using the calibration curve or normalization method to quantify the analyte.</value>
   </data>
@@ -1178,6 +1189,9 @@ file, or the file name again for other file types.</value>
   <data name="StdevTotalAreaRatio">
     <value>Standard deviation of the precursor TotalAreaNormalized
 values.</value>
+  </data>
+  <data name="TargetQualitativeIonRatio">
+    <value>The average of the Qualitative Ion Ratio values across all of the external standard replicates that have not been excluded from calibration.</value>
   </data>
   <data name="ThreeLetterCodes">
     <value>The modified sequence where modifications are referred to by their three letter codes, e.g. "C[CAM]". If the modification does not have a three letter code, then its full name is used instead.</value>
