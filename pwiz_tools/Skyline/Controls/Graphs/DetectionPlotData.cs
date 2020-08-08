@@ -15,7 +15,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public class DetectionPlotData
     {
-        public static DetectionDataCache DataCache  = new DetectionDataCache();
+        private static DetectionDataCache _dataCache;
         private Dictionary<DetectionsGraphController.TargetType, DataSet> _data = new Dictionary<DetectionsGraphController.TargetType, DataSet>();
 
         public SrmDocument Document { get; private set; }
@@ -27,6 +27,19 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             return _data[target];
 
+        }
+
+        public static DetectionDataCache GetDataCache()
+        {
+            if (_dataCache == null)
+                _dataCache = new DetectionDataCache();
+            return _dataCache;
+        }
+
+        public static void ReleaseDataCache()
+        {
+            _dataCache.Dispose();
+            _dataCache = null;
         }
 
         public List<string> ReplicateNames { get; private set; }
@@ -234,7 +247,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         }
 
-        public class DetectionDataCache
+        public class DetectionDataCache : IDisposable
         {
             private class DataRequest
             {
@@ -285,11 +298,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public bool TryGet(SrmDocument doc, float qValue, Action<DetectionPlotData> callback,  out DetectionPlotData data)
             {
-                data = DetectionPlotData.INVALID;
+                data = INVALID;
+                if (IsDisposed) return false;
                 var request = new DataRequest() { qValue = qValue};
                 if (ReferenceEquals(doc, _document))
                 {
-                    data = Get(request) ?? DetectionPlotData.INVALID;
+                    data = Get(request) ?? INVALID;
                     if (data.IsValid)
                         return true;
                     _callback = callback;
@@ -305,6 +319,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void Cancel()
             {
+                if (IsDisposed) return;
                 new Task(() => CancelWorker(null, true)).Start();
             }
 
@@ -380,6 +395,21 @@ namespace pwiz.Skyline.Controls.Graphs
                     throw;
                 }
             }
+
+            public bool IsDisposed { get; private set; }
+
+            public void Dispose()
+            {
+                // Will only be called from UI thread, so it's safe to not have a lock
+                if (!IsDisposed)
+                {
+                    _tokenSource.Cancel();
+                    _stackWorker.Dispose();
+                    _tokenSource.Dispose();
+                    IsDisposed = true;
+                }
+            }
+
         }
     }
 

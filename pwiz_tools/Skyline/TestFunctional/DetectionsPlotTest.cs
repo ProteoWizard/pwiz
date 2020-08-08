@@ -120,7 +120,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.EditDelete();
             });
             WaitForGraphs();
-            WaitForConditionUI(() => DetectionPlotData.DataCache.Datas.Any((dat) =>
+            WaitForConditionUI(() => DetectionPlotData.GetDataCache().Datas.Any((dat) =>
                     ReferenceEquals(SkylineWindow.DocumentUI, dat.Document) &&
                     DetectionsGraphController.Settings.QValueCutoff == dat.QValueCutoff),
                 "Cache is not updated on document change.");
@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
             //verify that the cache is purged after the document update
             RunUI(() =>
             {
-                Assert.IsTrue(DetectionPlotData.DataCache.Datas.All((dat) =>
+                Assert.IsTrue(DetectionPlotData.GetDataCache().Datas.All((dat) =>
                     ReferenceEquals(SkylineWindow.DocumentUI, dat.Document)));
             });
             AssertDataCorrect(pane, 4, 0.001f);
@@ -170,7 +170,7 @@ namespace pwiz.SkylineTestFunctional
             Trace.WriteLine(this.GetType().Name + $": Waiting for data for qValue {qValue} .");
             WaitForConditionUI(() => (data = pane.CurrentData) != null 
                                            && pane.CurrentData.QValueCutoff == qValue
-                                           && DetectionPlotData.DataCache.Status == DetectionPlotData.DetectionDataCache.CacheStatus.idle,
+                                           && DetectionPlotData.GetDataCache().Status == DetectionPlotData.DetectionDataCache.CacheStatus.idle,
                 () => $"Retrieving data for qValue {qValue}, refIndex {refIndex} took too long.");
             WaitForGraphs();
             Assert.IsTrue(data.IsValid);

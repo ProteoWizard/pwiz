@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
             Legend.IsVisible = false;
 
-            if (!DetectionPlotData.DataCache.TryGet(
+            if (!DetectionPlotData.GetDataCache().TryGet(
                 GraphSummary.DocumentUIContainer.DocumentUI, Settings.QValueCutoff, this.DataCallback,
                 out _detectionData))
                 return;

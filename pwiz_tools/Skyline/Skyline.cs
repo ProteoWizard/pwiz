@@ -1090,7 +1090,6 @@ namespace pwiz.Skyline
             _importPeptideSearchManager.ProgressUpdateEvent -= UpdateProgress;
             
             DestroyAllChromatogramsGraph();
-
             base.OnClosing(e);
         }
 
@@ -1111,8 +1110,10 @@ namespace pwiz.Skyline
             if (!Program.FunctionalTest)
                 // ReSharper disable LocalizableElement
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
-                // ReSharper restore LocalizableElement
-            
+            // ReSharper restore LocalizableElement
+
+            DetectionPlotData.ReleaseDataCache();
+
             base.OnClosed(e);
         }
 

@@ -252,8 +252,8 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = false;
             ToolTip = new ToolTipImplementation(this);
 
-            DetectionPlotData.DataCache.ReportProgress += UpdateProgressHandler;
-            DetectionPlotData.DataCache.StatusChange += UpdateStatusHandler;
+            DetectionPlotData.GetDataCache().ReportProgress += UpdateProgressHandler;
+            DetectionPlotData.GetDataCache().StatusChange += UpdateStatusHandler;
         }
 
         public void UpdateProgressHandler(int progress)
@@ -287,8 +287,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void OnClose(EventArgs e)
         {
-            DetectionPlotData.DataCache.ReportProgress -= UpdateProgressHandler;
-            DetectionPlotData.DataCache.StatusChange -= UpdateStatusHandler;
+            DetectionPlotData.GetDataCache().ReportProgress -= UpdateProgressHandler;
+            DetectionPlotData.GetDataCache().StatusChange -= UpdateStatusHandler;
             Dispose();
         }
 
@@ -362,7 +362,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected virtual void AddLabels()
         {
             if (!_detectionData.IsValid)
-                switch (DetectionPlotData.DataCache.Status)
+                switch (DetectionPlotData.GetDataCache().Status)
                 {
                     case DetectionPlotData.DetectionDataCache.CacheStatus.processing:
                         Title.Text = Resources.DetectionPlotPane_WaitingForData_Label;
