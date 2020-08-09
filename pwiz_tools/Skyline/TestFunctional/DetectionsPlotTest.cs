@@ -1,5 +1,5 @@
 ﻿/*
- * Original author: Rita Chupalov <ritach .at. uw.edu>,
+ * Original author: Rita Chupalov <ritach .at. uw.edu>, 
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2020 University of Washington - Seattle, WA
