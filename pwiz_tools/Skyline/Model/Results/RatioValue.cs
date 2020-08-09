@@ -74,6 +74,15 @@ namespace pwiz.Skyline.Model.Results
             };
         }
 
+        public static RatioValue CalculateFromUnmatchedPairs(IList<double> numerators, IList<double> denominators)
+        {
+            if (numerators.Count == 0 || denominators.Count == 0)
+            {
+                return null;
+            }
+            return new RatioValue(numerators.Sum() / denominators.Sum());
+        }
+
         public static RatioValue ValueOf(double? ratio)
         {
             return ratio.HasValue ? new RatioValue(ratio.Value) : null;

@@ -95,7 +95,48 @@ namespace pwiz.Skyline.Model
 
         public TransitionLossKey Key(TransitionGroupDocNode parent)
         {
-            return new TransitionLossKey(parent, this, Losses);
+            return TransitionLossKey;
+        }
+
+        public TransitionLossKey TransitionLossKey
+        {
+            get
+            {
+                return new TransitionLossKey(this);
+            }
+        }
+
+        public object CustomIonEquivalenceTestValue
+        {
+            get
+            {
+                if (!Transition.IsCustom())
+                {
+                    return null;
+                }
+
+                if (!string.IsNullOrEmpty(PrimaryCustomIonEquivalenceKey))
+                    return PrimaryCustomIonEquivalenceKey;
+                else if (!string.IsNullOrEmpty(SecondaryCustomIonEquivalenceKey))
+                    return SecondaryCustomIonEquivalenceKey;
+                else if (Transition.IsNonReporterCustomIon())
+                {
+                    // transitions like this cannot be matched up between precursors,
+                    // so set use an object which will only be equal to this.
+                    return new IdentityPath(Transition);
+                }
+
+                return null;
+            }
+        }
+
+        public bool CanBeMatchedAcrossPrecursors
+        {
+            get
+            {
+                var customIonEquivalenceTestValue = CustomIonEquivalenceTestValue;
+                return customIonEquivalenceTestValue == null || customIonEquivalenceTestValue is string;
+            }
         }
 
         public MassType MzMassType { get; private set; }  // The massType used to calculate Mz

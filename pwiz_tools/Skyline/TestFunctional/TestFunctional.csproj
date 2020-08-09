@@ -347,6 +347,7 @@
     <Compile Include="UniquePeptidesDialogTest.cs" />
     <Compile Include="UniquePeptidesSettingsTest.cs" />
     <Compile Include="RunToRunRegressionTest.cs" />
+    <Compile Include="UnnamedTransitionTest.cs" />
     <Compile Include="UpdateAnnotationsGridTest.cs" />
     <Compile Include="UpdateGlobalStandardTest.cs" />
     <Compile Include="UpgradeTest.cs" />
@@ -526,6 +527,7 @@
     <None Include="TriggeredAcquisitionTest.zip" />
     <None Include="UIModeTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
+    <None Include="UnnamedTransitionTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />
   </ItemGroup>
   <ItemGroup>

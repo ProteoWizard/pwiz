@@ -463,7 +463,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             var keys = new HashSet<TransitionLossKey>();
             foreach (var transition in transitions)
             {
-                var key = transition.Key(null);
+                var key = transition.TransitionLossKey;
                 if (keys.Add(key))
                 {
                     yield return transition;

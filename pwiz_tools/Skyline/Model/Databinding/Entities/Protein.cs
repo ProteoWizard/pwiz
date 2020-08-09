@@ -222,12 +222,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 ? SrmDocument.Settings.MeasuredResults.Chromatograms.Count : 0;
             var abundances = new Dictionary<int, Tuple<double, int>>();
             var srmSettings = SrmDocument.Settings;
-            bool allowMissingTransitions =
-                srmSettings.PeptideSettings.Quantification.NormalizationMethod is NormalizationMethod.RatioToLabel;
+            bool allowMissingTransitions = 
+                srmSettings.PeptideSettings.Quantification.NormalizationMethod is
+                    NormalizationMethod.RatioToLabel && quantifiers.All(q=>q.MatchTransitionsAcrossPrecursors);
             for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
             {
                 double totalNumerator = 0;
-                double totalDenomicator = 0;
+                double totalDenominator = 0;
                 int transitionCount = 0;
                 foreach (var peptideQuantifier in quantifiers)
                 {
@@ -235,7 +236,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         false))
                     {
                         totalNumerator += Math.Max(entry.Value.Intensity, 1.0);
-                        totalDenomicator += Math.Max(entry.Value.Denominator, 1.0);
+                        totalDenominator += Math.Max(entry.Value.Denominator, 1.0);
                         allTransitionIdentityPaths.Add(entry.Key);
                         transitionCount++;
                     }
@@ -243,7 +244,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
                 if (transitionCount != 0)
                 {
-                    var abundance = totalNumerator / totalDenomicator;
+                    var abundance = totalNumerator / totalDenominator;
                     abundances.Add(iReplicate, Tuple.Create(abundance, transitionCount));
                 }
             }

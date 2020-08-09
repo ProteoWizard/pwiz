@@ -19,6 +19,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             PeptideDocNode = peptideDocNode;
             QuantificationSettings = quantificationSettings;
             _getNormalizationDataFunc = getNormalizationDataFunc;
+            MatchTransitionsAcrossPrecursors = peptideDocNode.CanMatchTransitionsAcrossPrecursors();
         }
 
         public static PeptideQuantifier GetPeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, SrmSettings srmSettings, PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
@@ -52,6 +53,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
         public ICollection<IsotopeLabelType> MeasuredLabelTypes { get; set; }
+
+        public bool MatchTransitionsAcrossPrecursors { get; set; }
 
         public NormalizationData GetNormalizationData()
         {
@@ -252,14 +255,23 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             if (null != peptideStandards)
             {
-                TransitionChromInfo chromInfoStandard;
-                if (!peptideStandards.TryGetValue(GetRatioTransitionKey(transitionGroup, transition), out chromInfoStandard))
+                if (MatchTransitionsAcrossPrecursors)
                 {
-                    return null;
+                    TransitionChromInfo chromInfoStandard;
+                    if (!peptideStandards.TryGetValue(GetRatioTransitionKey(transitionGroup, transition), out chromInfoStandard))
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        denominator = chromInfoStandard.Area;
+                    }
                 }
                 else
                 {
-                    denominator = chromInfoStandard.Area;
+                    denominator = peptideStandards
+                        .Where(kvp => kvp.Key.IsMatchForRatioPurposes(transitionGroup.PrecursorAdduct))
+                        .Sum(kvp => kvp.Value.Area);
                 }
             }
             else

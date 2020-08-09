@@ -819,40 +819,25 @@ namespace pwiz.Skyline.Model
 
     public sealed class TransitionLossKey
     {
-
-        public TransitionLossKey(TransitionGroupDocNode parent, TransitionDocNode transition, TransitionLosses losses)
+        public TransitionLossKey(TransitionDocNode transition)
         {
             Transition = transition.Transition;
-            Losses = losses;
+            Losses = transition.Losses;
             ComplexFragmentIonName = transition.ComplexFragmentIon.GetName();
-            if (Transition.IsCustom())
-            {
-                if (!string.IsNullOrEmpty(transition.PrimaryCustomIonEquivalenceKey))
-                    CustomIonEquivalenceTestValue = transition.PrimaryCustomIonEquivalenceKey;
-                else if (!string.IsNullOrEmpty(transition.SecondaryCustomIonEquivalenceKey))
-                    CustomIonEquivalenceTestValue = transition.SecondaryCustomIonEquivalenceKey;
-                else if (Transition.IsNonReporterCustomIon())
-                    CustomIonEquivalenceTestValue = @"_mzSortIndex_" + parent.Children.IndexOf(transition);
-                else
-                    CustomIonEquivalenceTestValue = null;
-            }
-            else
-            {
-               CustomIonEquivalenceTestValue = null;
-            }
+            CustomIonEquivalenceTestValue = transition.CustomIonEquivalenceTestValue;
         }
 
         public Transition Transition { get; private set; }
         public TransitionLosses Losses { get; private set; }
-        public string CustomIonEquivalenceTestValue { get; private set;  }
+        public object CustomIonEquivalenceTestValue { get; private set;  }
         public ComplexFragmentIonName ComplexFragmentIonName { get; private set; }
 
         public bool Equivalent(TransitionLossKey other)
         {
             return Equals(CustomIonEquivalenceTestValue, other.CustomIonEquivalenceTestValue) &&
-                other.Transition.Equivalent(Transition) &&
-                Equals(other.Losses, Losses) &&
-                Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
+                   other.Transition.Equivalent(Transition) &&
+                   Equals(other.Losses, Losses) &&
+                   Equals(other.ComplexFragmentIonName, ComplexFragmentIonName);
         }
 
         #region object overrides

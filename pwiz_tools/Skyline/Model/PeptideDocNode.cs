@@ -1176,6 +1176,12 @@ namespace pwiz.Skyline.Model
             return tranGroup.GetMatchingTransitions(settings, nodeGroupMatching, explicitMods);
         }
 
+        public bool CanMatchTransitionsAcrossPrecursors()
+        {
+            return TransitionGroups.SelectMany(group => group.Transitions)
+                .All(transition => transition.CanBeMatchedAcrossPrecursors);
+        }
+
         private PeptideDocNode UpdateResults(SrmSettings settingsNew /*, SrmSettingsDiff diff*/)
         {
             // First check whether any child results are present
@@ -1195,7 +1201,7 @@ namespace pwiz.Skyline.Model
 
             var transitionGroupKeys = new HashSet<Tuple<IsotopeLabelType, Adduct>>();
             // Update the results summary
-            var resultsCalc = new PeptideResultsCalculator(settingsNew, NormalizationMethod);
+            var resultsCalc = new PeptideResultsCalculator(settingsNew, NormalizationMethod, CanMatchTransitionsAcrossPrecursors());
             foreach (TransitionGroupDocNode nodeGroup in Children)
             {
                 var transitionGroupKey =
@@ -1272,14 +1278,17 @@ namespace pwiz.Skyline.Model
         {
             private readonly List<PeptideChromInfoListCalculator> _listResultCalcs;
 
-            public PeptideResultsCalculator(SrmSettings settings, NormalizationMethod normalizationMethod)
+            public PeptideResultsCalculator(SrmSettings settings, NormalizationMethod normalizationMethod, bool matchTransitionsAcrossPrecursors)
             {
                 Settings = settings;
+                MatchTransitionsAcrossPrecursors = matchTransitionsAcrossPrecursors;
                 _listResultCalcs = new List<PeptideChromInfoListCalculator>(settings.MeasuredResults.Chromatograms.Count);
             }
 
             private SrmSettings Settings { get; set; }
             private int TransitionGroupCount { get; set; }
+
+            public bool MatchTransitionsAcrossPrecursors { get; private set; }
 
             public void AddGroupChromInfo(TransitionGroupDocNode nodeGroup)
             {
@@ -1290,7 +1299,7 @@ namespace pwiz.Skyline.Model
                     int countResults = nodeGroup.Results.Count;
                     while (_listResultCalcs.Count < countResults)
                     {
-                        var calc = new PeptideChromInfoListCalculator(Settings, _listResultCalcs.Count);
+                        var calc = new PeptideChromInfoListCalculator(Settings, MatchTransitionsAcrossPrecursors, _listResultCalcs.Count);
                         _listResultCalcs.Add(calc);
                     }
                     for (int i = 0; i < countResults; i++)
@@ -1424,12 +1433,14 @@ namespace pwiz.Skyline.Model
 
         private sealed class PeptideChromInfoListCalculator
         {
-            public PeptideChromInfoListCalculator(SrmSettings settings, int resultsIndex)
+            public PeptideChromInfoListCalculator(SrmSettings settings, bool matchTransitionsAcrossPrecursors, int resultsIndex)
             {
                 ResultsIndex = resultsIndex;
                 Settings = settings;
+                MatchTransitionsAcrossPrecursors = matchTransitionsAcrossPrecursors;
             }
             public int ResultsIndex { get; private set; }
+            public bool MatchTransitionsAcrossPrecursors { get; private set; }
 
             private SrmSettings Settings { get; set; }
 
@@ -1452,7 +1463,7 @@ namespace pwiz.Skyline.Model
                     PeptideChromInfoCalculator calc;
                     if (!TryGetCalculator(info.FileIndex, out calc))
                     {
-                        calc = new PeptideChromInfoCalculator(Settings, ResultsIndex);
+                        calc = new PeptideChromInfoCalculator(Settings, MatchTransitionsAcrossPrecursors, ResultsIndex);
                         AddCalculator(info.FileIndex, calc);
                     }
                     calc.AddChromInfo(nodeGroup, info);
@@ -1506,7 +1517,7 @@ namespace pwiz.Skyline.Model
                     PeptideChromInfoCalculator calc;
                     if (!TryGetCalculator(info.FileIndex, out calc))
                     {
-                        calc = new PeptideChromInfoCalculator(Settings, ResultsIndex);
+                        calc = new PeptideChromInfoCalculator(Settings, MatchTransitionsAcrossPrecursors, ResultsIndex);
                         AddCalculator(info.FileIndex, calc);
                     }
                     calc.AddChromInfo(nodeGroup, nodeTran, info);
@@ -1685,15 +1696,18 @@ namespace pwiz.Skyline.Model
 
         private sealed class PeptideChromInfoCalculator
         {
-            public PeptideChromInfoCalculator(SrmSettings settings, int resultsIndex)
+            public PeptideChromInfoCalculator(SrmSettings settings, bool matchTransitionsAcrossPrecursors, int resultsIndex)
             {
                 Settings = settings;
+                MatchTransitionsAcrossPrecursors = matchTransitionsAcrossPrecursors;
                 ResultsIndex = resultsIndex;
                 TranTypes = new HashSet<IsotopeLabelType>();
                 TranAreas = new Dictionary<TransitionKey, float>();
             }
 
+
             private SrmSettings Settings { get; set; }
+            private bool MatchTransitionsAcrossPrecursors { get; set; }
             private int ResultsIndex { get; set; }
             private ChromFileInfoId FileId { get; set; }
             public int FileOrder { get; private set; }
@@ -1847,13 +1861,17 @@ namespace pwiz.Skyline.Model
                 // Delay allocation, which can be costly in DIA data with no ratios
                 List<double> numerators = null;
                 List<double> denominators = null;
-
-                foreach (var pair in GetAreaPairs(labelTypeNum))
+                if (!MatchTransitionsAcrossPrecursors)
+                {
+                    numerators = GetAreaPairsWithChargeState(labelTypeNum, precursorAdduct)
+                        .Select(pair => (double) pair.Value).ToList();
+                    denominators = GetAreaPairsWithChargeState(labelTypeDenom, precursorAdduct)
+                        .Select(pair => (double) pair.Value).ToList();
+                    return RatioValue.CalculateFromUnmatchedPairs(numerators, denominators);
+                }
+                foreach (var pair in GetAreaPairsWithChargeState(labelTypeNum, precursorAdduct))
                 {
                     var key = pair.Key;
-                    if (!key.IsMatchForRatioPurposes(precursorAdduct))
-                        continue; // Match charge states if any specified (adduct may also contain isotope info, so look at charge specifically)
-
                     float areaNum = pair.Value;
                     float areaDenom;
                     if (!TranAreas.TryGetValue(new TransitionKey(key, labelTypeDenom), out areaDenom))
@@ -1880,12 +1898,19 @@ namespace pwiz.Skyline.Model
                        where ReferenceEquals(labelType, pair.Key.LabelType)
                        select pair;
             }
+
+            private IEnumerable<KeyValuePair<TransitionKey, float>> GetAreaPairsWithChargeState(
+                IsotopeLabelType labelType,
+                Adduct chargeState)
+            {
+                return GetAreaPairs(labelType).Where(pair => pair.Key.IsMatchForRatioPurposes(chargeState));
+            }
         }
 
         public struct TransitionKey
         {
             private readonly IonType _ionType;
-            private readonly string _customIonEquivalenceTestValue; // Derived from formula, or name, or an mz sort
+            private readonly object _customIonEquivalenceTestValue; // Derived from formula, or name, or an mz sort
             private readonly int _ionOrdinal;
             private readonly int _massIndex;
             private readonly int? _decoyMassShift;
@@ -1928,6 +1953,14 @@ namespace pwiz.Skyline.Model
             internal bool IsMatchForRatioPurposes(Adduct other)
             {
                 return other.IsEmpty || Equals(PrecursorAdduct, other.Unlabeled);
+            }
+
+            public bool CanBeComparedAcrossPrecursors
+            {
+                get
+                {
+                    return _customIonEquivalenceTestValue == null || _customIonEquivalenceTestValue is string;
+                }
             }
 
             #region object overrides

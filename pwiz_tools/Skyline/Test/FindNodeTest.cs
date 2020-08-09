@@ -103,10 +103,10 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(countHeavyForward, CountOccurrances(doc, heavyText.ToUpperInvariant(), displaySettings, false, false));
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
                 Assert.AreEqual(1, CountOccurrances(doc, "hgflpr", displaySettings, true, false));
-
             // Test mismatched transitions finder
             var missmatchFinder = new FindOptions().ChangeCustomFinders(new[] {new MismatchedIsotopeTransitionsFinder()});
-            Assert.AreEqual(4, CountOccurrances(doc, missmatchFinder, displaySettings));
+            Assert.AreEqual(asSmallMolecules == RefinementSettings.ConvertToSmallMoleculesMode.masses_only ? 0 : 4, 
+                CountOccurrances(doc, missmatchFinder, displaySettings));
             var docRemoved = (SrmDocument) doc.RemoveChild(doc.Children[1]).RemoveChild(doc.Children[2]);
             Assert.AreEqual(0, CountOccurrances(docRemoved, missmatchFinder, displaySettings));
             var refineRemoveHeavy = new RefinementSettings {RefineLabelType = IsotopeLabelType.heavy};
@@ -121,7 +121,8 @@ namespace pwiz.SkylineTest
             var pathTranMultiRemove = docMulti.GetPathTo((int) SrmDocument.Level.Transitions, 7);
             var tranMultiRemove = docMulti.FindNode(pathTranMultiRemove);
             var docMultiRemoved = (SrmDocument) docMulti.RemoveChild(pathTranMultiRemove.Parent, tranMultiRemove);
-            Assert.AreEqual(2, CountOccurrances(docMultiRemoved, missmatchFinder, displaySettings));
+            Assert.AreEqual(asSmallMolecules == RefinementSettings.ConvertToSmallMoleculesMode.masses_only ? 0 : 2,
+                CountOccurrances(docMultiRemoved, missmatchFinder, displaySettings));
             var tranGroupMultiRemove = docMulti.FindNode(pathTranMultiRemove.Parent);
             var docMultiGroupRemoved = (SrmDocument)
                 docMulti.RemoveChild(pathTranMultiRemove.Parent.Parent, tranGroupMultiRemove);

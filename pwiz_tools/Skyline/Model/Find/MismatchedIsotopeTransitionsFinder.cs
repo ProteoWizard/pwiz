@@ -94,6 +94,10 @@ namespace pwiz.Skyline.Model.Find
             /// </summary>
             public void AddTransition(TransitionDocNode nodeTran, TransitionGroupDocNode parent)
             {
+                if (!nodeTran.CanBeMatchedAcrossPrecursors)
+                {
+                    return;
+                }
                 var tranKey = GetTransitionKey(nodeTran, parent);
                 if (!_dictTransitionCount.ContainsKey(tranKey))
                     _dictTransitionCount.Add(tranKey, 0);
