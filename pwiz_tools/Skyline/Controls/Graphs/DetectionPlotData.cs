@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static void ReleaseDataCache()
         {
-            _dataCache.Dispose();
+            _dataCache?.Dispose();
             _dataCache = null;
         }
 
