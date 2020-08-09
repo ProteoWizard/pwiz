@@ -17695,6 +17695,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} must either be a valid regular expression or blank.
+        /// </summary>
+        public static string MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank {
+            get {
+                return ResourceManager.GetString("MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_" +
+                        "blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exporting method {0}....
         /// </summary>
         public static string MethodExporter_ExportMethod_Exporting_method__0__ {

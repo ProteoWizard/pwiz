@@ -270,7 +270,7 @@ namespace pwiz.Skyline.SettingsUI
                 catch (Exception)
                 {
                     helper.ShowTextBoxError(tbxRegularExpression,
-                        "{0} must either be a valid regular expression or blank");
+                        Resources.MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank);
                     return;
                 }
             }

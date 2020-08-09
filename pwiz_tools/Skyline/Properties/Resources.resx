@@ -10983,4 +10983,7 @@ Invalid peptide sequence at position 18
   <data name="MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_" xml:space="preserve">
     <value>This is not a valid regular expression.</value>
   </data>
+  <data name="MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank" xml:space="preserve">
+    <value>{0} must either be a valid regular expression or blank</value>
+  </data>
 </root>
