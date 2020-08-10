@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -9499,6 +9499,12 @@ Here are the {0} pairs with multiple entries:
   <data name="Extensions_CustomToString_Scheduling" xml:space="preserve">
     <value>Scheduling</value>
   </data>
+  <data name="Extensions_CustomToString_Detections_Replicates" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="Extensions_CustomToString_Detections_Histogram" xml:space="preserve">
+    <value>Histogram</value>
+  </data>
   <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_" xml:space="preserve">
     <value>The file {0} is missing.</value>
   </data>
@@ -10865,6 +10871,84 @@ Invalid peptide sequence at position 18
   </data>
   <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
     <value>Could not read the precursor m/z value "{0}"</value>
+  </data>
+  <data name="DetectionPlot_TargetType_Precursor" xml:space="preserve">
+    <value>Precursor</value>
+  </data>
+  <data name="DetectionPlot_TargetType_Peptide" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="DetectionPlot_YScale_One" xml:space="preserve">
+    <value>{0} Count</value>
+  </data>
+  <data name="DetectionPlot_YScale_Percent" xml:space="preserve">
+    <value>% of all {0}s</value>
+  </data>
+  <data name="SkylineWindow_CreateGraphDetections_Counts" xml:space="preserve">
+    <value>Detection</value>
+  </data>
+  <data name="DetectionToolbarProperties_AtLeastNReplicates" xml:space="preserve">
+    <value>At least {0} replicates</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_Replicate" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_Count" xml:space="preserve">
+    <value>{0} Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_CumulativeCount" xml:space="preserve">
+    <value>Cumulative Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_AllCount" xml:space="preserve">
+    <value>All Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_QMedian" xml:space="preserve">
+    <value>-log10 of Q-Value Median</value>
+  </data>
+  <data name="DetectionPlotPane_XAxis_Name" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
+  <data name="DetectionPlotPane_YAxis_Name" xml:space="preserve">
+    <value>Detections</value>
+  </data>
+  <data name="DetectionPlotPane_CumulativeLine_Name" xml:space="preserve">
+    <value>cumulative</value>
+  </data>
+  <data name="DetectionPlotPane_AllRunsLine_Name" xml:space="preserve">
+    <value>all runs</value>
+  </data>
+  <data name="DetectionPlotPane_AtLeastLine_Name" xml:space="preserve">
+    <value>at least {0} (of {1}) - {2:#,##0}</value>
+  </data>
+  <data name="DetectionPlotPane_Label_Mean" xml:space="preserve">
+    <value>  Mean: {0:#,##0}</value>
+  </data>
+  <data name="DetectionPlotPane_Label_Stddev" xml:space="preserve">
+    <value>  Stddev:{1:#,##0}</value>
+  </data>
+  <data name="DetectionPlotPane_WaitingForData_Label" xml:space="preserve">
+    <value>Calculating (Esc to cancel)...</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlotError_Label" xml:space="preserve">
+    <value>Error when retrieving plot data.</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlot_Label" xml:space="preserve">
+    <value>No data available for this plot.</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlotCanceled_Label" xml:space="preserve">
+    <value>Operation canceled.</value>
+  </data>
+  <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
+    <value>Replicate Count</value>
+  </data>
+  <data name="DetectionHistogramPane_YAxis_Name" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="DetectionHistogramPane_Tooltip_ReplicateCount" xml:space="preserve">
+    <value>Replicate Count</value>
+  </data>
+  <data name="DetectionHistogramPane_Tooltip_Count" xml:space="preserve">
+    <value>{0} Count</value>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch" xml:space="preserve">
     <value>A FASTA file is required for the DDA search.</value>
