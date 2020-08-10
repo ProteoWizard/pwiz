@@ -926,7 +926,10 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             var refSpectraId = dataReader.GetInt32(0);
                             var accession = dataReader.GetString(1);
-                            proteinsBySpectraID.Add(refSpectraId, accession);
+                            if (!string.IsNullOrEmpty(accession) && proteinsBySpectraID.ContainsKey(refSpectraId))
+                            {
+                                proteinsBySpectraID.Add(refSpectraId, accession);
+                            }
                         }
                     }
                 }
