@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Alerts
         }
 
         private readonly SrmDocument _document;
-        private readonly List<PeptideGroupDocNode> _addedPeptideGroups;
+        public readonly List<PeptideGroupDocNode> _addedPeptideGroups;
 
         public bool DocumentFinalCalculated { get; private set; }
         public SrmDocument DocumentFinal { get; private set; }

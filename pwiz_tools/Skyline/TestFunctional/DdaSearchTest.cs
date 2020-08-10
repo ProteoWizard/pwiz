@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -171,7 +172,15 @@ namespace pwiz.SkylineTestFunctional
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 Assert.AreEqual(1131, proteinCount);
-                Assert.AreEqual(61, peptideCount);
+                if (61 != peptideCount)
+                {
+                    Console.Out.WriteLine("Incorrect peptide count");
+                    foreach (var peptideGroup in emptyProteinsDlg._addedPeptideGroups)
+                    {
+                        Console.Out.WriteLine("{0}: {1} peptides", peptideGroup.Name, peptideGroup.PeptideCount);
+                    }
+                    Assert.AreEqual(61, peptideCount);
+                }
                 Assert.AreEqual(61, precursorCount);
                 Assert.AreEqual(183, transitionCount);
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
