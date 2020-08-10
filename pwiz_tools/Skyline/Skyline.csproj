@@ -354,6 +354,23 @@
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.Designer.cs">
       <DependentUpon>ExportMethodScheduleGraph.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\DetectionPlotData.cs" />
+    <Compile Include="Controls\Graphs\DetectionsGraphController.cs" />
+    <Compile Include="Controls\Graphs\DetectionsHistogramPane.cs" />
+    <Compile Include="Controls\Graphs\DetectionsByReplicatePane.cs" />
+    <Compile Include="Controls\Graphs\DetectionsPlotPane.cs" />
+    <Compile Include="Controls\Graphs\DetectionsToolbar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\DetectionsToolbar.Designer.cs">
+      <DependentUpon>DetectionsToolbar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Graphs\DetectionToolbarProperties.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\DetectionToolbarProperties.Designer.cs">
+      <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\ReplicateValue.cs" />
     <Compile Include="Controls\ImageListBox.cs">
@@ -2119,6 +2136,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationForm.zh-CHS.resx">
       <DependentUpon>CalibrationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\DetectionsToolbar.resx">
+      <DependentUpon>DetectionsToolbar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\DetectionToolbarProperties.resx">
+      <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\FileProgressControl.ja.resx">
       <DependentUpon>FileProgressControl.cs</DependentUpon>
