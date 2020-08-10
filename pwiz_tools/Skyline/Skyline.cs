@@ -1091,7 +1091,6 @@ namespace pwiz.Skyline
             _importPeptideSearchManager.ProgressUpdateEvent -= UpdateProgress;
             
             DestroyAllChromatogramsGraph();
-
             base.OnClosing(e);
         }
 
@@ -1112,8 +1111,10 @@ namespace pwiz.Skyline
             if (!Program.FunctionalTest)
                 // ReSharper disable LocalizableElement
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
-                // ReSharper restore LocalizableElement
-            
+            // ReSharper restore LocalizableElement
+
+            DetectionPlotData.ReleaseDataCache();
+
             base.OnClosed(e);
         }
 
@@ -4924,6 +4925,7 @@ namespace pwiz.Skyline
             SetResultIndexOnGraphs(_listGraphRetentionTime, true);
             SetResultIndexOnGraphs(_listGraphPeakArea, false);
             SetResultIndexOnGraphs(_listGraphMassError, false);
+            SetResultIndexOnGraphs(_listGraphDetections, false);
 
             var liveResultsGrid = (LiveResultsGrid)_resultsGridForm;
             if (null != liveResultsGrid)
@@ -5868,6 +5870,8 @@ namespace pwiz.Skyline
             ShowSequenceTreeForm(true, true);
             UpdateGraphPanes();
         }
+
+
     }
 }
 

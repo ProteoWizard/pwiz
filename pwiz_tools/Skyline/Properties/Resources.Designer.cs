@@ -8338,6 +8338,231 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} Count.
+        /// </summary>
+        public static string DetectionHistogramPane_Tooltip_Count {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_Tooltip_Count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Count.
+        /// </summary>
+        public static string DetectionHistogramPane_Tooltip_ReplicateCount {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_Tooltip_ReplicateCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Count.
+        /// </summary>
+        public static string DetectionHistogramPane_XAxis_Name {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_XAxis_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Frequency.
+        /// </summary>
+        public static string DetectionHistogramPane_YAxis_Name {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_YAxis_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide.
+        /// </summary>
+        public static string DetectionPlot_TargetType_Peptide {
+            get {
+                return ResourceManager.GetString("DetectionPlot_TargetType_Peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor.
+        /// </summary>
+        public static string DetectionPlot_TargetType_Precursor {
+            get {
+                return ResourceManager.GetString("DetectionPlot_TargetType_Precursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Count.
+        /// </summary>
+        public static string DetectionPlot_YScale_One {
+            get {
+                return ResourceManager.GetString("DetectionPlot_YScale_One", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to % of all {0}s.
+        /// </summary>
+        public static string DetectionPlot_YScale_Percent {
+            get {
+                return ResourceManager.GetString("DetectionPlot_YScale_Percent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to all runs.
+        /// </summary>
+        public static string DetectionPlotPane_AllRunsLine_Name {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_AllRunsLine_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to at least {0} (of {1}) - {2:#,##0}.
+        /// </summary>
+        public static string DetectionPlotPane_AtLeastLine_Name {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_AtLeastLine_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to cumulative.
+        /// </summary>
+        public static string DetectionPlotPane_CumulativeLine_Name {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_CumulativeLine_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No data available for this plot..
+        /// </summary>
+        public static string DetectionPlotPane_EmptyPlot_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_EmptyPlot_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operation canceled..
+        /// </summary>
+        public static string DetectionPlotPane_EmptyPlotCanceled_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_EmptyPlotCanceled_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error when retrieving plot data..
+        /// </summary>
+        public static string DetectionPlotPane_EmptyPlotError_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_EmptyPlotError_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to   Mean: {0:#,##0}.
+        /// </summary>
+        public static string DetectionPlotPane_Label_Mean {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Label_Mean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to   Stddev:{1:#,##0}.
+        /// </summary>
+        public static string DetectionPlotPane_Label_Stddev {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Label_Stddev", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All Count.
+        /// </summary>
+        public static string DetectionPlotPane_Tooltip_AllCount {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Tooltip_AllCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Count.
+        /// </summary>
+        public static string DetectionPlotPane_Tooltip_Count {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Tooltip_Count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cumulative Count.
+        /// </summary>
+        public static string DetectionPlotPane_Tooltip_CumulativeCount {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Tooltip_CumulativeCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -log10 of Q-Value Median.
+        /// </summary>
+        public static string DetectionPlotPane_Tooltip_QMedian {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Tooltip_QMedian", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate.
+        /// </summary>
+        public static string DetectionPlotPane_Tooltip_Replicate {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Tooltip_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating (Esc to cancel)....
+        /// </summary>
+        public static string DetectionPlotPane_WaitingForData_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_WaitingForData_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate.
+        /// </summary>
+        public static string DetectionPlotPane_XAxis_Name {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_XAxis_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detections.
+        /// </summary>
+        public static string DetectionPlotPane_YAxis_Name {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_YAxis_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At least {0} replicates.
+        /// </summary>
+        public static string DetectionToolbarProperties_AtLeastNReplicates {
+            get {
+                return ResourceManager.GetString("DetectionToolbarProperties_AtLeastNReplicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Extraction Windows.
         /// </summary>
         public static string DiaIsolationWindowsGraphForm_checkBox1_CheckedChanged_Extraction_Windows {
@@ -12474,6 +12699,24 @@ namespace pwiz.Skyline.Properties {
         public static string Extensions_CustomToString__2D_Histogram {
             get {
                 return ResourceManager.GetString("Extensions_CustomToString__2D_Histogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Histogram.
+        /// </summary>
+        public static string Extensions_CustomToString_Detections_Histogram {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Detections_Histogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicates.
+        /// </summary>
+        public static string Extensions_CustomToString_Detections_Replicates {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Detections_Replicates", resourceCulture);
             }
         }
         
@@ -26005,6 +26248,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ConnectLibrarySpecs_Spectral_Library {
             get {
                 return ResourceManager.GetString("SkylineWindow_ConnectLibrarySpecs_Spectral_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detection.
+        /// </summary>
+        public static string SkylineWindow_CreateGraphDetections_Counts {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CreateGraphDetections_Counts", resourceCulture);
             }
         }
         
