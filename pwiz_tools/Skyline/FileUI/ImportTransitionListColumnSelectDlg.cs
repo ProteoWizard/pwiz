@@ -129,7 +129,8 @@ namespace pwiz.Skyline.FileUI
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,
-                    "Fragment Name"
+                    "Fragment Name",
+                    "Precursor Charge"
                 });
                 comboBox.SelectedIndex = 0;
                 comboBox.SelectedIndexChanged += comboChanged;       
@@ -151,6 +152,7 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
             SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             SetComboBoxText(columns.FragmentNameColumn, "Fragment Name");
+            SetComboBoxText(columns.PrecursorChargeColumn, "Precursor Charge");
         }
 
         public void ResizeComboBoxes()
@@ -258,6 +260,12 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.FragmentNameColumn = comboBoxIndex;
             }
+            else if (comboBox.Text == "Precursor Charge")
+            {
+                CheckForComboBoxOverlap(columns.PrecursorChargeColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.PrecursorChargeColumn = comboBoxIndex;
+            }
             else
             {
                 if (columns.DecoyColumn == comboBoxIndex) columns.DecoyColumn = -1;
@@ -269,6 +277,7 @@ namespace pwiz.Skyline.FileUI
                 if (columns.ProductColumn == comboBoxIndex) columns.ProductColumn = -1;
                 if (columns.ProteinColumn == comboBoxIndex) columns.ProteinColumn = -1;
                 if (columns.FragmentNameColumn == comboBoxIndex) columns.FragmentNameColumn = -1;
+                if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
             }
         }
 

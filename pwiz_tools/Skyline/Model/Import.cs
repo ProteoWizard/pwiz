@@ -711,7 +711,7 @@ namespace pwiz.Skyline.Model
 
             private int PrecursorColumn { get { return Indices.PrecursorColumn; } }
             protected double PrecursorMz { get { return ColumnMz(Fields, PrecursorColumn, FormatProvider); } }
-            private int PrecursorChargeColumn { get { return Indices.PrecursorChargeColumn; } }
+            protected int PrecursorChargeColumn { get { return Indices.PrecursorChargeColumn; } }
             protected int? PrecursorCharge { get { return ColumnInt(Fields, PrecursorChargeColumn, FormatProvider); } }
             private int ProductColumn { get { return Indices.ProductColumn; } }
             public double ProductMz { get { return ColumnMz(Fields, ProductColumn, FormatProvider); } }
@@ -1190,7 +1190,7 @@ namespace pwiz.Skyline.Model
                     {
                         iLabelType = FindLabelType(fields, lines, separator);
                         posFragmentName = FindFragmentName(fields, lines, separator);
-
+                    
 
                         // If no sequence column found, return null.  After this, all errors throw.
                         var newSeqCandidates = FindSequenceCandidates(fields);
@@ -1252,13 +1252,14 @@ namespace pwiz.Skyline.Model
                     tolerance, provider, settings);
                 if (iProduct == -1)
                     throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
-
                 int iProt = indices.ProteinColumn;
                 if (iProt == -1)
                     iProt = FindProtein(fieldsFirstRow, iSequence, lines, indices.Headers, provider, separator);
+                int posPrecursorCharge = indices.PrecursorChargeColumn;
+                if (posPrecursorCharge == -1)
+                    posPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator);
 
-
-                indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, posFragmentName);
+                indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, posFragmentName, posPrecursorCharge);
 
                 return new GeneralRowReader(provider, separator, indices, settings, lines);
             }
@@ -1405,7 +1406,6 @@ namespace pwiz.Skyline.Model
                 return -1;
             }
 
-          
             // lookHard = false is used extensively in GeneralRowReader, lookHard = true is used to automatically assign the Label Type column header
 
             private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
@@ -1500,7 +1500,58 @@ namespace pwiz.Skyline.Model
                 }
                 return false;
             }
+            private static int FindPrecursorCharge(string[] fields, IEnumerable<string> lines, char separator)
 
+            {
+                // Look for the first column containing just a Precursor Charge
+
+                int PrecursorChargePos = -1;
+
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    if (ContainsPrecursorCharge(fields[i]))
+                    {
+                        PrecursorChargePos = i;
+                        break;
+                    }
+
+                }
+
+                if (PrecursorChargePos == -1)
+                    return -1;
+
+                // Make sure all other rows have just precursor charges in this column
+
+                foreach (string line in lines)
+                {
+                    string[] fieldsNext = line.ParseDsvFields(separator);
+
+                    if (!ContainsPrecursorCharge(fieldsNext[PrecursorChargePos]))
+
+                        return -1;
+
+                }
+                return PrecursorChargePos;
+            }
+
+
+
+            // Helper method for FindPrecursorCharge
+
+           private static bool ContainsPrecursorCharge(string field)
+            {
+                //checks if we can turn the string into an integer
+                 if (int.TryParse(field, out int j))
+                 {
+                     //checks if the integer is between the range of possible charges
+                     if (j >=TransitionGroup.MIN_PRECURSOR_CHARGE && j <= TransitionGroup.MAX_PRECURSOR_CHARGE)
+                     {
+                         return true;
+                     }
+                 }
+                 return false;
+                
+            }
 
             private static void AddCount(string key, IDictionary<string, int> dict)
             {
@@ -1607,7 +1658,7 @@ namespace pwiz.Skyline.Model
                 if (iProduct == -1)
                     throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
 
-                indices.AssignDetected(iExPeptide, iExPeptide, iPrecursor, iProduct, iExPeptide, iExPeptide);
+                indices.AssignDetected(iExPeptide, iExPeptide, iPrecursor, iProduct, iExPeptide, iExPeptide, iExPeptide);
                 return new ExPeptideRowReader(provider, separator, indices, exPeptideRegex, settings, lines);
             }
 
@@ -1770,7 +1821,7 @@ namespace pwiz.Skyline.Model
         public ColumnIndices(int proteinColumn, int peptideColumn, int precursorColumn, int productColumn)
             :this()
         {
-            AssignDetected(proteinColumn, peptideColumn, precursorColumn, productColumn, -1, -1);
+            AssignDetected(proteinColumn, peptideColumn, precursorColumn, productColumn, -1, -1, -1);
         }
 
         public void AssignDetected(int proteinColumn,
@@ -1778,7 +1829,8 @@ namespace pwiz.Skyline.Model
             int precursorColumn,
             int productColumn,
             int labelTypeColumn,
-            int fragmentNameColumn)
+            int fragmentNameColumn, 
+            int precursorChargeColumn)
         {
             ProteinColumn = proteinColumn;
             PeptideColumn = peptideColumn;
@@ -1786,6 +1838,7 @@ namespace pwiz.Skyline.Model
             ProductColumn = productColumn;
             LabelTypeColumn = labelTypeColumn;
             FragmentNameColumn = fragmentNameColumn;
+            PrecursorChargeColumn = precursorChargeColumn;
         }
 
         public string[] Headers { get; private set; }
@@ -1878,6 +1931,8 @@ namespace pwiz.Skyline.Model
                 ProteinColumn = -1;
             if (FragmentNameColumn == index)
                 FragmentNameColumn = -1;
+            if (PrecursorChargeColumn == index)
+                PrecursorChargeColumn = -1;
         }
 
         /// <summary>
