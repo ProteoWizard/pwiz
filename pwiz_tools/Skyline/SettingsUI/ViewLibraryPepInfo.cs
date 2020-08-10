@@ -34,13 +34,15 @@ namespace pwiz.Skyline.SettingsUI
     /// </summary>
     public class ViewLibraryPepInfo : Immutable
     {
-        public ViewLibraryPepInfo(LibKey key)
+        public ViewLibraryPepInfo(LibKey key, SpectrumHeaderInfo libInfo)
         {
             Key = key;
+            LibInfo = libInfo;
             UnmodifiedTargetText = GetUnmodifiedTargetText(key.LibraryKey);
         }
 
         public LibKey Key { get; private set; }
+        public SpectrumHeaderInfo LibInfo { get; private set; } //
         public PeptideDocNode PeptideNode { get; private set; }
 
         public ViewLibraryPepInfo ChangePeptideNode(PeptideDocNode peptideDocNode)

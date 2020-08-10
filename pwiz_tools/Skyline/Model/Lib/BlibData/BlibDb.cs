@@ -136,6 +136,83 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             }
         }
 
+        private class ProteinTablesBuilder
+        {
+            private ISession _session;
+            private Dictionary<string, int> _namedProteinIds;
+            private Dictionary<int, int> _peptideIdProteinId;
+
+            public ProteinTablesBuilder(ISession session)
+            {
+                _session = session;
+                _namedProteinIds = new Dictionary<string, int>();
+                _peptideIdProteinId = new Dictionary<int, int>();
+            }
+
+            public void Add(DbRefSpectra refSpectra, string proteinName)
+            {
+                if (!_namedProteinIds.TryGetValue(proteinName, out var proteinTableId))
+                {
+                    proteinTableId = _namedProteinIds.Count + 1;
+                    _namedProteinIds.Add(proteinName, proteinTableId);
+                }
+                _peptideIdProteinId.Add((int)(refSpectra.Id ?? 0), proteinTableId);
+            }
+
+            public void Write()
+            {
+                // Output the protein - peptide relationships
+                using (var cmd = _session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"DROP TABLE IF EXISTS Proteins";
+                    cmd.ExecuteNonQuery();
+                }
+                using (var cmd = _session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"CREATE TABLE Proteins (id INTEGER not null, accession TEXT)";
+                    cmd.ExecuteNonQuery();
+                }
+                using (var insertCommand = _session.Connection.CreateCommand())
+                {
+                    insertCommand.CommandText = @"INSERT INTO Proteins (id, accession) VALUES(?,?)";
+                    insertCommand.Parameters.Add(new SQLiteParameter());
+                    insertCommand.Parameters.Add(new SQLiteParameter());
+                    foreach (var kvp in _namedProteinIds)
+                    {
+                        ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Value; // Id
+                        ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Key; // Accession
+                        insertCommand.ExecuteNonQuery();
+                    }
+                }
+
+                using (var cmd = _session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"DROP TABLE IF EXISTS  RefSpectraProteins";
+                    cmd.ExecuteNonQuery();
+                }
+                using (var cmd = _session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"CREATE TABLE RefSpectraProteins (RefSpectraId INTEGER not null, ProteinId INTEGER not null)";
+                    cmd.ExecuteNonQuery();
+                }
+                using (var insertCommand = _session.Connection.CreateCommand())
+                {
+                    insertCommand.CommandText = @"INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) VALUES(?,?)";
+                    insertCommand.Parameters.Add(new SQLiteParameter());
+                    insertCommand.Parameters.Add(new SQLiteParameter());
+                    foreach (var kvp in _peptideIdProteinId)
+                    {
+                        ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Key; // RefSpectraId
+                        ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Value; // ProteinId
+                        insertCommand.ExecuteNonQuery();
+                    }
+                }
+
+                _session.Flush();
+                _session.Clear();
+            }
+        }
+
         /// <summary>
         /// Make a BiblioSpec SQLite library from a list of spectra and their intensities.
         /// </summary>
@@ -164,7 +241,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             const int minorVer = DbLibInfo.SCHEMA_VERSION_CURRENT;
             string libId = libraryName;
             // Use a very specific LSID, since it really only matches this document.
-            string libLsid = string.Format(@"urn:lsid:{0}:spectral_libary:bibliospec:nr:minimal:{1}:{2}:{3}.{4}",
+            string libLsid = string.Format(@"urn:lsid:{0}:spectral_library:bibliospec:nr:minimal:{1}:{2}:{3}.{4}",
                 libAuthority, libId, Guid.NewGuid(), majorVer, minorVer);
 
             var listLibrary = new List<BiblioLiteSpectrumInfo>();
@@ -175,6 +252,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 int progressPercent = -1;
                 int i = 0;
                 var sourceFiles = new Dictionary<string, long>();
+                var proteinTablesBuilder = new ProteinTablesBuilder(session);
+
                 foreach (var spectrum in listSpectra)
                 {
                     var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
@@ -182,7 +261,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key, 
                                                                 dbRefSpectrum.Copies,
                                                                 dbRefSpectrum.NumPeaks,
-                                                                (int) (dbRefSpectrum.Id ?? 0)));
+                                                                (int) (dbRefSpectrum.Id ?? 0),
+                                                                spectrum.Protein));
+                    proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
                     if (progressMonitor != null)
                     {
                         if (progressMonitor.IsCanceled)
@@ -199,6 +280,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                 session.Flush();
                 session.Clear();
+
+                proteinTablesBuilder.Write();
                 // Simulate ctime(d), which is what BlibBuild uses.
                 string createTime = string.Format(@"{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now); // CONSIDER: localize? different date/time format in different countries
                 DbLibInfo libInfo = new DbLibInfo
@@ -379,7 +462,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 }
             }
             // Use a very specific LSID, since it really only matches this document.
-            string libLsid = string.Format(@"urn:lsid:{0}:spectral_libary:bibliospec:nr:minimal:{1}:{2}:{3}.{4}",
+            string libLsid = string.Format(@"urn:lsid:{0}:spectral_library:bibliospec:nr:minimal:{1}:{2}:{3}.{4}",
                 libAuthority, libId, Guid.NewGuid(), libraryRevision, schemaVersion);
 
             var dictLibrary = new Dictionary<LibKey, BiblioLiteSpectrumInfo>();
@@ -401,136 +484,161 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 {
                     int peptideCount = document.MoleculeCount;
                     int savedCount = 0;
+                    var proteinTablesBuilder = new ProteinTablesBuilder(session);
 
-                    foreach (var nodePep in document.Molecules)
+                    foreach (var moleculeGroup in document.MoleculeGroups)
                     {
-                        foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                        var proteinName = moleculeGroup.Name;
+                        foreach (var nodePep in moleculeGroup.Molecules)
                         {
-                            // Only get library info from precursors that use the desired library
-                            if (!nodeGroup.HasLibInfo || !Equals(nodeGroup.LibInfo.LibraryName, library.Name))
-                                continue;
-
-                            TransitionGroup group = nodeGroup.TransitionGroup;
-                            var peptideSeq = nodePep.SourceUnmodifiedTarget;
-                            var precursorAdduct = group.PrecursorAdduct;
-                            IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
-
-                            var smallMoleculeAttributes = nodePep.Peptide.GetSmallMoleculeLibraryAttributes();
-                            Target peptideModSeq;
-                            if (nodePep.IsProteomic)
+                            foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                             {
-                                var calcPre = document.Settings.GetPrecursorCalc(labelType, nodePep.SourceExplicitMods);
-                                peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, SequenceModFormatType.lib_precision, false);
-                            }
-                            else
-                            {
-                                peptideModSeq = nodePep.SourceModifiedTarget;
-                            }
-                            LibKey libKey = peptideModSeq.GetLibKey(nodeGroup.PrecursorAdduct);
-                            var newLibKey = libKey;
+                                // Only get library info from precursors that use the desired library
+                                if (!nodeGroup.HasLibInfo || !Equals(nodeGroup.LibInfo.LibraryName, library.Name))
+                                    continue;
 
-                            if (convertingToSmallMolecules)
-                            {
-                                if (smallMoleculeConversionMap.TryGetValue(peptideModSeq.GetLibKey(group.PrecursorAdduct), out newLibKey))
+                                TransitionGroup group = nodeGroup.TransitionGroup;
+                                var peptideSeq = nodePep.SourceUnmodifiedTarget;
+                                var precursorAdduct = group.PrecursorAdduct;
+                                IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
+
+                                var smallMoleculeAttributes = nodePep.Peptide.GetSmallMoleculeLibraryAttributes();
+                                Target peptideModSeq;
+                                if (nodePep.IsProteomic)
                                 {
-                                    precursorAdduct = newLibKey.Adduct;
-                                    smallMoleculeAttributes = newLibKey.SmallMoleculeLibraryAttributes;
+                                    var calcPre =
+                                        document.Settings.GetPrecursorCalc(labelType, nodePep.SourceExplicitMods);
+                                    peptideModSeq = calcPre.GetModifiedSequence(peptideSeq,
+                                        SequenceModFormatType.lib_precision, false);
                                 }
                                 else
                                 {
-                                    // Not being converted
-                                    Assume.IsTrue(group.Peptide.IsDecoy);
-                                    continue; // Not wanted in library
+                                    peptideModSeq = nodePep.SourceModifiedTarget;
                                 }
-                            }
 
-                            if (dictLibrary.ContainsKey(newLibKey))
-                                continue;
+                                LibKey libKey = peptideModSeq.GetLibKey(nodeGroup.PrecursorAdduct);
+                                var newLibKey = libKey;
 
-                            // saveRetentionTimes will be false unless this is a BiblioSpec(schemaVersion >=1) library.
-                            if (!saveRetentionTimes)
-                            {
-                                // get the best spectra
-                                foreach (var spectrumInfo in library.GetSpectra(libKey, labelType, LibraryRedundancy.best))
+                                if (convertingToSmallMolecules)
                                 {
-                                    DbRefSpectra refSpectra = MakeRefSpectrum(session,
-                                                                              convertingToSmallMolecules,
-                                                                              spectrumInfo,
-                                                                              peptideSeq,
-                                                                              peptideModSeq,
-                                                                              nodeGroup.PrecursorMz,
-                                                                              precursorAdduct,
-                                                                              smallMoleculeAttributes,
-                                                                              dictFiles);
-
-                                    session.Save(refSpectra);
-
-                                    dictLibrary.Add(newLibKey,
-                                                    new BiblioLiteSpectrumInfo(newLibKey, refSpectra.Copies,
-                                                                               refSpectra.NumPeaks,
-                                                                               (int) (refSpectra.Id ?? 0)));
+                                    if (smallMoleculeConversionMap.TryGetValue(
+                                        peptideModSeq.GetLibKey(group.PrecursorAdduct), out newLibKey))
+                                    {
+                                        precursorAdduct = newLibKey.Adduct;
+                                        smallMoleculeAttributes = newLibKey.SmallMoleculeLibraryAttributes;
+                                    }
+                                    else
+                                    {
+                                        // Not being converted
+                                        Assume.IsTrue(group.Peptide.IsDecoy);
+                                        continue; // Not wanted in library
+                                    }
                                 }
 
-                                session.Flush();
-                                session.Clear();
-                            }
-                                // This is a BiblioSpec(schemaVersion >=1) library.
-                            else
-                            {
-                                // get all the spectra, including the redundant ones if this library has any
-                                var spectra = library.GetSpectra(libKey, labelType, LibraryRedundancy.all_redundant).ToArray();
-                                // Avoid saving to the RefSpectra table for isotope label types that have no spectra
-                                if (spectra.Length == 0)
+                                if (dictLibrary.ContainsKey(newLibKey))
                                     continue;
 
-                                DbRefSpectra refSpectra = new DbRefSpectra
-                                                              {
-                                                                  PeptideSeq = peptideSeq.IsProteomic ? peptideSeq.Sequence : string.Empty,
-                                                                  PrecursorMZ = nodeGroup.PrecursorMz,
-                                                                  PrecursorCharge = precursorAdduct.AdductCharge,
-                                                                  PrecursorAdduct = precursorAdduct.AsFormula(), // [M+...] format, even for proteomic charges
-                                                                  MoleculeName = smallMoleculeAttributes.MoleculeName ?? string.Empty,
-                                                                  ChemicalFormula = smallMoleculeAttributes.ChemicalFormula ?? string.Empty,
-                                                                  InChiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
-                                                                  OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty,
-                                                                  PeptideModSeq = peptideModSeq.IsProteomic ? peptideModSeq.Sequence : string.Empty
-                                                              };
-
-                                // Get all the information for this reference spectrum.
-                                // For BiblioSpec (schema ver >= 1), this can include retention time information 
-                                // for this spectrum as well as any redundant spectra for the peptide.
-                                // Ids of spectra in the redundant library, where available, are also returned.
-                                var redundantSpectraKeys = new List<SpectrumKeyTime>();
-                                BuildRefSpectra(document, session, convertingToSmallMolecules, refSpectra, spectra, dictFiles, redundantSpectraKeys);
-
-                                session.Save(refSpectra);
-                                session.Flush();
-                                session.Clear();
-
-                                dictLibrary.Add(newLibKey,
-                                                new BiblioLiteSpectrumInfo(newLibKey,
-                                                                           refSpectra.Copies,
-                                                                           refSpectra.NumPeaks,
-                                                                           (int) (refSpectra.Id ?? 0)));
-
-                                // Save entries in the redundant library.
-                                if (saveRedundantLib && redundantSpectraKeys.Count > 0)
+                                // saveRetentionTimes will be false unless this is a BiblioSpec(schemaVersion >=1) library.
+                                if (!saveRetentionTimes)
                                 {
-                                    if (redundantSession == null)
+                                    // get the best spectra
+                                    foreach (var spectrumInfo in library.GetSpectra(libKey, labelType,
+                                        LibraryRedundancy.best))
                                     {
-                                        redundantSession = OpenWriteSession_Redundant();
-                                        redundantTransaction = redundantSession.BeginTransaction();
+                                        DbRefSpectra refSpectra = MakeRefSpectrum(session,
+                                            convertingToSmallMolecules,
+                                            spectrumInfo,
+                                            peptideSeq,
+                                            peptideModSeq,
+                                            nodeGroup.PrecursorMz,
+                                            precursorAdduct,
+                                            smallMoleculeAttributes,
+                                            dictFiles);
+
+                                        session.Save(refSpectra);
+
+                                        dictLibrary.Add(newLibKey,
+                                            new BiblioLiteSpectrumInfo(newLibKey, refSpectra.Copies,
+                                                refSpectra.NumPeaks,
+                                                (int) (refSpectra.Id ?? 0),
+                                                proteinName));
                                     }
-                                    SaveRedundantSpectra(redundantSession, redundantSpectraKeys, dictFilesRedundant, refSpectra, library, setRedundantSpectraIds);
-                                    redundantSpectraCount += redundantSpectraKeys.Count;
+
+                                    session.Flush();
+                                    session.Clear();
+                                }
+                                // This is a BiblioSpec(schemaVersion >=1) library.
+                                else
+                                {
+                                    // get all the spectra, including the redundant ones if this library has any
+                                    var spectra = library.GetSpectra(libKey, labelType, LibraryRedundancy.all_redundant)
+                                        .ToArray();
+                                    // Avoid saving to the RefSpectra table for isotope label types that have no spectra
+                                    if (spectra.Length == 0)
+                                        continue;
+
+                                    DbRefSpectra refSpectra = new DbRefSpectra
+                                    {
+                                        PeptideSeq = peptideSeq.IsProteomic ? peptideSeq.Sequence : string.Empty,
+                                        PrecursorMZ = nodeGroup.PrecursorMz,
+                                        PrecursorCharge = precursorAdduct.AdductCharge,
+                                        PrecursorAdduct =
+                                            precursorAdduct.AsFormula(), // [M+...] format, even for proteomic charges
+                                        MoleculeName = smallMoleculeAttributes.MoleculeName ?? string.Empty,
+                                        ChemicalFormula = smallMoleculeAttributes.ChemicalFormula ?? string.Empty,
+                                        InChiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
+                                        OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty,
+                                        PeptideModSeq = peptideModSeq.IsProteomic
+                                            ? peptideModSeq.Sequence
+                                            : string.Empty
+                                    };
+
+                                    // Get all the information for this reference spectrum.
+                                    // For BiblioSpec (schema ver >= 1), this can include retention time information 
+                                    // for this spectrum as well as any redundant spectra for the peptide.
+                                    // Ids of spectra in the redundant library, where available, are also returned.
+                                    var redundantSpectraKeys = new List<SpectrumKeyTime>();
+                                    BuildRefSpectra(document, session, convertingToSmallMolecules, refSpectra, spectra,
+                                        dictFiles, redundantSpectraKeys);
+
+                                    session.Save(refSpectra);
+                                    session.Flush();
+                                    session.Clear();
+
+                                    dictLibrary.Add(newLibKey,
+                                        new BiblioLiteSpectrumInfo(newLibKey,
+                                            refSpectra.Copies,
+                                            refSpectra.NumPeaks,
+                                            (int) (refSpectra.Id ?? 0),
+                                            proteinName));
+
+                                    // Save entries in the redundant library.
+                                    if (saveRedundantLib && redundantSpectraKeys.Count > 0)
+                                    {
+                                        if (redundantSession == null)
+                                        {
+                                            redundantSession = OpenWriteSession_Redundant();
+                                            redundantTransaction = redundantSession.BeginTransaction();
+                                        }
+
+                                        SaveRedundantSpectra(redundantSession, redundantSpectraKeys, dictFilesRedundant,
+                                            refSpectra, library, setRedundantSpectraIds);
+                                        redundantSpectraCount += redundantSpectraKeys.Count;
+                                    }
+
+                                    // Prepare to build peptide-protein tables
+                                    proteinTablesBuilder.Add(refSpectra, proteinName);
                                 }
                             }
-                        }
 
-                        savedCount++;
-                        if (!UpdateProgress(peptideCount, savedCount))
-                            return null;
+                            savedCount++;
+                            if (!UpdateProgress(peptideCount, savedCount))
+                                return null;
+                        }
                     }
+
+                    // Output the protein - peptide relationships
+                    proteinTablesBuilder.Write();
 
                     // Simulate ctime(d), which is what BlibBuild uses.
                     string createTime = string.Format(@"{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now); // CONSIDER: localize? different date/time format in different countries

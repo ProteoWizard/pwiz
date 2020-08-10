@@ -116,7 +116,8 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 18;
+        private const int FORMAT_VERSION_CACHE = 19;
+        // V19 add protein/MoleculeGroupName
         // V18 crosslinks
         // V17 add ID file (alongside already-cached spectrum source file)
         // V16 scores and score types
@@ -637,6 +638,7 @@ namespace pwiz.Skyline.Model.Lib
                 ILookup<int, KeyValuePair<int, ExplicitPeakBounds>> peakBoundsBySpectraIdAndFileId = null;
                 var scoreTypesById = new Dictionary<int, string>();
                 var scoreTypesByName = new Dictionary<string, int>();
+                var proteinsBySpectraID = ProteinsBySpectraID();
 
                 if (schemaVer >= 1)
                 {
@@ -713,6 +715,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
 
                         int id = reader.GetInt32(iId);
+                        proteinsBySpectraID.TryGetValue(id, out var protein);
 
                         string sequence = reader.GetString(iModSeq);
                         int charge = reader.GetInt16(iCharge);
@@ -785,7 +788,7 @@ namespace pwiz.Skyline.Model.Lib
                                 scoreTypesById.TryGetValue(scoreType.Value, out scoreName);
                             }
 
-                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id,
+                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, protein,
                                 retentionTimesByFileId, driftTimesByFileId, peakBoundariesByFileId, score, scoreName));
                         }
                     }
@@ -823,6 +826,17 @@ namespace pwiz.Skyline.Model.Lib
                         outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
                         outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
                         outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
+
+                        // Optional protein name or molecule list name
+                        var proteinOrMoleculeList = info.Protein ?? string.Empty;
+                        int len = proteinOrMoleculeList.Length;
+                        outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
+                        if (len > 0)
+                        {
+                            var proteinOrMoleculeListBytes = Encoding.UTF8.GetBytes(proteinOrMoleculeList);
+                            outStream.Write(proteinOrMoleculeListBytes, 0, proteinOrMoleculeListBytes.Length);
+                        }
+
                         if (info.ScoreType == null || !scoreTypesByName.TryGetValue(info.ScoreType, out var scoreType))
                         {
                             scoreType = -1;
@@ -895,6 +909,30 @@ namespace pwiz.Skyline.Model.Lib
             loader.UpdateProgress(status.Complete());
 
             return true;
+        }
+
+        private Dictionary<int, string> ProteinsBySpectraID()
+        {
+            var proteinsBySpectraID = new Dictionary<int, string>();
+            if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"RefSpectraProteins"))
+            {
+                using (var cmd = _sqliteConnection.Connection.CreateCommand())
+                {
+                    cmd.CommandText =
+                        @"SELECT RefSpectraId, accession FROM [Proteins] as t INNER JOIN [RefSpectraProteins] as s ON t.[id] = s.[ProteinId]";
+                    using (var dataReader = cmd.ExecuteReader())
+                    {
+                        while (dataReader.Read())
+                        {
+                            var refSpectraId = dataReader.GetInt32(0);
+                            var accession = dataReader.GetString(1);
+                            proteinsBySpectraID.Add(refSpectraId, accession);
+                        }
+                    }
+                }
+            }
+
+            return proteinsBySpectraID;
         }
 
         private bool Load(ILoadMonitor loader)
@@ -1054,6 +1092,9 @@ namespace pwiz.Skyline.Model.Lib
                         int copies = PrimitiveArrays.ReadOneValue<int>(stream);
                         int numPeaks = PrimitiveArrays.ReadOneValue<int>(stream);
                         int id = PrimitiveArrays.ReadOneValue<int>(stream);
+                        int proteinLength = PrimitiveArrays.ReadOneValue<int>(stream);
+                        string proteinOrMoleculeList = ReadString(stream, proteinLength);
+
                         var scoreTypeId = PrimitiveArrays.ReadOneValue<int>(stream);
                         var score = (double?) PrimitiveArrays.ReadOneValue<double>(stream);
                         if (!scoreTypes.TryGetValue(scoreTypeId, out var scoreType))
@@ -1065,7 +1106,7 @@ namespace pwiz.Skyline.Model.Lib
                         ImmutableSortedList<int, ExplicitPeakBounds> peakBoundaries =
                             ReadPeakBoundaries(stream);
                         _anyExplicitPeakBounds = _anyExplicitPeakBounds || peakBoundaries.Count > 0;
-                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id,
+                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, proteinOrMoleculeList,
                             retentionTimesByFileId, driftTimesByFileId, peakBoundaries, score, scoreType);
                     }
 
@@ -1170,7 +1211,7 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(BiblioLiteSpectrumInfo info)
         {
-            return new BiblioSpecSpectrumHeaderInfo(Name, info.Copies, info.Score, info.ScoreType);
+            return new BiblioSpecSpectrumHeaderInfo(Name, info.Copies, info.Score, info.ScoreType, info.Protein);
         }
 
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(BiblioLiteSpectrumInfo info)
@@ -1738,6 +1779,7 @@ namespace pwiz.Skyline.Model.Lib
 
             var hasRetentionTimesTable = RetentionTimesPsmCount() != 0;
             var info = _libraryEntries[i];
+            var protein = info.Protein;
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
                 select.CommandText = hasRetentionTimesTable
@@ -1842,7 +1884,7 @@ namespace pwiz.Skyline.Model.Lib
                         object spectrumKey = i;
                         if (!isBest || redundancy == LibraryRedundancy.all_redundant)
                             spectrumKey = new SpectrumLiteKey(i, redundantId, isBest);
-                        listSpectra.Add(new SpectrumInfoLibrary(this, labelType, filePath, retentionTime, ionMobilityInfo, isBest,
+                        listSpectra.Add(new SpectrumInfoLibrary(this, labelType, filePath, retentionTime, ionMobilityInfo, protein, isBest,
                                                          spectrumKey)
                                             {
                                                 SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i])
@@ -2483,13 +2525,13 @@ namespace pwiz.Skyline.Model.Lib
 
     public struct BiblioLiteSpectrumInfo : ICachedSpectrumInfo
     {
-        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id)
-            : this(key, copies, numPeaks, id, default(IndexedRetentionTimes), default(IndexedIonMobilities), 
+        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, string protein)
+            : this(key, copies, numPeaks, id, protein, default(IndexedRetentionTimes), default(IndexedIonMobilities), 
             ImmutableSortedList<int, ExplicitPeakBounds>.EMPTY, null, null)
         {
         }
 
-        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id,
+        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, string protein,
             IndexedRetentionTimes retentionTimesByFileId, IndexedIonMobilities ionMobilitiesByFileId,
             ImmutableSortedList<int, ExplicitPeakBounds> peakBoundaries, double? score, string scoreType)
         {
@@ -2497,6 +2539,7 @@ namespace pwiz.Skyline.Model.Lib
             Copies = copies;
             NumPeaks = numPeaks;
             Id = id;
+            Protein = protein;
             RetentionTimesByFileId = retentionTimesByFileId;
             IonMobilitiesByFileId = ionMobilitiesByFileId;
             PeakBoundariesByFileId = peakBoundaries;
@@ -2509,6 +2552,7 @@ namespace pwiz.Skyline.Model.Lib
         public int Copies { get; }
         public int NumPeaks { get; }
         public int Id { get; }
+        public string Protein { get; } // From the RefSpectraProteins table, either a protein accession or an arbitrary molecule list name
         public IndexedRetentionTimes RetentionTimesByFileId { get; }
         public IndexedIonMobilities IonMobilitiesByFileId { get; }
         public ImmutableSortedList<int, ExplicitPeakBounds> PeakBoundariesByFileId { get; }

@@ -29,6 +29,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -1698,6 +1699,8 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public abstract IEnumerable<KeyValuePair<PeptideRankId, string>> RankValues { get; }
+        public abstract string Protein { get; } // Some .blib files provide a protein accession (or Molecule List Name for small molecules)
+
 
         #region Implementation of IXmlSerializable
 
@@ -2201,6 +2204,7 @@ namespace pwiz.Skyline.Model.Lib
     {
         public string SourceFile { get; set; }
         public LibKey Key { get; set; }
+        public string Protein { get; set; } // Also used as Molecule List Name for small molecules
         public SmallMoleculeLibraryAttributes SmallMoleculeLibraryAttributes { get { return Key.SmallMoleculeLibraryAttributes; } }
         public IonMobilityAndCCS IonMobility { get; set; }
         public double PrecursorMz { get; set; }
@@ -2300,7 +2304,8 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     SourceFile = info.FileName,
                     Key = key,
-                    SpectrumPeaks = info.SpectrumPeaksInfo
+                    SpectrumPeaks = info.SpectrumPeaksInfo,
+                    Protein = info.Protein
                 });
             }
             return spectrumMzInfos;
@@ -2365,12 +2370,12 @@ namespace pwiz.Skyline.Model.Lib
         private Library _library;
 
         public SpectrumInfoLibrary(Library library, IsotopeLabelType labelType, object spectrumKey):
-            this(library, labelType, null, null, null, true, spectrumKey)
+            this(library, labelType, null, null, null, null, true, spectrumKey)
         {
         }
 
         public SpectrumInfoLibrary(Library library, IsotopeLabelType labelType, string filePath,
-            double? retentionTime, IonMobilityAndCCS ionMobilityInfo, bool isBest, object spectrumKey) :
+            double? retentionTime, IonMobilityAndCCS ionMobilityInfo, string protein, bool isBest, object spectrumKey) :
                 base(labelType, true)
         {
             _library = library;
@@ -2379,6 +2384,7 @@ namespace pwiz.Skyline.Model.Lib
             FilePath = filePath;
             RetentionTime = retentionTime;
             IonMobilityInfo = ionMobilityInfo ?? IonMobilityAndCCS.EMPTY;
+            Protein = protein;
             IsBest = isBest;
         }
 
@@ -2417,6 +2423,7 @@ namespace pwiz.Skyline.Model.Lib
         }
         public double? RetentionTime { get; set; }
         public IonMobilityAndCCS IonMobilityInfo { get; private set; }
+        public string Protein { get; private set; } // Also used as Molecule List Name for small molecules
     }
 
     public class SpectrumInfoProsit : SpectrumInfo

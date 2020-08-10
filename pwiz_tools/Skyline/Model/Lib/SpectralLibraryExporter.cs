@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         for (var i = 0; i < Document.Settings.MeasuredResults.Chromatograms.Count; i++)
                         {
-                            ProcessTransitionGroup(spectra, nodePep, nodeTranGroup, i);
+                            ProcessTransitionGroup(spectra, nodePepGroup, nodePep, nodeTranGroup, i);
                         }
                     }
                 }
@@ -82,8 +82,8 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        private void ProcessTransitionGroup(IDictionary<LibKey, SpectrumMzInfo> spectra, 
-            PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, int replicateIndex)
+        private void ProcessTransitionGroup(IDictionary<LibKey, SpectrumMzInfo> spectra,
+            PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, int replicateIndex)
         {
             LibKey key;
             if (nodePep.IsProteomic)
@@ -153,6 +153,7 @@ namespace pwiz.Skyline.Model.Lib
                     SpectrumPeaks = new SpectrumPeaksInfo(mi.ToArray()),
                     RetentionTimes = new List<SpectrumMzInfo.IonMobilityAndRT>(),
                     IonMobility = im,
+                    Protein = nodePepGroup.Name,
                     RetentionTime = rt
                 };
                 spectra[key] = spectrumMzInfo;

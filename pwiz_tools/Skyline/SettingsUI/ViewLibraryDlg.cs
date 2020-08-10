@@ -379,7 +379,14 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 pepInfos = _selectedLibrary.Keys.Select(
-                    key => new ViewLibraryPepInfo(key));
+                    key =>
+                    {
+                        if (!_selectedLibrary.TryGetLibInfo(key, out var libinfo))
+                        {
+                            libinfo = null;
+                        }
+                        return new ViewLibraryPepInfo(key, libinfo);
+                    });
             }
             _peptides = new ViewLibraryPepInfoList(pepInfos);
             bool allPeptides = _peptides.All(key => key.Key.IsProteomicKey);
