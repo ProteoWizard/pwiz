@@ -309,7 +309,7 @@ namespace pwiz.Skyline.Model.Irt
             });
 
         public static readonly ImmutableList<IrtStandard> ALL = ImmutableList.ValueOf(new[] {
-            AUTO, EMPTY, BIOGNOSYS_10, BIOGNOSYS_11, PIERCE, REPLICAL, RTBEADS, SCIEX, SIGMA, APOA1, CIRT_SHORT
+            EMPTY, AUTO, BIOGNOSYS_10, BIOGNOSYS_11, PIERCE, REPLICAL, RTBEADS, SCIEX, SIGMA, APOA1, CIRT_SHORT
         });
 
         private static readonly HashSet<Target> ALL_TARGETS = new HashSet<Target>(ALL.SelectMany(l => l.Peptides.Select(p => p.ModifiedTarget)));

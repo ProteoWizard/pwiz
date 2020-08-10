@@ -59,7 +59,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 cbFilterForDocumentPeptides.Hide();
 
             _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
-            _driverStandards.LoadList(IrtStandard.AUTO.GetKey());
+            _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
         }
 
         public BuildPeptideSearchLibrarySettings BuildLibrarySettings
