@@ -26,12 +26,12 @@ namespace AutoQC.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SkylineExePath {
+        public string SkylineCmdLineExePath {
             get {
-                return ((string)(this["SkylineExePath"]));
+                return ((string)(this["SkylineCmdLineExePath"]));
             }
             set {
-                this["SkylineExePath"] = value;
+                this["SkylineCmdLineExePath"] = value;
             }
         }
         
@@ -44,18 +44,6 @@ namespace AutoQC.Properties {
             }
             set {
                 this["SkylineType"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ExeName {
-            get {
-                return ((string)(this["ExeName"]));
-            }
-            set {
-                this["ExeName"] = value;
             }
         }
     }

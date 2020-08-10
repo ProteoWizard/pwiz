@@ -219,7 +219,7 @@ namespace AutoQC
                 return null;
             }
             var args = string.Format("--in=\"{0}\" {1}", SkylineFilePath, archiveArgs);
-            return new ProcessInfo(MainForm.GetExePathName().Item1, MainForm.GetExePathName().Item2, args, args);
+            return new ProcessInfo(MainForm.GetExePath(), args, args);
         }
 
         public virtual ProcessInfo RunAfter(ImportContext importContext)
@@ -242,7 +242,7 @@ namespace AutoQC
                 return null;
             }
             var args = string.Format("--in=\"{0}\" {1}", SkylineFilePath, archiveArgs);
-            return new ProcessInfo(MainForm.GetExePathName().Item1, MainForm.GetExePathName().Item2, args, args);
+            return new ProcessInfo(MainForm.GetExePath(), args, args);
         }
 
         public string GetArchiveArgs(DateTime archiveDate, DateTime currentDate)

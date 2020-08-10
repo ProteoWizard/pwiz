@@ -2,13 +2,10 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AutoQC.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="SkylineExePath" Type="System.String" Scope="User">
+    <Setting Name="SkylineCmdLineExePath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="SkylineType" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="ExeName" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>
