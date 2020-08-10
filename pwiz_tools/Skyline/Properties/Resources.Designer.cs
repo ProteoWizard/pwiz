@@ -22180,6 +22180,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Go to Tools &gt; Options &gt; Panorama tab to update the username and password..
+        /// </summary>
+        public static string PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_ {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to" +
+                        "_update_the_username_and_password_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The selected server does not support version {0} of the skyd file format. 
         ///Please contact the Panorama server administrator to upgrade the server..
         /// </summary>

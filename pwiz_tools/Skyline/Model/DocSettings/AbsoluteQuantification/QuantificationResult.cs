@@ -97,4 +97,39 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return TextUtil.SpaceSeparate(calculatedConcentration.ToString(Formats.Concentration), units);
         }
     }
+
+    public class PeptideQuantificationResult : QuantificationResult
+    {
+        #region duplicate properties from base class to control the order they appear in Report Editor
+        [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+        public new double? NormalizedArea
+        {
+            get { return base.NormalizedArea; }
+        }
+
+        [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+        public new double? CalculatedConcentration
+        {
+            get { return base.CalculatedConcentration; }
+        }
+
+        [Format(Formats.CV, NullValue = TextUtil.EXCEL_NA)]
+        public new double? Accuracy
+        {
+            get { return base.Accuracy; }
+        }
+        #endregion
+
+        public double? QualitativeIonRatio { get; private set; }
+        public ValueStatus QualitativeIonRatioStatus { get; private set; }
+
+        public PeptideQuantificationResult ChangeIonRatio(double? ionRatio, ValueStatus ionRatioStatus)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.QualitativeIonRatio = ionRatio;
+                im.QualitativeIonRatioStatus = ionRatioStatus;
+            });
+        }
+    }
 }

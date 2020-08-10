@@ -1550,4 +1550,7 @@
   <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
     <value>Library ion mobility values</value>
   </data>
+  <data name="QuantificationSettings_QualitativeIonRatioThreshold">
+    <value>Qualitative ion ratio threshold</value>
+  </data>
 </root>

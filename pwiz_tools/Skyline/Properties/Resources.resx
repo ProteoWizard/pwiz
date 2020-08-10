@@ -10950,4 +10950,7 @@ Invalid peptide sequence at position 18
   <data name="EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_" xml:space="preserve">
     <value>'{0}' is not a recognized Unimod name.</value>
   </data>
+  <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_" xml:space="preserve">
+    <value>Go to Tools &gt; Options &gt; Panorama tab to update the username and password.</value>
+  </data>
 </root>

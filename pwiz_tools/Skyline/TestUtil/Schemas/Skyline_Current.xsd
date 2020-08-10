@@ -290,6 +290,7 @@
           <xs:attribute name="lod_calculation" type="xs:string" />
           <xs:attribute name="max_loq_bias" type="xs:double" />
           <xs:attribute name="max_loq_cv" type="xs:double" />
+          <xs:attribute name="qualitative_ion_ratio_threshold" type="xs:double" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>
