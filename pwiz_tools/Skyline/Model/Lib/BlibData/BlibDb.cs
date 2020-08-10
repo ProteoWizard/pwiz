@@ -151,12 +151,15 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
             public void Add(DbRefSpectra refSpectra, string proteinName)
             {
-                if (!_namedProteinIds.TryGetValue(proteinName, out var proteinTableId))
+                if (!string.IsNullOrEmpty(proteinName))
                 {
-                    proteinTableId = _namedProteinIds.Count + 1;
-                    _namedProteinIds.Add(proteinName, proteinTableId);
+                    if (!_namedProteinIds.TryGetValue(proteinName, out var proteinTableId))
+                    {
+                        proteinTableId = _namedProteinIds.Count + 1;
+                        _namedProteinIds.Add(proteinName, proteinTableId);
+                    }
+                    _peptideIdProteinId.Add((int)(refSpectra.Id ?? 0), proteinTableId);
                 }
-                _peptideIdProteinId.Add((int)(refSpectra.Id ?? 0), proteinTableId);
             }
 
             public void Write()
@@ -169,42 +172,46 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 }
                 using (var cmd = _session.Connection.CreateCommand())
                 {
-                    cmd.CommandText = @"CREATE TABLE Proteins (id INTEGER not null, accession TEXT)";
+                    cmd.CommandText = @"DROP TABLE IF EXISTS RefSpectraProteins";
                     cmd.ExecuteNonQuery();
-                }
-                using (var insertCommand = _session.Connection.CreateCommand())
-                {
-                    insertCommand.CommandText = @"INSERT INTO Proteins (id, accession) VALUES(?,?)";
-                    insertCommand.Parameters.Add(new SQLiteParameter());
-                    insertCommand.Parameters.Add(new SQLiteParameter());
-                    foreach (var kvp in _namedProteinIds)
-                    {
-                        ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Value; // Id
-                        ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Key; // Accession
-                        insertCommand.ExecuteNonQuery();
-                    }
                 }
 
-                using (var cmd = _session.Connection.CreateCommand())
+                if (_namedProteinIds.Any())
                 {
-                    cmd.CommandText = @"DROP TABLE IF EXISTS  RefSpectraProteins";
-                    cmd.ExecuteNonQuery();
-                }
-                using (var cmd = _session.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"CREATE TABLE RefSpectraProteins (RefSpectraId INTEGER not null, ProteinId INTEGER not null)";
-                    cmd.ExecuteNonQuery();
-                }
-                using (var insertCommand = _session.Connection.CreateCommand())
-                {
-                    insertCommand.CommandText = @"INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) VALUES(?,?)";
-                    insertCommand.Parameters.Add(new SQLiteParameter());
-                    insertCommand.Parameters.Add(new SQLiteParameter());
-                    foreach (var kvp in _peptideIdProteinId)
+                    using (var cmd = _session.Connection.CreateCommand())
                     {
-                        ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Key; // RefSpectraId
-                        ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Value; // ProteinId
-                        insertCommand.ExecuteNonQuery();
+                        cmd.CommandText = @"CREATE TABLE Proteins (id INTEGER not null, accession TEXT)";
+                        cmd.ExecuteNonQuery();
+                    }
+                    using (var insertCommand = _session.Connection.CreateCommand())
+                    {
+                        insertCommand.CommandText = @"INSERT INTO Proteins (id, accession) VALUES(?,?)";
+                        insertCommand.Parameters.Add(new SQLiteParameter());
+                        insertCommand.Parameters.Add(new SQLiteParameter());
+                        foreach (var kvp in _namedProteinIds)
+                        {
+                            ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Value; // Id
+                            ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Key; // Accession
+                            insertCommand.ExecuteNonQuery();
+                        }
+                    }
+
+                    using (var cmd = _session.Connection.CreateCommand())
+                    {
+                        cmd.CommandText = @"CREATE TABLE RefSpectraProteins (RefSpectraId INTEGER not null, ProteinId INTEGER not null)";
+                        cmd.ExecuteNonQuery();
+                    }
+                    using (var insertCommand = _session.Connection.CreateCommand())
+                    {
+                        insertCommand.CommandText = @"INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) VALUES(?,?)";
+                        insertCommand.Parameters.Add(new SQLiteParameter());
+                        insertCommand.Parameters.Add(new SQLiteParameter());
+                        foreach (var kvp in _peptideIdProteinId)
+                        {
+                            ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Key; // RefSpectraId
+                            ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Value; // ProteinId
+                            insertCommand.ExecuteNonQuery();
+                        }
                     }
                 }
 
