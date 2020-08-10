@@ -180,6 +180,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         Console.Out.WriteLine("{0}, {1}", peptideGroup.Name, string.Join(",", peptideGroup.Molecules.Select(mol=>mol.ModifiedSequence)));
                     }
+
                     Assert.AreEqual(61, peptideCount);
                 }
                 Assert.AreEqual(61, precursorCount);
