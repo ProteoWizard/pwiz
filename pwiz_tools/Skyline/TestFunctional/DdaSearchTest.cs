@@ -175,6 +175,7 @@ namespace pwiz.SkylineTestFunctional
                 if (61 != peptideCount)
                 {
                     Console.Out.WriteLine("Incorrect peptide count");
+
                     foreach (var peptideGroup in emptyProteinsDlg._addedPeptideGroups)
                     {
                         Console.Out.WriteLine("{0}, {1}", peptideGroup.Name, string.Join(",", peptideGroup.Molecules.Select(mol=>mol.ModifiedSequence)));
