@@ -17,9 +17,7 @@
  * limitations under the License.
  */
 using System.Windows.Forms;
-using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
