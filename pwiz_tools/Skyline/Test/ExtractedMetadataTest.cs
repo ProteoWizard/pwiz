@@ -46,7 +46,7 @@ namespace pwiz.SkylineTest
         public static void Deserializable<T>(T obj) where T: class
         {
             string expected = null;
-            AssertEx.RoundTrip<T>(obj, ref expected);
+            AssertEx.RoundTrip(obj, ref expected);
             var xmlElementHelper = new XmlElementHelper<T>();
             using (var xmlReader = XmlReader.Create(new StringReader(expected)))
             {
