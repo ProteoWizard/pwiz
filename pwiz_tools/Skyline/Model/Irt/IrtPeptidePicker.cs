@@ -358,10 +358,10 @@ namespace pwiz.Skyline.Model.Irt
                     curBinCandidates = new Dictionary<Target, Statistics>(targetStats);
                     targetStats.Clear();
                 }
-                var maxCount = curBinCandidates.Max(x => x.Value.Length);
-                curBinCandidates = curBinCandidates.Where(pair => pair.Value.Length == maxCount).ToDictionary(pair => pair.Key, pair => pair.Value);
                 if (curBinCandidates.Count == 0)
                     continue;
+                var maxCount = curBinCandidates.Max(x => x.Value.Length);
+                curBinCandidates = curBinCandidates.Where(pair => pair.Value.Length == maxCount).ToDictionary(pair => pair.Key, pair => pair.Value);
                 Target best = null;
                 if (maxCount == 1)
                 {
