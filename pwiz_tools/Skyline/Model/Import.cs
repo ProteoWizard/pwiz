@@ -1445,9 +1445,11 @@ namespace pwiz.Skyline.Model
                 return false;
             }
 
+            //Finds the index of the Fragment Name Column
             private static int FindFragmentName(string[] fields, IEnumerable<string> lines, char separator)
             {
                 int iFragmentName = -1;
+                //Look for the first column that contains something that looks like a Fragment Name
                 for (int i = 0; i < fields.Length; i++)
                 {
                     if (ContainsFragmentName(fields[i]))
@@ -1462,6 +1464,7 @@ namespace pwiz.Skyline.Model
                     return -1;
                 }
 
+                //Confirm that the rest of the column has only entries that look like Fragment Names
                 foreach (string line in lines)
                 {
                     string[] fieldsNext = line.ParseDsvFields(separator);
@@ -1478,8 +1481,8 @@ namespace pwiz.Skyline.Model
             private static bool ContainsFragmentName(string field)
             {
                 field = field.ToLower();
-                //detection needs to get a little more specific, too broad right now
-                if (char.IsLetter(field, 0) && char.IsDigit(field, 1))
+                
+                if ("abcxyz".Contains(field[0]) && char.IsDigit(field, 1))
                 {
                     return true;
                 }
