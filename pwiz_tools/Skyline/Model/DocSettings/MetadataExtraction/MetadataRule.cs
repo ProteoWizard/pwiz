@@ -238,11 +238,11 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
 
         public override string Title
         {
-            get { return Resources.MetadataRuleSetList_Title_Define_Metadata_Rules; }
+            get { return Resources.MetadataRuleSetList_Title_Result_File_Rules; }
         }
         public override string Label
         {
-            get { return Resources.MetadataRuleSetList_Label_Metadata_Rule; }
+            get { return Resources.MetadataRuleSetList_Label_Result_File_Rule; }
         }
 
         public override MetadataRule CopyItem(MetadataRule item)

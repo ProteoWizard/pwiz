@@ -36,10 +36,6 @@
             this.lblName = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.dataGridViewRules = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.colSource = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colPattern = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colReplacement = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colTarget = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.bindingSourceRules = new System.Windows.Forms.BindingSource(this.components);
             this.toolStripRules = new System.Windows.Forms.ToolStrip();
             this.btnRemove = new System.Windows.Forms.ToolStripButton();
@@ -51,6 +47,11 @@
             this.panelButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            this.colSource = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colPattern = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colReplacement = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTarget = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -79,6 +80,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.label1);
             this.splitContainer1.Panel2.Controls.Add(this.boundDataGridViewEx1);
             resources.ApplyResources(this.splitContainer1.Panel2, "splitContainer1.Panel2");
             // 
@@ -107,7 +109,6 @@
             // dataGridViewRules
             // 
             this.dataGridViewRules.AutoGenerateColumns = false;
-            this.dataGridViewRules.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridViewRules.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewRules.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colSource,
@@ -120,34 +121,6 @@
             this.dataGridViewRules.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridViewRules.CurrentCellChanged += new System.EventHandler(this.dataGridViewRules_CurrentCellChanged);
             this.dataGridViewRules.SelectionChanged += new System.EventHandler(this.dataGridViewRules_SelectionChanged);
-            // 
-            // colSource
-            // 
-            this.colSource.DataPropertyName = "Source";
-            this.colSource.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            resources.ApplyResources(this.colSource, "colSource");
-            this.colSource.Name = "colSource";
-            // 
-            // colPattern
-            // 
-            this.colPattern.DataPropertyName = "Pattern";
-            resources.ApplyResources(this.colPattern, "colPattern");
-            this.colPattern.Name = "colPattern";
-            // 
-            // colReplacement
-            // 
-            this.colReplacement.DataPropertyName = "Replacement";
-            resources.ApplyResources(this.colReplacement, "colReplacement");
-            this.colReplacement.Name = "colReplacement";
-            // 
-            // colTarget
-            // 
-            this.colTarget.DataPropertyName = "Target";
-            this.colTarget.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            resources.ApplyResources(this.colTarget, "colTarget");
-            this.colTarget.Name = "colTarget";
-            this.colTarget.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colTarget.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // bindingSourceRules
             // 
@@ -198,10 +171,10 @@
             // 
             // boundDataGridViewEx1
             // 
+            resources.ApplyResources(this.boundDataGridViewEx1, "boundDataGridViewEx1");
             this.boundDataGridViewEx1.AutoGenerateColumns = false;
             this.boundDataGridViewEx1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.boundDataGridViewEx1.DataSource = this.bindingListSourceResults;
-            resources.ApplyResources(this.boundDataGridViewEx1, "boundDataGridViewEx1");
             this.boundDataGridViewEx1.MaximumColumnCount = 2000;
             this.boundDataGridViewEx1.Name = "boundDataGridViewEx1";
             // 
@@ -230,6 +203,39 @@
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
+            // colSource
+            // 
+            this.colSource.DataPropertyName = "Source";
+            this.colSource.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            resources.ApplyResources(this.colSource, "colSource");
+            this.colSource.Name = "colSource";
+            // 
+            // colPattern
+            // 
+            this.colPattern.DataPropertyName = "Pattern";
+            resources.ApplyResources(this.colPattern, "colPattern");
+            this.colPattern.Name = "colPattern";
+            // 
+            // colReplacement
+            // 
+            this.colReplacement.DataPropertyName = "Replacement";
+            resources.ApplyResources(this.colReplacement, "colReplacement");
+            this.colReplacement.Name = "colReplacement";
+            // 
+            // colTarget
+            // 
+            this.colTarget.DataPropertyName = "Target";
+            this.colTarget.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            resources.ApplyResources(this.colTarget, "colTarget");
+            this.colTarget.Name = "colTarget";
+            this.colTarget.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colTarget.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
             // MetadataRuleEditor
             // 
             resources.ApplyResources(this, "$this");
@@ -245,6 +251,7 @@
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
@@ -282,5 +289,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colPattern;
         private System.Windows.Forms.DataGridViewTextBoxColumn colReplacement;
         private System.Windows.Forms.DataGridViewComboBoxColumn colTarget;
+        private System.Windows.Forms.Label label1;
     }
 }

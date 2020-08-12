@@ -70,10 +70,10 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Controls.Add(this.tabPageAnnotations);
+            this.tabControl.Controls.Add(this.tabPageResultFileRules);
             this.tabControl.Controls.Add(this.tabPageLists);
             this.tabControl.Controls.Add(this.tabPageGroupComparisons);
             this.tabControl.Controls.Add(this.tabPageReports);
-            this.tabControl.Controls.Add(this.tabPageResultFileRules);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
             // 

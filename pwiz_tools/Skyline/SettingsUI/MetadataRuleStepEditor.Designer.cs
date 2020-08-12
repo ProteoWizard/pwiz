@@ -44,6 +44,7 @@
             this.boundDataGridView1 = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.lblReplacement = new System.Windows.Forms.Label();
             this.tbxReplacement = new System.Windows.Forms.TextBox();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelButtons.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource1)).BeginInit();
@@ -75,6 +76,7 @@
             // 
             resources.ApplyResources(this.tbxRegularExpression, "tbxRegularExpression");
             this.tbxRegularExpression.Name = "tbxRegularExpression";
+            this.toolTip.SetToolTip(this.tbxRegularExpression, resources.GetString("tbxRegularExpression.ToolTip"));
             this.tbxRegularExpression.Leave += new System.EventHandler(this.tbxRegularExpression_Leave);
             // 
             // lblTarget
@@ -88,6 +90,7 @@
             this.comboMetadataTarget.FormattingEnabled = true;
             resources.ApplyResources(this.comboMetadataTarget, "comboMetadataTarget");
             this.comboMetadataTarget.Name = "comboMetadataTarget";
+            this.toolTip.SetToolTip(this.comboMetadataTarget, resources.GetString("comboMetadataTarget.ToolTip"));
             this.comboMetadataTarget.SelectedIndexChanged += new System.EventHandler(this.comboMetadataTarget_SelectedIndexChanged);
             // 
             // lblSourceText
@@ -101,6 +104,7 @@
             this.comboSourceText.FormattingEnabled = true;
             resources.ApplyResources(this.comboSourceText, "comboSourceText");
             this.comboSourceText.Name = "comboSourceText";
+            this.toolTip.SetToolTip(this.comboSourceText, resources.GetString("comboSourceText.ToolTip"));
             this.comboSourceText.SelectedIndexChanged += new System.EventHandler(this.comboSourceText_SelectedIndexChanged);
             // 
             // lblPreview
@@ -113,6 +117,7 @@
             resources.ApplyResources(this.linkLabelRegularExpression, "linkLabelRegularExpression");
             this.linkLabelRegularExpression.Name = "linkLabelRegularExpression";
             this.linkLabelRegularExpression.TabStop = true;
+            this.linkLabelRegularExpression.UseCompatibleTextRendering = true;
             this.linkLabelRegularExpression.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelRegularExpression_LinkClicked);
             // 
             // bindingListSource1
@@ -137,6 +142,7 @@
             // 
             resources.ApplyResources(this.tbxReplacement, "tbxReplacement");
             this.tbxReplacement.Name = "tbxReplacement";
+            this.toolTip.SetToolTip(this.tbxReplacement, resources.GetString("tbxReplacement.ToolTip"));
             // 
             // MetadataRuleStepEditor
             // 
@@ -182,5 +188,6 @@
         private pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx boundDataGridView1;
         private System.Windows.Forms.Label lblReplacement;
         private System.Windows.Forms.TextBox tbxReplacement;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }

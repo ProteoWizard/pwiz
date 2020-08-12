@@ -120,72 +120,21 @@
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
-    <value>btnOK</value>
-  </data>
-  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="panelButtons.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Bottom</value>
-  </data>
-  <data name="panelButtons.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
-    <value>RightToLeft</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="panelButtons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 421</value>
-  </data>
-  <data name="panelButtons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>583, 29</value>
-  </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;panelButtons.Name" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;panelButtons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelButtons.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelButtons.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>505, 3</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
@@ -234,14 +183,47 @@
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="panelButtons.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="panelButtons.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
+    <value>RightToLeft</value>
+  </data>
+  <data name="panelButtons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 421</value>
+  </data>
+  <data name="panelButtons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>583, 29</value>
+  </data>
+  <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.Name" xml:space="preserve">
+    <value>panelButtons</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
   <data name="tbxRegularExpression.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 66</value>
+    <value>9, 77</value>
   </data>
   <data name="tbxRegularExpression.Size" type="System.Drawing.Size, System.Drawing">
     <value>268, 20</value>
   </data>
   <data name="tbxRegularExpression.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
+  </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>310, 17</value>
+  </metadata>
+  <data name="tbxRegularExpression.ToolTip" xml:space="preserve">
+    <value>A regular expression to match with the source text</value>
   </data>
   <data name="&gt;&gt;tbxRegularExpression.Name" xml:space="preserve">
     <value>tbxRegularExpression</value>
@@ -259,7 +241,7 @@
     <value>True</value>
   </data>
   <data name="lblTarget.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 128</value>
+    <value>9, 151</value>
   </data>
   <data name="lblTarget.Size" type="System.Drawing.Size, System.Drawing">
     <value>41, 13</value>
@@ -283,13 +265,16 @@
     <value>8</value>
   </data>
   <data name="comboMetadataTarget.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 144</value>
+    <value>9, 167</value>
   </data>
   <data name="comboMetadataTarget.Size" type="System.Drawing.Size, System.Drawing">
     <value>268, 21</value>
   </data>
   <data name="comboMetadataTarget.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
+  </data>
+  <data name="comboMetadataTarget.ToolTip" xml:space="preserve">
+    <value>The replicate annotation or value to populate with the replacement text.</value>
   </data>
   <data name="&gt;&gt;comboMetadataTarget.Name" xml:space="preserve">
     <value>comboMetadataTarget</value>
@@ -307,7 +292,7 @@
     <value>True</value>
   </data>
   <data name="lblSourceText.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 10</value>
+    <value>9, 10</value>
   </data>
   <data name="lblSourceText.Size" type="System.Drawing.Size, System.Drawing">
     <value>73, 13</value>
@@ -331,13 +316,16 @@
     <value>6</value>
   </data>
   <data name="comboSourceText.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 26</value>
+    <value>9, 26</value>
   </data>
   <data name="comboSourceText.Size" type="System.Drawing.Size, System.Drawing">
     <value>268, 21</value>
   </data>
   <data name="comboSourceText.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="comboSourceText.ToolTip" xml:space="preserve">
+    <value>Specifies a result file property to use as the source text</value>
   </data>
   <data name="&gt;&gt;comboSourceText.Name" xml:space="preserve">
     <value>comboSourceText</value>
@@ -355,7 +343,7 @@
     <value>True</value>
   </data>
   <data name="lblPreview.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 168</value>
+    <value>9, 207</value>
   </data>
   <data name="lblPreview.Size" type="System.Drawing.Size, System.Drawing">
     <value>48, 13</value>
@@ -381,17 +369,20 @@
   <data name="linkLabelRegularExpression.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="linkLabelRegularExpression.LinkArea" type="System.Windows.Forms.LinkArea, System.Windows.Forms">
+    <value>10, 18</value>
+  </data>
   <data name="linkLabelRegularExpression.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 50</value>
+    <value>9, 60</value>
   </data>
   <data name="linkLabelRegularExpression.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 13</value>
+    <value>148, 17</value>
   </data>
   <data name="linkLabelRegularExpression.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="linkLabelRegularExpression.Text" xml:space="preserve">
-    <value>Re&amp;gular expression:</value>
+    <value>&amp;Pattern (regular expression):</value>
   </data>
   <data name="&gt;&gt;linkLabelRegularExpression.Name" xml:space="preserve">
     <value>linkLabelRegularExpression</value>
@@ -412,10 +403,10 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="boundDataGridView1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 184</value>
+    <value>9, 223</value>
   </data>
   <data name="boundDataGridView1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>568, 221</value>
+    <value>562, 190</value>
   </data>
   <data name="boundDataGridView1.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -424,7 +415,7 @@
     <value>boundDataGridView1</value>
   </data>
   <data name="&gt;&gt;boundDataGridView1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.1.1.203, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;boundDataGridView1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -436,7 +427,7 @@
     <value>True</value>
   </data>
   <data name="lblReplacement.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 89</value>
+    <value>9, 104</value>
   </data>
   <data name="lblReplacement.Size" type="System.Drawing.Size, System.Drawing">
     <value>73, 13</value>
@@ -460,13 +451,19 @@
     <value>1</value>
   </data>
   <data name="tbxReplacement.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 105</value>
+    <value>9, 120</value>
   </data>
   <data name="tbxReplacement.Size" type="System.Drawing.Size, System.Drawing">
     <value>268, 20</value>
   </data>
   <data name="tbxReplacement.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
+  </data>
+  <data name="tbxReplacement.ToolTip" xml:space="preserve">
+    <value>Text to use for the annotation when there is a match.
+When parentheses are used in the regular expression,
+the replacement text can include $1, $2, $3, etc. to refer
+to the matching sub-expression.</value>
   </data>
   <data name="&gt;&gt;tbxReplacement.Name" xml:space="preserve">
     <value>tbxReplacement</value>
@@ -496,13 +493,13 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Metadata Rule Step Editor</value>
+    <value>Result File Rule Editor</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.203, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;bindingListSource1.Name" xml:space="preserve">
     <value>bindingListSource1</value>
@@ -510,10 +507,16 @@
   <data name="&gt;&gt;bindingListSource1.Type" xml:space="preserve">
     <value>pwiz.Common.DataBinding.Controls.BindingListSource, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
+  <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
+    <value>toolTip</value>
+  </data>
+  <data name="&gt;&gt;toolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>MetadataRuleStepEditor</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.203, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -11040,12 +11040,6 @@ Invalid peptide sequence at position 18
   <data name="RuleError_ToString_An_error_occurred_applying_the_rule___0___" xml:space="preserve">
     <value>An error occurred applying the rule '{0}':</value>
   </data>
-  <data name="MetadataRuleSetList_Title_Define_Metadata_Rules" xml:space="preserve">
-    <value>Define Metadata Rules</value>
-  </data>
-  <data name="MetadataRuleSetList_Label_Metadata_Rule" xml:space="preserve">
-    <value>Metadata Rule</value>
-  </data>
   <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_" xml:space="preserve">
     <value>Go to Tools &gt; Options &gt; Panorama tab to update the username and password.</value>
   </data>
@@ -11069,5 +11063,11 @@ Invalid peptide sequence at position 18
   </data>
   <data name="MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank" xml:space="preserve">
     <value>{0} must either be a valid regular expression or blank</value>
+  </data>
+  <data name="MetadataRuleSetList_Title_Result_File_Rules" xml:space="preserve">
+    <value>Result File Rules</value>
+  </data>
+  <data name="MetadataRuleSetList_Label_Result_File_Rule" xml:space="preserve">
+    <value>Result File Rule</value>
   </data>
 </root>
