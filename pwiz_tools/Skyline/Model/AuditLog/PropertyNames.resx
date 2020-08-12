@@ -1547,9 +1547,6 @@
   <data name="IonMobilityLibrary_FilePathAuditLog" xml:space="preserve">
     <value>File path</value>
   </data>
-  <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
-    <value>Library ion mobility values</value>
-  </data>
   <data name="DataSettings_MetadataRuleSets" xml:space="preserve">
     <value>Metadata rule sets</value>
   </data>
