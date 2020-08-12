@@ -85,6 +85,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly int tbxFastaHeightDifference;
 
         public bool ContainsFastaContent { get { return !string.IsNullOrWhiteSpace(tbxFasta.Text); } }
+        public bool IsDDASearch { get; set; }
 
         public ImportFastaSettings ImportSettings
         {
@@ -228,7 +229,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             try
             {
                 var fileInfo = new FileInfo(fastaFilePath);
-                if (fileInfo.Length > MAX_FASTA_TEXTBOX_LENGTH)
+                if (IsDDASearch || fileInfo.Length > MAX_FASTA_TEXTBOX_LENGTH)
                 {
                     _fastaFile = true;
                     tbxFasta.Text = fastaFilePath;
@@ -320,10 +321,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 var docCurrent = DocumentContainer.Document;
                 // If the document has precursor transitions already, then just trust the user
                 // knows what they are doing, and this document is already set up for MS1 filtering
-                if (HasPrecursorTransitions(docCurrent))
+                if (HasPrecursorTransitions(docCurrent)&& !IsDDASearch)
                     return true;
 
-                if (docCurrent.PeptideCount == 0)
+                if (docCurrent.PeptideCount == 0|| IsDDASearch)
                 {
                     MessageDlg.Show(WizardForm, TextUtil.LineSeparate(Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_,
                                                                       Resources.ImportFastaControl_ImportFasta_Please_import_FASTA_to_add_peptides_to_the_document_));

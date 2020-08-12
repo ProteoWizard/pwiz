@@ -770,6 +770,9 @@ namespace pwiz.Skyline.SettingsUI
         public void SetModification(string modName, bool isVariable)
         {
             var modification = UniMod.GetModification(modName, IsStructural);
+            if (modification == null)
+                throw new ArgumentException(string.Format(Resources.EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_, modName));
+
             // Avoid setting loss-only modifications to variable, since losses themselves act as variable
             if (modification.HasLoss && !modification.HasMod)
                 isVariable = false;

@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             _elementHandlers = ElementHandler.GetElementHandlers(DataSchema).ToDictionary(handler => handler.Name);
         }
 
-        public DocumentAnnotations(SrmDocument document) : this (SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT))
+        public DocumentAnnotations(SrmDocument document) : this (SkylineDataSchema.MemoryDataSchema(document, SkylineDataSchema.GetLocalizedSchemaLocalizer()))
         {
         }
 
@@ -176,7 +176,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                         continue;
                     }
                     string fieldName = fieldNames[icol];
-                    ImportablePropertyInfo propertyInfo = null;
+                    TextColumnWrapper propertyInfo = null;
                     AnnotationDef annotationDef = null;
                     if (fieldName.StartsWith(PROPERTY_PREFIX))
                     {
@@ -206,8 +206,8 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                     
                     if (propertyInfo != null)
                     {
-                        object value = propertyInfo.ParsePropertyValue(CultureInfo, fieldValue);
-                        propertyInfo.PropertyDescriptor.SetValue(element, value);
+                        object value = propertyInfo.ParseTextValue(CultureInfo, fieldValue);
+                        propertyInfo.SetValue(element, value);
                     }
                     if (annotationDef != null)
                     {
@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                 }
                 else
                 {
-                    yield return propertyInfo.FormatPropertyValue(CultureInfo, propertyInfo.PropertyDescriptor.GetValue(skylineObject));
+                    yield return propertyInfo.ValueToText(CultureInfo, propertyInfo.GetValue(skylineObject));
                 }
             }
         }

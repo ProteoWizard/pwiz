@@ -602,6 +602,69 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Equal.
+        /// </summary>
+        public static string ValueStatus_EQUAL_Equal {
+            get {
+                return ResourceManager.GetString("ValueStatus_EQUAL_Equal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fail.
+        /// </summary>
+        public static string ValueStatus_FAIL_Fail {
+            get {
+                return ResourceManager.GetString("ValueStatus_FAIL_Fail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to High.
+        /// </summary>
+        public static string ValueStatus_HIGH_High {
+            get {
+                return ResourceManager.GetString("ValueStatus_HIGH_High", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Low.
+        /// </summary>
+        public static string ValueStatus_LOW_Low {
+            get {
+                return ResourceManager.GetString("ValueStatus_LOW_Low", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pass.
+        /// </summary>
+        public static string ValueStatus_PASS_Pass {
+            get {
+                return ResourceManager.GetString("ValueStatus_PASS_Pass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Present.
+        /// </summary>
+        public static string ValueStatus_PRESENT_Present {
+            get {
+                return ResourceManager.GetString("ValueStatus_PRESENT_Present", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Undefined.
+        /// </summary>
+        public static string ValueStatus_UNDEFINED_Undefined {
+            get {
+                return ResourceManager.GetString("ValueStatus_UNDEFINED_Undefined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Weighting.
         /// </summary>
         public static string Weighting {

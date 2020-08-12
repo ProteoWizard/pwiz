@@ -18,8 +18,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -131,6 +133,41 @@ namespace pwiz.Common.SystemUtil
                     }
                 }
             }
+        }
+        /// <summary>
+        /// Set the tooltips for the control and all of its children to null.
+        /// The ToolTip control sometimes gets confused if any of the tooltips belong to
+        /// controls that are no longer part of the form.
+        /// (ToolTip.TopLevelControl sometimes gets set to a bogus value)
+        /// </summary>
+        public static void PurgeTooltips(IList<ToolTip> toolTipControls, Control control)
+        {
+            foreach (var toolTipControl in toolTipControls)
+            {
+                toolTipControl.SetToolTip(control, null);
+            }
+
+            foreach (var child in control.Controls.OfType<Control>())
+            {
+                PurgeTooltips(toolTipControls, child);
+            }
+        }
+
+        /// <summary>
+        /// Removes the tab page, and nulls out the tooltips that may have been set.
+        /// </summary>
+        public static void RemoveTabPage(TabPage tabPage, IList<ToolTip> toolTipControls)
+        {
+            ((TabControl) tabPage.Parent).TabPages.Remove(tabPage);
+            if (toolTipControls != null && toolTipControls.Count > 0)
+            {
+                PurgeTooltips(toolTipControls, tabPage);
+            }
+        }
+
+        public static void RemoveTabPage(TabPage tabPage, ToolTip toolTipControl)
+        {
+            RemoveTabPage(tabPage, ImmutableList.Singleton(toolTipControl));
         }
     }
 }
