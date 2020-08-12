@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Deployment.Application;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using AutoQC.Properties;
@@ -79,6 +79,10 @@ namespace AutoQC
 
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
+
+                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+                Console.WriteLine("Local user config path: {0}", config.FilePath);
+
                 if (!InitSkylineSettings())
                 {
                     mutex.ReleaseMutex();
@@ -92,9 +96,6 @@ namespace AutoQC
                     ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
                     : "";
                 form.Text = Version();
-
-                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                Console.WriteLine("Local user config path: {0}", config.FilePath);
 
                 var worker = new BackgroundWorker {WorkerSupportsCancellation = false, WorkerReportsProgress = false};
                 worker.DoWork += UpdateAutoQcStarter;
@@ -119,69 +120,70 @@ namespace AutoQC
         {
             if (!string.IsNullOrWhiteSpace(Settings.Default.SkylineType))
                 return true;
-            var listOfDirectories = "";
+            var listOfDirectories = new StringBuilder();
+
+            var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             // C:\Program Files\Skyline  
-            var adminSkylineDir = Path.Combine("C:\\Program Files", "Skyline");
+            var adminSkylineDir = Path.Combine(programFilesPath, MainForm.SKYLINE);
             if (Directory.Exists(adminSkylineDir))
             {
                 var cmdFile = Path.Combine(adminSkylineDir, MainForm.SKYLINE_CMD);
-                const string skylineExe = MainForm.SKYLINE + ".exe";
-                const string skylineDailyExe = MainForm.SKYLINE_DAILY + ".exe";
+               
                 if (File.Exists(cmdFile)
-                    && (File.Exists(Path.Combine(adminSkylineDir, skylineExe))))
+                    && (File.Exists(Path.Combine(adminSkylineDir, MainForm.SKYLINE_EXE))))
                 {
                     Settings.Default.SkylineCmdLineExePath = cmdFile;
                     Settings.Default.SkylineType = MainForm.SKYLINE;
                     return true;
                 }
-                else if (File.Exists(cmdFile) && File.Exists(Path.Combine(adminSkylineDir, skylineDailyExe)))
+                else if (File.Exists(cmdFile) && File.Exists(Path.Combine(adminSkylineDir, MainForm.SKYLINE_DAILY_EXE)))
                 {
                     Settings.Default.SkylineCmdLineExePath = cmdFile;
                     Settings.Default.SkylineType = MainForm.SKYLINE_DAILY;
                     return true;
                 }
             }
-            listOfDirectories += "\n" + adminSkylineDir;
+            listOfDirectories.AppendLine(adminSkylineDir);
 
             // C:\Program Files\Skyline-daily
-            if (Directory.Exists(adminSkylineDir = Path.Combine("C:\\Program Files", "Skyline-daily")))
+            if (Directory.Exists(adminSkylineDir = Path.Combine(programFilesPath, MainForm.SKYLINE_DAILY)))
             {
-                const string skylineDailyExe = MainForm.SKYLINE_DAILY + ".exe";
                 var cmdFile = Path.Combine(adminSkylineDir, MainForm.SKYLINE_CMD);
                 if (File.Exists(cmdFile)
-                    && File.Exists(Path.Combine(adminSkylineDir, skylineDailyExe)))
+                    && File.Exists(Path.Combine(adminSkylineDir, MainForm.SKYLINE_DAILY_EXE)))
                 {
                     Settings.Default.SkylineType = MainForm.SKYLINE_DAILY;
                     Settings.Default.SkylineCmdLineExePath = cmdFile;
                     return true;
                 }
             }
-            listOfDirectories += "\n" + adminSkylineDir;
+            listOfDirectories.AppendLine(adminSkylineDir);
 
-            // ClickOnce Skyline installation   
-            if (MainForm.ListPossibleSkylineShortcutPaths(MainForm.SKYLINE).FirstOrDefault(File.Exists) != null)
+            // ClickOnce Skyline installation
+            var skylineShortcutPaths = MainForm.ListPossibleSkylineShortcutPaths(MainForm.SKYLINE);
+            if (skylineShortcutPaths.FirstOrDefault(File.Exists) != null)
             {
                 Settings.Default.SkylineType = MainForm.SKYLINE;
                 Settings.Default.SkylineCmdLineExePath = Path.Combine(MainForm.AutoQCInstallDir, MainForm.SKYLINE_RUNNER);
                 return true;
             }
-            listOfDirectories += "\n" + MainForm.AutoQCInstallDir;
+            Array.ForEach(skylineShortcutPaths, path => listOfDirectories.AppendLine(path));
 
-            // ClickOnce Skyline-daily installation  
-            if (MainForm.ListPossibleSkylineShortcutPaths(MainForm.SKYLINE_DAILY).FirstOrDefault(File.Exists) != null)
+            // ClickOnce Skyline-daily installation
+            skylineShortcutPaths = MainForm.ListPossibleSkylineShortcutPaths(MainForm.SKYLINE_DAILY);
+            if (skylineShortcutPaths.FirstOrDefault(File.Exists) != null)
             {
                 Settings.Default.SkylineType = MainForm.SKYLINE_DAILY;
                 Settings.Default.SkylineCmdLineExePath = Path.Combine(MainForm.AutoQCInstallDir, MainForm.SKYLINE_DAILY_RUNNER);
                 return true;
             }
-            listOfDirectories += "\n" + MainForm.AutoQCInstallDir;
+            Array.ForEach(skylineShortcutPaths, path => listOfDirectories.AppendLine(path));
 
-            MessageBox.Show("AutoQC Loader requires Skyline or Skyline - daily to be installed on the computer. " +
-                            $"Unable to find Skyline at any of the following locations: {listOfDirectories}. " +
-                            "Please install Skyline or Skyline - daily to use AutoQC Loader", "Unable To Find Skyline",
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(string.Join(Environment.NewLine, $"AutoQC Loader requires {MainForm.SKYLINE} or {MainForm.SKYLINE_DAILY} to be installed on the computer."
+                , $"Unable to find {MainForm.SKYLINE} at any of the following locations: {listOfDirectories}."
+                , $"Please install {MainForm.SKYLINE} or {MainForm.SKYLINE_DAILY} to use AutoQC Loader"), "Unable To Find Skyline",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
-
         }
 
         private static void UpdateAutoQcStarter(object sender, DoWorkEventArgs e)

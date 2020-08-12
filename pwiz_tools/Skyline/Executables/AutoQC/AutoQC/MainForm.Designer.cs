@@ -53,17 +53,17 @@
             this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.comboConfigs = new System.Windows.Forms.ComboBox();
             this.tabSettings = new System.Windows.Forms.TabPage();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.panel1 = new System.Windows.Forms.Panel();
+            this.groupBoxSkylineSettings = new System.Windows.Forms.GroupBox();
+            this.panelSkylineType = new System.Windows.Forms.Panel();
             this.radioButtonUseSkylineDaily = new System.Windows.Forms.RadioButton();
             this.radioButtonUseSkyline = new System.Windows.Forms.RadioButton();
             this.buttonFileDialogSkylineInstall = new System.Windows.Forms.Button();
-            this.radioButtonWebBasedSkylinePath = new System.Windows.Forms.RadioButton();
-            this.buttonSkylinePathApply = new System.Windows.Forms.Button();
+            this.radioButtonWebBasedSkyline = new System.Windows.Forms.RadioButton();
+            this.buttonApplySkylineSettings = new System.Windows.Forms.Button();
             this.radioButtonSpecifySkylinePath = new System.Windows.Forms.RadioButton();
-            this.textBoxSkylineCmdPath = new System.Windows.Forms.TextBox();
+            this.textBoxSkylinePath = new System.Windows.Forms.TextBox();
             this.label_Skylinecmd = new System.Windows.Forms.Label();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBoxAutoQcSettings = new System.Windows.Forms.GroupBox();
             this.cb_minimizeToSysTray = new System.Windows.Forms.CheckBox();
             this.cb_keepRunning = new System.Windows.Forms.CheckBox();
             this.toolTip_MainForm = new System.Windows.Forms.ToolTip(this.components);
@@ -72,9 +72,9 @@
             this.tabFront.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.tabSettings.SuspendLayout();
-            this.groupBox3.SuspendLayout();
-            this.panel1.SuspendLayout();
-            this.groupBox1.SuspendLayout();
+            this.groupBoxSkylineSettings.SuspendLayout();
+            this.panelSkylineType.SuspendLayout();
+            this.groupBoxAutoQcSettings.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnEdit
@@ -200,7 +200,7 @@
             this.tabMain.SelectedIndex = 0;
             this.tabMain.Size = new System.Drawing.Size(739, 551);
             this.tabMain.TabIndex = 10;
-            this.tabMain.SelectedIndexChanged += new System.EventHandler(this.Tab_Click);
+            this.tabMain.Deselecting += new System.Windows.Forms.TabControlCancelEventHandler(this.TabMain_Deselecting);
             // 
             // tabFront
             // 
@@ -308,9 +308,9 @@
             // tabSettings
             // 
             this.tabSettings.BackColor = System.Drawing.SystemColors.Control;
-            this.tabSettings.Controls.Add(this.groupBox3);
+            this.tabSettings.Controls.Add(this.groupBoxSkylineSettings);
             this.tabSettings.Controls.Add(this.label_Skylinecmd);
-            this.tabSettings.Controls.Add(this.groupBox1);
+            this.tabSettings.Controls.Add(this.groupBoxAutoQcSettings);
             this.tabSettings.Location = new System.Drawing.Point(4, 22);
             this.tabSettings.Name = "tabSettings";
             this.tabSettings.Padding = new System.Windows.Forms.Padding(3);
@@ -318,28 +318,29 @@
             this.tabSettings.TabIndex = 2;
             this.tabSettings.Text = "Settings";
             // 
-            // groupBox3
+            // groupBoxSkylineSettings
             // 
-            this.groupBox3.Controls.Add(this.panel1);
-            this.groupBox3.Controls.Add(this.buttonFileDialogSkylineInstall);
-            this.groupBox3.Controls.Add(this.radioButtonWebBasedSkylinePath);
-            this.groupBox3.Controls.Add(this.buttonSkylinePathApply);
-            this.groupBox3.Controls.Add(this.radioButtonSpecifySkylinePath);
-            this.groupBox3.Controls.Add(this.textBoxSkylineCmdPath);
-            this.groupBox3.Location = new System.Drawing.Point(53, 27);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(629, 196);
-            this.groupBox3.TabIndex = 9;
-            this.groupBox3.TabStop = false;
+            this.groupBoxSkylineSettings.Controls.Add(this.panelSkylineType);
+            this.groupBoxSkylineSettings.Controls.Add(this.buttonFileDialogSkylineInstall);
+            this.groupBoxSkylineSettings.Controls.Add(this.radioButtonWebBasedSkyline);
+            this.groupBoxSkylineSettings.Controls.Add(this.buttonApplySkylineSettings);
+            this.groupBoxSkylineSettings.Controls.Add(this.radioButtonSpecifySkylinePath);
+            this.groupBoxSkylineSettings.Controls.Add(this.textBoxSkylinePath);
+            this.groupBoxSkylineSettings.Location = new System.Drawing.Point(53, 27);
+            this.groupBoxSkylineSettings.Name = "groupBoxSkylineSettings";
+            this.groupBoxSkylineSettings.Size = new System.Drawing.Size(629, 196);
+            this.groupBoxSkylineSettings.TabIndex = 9;
+            this.groupBoxSkylineSettings.TabStop = false;
+            this.groupBoxSkylineSettings.Text = "Skyline Settings";
             // 
-            // panel1
+            // panelSkylineType
             // 
-            this.panel1.Controls.Add(this.radioButtonUseSkylineDaily);
-            this.panel1.Controls.Add(this.radioButtonUseSkyline);
-            this.panel1.Location = new System.Drawing.Point(6, 19);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(611, 39);
-            this.panel1.TabIndex = 10;
+            this.panelSkylineType.Controls.Add(this.radioButtonUseSkylineDaily);
+            this.panelSkylineType.Controls.Add(this.radioButtonUseSkyline);
+            this.panelSkylineType.Location = new System.Drawing.Point(6, 19);
+            this.panelSkylineType.Name = "panelSkylineType";
+            this.panelSkylineType.Size = new System.Drawing.Size(611, 39);
+            this.panelSkylineType.TabIndex = 10;
             // 
             // radioButtonUseSkylineDaily
             // 
@@ -352,7 +353,6 @@
             this.radioButtonUseSkylineDaily.TabStop = true;
             this.radioButtonUseSkylineDaily.Text = "Use Skyline-daily";
             this.radioButtonUseSkylineDaily.UseVisualStyleBackColor = true;
-            this.radioButtonUseSkylineDaily.CheckedChanged += new System.EventHandler(this.TypeSkylineDaily_Click);
             // 
             // radioButtonUseSkyline
             // 
@@ -365,7 +365,6 @@
             this.radioButtonUseSkyline.TabStop = true;
             this.radioButtonUseSkyline.Text = "Use Skyline";
             this.radioButtonUseSkyline.UseVisualStyleBackColor = true;
-            this.radioButtonUseSkyline.CheckedChanged += new System.EventHandler(this.TypeSkyline_Click);
             // 
             // buttonFileDialogSkylineInstall
             // 
@@ -378,28 +377,28 @@
             this.buttonFileDialogSkylineInstall.UseVisualStyleBackColor = true;
             this.buttonFileDialogSkylineInstall.Click += new System.EventHandler(this.buttonFileDialogSkylineInstall_click);
             // 
-            // radioButtonWebBasedSkylinePath
+            // radioButtonWebBasedSkyline
             // 
-            this.radioButtonWebBasedSkylinePath.AutoSize = true;
-            this.radioButtonWebBasedSkylinePath.CheckAlign = System.Drawing.ContentAlignment.TopLeft;
-            this.radioButtonWebBasedSkylinePath.Location = new System.Drawing.Point(10, 76);
-            this.radioButtonWebBasedSkylinePath.Name = "radioButtonWebBasedSkylinePath";
-            this.radioButtonWebBasedSkylinePath.Size = new System.Drawing.Size(188, 17);
-            this.radioButtonWebBasedSkylinePath.TabIndex = 9;
-            this.radioButtonWebBasedSkylinePath.TabStop = true;
-            this.radioButtonWebBasedSkylinePath.Text = "Use web-based Skyline installation";
-            this.radioButtonWebBasedSkylinePath.UseVisualStyleBackColor = true;
-            this.radioButtonWebBasedSkylinePath.CheckedChanged += new System.EventHandler(this.WebBasedInstall_Click);
+            this.radioButtonWebBasedSkyline.AutoSize = true;
+            this.radioButtonWebBasedSkyline.CheckAlign = System.Drawing.ContentAlignment.TopLeft;
+            this.radioButtonWebBasedSkyline.Location = new System.Drawing.Point(10, 76);
+            this.radioButtonWebBasedSkyline.Name = "radioButtonWebBasedSkyline";
+            this.radioButtonWebBasedSkyline.Size = new System.Drawing.Size(188, 17);
+            this.radioButtonWebBasedSkyline.TabIndex = 9;
+            this.radioButtonWebBasedSkyline.TabStop = true;
+            this.radioButtonWebBasedSkyline.Text = "Use web-based Skyline installation";
+            this.radioButtonWebBasedSkyline.UseVisualStyleBackColor = true;
+            this.radioButtonWebBasedSkyline.CheckedChanged += new System.EventHandler(this.WebBasedInstall_Click);
             // 
-            // buttonSkylinePathApply
+            // buttonApplySkylineSettings
             // 
-            this.buttonSkylinePathApply.Location = new System.Drawing.Point(267, 159);
-            this.buttonSkylinePathApply.Name = "buttonSkylinePathApply";
-            this.buttonSkylinePathApply.Size = new System.Drawing.Size(75, 26);
-            this.buttonSkylinePathApply.TabIndex = 6;
-            this.buttonSkylinePathApply.Text = "Apply";
-            this.buttonSkylinePathApply.UseVisualStyleBackColor = true;
-            this.buttonSkylinePathApply.Click += new System.EventHandler(this.ApplySkylinePath_Click);
+            this.buttonApplySkylineSettings.Location = new System.Drawing.Point(267, 159);
+            this.buttonApplySkylineSettings.Name = "buttonApplySkylineSettings";
+            this.buttonApplySkylineSettings.Size = new System.Drawing.Size(75, 26);
+            this.buttonApplySkylineSettings.TabIndex = 6;
+            this.buttonApplySkylineSettings.Text = "Apply";
+            this.buttonApplySkylineSettings.UseVisualStyleBackColor = true;
+            this.buttonApplySkylineSettings.Click += new System.EventHandler(this.ApplySkylineSettings_Click);
             // 
             // radioButtonSpecifySkylinePath
             // 
@@ -414,13 +413,13 @@
             this.radioButtonSpecifySkylinePath.UseVisualStyleBackColor = true;
             this.radioButtonSpecifySkylinePath.CheckedChanged += new System.EventHandler(this.SpecifiyInstall_Click);
             // 
-            // textBoxSkylineCmdPath
+            // textBoxSkylinePath
             // 
-            this.textBoxSkylineCmdPath.Enabled = false;
-            this.textBoxSkylineCmdPath.Location = new System.Drawing.Point(10, 122);
-            this.textBoxSkylineCmdPath.Name = "textBoxSkylineCmdPath";
-            this.textBoxSkylineCmdPath.Size = new System.Drawing.Size(546, 20);
-            this.textBoxSkylineCmdPath.TabIndex = 4;
+            this.textBoxSkylinePath.Enabled = false;
+            this.textBoxSkylinePath.Location = new System.Drawing.Point(10, 122);
+            this.textBoxSkylinePath.Name = "textBoxSkylinePath";
+            this.textBoxSkylinePath.Size = new System.Drawing.Size(546, 20);
+            this.textBoxSkylinePath.TabIndex = 4;
             // 
             // label_Skylinecmd
             // 
@@ -430,20 +429,21 @@
             this.label_Skylinecmd.Size = new System.Drawing.Size(0, 13);
             this.label_Skylinecmd.TabIndex = 5;
             // 
-            // groupBox1
+            // groupBoxAutoQcSettings
             // 
-            this.groupBox1.Controls.Add(this.cb_minimizeToSysTray);
-            this.groupBox1.Controls.Add(this.cb_keepRunning);
-            this.groupBox1.Location = new System.Drawing.Point(53, 257);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(629, 81);
-            this.groupBox1.TabIndex = 3;
-            this.groupBox1.TabStop = false;
+            this.groupBoxAutoQcSettings.Controls.Add(this.cb_minimizeToSysTray);
+            this.groupBoxAutoQcSettings.Controls.Add(this.cb_keepRunning);
+            this.groupBoxAutoQcSettings.Location = new System.Drawing.Point(53, 257);
+            this.groupBoxAutoQcSettings.Name = "groupBoxAutoQcSettings";
+            this.groupBoxAutoQcSettings.Size = new System.Drawing.Size(629, 81);
+            this.groupBoxAutoQcSettings.TabIndex = 3;
+            this.groupBoxAutoQcSettings.TabStop = false;
+            this.groupBoxAutoQcSettings.Text = "AutoQC Loader Settings";
             // 
             // cb_minimizeToSysTray
             // 
             this.cb_minimizeToSysTray.AutoSize = true;
-            this.cb_minimizeToSysTray.Location = new System.Drawing.Point(14, 48);
+            this.cb_minimizeToSysTray.Location = new System.Drawing.Point(14, 51);
             this.cb_minimizeToSysTray.Name = "cb_minimizeToSysTray";
             this.cb_minimizeToSysTray.Size = new System.Drawing.Size(227, 17);
             this.cb_minimizeToSysTray.TabIndex = 2;
@@ -453,7 +453,7 @@
             // cb_keepRunning
             // 
             this.cb_keepRunning.AutoSize = true;
-            this.cb_keepRunning.Location = new System.Drawing.Point(14, 19);
+            this.cb_keepRunning.Location = new System.Drawing.Point(14, 22);
             this.cb_keepRunning.Name = "cb_keepRunning";
             this.cb_keepRunning.Size = new System.Drawing.Size(165, 17);
             this.cb_keepRunning.TabIndex = 0;
@@ -487,12 +487,12 @@
             this.tabLog.PerformLayout();
             this.tabSettings.ResumeLayout(false);
             this.tabSettings.PerformLayout();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.groupBoxSkylineSettings.ResumeLayout(false);
+            this.groupBoxSkylineSettings.PerformLayout();
+            this.panelSkylineType.ResumeLayout(false);
+            this.panelSkylineType.PerformLayout();
+            this.groupBoxAutoQcSettings.ResumeLayout(false);
+            this.groupBoxAutoQcSettings.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -524,18 +524,18 @@
         private System.Windows.Forms.ToolTip toolTip_MainForm;
         private System.Windows.Forms.TabPage tabSettings;
         private System.Windows.Forms.CheckBox cb_minimizeToSysTray;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox groupBoxAutoQcSettings;
         private System.Windows.Forms.CheckBox cb_keepRunning;
         private System.Windows.Forms.NotifyIcon systray_icon;
-        private System.Windows.Forms.Button buttonSkylinePathApply;
+        private System.Windows.Forms.Button buttonApplySkylineSettings;
         private System.Windows.Forms.Label label_Skylinecmd;
-        private System.Windows.Forms.TextBox textBoxSkylineCmdPath;
+        private System.Windows.Forms.TextBox textBoxSkylinePath;
         private System.Windows.Forms.Button buttonFileDialogSkylineInstall;
         private System.Windows.Forms.RadioButton radioButtonSpecifySkylinePath;
-        private System.Windows.Forms.RadioButton radioButtonWebBasedSkylinePath;
+        private System.Windows.Forms.RadioButton radioButtonWebBasedSkyline;
         private System.Windows.Forms.RadioButton radioButtonUseSkylineDaily;
         private System.Windows.Forms.RadioButton radioButtonUseSkyline;
-        private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.GroupBox groupBoxSkylineSettings;
+        private System.Windows.Forms.Panel panelSkylineType;
     }
 }
