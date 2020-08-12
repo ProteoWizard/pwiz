@@ -8907,6 +8907,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred while applying the rule set &apos;{0}&apos;. Do you want to continue with the change to the Document Settings?.
+        /// </summary>
+        public static string DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_ {
+            get {
+                return ResourceManager.GetString("DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_ru" +
+                        "le___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap down_pro32 {
@@ -15248,7 +15258,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct components  [rest of string was truncated]&quot;;.
+        ///Recognized adduct com [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -17845,6 +17855,79 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error converting &apos;{0}&apos; to &apos;{1}&apos;:.
+        /// </summary>
+        public static string MetadataExtractor_ApplyStep_Error_converting___0___to___1___ {
+            get {
+                return ResourceManager.GetString("MetadataExtractor_ApplyStep_Error_converting___0___to___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find column {0}.
+        /// </summary>
+        public static string MetadataExtractor_ResolveColumn_Unable_to_find_column__0_ {
+            get {
+                return ResourceManager.GetString("MetadataExtractor_ResolveColumn_Unable_to_find_column__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} cannot be blank.
+        /// </summary>
+        public static string MetadataRuleEditor_OkDialog__0__cannot_be_blank {
+            get {
+                return ResourceManager.GetString("MetadataRuleEditor_OkDialog__0__cannot_be_blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is already a result file rule set named &apos;{0}&apos;..
+        /// </summary>
+        public static string MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___ {
+            get {
+                return ResourceManager.GetString("MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This is not a valid regular expression..
+        /// </summary>
+        public static string MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_ {
+            get {
+                return ResourceManager.GetString("MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rule Set.
+        /// </summary>
+        public static string MetadataRuleSetList_Label_Rule_Set {
+            get {
+                return ResourceManager.GetString("MetadataRuleSetList_Label_Rule_Set", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rule Sets.
+        /// </summary>
+        public static string MetadataRuleSetList_Title_Rule_Sets {
+            get {
+                return ResourceManager.GetString("MetadataRuleSetList_Title_Rule_Sets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text &apos;{0}&apos; must either be a valid regular expression or blank.
+        /// </summary>
+        public static string MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank {
+            get {
+                return ResourceManager.GetString("MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_" +
+                        "blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exporting method {0}....
         /// </summary>
         public static string MethodExporter_ExportMethod_Exporting_method__0__ {
@@ -19804,7 +19887,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
@@ -24766,6 +24849,15 @@ namespace pwiz.Skyline.Properties {
         public static string RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators {
             get {
                 return ResourceManager.GetString("RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred applying the rule &apos;{0}&apos;:.
+        /// </summary>
+        public static string RuleError_ToString_An_error_occurred_applying_the_rule___0___ {
+            get {
+                return ResourceManager.GetString("RuleError_ToString_An_error_occurred_applying_the_rule___0___", resourceCulture);
             }
         }
         
