@@ -1257,7 +1257,7 @@ namespace pwiz.Skyline.Model
                     iProt = FindProtein(fieldsFirstRow, iSequence, lines, indices.Headers, provider, separator);
                 int posPrecursorCharge = indices.PrecursorChargeColumn;
                 if (posPrecursorCharge == -1)
-                    posPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator);
+                    posPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator); 
 
                 indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, posFragmentName, posPrecursorCharge);
 
@@ -1500,57 +1500,63 @@ namespace pwiz.Skyline.Model
                 }
                 return false;
             }
-            private static int FindPrecursorCharge(string[] fields, IEnumerable<string> lines, char separator)
 
+            private static int FindPrecursorCharge (string[] fields, IEnumerable<string> lines, char separator)
             {
-                // Look for the first column containing just a Precursor Charge
 
-                int PrecursorChargePos = -1;
+                var listCandidates = new List<int>();
 
                 for (int i = 0; i < fields.Length; i++)
                 {
+                    //if any of the cells in the first row look like precursor charges, we add their index to the list of candidates
                     if (ContainsPrecursorCharge(fields[i]))
                     {
-                        PrecursorChargePos = i;
-                        break;
+                        listCandidates.Add(i);
                     }
-
                 }
 
-                if (PrecursorChargePos == -1)
-                    return -1;
+                int[] ListCandidates = listCandidates.ToArray();
 
-                // Make sure all other rows have just precursor charges in this column
-
-                foreach (string line in lines)
+                //We test every cell in each candidate column and return the first column that has no exceptions to our criteria
+                foreach (int i in ListCandidates)
                 {
-                    string[] fieldsNext = line.ParseDsvFields(separator);
+                    bool noExcepetions = true;
+                    foreach (string line in lines)
+                    {
+                        string[] fieldsNext = line.ParseDsvFields(separator);
+                        if (!ContainsPrecursorCharge(fieldsNext[i]))
+                        {
+                           noExcepetions = false;
+                            break;
+                        }
 
-                    if (!ContainsPrecursorCharge(fieldsNext[PrecursorChargePos]))
-
-                        return -1;
-
+                    }
+                    if (noExcepetions)
+                    {
+                        return i;
+                    }
                 }
-                return PrecursorChargePos;
+                return -1;
             }
+
 
 
 
             // Helper method for FindPrecursorCharge
 
-           private static bool ContainsPrecursorCharge(string field)
+            private static bool ContainsPrecursorCharge(string field)
             {
                 //checks if we can turn the string into an integer
-                 if (int.TryParse(field, out int j))
-                 {
-                     //checks if the integer is between the range of possible charges
-                     if (j >=TransitionGroup.MIN_PRECURSOR_CHARGE && j <= TransitionGroup.MAX_PRECURSOR_CHARGE)
-                     {
-                         return true;
-                     }
-                 }
-                 return false;
-                
+                if (int.TryParse(field, out int j))
+                {
+                    //checks if the integer is between the range of possible charges
+                    if (j >= TransitionGroup.MIN_PRECURSOR_CHARGE && j <= TransitionGroup.MAX_PRECURSOR_CHARGE)
+                    {
+                        return true;
+                    }
+                    
+                }
+                return false;
             }
 
             private static void AddCount(string key, IDictionary<string, int> dict)
