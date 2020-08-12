@@ -682,6 +682,66 @@ You can associate list items with elements in the document by defining a lookup 
   <data name="&gt;&gt;tabPageReports.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="btnAddMetadataRule.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAddMetadataRule.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnAddMetadataRule.Location" type="System.Drawing.Point, System.Drawing">
+    <value>541, 46</value>
+  </data>
+  <data name="btnAddMetadataRule.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnAddMetadataRule.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="btnAddMetadataRule.Text" xml:space="preserve">
+    <value>&amp;Add...</value>
+  </data>
+  <data name="&gt;&gt;btnAddMetadataRule.Name" xml:space="preserve">
+    <value>btnAddMetadataRule</value>
+  </data>
+  <data name="&gt;&gt;btnAddMetadataRule.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddMetadataRule.Parent" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;btnAddMetadataRule.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnEditMetadataRuleList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnEditMetadataRuleList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnEditMetadataRuleList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>541, 75</value>
+  </data>
+  <data name="btnEditMetadataRuleList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnEditMetadataRuleList.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="btnEditMetadataRuleList.Text" xml:space="preserve">
+    <value>&amp;Edit List...</value>
+  </data>
+  <data name="&gt;&gt;btnEditMetadataRuleList.Name" xml:space="preserve">
+    <value>btnEditMetadataRuleList</value>
+  </data>
+  <data name="&gt;&gt;btnEditMetadataRuleList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnEditMetadataRuleList.Parent" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;btnEditMetadataRuleList.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="lblMetadataRulesDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -707,103 +767,7 @@ You can associate list items with elements in the document by defining a lookup 
     <value>tabPageResultFileRules</value>
   </data>
   <data name="&gt;&gt;lblMetadataRulesDescription.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="btnEditRule.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnEditRule.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnEditRule.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnEditRule.Location" type="System.Drawing.Point, System.Drawing">
-    <value>521, 74</value>
-  </data>
-  <data name="btnEditRule.Size" type="System.Drawing.Size, System.Drawing">
-    <value>94, 23</value>
-  </data>
-  <data name="btnEditRule.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
-  </data>
-  <data name="btnEditRule.Text" xml:space="preserve">
-    <value>&amp;Edit...</value>
-  </data>
-  <data name="&gt;&gt;btnEditRule.Name" xml:space="preserve">
-    <value>btnEditRule</value>
-  </data>
-  <data name="&gt;&gt;btnEditRule.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnEditRule.Parent" xml:space="preserve">
-    <value>tabPageResultFileRules</value>
-  </data>
-  <data name="&gt;&gt;btnEditRule.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnAddRule.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnAddRule.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnAddRule.Location" type="System.Drawing.Point, System.Drawing">
-    <value>521, 45</value>
-  </data>
-  <data name="btnAddRule.Size" type="System.Drawing.Size, System.Drawing">
-    <value>94, 23</value>
-  </data>
-  <data name="btnAddRule.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="btnAddRule.Text" xml:space="preserve">
-    <value>New...</value>
-  </data>
-  <data name="&gt;&gt;btnAddRule.Name" xml:space="preserve">
-    <value>btnAddRule</value>
-  </data>
-  <data name="&gt;&gt;btnAddRule.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAddRule.Parent" xml:space="preserve">
-    <value>tabPageResultFileRules</value>
-  </data>
-  <data name="&gt;&gt;btnAddRule.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="btnDeleteRules.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnDeleteRules.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnDeleteRules.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnDeleteRules.Location" type="System.Drawing.Point, System.Drawing">
-    <value>521, 103</value>
-  </data>
-  <data name="btnDeleteRules.Size" type="System.Drawing.Size, System.Drawing">
-    <value>94, 23</value>
-  </data>
-  <data name="btnDeleteRules.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="btnDeleteRules.Text" xml:space="preserve">
-    <value>Delete</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteRules.Name" xml:space="preserve">
-    <value>btnDeleteRules</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteRules.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteRules.Parent" xml:space="preserve">
-    <value>tabPageResultFileRules</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteRules.ZOrder" xml:space="preserve">
-    <value>3</value>
   </data>
   <data name="checkedListBoxRuleSets.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -812,7 +776,7 @@ You can associate list items with elements in the document by defining a lookup 
     <value>8, 46</value>
   </data>
   <data name="checkedListBoxRuleSets.Size" type="System.Drawing.Size, System.Drawing">
-    <value>507, 184</value>
+    <value>527, 184</value>
   </data>
   <data name="checkedListBoxRuleSets.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -827,7 +791,7 @@ You can associate list items with elements in the document by defining a lookup 
     <value>tabPageResultFileRules</value>
   </data>
   <data name="&gt;&gt;checkedListBoxRuleSets.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="tabPageResultFileRules.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

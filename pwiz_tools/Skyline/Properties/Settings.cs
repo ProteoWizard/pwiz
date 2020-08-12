@@ -1192,23 +1192,23 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
-        public MetadataRuleSetList MetadataRuleSets
+        public MetadataRuleSetList MetadataRules
         {
             get
             {
-                var ruleSets = (MetadataRuleSetList) this[nameof(MetadataRuleSets)];
+                var ruleSets = (MetadataRuleSetList) this[nameof(MetadataRules)];
                 if (ruleSets == null)
                 {
                     ruleSets = new MetadataRuleSetList();
                     ruleSets.AddDefaults();
-                    MetadataRuleSets = ruleSets;
+                    MetadataRules = ruleSets;
                 }
 
                 return ruleSets;
             }
             set
             {
-                this[nameof(MetadataRuleSets)] = value;
+                this[nameof(MetadataRules)] = value;
             }
         }
 

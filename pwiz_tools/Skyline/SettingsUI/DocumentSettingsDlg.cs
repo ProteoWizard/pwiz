@@ -26,7 +26,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
         private readonly SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
         private readonly SettingsListBoxDriver<ListData> _listsListBoxDriver;
-        private XmlMappedList<string, MetadataRule> _ruleSets;
+        private readonly SettingsListBoxDriver<MetadataRule> _metadataRuleListBoxDriver;
         private DataSettings _originalSettings;
 
         public DocumentSettingsDlg(IDocumentUIContainer documentContainer)
@@ -52,11 +52,9 @@ namespace pwiz.Skyline.SettingsUI
             chooseViewsControl.ShowCheckboxes = true;
             chooseViewsControl.CheckedViews = dataSettings.ViewSpecList.ViewSpecs.Select(
                 viewSpec => PersistedViews.MainGroup.Id.ViewName(viewSpec.Name));
-            _ruleSets = new XmlMappedList<string, MetadataRule>();
-            _ruleSets.AddRange(Settings.Default.MetadataRuleSets);
-            _ruleSets.AddRange(dataSettings.MetadataRuleSets);
+            _metadataRuleListBoxDriver = new SettingsListBoxDriver<MetadataRule>(checkedListBoxRuleSets, Settings.Default.MetadataRules);
+            _metadataRuleListBoxDriver.LoadList(dataSettings.MetadataRuleSets);
             _originalSettings = dataSettings;
-            UpdateRuleSets(dataSettings.MetadataRuleSets.Select(ruleSet=>ruleSet.Name).ToHashSet());
         }
 
         public IDocumentUIContainer DocumentContainer { get; private set; }
@@ -68,13 +66,11 @@ namespace pwiz.Skyline.SettingsUI
                 .Select(viewName=>viewName.Name));
             var viewSpecs = Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id)
                 .Filter(view => selectedViews.Contains(view.Name));
-            var ruleSets = checkedListBoxRuleSets.CheckedIndices.OfType<int>()
-                .Select(index => _ruleSets[index]);
             return dataSettings.ChangeAnnotationDefs(_annotationsListBoxDriver.Chosen)
                 .ChangeGroupComparisonDefs(_groupComparisonsListBoxDriver.Chosen)
                 .ChangeViewSpecList(viewSpecs)
                 .ChangeListDefs(_listsListBoxDriver.Chosen)
-                .ChangeExtractedMetadata(ruleSets);
+                .ChangeExtractedMetadata(_metadataRuleListBoxDriver.Chosen);
         }
 
         private void btnAddAnnotation_Click(object sender, System.EventArgs e)
@@ -187,9 +183,12 @@ namespace pwiz.Skyline.SettingsUI
             Settings.Default.ListDefList.Clear();
             Settings.Default.ListDefList.AddRange(_listsListBoxDriver.List.Select(list=>list.DeleteAllRows()));
 
-            Settings.Default.MetadataRuleSets.Clear();
-            Settings.Default.MetadataRuleSets.AddRange(_ruleSets);
             DialogResult = DialogResult.OK;
+        }
+
+        public void EditMetadataRuleList()
+        {
+            _metadataRuleListBoxDriver.EditList(DocumentContainer);
         }
 
         public bool ValidateMetadataRules()
@@ -294,137 +293,29 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private void btnAddRuleSet_Click(object sender, System.EventArgs e)
+        public void AddMetadataRule()
+        {
+            using (var editDlg = new MetadataRuleEditor(DocumentContainer, new MetadataRule(typeof(ResultFile)),
+                Settings.Default.MetadataRules))
+            {
+                if (editDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var chosen = _metadataRuleListBoxDriver.Chosen.ToList();
+                    Settings.Default.MetadataRules.Add(editDlg.MetadataRule);
+                    chosen.Add(editDlg.MetadataRule);
+                    _metadataRuleListBoxDriver.LoadList(chosen);
+                }
+            }
+        }
+
+        private void btnAddMetadataRule_Click(object sender, System.EventArgs e)
         {
             AddMetadataRule();
         }
 
-        public void EditMetadataRule()
+        private void btnEditMetadataRuleList_Click(object sender, System.EventArgs e)
         {
-            var selectedIndex = checkedListBoxRuleSets.SelectedIndex;
-            if (selectedIndex < 0)
-            {
-                return;
-            }
-
-            var editedRule = ShowMetadataRuleEditor(_ruleSets[selectedIndex]);
-            if (editedRule == null)
-            {
-                return;
-            }
-
-            _ruleSets[selectedIndex] = editedRule;
-            UpdateRuleSets(checkedListBoxRuleSets.CheckedIndices.Cast<int>().Select(i=>_ruleSets[i].Name).ToHashSet());
-        }
-
-        public void AddMetadataRule()
-        {
-            var newRule = ShowMetadataRuleEditor(new MetadataRule(typeof(ResultFile)));
-            if (newRule == null)
-            {
-                return;
-            }
-
-            var checkedNames = checkedListBoxRuleSets.CheckedIndices.Cast<int>().Select(i => _ruleSets[i].Name)
-                .ToHashSet();
-            checkedNames.Add(newRule.Name);
-            _ruleSets.Add(newRule);
-            UpdateRuleSets(checkedNames);
-        }
-
-        public MetadataRule ShowMetadataRuleEditor(MetadataRule ruleSet)
-        {
-            using (var dlg = new MetadataRuleEditor(DocumentContainer, ruleSet, _ruleSets))
-            {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    return dlg.MetadataRule;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
-        public void SelectMetadataRule(string ruleName)
-        {
-            checkedListBoxRuleSets.SelectedIndex = _ruleSets.IndexOf(item => item.Name == ruleName);
-        }
-
-        public void UpdateMetadataButtons()
-        {
-            btnEditRule.Enabled = checkedListBoxRuleSets.SelectedIndices.Count == 1;
-            btnDeleteRules.Enabled = checkedListBoxRuleSets.SelectedIndices.Count != 0;
-        }
-
-        private void checkedListBoxResultFileRules_SelectedIndexChanged(object sender, System.EventArgs e)
-        {
-            UpdateMetadataButtons();
-        }
-
-        private void btnEditRule_Click(object sender, System.EventArgs e)
-        {
-            EditMetadataRule();
-        }
-
-        private void UpdateRuleSets(HashSet<string> checkedNames)
-        {
-            var newNames = _ruleSets.Select(rule => rule.Name).ToArray();
-            checkedListBoxRuleSets.BeginUpdate();
-            try
-            {
-                if (!newNames.SequenceEqual(checkedListBoxRuleSets.Items.Cast<string>()))
-                {
-                    checkedListBoxRuleSets.Items.Clear();
-                    checkedListBoxRuleSets.Items.AddRange(newNames);
-                }
-                for (int i = 0; i < newNames.Length; i++)
-                {
-                    checkedListBoxRuleSets.SetItemChecked(i, checkedNames.Contains(newNames[i]));
-                }
-
-                if (checkedListBoxRuleSets.SelectedIndex < 0 && checkedListBoxRuleSets.Items.Count > 0)
-                {
-                    checkedListBoxRuleSets.SelectedIndex = 0;
-                }
-            }
-            finally
-            {
-                checkedListBoxRuleSets.EndUpdate();
-            }
-        }
-
-        private void btnDeleteRules_Click(object sender, System.EventArgs e)
-        {
-            var namesToDelete = checkedListBoxRuleSets.SelectedIndices.Cast<int>().Select(i => _ruleSets[i].Name)
-                .ToHashSet();
-            if (namesToDelete.Count == 0)
-            {
-                return;
-            }
-            string message;
-            if (namesToDelete.Count == 1)
-            {
-                message = string.Format(Resources.DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_the_rule___0___, namesToDelete.First());
-            }
-            else
-            {
-                message = string.Format(Resources.DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_these__0__rules_, namesToDelete.Count);
-            }
-
-            if (DialogResult.OK != new AlertDlg(message, MessageBoxButtons.OKCancel).ShowAndDispose(this))
-            {
-                return;
-            }
-
-            var checkedNames = checkedListBoxRuleSets.CheckedIndices.Cast<int>().Select(i => _ruleSets[i].Name)
-                .ToHashSet();
-            foreach (var nameToDelete in namesToDelete)
-            {
-                _ruleSets.Remove(_ruleSets[nameToDelete]);
-            }
-            UpdateRuleSets(checkedNames);
+            EditMetadataRuleList();
         }
     }
 }

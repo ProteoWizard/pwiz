@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
@@ -26,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
@@ -227,7 +229,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
         }
     }
 
-    public class MetadataRuleSetList : SettingsListBase<MetadataRule>
+    public class MetadataRuleSetList : SettingsList<MetadataRule>
     {
         public override IEnumerable<MetadataRule> GetDefaults(int revisionIndex)
         {
@@ -241,6 +243,27 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
         public override string Label
         {
             get { return Resources.MetadataRuleSetList_Label_Metadata_Rule; }
+        }
+
+        public override MetadataRule CopyItem(MetadataRule item)
+        {
+            return item.ChangeName(string.Empty);
+        }
+
+        public override MetadataRule EditItem(Control owner, MetadataRule item, IEnumerable<MetadataRule> existing, object tag)
+        {
+            var documentContainer = (IDocumentContainer) tag;
+            using (var dlg = new MetadataRuleEditor(documentContainer, item, existing))
+            {
+                if (dlg.ShowDialog(owner) == DialogResult.OK)
+                {
+                    return dlg.MetadataRule;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
     }
 }

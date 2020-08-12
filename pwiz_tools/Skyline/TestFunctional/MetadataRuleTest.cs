@@ -25,6 +25,7 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -95,8 +96,10 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, metadataRuleStepEditor.PreviewGrid.RowCount);
             OkDialog(metadataRuleStepEditor, metadataRuleStepEditor.OkDialog);
             OkDialog(metadataRuleEditor, metadataRuleEditor.OkDialog);
-            RunUI(()=>documentSettingsDlg.SelectMetadataRule("SubjectId"));
-            metadataRuleEditor = ShowDialog<MetadataRuleEditor>(documentSettingsDlg.EditMetadataRule);
+            var metadataRuleListEditor = ShowDialog<EditListDlg<SettingsListBase<MetadataRule>, MetadataRule>>
+                (documentSettingsDlg.EditMetadataRuleList);
+            RunUI(()=>metadataRuleListEditor.SelectItem("SubjectId"));
+            metadataRuleEditor = ShowDialog<MetadataRuleEditor>(metadataRuleListEditor.EditItem);
             RunUI(() =>
             {
                 var grid = metadataRuleEditor.DataGridViewSteps;
@@ -129,6 +132,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("D102", grid.Rows[0].Cells[colSubjectId.Index].Value);
             });
             OkDialog(metadataRuleEditor, metadataRuleEditor.OkDialog);
+            OkDialog(metadataRuleListEditor, metadataRuleListEditor.OkDialog);
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
             CollectionAssert.AreEqual(new[] { "D102", "H146" }, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
                 .Select(chrom => chrom.Annotations.GetAnnotation("SubjectId")).ToList());
@@ -143,10 +147,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules);
-                documentSettingsDlg.SelectMetadataRule("SubjectId");
             });
-           
-            metadataRuleEditor = ShowDialog<MetadataRuleEditor>(documentSettingsDlg.EditMetadataRule);
+            metadataRuleListEditor = ShowDialog<EditListDlg<SettingsListBase<MetadataRule>, MetadataRule>>
+                (documentSettingsDlg.EditMetadataRuleList);
+            RunUI(() =>
+            {
+                metadataRuleListEditor.SelectItem("SubjectId");
+            });
+            metadataRuleEditor = ShowDialog<MetadataRuleEditor>(metadataRuleListEditor.EditItem);
             RunUI(() =>
             {
                 var grid = metadataRuleEditor.DataGridViewSteps;
@@ -169,6 +177,7 @@ namespace pwiz.SkylineTestFunctional
                 grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnSource.Index];
             });
             OkDialog(metadataRuleEditor, metadataRuleEditor.OkDialog);
+            OkDialog(metadataRuleListEditor, metadataRuleListEditor.OkDialog);
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
             CollectionAssert.AreEqual(new[] { "Diseased", "Healthy" }, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
                 .Select(chrom => chrom.Annotations.GetAnnotation("Condition")).ToList());
