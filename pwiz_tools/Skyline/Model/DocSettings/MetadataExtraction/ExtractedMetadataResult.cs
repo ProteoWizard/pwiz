@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
 
     public class ExtractedMetadataResultColumn : IErrorTextProvider
     {
-        public ExtractedMetadataResultColumn(MetadataRuleStep rule, string columnName, object value, string errorText)
+        public ExtractedMetadataResultColumn(MetadataRule rule, string columnName, object value, string errorText)
         {
             Rule = rule;
             ColumnName = columnName;
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
         public string ColumnName { get; private set; }
         public object ExtractedValue { get; private set; }
         public string ErrorText { get; private set; }
-        public MetadataRuleStep Rule { get; private set; }
+        public MetadataRule Rule { get; private set; }
 
         public string GetErrorText(string columnName)
         {
@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
 
     public class MetadataStepResult : IErrorTextProvider
     {
-        public MetadataStepResult(MetadataRuleStep rule, string source, bool match, string matchedValue, string replacedValue,
+        public MetadataStepResult(MetadataRule rule, string source, bool match, string matchedValue, string replacedValue,
             object target, string errorText)
         {
             Rule = rule;
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             ErrorText = errorText;
         }
 
-        public MetadataRuleStep Rule { get; private set; }
+        public MetadataRule Rule { get; private set; }
         public string Source { get; private set; }
         public bool Match { get; private set; }
         public string MatchedValue { get; private set; }

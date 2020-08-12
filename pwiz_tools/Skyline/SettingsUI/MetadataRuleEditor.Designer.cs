@@ -30,157 +30,26 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MetadataRuleEditor));
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.lblRules = new System.Windows.Forms.Label();
-            this.tbxName = new System.Windows.Forms.TextBox();
-            this.lblName = new System.Windows.Forms.Label();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.dataGridViewRules = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.bindingSourceRules = new System.Windows.Forms.BindingSource(this.components);
-            this.toolStripRules = new System.Windows.Forms.ToolStrip();
-            this.btnRemove = new System.Windows.Forms.ToolStripButton();
-            this.btnUp = new System.Windows.Forms.ToolStripButton();
-            this.btnDown = new System.Windows.Forms.ToolStripButton();
-            this.btnEdit = new System.Windows.Forms.ToolStripButton();
-            this.boundDataGridViewEx1 = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
-            this.bindingListSourceResults = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.panelButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.colSource = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colPattern = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colReplacement = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colTarget = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.label1 = new System.Windows.Forms.Label();
+            this.tbxRegularExpression = new System.Windows.Forms.TextBox();
+            this.lblTarget = new System.Windows.Forms.Label();
+            this.comboMetadataTarget = new System.Windows.Forms.ComboBox();
+            this.lblSourceText = new System.Windows.Forms.Label();
+            this.comboSourceText = new System.Windows.Forms.ComboBox();
+            this.lblPreview = new System.Windows.Forms.Label();
+            this.linkLabelRegularExpression = new System.Windows.Forms.LinkLabel();
+            this.bindingListSource1 = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
+            this.boundDataGridView1 = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
+            this.lblReplacement = new System.Windows.Forms.Label();
+            this.tbxReplacement = new System.Windows.Forms.TextBox();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
-            this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewRules)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceRules)).BeginInit();
-            this.toolStripRules.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.boundDataGridViewEx1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingListSourceResults)).BeginInit();
             this.panelButtons.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingListSource1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView1)).BeginInit();
             this.SuspendLayout();
-            // 
-            // splitContainer1
-            // 
-            resources.ApplyResources(this.splitContainer1, "splitContainer1");
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.lblRules);
-            this.splitContainer1.Panel1.Controls.Add(this.tbxName);
-            this.splitContainer1.Panel1.Controls.Add(this.lblName);
-            this.splitContainer1.Panel1.Controls.Add(this.panel1);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.label1);
-            this.splitContainer1.Panel2.Controls.Add(this.boundDataGridViewEx1);
-            resources.ApplyResources(this.splitContainer1.Panel2, "splitContainer1.Panel2");
-            // 
-            // lblRules
-            // 
-            resources.ApplyResources(this.lblRules, "lblRules");
-            this.lblRules.Name = "lblRules";
-            // 
-            // tbxName
-            // 
-            resources.ApplyResources(this.tbxName, "tbxName");
-            this.tbxName.Name = "tbxName";
-            // 
-            // lblName
-            // 
-            resources.ApplyResources(this.lblName, "lblName");
-            this.lblName.Name = "lblName";
-            // 
-            // panel1
-            // 
-            resources.ApplyResources(this.panel1, "panel1");
-            this.panel1.Controls.Add(this.dataGridViewRules);
-            this.panel1.Controls.Add(this.toolStripRules);
-            this.panel1.Name = "panel1";
-            // 
-            // dataGridViewRules
-            // 
-            this.dataGridViewRules.AutoGenerateColumns = false;
-            this.dataGridViewRules.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewRules.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colSource,
-            this.colPattern,
-            this.colReplacement,
-            this.colTarget});
-            this.dataGridViewRules.DataSource = this.bindingSourceRules;
-            resources.ApplyResources(this.dataGridViewRules, "dataGridViewRules");
-            this.dataGridViewRules.Name = "dataGridViewRules";
-            this.dataGridViewRules.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridViewRules.CurrentCellChanged += new System.EventHandler(this.dataGridViewRules_CurrentCellChanged);
-            this.dataGridViewRules.SelectionChanged += new System.EventHandler(this.dataGridViewRules_SelectionChanged);
-            // 
-            // bindingSourceRules
-            // 
-            this.bindingSourceRules.ListChanged += new System.ComponentModel.ListChangedEventHandler(this.bindingSourceRules_ListChanged);
-            // 
-            // toolStripRules
-            // 
-            resources.ApplyResources(this.toolStripRules, "toolStripRules");
-            this.toolStripRules.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStripRules.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnRemove,
-            this.btnUp,
-            this.btnDown,
-            this.btnEdit});
-            this.toolStripRules.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
-            this.toolStripRules.Name = "toolStripRules";
-            // 
-            // btnRemove
-            // 
-            this.btnRemove.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnRemove.Image = global::pwiz.Skyline.Properties.Resources.Delete;
-            resources.ApplyResources(this.btnRemove, "btnRemove");
-            this.btnRemove.Name = "btnRemove";
-            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
-            // 
-            // btnUp
-            // 
-            this.btnUp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnUp.Image = global::pwiz.Skyline.Properties.Resources.up_pro32;
-            resources.ApplyResources(this.btnUp, "btnUp");
-            this.btnUp.Name = "btnUp";
-            this.btnUp.Click += new System.EventHandler(this.BtnUpOnClick);
-            // 
-            // btnDown
-            // 
-            this.btnDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDown.Image = global::pwiz.Skyline.Properties.Resources.down_pro32;
-            resources.ApplyResources(this.btnDown, "btnDown");
-            this.btnDown.Name = "btnDown";
-            this.btnDown.Click += new System.EventHandler(this.BtnDownOnClick);
-            // 
-            // btnEdit
-            // 
-            this.btnEdit.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            resources.ApplyResources(this.btnEdit, "btnEdit");
-            this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
-            // 
-            // boundDataGridViewEx1
-            // 
-            resources.ApplyResources(this.boundDataGridViewEx1, "boundDataGridViewEx1");
-            this.boundDataGridViewEx1.AutoGenerateColumns = false;
-            this.boundDataGridViewEx1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.boundDataGridViewEx1.DataSource = this.bindingListSourceResults;
-            this.boundDataGridViewEx1.MaximumColumnCount = 2000;
-            this.boundDataGridViewEx1.Name = "boundDataGridViewEx1";
-            // 
-            // bindingListSourceResults
-            // 
-            this.bindingListSourceResults.NewRowHandler = null;
             // 
             // panelButtons
             // 
@@ -203,44 +72,92 @@
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
-            // colSource
+            // tbxRegularExpression
             // 
-            this.colSource.DataPropertyName = "Source";
-            this.colSource.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            resources.ApplyResources(this.colSource, "colSource");
-            this.colSource.Name = "colSource";
+            resources.ApplyResources(this.tbxRegularExpression, "tbxRegularExpression");
+            this.tbxRegularExpression.Name = "tbxRegularExpression";
+            this.toolTip.SetToolTip(this.tbxRegularExpression, resources.GetString("tbxRegularExpression.ToolTip"));
+            this.tbxRegularExpression.Leave += new System.EventHandler(this.tbxRegularExpression_Leave);
             // 
-            // colPattern
+            // lblTarget
             // 
-            this.colPattern.DataPropertyName = "Pattern";
-            resources.ApplyResources(this.colPattern, "colPattern");
-            this.colPattern.Name = "colPattern";
+            resources.ApplyResources(this.lblTarget, "lblTarget");
+            this.lblTarget.Name = "lblTarget";
             // 
-            // colReplacement
+            // comboMetadataTarget
             // 
-            this.colReplacement.DataPropertyName = "Replacement";
-            resources.ApplyResources(this.colReplacement, "colReplacement");
-            this.colReplacement.Name = "colReplacement";
+            this.comboMetadataTarget.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboMetadataTarget.FormattingEnabled = true;
+            resources.ApplyResources(this.comboMetadataTarget, "comboMetadataTarget");
+            this.comboMetadataTarget.Name = "comboMetadataTarget";
+            this.toolTip.SetToolTip(this.comboMetadataTarget, resources.GetString("comboMetadataTarget.ToolTip"));
+            this.comboMetadataTarget.SelectedIndexChanged += new System.EventHandler(this.comboMetadataTarget_SelectedIndexChanged);
             // 
-            // colTarget
+            // lblSourceText
             // 
-            this.colTarget.DataPropertyName = "Target";
-            this.colTarget.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            resources.ApplyResources(this.colTarget, "colTarget");
-            this.colTarget.Name = "colTarget";
-            this.colTarget.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colTarget.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            resources.ApplyResources(this.lblSourceText, "lblSourceText");
+            this.lblSourceText.Name = "lblSourceText";
             // 
-            // label1
+            // comboSourceText
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            this.comboSourceText.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboSourceText.FormattingEnabled = true;
+            resources.ApplyResources(this.comboSourceText, "comboSourceText");
+            this.comboSourceText.Name = "comboSourceText";
+            this.toolTip.SetToolTip(this.comboSourceText, resources.GetString("comboSourceText.ToolTip"));
+            this.comboSourceText.SelectedIndexChanged += new System.EventHandler(this.comboSourceText_SelectedIndexChanged);
             // 
-            // MetadataRuleEditor
+            // lblPreview
+            // 
+            resources.ApplyResources(this.lblPreview, "lblPreview");
+            this.lblPreview.Name = "lblPreview";
+            // 
+            // linkLabelRegularExpression
+            // 
+            resources.ApplyResources(this.linkLabelRegularExpression, "linkLabelRegularExpression");
+            this.linkLabelRegularExpression.Name = "linkLabelRegularExpression";
+            this.linkLabelRegularExpression.TabStop = true;
+            this.linkLabelRegularExpression.UseCompatibleTextRendering = true;
+            this.linkLabelRegularExpression.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelRegularExpression_LinkClicked);
+            // 
+            // bindingListSource1
+            // 
+            this.bindingListSource1.NewRowHandler = null;
+            // 
+            // boundDataGridView1
+            // 
+            resources.ApplyResources(this.boundDataGridView1, "boundDataGridView1");
+            this.boundDataGridView1.AutoGenerateColumns = false;
+            this.boundDataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.boundDataGridView1.DataSource = this.bindingListSource1;
+            this.boundDataGridView1.MaximumColumnCount = 2000;
+            this.boundDataGridView1.Name = "boundDataGridView1";
+            // 
+            // lblReplacement
+            // 
+            resources.ApplyResources(this.lblReplacement, "lblReplacement");
+            this.lblReplacement.Name = "lblReplacement";
+            // 
+            // tbxReplacement
+            // 
+            resources.ApplyResources(this.tbxReplacement, "tbxReplacement");
+            this.tbxReplacement.Name = "tbxReplacement";
+            this.toolTip.SetToolTip(this.tbxReplacement, resources.GetString("tbxReplacement.ToolTip"));
+            // 
+            // MetadataRuleStepEditor
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.tbxReplacement);
+            this.Controls.Add(this.lblReplacement);
+            this.Controls.Add(this.boundDataGridView1);
+            this.Controls.Add(this.linkLabelRegularExpression);
+            this.Controls.Add(this.lblPreview);
+            this.Controls.Add(this.comboSourceText);
+            this.Controls.Add(this.lblSourceText);
+            this.Controls.Add(this.comboMetadataTarget);
+            this.Controls.Add(this.lblTarget);
+            this.Controls.Add(this.tbxRegularExpression);
             this.Controls.Add(this.panelButtons);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -248,47 +165,29 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel1.PerformLayout();
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewRules)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceRules)).EndInit();
-            this.toolStripRules.ResumeLayout(false);
-            this.toolStripRules.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.boundDataGridViewEx1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingListSourceResults)).EndInit();
             this.panelButtons.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.bindingListSource1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView1)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
-        private System.Windows.Forms.Label lblName;
-        private System.Windows.Forms.TextBox tbxName;
-        private System.Windows.Forms.Label lblRules;
-        private System.Windows.Forms.ToolStrip toolStripRules;
-        private System.Windows.Forms.ToolStripButton btnRemove;
-        private System.Windows.Forms.ToolStripButton btnUp;
-        private System.Windows.Forms.ToolStripButton btnDown;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.SplitContainer splitContainer1;
-        private Controls.Databinding.BoundDataGridViewEx boundDataGridViewEx1;
         private System.Windows.Forms.FlowLayoutPanel panelButtons;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
-        private Common.DataBinding.Controls.BindingListSource bindingListSourceResults;
-        private System.Windows.Forms.ToolStripButton btnEdit;
-        private Controls.DataGridViewEx dataGridViewRules;
-        private System.Windows.Forms.BindingSource bindingSourceRules;
-        private System.Windows.Forms.DataGridViewComboBoxColumn colSource;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colPattern;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colReplacement;
-        private System.Windows.Forms.DataGridViewComboBoxColumn colTarget;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox tbxRegularExpression;
+        private System.Windows.Forms.Label lblTarget;
+        private System.Windows.Forms.ComboBox comboMetadataTarget;
+        private System.Windows.Forms.Label lblSourceText;
+        private System.Windows.Forms.ComboBox comboSourceText;
+        private System.Windows.Forms.Label lblPreview;
+        private System.Windows.Forms.LinkLabel linkLabelRegularExpression;
+        private Common.DataBinding.Controls.BindingListSource bindingListSource1;
+        private pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx boundDataGridView1;
+        private System.Windows.Forms.Label lblReplacement;
+        private System.Windows.Forms.TextBox tbxReplacement;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }

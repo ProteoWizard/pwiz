@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
 
         public SkylineDataSchema DataSchema { get; private set; }
 
-        public Step ResolveStep(MetadataRuleStep extractedMetadataRule, List<CommonException<StepError>> errors)
+        public Step ResolveStep(MetadataRule extractedMetadataRule, List<CommonException<StepError>> errors)
         {
             var sourceColumn = ResolveColumn(extractedMetadataRule, nameof(extractedMetadataRule.Source), extractedMetadataRule.Source, errors);
             Regex regex = null;
@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             return ResolveColumn(null, null, propertyPath, null);
         }
 
-        private TextColumnWrapper ResolveColumn(MetadataRuleStep rule, string propertyName, PropertyPath propertyPath, List<CommonException<StepError>> errors)
+        private TextColumnWrapper ResolveColumn(MetadataRule rule, string propertyName, PropertyPath propertyPath, List<CommonException<StepError>> errors)
         {
             if (propertyPath == null)
             {
@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
         public class StepError
         {
             public StepError(
-                MetadataRuleStep rule,
+                MetadataRule rule,
                 string property, string message)
             {
                 Rule = rule;
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                 Message = message;
             }
 
-            public MetadataRuleStep Rule
+            public MetadataRule Rule
             {
                 get;
                 private set;
@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
             }
         }
 
-        public void ApplyRule(MetadataRule ruleSet, HashSet<MsDataFileUri> dataFileUris)
+        public void ApplyRule(MetadataRuleSet ruleSetSet, HashSet<MsDataFileUri> dataFileUris)
         {
             var skylineDataSchema = (SkylineDataSchema) _rootColumn.DataSchema;
             List<Step> resolvedRules = null;
@@ -285,14 +285,14 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                 {
                     var ruleErrors = new List<CommonException<StepError>>();
                     resolvedRules = new List<Step>();
-                    foreach (var rule in ruleSet.Steps)
+                    foreach (var rule in ruleSetSet.Rules)
                     {
                         var resolvedRule = ResolveStep(rule, ruleErrors);
                         if (ruleErrors.Count > 0)
                         {
                             var ruleError = ruleErrors[0];
                             throw CommonException.Create(
-                                new RuleError(ruleSet.Name, resultFile.ChromFileInfo.FilePath, ruleError.Message),
+                                new RuleError(ruleSetSet.Name, resultFile.ChromFileInfo.FilePath, ruleError.Message),
                                 ruleError);
 
                         }
@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                     var result = ApplyStep(resultFile, rule);
                     if (result.ErrorText != null)
                     {
-                        throw CommonException.Create(new RuleError(ruleSet.Name, resultFile.ChromFileInfo.FilePath, result.ErrorText));
+                        throw CommonException.Create(new RuleError(ruleSetSet.Name, resultFile.ChromFileInfo.FilePath, result.ErrorText));
                     }
                     if (!result.Match)
                     {
@@ -352,8 +352,8 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
         }
         public class Step
         {
-            public static readonly Step EMPTY = new Step(MetadataRuleStep.EMPTY, null, null, null, null);
-            public Step(MetadataRuleStep def, TextColumnWrapper source, Regex regex, string replacement, TextColumnWrapper target)
+            public static readonly Step EMPTY = new Step(MetadataRule.EMPTY, null, null, null, null);
+            public Step(MetadataRule def, TextColumnWrapper source, Regex regex, string replacement, TextColumnWrapper target)
             {
                 Def = def;
                 Source = source;
@@ -362,7 +362,7 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                 Target = target;
             }
 
-            public MetadataRuleStep Def { get; private set; }
+            public MetadataRule Def { get; private set; }
             public TextColumnWrapper Source { get; private set; }
 
             public string Replacement { get; private set; }

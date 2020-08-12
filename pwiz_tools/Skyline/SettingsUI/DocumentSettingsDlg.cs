@@ -26,7 +26,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
         private readonly SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
         private readonly SettingsListBoxDriver<ListData> _listsListBoxDriver;
-        private readonly SettingsListBoxDriver<MetadataRule> _metadataRuleListBoxDriver;
+        private readonly SettingsListBoxDriver<MetadataRuleSet> _metadataRuleSetsListBoxDriver;
         private DataSettings _originalSettings;
 
         public DocumentSettingsDlg(IDocumentUIContainer documentContainer)
@@ -52,8 +52,8 @@ namespace pwiz.Skyline.SettingsUI
             chooseViewsControl.ShowCheckboxes = true;
             chooseViewsControl.CheckedViews = dataSettings.ViewSpecList.ViewSpecs.Select(
                 viewSpec => PersistedViews.MainGroup.Id.ViewName(viewSpec.Name));
-            _metadataRuleListBoxDriver = new SettingsListBoxDriver<MetadataRule>(checkedListBoxRuleSets, Settings.Default.MetadataRules);
-            _metadataRuleListBoxDriver.LoadList(dataSettings.MetadataRuleSets);
+            _metadataRuleSetsListBoxDriver = new SettingsListBoxDriver<MetadataRuleSet>(checkedListBoxRuleSets, Settings.Default.MetadataRuleSets);
+            _metadataRuleSetsListBoxDriver.LoadList(dataSettings.MetadataRuleSets);
             _originalSettings = dataSettings;
         }
 
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.SettingsUI
                 .ChangeGroupComparisonDefs(_groupComparisonsListBoxDriver.Chosen)
                 .ChangeViewSpecList(viewSpecs)
                 .ChangeListDefs(_listsListBoxDriver.Chosen)
-                .ChangeExtractedMetadata(_metadataRuleListBoxDriver.Chosen);
+                .ChangeExtractedMetadata(_metadataRuleSetsListBoxDriver.Chosen);
         }
 
         private void btnAddAnnotation_Click(object sender, System.EventArgs e)
@@ -188,7 +188,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditMetadataRuleList()
         {
-            _metadataRuleListBoxDriver.EditList(DocumentContainer);
+            _metadataRuleSetsListBoxDriver.EditList(DocumentContainer);
         }
 
         public bool ValidateMetadataRules()
@@ -295,15 +295,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddMetadataRule()
         {
-            using (var editDlg = new MetadataRuleEditor(DocumentContainer, new MetadataRule(typeof(ResultFile)),
-                Settings.Default.MetadataRules))
+            using (var editDlg = new MetadataRuleSetEditor(DocumentContainer, new MetadataRuleSet(typeof(ResultFile)),
+                Settings.Default.MetadataRuleSets))
             {
                 if (editDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    var chosen = _metadataRuleListBoxDriver.Chosen.ToList();
-                    Settings.Default.MetadataRules.Add(editDlg.MetadataRule);
-                    chosen.Add(editDlg.MetadataRule);
-                    _metadataRuleListBoxDriver.LoadList(chosen);
+                    var chosen = _metadataRuleSetsListBoxDriver.Chosen.ToList();
+                    Settings.Default.MetadataRuleSets.Add(editDlg.MetadataRuleSet);
+                    chosen.Add(editDlg.MetadataRuleSet);
+                    _metadataRuleSetsListBoxDriver.LoadList(chosen);
                 }
             }
         }

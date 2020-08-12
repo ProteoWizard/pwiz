@@ -1615,9 +1615,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
             foreach (var metadataRuleSet in DataSettings.MetadataRuleSets)
             {
-                if (!defSet.MetadataRules.Contains(metadataRuleSet))
+                if (!defSet.MetadataRuleSets.Contains(metadataRuleSet))
                 {
-                    defSet.MetadataRules.SetValue(metadataRuleSet);
+                    defSet.MetadataRuleSets.SetValue(metadataRuleSet);
                 }
             }
             var mainViewSpecList = defSet.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);

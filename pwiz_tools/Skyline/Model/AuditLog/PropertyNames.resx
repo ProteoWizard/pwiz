@@ -1548,31 +1548,31 @@
     <value>File path</value>
   </data>
   <data name="DataSettings_MetadataRuleSets" xml:space="preserve">
-    <value>Metadata rule sets</value>
+    <value>Rule sets</value>
   </data>
   <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
     <value>Library ion mobility values</value>
   </data>
-  <data name="MetadataRuleStep_Source" xml:space="preserve">
+  <data name="MetadataRule_Source" xml:space="preserve">
     <value>Source</value>
   </data>
-  <data name="MetadataRuleStep_Pattern" xml:space="preserve">
+  <data name="MetadataRule_Pattern" xml:space="preserve">
     <value>Pattern</value>
   </data>
-  <data name="MetadataRuleStep_Replacement" xml:space="preserve">
+  <data name="MetadataRule_Replacement" xml:space="preserve">
     <value>Replacement</value>
   </data>
-  <data name="MetadataRuleStep_Target" xml:space="preserve">
+  <data name="MetadataRule_Target" xml:space="preserve">
     <value>Target</value>
   </data>
-  <data name="MetadataRule_Name" xml:space="preserve">
+  <data name="MetadataRuleSet_Name" xml:space="preserve">
     <value>Name</value>
   </data>
-  <data name="MetadataRule_RowSource" xml:space="preserve">
+  <data name="MetadataRuleSet_RowSource" xml:space="preserve">
     <value>Row source</value>
   </data>
-  <data name="MetadataRule_Steps" xml:space="preserve">
-    <value>Steps</value>
+  <data name="MetadataRuleSet_Rules" xml:space="preserve">
+    <value>Rules</value>
   </data>
   <data name="QuantificationSettings_QualitativeIonRatioThreshold">
     <value>Qualitative ion ratio threshold</value>

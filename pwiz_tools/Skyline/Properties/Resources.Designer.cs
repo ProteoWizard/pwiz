@@ -8867,26 +8867,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to delete the rule &apos;{0}&apos;?.
-        /// </summary>
-        public static string DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_the_rule___0___ {
-            get {
-                return ResourceManager.GetString("DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_the_rule" +
-                        "___0___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Are you sure you want to delete these {0} rules?.
-        /// </summary>
-        public static string DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_these__0__rules_ {
-            get {
-                return ResourceManager.GetString("DocumentSettingsDlg_btnDeleteRules_Click_Are_you_sure_you_want_to_delete_these__0" +
-                        "__rules_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete those items from those lists?.
         /// </summary>
         public static string DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_ {
@@ -8927,7 +8907,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred while applying the rule &apos;{0}&apos;. Do you want to continue with the change to the Document Settings?.
+        ///   Looks up a localized string similar to An error occurred while applying the rule set &apos;{0}&apos;. Do you want to continue with the change to the Document Settings?.
         /// </summary>
         public static string DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_ {
             get {
@@ -17902,7 +17882,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There is already a metadata rule named &apos;{0}&apos;..
+        ///   Looks up a localized string similar to There is already a result file rule set named &apos;{0}&apos;..
         /// </summary>
         public static string MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___ {
             get {
@@ -17920,7 +17900,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Result File Rule.
+        ///   Looks up a localized string similar to Result File Rule Set.
         /// </summary>
         public static string MetadataRuleSetList_Label_Result_File_Rule {
             get {
@@ -17929,7 +17909,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Result File Rules.
+        ///   Looks up a localized string similar to Result File Rule Sets.
         /// </summary>
         public static string MetadataRuleSetList_Title_Result_File_Rules {
             get {
@@ -17938,7 +17918,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} must either be a valid regular expression or blank.
+        ///   Looks up a localized string similar to The text &apos;{0}&apos; must either be a valid regular expression or blank.
         /// </summary>
         public static string MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank {
             get {

@@ -121,380 +121,20 @@
     <value>17, 17</value>
   </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="splitContainer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="splitContainer1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="splitContainer1.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
-    <value>Horizontal</value>
-  </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="lblRules.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblRules.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 67</value>
-  </data>
-  <data name="lblRules.Size" type="System.Drawing.Size, System.Drawing">
-    <value>37, 13</value>
-  </data>
-  <data name="lblRules.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="lblRules.Text" xml:space="preserve">
-    <value>&amp;Steps:</value>
-  </data>
-  <data name="&gt;&gt;lblRules.Name" xml:space="preserve">
-    <value>lblRules</value>
-  </data>
-  <data name="&gt;&gt;lblRules.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblRules.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
-  <data name="&gt;&gt;lblRules.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="tbxName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 25</value>
-  </data>
-  <data name="tbxName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>154, 20</value>
-  </data>
-  <data name="tbxName.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;tbxName.Name" xml:space="preserve">
-    <value>tbxName</value>
-  </data>
-  <data name="&gt;&gt;tbxName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tbxName.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
-  <data name="&gt;&gt;tbxName.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="lblName.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 9</value>
-  </data>
-  <data name="lblName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>38, 13</value>
-  </data>
-  <data name="lblName.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="lblName.Text" xml:space="preserve">
-    <value>&amp;Name:</value>
-  </data>
-  <data name="&gt;&gt;lblName.Name" xml:space="preserve">
-    <value>lblName</value>
-  </data>
-  <data name="&gt;&gt;lblName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblName.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
-  <data name="&gt;&gt;lblName.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="panel1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <metadata name="colSource.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colSource.HeaderText" xml:space="preserve">
-    <value>Source</value>
-  </data>
-  <data name="colSource.Width" type="System.Int32, mscorlib">
-    <value>178</value>
-  </data>
-  <metadata name="colPattern.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colPattern.HeaderText" xml:space="preserve">
-    <value>Pattern</value>
-  </data>
-  <data name="colPattern.Width" type="System.Int32, mscorlib">
-    <value>178</value>
-  </data>
-  <metadata name="colReplacement.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colReplacement.HeaderText" xml:space="preserve">
-    <value>Replacement</value>
-  </data>
-  <data name="colReplacement.Width" type="System.Int32, mscorlib">
-    <value>178</value>
-  </data>
-  <metadata name="colTarget.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colTarget.HeaderText" xml:space="preserve">
-    <value>Target</value>
-  </data>
-  <data name="colTarget.Width" type="System.Int32, mscorlib">
-    <value>178</value>
-  </data>
-  <metadata name="bindingSourceRules.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>470, 17</value>
-  </metadata>
-  <data name="dataGridViewRules.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="dataGridViewRules.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 3</value>
-  </data>
-  <data name="dataGridViewRules.Size" type="System.Drawing.Size, System.Drawing">
-    <value>758, 146</value>
-  </data>
-  <data name="dataGridViewRules.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewRules.Name" xml:space="preserve">
-    <value>dataGridViewRules</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewRules.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewRules.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewRules.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <metadata name="toolStripRules.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
-  <data name="toolStripRules.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Right</value>
-  </data>
-  <data name="btnRemove.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnRemove.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="btnRemove.Text" xml:space="preserve">
-    <value>Remove</value>
-  </data>
-  <data name="btnUp.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnUp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="btnUp.Text" xml:space="preserve">
-    <value>Up</value>
-  </data>
-  <data name="btnDown.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnDown.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="btnDown.Text" xml:space="preserve">
-    <value>Down</value>
-  </data>
-  <data name="btnEdit.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
-        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
-        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
-        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
-        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
-        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
-        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
-        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
-        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
-        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="btnEdit.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnEdit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 19</value>
-  </data>
-  <data name="btnEdit.Text" xml:space="preserve">
-    <value>...</value>
-  </data>
-  <data name="toolStripRules.Location" type="System.Drawing.Point, System.Drawing">
-    <value>773, 3</value>
-  </data>
-  <data name="toolStripRules.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 146</value>
-  </data>
-  <data name="toolStripRules.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="toolStripRules.Text" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
-  <data name="&gt;&gt;toolStripRules.Name" xml:space="preserve">
-    <value>toolStripRules</value>
-  </data>
-  <data name="&gt;&gt;toolStripRules.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripRules.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;toolStripRules.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 83</value>
-  </data>
-  <data name="panel1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>15, 3, 3, 3</value>
-  </data>
-  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>800, 152</value>
-  </data>
-  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
-    <value>splitContainer1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 6</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>48, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>&amp;Preview:</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="boundDataGridViewEx1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <metadata name="bindingListSourceResults.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>283, 17</value>
-  </metadata>
-  <data name="boundDataGridViewEx1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 22</value>
-  </data>
-  <data name="boundDataGridViewEx1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>758, 139</value>
-  </data>
-  <data name="boundDataGridViewEx1.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;boundDataGridViewEx1.Name" xml:space="preserve">
-    <value>boundDataGridViewEx1</value>
-  </data>
-  <data name="&gt;&gt;boundDataGridViewEx1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;boundDataGridViewEx1.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
-  <data name="&gt;&gt;boundDataGridViewEx1.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="splitContainer1.Panel2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Parent" xml:space="preserve">
-    <value>splitContainer1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>800, 421</value>
-  </data>
-  <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>237</value>
-  </data>
-  <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
-    <value>splitContainer1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>722, 3</value>
+    <value>505, 3</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
@@ -520,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>641, 3</value>
+    <value>424, 3</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -553,10 +193,10 @@
     <value>0, 421</value>
   </data>
   <data name="panelButtons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>800, 29</value>
+    <value>583, 29</value>
   </data>
   <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>10</value>
   </data>
   <data name="&gt;&gt;panelButtons.Name" xml:space="preserve">
     <value>panelButtons</value>
@@ -568,19 +208,286 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelButtons.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="tbxRegularExpression.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 77</value>
+  </data>
+  <data name="tbxRegularExpression.Size" type="System.Drawing.Size, System.Drawing">
+    <value>268, 20</value>
+  </data>
+  <data name="tbxRegularExpression.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>310, 17</value>
+  </metadata>
+  <data name="tbxRegularExpression.ToolTip" xml:space="preserve">
+    <value>A regular expression to match with the source text</value>
+  </data>
+  <data name="&gt;&gt;tbxRegularExpression.Name" xml:space="preserve">
+    <value>tbxRegularExpression</value>
+  </data>
+  <data name="&gt;&gt;tbxRegularExpression.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxRegularExpression.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tbxRegularExpression.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="lblTarget.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblTarget.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 151</value>
+  </data>
+  <data name="lblTarget.Size" type="System.Drawing.Size, System.Drawing">
+    <value>41, 13</value>
+  </data>
+  <data name="lblTarget.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="lblTarget.Text" xml:space="preserve">
+    <value>&amp;Target:</value>
+  </data>
+  <data name="&gt;&gt;lblTarget.Name" xml:space="preserve">
+    <value>lblTarget</value>
+  </data>
+  <data name="&gt;&gt;lblTarget.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblTarget.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblTarget.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="comboMetadataTarget.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 167</value>
+  </data>
+  <data name="comboMetadataTarget.Size" type="System.Drawing.Size, System.Drawing">
+    <value>268, 21</value>
+  </data>
+  <data name="comboMetadataTarget.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="comboMetadataTarget.ToolTip" xml:space="preserve">
+    <value>The replicate annotation or value to populate with the replacement text.</value>
+  </data>
+  <data name="&gt;&gt;comboMetadataTarget.Name" xml:space="preserve">
+    <value>comboMetadataTarget</value>
+  </data>
+  <data name="&gt;&gt;comboMetadataTarget.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboMetadataTarget.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboMetadataTarget.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="lblSourceText.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblSourceText.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 10</value>
+  </data>
+  <data name="lblSourceText.Size" type="System.Drawing.Size, System.Drawing">
+    <value>73, 13</value>
+  </data>
+  <data name="lblSourceText.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblSourceText.Text" xml:space="preserve">
+    <value>&amp;Source value:</value>
+  </data>
+  <data name="&gt;&gt;lblSourceText.Name" xml:space="preserve">
+    <value>lblSourceText</value>
+  </data>
+  <data name="&gt;&gt;lblSourceText.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSourceText.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblSourceText.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="comboSourceText.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 26</value>
+  </data>
+  <data name="comboSourceText.Size" type="System.Drawing.Size, System.Drawing">
+    <value>268, 21</value>
+  </data>
+  <data name="comboSourceText.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="comboSourceText.ToolTip" xml:space="preserve">
+    <value>Specifies a result file property to use as the source text</value>
+  </data>
+  <data name="&gt;&gt;comboSourceText.Name" xml:space="preserve">
+    <value>comboSourceText</value>
+  </data>
+  <data name="&gt;&gt;comboSourceText.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboSourceText.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboSourceText.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="lblPreview.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblPreview.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 207</value>
+  </data>
+  <data name="lblPreview.Size" type="System.Drawing.Size, System.Drawing">
+    <value>48, 13</value>
+  </data>
+  <data name="lblPreview.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="lblPreview.Text" xml:space="preserve">
+    <value>&amp;Preview:</value>
+  </data>
+  <data name="&gt;&gt;lblPreview.Name" xml:space="preserve">
+    <value>lblPreview</value>
+  </data>
+  <data name="&gt;&gt;lblPreview.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblPreview.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblPreview.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="linkLabelRegularExpression.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="linkLabelRegularExpression.LinkArea" type="System.Windows.Forms.LinkArea, System.Windows.Forms">
+    <value>10, 18</value>
+  </data>
+  <data name="linkLabelRegularExpression.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 60</value>
+  </data>
+  <data name="linkLabelRegularExpression.Size" type="System.Drawing.Size, System.Drawing">
+    <value>148, 17</value>
+  </data>
+  <data name="linkLabelRegularExpression.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="linkLabelRegularExpression.Text" xml:space="preserve">
+    <value>&amp;Pattern (regular expression):</value>
+  </data>
+  <data name="&gt;&gt;linkLabelRegularExpression.Name" xml:space="preserve">
+    <value>linkLabelRegularExpression</value>
+  </data>
+  <data name="&gt;&gt;linkLabelRegularExpression.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linkLabelRegularExpression.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;linkLabelRegularExpression.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <metadata name="bindingListSource1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <data name="boundDataGridView1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="boundDataGridView1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 223</value>
+  </data>
+  <data name="boundDataGridView1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>562, 190</value>
+  </data>
+  <data name="boundDataGridView1.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView1.Name" xml:space="preserve">
+    <value>boundDataGridView1</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView1.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="lblReplacement.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblReplacement.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 104</value>
+  </data>
+  <data name="lblReplacement.Size" type="System.Drawing.Size, System.Drawing">
+    <value>73, 13</value>
+  </data>
+  <data name="lblReplacement.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="lblReplacement.Text" xml:space="preserve">
+    <value>&amp;Replacement:</value>
+  </data>
+  <data name="&gt;&gt;lblReplacement.Name" xml:space="preserve">
+    <value>lblReplacement</value>
+  </data>
+  <data name="&gt;&gt;lblReplacement.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblReplacement.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblReplacement.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tbxReplacement.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 120</value>
+  </data>
+  <data name="tbxReplacement.Size" type="System.Drawing.Size, System.Drawing">
+    <value>268, 20</value>
+  </data>
+  <data name="tbxReplacement.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="tbxReplacement.ToolTip" xml:space="preserve">
+    <value>Text to use for the annotation when there is a match.
+When parentheses are used in the regular expression,
+the replacement text can include $1, $2, $3, etc. to refer
+to the matching sub-expression.</value>
+  </data>
+  <data name="&gt;&gt;tbxReplacement.Name" xml:space="preserve">
+    <value>tbxReplacement</value>
+  </data>
+  <data name="&gt;&gt;tbxReplacement.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxReplacement.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tbxReplacement.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>84</value>
+    <value>61</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>800, 450</value>
+    <value>583, 450</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -594,65 +501,17 @@
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;bindingSourceRules.Name" xml:space="preserve">
-    <value>bindingSourceRules</value>
+  <data name="&gt;&gt;bindingListSource1.Name" xml:space="preserve">
+    <value>bindingListSource1</value>
   </data>
-  <data name="&gt;&gt;bindingSourceRules.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnRemove.Name" xml:space="preserve">
-    <value>btnRemove</value>
-  </data>
-  <data name="&gt;&gt;btnRemove.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnUp.Name" xml:space="preserve">
-    <value>btnUp</value>
-  </data>
-  <data name="&gt;&gt;btnUp.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnDown.Name" xml:space="preserve">
-    <value>btnDown</value>
-  </data>
-  <data name="&gt;&gt;btnDown.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnEdit.Name" xml:space="preserve">
-    <value>btnEdit</value>
-  </data>
-  <data name="&gt;&gt;btnEdit.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;bindingListSourceResults.Name" xml:space="preserve">
-    <value>bindingListSourceResults</value>
-  </data>
-  <data name="&gt;&gt;bindingListSourceResults.Type" xml:space="preserve">
+  <data name="&gt;&gt;bindingListSource1.Type" xml:space="preserve">
     <value>pwiz.Common.DataBinding.Controls.BindingListSource, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;colSource.Name" xml:space="preserve">
-    <value>colSource</value>
+  <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
+    <value>toolTip</value>
   </data>
-  <data name="&gt;&gt;colSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colPattern.Name" xml:space="preserve">
-    <value>colPattern</value>
-  </data>
-  <data name="&gt;&gt;colPattern.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colReplacement.Name" xml:space="preserve">
-    <value>colReplacement</value>
-  </data>
-  <data name="&gt;&gt;colReplacement.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colTarget.Name" xml:space="preserve">
-    <value>colTarget</value>
-  </data>
-  <data name="&gt;&gt;colTarget.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;toolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>MetadataRuleEditor</value>

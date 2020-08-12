@@ -529,7 +529,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Metadata rule sets.
+        ///   Looks up a localized string similar to Rule sets.
         /// </summary>
         public static string DataSettings_MetadataRuleSets {
             get {
@@ -2095,65 +2095,65 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name.
-        /// </summary>
-        public static string MetadataRule_Name {
-            get {
-                return ResourceManager.GetString("MetadataRule_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Row source.
-        /// </summary>
-        public static string MetadataRule_RowSource {
-            get {
-                return ResourceManager.GetString("MetadataRule_RowSource", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Steps.
-        /// </summary>
-        public static string MetadataRule_Steps {
-            get {
-                return ResourceManager.GetString("MetadataRule_Steps", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Pattern.
         /// </summary>
-        public static string MetadataRuleStep_Pattern {
+        public static string MetadataRule_Pattern {
             get {
-                return ResourceManager.GetString("MetadataRuleStep_Pattern", resourceCulture);
+                return ResourceManager.GetString("MetadataRule_Pattern", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Replacement.
         /// </summary>
-        public static string MetadataRuleStep_Replacement {
+        public static string MetadataRule_Replacement {
             get {
-                return ResourceManager.GetString("MetadataRuleStep_Replacement", resourceCulture);
+                return ResourceManager.GetString("MetadataRule_Replacement", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Source.
         /// </summary>
-        public static string MetadataRuleStep_Source {
+        public static string MetadataRule_Source {
             get {
-                return ResourceManager.GetString("MetadataRuleStep_Source", resourceCulture);
+                return ResourceManager.GetString("MetadataRule_Source", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Target.
         /// </summary>
-        public static string MetadataRuleStep_Target {
+        public static string MetadataRule_Target {
             get {
-                return ResourceManager.GetString("MetadataRuleStep_Target", resourceCulture);
+                return ResourceManager.GetString("MetadataRule_Target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string MetadataRuleSet_Name {
+            get {
+                return ResourceManager.GetString("MetadataRuleSet_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Row source.
+        /// </summary>
+        public static string MetadataRuleSet_RowSource {
+            get {
+                return ResourceManager.GetString("MetadataRuleSet_RowSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rules.
+        /// </summary>
+        public static string MetadataRuleSet_Rules {
+            get {
+                return ResourceManager.GetString("MetadataRuleSet_Rules", resourceCulture);
             }
         }
         

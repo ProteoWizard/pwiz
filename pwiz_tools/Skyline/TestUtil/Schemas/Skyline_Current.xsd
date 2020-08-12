@@ -601,10 +601,10 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="metadata_rule" minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="metadata_rule_set" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="step" minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="rule" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:attribute name="source" />
                 <xs:attribute name="pattern" />

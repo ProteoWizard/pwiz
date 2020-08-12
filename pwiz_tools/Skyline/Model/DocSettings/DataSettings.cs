@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.DocSettings
             ViewSpecList = ViewSpecList.EMPTY;
             AuditLogging = true;
             Lists = ImmutableList<ListData>.EMPTY;
-            MetadataRuleSets = ImmutableList<MetadataRule>.EMPTY;
+            MetadataRuleSets = ImmutableList<MetadataRuleSet>.EMPTY;
         }
 
         [TrackChildren(true)]
@@ -84,13 +84,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public Uri PanoramaPublishUri { get; private set; }
 
         [TrackChildren]
-        public ImmutableList<MetadataRule> MetadataRuleSets
+        public ImmutableList<MetadataRuleSet> MetadataRuleSets
         {
             get;
             private set;
         }
 
-        public DataSettings ChangeExtractedMetadata(IEnumerable<MetadataRule> extractedMetadata)
+        public DataSettings ChangeExtractedMetadata(IEnumerable<MetadataRuleSet> extractedMetadata)
         {
             return ChangeProp(ImClone(this),
                 im => im.MetadataRuleSets = ImmutableList.ValueOfOrEmpty(extractedMetadata));
@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Model.DocSettings
             _groupComparisonDefs = MakeReadOnly(allElements.OfType<GroupComparisonDef>());
             ViewSpecList = allElements.OfType<ViewSpecList>().FirstOrDefault() ?? ViewSpecList.EMPTY;
             Lists= ImmutableList.ValueOf(allElements.OfType<ListData>());
-            MetadataRuleSets = ImmutableList.ValueOf(allElements.OfType<MetadataRule>());
+            MetadataRuleSets = ImmutableList.ValueOf(allElements.OfType<MetadataRuleSet>());
         }
 
         private enum Attr
@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 new XmlElementHelperSuper<GroupComparisonDef, IXmlSerializable>(),
                 new XmlElementHelperSuper<ViewSpecList, IXmlSerializable>(),
                 new XmlElementHelperSuper<ListData, IXmlSerializable>(),
-                new XmlElementHelperSuper<MetadataRule, IXmlSerializable>(),
+                new XmlElementHelperSuper<MetadataRuleSet, IXmlSerializable>(),
             };
         }
         #endregion

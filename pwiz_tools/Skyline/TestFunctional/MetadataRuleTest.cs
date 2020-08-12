@@ -46,20 +46,21 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky")));
+            // Define a rule which sets SubjectId for the samples to "D" or "H" followed by "_" and the bioreplicate number.
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(()=>
             {
                 documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules);
             });
-            var metadataRuleEditor = ShowDialog<MetadataRuleEditor>(documentSettingsDlg.AddMetadataRule);
+            var metadataRuleEditor = ShowDialog<MetadataRuleSetEditor>(documentSettingsDlg.AddMetadataRule);
             RunUI(() =>
             {
                 metadataRuleEditor.RuleName = "SubjectId";
             });
-            var metadataRuleStepEditor = ShowDialog<MetadataRuleStepEditor>(() => metadataRuleEditor.EditRule(0));
+            var metadataRuleStepEditor = ShowDialog<MetadataRuleEditor>(() => metadataRuleEditor.EditRule(0));
             RunUI(() =>
             {
-                metadataRuleStepEditor.MetadataRuleStep = new MetadataRuleStep()
+                metadataRuleStepEditor.MetadataRule = new MetadataRule()
                     .ChangeSource(PropertyPath.Root.Property(nameof(ResultFile.FileName)))
                     .ChangePattern("[DH]_[0-9]+")
                     .ChangeTarget(PropertyPathForAnnotation("SubjectId"));
@@ -68,6 +69,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(metadataRuleEditor, metadataRuleEditor.OkDialog);
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
 
+            // Verify that newly imported files get the correct SubjectId
             ImportResultsFiles(new[]
             {
                 new MsDataFilePath(TestFilesDir.GetTestPath("D_102_REP1.mzML")),
@@ -76,17 +78,19 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
             CollectionAssert.AreEqual(new[]{"D_102", "H_146"}, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
                 .Select(chrom=>chrom.Annotations.GetAnnotation("SubjectId")).ToList());
+
+            // Add a BioReplicate rule which sets the BioReplicate to the number between the underscores in the filename.
             documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(() =>
             {
                 documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules);
             });
-            metadataRuleEditor = ShowDialog<MetadataRuleEditor>(documentSettingsDlg.AddMetadataRule);
+            metadataRuleEditor = ShowDialog<MetadataRuleSetEditor>(documentSettingsDlg.AddMetadataRule);
             RunUI(()=> metadataRuleEditor.RuleName = "BioReplicate");
-            metadataRuleStepEditor = ShowDialog<MetadataRuleStepEditor>(() => metadataRuleEditor.EditRule(0));
+            metadataRuleStepEditor = ShowDialog<MetadataRuleEditor>(() => metadataRuleEditor.EditRule(0));
             RunUI(() =>
             {
-                metadataRuleStepEditor.MetadataRuleStep = new MetadataRuleStep()
+                metadataRuleStepEditor.MetadataRule = new MetadataRule()
                     .ChangeSource(PropertyPath.Root.Property(nameof(ResultFile.FileName)))
                     .ChangePattern("_([0-9]+)")
                     .ChangeReplacement("$1")
@@ -96,10 +100,12 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, metadataRuleStepEditor.PreviewGrid.RowCount);
             OkDialog(metadataRuleStepEditor, metadataRuleStepEditor.OkDialog);
             OkDialog(metadataRuleEditor, metadataRuleEditor.OkDialog);
-            var metadataRuleListEditor = ShowDialog<EditListDlg<SettingsListBase<MetadataRule>, MetadataRule>>
+
+            // Change the "SubjectId" rule so that it has some regular expressions groups in it
+            var metadataRuleListEditor = ShowDialog<EditListDlg<SettingsListBase<MetadataRuleSet>, MetadataRuleSet>>
                 (documentSettingsDlg.EditMetadataRuleList);
             RunUI(()=>metadataRuleListEditor.SelectItem("SubjectId"));
-            metadataRuleEditor = ShowDialog<MetadataRuleEditor>(metadataRuleListEditor.EditItem);
+            metadataRuleEditor = ShowDialog<MetadataRuleSetEditor>(metadataRuleListEditor.EditItem);
             RunUI(() =>
             {
                 var grid = metadataRuleEditor.DataGridViewSteps;
@@ -115,6 +121,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(colSubjectId);
                 Assert.AreEqual("D_102", grid.Rows[0].Cells[colSubjectId.Index].Value);
             });
+            // Change the replacement value so that the "_" is removed from the SubjectId
             RunUI(() =>
             {
                 var grid = metadataRuleEditor.DataGridViewSteps;
@@ -134,6 +141,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(metadataRuleEditor, metadataRuleEditor.OkDialog);
             OkDialog(metadataRuleListEditor, metadataRuleListEditor.OkDialog);
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
+
+            // Verify the "SubjectId" and "BioReplicate" values on the replicates
             CollectionAssert.AreEqual(new[] { "D102", "H146" }, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
                 .Select(chrom => chrom.Annotations.GetAnnotation("SubjectId")).ToList());
             var annotationDefBioReplicate =
@@ -143,18 +152,19 @@ namespace pwiz.SkylineTestFunctional
             CollectionAssert.AreEqual(new[] { 102.0, 146.0 }, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
                 .Select(chrom => chrom.Annotations.GetAnnotation(annotationDefBioReplicate)).ToList());
 
+            // Modify the "SubjectId" rule so that it also sets "Condition" to either "Diseased" or "Healthy"
             documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(() =>
             {
                 documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules);
             });
-            metadataRuleListEditor = ShowDialog<EditListDlg<SettingsListBase<MetadataRule>, MetadataRule>>
+            metadataRuleListEditor = ShowDialog<EditListDlg<SettingsListBase<MetadataRuleSet>, MetadataRuleSet>>
                 (documentSettingsDlg.EditMetadataRuleList);
             RunUI(() =>
             {
                 metadataRuleListEditor.SelectItem("SubjectId");
             });
-            metadataRuleEditor = ShowDialog<MetadataRuleEditor>(metadataRuleListEditor.EditItem);
+            metadataRuleEditor = ShowDialog<MetadataRuleSetEditor>(metadataRuleListEditor.EditItem);
             RunUI(() =>
             {
                 var grid = metadataRuleEditor.DataGridViewSteps;
@@ -181,13 +191,16 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
             CollectionAssert.AreEqual(new[] { "Diseased", "Healthy" }, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
                 .Select(chrom => chrom.Annotations.GetAnnotation("Condition")).ToList());
+
+            // Import some more result files
             ImportResultsFiles(new[]
             {
                 new MsDataFilePath(TestFilesDir.GetTestPath("D_102_REP2.mzML")),
                 new MsDataFilePath(TestFilesDir.GetTestPath("H_146_Rep2.mzML"))
             });
-            CollectionAssert.AreEqual(new[] { "Diseased", "Healthy", "Diseased", "Healthy" }, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
-                .Select(chrom => chrom.Annotations.GetAnnotation("Condition")).ToList());
+            CollectionAssert.AreEqual(new[] {"Diseased", "Healthy", "Diseased", "Healthy"},
+                SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
+                    .Select(chrom => chrom.Annotations.GetAnnotation("Condition")).ToList());
         }
 
         private void SetCurrentCellValue(DataGridView grid, object value)
