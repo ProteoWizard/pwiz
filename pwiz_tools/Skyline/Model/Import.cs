@@ -706,9 +706,7 @@ namespace pwiz.Skyline.Model
             protected int ProteinColumn { get { return Indices.ProteinColumn; } }
             protected int PeptideColumn { get { return Indices.PeptideColumn; } }
             protected int LabelTypeColumn { get { return Indices.LabelTypeColumn; } }
-
             protected int FragmentNameColumn { get { return Indices.FragmentNameColumn; } }
-
             private int PrecursorColumn { get { return Indices.PrecursorColumn; } }
             protected double PrecursorMz { get { return ColumnMz(Fields, PrecursorColumn, FormatProvider); } }
             protected int PrecursorChargeColumn { get { return Indices.PrecursorChargeColumn; } }
@@ -1175,7 +1173,7 @@ namespace pwiz.Skyline.Model
                 PrecursorCandidate[] sequenceCandidates = null;
                 int bestCandidateIndex = -1;
                 int iLabelType = -1;
-                int posFragmentName = -1;
+                int iFragmentName = -1;
 
                 double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
 
@@ -1189,8 +1187,7 @@ namespace pwiz.Skyline.Model
                     if (sequenceCandidates == null)
                     {
                         iLabelType = FindLabelType(fields, lines, separator);
-                        posFragmentName = FindFragmentName(fields, lines, separator);
-                    
+                        iFragmentName = FindFragmentName(fields, lines, separator);
 
                         // If no sequence column found, return null.  After this, all errors throw.
                         var newSeqCandidates = FindSequenceCandidates(fields);
@@ -1255,11 +1252,11 @@ namespace pwiz.Skyline.Model
                 int iProt = indices.ProteinColumn;
                 if (iProt == -1)
                     iProt = FindProtein(fieldsFirstRow, iSequence, lines, indices.Headers, provider, separator);
-                int posPrecursorCharge = indices.PrecursorChargeColumn;
-                if (posPrecursorCharge == -1)
-                    posPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator); 
+                int iPrecursorCharge = indices.PrecursorChargeColumn;
+                if (iPrecursorCharge == -1)
+                    iPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator); 
 
-                indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, posFragmentName, posPrecursorCharge);
+                indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, iFragmentName, iPrecursorCharge);
 
                 return new GeneralRowReader(provider, separator, indices, settings, lines);
             }
@@ -1406,13 +1403,9 @@ namespace pwiz.Skyline.Model
                 return -1;
             }
 
-            // lookHard = false is used extensively in GeneralRowReader, lookHard = true is used to automatically assign the Label Type column header
-
             private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
-
             {
                 // Look for the first column containing just L, H, light or heavy
-
                 int LabelTypePos = -1;
 
                 for (int i = 0; i < fields.Length; i++)
@@ -1422,55 +1415,49 @@ namespace pwiz.Skyline.Model
                         LabelTypePos = i;
                         break;
                     }
-
                 }
 
                 if (LabelTypePos == -1)
                     return -1;
 
                 // Make sure all other rows have just label types in this column
-
                 foreach (string line in lines)
                 {
                     string[] fieldsNext = line.ParseDsvFields(separator);
 
                     if (!ContainsLabelType(fieldsNext[LabelTypePos]))
-
                        return -1;
-
                 }
                 return LabelTypePos;
             }
 
-         
-
             // Helper method for FindLabelType
-
             private static bool ContainsLabelType(string field)
             {
-                field = field.ToLower();
-                
-                if (Equals(field, IsotopeLabelType.LIGHT_NAME.Substring(0, 1)) || (Equals(field, IsotopeLabelType.HEAVY_NAME.Substring(0, 1)) || (Equals(field, IsotopeLabelType.LIGHT_NAME)) || (Equals(field, IsotopeLabelType.HEAVY_NAME))))
+                field = field.ToLower(); //now our detection is not case sensitive
+                if (Equals(field, IsotopeLabelType.LIGHT_NAME.Substring(0, 1)) || //checks for "L"
+                    (Equals(field, IsotopeLabelType.HEAVY_NAME.Substring(0, 1)) || //checks for "H"
+                    (Equals(field, IsotopeLabelType.LIGHT_NAME)) || //checks for "light"
+                    (Equals(field, IsotopeLabelType.HEAVY_NAME)))) //checks for "heavy"
                 {
                     return true;
                 }
-
                 return false;
             }
 
             private static int FindFragmentName(string[] fields, IEnumerable<string> lines, char separator)
             {
-                int FragmentNamePos = -1;
+                int iFragmentName = -1;
                 for (int i = 0; i < fields.Length; i++)
                 {
                     if (ContainsFragmentName(fields[i]))
                     {
-                        FragmentNamePos = i;
+                        iFragmentName = i;
                         break;
                     }
                 }
 
-                if (FragmentNamePos == -1)
+                if (iFragmentName == -1)
                 {
                     return -1;
                 }
@@ -1479,14 +1466,12 @@ namespace pwiz.Skyline.Model
                 {
                     string[] fieldsNext = line.ParseDsvFields(separator);
 
-                    if (!ContainsFragmentName(fieldsNext[FragmentNamePos]))
+                    if (!ContainsFragmentName(fieldsNext[iFragmentName]))
                     {
                         return -1;
                     }
-                        
-
                 }
-                return FragmentNamePos;
+                return iFragmentName;
             }
 
             // Helper method for FindFragmentName
@@ -1503,7 +1488,6 @@ namespace pwiz.Skyline.Model
 
             private static int FindPrecursorCharge (string[] fields, IEnumerable<string> lines, char separator)
             {
-
                 var listCandidates = new List<int>();
 
                 for (int i = 0; i < fields.Length; i++)
@@ -1514,7 +1498,6 @@ namespace pwiz.Skyline.Model
                         listCandidates.Add(i);
                     }
                 }
-
                 int[] ListCandidates = listCandidates.ToArray();
 
                 //We test every cell in each candidate column and return the first column that has no exceptions to our criteria
@@ -1529,7 +1512,6 @@ namespace pwiz.Skyline.Model
                            noExcepetions = false;
                             break;
                         }
-
                     }
                     if (noExcepetions)
                     {
@@ -1539,11 +1521,7 @@ namespace pwiz.Skyline.Model
                 return -1;
             }
 
-
-
-
             // Helper method for FindPrecursorCharge
-
             private static bool ContainsPrecursorCharge(string field)
             {
                 //checks if we can turn the string into an integer
@@ -1554,7 +1532,6 @@ namespace pwiz.Skyline.Model
                     {
                         return true;
                     }
-                    
                 }
                 return false;
             }
