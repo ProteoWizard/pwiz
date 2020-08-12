@@ -1050,6 +1050,7 @@
                       use="required"/>
                   <xs:attribute name="score" type="xs:double"/>
                   <xs:attribute name="score_type" type="xs:string"/>
+                  <xs:attribute name="protein" type="xs:string" use="optional"/> <!-- From .blib RefSpectraProteins table when available -->
                 </xs:extension>
               </xs:complexContent>
             </xs:complexType>
