@@ -828,12 +828,15 @@ namespace pwiz.Skyline.Model.Lib
                         outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
 
                         // Optional protein name or molecule list name
-                        var proteinOrMoleculeList = info.Protein ?? string.Empty;
-                        int len = proteinOrMoleculeList.Length;
-                        outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
-                        if (len > 0)
+                        if (string.IsNullOrEmpty(info.Protein))
                         {
-                            var proteinOrMoleculeListBytes = Encoding.UTF8.GetBytes(proteinOrMoleculeList);
+                            const int len = 0;
+                            outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
+                        }
+                        else
+                        {
+                            var proteinOrMoleculeListBytes = Encoding.UTF8.GetBytes(info.Protein);
+                            outStream.Write(BitConverter.GetBytes(proteinOrMoleculeListBytes.Length), 0, sizeof(int));
                             outStream.Write(proteinOrMoleculeListBytes, 0, proteinOrMoleculeListBytes.Length);
                         }
 
@@ -926,7 +929,8 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             var refSpectraId = dataReader.GetInt32(0);
                             var accession = dataReader.GetString(1);
-                            if (!string.IsNullOrEmpty(accession) && proteinsBySpectraID.ContainsKey(refSpectraId))
+                            // RefSpectraProteins is a many-to-many table, just use first seen for group naming purposes
+                            if (!string.IsNullOrEmpty(accession) && !proteinsBySpectraID.ContainsKey(refSpectraId))
                             {
                                 proteinsBySpectraID.Add(refSpectraId, accession);
                             }

@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using NHibernate;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Database;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -165,24 +166,35 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             public void Write()
             {
                 // Output the protein - peptide relationships
-                using (var cmd = _session.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"DROP TABLE IF EXISTS Proteins";
-                    cmd.ExecuteNonQuery();
-                }
-                using (var cmd = _session.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"DROP TABLE IF EXISTS RefSpectraProteins";
-                    cmd.ExecuteNonQuery();
-                }
-
                 if (_namedProteinIds.Any())
                 {
-                    using (var cmd = _session.Connection.CreateCommand())
+                    if (!SqliteOperations.TableExists(_session.Connection, @"RefSpectraProteins"))
                     {
-                        cmd.CommandText = @"CREATE TABLE Proteins (id INTEGER not null, accession TEXT)";
-                        cmd.ExecuteNonQuery();
+                        using (var cmd = _session.Connection.CreateCommand())
+                        {
+                            cmd.CommandText = @"CREATE TABLE RefSpectraProteins (RefSpectraId INTEGER not null, ProteinId INTEGER not null)";
+                            cmd.ExecuteNonQuery();
+                        }
                     }
+
+                    var existingProteinsCount = 0;
+                    if (SqliteOperations.TableExists(_session.Connection, @"Proteins"))
+                    {
+                        using (var cmd = _session.Connection.CreateCommand())
+                        {
+                            cmd.CommandText = @"SELECT COALESCE(MAX(id), 0) FROM Proteins";
+                            existingProteinsCount = Convert.ToInt32(cmd.ExecuteScalar());
+                        }
+                    }
+                    else
+                    {
+                        using (var cmd = _session.Connection.CreateCommand())
+                        {
+                            cmd.CommandText = @"CREATE TABLE Proteins (id INTEGER primary key autoincrement, accession TEXT)";
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+
                     using (var insertCommand = _session.Connection.CreateCommand())
                     {
                         insertCommand.CommandText = @"INSERT INTO Proteins (id, accession) VALUES(?,?)";
@@ -190,17 +202,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         insertCommand.Parameters.Add(new SQLiteParameter());
                         foreach (var kvp in _namedProteinIds)
                         {
-                            ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Value; // Id
+                            ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Value + existingProteinsCount; // Id
                             ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Key; // Accession
                             insertCommand.ExecuteNonQuery();
                         }
                     }
 
-                    using (var cmd = _session.Connection.CreateCommand())
-                    {
-                        cmd.CommandText = @"CREATE TABLE RefSpectraProteins (RefSpectraId INTEGER not null, ProteinId INTEGER not null)";
-                        cmd.ExecuteNonQuery();
-                    }
                     using (var insertCommand = _session.Connection.CreateCommand())
                     {
                         insertCommand.CommandText = @"INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) VALUES(?,?)";
@@ -209,7 +216,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         foreach (var kvp in _peptideIdProteinId)
                         {
                             ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Key; // RefSpectraId
-                            ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Value; // ProteinId
+                            ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Value + existingProteinsCount; // ProteinId
                             insertCommand.ExecuteNonQuery();
                         }
                     }

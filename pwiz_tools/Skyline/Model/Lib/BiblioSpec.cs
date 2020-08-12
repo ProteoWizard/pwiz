@@ -159,10 +159,7 @@ namespace pwiz.Skyline.Model.Lib
                 writer.WriteAttribute(ATTR.score, Score.Value);
                 writer.WriteAttribute(ATTR.score_type, ScoreType);
             }
-            if (!string.IsNullOrEmpty(Protein))
-            {
-                writer.WriteAttribute(ATTR.protein, Protein);
-            }
+            writer.WriteAttributeIfString(ATTR.protein, Protein);
         }
 
         #endregion
