@@ -739,13 +739,14 @@ namespace pwiz.Skyline.SettingsUI
             int totalMatches = listMatches.Count;
             selectedPath = null;
 
-            // Some .blib files provide protein accessions or Molecule List Names.
+            // Some .blib files provide protein accessions (understood as Molecule List Names fro small molecules).
             // If those are provided we will use them as node names.
-            foreach (var name in listMatches.Select(m => m.LibInfo.Protein).Distinct())
+            // TODO(bspratt) for now we will do this only for small molecules since it might be a surprise to proteomics users. We should revisit that decision.
+            foreach (var proteinName in listMatches.Select(m => m.LibInfo.Protein).Distinct())
             {
                 var listPeptides = new List<PeptideDocNode>();
                 var hasSmallMolecules = false;
-                foreach (var match in listMatches.Where(m => Equals(name, m.LibInfo.Protein)))
+                foreach (var match in listMatches.Where(m => Equals(proteinName, m.LibInfo.Protein)))
                 {
                     // Show progress, if in a long wait
                     if (broker != null)
@@ -772,11 +773,15 @@ namespace pwiz.Skyline.SettingsUI
                     listPeptides.Contains(nodePep => nodePep.HasExplicitMods && nodePep.ExplicitMods.IsVariableStaticMods);
 
                 // Use existing group by this name, if present.
-                var nodeName = string.IsNullOrEmpty(name) ? 
-                    hasSmallMolecules
-                        ? Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules
-                        : Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides
-                    : name;
+                // If library provides a RefSpectraProteins table, use that to name the group
+                // TODO(bspratt) for now we will use RefSpectraProteins names only for small molecules
+                var genericLibraryPeptidesGroupName = hasSmallMolecules
+                    ? Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules
+                    : Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides;
+                var nodeName = string.IsNullOrEmpty(proteinName) || 
+                               listPeptides.Any(p => p.IsProteomic) // TODO(bspratt) revisit this caution-driven decision
+                    ? genericLibraryPeptidesGroupName
+                    : proteinName;
                 var nodePepGroupNew = FindPeptideGroupDocNode(document, nodeName, null);
                 if(nodePepGroupNew != null)
                 {
