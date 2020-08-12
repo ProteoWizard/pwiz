@@ -143,6 +143,7 @@
             resources.ApplyResources(this.tbxReplacement, "tbxReplacement");
             this.tbxReplacement.Name = "tbxReplacement";
             this.toolTip.SetToolTip(this.tbxReplacement, resources.GetString("tbxReplacement.ToolTip"));
+            this.tbxReplacement.Leave += new System.EventHandler(this.tbxRegularExpression_Leave);
             // 
             // MetadataRuleEditor
             // 
