@@ -415,7 +415,7 @@
     <value>boundDataGridView1</value>
   </data>
   <data name="&gt;&gt;boundDataGridView1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.1.1.225, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;boundDataGridView1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -493,13 +493,13 @@ to the matching sub-expression.</value>
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Result File Rule Editor</value>
+    <value>Rule Editor</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.225, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;bindingListSource1.Name" xml:space="preserve">
     <value>bindingListSource1</value>
@@ -517,6 +517,6 @@ to the matching sub-expression.</value>
     <value>MetadataRuleEditor</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.219, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.225, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

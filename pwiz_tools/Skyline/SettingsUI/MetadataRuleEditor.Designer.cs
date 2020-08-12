@@ -144,7 +144,7 @@
             this.tbxReplacement.Name = "tbxReplacement";
             this.toolTip.SetToolTip(this.tbxReplacement, resources.GetString("tbxReplacement.ToolTip"));
             // 
-            // MetadataRuleStepEditor
+            // MetadataRuleEditor
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;

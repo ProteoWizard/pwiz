@@ -17900,20 +17900,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Result File Rule Set.
+        ///   Looks up a localized string similar to Rule Set.
         /// </summary>
-        public static string MetadataRuleSetList_Label_Result_File_Rule {
+        public static string MetadataRuleSetList_Label_Rule_Set {
             get {
-                return ResourceManager.GetString("MetadataRuleSetList_Label_Result_File_Rule", resourceCulture);
+                return ResourceManager.GetString("MetadataRuleSetList_Label_Rule_Set", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Result File Rule Sets.
+        ///   Looks up a localized string similar to Rule Sets.
         /// </summary>
-        public static string MetadataRuleSetList_Title_Result_File_Rules {
+        public static string MetadataRuleSetList_Title_Rule_Sets {
             get {
-                return ResourceManager.GetString("MetadataRuleSetList_Title_Result_File_Rules", resourceCulture);
+                return ResourceManager.GetString("MetadataRuleSetList_Title_Rule_Sets", resourceCulture);
             }
         }
         

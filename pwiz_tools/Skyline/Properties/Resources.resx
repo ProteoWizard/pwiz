@@ -11058,10 +11058,10 @@ Invalid peptide sequence at position 18
   <data name="MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank" xml:space="preserve">
     <value>The text '{0}' must either be a valid regular expression or blank</value>
   </data>
-  <data name="MetadataRuleSetList_Title_Result_File_Rules" xml:space="preserve">
-    <value>Result File Rule Sets</value>
+  <data name="MetadataRuleSetList_Title_Rule_Sets" xml:space="preserve">
+    <value>Rule Sets</value>
   </data>
-  <data name="MetadataRuleSetList_Label_Result_File_Rule" xml:space="preserve">
-    <value>Result File Rule Set</value>
+  <data name="MetadataRuleSetList_Label_Rule_Set" xml:space="preserve">
+    <value>Rule Set</value>
   </data>
 </root>

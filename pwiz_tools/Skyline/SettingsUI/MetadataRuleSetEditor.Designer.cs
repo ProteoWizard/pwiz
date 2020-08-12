@@ -36,22 +36,22 @@
             this.lblName = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.dataGridViewRules = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.colSource = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colPattern = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colReplacement = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTarget = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.bindingSourceRules = new System.Windows.Forms.BindingSource(this.components);
             this.toolStripRules = new System.Windows.Forms.ToolStrip();
             this.btnRemove = new System.Windows.Forms.ToolStripButton();
             this.btnUp = new System.Windows.Forms.ToolStripButton();
             this.btnDown = new System.Windows.Forms.ToolStripButton();
             this.btnEdit = new System.Windows.Forms.ToolStripButton();
+            this.label1 = new System.Windows.Forms.Label();
             this.boundDataGridViewEx1 = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSourceResults = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.panelButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.colSource = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colPattern = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colReplacement = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colTarget = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -122,6 +122,34 @@
             this.dataGridViewRules.CurrentCellChanged += new System.EventHandler(this.dataGridViewRules_CurrentCellChanged);
             this.dataGridViewRules.SelectionChanged += new System.EventHandler(this.dataGridViewRules_SelectionChanged);
             // 
+            // colSource
+            // 
+            this.colSource.DataPropertyName = "Source";
+            this.colSource.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            resources.ApplyResources(this.colSource, "colSource");
+            this.colSource.Name = "colSource";
+            // 
+            // colPattern
+            // 
+            this.colPattern.DataPropertyName = "Pattern";
+            resources.ApplyResources(this.colPattern, "colPattern");
+            this.colPattern.Name = "colPattern";
+            // 
+            // colReplacement
+            // 
+            this.colReplacement.DataPropertyName = "Replacement";
+            resources.ApplyResources(this.colReplacement, "colReplacement");
+            this.colReplacement.Name = "colReplacement";
+            // 
+            // colTarget
+            // 
+            this.colTarget.DataPropertyName = "Target";
+            this.colTarget.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            resources.ApplyResources(this.colTarget, "colTarget");
+            this.colTarget.Name = "colTarget";
+            this.colTarget.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colTarget.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
             // bindingSourceRules
             // 
             this.bindingSourceRules.ListChanged += new System.ComponentModel.ListChangedEventHandler(this.bindingSourceRules_ListChanged);
@@ -169,6 +197,11 @@
             this.btnEdit.Name = "btnEdit";
             this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
             // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
             // boundDataGridViewEx1
             // 
             resources.ApplyResources(this.boundDataGridViewEx1, "boundDataGridViewEx1");
@@ -203,40 +236,7 @@
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
-            // colSource
-            // 
-            this.colSource.DataPropertyName = "Source";
-            this.colSource.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            resources.ApplyResources(this.colSource, "colSource");
-            this.colSource.Name = "colSource";
-            // 
-            // colPattern
-            // 
-            this.colPattern.DataPropertyName = "Pattern";
-            resources.ApplyResources(this.colPattern, "colPattern");
-            this.colPattern.Name = "colPattern";
-            // 
-            // colReplacement
-            // 
-            this.colReplacement.DataPropertyName = "Replacement";
-            resources.ApplyResources(this.colReplacement, "colReplacement");
-            this.colReplacement.Name = "colReplacement";
-            // 
-            // colTarget
-            // 
-            this.colTarget.DataPropertyName = "Target";
-            this.colTarget.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            resources.ApplyResources(this.colTarget, "colTarget");
-            this.colTarget.Name = "colTarget";
-            this.colTarget.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colTarget.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
-            // 
-            // MetadataRuleEditor
+            // MetadataRuleSetEditor
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
