@@ -179,6 +179,10 @@ namespace pwiz.Skyline.SettingsUI
             FormUtil.RemoveTabPage(tabIntegration, helpTip);
             comboNormalizationMethod.Items.AddRange(
                 NormalizationMethod.ListNormalizationMethods(parent.DocumentUI).ToArray());
+            if (!comboNormalizationMethod.Items.Contains(_peptideSettings.Quantification.NormalizationMethod))
+            {
+                comboNormalizationMethod.Items.Add(_peptideSettings.Quantification.NormalizationMethod);
+            }
             comboNormalizationMethod.SelectedItem = _peptideSettings.Quantification.NormalizationMethod;
             comboWeighting.Items.AddRange(RegressionWeighting.All.Cast<object>().ToArray());
             comboWeighting.SelectedItem = _peptideSettings.Quantification.RegressionWeighting;

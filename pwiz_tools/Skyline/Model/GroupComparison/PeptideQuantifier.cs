@@ -29,7 +29,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                 .Except(mods.InternalStandardTypes));
             return new PeptideQuantifier(getNormalizationDataFunc, peptideGroup, peptide, srmSettings.PeptideSettings.Quantification)
             {
-                MeasuredLabelTypes = labelTypes
+                MeasuredLabelTypes = labelTypes,
+                IncludeTruncatedPeaks = srmSettings.TransitionSettings.Instrument.TriggeredAcquisition
             };
         }
 
@@ -62,6 +63,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             return _normalizationData;
         }
         public double? QValueCutoff { get; set; }
+
+        public bool IncludeTruncatedPeaks { get; set; }
 
         public IsotopeLabelType RatioLabelType
         {
@@ -242,7 +245,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            double? normalizedArea = GetArea(treatMissingAsZero, QValueCutoff, transitionGroup, transition, replicateIndex, chromInfo);
+            double? normalizedArea = GetArea(treatMissingAsZero, QValueCutoff, IncludeTruncatedPeaks, transitionGroup, transition, replicateIndex, chromInfo);
             if (!normalizedArea.HasValue)
             {
                 return null;
@@ -403,17 +406,23 @@ namespace pwiz.Skyline.Model.GroupComparison
             public double Denominator { get; private set; }
         }
 
-        public static double? GetArea(bool treatMissingAsZero, double? qValueCutoff, TransitionGroupDocNode transitionGroup,
+        public static double? GetArea(bool treatMissingAsZero, double? qValueCutoff, bool allowTruncated, TransitionGroupDocNode transitionGroup,
             TransitionDocNode transition, int replicateIndex, TransitionChromInfo chromInfo)
         {
             if (treatMissingAsZero && chromInfo.IsEmpty)
             {
                 return 0;
             }
-            if (chromInfo.IsEmpty || chromInfo.IsTruncated.GetValueOrDefault())
+            if (chromInfo.IsEmpty)
             {
                 return null;
             }
+
+            if (!allowTruncated && chromInfo.IsTruncated.GetValueOrDefault())
+            {
+                return null;
+            }
+
             if (qValueCutoff.HasValue)
             {
                 TransitionGroupChromInfo transitionGroupChromInfo = FindTransitionGroupChromInfo(transitionGroup,
