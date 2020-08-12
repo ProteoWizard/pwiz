@@ -205,3 +205,4 @@ ViewEditor.FilterView,TestLiveReportsFilter
 ViewLibraryDlg,TestFullScanId
 VolcanoPlotPropertiesDlg,TestGroupComparisonVolcanoPlot
 VolcanoPlotFormattingDlg,TestVolcanoPlotFormatting
+DetectionToolbarProperties, TestDetectionsPlot
