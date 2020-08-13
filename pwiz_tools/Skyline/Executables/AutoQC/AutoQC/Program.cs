@@ -84,11 +84,7 @@ namespace AutoQC
                 var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
                 Console.WriteLine("Local user config path: {0}", config.FilePath);
 
-                if (!InitSkylineSettings())
-                {
-                    mutex.ReleaseMutex();
-                    return;
-                }
+                InitSkylineSettings();
 
                 var form = new MainForm();
 

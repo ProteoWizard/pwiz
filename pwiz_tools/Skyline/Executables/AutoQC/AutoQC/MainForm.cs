@@ -771,8 +771,15 @@ namespace AutoQC
 
             cb_minimizeToSysTray.CheckedChanged += cb_minimizeToSysTray_CheckedChanged;
             cb_keepRunning.CheckedChanged += cb_keepRunning_CheckedChanged;
-            
-            UpdateSkylineTypeAndInstallPathControls();
+
+            if (SkylineSettings.IsInitialized())
+            {
+                UpdateSkylineTypeAndInstallPathControls();
+            }
+            else
+            {
+                tabMain.SelectedTab = tabSettings;
+            }
         }
 
         public void UpdateConfiguration(AutoQcConfig oldConfig, AutoQcConfig newConfig)
@@ -1009,6 +1016,10 @@ namespace AutoQC
             }
             else
             {
+                if (radioButtonWebBasedSkyline.Checked)
+                {
+                    textBoxSkylinePath.Text = string.Empty;
+                }
                 ShowInfoDialog("Skyline Settings Updated", "Skyline settings were updated successfully!");
             }
         }
@@ -1045,6 +1056,12 @@ namespace AutoQC
         {
             if (e.TabPage.Name.Equals("tabSettings"))
             {
+                if (!SkylineSettings.IsInitialized())
+                {
+                    ShowErrorDialog("Please Specify Skyline Settings", 
+                        "Could not find a valid Skyline installation. Enter Skyline installation details to continue.");
+                    e.Cancel = true;
+                }
                 if (SkylineSettings.SettingsChanged(radioButtonUseSkyline.Checked, radioButtonWebBasedSkyline.Checked,
                     textBoxSkylinePath.Text))
                 {
