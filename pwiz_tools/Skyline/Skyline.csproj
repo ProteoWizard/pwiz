@@ -634,6 +634,12 @@
     <Compile Include="SettingsUI\IonMobility\IonMobilityFilteringUserControl.Designer.cs">
       <DependentUpon>IonMobilityFilteringUserControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\Irt\SelectIrtStandardDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\SelectIrtStandardDlg.Designer.cs">
+      <DependentUpon>SelectIrtStandardDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\Irt\UseCurrentCalculatorDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -3524,6 +3530,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.zh-CHS.resx">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\SelectIrtStandardDlg.resx">
+      <DependentUpon>SelectIrtStandardDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\UseCurrentCalculatorDlg.resx">
       <DependentUpon>UseCurrentCalculatorDlg.cs</DependentUpon>
