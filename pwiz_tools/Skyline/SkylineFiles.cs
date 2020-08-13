@@ -2131,34 +2131,7 @@ namespace pwiz.Skyline
             {
                 db = IrtDb.CreateIrtDb(AssayLibraryFileName);
 
-                // Try to guess iRT standards
-                var matchingStandards = IrtStandard.ALL.Where(standard => standard.IsSubset(dbIrtPeptides, null)).ToList();
-
-                // Remove standards that don't actually match (heavy label check with precursor m/zs)
-                for (var i = matchingStandards.Count - 1; i >= 0; i--)
-                {
-                    var standardDoc = matchingStandards[i].GetDocument();
-                    if (standardDoc == null || standardDoc.Peptides.All(nodePep => nodePep.ExplicitModsHeavy.Count == 0))
-                        continue;
-
-                    var docPeps = new TargetMap<PeptideDocNode>(standardDoc.Peptides.Select(pep => new KeyValuePair<Target, PeptideDocNode>(pep.ModifiedTarget, pep)));
-                    var matchTargets = standardDoc.Peptides.Select(pep => pep.ModifiedTarget).ToHashSet();
-                    // Compare precursor m/z to see if heavy labeled
-                    foreach (var spec in librarySpectra)
-                    {
-                        if (!docPeps.TryGetValue(spec.Key.Target, out var nodePep))
-                            continue;
-
-                        var docPrecursors = nodePep.TransitionGroups.ToDictionary(nodeTranGroup => nodeTranGroup.PrecursorCharge, nodeTranGroup => nodeTranGroup.PrecursorMz);
-                        if (docPrecursors.TryGetValue(spec.Key.Charge, out var docPrecursorMz) && Math.Abs(docPrecursorMz - spec.PrecursorMz) < 1)
-                            matchTargets.Remove(nodePep.ModifiedTarget);
-                    }
-                    if (matchTargets.Count > 0)
-                        matchingStandards.RemoveAt(i);
-                }
-
-                if (matchingStandards.Count == 2 && matchingStandards.Contains(IrtStandard.BIOGNOSYS_10) && matchingStandards.Contains(IrtStandard.BIOGNOSYS_11))
-                    matchingStandards = new List<IrtStandard> { IrtStandard.BIOGNOSYS_11 };
+                var matchingStandards = IrtStandard.BestMatch(librarySpectra);
 
                 if (matchingStandards.Count == 1)
                 {

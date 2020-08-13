@@ -125,9 +125,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 result.Add(GLOBAL_STANDARDS);
             }
-            foreach (var isotopeLabelType in document.Settings.PeptideSettings.Modifications.InternalStandardTypes)
+
+            var modificationTypes = document.Settings.PeptideSettings.Modifications.GetModificationTypes().ToList();
+            if (modificationTypes.Count > 1)
             {
-                result.Add(GetNormalizationMethod(isotopeLabelType));
+                foreach (var isotopeLabelType in document.Settings.PeptideSettings.Modifications.InternalStandardTypes)
+                {
+                    result.Add(GetNormalizationMethod(isotopeLabelType));
+                }
             }
             return result.AsReadOnly();
         }

@@ -474,6 +474,10 @@
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
     <Compile Include="Model\DocSettings\DocumentAnnotationUpdater.cs" />
     <Compile Include="Model\DocSettings\DriftTimePredictor.cs" />
+    <Compile Include="Model\DocSettings\MetadataExtraction\MetadataExtractor.cs" />
+    <Compile Include="Model\DocSettings\MetadataExtraction\MetadataRuleSet.cs" />
+    <Compile Include="Model\DocSettings\MetadataExtraction\ExtractedMetadataResult.cs" />
+    <Compile Include="Model\ElementLocators\ExportAnnotations\TextColumnWrapper.cs" />
     <Compile Include="Model\ElementLocators\AuditLogRef.cs" />
     <Compile Include="Model\DocSettings\TransitionIonMobilityFiltering.cs" />
     <Compile Include="Model\ElementLocators\ElementLocator.cs" />
@@ -618,17 +622,35 @@
     <Compile Include="ProtocolBuffers\GeneratedCode\Tensor.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\TensorShape.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\Types.cs" />
+    <Compile Include="SettingsUI\MetadataRuleEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\MetadataRuleEditor.Designer.cs">
+      <DependentUpon>MetadataRuleEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\IonMobility\IonMobilityFilteringUserControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="SettingsUI\IonMobility\IonMobilityFilteringUserControl.Designer.cs">
       <DependentUpon>IonMobilityFilteringUserControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\Irt\SelectIrtStandardDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\SelectIrtStandardDlg.Designer.cs">
+      <DependentUpon>SelectIrtStandardDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\Irt\UseCurrentCalculatorDlg.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SettingsUI\Irt\UseCurrentCalculatorDlg.Designer.cs">
       <DependentUpon>UseCurrentCalculatorDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\MetadataRuleSetEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\MetadataRuleSetEditor.Designer.cs">
+      <DependentUpon>MetadataRuleSetEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.cs">
       <SubType>UserControl</SubType>
@@ -3254,6 +3276,9 @@
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.zh-CHS.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\MetadataRuleEditor.resx">
+      <DependentUpon>MetadataRuleEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DiaIsolationWindowsGraphForm.ja.resx">
       <DependentUpon>DiaIsolationWindowsGraphForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -3506,8 +3531,14 @@
     <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.zh-CHS.resx">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\SelectIrtStandardDlg.resx">
+      <DependentUpon>SelectIrtStandardDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\UseCurrentCalculatorDlg.resx">
       <DependentUpon>UseCurrentCalculatorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\MetadataRuleSetEditor.resx">
+      <DependentUpon>MetadataRuleSetEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>

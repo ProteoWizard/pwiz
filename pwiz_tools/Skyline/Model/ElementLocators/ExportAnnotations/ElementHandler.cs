@@ -1,26 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 {
 
     public abstract class ElementHandler
     {
-        private IDictionary<string, ImportablePropertyInfo> _importableProperties;
+        private IDictionary<string, TextColumnWrapper> _importableProperties;
         private IDictionary<string, AnnotationDef> _annotationDefs;
         private IDictionary<ElementRef, SkylineObject> _elementMap;
         public ElementHandler(SkylineDataSchema dataSchema)
         {
             DataSchema = dataSchema;
+            var rootColumn = ColumnDescriptor.RootColumn(dataSchema, typeof(object));
             // ReSharper disable VirtualMemberCallInConstructor
-            _importableProperties = ListImportableProperties().ToDictionary(pd => pd.Name, pd=>new ImportablePropertyInfo(pd));
+            _importableProperties = ListImportableProperties().ToDictionary(pd => pd.Name, pd=>new TextColumnWrapper(rootColumn.GetChild(pd)));
             // ReSharper restore VirtualMemberCallInConstructor
             _annotationDefs = ListAnnotationDefs().ToDictionary(annotationDef => annotationDef.Name);
         }
@@ -37,14 +36,14 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             }
         }
 
-        public ImportablePropertyInfo FindProperty(string name)
+        public TextColumnWrapper FindProperty(string name)
         {
-            ImportablePropertyInfo pd;
+            TextColumnWrapper pd;
             _importableProperties.TryGetValue(name, out pd);
             return pd;
         }
 
-        public IEnumerable<ImportablePropertyInfo> Properties { get { return _importableProperties.Values; } }
+        public IEnumerable<TextColumnWrapper> Properties { get { return _importableProperties.Values; } }
 
         public AnnotationDef FindAnnotation(string name)
         {
@@ -276,75 +275,6 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         {
             return new TransitionHandler(DataSchema).ListAllElements()
                 .SelectMany(transition => transition.Results.Values);
-        }
-    }
-
-    public class ImportablePropertyInfo
-    {
-        public ImportablePropertyInfo(PropertyDescriptor propertyDescriptor)
-        {
-            PropertyDescriptor = propertyDescriptor;
-            var importableAttribute = (ImportableAttribute) propertyDescriptor.Attributes[typeof(ImportableAttribute)];
-            if (null != importableAttribute.Formatter)
-            {
-                Formatter = (IPropertyFormatter) Activator.CreateInstance(importableAttribute.Formatter);
-            }
-            else
-            {
-                if (propertyDescriptor.PropertyType.IsValueType)
-                {
-                    DefaultValue = Activator.CreateInstance(propertyDescriptor.PropertyType);
-                }
-                else
-                {
-                    DefaultValue = null;
-                }
-            }
-        }
-
-        public PropertyDescriptor PropertyDescriptor { get; private set; }
-
-        public IPropertyFormatter Formatter { get; private set; }
-
-        public object DefaultValue { get; private set; }
-
-        public string FormatPropertyValue(CultureInfo cultureInfo, object value)
-        {
-            if (value == null)
-            {
-                return string.Empty;
-            }
-            if (Formatter != null)
-            {
-                return Formatter.FormatValue(cultureInfo, value);
-            }
-            if (Equals(value, DefaultValue))
-            {
-                return string.Empty;
-            }
-            if (value is double d)
-            {
-                return d.ToString(Formats.RoundTrip, cultureInfo);
-            }
-            return (string)Convert.ChangeType(value, typeof(string), cultureInfo);
-        }
-
-        public object ParsePropertyValue(CultureInfo cultureInfo, string strValue)
-        {
-            if (Formatter != null)
-            {
-                return Formatter.ParseValue(cultureInfo, strValue);
-            }
-            if (string.IsNullOrEmpty(strValue))
-            {
-                return DefaultValue;
-            }
-            var targetType = PropertyDescriptor.PropertyType;
-            if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Nullable<>))
-            {
-                targetType = targetType.GetGenericArguments()[0];
-            }
-            return Convert.ChangeType(strValue, targetType, cultureInfo);
         }
     }
 }

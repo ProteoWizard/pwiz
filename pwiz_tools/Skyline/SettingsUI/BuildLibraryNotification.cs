@@ -424,9 +424,13 @@ namespace pwiz.Skyline.SettingsUI
             Control GetParent() { return useTopMostForm ? FormUtil.FindTopLevelOpenForm(f => f is BuildLibraryNotification) ?? parent : parent; }
 
             IRetentionTimeProvider[] irtProviders = null;
+            var isAuto = ReferenceEquals(standard, IrtStandard.AUTO);
+            List<IrtStandard> autoStandards = null;
             var cirtPeptides = new DbIrtPeptide[0];
+
             using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers})
             {
+                var standard1 = standard;
                 var status = longWait.PerformWork(GetParent(), 800, monitor =>
                 {
                     monitor.UpdateProgress(new ProgressStatus().ChangePercentComplete(-1));
@@ -434,7 +438,13 @@ namespace pwiz.Skyline.SettingsUI
                     if (!irtProviders.Any())
                         irtProviders = lib.RetentionTimeProviders.ToArray();
 
-                    if (ReferenceEquals(standard, IrtStandard.CIRT_SHORT))
+                    if (isAuto)
+                    {
+                        autoStandards = IrtStandard.BestMatch(irtProviders.SelectMany(provider => provider.PeptideRetentionTimes)
+                            .Select(rt => rt.PeptideSequence));
+                    }
+
+                    if (ReferenceEquals(standard1, IrtStandard.CIRT_SHORT) || isAuto && autoStandards.Count == 0)
                     {
                         var libPeptides = new TargetMap<bool>(irtProviders
                             .SelectMany(provider => provider.PeptideRetentionTimes).Select(rt => new KeyValuePair<Target, bool>(rt.PeptideSequence, true)));
@@ -458,6 +468,26 @@ namespace pwiz.Skyline.SettingsUI
                     if (dlg.ShowDialog(GetParent()) != DialogResult.OK)
                         return false;
                     numCirt = dlg.StandardCount;
+                }
+            }
+            else if (isAuto)
+            {
+                switch (autoStandards.Count)
+                {
+                    case 0:
+                        standard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, IrtPeptidePicker.Pick(irtProviders, 10));
+                        break;
+                    case 1:
+                        standard = autoStandards[0];
+                        break;
+                    default:
+                        using (var selectIrtStandardDlg = new SelectIrtStandardDlg(autoStandards))
+                        {
+                            if (selectIrtStandardDlg.ShowDialog(GetParent()) != DialogResult.OK)
+                                return false;
+                            standard = selectIrtStandardDlg.Selected;
+                        }
+                        break;
                 }
             }
 

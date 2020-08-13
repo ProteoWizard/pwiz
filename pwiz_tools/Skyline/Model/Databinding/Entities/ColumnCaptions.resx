@@ -399,6 +399,9 @@
   <data name="FileName">
     <value>File Name</value>
   </data>
+  <data name="FilePath">
+    <value>File Path</value>
+  </data>
   <data name="Files">
     <value>Files</value>
   </data>

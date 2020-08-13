@@ -1620,6 +1620,14 @@ namespace pwiz.Skyline.Model.DocSettings
                     defSet.GroupComparisonDefList.SetValue(groupComparisonDef);
                 }
             }
+
+            foreach (var metadataRuleSet in DataSettings.MetadataRuleSets)
+            {
+                if (!defSet.MetadataRuleSets.Contains(metadataRuleSet))
+                {
+                    defSet.MetadataRuleSets.SetValue(metadataRuleSet);
+                }
+            }
             var mainViewSpecList = defSet.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
             foreach (var viewSpec in DataSettings.ViewSpecList.ViewSpecLayouts)
             {
