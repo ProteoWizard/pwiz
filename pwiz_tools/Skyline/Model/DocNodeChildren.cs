@@ -21,8 +21,8 @@ namespace pwiz.Skyline.Model
                 _indexes = previousChildren._indexes;
             else
             {
-                _indexes = new Dictionary<Identity, int>(_items.Count, IDENTITY_EQUALITY_COMPARER);
-                for (int i = 0; i < _items.Count; i++)
+                _indexes = new Dictionary<Identity, int>(_itemCount, IDENTITY_EQUALITY_COMPARER);
+                for (int i = 0; i < _itemCount; i++)
                 {
                     _indexes.Add(_items[i].Id, i);
                 }
