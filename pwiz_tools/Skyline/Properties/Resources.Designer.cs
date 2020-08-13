@@ -15675,6 +15675,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Automatic.
+        /// </summary>
+        public static string IrtStandard_AUTO_Automatic {
+            get {
+                return ResourceManager.GetString("IrtStandard_AUTO_Automatic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No document to import.
         /// </summary>
         public static string IrtStandard_DocumentStream_No_document_to_import {
