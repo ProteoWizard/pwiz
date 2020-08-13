@@ -1300,6 +1300,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
             var selected = _driverStandards.SelectedItem;
             var lastIdx = _driverStandards.SelectedIndexLast;
 
+            if (ReferenceEquals(selected, IrtStandard.AUTO))
+            {
+                comboStandards.SelectedIndexChanged -= comboStandards_SelectedIndexChanged;
+                comboStandards.SelectedIndex = lastIdx;
+                comboStandards.SelectedIndexChanged += comboStandards_SelectedIndexChanged;
+                return;
+            }
+
             if (comboStandards.SelectedItem.ToString().Equals(Resources.SettingsListComboDriver_Edit_current) &&
                 IrtStandard.ALL.Any(standard => standard.Name.Equals(comboStandards.Items[lastIdx])))
             {

@@ -48,6 +48,7 @@ namespace pwiz.Common.DataBinding.Internal
     {
         private readonly HashSet<ListChangedEventHandler> _listChangedEventHandlers = new HashSet<ListChangedEventHandler>();
         private ImmutableList<DataPropertyDescriptor> _itemProperties;
+        private IDictionary<string, DataPropertyDescriptor> _itemPropertiesDictionary;
         private QueryResults _queryResults;
         private IRowSource _rowSource = StaticRowSource.EMPTY;
         private readonly QueryRequestor _queryRequestor;
@@ -60,6 +61,7 @@ namespace pwiz.Common.DataBinding.Internal
             QueryLock = new QueryLock(CancellationToken.None);
             _queryResults = QueryResults.Empty;
             _itemProperties = ImmutableList<DataPropertyDescriptor>.EMPTY;
+            _itemPropertiesDictionary = new Dictionary<string, DataPropertyDescriptor>();
             _queryRequestor = new QueryRequestor(this);
             AllowNew = AllowRemove = AllowEdit = false;
         }
@@ -312,6 +314,13 @@ namespace pwiz.Common.DataBinding.Internal
 
         public ImmutableList<DataPropertyDescriptor> ItemProperties { get { return _itemProperties; } }
 
+        public DataPropertyDescriptor FindDataProperty(string name)
+        {
+            DataPropertyDescriptor propertyDescriptor;
+            _itemPropertiesDictionary.TryGetValue(name, out propertyDescriptor);
+            return propertyDescriptor;
+        }
+
         private List<RowItem> RowItemList
         {
             get
@@ -360,6 +369,7 @@ namespace pwiz.Common.DataBinding.Internal
                 propsChanged = true;
             }
             _itemProperties = QueryResults.ItemProperties;
+            _itemPropertiesDictionary = _itemProperties.ToDictionary(property => property.Name);
             AllowNew = NewRowHandler != null;
             AllowEdit = true;
             AllowRemove = false;
