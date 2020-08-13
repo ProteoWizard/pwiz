@@ -104,6 +104,7 @@
   <ItemGroup>
     <Compile Include="AutoQcConfig.cs" />
     <Compile Include="AutoQcLogger.cs" />
+    <Compile Include="SkylineSettings.cs" />
     <Compile Include="StartupManager.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
