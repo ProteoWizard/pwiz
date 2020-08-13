@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                                         continue;
                                     }
                                     double? area = PeptideQuantifier.GetArea(treatMissingValuesAsZero, qValueCutoff,
-                                        transitionGroup, transition, iResult, chromInfo);
+                                        false, transitionGroup, transition, iResult, chromInfo);
                                     if (!area.HasValue)
                                     {
                                         continue;

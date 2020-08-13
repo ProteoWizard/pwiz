@@ -27,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Properties;
@@ -53,6 +54,7 @@ namespace pwiz.Skyline.Model.DocSettings
             ViewSpecList = ViewSpecList.EMPTY;
             AuditLogging = true;
             Lists = ImmutableList<ListData>.EMPTY;
+            MetadataRuleSets = ImmutableList<MetadataRuleSet>.EMPTY;
         }
 
         [TrackChildren(true)]
@@ -80,6 +82,19 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [Track]
         public Uri PanoramaPublishUri { get; private set; }
+
+        [TrackChildren]
+        public ImmutableList<MetadataRuleSet> MetadataRuleSets
+        {
+            get;
+            private set;
+        }
+
+        public DataSettings ChangeExtractedMetadata(IEnumerable<MetadataRuleSet> extractedMetadata)
+        {
+            return ChangeProp(ImClone(this),
+                im => im.MetadataRuleSets = ImmutableList.ValueOfOrEmpty(extractedMetadata));
+        }
 
         /// <summary>
         /// True if audit logging is enabled for this document. ModifyDocument calls will generate audit log entries that can be viewed in the
@@ -221,6 +236,7 @@ namespace pwiz.Skyline.Model.DocSettings
             _groupComparisonDefs = MakeReadOnly(allElements.OfType<GroupComparisonDef>());
             ViewSpecList = allElements.OfType<ViewSpecList>().FirstOrDefault() ?? ViewSpecList.EMPTY;
             Lists= ImmutableList.ValueOf(allElements.OfType<ListData>());
+            MetadataRuleSets = ImmutableList.ValueOf(allElements.OfType<MetadataRuleSet>());
         }
 
         private enum Attr
@@ -238,7 +254,10 @@ namespace pwiz.Skyline.Model.DocSettings
             if(!string.IsNullOrEmpty(DocumentGuid))
                 writer.WriteAttributeString(Attr.document_guid, DocumentGuid);
             writer.WriteAttribute(Attr.audit_logging, AuditLogging);
-            var elements = AnnotationDefs.Cast<IXmlSerializable>().Concat(GroupComparisonDefs).Concat(Lists);
+            var elements = AnnotationDefs.Cast<IXmlSerializable>()
+                .Concat(GroupComparisonDefs)
+                .Concat(Lists)
+                .Concat(MetadataRuleSets);
             if (ViewSpecList.ViewSpecs.Any())
             {
                 elements = elements.Concat(new[] {ViewSpecList});
@@ -249,12 +268,13 @@ namespace pwiz.Skyline.Model.DocSettings
         private static IXmlElementHelper<IXmlSerializable>[] GetElementHelpers()
         {
             return new IXmlElementHelper<IXmlSerializable>[]
-                {
-                    new XmlElementHelperSuper<AnnotationDef, IXmlSerializable>(),
-                    new XmlElementHelperSuper<GroupComparisonDef, IXmlSerializable>(), 
-                    new XmlElementHelperSuper<ViewSpecList, IXmlSerializable>(),
-                    new XmlElementHelperSuper<ListData, IXmlSerializable>(),
-                };
+            {
+                new XmlElementHelperSuper<AnnotationDef, IXmlSerializable>(),
+                new XmlElementHelperSuper<GroupComparisonDef, IXmlSerializable>(),
+                new XmlElementHelperSuper<ViewSpecList, IXmlSerializable>(),
+                new XmlElementHelperSuper<ListData, IXmlSerializable>(),
+                new XmlElementHelperSuper<MetadataRuleSet, IXmlSerializable>(),
+            };
         }
         #endregion
 
@@ -269,7 +289,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    && Equals(PanoramaPublishUri, other.PanoramaPublishUri)
                    && Equals(AuditLogging, other.AuditLogging)
                    && Equals(DocumentGuid, other.DocumentGuid)
-                   && Equals(Lists, other.Lists);
+                   && Equals(Lists, other.Lists)
+                   && Equals(MetadataRuleSets, other.MetadataRuleSets);
         }
 
         public override bool Equals(object obj)
@@ -291,6 +312,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = result*397 + (AuditLogging ? 1 : 0);
                 result = result*397 + (DocumentGuid == null ? 0 : DocumentGuid.GetHashCode());
                 result = result*397 + Lists.GetHashCode();
+                result = result*397 + MetadataRuleSets.GetHashCode();
                 return result;
             }
         }

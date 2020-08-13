@@ -158,6 +158,7 @@
     <Compile Include="EspTest.cs" />
     <Compile Include="ExplicitLossTest.cs" />
     <Compile Include="ExplicitModTest.cs" />
+    <Compile Include="ExtractedMetadataTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
     <Compile Include="FindNodeTest.cs" />
     <Compile Include="FragmentedMoleculeTest.cs" />
