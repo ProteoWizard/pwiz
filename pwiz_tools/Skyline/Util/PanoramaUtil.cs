@@ -565,7 +565,7 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                // Use the LabKey AdminController.HealthCheckAction instead of Project.GetContainersAction which does not return the expected
+                // Use the LabKey AdminController.HealthCheckAction instead of ProjectController.GetContainersAction which does not return the expected
                 // JSON key if the "Home" container on the LabKey Server is not public.
                 // (https://www.labkey.org/home/Developer/issues/Secure/issues-details.view?issueId=20686)
                 Uri uri = new Uri(ServerUri, @"admin/home/healthCheck.view");
