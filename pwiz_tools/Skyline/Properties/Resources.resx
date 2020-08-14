@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -322,9 +322,6 @@
   <data name="SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_" xml:space="preserve">
     <value>The standard peptides for an iRT calculator can only be set in the iRT calculator editor.</value>
   </data>
-  <data name="DriftTimePredictorList_Label_Drift_Time_Predictor_" xml:space="preserve">
-    <value>Drift Time Predictor:</value>
-  </data>
   <data name="EditIsolationSchemeDlg_OkDialog_The_isolation_scheme_named__0__already_exists" xml:space="preserve">
     <value>The isolation scheme named '{0}' already exists.</value>
   </data>
@@ -516,9 +513,6 @@
   </data>
   <data name="LoadingTooSlowlyException_LoadingTooSlowlyException_Data_import_expected_to_consume__0__minutes_with_maximum_of__1__mintues" xml:space="preserve">
     <value>Data import expected to consume {0} minutes with maximum of {1} minutes</value>
-  </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_high_energy_drift_time_offset_on_line__1__" xml:space="preserve">
-    <value>Invalid number format {0} for high energy drift time offset on line {1}.</value>
   </data>
   <data name="EditMeasuredIonDlg_OkDialog_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__" xml:space="preserve">
     <value>Reporter ion masses must be greater than or equal to {0}.</value>
@@ -1374,9 +1368,6 @@
   <data name="FragmentLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\FragmentLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="IonMobilityLibraryList_AcceptList_The_drift_time_predictors_" xml:space="preserve">
-    <value>The drift time predictors:</value>
-  </data>
   <data name="ChromCacheJoiner_JoinNextPart_Joining_file__0__" xml:space="preserve">
     <value>Joining file {0}</value>
   </data>
@@ -1522,6 +1513,9 @@
   </data>
   <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_collisional_cross_section_value_on_line__0__" xml:space="preserve">
     <value>Missing collisional cross section value on line {0}.</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_ion_mobility_value_on_line__0__" xml:space="preserve">
+    <value>Missing ion mobility value on line {0}.</value>
   </data>
   <data name="SkylineStartup_SkylineStartup_Start_a_new_Skyline_document_with_target_proteins_specified_in_a_tabular_list_you_can_paste_into_a_grid_" xml:space="preserve">
     <value>Start a new Skyline document with target proteins specified in a tabular list you can paste into a grid.</value>
@@ -1679,6 +1673,9 @@
   </data>
   <data name="LabKey" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\LabKey.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MSAmandaLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\LogoAmanda_32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ToolService_ImportFasta_Insert_proteins" xml:space="preserve">
     <value>Insert proteins</value>
@@ -1869,7 +1866,7 @@
   <data name="EditCoVDlg_btnOk_Click_The_compensation_voltage_parameters___0___already_exist_" xml:space="preserve">
     <value>The compensation voltage parameters '{0}' already exist.</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope_" xml:space="preserve">
     <value>the value {0} is not a valid slope.</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_" xml:space="preserve">
@@ -2015,9 +2012,6 @@
   </data>
   <data name="PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank" xml:space="preserve">
     <value>The peptide sequence cannot be blank.</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_pasted_text_must_have_three_columns_" xml:space="preserve">
-    <value>The pasted text must have three columns.</value>
   </data>
   <data name="AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__" xml:space="preserve">
     <value>The number of required transitions {0} exceeds the maximum {1}</value>
@@ -2364,9 +2358,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence" xml:space="preserve">
     <value>Shuffle Sequence</value>
-  </data>
-  <data name="ValidatingIonMobilityPeptide_ValidateHighEnergyDriftTimeOffsetMsec_High_energy_drift_time_offsets_should_be_empty__or_a__usually_negative__value_for_the_relative_drift_time_in_msec_for_high_collision_energy_scans_" xml:space="preserve">
-    <value>High energy drift time offsets should be empty, or a (usually negative) value for the relative drift time in msec for high collision energy scans.</value>
   </data>
   <data name="ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again" xml:space="preserve">
     <value>Error running the installed tool {0}. It seems to have an error in one of its files. Please reinstall the tool and try again</value>
@@ -2751,9 +2742,6 @@ Are you sure you want to continue?</value>
   <data name="ImportPeptideSearchDlg_NextPage_Finish" xml:space="preserve">
     <value>&amp;Finish</value>
   </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_added_list_contains__0__charged_peptides_with_inconsistent_ion_mobility_values_" xml:space="preserve">
-    <value>The added list contains {0} charged peptides with inconsistent ion mobility values.</value>
-  </data>
   <data name="RetentionTimeRegression_RetentionTimeRegression_Slope_and_intercept_must_both_have_values_or_both_not_have_values" xml:space="preserve">
     <value>Slope and intercept must both have values or both not have values</value>
   </data>
@@ -2957,9 +2945,6 @@ Are you sure you want to continue?</value>
   <data name="ExportMethodDlg_VerifySchedulingAllowed_The_current_document_contains_peptides_without_enough_information_to_rank_transitions_for_triggered_acquisition_" xml:space="preserve">
     <value>The current document contains peptides without enough information to rank transitions for triggered acquisition.</value>
   </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_A_modified_peptide_sequence_is_required_for_each_entry_" xml:space="preserve">
-    <value>A modified peptide sequence is required for each entry.</value>
-  </data>
   <data name="BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist" xml:space="preserve">
     <value>The redundant library {0} does not exist.</value>
   </data>
@@ -2999,11 +2984,8 @@ Are you sure you want to continue?</value>
   <data name="Delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\delete.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateCell_A_value_is_required_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateCell_A_value_is_required_" xml:space="preserve">
     <value>A value is required.</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_sequence__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
-    <value>The sequence {0} is not a valid modified peptide sequence.</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_Importing__0__" xml:space="preserve">
     <value>Importing {0}</value>
@@ -3077,7 +3059,7 @@ Are you sure you want to continue?</value>
   <data name="ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__" xml:space="preserve">
     <value>The command for {0} may not exist in that location. Would you like to edit it?</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_Do_you_want_to_change_it_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_OkDialog_Do_you_want_to_change_it_" xml:space="preserve">
     <value>Do you want to change it?</value>
   </data>
   <data name="ExportMethodDlg_btnBrowseTemplate_Click__0__Method" xml:space="preserve">
@@ -3304,9 +3286,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="CompensationVoltageList_Label_Compensation__Voltage_Parameters_" xml:space="preserve">
     <value>Compensation &amp;Voltage Parameters:</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
-    <value>The entry {0} is not a valid charge. Precursor charges must be integer values between 1 and {1}.</value>
   </data>
   <data name="ViewLibraryDlg_AddPeptide_The_precursor_m_z__0_F04__is_outside_the_instrument_range__1__to__2__" xml:space="preserve">
     <value>The precursor m/z {0:F04} is outside the instrument range {1} to {2}.</value>
@@ -4390,6 +4369,9 @@ If you prefer you can choose to report anonymously.</value>
   <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_collisional_cross_section_on_line__1__" xml:space="preserve">
     <value>Invalid number format {0} for collisional cross section on line {1}.</value>
   </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Invalid_number_format__0__for_ion_mobility_on_line__1__" xml:space="preserve">
+    <value>Invalid number format {0} for ion mobility on line {1}.</value>
+  </data>
   <data name="CommandLine_ExportReport_Report__0__exported_successfully_" xml:space="preserve">
     <value>Report {0} exported successfully.</value>
   </data>
@@ -4416,9 +4398,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="BuildLibraryDlg_ValidateBuilder_The_directory__0__does_not_exist" xml:space="preserve">
     <value>The directory {0} does not exist.</value>
-  </data>
-  <data name="DriftTimePredictorList_Title_Edit_Drift_Time_Predictors" xml:space="preserve">
-    <value>Edit Drift Time Predictors</value>
   </data>
   <data name="PeptideGroupTreeNode_RenderTip_Name" xml:space="preserve">
     <value>Name</value>
@@ -4620,9 +4599,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__to_export_a_scheduled_method__you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings___Prediction_" xml:space="preserve">
     <value>Error: to export a scheduled method, you must first choose a retention time predictor in Peptide Settings / Prediction.</value>
-  </data>
-  <data name="DriftTimeFinder_HandleLoadScanException_Problem_using_results_to_populate_drift_time_library__" xml:space="preserve">
-    <value>Problem using results to populate drift time library:</value>
   </data>
   <data name="TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_" xml:space="preserve">
     <value>CSV (Comma delimited)</value>
@@ -4868,7 +4844,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ComparePeakPickingDlg_InitializeGraphPanes_Add_models_files_for_comparison_to_see_a_q_Q_plot" xml:space="preserve">
     <value>Add models/files for comparison to see a q-Q plot</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept_" xml:space="preserve">
     <value>the value {0} is not a valid intercept.</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_Error__Use___in_to_specify_a_Skyline_document_to_open_" xml:space="preserve">
@@ -4987,9 +4963,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="SrmTreeNodeParent_ShowPickList_An_error_occurred_creating_options_" xml:space="preserve">
     <value>An error occurred creating options.</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_" xml:space="preserve">
-    <value>The value {0} is not a valid drift time.</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_The_current_file_or_model_has_no_q_values_or_scores_to_analyze___Either_q_values_or_scores_are_necessary_to_compare_peak_picking_tools_" xml:space="preserve">
     <value>The current file or model has no q values or scores to analyze.  Either q values or scores are necessary to compare peak picking tools.</value>
@@ -5122,9 +5095,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="BackgroundWorker_UpdateStatistics_After_minimizing_the_cache_file_will_be_reduced_to__0__its_current_size" xml:space="preserve">
     <value>After minimizing, the cache file will be reduced to {0:0%} its current size</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_Drift_time_prediction_requires_an_ion_mobility_library_" xml:space="preserve">
-    <value>Drift time prediction requires an ion mobility library.</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_There_is_already_an_imported_file_with_the_current_name___Please_choose_another_name" xml:space="preserve">
     <value>There is already an imported file with the current name.  Please choose another name</value>
@@ -5425,9 +5395,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>A drift time predictor with the name {0} already exists.</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
     <value>Error: Duplicate replicate name '{0}' after applying regular expression.</value>
@@ -5841,7 +5808,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="CommandArgs_ParseArgsInternal_Warning__Invalid_max_transitions_per_injection_parameter___0___" xml:space="preserve">
     <value>Warning: Invalid max transitions per injection parameter ({0}).</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge__Charges_must_be_integer_values_between_1_and__1__" xml:space="preserve">
     <value>the value {0} is not a valid charge. Charges must be integer values between 1 and {1}.</value>
   </data>
   <data name="EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_" xml:space="preserve">
@@ -6360,9 +6327,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
     <value>Change digestion settings</value>
-  </data>
-  <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_ion_mobility_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__" xml:space="preserve">
-    <value>Cannot import measured ion mobility for sequence {0}: no collisional cross section conversion parameters were provided for charge state {1}.</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist" xml:space="preserve">
     <value>The file {0} does not exist.</value>
@@ -6889,7 +6853,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="WatersMethodExporter_EnsureLibraries_Waters_method_creation_software_may_not_be_installed_correctly" xml:space="preserve">
     <value>Waters method creation software may not be installed correctly.</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_On_line__0___1_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateRegressionCellValues_On_line__0___1_" xml:space="preserve">
     <value>On line {0} {1}</value>
   </data>
   <data name="BiblioSpecLibrary_Load_Loading__0__library" xml:space="preserve">
@@ -7340,10 +7304,10 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="AbstractChromGraphItem_CustomizeYAxis_Intensity" xml:space="preserve">
     <value>Intensity</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateCell_The_entry__0__is_not_valid_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateCell_The_entry__0__is_not_valid_" xml:space="preserve">
     <value>The entry {0} is not valid.</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_" xml:space="preserve">
     <value>Resolving power must be greater than 0.</value>
   </data>
   <data name="ToolStoreDlg_FormatVersionText_Not_currently_installed__Version___0__is_available" xml:space="preserve">
@@ -7429,9 +7393,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_prediction_calculator_is_unable_to_score" xml:space="preserve">
     <value>Retention time prediction calculator is unable to score.</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_following_peptides_appear_in_the_added_list_with_inconsistent_ion_mobility_values_" xml:space="preserve">
-    <value>The following peptides appear in the added list with inconsistent ion mobility values.</value>
   </data>
   <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__" xml:space="preserve">
     <value>Failed querying background proteome {0}.</value>
@@ -7769,9 +7730,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ImportFastaHelper_AddFasta___0___is_not_a_capital_letter_that_corresponds_to_an_amino_acid_" xml:space="preserve">
     <value>'{0}' is not a capital letter that corresponds to an amino acid.</value>
   </data>
-  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_at_least_two_columns_" xml:space="preserve">
-    <value>The pasted text must have at least two columns.</value>
-  </data>
   <data name="ViewLibraryDlg_MatchModifications_No" xml:space="preserve">
     <value>No</value>
   </data>
@@ -7894,9 +7852,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="Ions_Z" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Ions_Z.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_peptide__0__has_inconsistent_ion_mobility_values_in_the_added_list_" xml:space="preserve">
-    <value>The peptide {0} has inconsistent ion mobility values in the added list.</value>
   </data>
   <data name="UndoManager_BeginTransaction_Undo_transaction_may_not_be_started_in_undo_redo" xml:space="preserve">
     <value>Undo transaction may not be started in undo/redo.</value>
@@ -8852,6 +8807,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_" xml:space="preserve">
     <value>Peak width must be non-negative.</value>
   </data>
+  <data name="DriftTimeWindowWidthCalculator_Validate_Fixed window_width_must_be_non_negative_" xml:space="preserve">
+    <value>Fixed window width must be non negative.</value>
+  </data>
   <data name="FastaImporter_Import_Error_at_or_around_line__0____1_" xml:space="preserve">
     <value>Error at or around line {0}: {1}</value>
   </data>
@@ -9052,12 +9010,6 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_" xml:space="preserve">
     <value>Invalid collisional cross section value {0}</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_collisional_cross_section_" xml:space="preserve">
-    <value>The value {0} is not a valid collisional cross section.</value>
-  </data>
-  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_" xml:space="preserve">
-    <value>The value {0} is not a valid high energy offset.</value>
   </data>
   <data name="IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from__0_" xml:space="preserve">
     <value>Reading isolation scheme from {0}</value>
@@ -9547,6 +9499,12 @@ Here are the {0} pairs with multiple entries:
   <data name="Extensions_CustomToString_Scheduling" xml:space="preserve">
     <value>Scheduling</value>
   </data>
+  <data name="Extensions_CustomToString_Detections_Replicates" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="Extensions_CustomToString_Detections_Histogram" xml:space="preserve">
+    <value>Histogram</value>
+  </data>
   <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_" xml:space="preserve">
     <value>The file {0} is missing.</value>
   </data>
@@ -9627,11 +9585,8 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   <data name="FileProgressControl_SetStatus_warning" xml:space="preserve">
     <value>warning</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks" xml:space="preserve">
     <value>Finding ion mobility values for peaks</value>
-  </data>
-  <data name="IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_" xml:space="preserve">
-    <value>Ion mobility predictors using an ion mobility library must provide a filename for the library.</value>
   </data>
   <data name="IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_" xml:space="preserve">
     <value>Ion mobility predictors using an ion mobility library must include per-charge regression values.</value>
@@ -9787,13 +9742,13 @@ Recognized isotopes include: {2}</value>
   <data name="Columns_Columns_Missing_column___0__" xml:space="preserve">
     <value>Missing column '{0}'</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_" xml:space="preserve">
     <value>An ion mobility predictor with the name {0} already exists.</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Molecule" xml:space="preserve">
     <value>Molecule</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct" xml:space="preserve">
+  <data name="EditIonMobilityLibraryDlg_EditIonMobilityLibraryDlg_Adduct" xml:space="preserve">
     <value>Adduct</value>
   </data>
   <data name="ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___" xml:space="preserve">
@@ -10769,6 +10724,36 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
     <value>The document must be fully loaded before importing a peptide search.</value>
   </data>
+  <data name="ValidatingIonMobilityPeptide_ValidateHighEnergyIonMobilityOffset_High_energy_ion_mobility_offsets_should_be_empty__or_express_an_offset_value_for_ion_mobility_in_high_collision_energy_scans_which_may_add_velocity_to_ions_" xml:space="preserve">
+    <value>High energy ion mobility offsets should be empty, or express an offset value for ion mobility in high collision energy scans which may add velocity to ions.</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_adduct_description_on_line__0_" xml:space="preserve">
+    <value>Missing adduct description on line {0}</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Could_not_parse_adduct_description___0___on_line__1_" xml:space="preserve">
+    <value>Could not parse adduct description "{0}" on line {1}</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_ion_mobility_value___0___on_line__1__must_be_greater_than_zero" xml:space="preserve">
+    <value>The ion mobility value "{0}" on line {1} must be greater than zero</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Unrecognized_ion_mobility_units___0___on_line__1_" xml:space="preserve">
+    <value>Unrecognized ion mobility units "{0}" on line {1}</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow__0__is_not_a_valid_charge__Precursor_charges_must_be_integers_with_absolute_value_between_1_and__1__" xml:space="preserve">
+    <value>{0} is not a valid charge. Precursor charges must be integers with absolute value between 1 and {1}.</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_at_a_minimum_contain_columns_for_peptide_and_adduct__along_with_collisional_cross_section_and_or_ion_mobility_" xml:space="preserve">
+    <value>The pasted text must at a minimum contain columns for peptide and adduct, along with collisional cross section and/or ion mobility.</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Cannot_read_high_energy_ion_mobility_offset_value___0___on_line__1__" xml:space="preserve">
+    <value>Cannot read high energy ion mobility offset value "{0}" on line {1}.</value>
+  </data>
+  <data name="ValidatingIonMobilityPeptide_Validate_No_ion_mobility_information_found" xml:space="preserve">
+    <value>No ion mobility information found</value>
+  </data>
+  <data name="ValidatingIonMobilityPeptide_Validate_No_ion_mobility_units_found" xml:space="preserve">
+    <value>No ion mobility units found</value>
+  </data>
   <data name="SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_" xml:space="preserve">
     <value>Apply Peak to </value>
   </data>
@@ -10786,6 +10771,18 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   </data>
   <data name="DisplayEquation_N_A" xml:space="preserve">
     <value>N/A</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_ValidateUniquePrecursors_The_ion__0__has_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_" xml:space="preserve">
+    <value>The ion {0} has multiple ion mobility values. Skyline supports multiple conformers, so this may be intentional.</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_ValidateUniquePrecursors_The_following_ions_have_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_" xml:space="preserve">
+    <value>The following ions have multiple ion mobility values. Skyline supports multiple conformers, so this may be intentional.</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_ValidateUniquePrecursors_This_list_contains__0__ions_with_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_" xml:space="preserve">
+    <value>This list contains {0} ions with multiple ion mobility values. Skyline supports multiple conformers, so this may be intentional.</value>
+  </data>
+  <data name="IonMobilityFilteringUserControl_ValidateFixedWindow_Fixed_window_size_must_be_greater_than_0_" xml:space="preserve">
+    <value>Fixed window size must be greater than 0.</value>
   </data>
   <data name="IIrtRegression_DisplayEquation_iRT" xml:space="preserve">
     <value>iRT</value>
@@ -10811,6 +10808,18 @@ There might be something wrong with default web browser on this computer.</value
   </data>
   <data name="EditLinkedPeptideDlg_TryMakeLinkedPeptide_The_crosslinker___0___cannot_attach_to_the_amino_acid___1___" xml:space="preserve">
     <value>The crosslinker '{0}' cannot attach to the amino acid '{1}'.</value>
+  </data>
+  <data name="CollisionalCrossSectionGridViewDriverBase_ValidateRow_Supported_units_include___0_" xml:space="preserve">
+    <value>Supported units include: {0}</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ion" xml:space="preserve">
+    <value>{0} Precursor Ion</value>
+  </data>
+  <data name="EditIonMobilityLibraryDlg_UpdateNumPrecursorIons__0__Precursor_Ions" xml:space="preserve">
+    <value>{0} Precursor Ions</value>
+  </data>
+  <data name="IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_" xml:space="preserve">
+    <value>Failed using results to populate ion mobility library:</value>
   </data>
   <data name="CommandLine_AddDecoys_Decoys_discarded" xml:space="preserve">
     <value>Decoys discarded</value>
@@ -10865,5 +10874,200 @@ Invalid peptide sequence at position 18
   </data>
   <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
     <value>Could not read the precursor m/z value "{0}"</value>
+  </data>
+  <data name="IrtStandard_AUTO_Automatic" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="DetectionPlot_TargetType_Precursor" xml:space="preserve">
+    <value>Precursor</value>
+  </data>
+  <data name="DetectionPlot_TargetType_Peptide" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="DetectionPlot_YScale_One" xml:space="preserve">
+    <value>{0} Count</value>
+  </data>
+  <data name="DetectionPlot_YScale_Percent" xml:space="preserve">
+    <value>% of all {0}s</value>
+  </data>
+  <data name="SkylineWindow_CreateGraphDetections_Counts" xml:space="preserve">
+    <value>Detection</value>
+  </data>
+  <data name="DetectionToolbarProperties_AtLeastNReplicates" xml:space="preserve">
+    <value>At least {0} replicates</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_Replicate" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_Count" xml:space="preserve">
+    <value>{0} Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_CumulativeCount" xml:space="preserve">
+    <value>Cumulative Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_AllCount" xml:space="preserve">
+    <value>All Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_QMedian" xml:space="preserve">
+    <value>-log10 of Q-Value Median</value>
+  </data>
+  <data name="DetectionPlotPane_XAxis_Name" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
+  <data name="DetectionPlotPane_YAxis_Name" xml:space="preserve">
+    <value>Detections</value>
+  </data>
+  <data name="DetectionPlotPane_CumulativeLine_Name" xml:space="preserve">
+    <value>cumulative</value>
+  </data>
+  <data name="DetectionPlotPane_AllRunsLine_Name" xml:space="preserve">
+    <value>all runs</value>
+  </data>
+  <data name="DetectionPlotPane_AtLeastLine_Name" xml:space="preserve">
+    <value>at least {0} (of {1}) - {2:#,##0}</value>
+  </data>
+  <data name="DetectionPlotPane_Label_Mean" xml:space="preserve">
+    <value>  Mean: {0:#,##0}</value>
+  </data>
+  <data name="DetectionPlotPane_Label_Stddev" xml:space="preserve">
+    <value>  Stddev:{1:#,##0}</value>
+  </data>
+  <data name="DetectionPlotPane_WaitingForData_Label" xml:space="preserve">
+    <value>Calculating (Esc to cancel)...</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlotError_Label" xml:space="preserve">
+    <value>Error when retrieving plot data.</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlot_Label" xml:space="preserve">
+    <value>No data available for this plot.</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlotCanceled_Label" xml:space="preserve">
+    <value>Operation canceled.</value>
+  </data>
+  <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
+    <value>Replicate Count</value>
+  </data>
+  <data name="DetectionHistogramPane_YAxis_Name" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="DetectionHistogramPane_Tooltip_ReplicateCount" xml:space="preserve">
+    <value>Replicate Count</value>
+  </data>
+  <data name="DetectionHistogramPane_Tooltip_Count" xml:space="preserve">
+    <value>{0} Count</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch" xml:space="preserve">
+    <value>A FASTA file is required for the DDA search.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Import_FASTA__required_" xml:space="preserve">
+    <value>Import FASTA (required)</value>
+  </data>
+  <data name="MatchModificationsControl_ModificationLabelText_DDA_Search" xml:space="preserve">
+    <value>Specify all modifications you want to include in the search:</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_canceled" xml:space="preserve">
+    <value>Search canceled.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_done" xml:space="preserve">
+    <value>Search done.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_failed" xml:space="preserve">
+    <value>Search failed.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Starting_search" xml:space="preserve">
+    <value>Starting search...</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found" xml:space="preserve">
+    <value>Enzymes file {0} not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found" xml:space="preserve">
+    <value>Instruments file {0} not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found" xml:space="preserve">
+    <value>Obo files (psi-ms.obo and unimod.obo) not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found" xml:space="preserve">
+    <value>Unimod file {0} not found</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox" xml:space="preserve">
+    <value>fragmentIons value not found in ComboBox items</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
+    <value>Fragment ions must be selected</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect" xml:space="preserve">
+    <value>MS1 Tolerance incorrect</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect" xml:space="preserve">
+    <value>MS2 Tolerance incorrect</value>
+  </data>
+  <data name="DdaSearch_Search_failed__0" xml:space="preserve">
+    <value>Search failed: {0}</value>
+  </data>
+  <data name="DdaSearch_Search_is_canceled" xml:space="preserve">
+    <value>Search is being canceled.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_Files_to_search_" xml:space="preserve">
+    <value>Files to search:</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_Result_files_" xml:space="preserve">
+    <value>Result files:</value>
+  </data>
+  <data name="ListBoxModification_ToString__variable_" xml:space="preserve">
+    <value>(variable)</value>
+  </data>
+  <data name="ListBoxModification_ToString__isotopic_label_" xml:space="preserve">
+    <value>(isotopic label)</value>
+  </data>
+  <data name="ListBoxModification_ToString__fixed_" xml:space="preserve">
+    <value>(fixed)</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize__Edit_modifications" xml:space="preserve">
+    <value>&amp;Edit modifications</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize_Edit__structural_modifications___" xml:space="preserve">
+    <value>Edit &amp;structural modifications...</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize_Edit__heavy_modifications___" xml:space="preserve">
+    <value>Edit &amp;heavy modifications...</value>
+  </data>
+  <data name="SearchSettingsControl_Additional_Settings" xml:space="preserve">
+    <value>Additional Settings</value>
+  </data>
+  <data name="EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_" xml:space="preserve">
+    <value>'{0}' is not a recognized Unimod name.</value>
+  </data>
+  <data name="MetadataExtractor_ApplyStep_Error_converting___0___to___1___" xml:space="preserve">
+    <value>Error converting '{0}' to '{1}':</value>
+  </data>
+  <data name="MetadataExtractor_ResolveColumn_Unable_to_find_column__0_" xml:space="preserve">
+    <value>Unable to find column {0}</value>
+  </data>
+  <data name="RuleError_ToString_An_error_occurred_applying_the_rule___0___" xml:space="preserve">
+    <value>An error occurred applying the rule '{0}':</value>
+  </data>
+  <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_" xml:space="preserve">
+    <value>Go to Tools &gt; Options &gt; Panorama tab to update the username and password.</value>
+  </data>
+  <data name="DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_" xml:space="preserve">
+    <value>An error occurred while applying the rule set '{0}'. Do you want to continue with the change to the Document Settings?</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___" xml:space="preserve">
+    <value>There is already a result file rule set named '{0}'.</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog__0__cannot_be_blank" xml:space="preserve">
+    <value>{0} cannot be blank</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_" xml:space="preserve">
+    <value>This is not a valid regular expression.</value>
+  </data>
+  <data name="MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank" xml:space="preserve">
+    <value>The text '{0}' must either be a valid regular expression or blank</value>
+  </data>
+  <data name="MetadataRuleSetList_Title_Rule_Sets" xml:space="preserve">
+    <value>Rule Sets</value>
+  </data>
+  <data name="MetadataRuleSetList_Label_Rule_Set" xml:space="preserve">
+    <value>Rule Set</value>
   </data>
 </root>

@@ -529,6 +529,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Rule sets.
+        /// </summary>
+        public static string DataSettings_MetadataRuleSets {
+            get {
+                return ResourceManager.GetString("DataSettings_MetadataRuleSets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Panorama URL.
         /// </summary>
         public static string DataSettings_PanoramaPublishUri {
@@ -1519,6 +1528,69 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File path.
+        /// </summary>
+        public static string IonMobilityLibrary_FilePathAuditLog {
+            get {
+                return ResourceManager.GetString("IonMobilityLibrary_FilePathAuditLog", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library ion mobility values.
+        /// </summary>
+        public static string IonMobilityLibrary_IonMobilityValues {
+            get {
+                return ResourceManager.GetString("IonMobilityLibrary_IonMobilityValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Contents changed.
+        /// </summary>
+        public static string IonMobilityLibrary_Status {
+            get {
+                return ResourceManager.GetString("IonMobilityLibrary_Status", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Items added.
+        /// </summary>
+        public static string IonMobilityLibraryChange_Added {
+            get {
+                return ResourceManager.GetString("IonMobilityLibraryChange_Added", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp.
+        /// </summary>
+        public static string IonMobilityLibraryChange_CreationTime {
+            get {
+                return ResourceManager.GetString("IonMobilityLibraryChange_CreationTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Items deleted.
+        /// </summary>
+        public static string IonMobilityLibraryChange_Deleted {
+            get {
+                return ResourceManager.GetString("IonMobilityLibraryChange_Deleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LSID.
+        /// </summary>
+        public static string IonMobilityLibraryChange_LSID {
+            get {
+                return ResourceManager.GetString("IonMobilityLibraryChange_LSID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Conversion parameters.
         /// </summary>
         public static string IonMobilityPredictor_ChargeRegressionLines {
@@ -1591,6 +1663,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion mobility filter window fixed width value.
+        /// </summary>
+        public static string IonMobilityWindowWidthCalculator_FixedWindowWidth {
+            get {
+                return ResourceManager.GetString("IonMobilityWindowWidthCalculator_FixedWindowWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Linear peak width.
         /// </summary>
         public static string IonMobilityWindowWidthCalculator_LinearPeakWidth {
@@ -1623,6 +1704,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string IonMobilityWindowWidthCalculator_ResolvingPower {
             get {
                 return ResourceManager.GetString("IonMobilityWindowWidthCalculator_ResolvingPower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility filter window width calculation type.
+        /// </summary>
+        public static string IonMobilityWindowWidthCalculator_WindowWidthMode {
+            get {
+                return ResourceManager.GetString("IonMobilityWindowWidthCalculator_WindowWidthMode", resourceCulture);
             }
         }
         
@@ -2001,6 +2091,69 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string MeasuredRetentionTime_RetentionTime {
             get {
                 return ResourceManager.GetString("MeasuredRetentionTime_RetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pattern.
+        /// </summary>
+        public static string MetadataRule_Pattern {
+            get {
+                return ResourceManager.GetString("MetadataRule_Pattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replacement.
+        /// </summary>
+        public static string MetadataRule_Replacement {
+            get {
+                return ResourceManager.GetString("MetadataRule_Replacement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source.
+        /// </summary>
+        public static string MetadataRule_Source {
+            get {
+                return ResourceManager.GetString("MetadataRule_Source", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target.
+        /// </summary>
+        public static string MetadataRule_Target {
+            get {
+                return ResourceManager.GetString("MetadataRule_Target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string MetadataRuleSet_Name {
+            get {
+                return ResourceManager.GetString("MetadataRuleSet_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Row source.
+        /// </summary>
+        public static string MetadataRuleSet_RowSource {
+            get {
+                return ResourceManager.GetString("MetadataRuleSet_RowSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rules.
+        /// </summary>
+        public static string MetadataRuleSet_Rules {
+            get {
+                return ResourceManager.GetString("MetadataRuleSet_Rules", resourceCulture);
             }
         }
         
@@ -2631,6 +2784,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string QuantificationSettings_NormalizationMethod {
             get {
                 return ResourceManager.GetString("QuantificationSettings_NormalizationMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Qualitative ion ratio threshold.
+        /// </summary>
+        public static string QuantificationSettings_QualitativeIonRatioThreshold {
+            get {
+                return ResourceManager.GetString("QuantificationSettings_QualitativeIonRatioThreshold", resourceCulture);
             }
         }
         
@@ -3976,6 +4138,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion mobility library.
+        /// </summary>
+        public static string TransitionIonMobilityFiltering_IonMobilityLibrary {
+            get {
+                return ResourceManager.GetString("TransitionIonMobilityFiltering_IonMobilityLibrary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use spectral library ion mobility values.
+        /// </summary>
+        public static string TransitionIonMobilityFiltering_UseSpectralLibraryIonMobilityValues {
+            get {
+                return ResourceManager.GetString("TransitionIonMobilityFiltering_UseSpectralLibraryIonMobilityValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Product ions.
         /// </summary>
         public static string TransitionLibraries_IonCount {
@@ -4125,6 +4305,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionSettings_Integration {
             get {
                 return ResourceManager.GetString("TransitionSettings_Integration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility.
+        /// </summary>
+        public static string TransitionSettings_IonMobilityFiltering {
+            get {
+                return ResourceManager.GetString("TransitionSettings_IonMobilityFiltering", resourceCulture);
             }
         }
         

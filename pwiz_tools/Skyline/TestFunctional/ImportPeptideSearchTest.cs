@@ -143,6 +143,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
                 AssertEx.AreEqualDeep(expectedMatched, importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.ToList());
                 AssertEx.AreEqualDeep(expectedUnmatched, importPeptideSearchDlg.MatchModificationsControl.UnmatchedModifications.ToList());
+
                 // Add the unmatched modification R[114] as Double Carbamidomethylation
                 StaticMod newMod = new StaticMod("Double Carbamidomethylation", "C,H,K,R", null, "H6C4N2O2");
                 importPeptideSearchDlg.MatchModificationsControl.AddModification(newMod, MatchModificationsControl.ModType.heavy);
@@ -593,7 +594,6 @@ namespace pwiz.SkylineTestFunctional
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             RunUI(() => peptidesPerProteinDlg.KeepAll = true);
             WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated);
-            OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             // The AllChromatogramsGraph will immediately show an error because the file being imported is bogus.
             var importResultsDlg = ShowDialog<AllChromatogramsGraph>(peptidesPerProteinDlg.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);

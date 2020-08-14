@@ -158,9 +158,9 @@
         private System.Windows.Forms.Panel lowerPanel;
         private System.Windows.Forms.FlowLayoutPanel buttonPanel;
         private System.Windows.Forms.Button btnMoreInfo;
-        private System.Windows.Forms.SplitContainer splitContainer;
+        protected System.Windows.Forms.SplitContainer splitContainer;
         private System.Windows.Forms.TextBox tbxDetail;
-        private System.Windows.Forms.Panel messageScrollPanel;
+        protected System.Windows.Forms.Panel messageScrollPanel;
         private System.Windows.Forms.Label labelMessage;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton toolStripButtonCopy;

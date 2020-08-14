@@ -75,10 +75,10 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
                 .ChangeTransitionSettings(ts => ts.ChangeFilter(ts.Filter
                 .ChangePeptidePrecursorCharges(new[] { Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })
                 .ChangePeptideProductCharges(new[] { Adduct.SINGLY_PROTONATED, Adduct.DOUBLY_PROTONATED })
-                .ChangePeptideIonTypes(new[] { IonType.y, IonType.precursor }))).
-                    ChangePeptideSettings(ps => ps.ChangePrediction(ps.Prediction
-                        .ChangeLibraryDriftTimesWindowWidthCalculator(new IonMobilityWindowWidthCalculator(IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 20, 0, 0))
-                        .ChangeUseLibraryIonMobilityValues(true))))));
+                .ChangePeptideIonTypes(new[] { IonType.y, IonType.precursor })))
+                .ChangeTransitionSettings(ts => ts.ChangeIonMobilityFiltering(ts.IonMobilityFiltering.ChangeFilterWindowWidthCalculator(
+                        new IonMobilityWindowWidthCalculator(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, 20, 0, 0, 0))
+                        .ChangeUseSpectralLibraryIonMobilityValues(true))))));
 
             TestWizardBuildDocumentLibraryAndFinish(documentFile);
 

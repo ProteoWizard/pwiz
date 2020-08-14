@@ -919,7 +919,22 @@ namespace pwiz.Skyline.Properties {
                 this["AreaGraphType"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("detection")]
+        public string DetectionGraphType
+        {
+            get
+            {
+                return ((string)(this["DetectionGraphType"]));
+            }
+            set
+            {
+                this["DetectionGraphType"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
@@ -931,7 +946,22 @@ namespace pwiz.Skyline.Properties {
                 this["ShowPeakAreaGraph"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowDetectionGraph
+        {
+            get
+            {
+                return ((bool)(this["ShowDetectionGraph"]));
+            }
+            set
+            {
+                this["ShowDetectionGraph"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
@@ -2913,7 +2943,6 @@ namespace pwiz.Skyline.Properties {
                 this["GroupApplyToBy"] = value;
             }
         }
-        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
@@ -2925,16 +2954,139 @@ namespace pwiz.Skyline.Properties {
                 this["BrukerPrmSqliteFile"] = value;
             }
         }
-        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.01")]
+        public float DetectionsQValueCutoff
+        {
+            get
+            {
+                return ((float)(this["DetectionsQValueCutoff"]));
+            }
+            set
+            {
+                this["DetectionsQValueCutoff"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Precursor")]
+        public string DetectionsTargetType
+        {
+            get { return ((string) (this["DetectionsTargetType"])); }
+            set { this["DetectionsTargetType"] = value; }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("10")]
-        public double ExportMs1RepetitionTime {
-            get {
-                return ((double)(this["ExportMs1RepetitionTime"]));
+        public double ExportMs1RepetitionTime
+        {
+            get { return ((double) (this["ExportMs1RepetitionTime"])); }
+            set { this["ExportMs1RepetitionTime"] = value; }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Thousands")]
+        public string DetectionsYScaleFactor
+        {
+            get
+            {
+                return ((string)(this["DetectionsYScaleFactor"]));
             }
-            set {
-                this["ExportMs1RepetitionTime"] = value;
+            set
+            {
+                this["DetectionsYScaleFactor"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public int DetectionsRepCount
+        {
+            get
+            {
+                return ((int)(this["DetectionsRepCount"]));
+            }
+            set
+            {
+                this["DetectionsRepCount"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public float DetectionsFontSize
+        {
+            get
+            {
+                return ((float)(this["DetectionsFontSize"]));
+            }
+            set
+            {
+                this["DetectionsFontSize"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("true")]
+        public bool DetectionsShowAtLeastN
+        {
+            get
+            {
+                return ((bool)(this["DetectionsShowAtLeastN"]));
+            }
+            set
+            {
+                this["DetectionsShowAtLeastN"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("true")]
+        public bool DetectionsShowSelection
+        {
+            get
+            {
+                return ((bool)(this["DetectionsShowSelection"]));
+            }
+            set
+            {
+                this["DetectionsShowSelection"] = value;
+            }
+        }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("true")]
+        public bool DetectionsShowMean
+        {
+            get
+            {
+                return ((bool)(this["DetectionsShowMean"]));
+            }
+            set
+            {
+                this["DetectionsShowMean"] = value;
+            }
+        }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("true")]
+        public bool DetectionsShowLegend
+        {
+            get
+            {
+                return ((bool)(this["DetectionsShowLegend"]));
+            }
+            set
+            {
+                this["DetectionsShowLegend"] = value;
             }
         }
     }

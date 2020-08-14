@@ -563,6 +563,21 @@
   <data name="IonMobilityWindowWidthCalculator_PeakWidthAtIonMobilityValueZero" xml:space="preserve">
     <value>Width at Dt0</value>
   </data>
+  <data name="IonMobilityLibrary_Status" xml:space="preserve">
+    <value>Contents changed</value>
+  </data>
+  <data name="IonMobilityLibraryChange_Added" xml:space="preserve">
+    <value>Items added</value>
+  </data>
+  <data name="IonMobilityLibraryChange_Deleted" xml:space="preserve">
+    <value>Items deleted</value>
+  </data>
+  <data name="IonMobilityLibraryChange_LSID" xml:space="preserve">
+    <value>LSID</value>
+  </data>
+  <data name="IonMobilityLibraryChange_CreationTime" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
   <data name="RetentionTimeRegression_PeptideTimes" xml:space="preserve">
     <value>Measured peptides</value>
   </data>
@@ -1513,5 +1528,53 @@
   </data>
   <data name="LinkedPeptide_Position" xml:space="preserve">
     <value>Position</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_FixedWindowWidth" xml:space="preserve">
+    <value>Ion mobility filter window fixed width value</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_WindowWidthMode" xml:space="preserve">
+    <value>Ion mobility filter window width calculation type</value>
+  </data>
+  <data name="TransitionIonMobilityFiltering_IonMobilityLibrary" xml:space="preserve">
+    <value>Ion mobility library</value>
+  </data>
+  <data name="TransitionIonMobilityFiltering_UseSpectralLibraryIonMobilityValues" xml:space="preserve">
+    <value>Use spectral library ion mobility values</value>
+  </data>
+  <data name="TransitionSettings_IonMobilityFiltering" xml:space="preserve">
+    <value>Ion mobility</value>
+  </data>
+  <data name="IonMobilityLibrary_FilePathAuditLog" xml:space="preserve">
+    <value>File path</value>
+  </data>
+  <data name="DataSettings_MetadataRuleSets" xml:space="preserve">
+    <value>Rule sets</value>
+  </data>
+  <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
+    <value>Library ion mobility values</value>
+  </data>
+  <data name="MetadataRule_Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="MetadataRule_Pattern" xml:space="preserve">
+    <value>Pattern</value>
+  </data>
+  <data name="MetadataRule_Replacement" xml:space="preserve">
+    <value>Replacement</value>
+  </data>
+  <data name="MetadataRule_Target" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="MetadataRuleSet_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="MetadataRuleSet_RowSource" xml:space="preserve">
+    <value>Row source</value>
+  </data>
+  <data name="MetadataRuleSet_Rules" xml:space="preserve">
+    <value>Rules</value>
+  </data>
+  <data name="QuantificationSettings_QualitativeIonRatioThreshold">
+    <value>Qualitative ion ratio threshold</value>
   </data>
 </root>

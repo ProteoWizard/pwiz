@@ -1240,17 +1240,19 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     // We have no idea what kind of file this might be, so even reading the first "line" might take a long time. Read a chunk instead.
-                    var probeFile = File.OpenRead(path);
-                    var CHUNKSIZE = 500; // Should be more than adequate to check for "?xml version="1.0" encoding="utf-8"?>< srm_settings format_version = "4.12" software_version = "Skyline (64-bit) " >"
-                    var probeBuf = new byte[CHUNKSIZE];
-                    probeFile.Read(probeBuf, 0, CHUNKSIZE);
-                    probeBuf[CHUNKSIZE - 1] = 0;
-                    var probeString = Encoding.UTF8.GetString(probeBuf);
-                    if (!probeString.Contains(@"<srm_settings"))
+                    using (var probeFile = File.OpenRead(path))
                     {
-                        explained = string.Format(
-                            Resources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
-                            path, EXT, SrmDocumentSharing.EXT_SKY_ZIP);
+                        var CHUNKSIZE = 500; // Should be more than adequate to check for "?xml version="1.0" encoding="utf-8"?>< srm_settings format_version = "4.12" software_version = "Skyline (64-bit) " >"
+                        var probeBuf = new byte[CHUNKSIZE];
+                        probeFile.Read(probeBuf, 0, CHUNKSIZE);
+                        probeBuf[CHUNKSIZE - 1] = 0;
+                        var probeString = Encoding.UTF8.GetString(probeBuf);
+                        if (!probeString.Contains(@"<srm_settings"))
+                        {
+                            explained = string.Format(
+                                Resources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
+                                path, EXT, SrmDocumentSharing.EXT_SKY_ZIP);
+                        }
                     }
                 }
                 catch (Exception e)
@@ -2405,6 +2407,65 @@ namespace pwiz.Skyline.Model
 
 
         #endregion
+
+        /// <summary>
+        /// Compares documents, returns null if equal, or a text diff if not
+        /// </summary>
+        public static string EqualsVerbose(SrmDocument expected, SrmDocument actual)
+        {
+            if (ReferenceEquals(null, expected))
+            {
+                return ReferenceEquals(null, actual) ? null : @"expected a null document";
+            }
+            if (ReferenceEquals(null, actual))
+            {
+                return @"expected a non-null document";
+            }
+            if (expected.Equals(actual))
+            {
+                return null;
+            }
+
+            string textExpected;
+            using (var stringWriterExpected = new StringWriter())
+            using (var xmlWriterExpected = new XmlTextWriter(stringWriterExpected){ Formatting = Formatting.Indented })
+            {
+                expected.Serialize(xmlWriterExpected, null, SkylineVersion.CURRENT, null);
+                textExpected = stringWriterExpected.ToString();
+            }
+            string textActual;
+            using (var stringWriterActual = new StringWriter())
+            using (var xmlWriterActual = new XmlTextWriter(stringWriterActual) { Formatting = Formatting.Indented })
+            {
+                actual.Serialize(xmlWriterActual, null, SkylineVersion.CURRENT, null);
+                textActual = stringWriterActual.ToString();
+            }
+
+            var linesExpected = textExpected.Split('\n');
+            var linesActual = textActual.Split('\n');
+            int lineNumber;
+            for (lineNumber = 0; lineNumber < linesExpected.Length && lineNumber < linesActual.Length; lineNumber++)
+            {
+                var lineExpected = linesExpected[lineNumber];
+                var lineActual = linesActual[lineNumber];
+                if (!Equals(lineExpected, lineActual))
+                {
+                    return $@"Expected XML representation of document does not match actual at line {lineNumber}\n" +
+                           $@"Expected line:\n{lineExpected}\n" +
+                           $@"Actual line:\n{lineActual}\n" +
+                           $@"Expected full document:\n{textExpected}\n" +
+                           $@"Actual full document:\n{textActual}\n";
+                }
+            }
+            if (lineNumber < linesExpected.Length || lineNumber < linesActual.Length)
+            {
+                return @"Expected XML representation of document is not the same length as actual\n"+
+                       $@"Expected full document:\n{textExpected}\n"+
+                       $@"Actual full document:\n{textActual}\n";
+            }
+
+            return @"Expected document does not match actual, but the difference does not appear in the XML representation. Difference may be in a library instead.";
+        }
 
         #region object overrides
 

@@ -1930,11 +1930,6 @@ namespace pwiz.Skyline.SettingsUI
             {
                 sequence = peptideLibraryKey.ModifiedSequence;
             }
-            else if (pep.Key.LibraryKey is CrosslinkLibraryKey crosslinkLibraryKey)
-            {
-                sequence = string.Join(string.Empty,
-                    crosslinkLibraryKey.PeptideLibraryKeys.Select(key => key.ModifiedSequence));
-            }
             else
             {
                 return modList;

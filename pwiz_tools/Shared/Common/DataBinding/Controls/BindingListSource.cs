@@ -210,7 +210,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         public DataPropertyDescriptor FindDataProperty(string dataPropertyName)
         {
-            return ItemProperties.FirstOrDefault(pd => pd.Name == dataPropertyName);
+            return BindingListView.FindDataProperty(dataPropertyName);
         }
 
         public void ApplyLayout(ViewLayout viewLayout)

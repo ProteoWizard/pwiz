@@ -48,6 +48,7 @@ using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Themes;
@@ -300,6 +301,32 @@ namespace pwiz.Skyline.Properties
                 };
 
                 this[@"AreaGraphTypes"] = value;
+            }
+        }
+
+        [UserScopedSettingAttribute]
+        public UniqueList<GraphTypeSummary> DetectionGraphTypes
+        {
+            get
+            {
+                if (this[@"DetectionGraphTypes"] == null)
+                {
+                    DetectionGraphTypes = ShowDetectionGraph
+                        ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(DetectionGraphType, GraphTypeSummary.detections) }
+                        : new UniqueList<GraphTypeSummary>();
+                }
+
+                return (UniqueList<GraphTypeSummary>)this[@"DetectionGraphTypes"];
+            }
+            set
+            {
+                value.CollectionChanged += (sender, args) =>
+                {
+                    if (DetectionGraphTypes.Any())
+                        DetectionGraphType = DetectionGraphTypes.First().ToString();
+                };
+
+                this[@"DetectionGraphTypes"] = value;
             }
         }
 
@@ -856,47 +883,9 @@ namespace pwiz.Skyline.Properties
             set => this[typeof(IrtStandardList).Name] = value;
         }
 
-        public IonMobilityPredictor GetDriftTimePredictorByName(string name)
+        public IonMobilityLibrary GetIonMobilityLibraryByName(string name)
         {
-            // Null return is valid for this list, and means no ion mobility
-            // calculation should be applied.
-            IonMobilityPredictor predictor;
-            if (DriftTimePredictorList.TryGetValue(name, out predictor))
-            {
-                if (predictor.GetKey() == DriftTimePredictorList.GetDefault().GetKey())
-                    predictor = null;
-            }
-            return predictor;
-        }
-
-        [UserScopedSettingAttribute]
-        public DriftTimePredictorList DriftTimePredictorList
-        {
-            get
-            {
-                DriftTimePredictorList list = (DriftTimePredictorList)this[typeof(DriftTimePredictorList).Name];
-                if (list == null)
-                {
-                    list = new DriftTimePredictorList();
-                    list.AddDefaults();
-                    DriftTimePredictorList = list;
-                }
-                else
-                {
-                    list.EnsureDefault();
-                }
-                return list;
-            }
-            set
-            {
-                this[typeof(DriftTimePredictorList).Name] = value;
-            }
-        }
-
-        public IonMobilityLibrarySpec GetIonMobilityLibraryByName(string name)
-        {
-            IonMobilityLibrarySpec dtLib;
-            return !IonMobilityLibraryList.TryGetValue(name, out dtLib) ? null : dtLib;
+            return !IonMobilityLibraryList.TryGetValue(name, out var dtLib) ? null : dtLib;
         }
 
         [UserScopedSettingAttribute]
@@ -1201,6 +1190,28 @@ namespace pwiz.Skyline.Properties
             }
             set { this[@"ColorSchemes"] = value; }
         }
+
+        [UserScopedSetting]
+        public MetadataRuleSetList MetadataRuleSets
+        {
+            get
+            {
+                var ruleSets = (MetadataRuleSetList) this[nameof(MetadataRuleSets)];
+                if (ruleSets == null)
+                {
+                    ruleSets = new MetadataRuleSetList();
+                    ruleSets.AddDefaults();
+                    MetadataRuleSets = ruleSets;
+                }
+
+                return ruleSets;
+            }
+            set
+            {
+                this[nameof(MetadataRuleSets)] = value;
+            }
+        }
+
     }
 
     /// <summary>
@@ -2192,79 +2203,33 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults => 1;
     }
 
-    public sealed class IonMobilityLibraryList : SettingsListNotifying<IonMobilityLibrarySpec>
+    public sealed class IonMobilityLibraryList : SettingsListNotifying<IonMobilityLibrary>
     {
-        /// <summary>
-        /// <see cref="IonMobilityPredictor"/> objects depend on ion mobility libraries. If a user deletes or changes a library,
-        /// the <see cref="IonMobilityPredictor"/> objects that depend on it may need to be removed.
-        /// </summary>
-        public override bool AcceptList(Control owner, IList<IonMobilityLibrarySpec> listNew)
+        public override bool AcceptList(Control owner, IList<IonMobilityLibrary> listNew)
         {
-            var listMissingLib = new List<IonMobilityPredictor>();
-            var listChangedLib = new List<IonMobilityPredictor>();
-            foreach (var driftTimePredictor in Settings.Default.DriftTimePredictorList.ToArray())
-            {
-                var predictor = driftTimePredictor;
-
-                // Not all ion mobility predictors use a library
-                if (predictor.IonMobilityLibrary == null)
-                    continue;
-
-                if (listNew.Contains(calc => Equals(calc, predictor.IonMobilityLibrary)))
-                {
-                    var libChanged = listNew.FirstOrDefault(calc =>
-                        Equals(calc, predictor.IonMobilityLibrary.ChangeName(calc.Name)));
-
-                    if (libChanged == null)
-                        listMissingLib.Add(predictor);
-                    else
-                        listChangedLib.Add(predictor.ChangeLibrary(libChanged));
-                }
-            }
-
-            if (listMissingLib.Count > 0)
-            {
-                var message = TextUtil.LineSeparate(Resources.IonMobilityLibraryList_AcceptList_The_drift_time_predictors_,
-                                                    TextUtil.LineSeparate(listMissingLib.Select(reg => reg.Name)),
-                                                    Resources.IonMobilityLibraryList_AcceptList_will_be_deleted_because_the_libraries_they_depend_on_have_changed__Do_you_want_to_continue_);
-                if (DialogResult.Yes != MultiButtonMsgDlg.Show(owner, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
-                {
-                    return false;
-                }
-            }
-
-            foreach (var predictor in listChangedLib)
-            {
-                Settings.Default.DriftTimePredictorList.SetValue(predictor);
-            }
-
             return true;
         }
 
-        public override IonMobilityLibrarySpec EditItem(Control owner, IonMobilityLibrarySpec item,
-            IEnumerable<IonMobilityLibrarySpec> existing, object tag)
+        public override IonMobilityLibrary EditItem(Control owner, IonMobilityLibrary item,
+            IEnumerable<IonMobilityLibrary> existing, object tag)
         {
-            var calc = item as IonMobilityLibrary;
-            if (item == null || calc != null)
+            using (var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(item, existing))
             {
-                using (var editIonMobilityLibraryDlg = new EditIonMobilityLibraryDlg(calc, existing))
+                if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
                 {
-                    if (editIonMobilityLibraryDlg.ShowDialog(owner) == DialogResult.OK)
-                    {
-                        return editIonMobilityLibraryDlg.IonMobilityLibrary;
-                    }
+                    return editIonMobilityLibraryDlg.IonMobilityLibrary;
                 }
             }
 
             return null;
         }
 
-        public override IonMobilityLibrarySpec CopyItem(IonMobilityLibrarySpec item)
+        public override IonMobilityLibrary CopyItem(IonMobilityLibrary item)
         {
-            return (IonMobilityLibrarySpec)item.ChangeName(string.Empty);
+            return (IonMobilityLibrary)item.ChangeName(string.Empty);
         }
 
-        public override IEnumerable<IonMobilityLibrarySpec> GetDefaults(int revisionIndex)
+        public override IEnumerable<IonMobilityLibrary> GetDefaults(int revisionIndex)
         {
             return new[] { IonMobilityLibrary.NONE };
         }
@@ -2283,22 +2248,22 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        private static readonly IXmlElementHelper<IonMobilityLibrarySpec>[] DRIFT_TIME_HELPERS =
+        private static readonly IXmlElementHelper<IonMobilityLibrary>[] ION_MOBILITY_LIB_HELPERS =
         {
-            new XmlElementHelperSuper<IonMobilityLibrary, IonMobilityLibrarySpec>(),
+            new XmlElementHelperSuper<IonMobilityLibrary, IonMobilityLibrary>(),
         };
 
 
-        protected override IXmlElementHelper<IonMobilityLibrarySpec>[] GetXmlElementHelpers()
+        protected override IXmlElementHelper<IonMobilityLibrary>[] GetXmlElementHelpers()
         {
-            return DRIFT_TIME_HELPERS;
+            return ION_MOBILITY_LIB_HELPERS;
         }
 
         public override string Title { get { return Resources.IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries; } }
 
         public override string Label { get { return Resources.IonMobilityLibraryList_Label_Ion_Mobility_Libraries_; } }
 
-        public bool CanEditItem(IonMobilityLibrarySpec item)
+        public bool CanEditItem(IonMobilityLibrary item)
         {
             return item != null && !GetDefaults().Contains(item);
         }
@@ -2423,59 +2388,6 @@ namespace pwiz.Skyline.Properties
         public override string Title { get { return Resources.RetentionTimeList_Title_Edit_Retention_Time_Regressions; } }
 
         public override string Label { get { return Resources.RetentionTimeList_Label_Retention_Time_Regression; } }
-
-        public override int ExcludeDefaults { get { return 1; } }
-    }
-
-    public sealed class DriftTimePredictorList : SettingsList<IonMobilityPredictor>
-    {
-        private static readonly IonMobilityPredictor NONE =
-            new IonMobilityPredictor(ELEMENT_NONE, null, null, null, 0, 0, 0, 0);
-
-        public override string GetDisplayName(IonMobilityPredictor item)
-        {
-            // Use the localized text in the UI
-            return Equals(item, NONE) ? Resources.SettingsList_ELEMENT_NONE_None : base.GetDisplayName(item);
-        }
-
-        public static IonMobilityPredictor GetDefault()
-        {
-            return NONE;
-        }
-
-        public override IEnumerable<IonMobilityPredictor> GetDefaults(int revisionIndex)
-        {
-            return new[] { GetDefault() };
-        }
-
-        public void EnsureDefault()
-        {
-            // Make sure the choice of no ion mobility regression is present.
-            IonMobilityPredictor defaultElement = GetDefault();
-            if (Count == 0 || this[0].GetKey() != defaultElement.GetKey())
-                Insert(0, defaultElement);
-        }
-
-        public override IonMobilityPredictor EditItem(Control owner, IonMobilityPredictor item,
-            IEnumerable<IonMobilityPredictor> existing, object tag)
-        {
-            using (EditDriftTimePredictorDlg editDT = new EditDriftTimePredictorDlg(existing ?? this) { Predictor = item })
-            {
-                if (editDT.ShowDialog(owner) == DialogResult.OK)
-                    return editDT.Predictor;
-            }
-
-            return null;
-        }
-
-        public override IonMobilityPredictor CopyItem(IonMobilityPredictor item)
-        {
-            return (IonMobilityPredictor)item.ChangeName(string.Empty);
-        }
-
-        public override string Title { get { return Resources.DriftTimePredictorList_Title_Edit_Drift_Time_Predictors; } }
-
-        public override string Label { get { return Resources.DriftTimePredictorList_Label_Drift_Time_Predictor_; } }
 
         public override int ExcludeDefaults { get { return 1; } }
     }
@@ -2936,7 +2848,7 @@ namespace pwiz.Skyline.Properties
                 (
                     EnzymeList.GetDefault(),
                     new DigestSettings(0, false),
-                    new PeptidePrediction(null, null, true, PeptidePrediction.DEFAULT_MEASURED_RT_WINDOW, false, IonMobilityWindowWidthCalculator.EMPTY),
+                    new PeptidePrediction(null, true, PeptidePrediction.DEFAULT_MEASURED_RT_WINDOW),
                     new PeptideFilter
                     (
                         25,  // ExcludeNTermAAs
@@ -2992,7 +2904,7 @@ namespace pwiz.Skyline.Properties
                         0,      // PrecursorMzWindow
                         false,  // ExclusionUseDIAWindow
                         true    // AutoSelect
-                    ),
+                    ), 
                     new TransitionLibraries
                     (
                         0.5,    // IonMatchTolerance
@@ -3012,7 +2924,8 @@ namespace pwiz.Skyline.Properties
                         null,  // MinTime
                         null   // MaxTime
                     ),
-                    TransitionFullScan.DEFAULT
+                    TransitionFullScan.DEFAULT,
+                    TransitionIonMobilityFiltering.EMPTY
                 ),
                 DataSettings.DEFAULT,
                 DocumentRetentionTimes.EMPTY
@@ -3378,7 +3291,8 @@ namespace pwiz.Skyline.Properties
 
         public static TItem DeserializeItem(string s)
         {
-            s = XmlUtil.XML_DIRECTIVE + s;
+            if (!s.StartsWith(XmlUtil.XML_DIRECTIVE.Split(' ')[0])) // Just match "<?xml" in <?xml version="1.0" encoding="utf-16"?>"
+                s = XmlUtil.XML_DIRECTIVE + s;
 
             XmlSerializer ser = new XmlSerializer(typeof(TItem));
             using (TextReader reader = new StringReader(s))

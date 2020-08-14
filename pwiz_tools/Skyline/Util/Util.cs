@@ -797,9 +797,10 @@ namespace pwiz.Skyline.Util
                 return true;
             if (values1 == null || values2 == null)
                 return false;
-            if (values1.Count != values2.Count)
+            int count = values1.Count;
+            if (count != values2.Count)
                 return false;
-            for (int i = 0; i < values1.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 if (!Equals(values1[i], values2[i]))
                     return false;
@@ -872,9 +873,10 @@ namespace pwiz.Skyline.Util
                 return true;
             if (values1 == null || values2 == null)
                 return false;
-            if (values1.Count != values2.Count)
+            int count = values1.Count;
+            if (count != values2.Count)
                 return false;
-            for (int i = 0; i < values1.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 if (!ReferenceEquals(values1[i], values2[i]))
                     return false;
@@ -2303,6 +2305,36 @@ namespace pwiz.Skyline.Util
         public static void Initialize()
         {
             ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);
+        }
+    }
+
+    /// <summary>
+    /// Creates a string representing a UTC time and offset to local time zone, per ISO 8601 standard
+    /// </summary>
+    public class TimeStampISO8601
+    {
+        public TimeStampISO8601(DateTime timeStampUTC)
+        {
+            Assume.IsTrue(timeStampUTC.Kind == DateTimeKind.Utc); // We only deal in UTC
+            TimeStampUTC = timeStampUTC;
+            TimeZoneOffset = TimeZoneInfo.Local.GetUtcOffset(TimeStampUTC); // UTC offset e.g. -8 for Seattle whn not on DST
+        }
+
+        public TimeStampISO8601() : this(DateTime.UtcNow)
+        {
+        }
+
+        public DateTime TimeStampUTC { get; } // UTC time of creation
+        public TimeSpan TimeZoneOffset { get; } // UTC offset at time of creation e.g. -8 for Seattle when not on DST, -7 when DST  
+
+        public override string ToString()
+        {
+            var localTime = TimeStampUTC + TimeZoneOffset;
+            var tzShift = TimeZoneOffset.TotalHours; // Decimal hours eg 8.5 or -0.5 etc
+            return localTime.ToString(@"s", DateTimeFormatInfo.InvariantInfo) +
+                   (tzShift == 0
+                       ? @"Z"
+                       : (tzShift < 0 ? @"-" : @"+") + TimeZoneOffset.ToString(@"hh\:mm"));
         }
     }
 

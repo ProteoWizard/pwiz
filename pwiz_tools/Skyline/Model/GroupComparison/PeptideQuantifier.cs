@@ -29,7 +29,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                 .Except(mods.InternalStandardTypes));
             return new PeptideQuantifier(getNormalizationDataFunc, peptideGroup, peptide, srmSettings.PeptideSettings.Quantification)
             {
-                MeasuredLabelTypes = labelTypes
+                MeasuredLabelTypes = labelTypes,
+                IncludeTruncatedPeaks = srmSettings.TransitionSettings.Instrument.TriggeredAcquisition
             };
         }
 
@@ -62,6 +63,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             return _normalizationData;
         }
         public double? QValueCutoff { get; set; }
+
+        public bool IncludeTruncatedPeaks { get; set; }
 
         public IsotopeLabelType RatioLabelType
         {
@@ -179,6 +182,43 @@ namespace pwiz.Skyline.Model.GroupComparison
             return totalArea;
         }
 
+        public double? GetQualitativeIonRatio(SrmSettings settings, int replicateIndex)
+        {
+            double numerator = 0;
+            int numeratorCount = 0;
+            double denominator = 0;
+            int denominatorCount = 0;
+            foreach (var precursor in PeptideDocNode.TransitionGroups)
+            {
+                foreach (var transition in precursor.Transitions)
+                {
+                    var quantity = GetTransitionQuantity(settings, null, NormalizationMethod.NONE, replicateIndex,
+                        precursor, transition, false);
+                    if (quantity != null)
+                    {
+                        double value = quantity.Intensity / quantity.Denominator;
+                        if (transition.ExplicitQuantitative)
+                        {
+                            denominator += value;
+                            denominatorCount++;
+                        }
+                        else
+                        {
+                            numerator += value;
+                            numeratorCount++;
+                        }
+                    }
+                }
+            }
+
+            if (numeratorCount == 0 || denominatorCount == 0)
+            {
+                return null;
+            }
+
+            return numerator / denominator;
+        }
+
         private Quantity GetTransitionQuantity(
             SrmSettings srmSettings,
             IDictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> peptideStandards,
@@ -205,7 +245,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            double? normalizedArea = GetArea(treatMissingAsZero, QValueCutoff, transitionGroup, transition, replicateIndex, chromInfo);
+            double? normalizedArea = GetArea(treatMissingAsZero, QValueCutoff, IncludeTruncatedPeaks, transitionGroup, transition, replicateIndex, chromInfo);
             if (!normalizedArea.HasValue)
             {
                 return null;
@@ -366,17 +406,23 @@ namespace pwiz.Skyline.Model.GroupComparison
             public double Denominator { get; private set; }
         }
 
-        public static double? GetArea(bool treatMissingAsZero, double? qValueCutoff, TransitionGroupDocNode transitionGroup,
+        public static double? GetArea(bool treatMissingAsZero, double? qValueCutoff, bool allowTruncated, TransitionGroupDocNode transitionGroup,
             TransitionDocNode transition, int replicateIndex, TransitionChromInfo chromInfo)
         {
             if (treatMissingAsZero && chromInfo.IsEmpty)
             {
                 return 0;
             }
-            if (chromInfo.IsEmpty || chromInfo.IsTruncated.GetValueOrDefault())
+            if (chromInfo.IsEmpty)
             {
                 return null;
             }
+
+            if (!allowTruncated && chromInfo.IsTruncated.GetValueOrDefault())
+            {
+                return null;
+            }
+
             if (qValueCutoff.HasValue)
             {
                 TransitionGroupChromInfo transitionGroupChromInfo = FindTransitionGroupChromInfo(transitionGroup,

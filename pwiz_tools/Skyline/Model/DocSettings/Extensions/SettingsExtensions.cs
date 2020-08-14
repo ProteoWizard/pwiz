@@ -95,6 +95,12 @@ namespace pwiz.Skyline.Model.DocSettings.Extensions
             return settings.ChangeTransitionSettings(setT => setT.ChangeIntegration(change(setT.Integration)));
         }
 
+        public static SrmSettings ChangeTransitionIonMobilityFiltering(this SrmSettings settings,
+            ChangeFunc<TransitionIonMobilityFiltering> change)
+        {
+            return settings.ChangeTransitionSettings(setT => setT.ChangeIonMobilityFiltering(change(setT.IonMobilityFiltering)));
+        }
+
         public static SrmSettings ChangeTransitionInstrument(this SrmSettings settings,
             ChangeFunc<TransitionInstrument> change)
         {

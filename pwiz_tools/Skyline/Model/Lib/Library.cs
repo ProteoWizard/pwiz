@@ -1360,23 +1360,28 @@ namespace pwiz.Skyline.Model.Lib
 
     public sealed class LibraryIonMobilityInfo : IIonMobilityInfoProvider
     {
-        private readonly LibKeyMap<IonMobilityAndCCS[]> _dictChargedPeptideDriftTimeInfos;
+        private readonly LibKeyMap<IonMobilityAndCCS[]> _dictLibKeyIonMobility;
 
-        public LibraryIonMobilityInfo(string path, IDictionary<LibKey, IonMobilityAndCCS[]> dict) 
-            : this(path, new LibKeyMap<IonMobilityAndCCS[]>(
+        public static LibraryIonMobilityInfo EMPTY = new LibraryIonMobilityInfo(String.Empty, false, new Dictionary<LibKey, IonMobilityAndCCS[]>());
+
+        public LibraryIonMobilityInfo(string path, bool supportMultipleConformers, IDictionary<LibKey, IonMobilityAndCCS[]> dict) 
+            : this(path, supportMultipleConformers, new LibKeyMap<IonMobilityAndCCS[]>(
                 ImmutableList.ValueOf(dict.Values), dict.Keys.Select(key=>key.LibraryKey)))
         {
-            
         }
-        public LibraryIonMobilityInfo(string path, LibKeyMap<IonMobilityAndCCS[]> dictChargedPeptideDriftTimeInfos)
+
+        public LibraryIonMobilityInfo(string path, bool supportMultipleConformers, LibKeyMap<IonMobilityAndCCS[]> dictLibKeyIonMobility)
         {
             Name = path;
-            _dictChargedPeptideDriftTimeInfos = dictChargedPeptideDriftTimeInfos;
+            SupportsMultipleConformers = supportMultipleConformers;
+            _dictLibKeyIonMobility = dictLibKeyIonMobility;
         }
 
         public string Name { get; private set; }
 
-        public bool IsEmpty { get { return _dictChargedPeptideDriftTimeInfos == null || _dictChargedPeptideDriftTimeInfos.Count == 0;} }
+        public bool SupportsMultipleConformers { get; private set; } // If false, average any redundancies (as with spectral libraries)
+
+        public bool IsEmpty { get { return _dictLibKeyIonMobility == null || _dictLibKeyIonMobility.Count == 0;} }
 
         /// <summary>
         /// Return the median measured CCS for spectra that were identified with a
@@ -1385,7 +1390,7 @@ namespace pwiz.Skyline.Model.Lib
         public double? GetLibraryMeasuredCollisionalCrossSection(LibKey chargedPeptide)
         {
             IonMobilityAndCCS[] ionMobilities;
-            if ((!_dictChargedPeptideDriftTimeInfos.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
+            if ((!_dictLibKeyIonMobility.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
                 return null;
             double? ccs = null;
             var ccsValues = Array.FindAll(ionMobilities, im => im.HasCollisionalCrossSection);
@@ -1401,11 +1406,12 @@ namespace pwiz.Skyline.Model.Lib
         /// specific modified peptide sequence and charge state.  Prefer to use median CCS
         /// when possible, and calculate IM from that. If only IM values are available, convert
         /// to CCS if possible.
+        /// CONSIDER: when we support multiple conformers, is there maybe some difference magnitude at which we should not be averaging (based on resolving power maybe)?
         /// </summary>
-        public IonMobilityAndCCS GetLibraryMeasuredIonMobilityAndHighEnergyOffset(LibKey chargedPeptide, double mz, IIonMobilityFunctionsProvider ionMobilityFunctionsProvider)
+        public IonMobilityAndCCS GetLibraryMeasuredIonMobilityAndCCS(LibKey chargedPeptide, double mz, IIonMobilityFunctionsProvider ionMobilityFunctionsProvider)
         {
             IonMobilityAndCCS[] ionMobilities;
-            if ((!_dictChargedPeptideDriftTimeInfos.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
+            if ((!_dictLibKeyIonMobility.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
                 return IonMobilityAndCCS.EMPTY;
             IonMobilityValue ionMobility = IonMobilityValue.EMPTY;
             double? ccs = null;
@@ -1434,13 +1440,13 @@ namespace pwiz.Skyline.Model.Lib
             }
             if (!ionMobility.HasValue)
                 return IonMobilityAndCCS.EMPTY;
-            var highEnergyDriftTimeOffsetMsec = new Statistics(ionMobilityInfos.Select(im => im.HighEnergyIonMobilityValueOffset)).Median(); // Median is more tolerant of errors than Average
+            var highEnergyDriftTimeOffsetMsec = new Statistics(ionMobilityInfos.Where(im => im.HighEnergyIonMobilityValueOffset.HasValue).Select(im => im.HighEnergyIonMobilityValueOffset.Value)).Median(); // Median is more tolerant of errors than Average
             return IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, ccs, highEnergyDriftTimeOffsetMsec);
         }
 
         public IDictionary<LibKey, IonMobilityAndCCS[]> GetIonMobilityDict()
         {
-            return _dictChargedPeptideDriftTimeInfos.AsDictionary();
+            return _dictLibKeyIonMobility.AsDictionary();
         }
     }
 
@@ -2496,12 +2502,13 @@ namespace pwiz.Skyline.Model.Lib
             public IonType IonType { get; set; }
             public int Ordinal { get; set; }
             public int MassIndex { get; set; }
-            // public DriftTimeFilter driftTime { get; set; } TODO(bspratt) IMS in chromatogram libs?
+            //public IonMobilityFilterSet IonMobility { get; set; } // Zero or more CCS and/or IM values  TODO(bspratt) IMS in chromatogram libs?
 
             protected bool Equals(ChromData other)
             {
                 return Mz.Equals(other.Mz) && Height.Equals(other.Height) && Equals(Intensities, other.Intensities) &&
                        Charge == other.Charge && IonType == other.IonType && Ordinal == other.Ordinal &&
+                       // IonMobility.Equals(other.IonMobility &&
                        MassIndex == other.MassIndex;
             }
 
@@ -2524,6 +2531,7 @@ namespace pwiz.Skyline.Model.Lib
                     hashCode = (hashCode * 397) ^ (int) IonType;
                     hashCode = (hashCode * 397) ^ Ordinal;
                     hashCode = (hashCode * 397) ^ MassIndex;
+                    //hashCode = (hashCode * 397) ^ (IonMobility != null ? IonMobility.GetHashCode() : 0);
                     return hashCode;
                 }
             }
@@ -2643,6 +2651,8 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public struct LibKey
     {
+        public static LibKey EMPTY = new LibKey(SmallMoleculeLibraryAttributes.EMPTY, Adduct.EMPTY);
+
         public LibKey(LibraryKey libraryKey) : this()
         {
             LibraryKey = libraryKey;

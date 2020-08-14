@@ -180,6 +180,306 @@
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="&gt;&gt;tabGeneral.Name" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;tabGeneral.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabGeneral.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabGeneral.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tabFilter.Name" xml:space="preserve">
+    <value>tabFilter</value>
+  </data>
+  <data name="&gt;&gt;tabFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabFilter.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabFilter.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;tabLibrary.Name" xml:space="preserve">
+    <value>tabLibrary</value>
+  </data>
+  <data name="&gt;&gt;tabLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabLibrary.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabLibrary.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;tabInstrument.Name" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;tabInstrument.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabInstrument.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabInstrument.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;tabFullScan.Name" xml:space="preserve">
+    <value>tabFullScan</value>
+  </data>
+  <data name="&gt;&gt;tabFullScan.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabFullScan.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabFullScan.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;tabIonMobility.Name" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;tabIonMobility.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabIonMobility.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabIonMobility.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 12</value>
+  </data>
+  <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>371, 515</value>
+  </data>
+  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;comboCompensationVoltage.Name" xml:space="preserve">
+    <value>comboCompensationVoltage</value>
+  </data>
+  <data name="&gt;&gt;comboCompensationVoltage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboCompensationVoltage.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;comboCompensationVoltage.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;label19.Name" xml:space="preserve">
+    <value>label19</value>
+  </data>
+  <data name="&gt;&gt;label19.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label19.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;label19.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizationLibrary.Name" xml:space="preserve">
+    <value>comboOptimizationLibrary</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizationLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizationLibrary.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizationLibrary.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;label20.Name" xml:space="preserve">
+    <value>label20</value>
+  </data>
+  <data name="&gt;&gt;label20.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label20.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;labelOptimizeType.Name" xml:space="preserve">
+    <value>labelOptimizeType</value>
+  </data>
+  <data name="&gt;&gt;labelOptimizeType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelOptimizeType.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;labelOptimizeType.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizeType.Name" xml:space="preserve">
+    <value>comboOptimizeType</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizeType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizeType.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizeType.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;cbUseOptimized.Name" xml:space="preserve">
+    <value>cbUseOptimized</value>
+  </data>
+  <data name="&gt;&gt;cbUseOptimized.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbUseOptimized.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;cbUseOptimized.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;comboDeclusterPotential.Name" xml:space="preserve">
+    <value>comboDeclusterPotential</value>
+  </data>
+  <data name="&gt;&gt;comboDeclusterPotential.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboDeclusterPotential.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;comboDeclusterPotential.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;label12.Name" xml:space="preserve">
+    <value>label12</value>
+  </data>
+  <data name="&gt;&gt;label12.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label12.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;label12.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;comboCollisionEnergy.Name" xml:space="preserve">
+    <value>comboCollisionEnergy</value>
+  </data>
+  <data name="&gt;&gt;comboCollisionEnergy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboCollisionEnergy.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;comboCollisionEnergy.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
+    <value>label7</value>
+  </data>
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;comboIonMass.Name" xml:space="preserve">
+    <value>comboIonMass</value>
+  </data>
+  <data name="&gt;&gt;comboIonMass.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboIonMass.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;comboIonMass.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;comboPrecursorMass.Name" xml:space="preserve">
+    <value>comboPrecursorMass</value>
+  </data>
+  <data name="&gt;&gt;comboPrecursorMass.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboPrecursorMass.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;comboPrecursorMass.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="tabGeneral.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabGeneral.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabGeneral.Size" type="System.Drawing.Size, System.Drawing">
+    <value>363, 489</value>
+  </data>
+  <data name="tabGeneral.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabGeneral.Text" xml:space="preserve">
+    <value>Prediction</value>
+  </data>
+  <data name="&gt;&gt;tabGeneral.Name" xml:space="preserve">
+    <value>tabGeneral</value>
+  </data>
+  <data name="&gt;&gt;tabGeneral.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabGeneral.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabGeneral.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="comboCompensationVoltage.Location" type="System.Drawing.Point, System.Drawing">
     <value>208, 179</value>
   </data>
@@ -312,6 +612,9 @@
   <data name="&gt;&gt;labelOptimizeType.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="comboOptimizeType.Items" xml:space="preserve">
     <value>Precursor</value>
   </data>
@@ -327,9 +630,6 @@
   <data name="comboOptimizeType.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
   </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <data name="comboOptimizeType.ToolTip" xml:space="preserve">
     <value>Specifies if optimization is to be done either for all transitions
 in each precursor totaled or for each transition separately</value>
@@ -604,32 +904,104 @@ to use in calculating all precursor masses</value>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>14</value>
   </data>
-  <data name="tabGeneral.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="&gt;&gt;cbExclusionUseDIAWindow.Name" xml:space="preserve">
+    <value>cbExclusionUseDIAWindow</value>
+  </data>
+  <data name="&gt;&gt;cbExclusionUseDIAWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbExclusionUseDIAWindow.Parent" xml:space="preserve">
+    <value>tabFilter</value>
+  </data>
+  <data name="&gt;&gt;cbExclusionUseDIAWindow.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;lbMZ.Name" xml:space="preserve">
+    <value>lbMZ</value>
+  </data>
+  <data name="&gt;&gt;lbMZ.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lbMZ.Parent" xml:space="preserve">
+    <value>tabFilter</value>
+  </data>
+  <data name="&gt;&gt;lbMZ.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;tabControlPeptidesSmallMols.Name" xml:space="preserve">
+    <value>tabControlPeptidesSmallMols</value>
+  </data>
+  <data name="&gt;&gt;tabControlPeptidesSmallMols.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabControlPeptidesSmallMols.Parent" xml:space="preserve">
+    <value>tabFilter</value>
+  </data>
+  <data name="&gt;&gt;tabControlPeptidesSmallMols.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;textExclusionWindow.Name" xml:space="preserve">
+    <value>textExclusionWindow</value>
+  </data>
+  <data name="&gt;&gt;textExclusionWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textExclusionWindow.Parent" xml:space="preserve">
+    <value>tabFilter</value>
+  </data>
+  <data name="&gt;&gt;textExclusionWindow.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
+    <value>cbAutoSelect</value>
+  </data>
+  <data name="&gt;&gt;cbAutoSelect.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAutoSelect.Parent" xml:space="preserve">
+    <value>tabFilter</value>
+  </data>
+  <data name="&gt;&gt;cbAutoSelect.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;lbPrecursorMzWindow.Name" xml:space="preserve">
+    <value>lbPrecursorMzWindow</value>
+  </data>
+  <data name="&gt;&gt;lbPrecursorMzWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lbPrecursorMzWindow.Parent" xml:space="preserve">
+    <value>tabFilter</value>
+  </data>
+  <data name="&gt;&gt;lbPrecursorMzWindow.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="tabFilter.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="tabGeneral.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabFilter.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
-  <data name="tabGeneral.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="tabFilter.Size" type="System.Drawing.Size, System.Drawing">
     <value>363, 489</value>
   </data>
-  <data name="tabGeneral.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="tabFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="tabGeneral.Text" xml:space="preserve">
-    <value>Prediction</value>
+  <data name="tabFilter.Text" xml:space="preserve">
+    <value>Filter</value>
   </data>
-  <data name="&gt;&gt;tabGeneral.Name" xml:space="preserve">
-    <value>tabGeneral</value>
+  <data name="&gt;&gt;tabFilter.Name" xml:space="preserve">
+    <value>tabFilter</value>
   </data>
-  <data name="&gt;&gt;tabGeneral.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabFilter.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabGeneral.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabFilter.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
-  <data name="&gt;&gt;tabGeneral.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="&gt;&gt;tabFilter.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="cbExclusionUseDIAWindow.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -697,6 +1069,162 @@ to use in calculating all precursor masses</value>
   <data name="&gt;&gt;lbMZ.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
+    <value>tabControlPeptidesSmallMols</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
+    <value>tabControlPeptidesSmallMols</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabControlPeptidesSmallMols.Location" type="System.Drawing.Point, System.Drawing">
+    <value>21, 15</value>
+  </data>
+  <data name="tabControlPeptidesSmallMols.Size" type="System.Drawing.Size, System.Drawing">
+    <value>321, 331</value>
+  </data>
+  <data name="tabControlPeptidesSmallMols.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tabControlPeptidesSmallMols.Name" xml:space="preserve">
+    <value>tabControlPeptidesSmallMols</value>
+  </data>
+  <data name="&gt;&gt;tabControlPeptidesSmallMols.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabControlPeptidesSmallMols.Parent" xml:space="preserve">
+    <value>tabFilter</value>
+  </data>
+  <data name="&gt;&gt;tabControlPeptidesSmallMols.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;textPeptideIonTypes.Name" xml:space="preserve">
+    <value>textPeptideIonTypes</value>
+  </data>
+  <data name="&gt;&gt;textPeptideIonTypes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textPeptideIonTypes.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;textPeptideIonTypes.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;label8.Name" xml:space="preserve">
+    <value>label8</value>
+  </data>
+  <data name="&gt;&gt;label8.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label8.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;label8.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;textPeptidePrecursorCharges.Name" xml:space="preserve">
+    <value>textPeptidePrecursorCharges</value>
+  </data>
+  <data name="&gt;&gt;textPeptidePrecursorCharges.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textPeptidePrecursorCharges.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;textPeptidePrecursorCharges.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;textPeptideIonCharges.Name" xml:space="preserve">
+    <value>textPeptideIonCharges</value>
+  </data>
+  <data name="&gt;&gt;textPeptideIonCharges.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textPeptideIonCharges.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;textPeptideIonCharges.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="tabPage1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPage1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>313, 305</value>
+  </data>
+  <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabPage1.Text" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
+    <value>tabControlPeptidesSmallMols</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -748,6 +1276,114 @@ for calculating potential product ions</value>
   </data>
   <data name="&gt;&gt;textPeptideIonTypes.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="&gt;&gt;btnEditSpecialTransitions.Name" xml:space="preserve">
+    <value>btnEditSpecialTransitions</value>
+  </data>
+  <data name="&gt;&gt;btnEditSpecialTransitions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnEditSpecialTransitions.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;btnEditSpecialTransitions.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;label18.Name" xml:space="preserve">
+    <value>label18</value>
+  </data>
+  <data name="&gt;&gt;label18.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label18.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;label18.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;listAlwaysAdd.Name" xml:space="preserve">
+    <value>listAlwaysAdd</value>
+  </data>
+  <data name="&gt;&gt;listAlwaysAdd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listAlwaysAdd.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;listAlwaysAdd.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;comboRangeFrom.Name" xml:space="preserve">
+    <value>comboRangeFrom</value>
+  </data>
+  <data name="&gt;&gt;comboRangeFrom.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboRangeFrom.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;comboRangeFrom.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;comboRangeTo.Name" xml:space="preserve">
+    <value>comboRangeTo</value>
+  </data>
+  <data name="&gt;&gt;comboRangeTo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboRangeTo.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;comboRangeTo.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 75</value>
+  </data>
+  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>299, 222</value>
+  </data>
+  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="groupBox1.Text" xml:space="preserve">
+    <value>Product ion selection</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="btnEditSpecialTransitions.Location" type="System.Drawing.Point, System.Drawing">
     <value>209, 103</value>
@@ -930,30 +1566,6 @@ the filtered range</value>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 75</value>
-  </data>
-  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>299, 222</value>
-  </data>
-  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="groupBox1.Text" xml:space="preserve">
-    <value>Product ion selection</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1058,32 +1670,128 @@ product ion mass-to-charge ratios</value>
   <data name="&gt;&gt;textPeptideIonCharges.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="tabPage1.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="&gt;&gt;btnPrecursorAdduct.Name" xml:space="preserve">
+    <value>btnPrecursorAdduct</value>
+  </data>
+  <data name="&gt;&gt;btnPrecursorAdduct.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnPrecursorAdduct.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;btnPrecursorAdduct.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;btnFragmentAdduct.Name" xml:space="preserve">
+    <value>btnFragmentAdduct</value>
+  </data>
+  <data name="&gt;&gt;btnFragmentAdduct.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnFragmentAdduct.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;btnFragmentAdduct.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Name" xml:space="preserve">
+    <value>textSmallMoleculeFragmentAdducts</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Name" xml:space="preserve">
+    <value>labelSmallMoleculeFragmentAdducts</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculeIonTypes.Name" xml:space="preserve">
+    <value>textSmallMoleculeIonTypes</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculeIonTypes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculeIonTypes.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculeIonTypes.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMoleculeIonTypes.Name" xml:space="preserve">
+    <value>labelSmallMoleculeIonTypes</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMoleculeIonTypes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMoleculeIonTypes.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;labelSmallMoleculeIonTypes.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Name" xml:space="preserve">
+    <value>textSmallMoleculePrecursorAdducts</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Name" xml:space="preserve">
+    <value>lblSmallMoleculePrecursorAdducts</value>
+  </data>
+  <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="tabPage2.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="tabPage1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabPage2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
-  <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
     <value>313, 305</value>
   </data>
-  <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="tabPage1.Text" xml:space="preserve">
-    <value>Peptides</value>
+  <data name="tabPage2.Text" xml:space="preserve">
+    <value>Molecules</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
-    <value>tabPage1</value>
+  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
+    <value>tabPage2</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
     <value>tabControlPeptidesSmallMols</value>
   </data>
-  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="btnPrecursorAdduct.Location" type="System.Drawing.Point, System.Drawing">
     <value>286, 24</value>
@@ -1320,54 +2028,6 @@ H (+1), K (+1), Na (+1), Li (+1), Br (-1), Cl (-1), F (-1), CH3COO (-1), HCOO (-
   <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="tabPage2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabPage2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>313, 305</value>
-  </data>
-  <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="tabPage2.Text" xml:space="preserve">
-    <value>Molecules</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
-    <value>tabControlPeptidesSmallMols</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="tabControlPeptidesSmallMols.Location" type="System.Drawing.Point, System.Drawing">
-    <value>21, 15</value>
-  </data>
-  <data name="tabControlPeptidesSmallMols.Size" type="System.Drawing.Size, System.Drawing">
-    <value>321, 331</value>
-  </data>
-  <data name="tabControlPeptidesSmallMols.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;tabControlPeptidesSmallMols.Name" xml:space="preserve">
-    <value>tabControlPeptidesSmallMols</value>
-  </data>
-  <data name="&gt;&gt;tabControlPeptidesSmallMols.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabControlPeptidesSmallMols.Parent" xml:space="preserve">
-    <value>tabFilter</value>
-  </data>
-  <data name="&gt;&gt;tabControlPeptidesSmallMols.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="textExclusionWindow.Location" type="System.Drawing.Point, System.Drawing">
     <value>24, 408</value>
   </data>
@@ -1453,32 +2113,92 @@ selection must be done by manual document editing.</value>
   <data name="&gt;&gt;lbPrecursorMzWindow.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <data name="tabFilter.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="&gt;&gt;label9.Name" xml:space="preserve">
+    <value>label9</value>
+  </data>
+  <data name="&gt;&gt;label9.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label9.Parent" xml:space="preserve">
+    <value>tabLibrary</value>
+  </data>
+  <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;panelPick.Name" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;panelPick.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelPick.Parent" xml:space="preserve">
+    <value>tabLibrary</value>
+  </data>
+  <data name="&gt;&gt;panelPick.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textTolerance.Name" xml:space="preserve">
+    <value>textTolerance</value>
+  </data>
+  <data name="&gt;&gt;textTolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textTolerance.Parent" xml:space="preserve">
+    <value>tabLibrary</value>
+  </data>
+  <data name="&gt;&gt;textTolerance.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;cbLibraryPick.Name" xml:space="preserve">
+    <value>cbLibraryPick</value>
+  </data>
+  <data name="&gt;&gt;cbLibraryPick.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbLibraryPick.Parent" xml:space="preserve">
+    <value>tabLibrary</value>
+  </data>
+  <data name="&gt;&gt;cbLibraryPick.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;label13.Name" xml:space="preserve">
+    <value>label13</value>
+  </data>
+  <data name="&gt;&gt;label13.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label13.Parent" xml:space="preserve">
+    <value>tabLibrary</value>
+  </data>
+  <data name="&gt;&gt;label13.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="tabLibrary.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="tabFilter.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="tabLibrary.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
-  <data name="tabFilter.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="tabLibrary.Size" type="System.Drawing.Size, System.Drawing">
     <value>363, 489</value>
   </data>
-  <data name="tabFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="tabLibrary.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
   </data>
-  <data name="tabFilter.Text" xml:space="preserve">
-    <value>Filter</value>
+  <data name="tabLibrary.Text" xml:space="preserve">
+    <value>Library</value>
   </data>
-  <data name="&gt;&gt;tabFilter.Name" xml:space="preserve">
-    <value>tabFilter</value>
+  <data name="&gt;&gt;tabLibrary.Name" xml:space="preserve">
+    <value>tabLibrary</value>
   </data>
-  <data name="&gt;&gt;tabFilter.Type" xml:space="preserve">
+  <data name="&gt;&gt;tabLibrary.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabFilter.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabLibrary.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
-  <data name="&gt;&gt;tabFilter.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="&gt;&gt;tabLibrary.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1506,6 +2226,123 @@ selection must be done by manual document editing.</value>
   </data>
   <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="&gt;&gt;label22.Name" xml:space="preserve">
+    <value>label22</value>
+  </data>
+  <data name="&gt;&gt;label22.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label22.Parent" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;label22.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;textMinIonCount.Name" xml:space="preserve">
+    <value>textMinIonCount</value>
+  </data>
+  <data name="&gt;&gt;textMinIonCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMinIonCount.Parent" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;textMinIonCount.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;radioAllAndFiltered.Name" xml:space="preserve">
+    <value>radioAllAndFiltered</value>
+  </data>
+  <data name="&gt;&gt;radioAllAndFiltered.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioAllAndFiltered.Parent" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;radioAllAndFiltered.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;radioFiltered.Name" xml:space="preserve">
+    <value>radioFiltered</value>
+  </data>
+  <data name="&gt;&gt;radioFiltered.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioFiltered.Parent" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;radioFiltered.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;radioAll.Name" xml:space="preserve">
+    <value>radioAll</value>
+  </data>
+  <data name="&gt;&gt;radioAll.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioAll.Parent" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;radioAll.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;label14.Name" xml:space="preserve">
+    <value>label14</value>
+  </data>
+  <data name="&gt;&gt;label14.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label14.Parent" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;label14.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;label15.Name" xml:space="preserve">
+    <value>label15</value>
+  </data>
+  <data name="&gt;&gt;label15.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label15.Parent" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;label15.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;textIonCount.Name" xml:space="preserve">
+    <value>textIonCount</value>
+  </data>
+  <data name="&gt;&gt;textIonCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textIonCount.Parent" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;textIonCount.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="panelPick.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 117</value>
+  </data>
+  <data name="panelPick.Size" type="System.Drawing.Size, System.Drawing">
+    <value>357, 168</value>
+  </data>
+  <data name="panelPick.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;panelPick.Name" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;panelPick.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelPick.Parent" xml:space="preserve">
+    <value>tabLibrary</value>
+  </data>
+  <data name="&gt;&gt;panelPick.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="label22.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1735,27 +2572,6 @@ peak intensity ranking</value>
   <data name="&gt;&gt;textIonCount.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="panelPick.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 117</value>
-  </data>
-  <data name="panelPick.Size" type="System.Drawing.Size, System.Drawing">
-    <value>357, 168</value>
-  </data>
-  <data name="panelPick.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;panelPick.Name" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;panelPick.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelPick.Parent" xml:space="preserve">
-    <value>tabLibrary</value>
-  </data>
-  <data name="&gt;&gt;panelPick.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="textTolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>21, 40</value>
   </data>
@@ -1842,32 +2658,281 @@ whenever peptides are matched to library spectrum.</value>
   <data name="&gt;&gt;label13.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="tabLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+  <data name="&gt;&gt;cbxTriggeredAcquisition.Name" xml:space="preserve">
+    <value>cbxTriggeredAcquisition</value>
   </data>
-  <data name="tabLibrary.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+  <data name="&gt;&gt;cbxTriggeredAcquisition.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="tabLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>363, 489</value>
+  <data name="&gt;&gt;cbxTriggeredAcquisition.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
   </data>
-  <data name="tabLibrary.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;cbxTriggeredAcquisition.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;textMaxInclusions.Name" xml:space="preserve">
+    <value>textMaxInclusions</value>
+  </data>
+  <data name="&gt;&gt;textMaxInclusions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMaxInclusions.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;textMaxInclusions.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;label21.Name" xml:space="preserve">
+    <value>label21</value>
+  </data>
+  <data name="&gt;&gt;label21.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label21.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label21.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;label30.Name" xml:space="preserve">
+    <value>label30</value>
+  </data>
+  <data name="&gt;&gt;label30.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label30.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label30.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="tabLibrary.Text" xml:space="preserve">
-    <value>Library</value>
+  <data name="&gt;&gt;label31.Name" xml:space="preserve">
+    <value>label31</value>
   </data>
-  <data name="&gt;&gt;tabLibrary.Name" xml:space="preserve">
-    <value>tabLibrary</value>
+  <data name="&gt;&gt;label31.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabLibrary.Type" xml:space="preserve">
+  <data name="&gt;&gt;label31.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label31.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;label33.Name" xml:space="preserve">
+    <value>label33</value>
+  </data>
+  <data name="&gt;&gt;label33.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label33.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label33.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;label34.Name" xml:space="preserve">
+    <value>label34</value>
+  </data>
+  <data name="&gt;&gt;label34.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label34.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label34.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;textMaxTime.Name" xml:space="preserve">
+    <value>textMaxTime</value>
+  </data>
+  <data name="&gt;&gt;textMaxTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMaxTime.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;textMaxTime.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;textMinTime.Name" xml:space="preserve">
+    <value>textMinTime</value>
+  </data>
+  <data name="&gt;&gt;textMinTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMinTime.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;textMinTime.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;label26.Name" xml:space="preserve">
+    <value>label26</value>
+  </data>
+  <data name="&gt;&gt;label26.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label26.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label26.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;label25.Name" xml:space="preserve">
+    <value>label25</value>
+  </data>
+  <data name="&gt;&gt;label25.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label25.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label25.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;label24.Name" xml:space="preserve">
+    <value>label24</value>
+  </data>
+  <data name="&gt;&gt;label24.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label24.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label24.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;cbDynamicMinimum.Name" xml:space="preserve">
+    <value>cbDynamicMinimum</value>
+  </data>
+  <data name="&gt;&gt;cbDynamicMinimum.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbDynamicMinimum.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;cbDynamicMinimum.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;textMaxTrans.Name" xml:space="preserve">
+    <value>textMaxTrans</value>
+  </data>
+  <data name="&gt;&gt;textMaxTrans.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMaxTrans.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;textMaxTrans.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;label17.Name" xml:space="preserve">
+    <value>label17</value>
+  </data>
+  <data name="&gt;&gt;label17.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label17.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label17.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;textMzMatchTolerance.Name" xml:space="preserve">
+    <value>textMzMatchTolerance</value>
+  </data>
+  <data name="&gt;&gt;textMzMatchTolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMzMatchTolerance.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
+    <value>15</value>
+  </data>
+  <data name="&gt;&gt;label16.Name" xml:space="preserve">
+    <value>label16</value>
+  </data>
+  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;label10.Name" xml:space="preserve">
+    <value>label10</value>
+  </data>
+  <data name="&gt;&gt;label10.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label10.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
+    <value>17</value>
+  </data>
+  <data name="&gt;&gt;label11.Name" xml:space="preserve">
+    <value>label11</value>
+  </data>
+  <data name="&gt;&gt;label11.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label11.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label11.ZOrder" xml:space="preserve">
+    <value>18</value>
+  </data>
+  <data name="&gt;&gt;textMaxMz.Name" xml:space="preserve">
+    <value>textMaxMz</value>
+  </data>
+  <data name="&gt;&gt;textMaxMz.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMaxMz.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;textMaxMz.ZOrder" xml:space="preserve">
+    <value>19</value>
+  </data>
+  <data name="&gt;&gt;textMinMz.Name" xml:space="preserve">
+    <value>textMinMz</value>
+  </data>
+  <data name="&gt;&gt;textMinMz.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMinMz.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;textMinMz.ZOrder" xml:space="preserve">
+    <value>20</value>
+  </data>
+  <data name="tabInstrument.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabInstrument.Size" type="System.Drawing.Size, System.Drawing">
+    <value>363, 489</value>
+  </data>
+  <data name="tabInstrument.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="tabInstrument.Text" xml:space="preserve">
+    <value>Instrument</value>
+  </data>
+  <data name="&gt;&gt;tabInstrument.Name" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;tabInstrument.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;tabLibrary.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabInstrument.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
-  <data name="&gt;&gt;tabLibrary.ZOrder" xml:space="preserve">
-    <value>2</value>
+  <data name="&gt;&gt;tabInstrument.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="cbxTriggeredAcquisition.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2441,30 +3506,6 @@ with predicted transition m/z values.
   <data name="&gt;&gt;textMinMz.ZOrder" xml:space="preserve">
     <value>20</value>
   </data>
-  <data name="tabInstrument.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabInstrument.Size" type="System.Drawing.Size, System.Drawing">
-    <value>363, 489</value>
-  </data>
-  <data name="tabInstrument.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="tabInstrument.Text" xml:space="preserve">
-    <value>Instrument</value>
-  </data>
-  <data name="&gt;&gt;tabInstrument.Name" xml:space="preserve">
-    <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;tabInstrument.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabInstrument.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabInstrument.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="tabFullScan.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
@@ -2492,27 +3533,66 @@ with predicted transition m/z values.
   <data name="&gt;&gt;tabFullScan.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 12</value>
+  <data name="&gt;&gt;ionMobilityFilteringControl.Name" xml:space="preserve">
+    <value>ionMobilityFilteringControl</value>
   </data>
-  <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>371, 515</value>
+  <data name="&gt;&gt;ionMobilityFilteringControl.Type" xml:space="preserve">
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;ionMobilityFilteringControl.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;ionMobilityFilteringControl.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
+  <data name="tabIonMobility.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabIonMobility.Size" type="System.Drawing.Size, System.Drawing">
+    <value>363, 489</value>
+  </data>
+  <data name="tabIonMobility.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="tabIonMobility.Text" xml:space="preserve">
+    <value>Ion Mobility</value>
+  </data>
+  <data name="&gt;&gt;tabIonMobility.Name" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;tabIonMobility.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabIonMobility.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
-  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;tabIonMobility.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
-  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
-    <value>$this</value>
+  <data name="ionMobilityFilteringControl.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 13</value>
   </data>
-  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
-    <value>4</value>
+  <data name="ionMobilityFilteringControl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>334, 281</value>
   </data>
+  <data name="ionMobilityFilteringControl.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;ionMobilityFilteringControl.Name" xml:space="preserve">
+    <value>ionMobilityFilteringControl</value>
+  </data>
+  <data name="&gt;&gt;ionMobilityFilteringControl.Type" xml:space="preserve">
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;ionMobilityFilteringControl.Parent" xml:space="preserve">
+    <value>tabIonMobility</value>
+  </data>
+  <data name="&gt;&gt;ionMobilityFilteringControl.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <metadata name="contextMenuStripPrecursorAdduct.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>247, 17</value>
   </metadata>
@@ -2559,7 +3639,7 @@ with predicted transition m/z values.
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.41, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2571,6 +3651,6 @@ with predicted transition m/z values.
     <value>TransitionSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.41, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

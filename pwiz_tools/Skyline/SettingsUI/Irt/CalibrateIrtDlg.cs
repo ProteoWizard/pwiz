@@ -582,7 +582,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         docPeptides[nodePep.ModifiedTarget] = nodePep;
                 }
 
-                foreach (var standard in Settings.Default.IrtStandardList.Where(standard => !ReferenceEquals(standard, IrtStandard.EMPTY)))
+                foreach (var standard in Settings.Default.IrtStandardList.Where(standard => standard.Peptides.Count > 0))
                 {
                     var pepMatches = new List<Tuple<DbIrtPeptide, PeptideDocNode>>();
                     foreach (var pep in standard.Peptides)
