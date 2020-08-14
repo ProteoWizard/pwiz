@@ -601,6 +601,22 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="metadata_rule_set" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="rule" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="source" />
+                <xs:attribute name="pattern" />
+                <xs:attribute name="replacement" />
+                <xs:attribute name="target" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="name" />
+          <xs:attribute name="rowsource" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="views" minOccurs="0">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="unbounded">

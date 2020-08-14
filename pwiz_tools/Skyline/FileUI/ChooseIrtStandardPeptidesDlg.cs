@@ -59,7 +59,8 @@ namespace pwiz.Skyline.FileUI
             _irtAdd = new List<MeasuredRetentionTime>();
             _irtTargets = null;
 
-            comboExisting.Items.AddRange(IrtStandard.ALL.Where(standard => !standard.Name.Equals(IrtStandard.EMPTY.Name)).Cast<object>().ToArray());
+            comboExisting.Items.AddRange(IrtStandard.ALL.Where(standard => !standard.Name.Equals(IrtStandard.EMPTY.Name) && !standard.Name.Equals(IrtStandard.AUTO.Name))
+                .Cast<object>().ToArray());
             comboExisting.SelectedIndex = 0;
 
             PeptideGroupDocNode[] proteinsContainingCommonIrts, proteinsNotContainingCommonIrts;

@@ -164,7 +164,7 @@ namespace pwiz.Skyline.FileUI
         {
             var selectedProperties = ImmutableList.ValueOf(SelectedProperties);
             var newProperties = SelectedHandlers
-                .SelectMany(handler => handler.Properties.Select(pd => pd.PropertyDescriptor.Name)).Distinct()
+                .SelectMany(handler => handler.Properties.Select(pd => pd.Name)).Distinct()
                 .OrderBy(name => name).ToArray();
             if (newProperties.SequenceEqual(listBoxProperties.Items.OfType<string>()))
             {
