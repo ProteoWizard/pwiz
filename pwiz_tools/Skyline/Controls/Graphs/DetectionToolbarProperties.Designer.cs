@@ -38,7 +38,6 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.rbQValueCustom = new System.Windows.Forms.RadioButton();
             this.txtQValueCustom = new System.Windows.Forms.TextBox();
-            this.rbQValue05 = new System.Windows.Forms.RadioButton();
             this.rbQValue01 = new System.Windows.Forms.RadioButton();
             this.cmbCountMultiple = new System.Windows.Forms.ComboBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -59,10 +58,9 @@
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnCancel.Location = new System.Drawing.Point(360, 67);
-            this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
+            this.btnCancel.Location = new System.Drawing.Point(270, 54);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(100, 28);
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 10;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
@@ -70,10 +68,9 @@
             // btnOk
             // 
             this.btnOk.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnOk.Location = new System.Drawing.Point(360, 31);
-            this.btnOk.Margin = new System.Windows.Forms.Padding(4);
+            this.btnOk.Location = new System.Drawing.Point(270, 25);
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(100, 28);
+            this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 9;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
@@ -82,9 +79,10 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 14);
+            this.label1.Location = new System.Drawing.Point(9, 11);
+            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(85, 17);
+            this.label1.Size = new System.Drawing.Size(64, 13);
             this.label1.TabIndex = 0;
             this.label1.Text = "&Target type:";
             // 
@@ -95,18 +93,20 @@
             this.cmbTargetType.Items.AddRange(new object[] {
             "Precursors",
             "Peptides"});
-            this.cmbTargetType.Location = new System.Drawing.Point(16, 34);
+            this.cmbTargetType.Location = new System.Drawing.Point(12, 28);
+            this.cmbTargetType.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.cmbTargetType.Name = "cmbTargetType";
-            this.cmbTargetType.Size = new System.Drawing.Size(138, 24);
+            this.cmbTargetType.Size = new System.Drawing.Size(104, 21);
             this.cmbTargetType.TabIndex = 1;
             this.cmbTargetType.SelectedIndexChanged += new System.EventHandler(this.cmbTargetType_SelectedIndexChanged);
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(164, 14);
+            this.label2.Location = new System.Drawing.Point(123, 11);
+            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(69, 17);
+            this.label2.Size = new System.Drawing.Size(52, 13);
             this.label2.TabIndex = 5;
             this.label2.Text = "&Font size:";
             // 
@@ -120,17 +120,19 @@
             "normal",
             "large",
             "x-large"});
-            this.cmbFontSize.Location = new System.Drawing.Point(167, 34);
+            this.cmbFontSize.Location = new System.Drawing.Point(125, 28);
+            this.cmbFontSize.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.cmbFontSize.Name = "cmbFontSize";
-            this.cmbFontSize.Size = new System.Drawing.Size(175, 24);
+            this.cmbFontSize.Size = new System.Drawing.Size(132, 21);
             this.cmbFontSize.TabIndex = 6;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(13, 211);
+            this.label3.Location = new System.Drawing.Point(10, 171);
+            this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(83, 17);
+            this.label3.Size = new System.Drawing.Size(63, 13);
             this.label3.TabIndex = 3;
             this.label3.Text = "&Y axis units:";
             // 
@@ -138,11 +140,12 @@
             // 
             this.groupBox1.Controls.Add(this.rbQValueCustom);
             this.groupBox1.Controls.Add(this.txtQValueCustom);
-            this.groupBox1.Controls.Add(this.rbQValue05);
             this.groupBox1.Controls.Add(this.rbQValue01);
-            this.groupBox1.Location = new System.Drawing.Point(16, 75);
+            this.groupBox1.Location = new System.Drawing.Point(12, 61);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(138, 133);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.groupBox1.Size = new System.Drawing.Size(104, 108);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Q value cutoff";
@@ -150,9 +153,10 @@
             // rbQValueCustom
             // 
             this.rbQValueCustom.AutoSize = true;
-            this.rbQValueCustom.Location = new System.Drawing.Point(6, 75);
+            this.rbQValueCustom.Location = new System.Drawing.Point(4, 38);
+            this.rbQValueCustom.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.rbQValueCustom.Name = "rbQValueCustom";
-            this.rbQValueCustom.Size = new System.Drawing.Size(80, 21);
+            this.rbQValueCustom.Size = new System.Drawing.Size(63, 17);
             this.rbQValueCustom.TabIndex = 2;
             this.rbQValueCustom.TabStop = true;
             this.rbQValueCustom.Text = "&Custom:";
@@ -160,29 +164,20 @@
             // 
             // txtQValueCustom
             // 
-            this.txtQValueCustom.Location = new System.Drawing.Point(30, 102);
+            this.txtQValueCustom.Location = new System.Drawing.Point(22, 60);
+            this.txtQValueCustom.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.txtQValueCustom.Name = "txtQValueCustom";
-            this.txtQValueCustom.Size = new System.Drawing.Size(93, 22);
+            this.txtQValueCustom.Size = new System.Drawing.Size(71, 20);
             this.txtQValueCustom.TabIndex = 3;
             this.txtQValueCustom.Enter += new System.EventHandler(this.txtQValueCustom_Enter);
-            // 
-            // rbQValue05
-            // 
-            this.rbQValue05.AutoSize = true;
-            this.rbQValue05.Location = new System.Drawing.Point(6, 48);
-            this.rbQValue05.Name = "rbQValue05";
-            this.rbQValue05.Size = new System.Drawing.Size(57, 21);
-            this.rbQValue05.TabIndex = 1;
-            this.rbQValue05.TabStop = true;
-            this.rbQValue05.Text = "0.0&5";
-            this.rbQValue05.UseVisualStyleBackColor = true;
             // 
             // rbQValue01
             // 
             this.rbQValue01.AutoSize = true;
-            this.rbQValue01.Location = new System.Drawing.Point(6, 21);
+            this.rbQValue01.Location = new System.Drawing.Point(4, 17);
+            this.rbQValue01.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.rbQValue01.Name = "rbQValue01";
-            this.rbQValue01.Size = new System.Drawing.Size(57, 21);
+            this.rbQValue01.Size = new System.Drawing.Size(46, 17);
             this.rbQValue01.TabIndex = 0;
             this.rbQValue01.TabStop = true;
             this.rbQValue01.Text = "0.0&1";
@@ -196,9 +191,10 @@
             "Ones",
             "Hundreds",
             "Thousands"});
-            this.cmbCountMultiple.Location = new System.Drawing.Point(16, 231);
+            this.cmbCountMultiple.Location = new System.Drawing.Point(12, 188);
+            this.cmbCountMultiple.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.cmbCountMultiple.Name = "cmbCountMultiple";
-            this.cmbCountMultiple.Size = new System.Drawing.Size(138, 24);
+            this.cmbCountMultiple.Size = new System.Drawing.Size(104, 21);
             this.cmbCountMultiple.TabIndex = 4;
             // 
             // groupBox2
@@ -207,9 +203,11 @@
             this.groupBox2.Controls.Add(this.cbShowSelection);
             this.groupBox2.Controls.Add(this.cbShowMeanStd);
             this.groupBox2.Controls.Add(this.cbShowAtLeastN);
-            this.groupBox2.Location = new System.Drawing.Point(167, 75);
+            this.groupBox2.Location = new System.Drawing.Point(125, 61);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(175, 133);
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.groupBox2.Size = new System.Drawing.Size(131, 108);
             this.groupBox2.TabIndex = 7;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Labels and lines";
@@ -217,9 +215,10 @@
             // cbShowLegend
             // 
             this.cbShowLegend.AutoSize = true;
-            this.cbShowLegend.Location = new System.Drawing.Point(7, 99);
+            this.cbShowLegend.Location = new System.Drawing.Point(5, 80);
+            this.cbShowLegend.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.cbShowLegend.Name = "cbShowLegend";
-            this.cbShowLegend.Size = new System.Drawing.Size(78, 21);
+            this.cbShowLegend.Size = new System.Drawing.Size(62, 17);
             this.cbShowLegend.TabIndex = 3;
             this.cbShowLegend.Text = "Le&gend";
             this.cbShowLegend.UseVisualStyleBackColor = true;
@@ -227,9 +226,10 @@
             // cbShowSelection
             // 
             this.cbShowSelection.AutoSize = true;
-            this.cbShowSelection.Location = new System.Drawing.Point(7, 48);
+            this.cbShowSelection.Location = new System.Drawing.Point(5, 39);
+            this.cbShowSelection.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.cbShowSelection.Name = "cbShowSelection";
-            this.cbShowSelection.Size = new System.Drawing.Size(88, 21);
+            this.cbShowSelection.Size = new System.Drawing.Size(70, 17);
             this.cbShowSelection.TabIndex = 1;
             this.cbShowSelection.Text = "&Selection";
             this.cbShowSelection.UseVisualStyleBackColor = true;
@@ -237,9 +237,10 @@
             // cbShowMeanStd
             // 
             this.cbShowMeanStd.AutoSize = true;
-            this.cbShowMeanStd.Location = new System.Drawing.Point(7, 72);
+            this.cbShowMeanStd.Location = new System.Drawing.Point(5, 58);
+            this.cbShowMeanStd.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.cbShowMeanStd.Name = "cbShowMeanStd";
-            this.cbShowMeanStd.Size = new System.Drawing.Size(118, 21);
+            this.cbShowMeanStd.Size = new System.Drawing.Size(93, 17);
             this.cbShowMeanStd.TabIndex = 2;
             this.cbShowMeanStd.Text = "M&ean && Stdev";
             this.cbShowMeanStd.UseVisualStyleBackColor = true;
@@ -247,19 +248,21 @@
             // cbShowAtLeastN
             // 
             this.cbShowAtLeastN.AutoSize = true;
-            this.cbShowAtLeastN.Location = new System.Drawing.Point(7, 22);
+            this.cbShowAtLeastN.Location = new System.Drawing.Point(5, 18);
+            this.cbShowAtLeastN.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.cbShowAtLeastN.Name = "cbShowAtLeastN";
-            this.cbShowAtLeastN.Size = new System.Drawing.Size(156, 21);
+            this.cbShowAtLeastN.Size = new System.Drawing.Size(120, 17);
             this.cbShowAtLeastN.TabIndex = 0;
             this.cbShowAtLeastN.Text = "At least &N replicates";
             this.cbShowAtLeastN.UseVisualStyleBackColor = true;
             // 
             // tbAtLeastN
             // 
-            this.tbAtLeastN.Location = new System.Drawing.Point(10, 21);
+            this.tbAtLeastN.Location = new System.Drawing.Point(8, 17);
+            this.tbAtLeastN.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tbAtLeastN.Minimum = 1;
             this.tbAtLeastN.Name = "tbAtLeastN";
-            this.tbAtLeastN.Size = new System.Drawing.Size(152, 56);
+            this.tbAtLeastN.Size = new System.Drawing.Size(114, 45);
             this.tbAtLeastN.TabIndex = 0;
             this.tbAtLeastN.TickStyle = System.Windows.Forms.TickStyle.Both;
             this.tbAtLeastN.Value = 1;
@@ -268,9 +271,11 @@
             // gbAtLeastN
             // 
             this.gbAtLeastN.Controls.Add(this.tbAtLeastN);
-            this.gbAtLeastN.Location = new System.Drawing.Point(167, 214);
+            this.gbAtLeastN.Location = new System.Drawing.Point(125, 174);
+            this.gbAtLeastN.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.gbAtLeastN.Name = "gbAtLeastN";
-            this.gbAtLeastN.Size = new System.Drawing.Size(175, 79);
+            this.gbAtLeastN.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.gbAtLeastN.Size = new System.Drawing.Size(131, 64);
             this.gbAtLeastN.TabIndex = 8;
             this.gbAtLeastN.TabStop = false;
             this.gbAtLeastN.Text = "At least N &replicates";
@@ -278,10 +283,10 @@
             // DetectionToolbarProperties
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(474, 307);
+            this.ClientSize = new System.Drawing.Size(356, 249);
             this.ControlBox = false;
             this.Controls.Add(this.gbAtLeastN);
             this.Controls.Add(this.groupBox2);
@@ -295,6 +300,7 @@
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.KeyPreview = true;
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DetectionToolbarProperties";
@@ -325,7 +331,6 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TextBox txtQValueCustom;
-        private System.Windows.Forms.RadioButton rbQValue05;
         private System.Windows.Forms.RadioButton rbQValue01;
         private System.Windows.Forms.ComboBox cmbCountMultiple;
         private System.Windows.Forms.GroupBox groupBox2;
