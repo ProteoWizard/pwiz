@@ -77,9 +77,6 @@
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
-    <Content Include="AutoQCDailyStarter.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="AutoQCStarter.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

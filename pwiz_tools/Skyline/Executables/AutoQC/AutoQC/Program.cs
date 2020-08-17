@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Deployment.Application;
@@ -26,7 +25,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using AutoQC.Properties;
 using log4net;
 using log4net.Appender;
 using log4net.Config;
@@ -39,8 +37,7 @@ namespace AutoQC
         private static readonly ILog LOG = LogManager.GetLogger("AutoQC");
         private static string _version;
 
-        public const bool IsDaily = false;
-        public const string AutoQcStarter = IsDaily ? "AutoQCDailyStarter" : "AutoQCStarter";
+        public const string AutoQcStarter = "AutoQCStarter";
         public static readonly string AutoQcStarterExe = $"{AutoQcStarter}.exe";
 
         [STAThread]
@@ -219,7 +216,7 @@ namespace AutoQC
 
         private static string AppName()
         {
-            return IsDaily ? "AutoQC Loader-daily" : "AutoQC Loader";
+            return "AutoQC Loader";
         }
 
         private static void InitializeSecurityProtocol()

@@ -67,7 +67,6 @@ namespace AutoQC
                 if (Settings.Default.KeepAutoQcRunning)
                 {
                     RunEnabledConfigurations();
-                    RunEnabledConfigurations();
                 }
             });
 
