@@ -523,7 +523,8 @@ namespace pwiz.Skyline.Model
                         if (!nodeTran.HasResults)
                             continue;
                         var result = nodeTran.Results[i];
-                        if (result.IsEmpty)
+                        int resultCount = result.Count;
+                        if (resultCount == 0)
                             continue;
                         // Use average area over all files in a replicate to avoid
                         // counting a replicate as best, simply because it has more
@@ -531,8 +532,9 @@ namespace pwiz.Skyline.Model
                         // file per precursor per replicate.
                         double tranArea = 0;
                         double tranMeasured = 0;
-                        foreach (var chromInfo in result)
+                        for (int iChromInfo = 0; iChromInfo < resultCount; iChromInfo++)
                         {
+                            var chromInfo = result[iChromInfo];
                             if (chromInfo != null && chromInfo.Area > 0)
                             {
                                 tranArea += chromInfo.Area;
@@ -541,8 +543,8 @@ namespace pwiz.Skyline.Model
                                 isGroupIdentified = isGroupIdentified || chromInfo.IsIdentified;
                             }
                         }
-                        groupArea += tranArea/result.Count;
-                        groupTranMeasured += tranMeasured/result.Count;
+                        groupArea += tranArea/resultCount;
+                        groupTranMeasured += tranMeasured/resultCount;
                     }
                     combinedScore += ChromDataPeakList.ScorePeak(groupArea,
                         LegacyCountScoreCalc.GetPeakCountScore(groupTranMeasured, nodeGroup.Children.Count),
