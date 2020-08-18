@@ -107,6 +107,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.MaxLoqCv = maxLoqCv);
         }
 
+        [Track]
+        public double? QualitativeIonRatioThreshold { get; private set; }
+
+        public QuantificationSettings ChangeQualitativeIonRatioThreshold(double? ionRatioThreshold)
+        {
+            return ChangeProp(ImClone(this), im => im.QualitativeIonRatioThreshold = ionRatioThreshold);
+        }
+
         #region Equality Members
 
         protected bool Equals(QuantificationSettings other)
@@ -118,7 +126,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                    Equals(Units, other.Units) &&
                    Equals(LodCalculation, other.LodCalculation) &&
                    Equals(MaxLoqBias, other.MaxLoqBias) &&
-                   Equals(MaxLoqCv, other.MaxLoqCv);
+                   Equals(MaxLoqCv, other.MaxLoqCv) &&
+                   Equals(QualitativeIonRatioThreshold, other.QualitativeIonRatioThreshold);
         }
 
         public override bool Equals(object obj)
@@ -158,6 +167,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             lod_calculation,
             max_loq_bias,
             max_loq_cv,
+            qualitative_ion_ratio_threshold
         }
         XmlSchema IXmlSerializable.GetSchema()
         {
@@ -178,6 +188,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             LodCalculation = LodCalculation.Parse(reader.GetAttribute(Attr.lod_calculation));
             MaxLoqBias = reader.GetNullableDoubleAttribute(Attr.max_loq_bias);
             MaxLoqCv = reader.GetNullableDoubleAttribute(Attr.max_loq_cv);
+            QualitativeIonRatioThreshold = reader.GetNullableDoubleAttribute(Attr.qualitative_ion_ratio_threshold);
             bool empty = reader.IsEmptyElement;
             reader.Read();
             if (!empty)
@@ -208,6 +219,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
             writer.WriteAttributeNullable(Attr.max_loq_bias, MaxLoqBias);
             writer.WriteAttributeNullable(Attr.max_loq_cv, MaxLoqCv);
+            writer.WriteAttributeNullable(Attr.qualitative_ion_ratio_threshold, QualitativeIonRatioThreshold);
         }
 
         public static QuantificationSettings Deserialize(XmlReader reader)

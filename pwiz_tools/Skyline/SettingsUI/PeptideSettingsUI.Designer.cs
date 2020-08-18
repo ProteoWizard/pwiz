@@ -75,6 +75,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboNormalizationMethod = new System.Windows.Forms.ComboBox();
             this.comboRegressionFit = new System.Windows.Forms.ComboBox();
             this.comboWeighting = new System.Windows.Forms.ComboBox();
+            this.tbxIonRatioThreshold = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
             this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
@@ -113,6 +114,8 @@ namespace pwiz.Skyline.SettingsUI
             this.label36 = new System.Windows.Forms.Label();
             this.tabQuantification = new System.Windows.Forms.TabPage();
             this.groupBoxFiguresOfMerit = new System.Windows.Forms.GroupBox();
+            this.label20 = new System.Windows.Forms.Label();
+            this.lblIonRatioThreshold = new System.Windows.Forms.Label();
             this.lblCaclulateLodBy = new System.Windows.Forms.Label();
             this.lblMaxLoqBias = new System.Windows.Forms.Label();
             this.lblMaxLoqBiasPct = new System.Windows.Forms.Label();
@@ -488,6 +491,12 @@ namespace pwiz.Skyline.SettingsUI
             this.comboWeighting.Name = "comboWeighting";
             this.helpTip.SetToolTip(this.comboWeighting, resources.GetString("comboWeighting.ToolTip"));
             // 
+            // tbxIonRatioThreshold
+            // 
+            resources.ApplyResources(this.tbxIonRatioThreshold, "tbxIonRatioThreshold");
+            this.tbxIonRatioThreshold.Name = "tbxIonRatioThreshold";
+            this.helpTip.SetToolTip(this.tbxIonRatioThreshold, resources.GetString("tbxIonRatioThreshold.ToolTip"));
+            // 
             // tabControl1
             // 
             resources.ApplyResources(this.tabControl1, "tabControl1");
@@ -778,7 +787,10 @@ namespace pwiz.Skyline.SettingsUI
             // groupBoxFiguresOfMerit
             // 
             resources.ApplyResources(this.groupBoxFiguresOfMerit, "groupBoxFiguresOfMerit");
+            this.groupBoxFiguresOfMerit.Controls.Add(this.label20);
             this.groupBoxFiguresOfMerit.Controls.Add(this.tbxMaxLoqBias);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.tbxIonRatioThreshold);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblIonRatioThreshold);
             this.groupBoxFiguresOfMerit.Controls.Add(this.comboLodMethod);
             this.groupBoxFiguresOfMerit.Controls.Add(this.lblCaclulateLodBy);
             this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqBias);
@@ -788,6 +800,16 @@ namespace pwiz.Skyline.SettingsUI
             this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqCv);
             this.groupBoxFiguresOfMerit.Name = "groupBoxFiguresOfMerit";
             this.groupBoxFiguresOfMerit.TabStop = false;
+            // 
+            // label20
+            // 
+            resources.ApplyResources(this.label20, "label20");
+            this.label20.Name = "label20";
+            // 
+            // lblIonRatioThreshold
+            // 
+            resources.ApplyResources(this.lblIonRatioThreshold, "lblIonRatioThreshold");
+            this.lblIonRatioThreshold.Name = "lblIonRatioThreshold";
             // 
             // lblCaclulateLodBy
             // 
@@ -1004,5 +1026,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button buttonEditListSmallMolInternalStandardTypes;
         private System.Windows.Forms.Label labelSmallMolInternalStandardTypes;
         private System.Windows.Forms.CheckedListBox listBoxSmallMolInternalStandardTypes;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.TextBox tbxIonRatioThreshold;
+        private System.Windows.Forms.Label lblIonRatioThreshold;
     }
 }

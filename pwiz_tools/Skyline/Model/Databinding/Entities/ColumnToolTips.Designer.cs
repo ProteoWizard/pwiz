@@ -311,6 +311,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Target Qualitative Ion Ratio calculated using the subset of external standard replicates that have the same Batch Name as this replicate..
+        /// </summary>
+        public static string BatchTargetQualitativeIonRatio {
+            get {
+                return ResourceManager.GetString("BatchTargetQualitativeIonRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The position of the first (N-terminal) amino acid of the peptide within its
         ///containing protein sequence, or #N/A if no protein sequence is available.
         ///    .
@@ -919,6 +928,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string FileName {
             get {
                 return ResourceManager.GetString("FileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The full path and file name of the file from which the data was imported..
+        /// </summary>
+        public static string FilePath {
+            get {
+                return ResourceManager.GetString("FilePath", resourceCulture);
             }
         }
         
@@ -2750,6 +2768,26 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ratio of the sum of peak areas of the the non-quantitative transitions to the sum of the peak areas of the quantitative transitions under this molecule or peptide..
+        /// </summary>
+        public static string QualitativeIonRatio {
+            get {
+                return ResourceManager.GetString("QualitativeIonRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Description of how the Qualitative Ion Ratio compares to the Target Qualitative Ion Ratio.
+        ///If the Qualitative Ion Ratio Threshold has been specified in the Quantification Settings, then Qualitative Ion Ratio Status will be either &quot;pass&quot; or &quot;fail&quot;.
+        ///If the Qualitative Ion Ratio Threshold has not been specified then Qualitative Ion Ratio Status will be either &quot;equal&quot;, &quot;low&quot;, or &quot;high&quot;, depending on how it compares to the Target Qualitative Ion Ratio..
+        /// </summary>
+        public static string QualitativeIonRatioStatus {
+            get {
+                return ResourceManager.GetString("QualitativeIonRatioStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Values related to using the calibration curve or normalization method to quantify the analyte..
         /// </summary>
         public static string Quantification {
@@ -3286,6 +3324,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SummaryMessage {
             get {
                 return ResourceManager.GetString("SummaryMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The average of the Qualitative Ion Ratio values across all of the external standard replicates that have not been excluded from calibration..
+        /// </summary>
+        public static string TargetQualitativeIonRatio {
+            get {
+                return ResourceManager.GetString("TargetQualitativeIonRatio", resourceCulture);
             }
         }
         
