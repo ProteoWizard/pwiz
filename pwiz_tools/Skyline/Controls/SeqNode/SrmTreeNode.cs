@@ -752,6 +752,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             while (i < treeNodes.Count && treeNodes[i] is TNode);
 
 
+            int firstInsertPosition = i;
+            List<TreeNode> nodesToInsert = new List<TreeNode>(docNodes.Count - firstInsertPosition);
             // Enumerate remaining DocNodes adding to the tree either corresponding
             // TreeNodes from the map, or creating new TreeNodes as necessary.
             for (; i < docNodes.Count; i++)
@@ -761,20 +763,42 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (!remaining.TryGetValue(nodeDoc.Id.GlobalIndex, out nodeTree))
                 {
                     nodeTree = create(tree, nodeDoc);
-                    treeNodes.Insert(i, nodeTree);
+                    nodesToInsert.Add(nodeTree);
                 }
                 else
                 {
-                    // Insert first, or node icons may not update correctly for a tree node with no tree
-                    treeNodes.Insert(i, nodeTree);
-                    if (!ReferenceEquals(nodeTree.Model, nodeDoc)) 
-                        nodeTree.Model = nodeDoc;
+                    nodesToInsert.Add(nodeTree);
                 }
+                if (tree.ShowReplicate == ReplicateDisplay.best)
+                    nodeTree.Model = nodeDoc;
+            }
+
+            if (firstInsertPosition == treeNodes.Count)
+            {
+                treeNodes.AddRange(nodesToInsert.ToArray());
+            }
+            else
+            {
+                for (int insertNodeIndex = 0; insertNodeIndex < nodesToInsert.Count; insertNodeIndex++)
+                {
+                    treeNodes.Insert(insertNodeIndex + firstInsertPosition, nodesToInsert[insertNodeIndex]);
+                }
+            }
+
+            // If necessary, update the model for these new tree nodes. This needs to be done after 
+            // the nodes have been added to the tree, because otherwise the icons may not update correctly.
+            for (int insertNodeIndex = 0; insertNodeIndex < nodesToInsert.Count; insertNodeIndex++)
+            {
+                var nodeTree = (TNode) treeNodes[insertNodeIndex + firstInsertPosition];
+                var docNode = docNodes[insertNodeIndex + firstInsertPosition];
                 // Best replicate display, requires that the node have correct
                 // parenting, before the text and icons can be set correctly.
                 // So, force a model change to update those values.
-                if (tree.ShowReplicate == ReplicateDisplay.best)
-                    nodeTree.Model = nodeDoc;
+                if (tree.ShowReplicate == ReplicateDisplay.best 
+                    || !ReferenceEquals(docNode, nodeTree.Model))
+                {
+                    nodeTree.Model = docNode;
+                }
             }
 
             if (selChanged)

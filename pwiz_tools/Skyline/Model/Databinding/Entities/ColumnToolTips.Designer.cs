@@ -311,6 +311,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Target Qualitative Ion Ratio calculated using the subset of external standard replicates that have the same Batch Name as this replicate..
+        /// </summary>
+        public static string BatchTargetQualitativeIonRatio {
+            get {
+                return ResourceManager.GetString("BatchTargetQualitativeIonRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The position of the first (N-terminal) amino acid of the peptide within its
         ///containing protein sequence, or #N/A if no protein sequence is available.
         ///    .
@@ -919,6 +928,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string FileName {
             get {
                 return ResourceManager.GetString("FileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The full path and file name of the file from which the data was imported..
+        /// </summary>
+        public static string FilePath {
+            get {
+                return ResourceManager.GetString("FilePath", resourceCulture);
             }
         }
         
@@ -1838,6 +1856,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A number representing the abundance of the molecule list. This number is obtained by averaging the normalized areas of all of the transitions under this Molecule List.
+        ///The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
+        ///The Molecule List Abundance will be blank if any transitions have missing values in this replicate, unless the normalization method is ratio to a label..
+        /// </summary>
+        public static string MoleculeListAbundance {
+            get {
+                return ResourceManager.GetString("MoleculeListAbundance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unique identifier of the molecule list within the document. This begins with &quot;MoleculeGroup:&quot;..
         /// </summary>
         public static string MoleculeListLocator {
@@ -1861,6 +1890,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MoleculeListNote {
             get {
                 return ResourceManager.GetString("MoleculeListNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule List Result.
+        /// </summary>
+        public static string MoleculeListResult {
+            get {
+                return ResourceManager.GetString("MoleculeListResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule List Results.
+        /// </summary>
+        public static string MoleculeListResults {
+            get {
+                return ResourceManager.GetString("MoleculeListResults", resourceCulture);
             }
         }
         
@@ -2577,6 +2624,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A number representing the abundance of the protein in the particular replicate.
+        ///The Protein Abundance is calculated by taking the average of the normalized areas of all of the Transitions under the Protein.
+        ///The Transition Areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
+        ///The Protein Abundance will be blank if any transitions have missing peak areas in the Replicate, unless the normalization method is ratio to a label..
+        /// </summary>
+        public static string ProteinAbundance {
+            get {
+                return ResourceManager.GetString("ProteinAbundance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein Accession.
         /// </summary>
         public static string ProteinAccession {
@@ -2644,6 +2703,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Protein Result.
+        /// </summary>
+        public static string ProteinResult {
+            get {
+                return ResourceManager.GetString("ProteinResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Results.
+        /// </summary>
+        public static string ProteinResults {
+            get {
+                return ResourceManager.GetString("ProteinResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Proteins.
         /// </summary>
         public static string Proteins {
@@ -2687,6 +2764,26 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string QuadraticCoefficient {
             get {
                 return ResourceManager.GetString("QuadraticCoefficient", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio of the sum of peak areas of the the non-quantitative transitions to the sum of the peak areas of the quantitative transitions under this molecule or peptide..
+        /// </summary>
+        public static string QualitativeIonRatio {
+            get {
+                return ResourceManager.GetString("QualitativeIonRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Description of how the Qualitative Ion Ratio compares to the Target Qualitative Ion Ratio.
+        ///If the Qualitative Ion Ratio Threshold has been specified in the Quantification Settings, then Qualitative Ion Ratio Status will be either &quot;pass&quot; or &quot;fail&quot;.
+        ///If the Qualitative Ion Ratio Threshold has not been specified then Qualitative Ion Ratio Status will be either &quot;equal&quot;, &quot;low&quot;, or &quot;high&quot;, depending on how it compares to the Target Qualitative Ion Ratio..
+        /// </summary>
+        public static string QualitativeIonRatioStatus {
+            get {
+                return ResourceManager.GetString("QualitativeIonRatioStatus", resourceCulture);
             }
         }
         
@@ -2976,15 +3073,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Results.
-        /// </summary>
-        public static string Results {
-            get {
-                return ResourceManager.GetString("Results", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Retention time at the maximum intensity for a transition peak..
         /// </summary>
         public static string RetentionTime {
@@ -3236,6 +3324,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SummaryMessage {
             get {
                 return ResourceManager.GetString("SummaryMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The average of the Qualitative Ion Ratio values across all of the external standard replicates that have not been excluded from calibration..
+        /// </summary>
+        public static string TargetQualitativeIonRatio {
+            get {
+                return ResourceManager.GetString("TargetQualitativeIonRatio", resourceCulture);
             }
         }
         

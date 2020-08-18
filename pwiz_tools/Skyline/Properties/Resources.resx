@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1673,6 +1673,9 @@
   </data>
   <data name="LabKey" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\LabKey.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MSAmandaLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\LogoAmanda_32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ToolService_ImportFasta_Insert_proteins" xml:space="preserve">
     <value>Insert proteins</value>
@@ -9496,6 +9499,12 @@ Here are the {0} pairs with multiple entries:
   <data name="Extensions_CustomToString_Scheduling" xml:space="preserve">
     <value>Scheduling</value>
   </data>
+  <data name="Extensions_CustomToString_Detections_Replicates" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="Extensions_CustomToString_Detections_Histogram" xml:space="preserve">
+    <value>Histogram</value>
+  </data>
   <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_" xml:space="preserve">
     <value>The file {0} is missing.</value>
   </data>
@@ -10862,5 +10871,200 @@ Invalid peptide sequence at position 18
   </data>
   <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
     <value>Could not read the precursor m/z value "{0}"</value>
+  </data>
+  <data name="IrtStandard_AUTO_Automatic" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="DetectionPlot_TargetType_Precursor" xml:space="preserve">
+    <value>Precursor</value>
+  </data>
+  <data name="DetectionPlot_TargetType_Peptide" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="DetectionPlot_YScale_One" xml:space="preserve">
+    <value>{0} Count</value>
+  </data>
+  <data name="DetectionPlot_YScale_Percent" xml:space="preserve">
+    <value>% of all {0}s</value>
+  </data>
+  <data name="SkylineWindow_CreateGraphDetections_Counts" xml:space="preserve">
+    <value>Detection</value>
+  </data>
+  <data name="DetectionToolbarProperties_AtLeastNReplicates" xml:space="preserve">
+    <value>At least {0} replicates</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_Replicate" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_Count" xml:space="preserve">
+    <value>{0} Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_CumulativeCount" xml:space="preserve">
+    <value>Cumulative Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_AllCount" xml:space="preserve">
+    <value>All Count</value>
+  </data>
+  <data name="DetectionPlotPane_Tooltip_QMedian" xml:space="preserve">
+    <value>-log10 of Q-Value Median</value>
+  </data>
+  <data name="DetectionPlotPane_XAxis_Name" xml:space="preserve">
+    <value>Replicate</value>
+  </data>
+  <data name="DetectionPlotPane_YAxis_Name" xml:space="preserve">
+    <value>Detections</value>
+  </data>
+  <data name="DetectionPlotPane_CumulativeLine_Name" xml:space="preserve">
+    <value>cumulative</value>
+  </data>
+  <data name="DetectionPlotPane_AllRunsLine_Name" xml:space="preserve">
+    <value>all runs</value>
+  </data>
+  <data name="DetectionPlotPane_AtLeastLine_Name" xml:space="preserve">
+    <value>at least {0} (of {1}) - {2:#,##0}</value>
+  </data>
+  <data name="DetectionPlotPane_Label_Mean" xml:space="preserve">
+    <value>  Mean: {0:#,##0}</value>
+  </data>
+  <data name="DetectionPlotPane_Label_Stddev" xml:space="preserve">
+    <value>  Stddev:{1:#,##0}</value>
+  </data>
+  <data name="DetectionPlotPane_WaitingForData_Label" xml:space="preserve">
+    <value>Calculating (Esc to cancel)...</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlotError_Label" xml:space="preserve">
+    <value>Error when retrieving plot data.</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlot_Label" xml:space="preserve">
+    <value>No data available for this plot.</value>
+  </data>
+  <data name="DetectionPlotPane_EmptyPlotCanceled_Label" xml:space="preserve">
+    <value>Operation canceled.</value>
+  </data>
+  <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
+    <value>Replicate Count</value>
+  </data>
+  <data name="DetectionHistogramPane_YAxis_Name" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="DetectionHistogramPane_Tooltip_ReplicateCount" xml:space="preserve">
+    <value>Replicate Count</value>
+  </data>
+  <data name="DetectionHistogramPane_Tooltip_Count" xml:space="preserve">
+    <value>{0} Count</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch" xml:space="preserve">
+    <value>A FASTA file is required for the DDA search.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Import_FASTA__required_" xml:space="preserve">
+    <value>Import FASTA (required)</value>
+  </data>
+  <data name="MatchModificationsControl_ModificationLabelText_DDA_Search" xml:space="preserve">
+    <value>Specify all modifications you want to include in the search:</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_canceled" xml:space="preserve">
+    <value>Search canceled.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_done" xml:space="preserve">
+    <value>Search done.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Search_failed" xml:space="preserve">
+    <value>Search failed.</value>
+  </data>
+  <data name="DDASearchControl_SearchProgress_Starting_search" xml:space="preserve">
+    <value>Starting search...</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found" xml:space="preserve">
+    <value>Enzymes file {0} not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found" xml:space="preserve">
+    <value>Instruments file {0} not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found" xml:space="preserve">
+    <value>Obo files (psi-ms.obo and unimod.obo) not found</value>
+  </data>
+  <data name="DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found" xml:space="preserve">
+    <value>Unimod file {0} not found</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox" xml:space="preserve">
+    <value>fragmentIons value not found in ComboBox items</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
+    <value>Fragment ions must be selected</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect" xml:space="preserve">
+    <value>MS1 Tolerance incorrect</value>
+  </data>
+  <data name="DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect" xml:space="preserve">
+    <value>MS2 Tolerance incorrect</value>
+  </data>
+  <data name="DdaSearch_Search_failed__0" xml:space="preserve">
+    <value>Search failed: {0}</value>
+  </data>
+  <data name="DdaSearch_Search_is_canceled" xml:space="preserve">
+    <value>Search is being canceled.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_Files_to_search_" xml:space="preserve">
+    <value>Files to search:</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_Result_files_" xml:space="preserve">
+    <value>Result files:</value>
+  </data>
+  <data name="ListBoxModification_ToString__variable_" xml:space="preserve">
+    <value>(variable)</value>
+  </data>
+  <data name="ListBoxModification_ToString__isotopic_label_" xml:space="preserve">
+    <value>(isotopic label)</value>
+  </data>
+  <data name="ListBoxModification_ToString__fixed_" xml:space="preserve">
+    <value>(fixed)</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize__Edit_modifications" xml:space="preserve">
+    <value>&amp;Edit modifications</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize_Edit__structural_modifications___" xml:space="preserve">
+    <value>Edit &amp;structural modifications...</value>
+  </data>
+  <data name="MatchModificationsControl_Initialize_Edit__heavy_modifications___" xml:space="preserve">
+    <value>Edit &amp;heavy modifications...</value>
+  </data>
+  <data name="SearchSettingsControl_Additional_Settings" xml:space="preserve">
+    <value>Additional Settings</value>
+  </data>
+  <data name="EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_" xml:space="preserve">
+    <value>'{0}' is not a recognized Unimod name.</value>
+  </data>
+  <data name="MetadataExtractor_ApplyStep_Error_converting___0___to___1___" xml:space="preserve">
+    <value>Error converting '{0}' to '{1}':</value>
+  </data>
+  <data name="MetadataExtractor_ResolveColumn_Unable_to_find_column__0_" xml:space="preserve">
+    <value>Unable to find column {0}</value>
+  </data>
+  <data name="RuleError_ToString_An_error_occurred_applying_the_rule___0___" xml:space="preserve">
+    <value>An error occurred applying the rule '{0}':</value>
+  </data>
+  <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_" xml:space="preserve">
+    <value>Go to Tools &gt; Options &gt; Panorama tab to update the username and password.</value>
+  </data>
+  <data name="DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_" xml:space="preserve">
+    <value>An error occurred while applying the rule set '{0}'. Do you want to continue with the change to the Document Settings?</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___" xml:space="preserve">
+    <value>There is already a result file rule set named '{0}'.</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog__0__cannot_be_blank" xml:space="preserve">
+    <value>{0} cannot be blank</value>
+  </data>
+  <data name="MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_" xml:space="preserve">
+    <value>This is not a valid regular expression.</value>
+  </data>
+  <data name="MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank" xml:space="preserve">
+    <value>The text '{0}' must either be a valid regular expression or blank</value>
+  </data>
+  <data name="MetadataRuleSetList_Title_Rule_Sets" xml:space="preserve">
+    <value>Rule Sets</value>
+  </data>
+  <data name="MetadataRuleSetList_Label_Rule_Set" xml:space="preserve">
+    <value>Rule Set</value>
   </data>
 </root>

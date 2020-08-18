@@ -168,7 +168,7 @@ namespace pwiz.SkylineTestUtil
             SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
         }
 
-        protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
+        protected static TDlg ShowDialog<TDlg>([InstantHandle] Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
@@ -239,15 +239,15 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        protected static void RunDlg<TDlg>(Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false) where TDlg : Form
+        protected static void RunDlg<TDlg>(Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
         {
-            RunDlg(show, false, act, pause);
+            RunDlg(show, false, act, pause, millis);
         }
 
-        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act = null, bool pause = false) where TDlg : Form
+        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
         {
             var doc = SkylineWindow.Document;
-            TDlg dlg = ShowDialog<TDlg>(show);
+            TDlg dlg = ShowDialog<TDlg>(show, millis);
             if (pause)
                 PauseTest();
             RunUI(() =>
