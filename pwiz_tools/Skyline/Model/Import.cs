@@ -725,6 +725,7 @@ namespace pwiz.Skyline.Model
                 get { return DecoyColumn != -1 && Equals(Fields[DecoyColumn].ToLowerInvariant(), @"true"); }
             }
 
+            
             public PeptideModifications GetModifications(SrmDocument document)
             {
                 return ModMatcher.GetDocModifications(document);
@@ -1174,6 +1175,7 @@ namespace pwiz.Skyline.Model
                 int bestCandidateIndex = -1;
                 int iLabelType = -1;
                 int iFragmentName = -1;
+                List<int> labelTypeColumns = new List<int>();
 
                 double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
 
@@ -1186,7 +1188,9 @@ namespace pwiz.Skyline.Model
                     // Choose precursor field candidates from the first row
                     if (sequenceCandidates == null)
                     {
-                        iLabelType = FindLabelType(fields, lines, separator);
+                        labelTypeColumns = FindLabelType(fields, lines, separator);
+                        if (labelTypeColumns.Count != 0)
+                            iLabelType = labelTypeColumns[0];
                         iFragmentName = FindFragmentName(fields, lines, separator);
 
                         // If no sequence column found, return null.  After this, all errors throw.
@@ -1403,32 +1407,44 @@ namespace pwiz.Skyline.Model
                 return -1;
             }
 
-            private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
+            //Finds the index of the Label Type columns
+            private static List<int> FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
             {
-                // Look for the first column containing just L, H, light or heavy
-                int LabelTypePos = -1;
+                // Look for columns containing just L, H, light or heavy
+                var labelTypeFields = new List<int>();
+                var candidates = new List<int>();
+
 
                 for (int i = 0; i < fields.Length; i++)
                 {
                     if (ContainsLabelType(fields[i]))
                     {
-                        LabelTypePos = i;
-                        break;
+                        labelTypeFields.Add(i);
                     }
                 }
 
-                if (LabelTypePos == -1)
-                    return -1;
+                if (labelTypeFields.Count == 0)
+                    return new List<int>();
 
-                // Make sure all other rows have just label types in this column
-                foreach (string line in lines)
+                foreach (int i in labelTypeFields)
                 {
-                    string[] fieldsNext = line.ParseDsvFields(separator);
-
-                    if (!ContainsLabelType(fieldsNext[LabelTypePos]))
-                       return -1;
+                    bool noExcepetions = true;
+                    foreach (string line in lines)
+                    {
+                        string[] fieldsNext = line.ParseDsvFields(separator);
+                        if (!ContainsLabelType(fieldsNext[i]))
+                        {
+                            noExcepetions = false;
+                            break;
+                        }
+                    }
+                    if (noExcepetions)
+                    {
+                        candidates.Add(i);
+                    }
                 }
-                return LabelTypePos;
+ 
+                return candidates;
             }
 
             // Helper method for FindLabelType
@@ -1894,6 +1910,8 @@ namespace pwiz.Skyline.Model
             DecoyColumn = headers.IndexOf(col => DecoyNames.Contains(col.ToLowerInvariant()));
             IrtColumn = headers.IndexOf(col => IrtColumnNames.Contains(col.ToLowerInvariant()));
             LibraryColumn = headers.IndexOf(col => LibraryColumnNames.Contains(col.ToLowerInvariant()));
+            LabelTypeColumn = headers.IndexOf(col => LabelTypeNames.Contains(col.ToLowerInvariant()));
+            FragmentNameColumn = headers.IndexOf(col => FragmentNameNames.Contains(col.ToLowerInvariant()));
         }
 
         // Checks all the column indices and resets any that have the given index to -1
@@ -1944,6 +1962,9 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> IrtColumnNames { get { return new[] { @"irt", @"normalizedretentiontime", @"tr_recalibrated" }; } }
         public static IEnumerable<string> LibraryColumnNames { get { return new[] { @"libraryintensity", @"relativeintensity", @"relative_intensity", @"relativefragmentintensity", @"library_intensity" }; } }
         public static IEnumerable<string> DecoyNames { get { return new[] { @"decoy" }; } }
+        public static IEnumerable<string> FragmentNameNames { get { return new[] { @"fragmentname" }; } }
+        public static IEnumerable<string> LabelTypeNames { get { return new[] { @"labeltype" }; } }
+
         // ReSharper restore StringLiteralTypo
     }
 
