@@ -134,8 +134,8 @@ class BuildParser : protected SAXHandler{
   virtual ~BuildParser();
   virtual bool parseFile() = 0; // pure virtual, force subclass to define
 
-  string getFileName();
-  string getSpecFileName();
+  const string& getFileName();
+  const string& getSpecFileName();
 };
 
 } // namespace

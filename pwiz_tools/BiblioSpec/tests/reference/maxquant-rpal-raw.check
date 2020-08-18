@@ -11,7 +11,7 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 7	AAGEAIAK	730.41540527	1	AAGEAIAK	-	-	1	116	0.0	0.0	0.0	0	9.72871	N/A	N/A	188821.80	N/A	N/A	N/A	N/A	N/A	1	240	0.006732	13
 8	AAGEAIAK	730.41577148	1	AAGEAIAK	-	-	1	151	0.0	0.0	0.0	0	12.70434333	N/A	N/A	780274.61	N/A	N/A	N/A	N/A	N/A	1	330	0.0063618	13
 id	fileName	idFileName	cutoffScore
-1	Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_01	/BiblioSpec/tests/inputs/rpal-raw-msms.txt	-1.0
+1	Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_01.mz5	/BiblioSpec/tests/inputs/rpal-raw-msms.txt	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
