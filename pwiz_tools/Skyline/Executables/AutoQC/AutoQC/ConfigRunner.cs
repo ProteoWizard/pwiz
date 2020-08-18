@@ -138,7 +138,7 @@ namespace AutoQC
                 ChangeStatus(RunnerStatus.Error);
                 throw;
             }
-
+            
             RunBackgroundWorker(RunConfiguration, ProcessFilesCompleted);
         }
 
@@ -657,7 +657,7 @@ namespace AutoQC
                     @" --in=""{0}"" --report-conflict-resolution=overwrite --report-add=""{1}"" --report-name=""{2}"" --report-file=""{3}""",
                     Config.MainSettings.SkylineFilePath, skyrFile, "AcquisitionTimes", reportFile);
 
-            var procInfo = new ProcessInfo(MainForm.SkylineRunnerPath, MainForm.SKYLINE_RUNNER, args, args);
+            var procInfo = new ProcessInfo(MainForm.GetExePath(), args, args);
             if (processControl.RunProcess(procInfo) == ProcStatus.Error)
             {
                 logger.LogError("Error getting the last acquired file date from the Skyline document.");
@@ -803,7 +803,7 @@ namespace AutoQC
 
             var skylineRunnerArgs = GetSkylineRunnerArgs(importContext);
             var argsToPrint = GetSkylineRunnerArgs(importContext, true);
-            var skylineRunner = new ProcessInfo(MainForm.SkylineRunnerPath, MainForm.SKYLINE_RUNNER, skylineRunnerArgs, argsToPrint);
+            var skylineRunner = new ProcessInfo(MainForm.GetExePath(), skylineRunnerArgs, argsToPrint);
             processInfos.Add(skylineRunner);
             
             var runAfter = Config.MainSettings.RunAfter(importContext);
@@ -821,7 +821,7 @@ namespace AutoQC
 
             args.AppendLine();
             args.Append(Config.MainSettings.SkylineRunnerArgs(importContext, toPrint));
-            args.AppendLine();
+            args.Append(" ");
             args.Append(Config.PanoramaSettings.SkylineRunnerArgs(importContext, toPrint));
 
             return args.ToString();

@@ -17,10 +17,12 @@
  */
 using System;
 using System.ComponentModel;
+using System.Configuration;
 using System.Deployment.Application;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using log4net;
@@ -35,8 +37,7 @@ namespace AutoQC
         private static readonly ILog LOG = LogManager.GetLogger("AutoQC");
         private static string _version;
 
-        public const bool IsDaily = false;
-        public const string AutoQcStarter = IsDaily ? "AutoQCDailyStarter" : "AutoQCStarter";
+        public const string AutoQcStarter = "AutoQCStarter";
         public static readonly string AutoQcStarterExe = $"{AutoQcStarter}.exe";
 
         [STAThread]
@@ -77,6 +78,11 @@ namespace AutoQC
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
+//                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+//                Console.WriteLine("Local user config path: {0}", config.FilePath);
+
+                InitSkylineSettings();
+
                 var form = new MainForm();
 
                 // CurrentDeployment is null if it isn't network deployed.
@@ -84,9 +90,6 @@ namespace AutoQC
                     ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
                     : "";
                 form.Text = Version();
-
-                //var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                //Console.WriteLine("Local user config path: {0}", config.FilePath);
 
                 var worker = new BackgroundWorker {WorkerSupportsCancellation = false, WorkerReportsProgress = false};
                 worker.DoWork += UpdateAutoQcStarter;
@@ -105,6 +108,25 @@ namespace AutoQC
 
                 mutex.ReleaseMutex();
             }
+        }
+
+        private static bool InitSkylineSettings()
+        {
+            if (SkylineSettings.IsInitialized() || SkylineSettings.FindSkyline(out var pathsChecked))
+            {
+                return true;
+            }
+
+            var message = new StringBuilder();
+            message.AppendLine(
+                    $"AutoQC Loader requires {SkylineSettings.Skyline} or {SkylineSettings.SkylineDaily} to be installed on the computer.")
+                .AppendLine($"Unable to find {SkylineSettings.Skyline} at any of the following locations: ")
+                .AppendLine(string.Join(Environment.NewLine, pathsChecked)).AppendLine()
+                .AppendLine(
+                    $"Please install {SkylineSettings.Skyline} or {SkylineSettings.SkylineDaily} to use AutoQC Loader");
+            MessageBox.Show(message.ToString(), "Unable To Find Skyline",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
         }
 
         private static void UpdateAutoQcStarter(object sender, DoWorkEventArgs e)
@@ -194,7 +216,7 @@ namespace AutoQC
 
         private static string AppName()
         {
-            return IsDaily ? "AutoQC Loader-daily" : "AutoQC Loader";
+            return "AutoQC Loader";
         }
 
         private static void InitializeSecurityProtocol()
