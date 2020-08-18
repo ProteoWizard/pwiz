@@ -144,11 +144,12 @@ namespace pwiz.Skyline.FileUI
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
             Console.WriteLine(Settings.Default.CustomImportTransitionListColumnsList.Count());
-            //if there's items on column list, we set the combo box text using that method
+            //if there are items on our saved column list, the combo box text is set using that list
             if (Settings.Default.CustomImportTransitionListColumnsList.Count() != 0)
             {
                 for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
                 {
+                    //the method is called for every tuplet on the list. Item 1 is the index position and item 2 is the name
                     SetComboBoxText(Settings.Default.CustomImportTransitionListColumnsList[i].Item1, Settings.Default.CustomImportTransitionListColumnsList[i].Item2);
                 }
             }
@@ -295,25 +296,24 @@ namespace pwiz.Skyline.FileUI
             
             }
         }
-
+        //saves column positions between transition lists
         private void updateColumnsList()
         {
-
-            var ColumnsList = new List<Tuple<int, string>>();
+            var ColumnList = new List<Tuple<int, string>>();
             var columns = Importer.RowReader.Indices;
-            
-            ColumnsList.Add(new Tuple<int, string>(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy));
-            ColumnsList.Add(new Tuple<int, string>(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT));
-            ColumnsList.Add(new Tuple<int, string> (columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type));
-            ColumnsList.Add(new Tuple<int, string> (columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity));
-            ColumnsList.Add(new Tuple<int, string> (columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
-            ColumnsList.Add(new Tuple<int, string> (columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
-            ColumnsList.Add(new Tuple<int, string> (columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
-            ColumnsList.Add(new Tuple<int, string> (columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name));
-            ColumnsList.Add(new Tuple<int, string> (columns.FragmentNameColumn, "Fragment Name"));
-            ColumnsList.Add(new Tuple<int, string> (columns.PrecursorChargeColumn, "Precursor Charge"));
+            //adds columns to the list as pairs: the index position and the name
+            ColumnList.Add(new Tuple<int, string>(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy));
+            ColumnList.Add(new Tuple<int, string>(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT));
+            ColumnList.Add(new Tuple<int, string> (columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type));
+            ColumnList.Add(new Tuple<int, string> (columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity));
+            ColumnList.Add(new Tuple<int, string> (columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
+            ColumnList.Add(new Tuple<int, string> (columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
+            ColumnList.Add(new Tuple<int, string> (columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
+            ColumnList.Add(new Tuple<int, string> (columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name));
+            ColumnList.Add(new Tuple<int, string> (columns.FragmentNameColumn, "Fragment Name"));
+            ColumnList.Add(new Tuple<int, string> (columns.PrecursorChargeColumn, "Precursor Charge"));
 
-            Settings.Default.CustomImportTransitionListColumnsList = ColumnsList;
+            Settings.Default.CustomImportTransitionListColumnsList = ColumnList;
         }
 
         private void dataGrid_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
@@ -329,10 +329,10 @@ namespace pwiz.Skyline.FileUI
         {
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
         }
+        //saves the column indices in a list when the OK button is clicked
         private void buttonOk_Click(object sender, EventArgs e)
         {
             updateColumnsList();
-            Console.WriteLine("bingus");
         }
         private void buttonCheckForErrors_Click(object sender, EventArgs e)
         {
