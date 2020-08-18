@@ -442,7 +442,7 @@
             this.radioButtonSpecifySkylinePath.TabStop = true;
             this.radioButtonSpecifySkylinePath.Text = "Specify Skyline installation directory";
             this.radioButtonSpecifySkylinePath.UseVisualStyleBackColor = true;
-            this.radioButtonSpecifySkylinePath.CheckedChanged += new System.EventHandler(this.SpecifiyInstall_Click);
+            this.radioButtonSpecifySkylinePath.CheckedChanged += new System.EventHandler(this.SpecifyInstall_Click);
             // 
             // textBoxSkylinePath
             // 

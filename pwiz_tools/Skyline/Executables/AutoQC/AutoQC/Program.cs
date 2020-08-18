@@ -78,8 +78,8 @@ namespace AutoQC
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
-                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                Console.WriteLine("Local user config path: {0}", config.FilePath);
+//                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+//                Console.WriteLine("Local user config path: {0}", config.FilePath);
 
                 InitSkylineSettings();
 

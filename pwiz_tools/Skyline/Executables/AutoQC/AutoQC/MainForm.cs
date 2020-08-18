@@ -777,6 +777,9 @@ namespace AutoQC
             }
             else
             {
+                // If Skyline settings are not initialized (most likely because we could not find a valid Skyline installation at first startup)
+                // show the "Settings" tab for the user to enter the details of the Skyline installation they want to use. 
+                // If they try to switch to another tab before saving valid Skyline settings a warning will be displayed.
                 tabMain.SelectedTab = tabSettings;
             }
         }
@@ -1043,7 +1046,7 @@ namespace AutoQC
             buttonFileDialogSkylineInstall.Enabled = false;
         }
 
-        private void SpecifiyInstall_Click(object sender, EventArgs e)
+        private void SpecifyInstall_Click(object sender, EventArgs e)
         {
             textBoxSkylinePath.Enabled = true;
             buttonFileDialogSkylineInstall.Enabled = true;
@@ -1060,6 +1063,7 @@ namespace AutoQC
             {
                 if (!SkylineSettings.IsInitialized())
                 {
+                    // Do not let the user switch to another tab without specifying a valid Skyline installation.
                     ShowErrorDialog("Skyline Settings Not Initialized", 
                         "An installation of Skyline or Skyline-daily is required to use AutoQC Loader. Please select Skyline installation details to continue.");
                     e.Cancel = true;
@@ -1067,9 +1071,8 @@ namespace AutoQC
                 if (SkylineSettings.SettingsChanged(radioButtonUseSkyline.Checked, radioButtonWebBasedSkyline.Checked,
                     textBoxSkylinePath.Text))
                 {
-                    const string message = "Skyline settings have not been saved. Would you like to save them?";
-                    const string title = "Unsaved Skyline Settings";
-                    var result = MessageBox.Show(message, title, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    var result = MessageBox.Show("Skyline settings have not been saved. Would you like to save them?",
+                        "Unsaved Skyline Settings", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (result == DialogResult.Yes)
                     {
                         ApplyChangesToSkylineSettings();
