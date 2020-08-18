@@ -52,6 +52,12 @@ namespace pwiz {
 namespace vendor_api {
 namespace Shimadzu {
 
+
+// constants for converting integer representations of mass and time to double
+static const double MASS_MULTIPLIER = 0.000000001;
+static const double TIME_MULTIPLIER = 0.001;
+
+
 class ShimadzuReaderImpl;
    
 class MRMChromatogramImpl : public SRMChromatogram
@@ -89,7 +95,7 @@ class TOFChromatogramImpl : public SRMChromatogram
             auto timeArray = chromatogram_->RetTimeList;
             x.resize(timeArray->Length);
             for (size_t i = 0; i < x.size(); ++i)
-                x[i] = timeArray[i] / 1000.0;
+                x[i] = timeArray[i] * TIME_MULTIPLIER;
         } CATCH_AND_FORWARD
     }
 
@@ -261,7 +267,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
                 auto chromatogramMng = dataObject_->MS->Chromatogram;
 
                 auto dummySpectrum = gcnew ShimadzuGeneric::MassSpectrumObject();
-                try { dataObject_->MS->Spectrum->GetMSSpectrumByScan(dummySpectrum, 1); }
+                try { dataObject_->MS->Spectrum->GetMSSpectrumByScan(dummySpectrum, 1, true); }
                 catch (...) {}
 
                 //int lastScanTime = 0;
@@ -292,7 +298,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
 
                         if (msLevels_.size() < 2)
                         {
-                            auto spectrumPtr = getSpectrum(eventLastScanNumber);
+                            auto spectrumPtr = getSpectrum(eventLastScanNumber, false);
                             msLevels_.insert(spectrumPtr->getMSLevel());
                         }
 
@@ -321,7 +327,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
                                 case ShimadzuGeneric::Charges::Charge6: charge = 6; break;
                                 case ShimadzuGeneric::Charges::Charge7: charge = 7; break;
                             }
-                            precursorInfoByScan_[scan] = make_pair(dependent->PrecursorMass * 0.000000001, charge);
+                            precursorInfoByScan_[scan] = make_pair(dependent->PrecursorMass * MASS_MULTIPLIER, charge);
                         }
             }
         }
@@ -403,12 +409,12 @@ class ShimadzuReaderImpl : public ShimadzuReader
         try { return ChromatogramPtr(new TICChromatogramImpl(*this, dataObject_, ms1Only)); } CATCH_AND_FORWARD
     }
 
-    virtual SpectrumPtr getSpectrum(int scanNumber) const
+    virtual SpectrumPtr getSpectrum(int scanNumber, bool profileDesired) const
     {
         try
         {
             ShimadzuGeneric::MassSpectrumObject^ spectrum;
-            auto result = dataObject_->MS->Spectrum->GetMSSpectrumByScan(spectrum, scanNumber);
+            auto result = dataObject_->MS->Spectrum->GetMSSpectrumByScan(spectrum, scanNumber, profileDesired);
             if (ShimadzuUtil::Failed(result))
                 throw runtime_error("[ShimadzuReader::getSpectrum] GetMSSpectrumByScan: " + ToStdString(System::Enum::GetName(result.GetType(), (System::Object^) result)));
 
@@ -420,6 +426,22 @@ class ShimadzuReaderImpl : public ShimadzuReader
             return SpectrumPtr(new SpectrumImpl(spectrum, getEventInfo(spectrum->EventNo), precursorInfo));
         }
         CATCH_AND_FORWARD
+    }
+
+    virtual SpectrumInfo getSpectrumInfo(int scanNumber) const
+    {
+        SpectrumInfo info;
+        int retentionTime, precursorMass;
+        ShimadzuGeneric::Polarities polarity;
+
+        auto result = dataObject_->MS->Spectrum->GetMSSpectrumInfo(scanNumber, retentionTime, info.msLevel, precursorMass, info.precursorScan, polarity, info.segment, info.event);
+        if (ShimadzuUtil::Failed(result))
+            throw runtime_error("[ShimadzuReader::getSpectrumInfo] GetMSSpectrumInfo: " + ToStdString(System::Enum::GetName(result.GetType(), (System::Object^) result)));
+
+        info.scanTime = retentionTime * TIME_MULTIPLIER;
+        info.precursorMz = precursorMass * MASS_MULTIPLIER;
+        info.polarity = (Polarity) (int) polarity;
+        return info;
     }
 
     virtual const set<int>& getMSLevels() const
