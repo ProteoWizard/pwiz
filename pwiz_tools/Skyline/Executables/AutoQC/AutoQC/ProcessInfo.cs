@@ -17,6 +17,7 @@
  */
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace AutoQC
 {
@@ -27,18 +28,12 @@ namespace AutoQC
         public string Args { get; private set; }
         public string ArgsToPrint { get; private set; }
         public string WorkingDirectory { get; set; }
-        
-        public ProcessInfo(string exe, string args)
-        {
-            Executable = exe;
-            ExeName = Executable;
-            Args = args;
-            ArgsToPrint = args;
-        }
 
-        public ProcessInfo(string exe, string exeName, string args, string argsToPrint) : this (exe, args)
+        public ProcessInfo(string exePath, string args, string argsToPrint)
         {
-            ExeName = exeName;
+            Executable = exePath;
+            ExeName = Path.GetFileName(exePath);
+            Args = args;
             ArgsToPrint = argsToPrint;
         }
     }
