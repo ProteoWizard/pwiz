@@ -361,6 +361,18 @@
       <Component Id="DualProbeInterfaceParametersCS.dll">
         <File Source="$(var.Skyline.TargetDir)/DualProbeInterfaceParametersCS.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="enzymes.xml">
+        <File Source="$(var.Skyline.TargetDir)/enzymes.xml" KeyPath="yes"/>
+      </Component>
+      <Component Id="FHOOE_IMP.MSAmanda.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/FHOOE_IMP.MSAmanda.Core.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="FHOOE_IMP.MSAmanda.InOutput.dll">
+        <File Source="$(var.Skyline.TargetDir)/FHOOE_IMP.MSAmanda.InOutput.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="FHOOE_IMP.MSAmanda.Utils.dll">
+        <File Source="$(var.Skyline.TargetDir)/FHOOE_IMP.MSAmanda.Utils.dll" KeyPath="yes"/>
+      </Component>
       <?if $(sys.BUILDARCH) != x64 ?>
       <Component Id="fileio.dll">
         <File Source="$(var.Skyline.TargetDir)/fileio.dll" KeyPath="yes"/>
@@ -389,6 +401,9 @@
       </Component>
       <Component Id="Iesi.Collections.dll">
         <File Source="$(var.Skyline.TargetDir)/Iesi.Collections.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Instruments.xml">
+        <File Source="$(var.Skyline.TargetDir)/Instruments.xml" KeyPath="yes"/>
       </Component>
       <?if $(sys.BUILDARCH) != x64 ?>
       <Component Id="Interop.DataExplorer.dll">

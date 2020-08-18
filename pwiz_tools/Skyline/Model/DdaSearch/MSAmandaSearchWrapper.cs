@@ -226,7 +226,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         finally
                         {
                             SearchEngine.Dispose();
-                            amandaInputParser.Dispose();
+                            amandaInputParser?.Dispose();
                             amandaInputParser = null;
                         }
                     }
