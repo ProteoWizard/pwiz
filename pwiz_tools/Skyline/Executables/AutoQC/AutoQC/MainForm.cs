@@ -1027,6 +1027,9 @@ namespace AutoQC
         {
             using (var folderBrowserDlg = new FolderBrowserDialog())
             {
+                folderBrowserDlg.Description = "Select the Skyline installation directory.";
+                folderBrowserDlg.ShowNewFolderButton = false;
+                folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                 if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
                 {
                     textBoxSkylinePath.Text = folderBrowserDlg.SelectedPath;
@@ -1057,8 +1060,8 @@ namespace AutoQC
             {
                 if (!SkylineSettings.IsInitialized())
                 {
-                    ShowErrorDialog("Please Specify Skyline Settings", 
-                        "Could not find a valid Skyline installation. Enter Skyline installation details to continue.");
+                    ShowErrorDialog("Skyline Settings Not Initialized", 
+                        "An installation of Skyline or Skyline-daily is required to use AutoQC Loader. Please select Skyline installation details to continue.");
                     e.Cancel = true;
                 }
                 if (SkylineSettings.SettingsChanged(radioButtonUseSkyline.Checked, radioButtonWebBasedSkyline.Checked,

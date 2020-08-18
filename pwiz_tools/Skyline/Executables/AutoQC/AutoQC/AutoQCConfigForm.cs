@@ -265,13 +265,13 @@ namespace AutoQC
 
         private void btnFolderToWatch_Click(object sender, EventArgs e)
         {
-            var dialog = new FolderBrowserDialog
+            using (var dialog = new FolderBrowserDialog())
             {
-                Description = "Directory where the instrument will write QC files."
-            };
-            if (dialog.ShowDialog(this) == DialogResult.OK)
-            {
-                textFolderToWatchPath.Text = dialog.SelectedPath;
+                dialog.Description = "Directory where the instrument will write QC files.";
+                if (dialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    textFolderToWatchPath.Text = dialog.SelectedPath;
+                }
             }
         }
 

@@ -165,19 +165,19 @@ namespace AutoQC
             {
                 if (string.IsNullOrWhiteSpace(installDir))
                 {
-                    errors = "No Skyline installation directory specified.";
+                    errors = "Path to Skyline installation directory cannot be empty.";
                     return false;
                 }
                 if (!Directory.Exists(installDir))
                 {
-                    errors = $"'{installDir}' does not exist.";
+                    errors = $"Directory '{installDir}' does not exist.";
                     return false;
                 }
 
                 var skylineCmdExePath = Path.Combine(installDir, SKYLINE_CMD_EXE);
                 if (!File.Exists(skylineCmdExePath))
                 {
-                    errors = $"{SKYLINE_CMD_EXE} does not exist in '{installDir}'.";
+                    errors = $"{SKYLINE_CMD_EXE} was not found in '{installDir}'.";
                     return false;
                 }
 
@@ -185,7 +185,7 @@ namespace AutoQC
                 var skylineExePath = Path.Combine(installDir, skylineExe);
                 if (!File.Exists(skylineExePath))
                 {
-                    errors = $"{skylineExe} not found in '{installDir}'.";
+                    errors = $"{skylineExe} was not found in '{installDir}'.";
                     return false;
                 }
 

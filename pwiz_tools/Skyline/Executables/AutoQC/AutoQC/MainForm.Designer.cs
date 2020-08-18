@@ -44,8 +44,10 @@
             this.btnViewLog1 = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
             this.tabFront = new System.Windows.Forms.TabPage();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.btnImportConfigs = new System.Windows.Forms.Button();
             this.btnExportConfigs = new System.Windows.Forms.Button();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.tabLog = new System.Windows.Forms.TabPage();
             this.btnOpenFolder = new System.Windows.Forms.Button();
             this.btnViewLog2 = new System.Windows.Forms.Button();
@@ -70,6 +72,8 @@
             this.systray_icon = new System.Windows.Forms.NotifyIcon(this.components);
             this.tabMain.SuspendLayout();
             this.tabFront.SuspendLayout();
+            this.panel1.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.tabSettings.SuspendLayout();
             this.groupBoxSkylineSettings.SuspendLayout();
@@ -79,7 +83,7 @@
             // 
             // btnEdit
             // 
-            this.btnEdit.Location = new System.Drawing.Point(603, 111);
+            this.btnEdit.Location = new System.Drawing.Point(4, 3);
             this.btnEdit.Name = "btnEdit";
             this.btnEdit.Size = new System.Drawing.Size(75, 23);
             this.btnEdit.TabIndex = 2;
@@ -89,7 +93,7 @@
             // 
             // btnDelete
             // 
-            this.btnDelete.Location = new System.Drawing.Point(603, 193);
+            this.btnDelete.Location = new System.Drawing.Point(4, 85);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(75, 23);
             this.btnDelete.TabIndex = 3;
@@ -99,7 +103,7 @@
             // 
             // btnCopy
             // 
-            this.btnCopy.Location = new System.Drawing.Point(603, 153);
+            this.btnCopy.Location = new System.Drawing.Point(4, 44);
             this.btnCopy.Name = "btnCopy";
             this.btnCopy.Size = new System.Drawing.Size(75, 23);
             this.btnCopy.TabIndex = 4;
@@ -112,7 +116,7 @@
             this.lblNoConfigs.AutoSize = true;
             this.lblNoConfigs.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblNoConfigs.ForeColor = System.Drawing.Color.Blue;
-            this.lblNoConfigs.Location = new System.Drawing.Point(81, 440);
+            this.lblNoConfigs.Location = new System.Drawing.Point(1, 2);
             this.lblNoConfigs.Name = "lblNoConfigs";
             this.lblNoConfigs.Size = new System.Drawing.Size(521, 16);
             this.lblNoConfigs.TabIndex = 5;
@@ -121,7 +125,7 @@
             // 
             // btnNewConfig
             // 
-            this.btnNewConfig.Location = new System.Drawing.Point(260, 468);
+            this.btnNewConfig.Location = new System.Drawing.Point(160, 30);
             this.btnNewConfig.Name = "btnNewConfig";
             this.btnNewConfig.Size = new System.Drawing.Size(202, 23);
             this.btnNewConfig.TabIndex = 6;
@@ -131,6 +135,9 @@
             // 
             // listViewConfigs
             // 
+            this.listViewConfigs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.listViewConfigs.CheckBoxes = true;
             this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.listViewConfigName,
@@ -139,10 +146,10 @@
             this.listViewStatus});
             this.listViewConfigs.FullRowSelect = true;
             this.listViewConfigs.HideSelection = false;
-            this.listViewConfigs.Location = new System.Drawing.Point(59, 54);
+            this.listViewConfigs.Location = new System.Drawing.Point(48, 54);
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
-            this.listViewConfigs.Size = new System.Drawing.Size(527, 373);
+            this.listViewConfigs.Size = new System.Drawing.Size(539, 351);
             this.listViewConfigs.TabIndex = 7;
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
@@ -174,7 +181,7 @@
             // labelSavedConfigurations
             // 
             this.labelSavedConfigurations.AutoSize = true;
-            this.labelSavedConfigurations.Location = new System.Drawing.Point(56, 35);
+            this.labelSavedConfigurations.Location = new System.Drawing.Point(47, 35);
             this.labelSavedConfigurations.Name = "labelSavedConfigurations";
             this.labelSavedConfigurations.Size = new System.Drawing.Size(110, 13);
             this.labelSavedConfigurations.TabIndex = 8;
@@ -182,7 +189,7 @@
             // 
             // btnViewLog1
             // 
-            this.btnViewLog1.Location = new System.Drawing.Point(603, 286);
+            this.btnViewLog1.Location = new System.Drawing.Point(4, 151);
             this.btnViewLog1.Name = "btnViewLog1";
             this.btnViewLog1.Size = new System.Drawing.Size(75, 23);
             this.btnViewLog1.TabIndex = 9;
@@ -192,6 +199,9 @@
             // 
             // tabMain
             // 
+            this.tabMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tabMain.Controls.Add(this.tabFront);
             this.tabMain.Controls.Add(this.tabLog);
             this.tabMain.Controls.Add(this.tabSettings);
@@ -205,16 +215,10 @@
             // tabFront
             // 
             this.tabFront.BackColor = System.Drawing.Color.Transparent;
-            this.tabFront.Controls.Add(this.btnImportConfigs);
-            this.tabFront.Controls.Add(this.btnExportConfigs);
             this.tabFront.Controls.Add(this.listViewConfigs);
             this.tabFront.Controls.Add(this.labelSavedConfigurations);
-            this.tabFront.Controls.Add(this.btnViewLog1);
-            this.tabFront.Controls.Add(this.lblNoConfigs);
-            this.tabFront.Controls.Add(this.btnNewConfig);
-            this.tabFront.Controls.Add(this.btnEdit);
-            this.tabFront.Controls.Add(this.btnCopy);
-            this.tabFront.Controls.Add(this.btnDelete);
+            this.tabFront.Controls.Add(this.panel1);
+            this.tabFront.Controls.Add(this.panel2);
             this.tabFront.Location = new System.Drawing.Point(4, 22);
             this.tabFront.Name = "tabFront";
             this.tabFront.Padding = new System.Windows.Forms.Padding(3);
@@ -222,9 +226,23 @@
             this.tabFront.TabIndex = 0;
             this.tabFront.Text = "Configurations";
             // 
+            // panel1
+            // 
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.Controls.Add(this.btnImportConfigs);
+            this.panel1.Controls.Add(this.btnExportConfigs);
+            this.panel1.Controls.Add(this.btnViewLog1);
+            this.panel1.Controls.Add(this.btnEdit);
+            this.panel1.Controls.Add(this.btnCopy);
+            this.panel1.Controls.Add(this.btnDelete);
+            this.panel1.Location = new System.Drawing.Point(612, 77);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(93, 306);
+            this.panel1.TabIndex = 12;
+            // 
             // btnImportConfigs
             // 
-            this.btnImportConfigs.Location = new System.Drawing.Point(603, 380);
+            this.btnImportConfigs.Location = new System.Drawing.Point(4, 256);
             this.btnImportConfigs.Name = "btnImportConfigs";
             this.btnImportConfigs.Size = new System.Drawing.Size(75, 23);
             this.btnImportConfigs.TabIndex = 11;
@@ -235,7 +253,7 @@
             // 
             // btnExportConfigs
             // 
-            this.btnExportConfigs.Location = new System.Drawing.Point(603, 340);
+            this.btnExportConfigs.Location = new System.Drawing.Point(4, 216);
             this.btnExportConfigs.Name = "btnExportConfigs";
             this.btnExportConfigs.Size = new System.Drawing.Size(75, 23);
             this.btnExportConfigs.TabIndex = 10;
@@ -243,6 +261,16 @@
             this.toolTip_MainForm.SetToolTip(this.btnExportConfigs, "Export saved configurations...");
             this.btnExportConfigs.UseVisualStyleBackColor = true;
             this.btnExportConfigs.Click += new System.EventHandler(this.btnExport_Click);
+            // 
+            // panel2
+            // 
+            this.panel2.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.panel2.Controls.Add(this.lblNoConfigs);
+            this.panel2.Controls.Add(this.btnNewConfig);
+            this.panel2.Location = new System.Drawing.Point(56, 426);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(523, 69);
+            this.panel2.TabIndex = 13;
             // 
             // tabLog
             // 
@@ -290,6 +318,9 @@
             // 
             // textBoxLog
             // 
+            this.textBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxLog.Location = new System.Drawing.Point(24, 59);
             this.textBoxLog.Name = "textBoxLog";
             this.textBoxLog.ReadOnly = true;
@@ -471,11 +502,10 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(763, 573);
             this.Controls.Add(this.tabMain);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximizeBox = false;
             this.Name = "MainForm";
             this.Text = " AutoQC";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
@@ -483,6 +513,9 @@
             this.tabMain.ResumeLayout(false);
             this.tabFront.ResumeLayout(false);
             this.tabFront.PerformLayout();
+            this.panel1.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.tabLog.ResumeLayout(false);
             this.tabLog.PerformLayout();
             this.tabSettings.ResumeLayout(false);
@@ -537,5 +570,7 @@
         private System.Windows.Forms.RadioButton radioButtonUseSkyline;
         private System.Windows.Forms.GroupBox groupBoxSkylineSettings;
         private System.Windows.Forms.Panel panelSkylineType;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Panel panel1;
     }
 }
