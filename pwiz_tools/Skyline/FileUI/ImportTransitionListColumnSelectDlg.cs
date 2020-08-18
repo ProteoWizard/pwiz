@@ -202,6 +202,7 @@ namespace pwiz.Skyline.FileUI
             if (comboBoxIndex < 0 || comboBoxIndex >= ComboBoxes.Count)
                 return;
             ComboBoxes[comboBoxIndex].Text = text;
+            comboChanged(ComboBoxes[comboBoxIndex]);
         }
 
         // Ensures two combo boxes do not have the same value. Usually newSelectedIndex will be zero, because that is IgnoreColumn.
@@ -296,7 +297,92 @@ namespace pwiz.Skyline.FileUI
             }
             updateColumnsList();
         }
-        
+
+        // Overloaded method achieves the same result as above but omits the eventHandler allowing it to be called from other states
+        private void comboChanged(object sender)  
+        {
+            var comboBox = (ComboBox)sender;
+            var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
+            var columns = Importer.RowReader.Indices;
+
+            if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy)
+            {
+                CheckForComboBoxOverlap(columns.DecoyColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.DecoyColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT)
+            {
+                CheckForComboBoxOverlap(columns.IrtColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.IrtColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type)
+            {
+                CheckForComboBoxOverlap(columns.LabelTypeColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.LabelTypeColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity)
+            {
+                CheckForComboBoxOverlap(columns.LibraryColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.LibraryColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence)
+            {
+                CheckForComboBoxOverlap(columns.PeptideColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.PeptideColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z)
+            {
+                CheckForComboBoxOverlap(columns.PrecursorColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.PrecursorColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z)
+            {
+                CheckForComboBoxOverlap(columns.ProductColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ProductColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name)
+            {
+                CheckForComboBoxOverlap(columns.ProteinColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.ProteinColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == "Fragment Name")
+            {
+                CheckForComboBoxOverlap(columns.FragmentNameColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.FragmentNameColumn = comboBoxIndex;
+            }
+            else if (comboBox.Text == "Precursor Charge")
+            {
+                CheckForComboBoxOverlap(columns.PrecursorChargeColumn, 0, comboBoxIndex);
+                columns.ResetDuplicateColumns(comboBoxIndex);
+                columns.PrecursorChargeColumn = comboBoxIndex;
+            }
+            else
+            {
+                if (columns.DecoyColumn == comboBoxIndex) columns.DecoyColumn = -1;
+                if (columns.IrtColumn == comboBoxIndex) columns.IrtColumn = -1;
+                if (columns.LabelTypeColumn == comboBoxIndex) columns.LabelTypeColumn = -1;
+                if (columns.LibraryColumn == comboBoxIndex) columns.LibraryColumn = -1;
+                if (columns.PeptideColumn == comboBoxIndex) columns.PeptideColumn = -1;
+                if (columns.PrecursorColumn == comboBoxIndex) columns.PrecursorColumn = -1;
+                if (columns.ProductColumn == comboBoxIndex) columns.ProductColumn = -1;
+                if (columns.ProteinColumn == comboBoxIndex) columns.ProteinColumn = -1;
+                if (columns.FragmentNameColumn == comboBoxIndex) columns.FragmentNameColumn = -1;
+                if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
+
+
+            }
+            updateColumnsList();
+        }
+
         private void updateColumnsList()
         {
 
