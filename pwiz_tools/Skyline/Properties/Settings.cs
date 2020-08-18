@@ -488,6 +488,25 @@ namespace pwiz.Skyline.Properties
                 this[@"CustomMoleculeTransitionInsertColumnsList"] = value;
             }
         }
+
+        [UserScopedSettingAttribute]
+        public List<Tuple<int, string>> CustomImportTransitionListColumnsList
+        {
+            get
+            {
+                if (this[@"CustomImportTransitionListColumnsList"] == null)
+                {
+                    var list = new List<Tuple<int, string>>();
+                    CustomImportTransitionListColumnsList = list;
+                }
+                return (List < Tuple < int, string>>)this[@"CustomImportTransitionListColumnsList"];
+            }
+            set
+            {
+                this[@"CustomImportTransitionListColumnsList"] = value;
+            }
+        }
+
         [UserScopedSettingAttribute]
         public EnzymeList EnzymeList
         {

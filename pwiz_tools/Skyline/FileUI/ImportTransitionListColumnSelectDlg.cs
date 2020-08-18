@@ -139,22 +139,35 @@ namespace pwiz.Skyline.FileUI
 
             var columns = Importer.RowReader.Indices;
 
+
             // It's not unusual to see lines like "744.8 858.39 10 APR.AGLCQTFVYGGCR.y7.light 105 40" where protein, peptide, and label are all stuck together,
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
+            Console.WriteLine(Settings.Default.CustomImportTransitionListColumnsList.Count());
+            //if there's items on column list, we set the combo box text using that method
+            if (Settings.Default.CustomImportTransitionListColumnsList.Count() != 0)
+            {
+                for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
+                {
+                    SetComboBoxText(Settings.Default.CustomImportTransitionListColumnsList[i].Item1, Settings.Default.CustomImportTransitionListColumnsList[i].Item2);
+                }
+            }
+            else {
+                SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
+                SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
+                SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity);
+                SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                SetComboBoxText(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                SetComboBoxText(columns.FragmentNameColumn, "Fragment Name");
+                SetComboBoxText(columns.PrecursorChargeColumn, "Precursor Charge");
+                
 
-            SetComboBoxText(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy);
-            SetComboBoxText(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT);
-            SetComboBoxText(columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
-            SetComboBoxText(columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity);
-            SetComboBoxText(columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-            SetComboBoxText(columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-            SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-            SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
-            SetComboBoxText(columns.FragmentNameColumn, "Fragment Name");
-            SetComboBoxText(columns.PrecursorChargeColumn, "Precursor Charge");
+            }
         }
-
+        
         public void ResizeComboBoxes()
         {
             const int gridBorderWidth = 1;
@@ -205,7 +218,7 @@ namespace pwiz.Skyline.FileUI
             var comboBox = (ComboBox) sender;
             var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
             var columns = Importer.RowReader.Indices;
-
+            
             if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy)
             {
                 CheckForComboBoxOverlap(columns.DecoyColumn, 0, comboBoxIndex);
@@ -278,7 +291,30 @@ namespace pwiz.Skyline.FileUI
                 if (columns.ProteinColumn == comboBoxIndex) columns.ProteinColumn = -1;
                 if (columns.FragmentNameColumn == comboBoxIndex) columns.FragmentNameColumn = -1;
                 if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
+
+            
             }
+            updateColumnsList();
+        }
+        
+        private void updateColumnsList()
+        {
+
+            var ColumnsList = new List<Tuple<int, string>>();
+            var columns = Importer.RowReader.Indices;
+            
+            ColumnsList.Add(new Tuple<int, string>(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy));
+            ColumnsList.Add(new Tuple<int, string>(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT));
+            ColumnsList.Add(new Tuple<int, string> (columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type));
+            ColumnsList.Add(new Tuple<int, string> (columns.LibraryColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Relative_Intensity));
+            ColumnsList.Add(new Tuple<int, string> (columns.PeptideColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
+            ColumnsList.Add(new Tuple<int, string> (columns.PrecursorColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
+            ColumnsList.Add(new Tuple<int, string> (columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
+            ColumnsList.Add(new Tuple<int, string> (columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name));
+            ColumnsList.Add(new Tuple<int, string> (columns.FragmentNameColumn, "Fragment Name"));
+            ColumnsList.Add(new Tuple<int, string> (columns.PrecursorChargeColumn, "Precursor Charge"));
+
+            Settings.Default.CustomImportTransitionListColumnsList = ColumnsList;
         }
 
         private void dataGrid_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
