@@ -108,8 +108,12 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void Helper_SearchProgressChanged(string message)
         {
-            int percentProgress = CurrentFile * 100 / TotalFiles;
-            percentProgress += amandaInputParser.CurrentSpectrum * 100 / amandaInputParser.TotalSpectra / TotalFiles;
+            int percentProgress = 0;
+            if (amandaInputParser != null)
+            {
+                percentProgress = CurrentFile * 100 / TotalFiles;
+                percentProgress += amandaInputParser.CurrentSpectrum * 100 / amandaInputParser.TotalSpectra / TotalFiles;
+            }
             SearchProgressChanged?.Invoke(this, new ProgressStatus(message).ChangePercentComplete(percentProgress));
         }
 
@@ -223,6 +227,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         {
                             SearchEngine.Dispose();
                             amandaInputParser.Dispose();
+                            amandaInputParser = null;
                         }
                     }
                 }
