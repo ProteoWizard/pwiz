@@ -27,7 +27,7 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 7	GISNEGQNASIK	609.30374762	2	G[+43.0]ISNEGQNASIK[-1.0]	-	-	1	100	0.0	0.0	0.0	0	17.47965	N/A	N/A	9.89822878	N/A	N/A	N/A	N/A	N/A	1	2089	5.32e-19	13
 8	GISNEGQNASIK	609.30497781	2	G[+43.0]ISNEGQNASIK[-1.0]	-	-	1	100	0.0	0.0	0.0	0	17.649	N/A	N/A	7.58127108	N/A	N/A	N/A	N/A	N/A	1	2102	4.41e-19	13
 id	fileName	idFileName	cutoffScore
-1	wine yeast sampleA_2	/BiblioSpec/tests/inputs/yeast-wiff-msms.txt	-1.0
+1	wine yeast sampleA_2.mz5	/BiblioSpec/tests/inputs/yeast-wiff-msms.txt	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
