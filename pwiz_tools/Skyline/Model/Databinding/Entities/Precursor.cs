@@ -543,7 +543,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [Format(Formats.PEAK_AREA_NORMALIZED)]
+        [Format(Formats.STANDARD_RATIO)]
         public double? TargetQualitativeIonRatio
         {
             get
