@@ -909,9 +909,6 @@
       <Component Id="Method_Bruker_BDal.Submethod.Wrapper.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BDal.Submethod.Wrapper.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="Method_Bruker_BDal.Submethod.Wrapper.xml">
-        <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BDal.Submethod.Wrapper.xml" KeyPath="yes"/>
-      </Component>
       <Component Id="Method_Bruker_BdalRetentionTimeMassList.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BdalRetentionTimeMassList.dll" KeyPath="yes"/>
       </Component>
