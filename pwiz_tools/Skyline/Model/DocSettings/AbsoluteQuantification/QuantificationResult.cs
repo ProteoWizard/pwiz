@@ -123,11 +123,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
         #endregion
 
-        [InvariantDisplayName("BatchTargetQualitativeIonRatio")]
-        public double? TargetQualitativeIonRatio { get; private set; }
+        [Format(Formats.PEAK_AREA_NORMALIZED)]
         public double? QualitativeIonRatio { get; private set; }
         public ValueStatus QualitativeIonRatioStatus { get; private set; }
-
+        [InvariantDisplayName("BatchTargetQualitativeIonRatio")]
+        [Format(Formats.PEAK_AREA_NORMALIZED)]
+        public double? TargetQualitativeIonRatio { get; private set; }
         public PrecursorQuantificationResult ChangeIonRatio(double? targetIonRatio, double? ionRatio, ValueStatus ionRatioStatus)
         {
             return ChangeProp(ImClone(this), im =>
