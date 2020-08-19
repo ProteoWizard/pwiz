@@ -39,6 +39,12 @@ namespace pwiz.SkylineTestFunctional
         public void TestDdaSearch()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+
+            // Test that correct error is issued when MSAmanda tries to parse a missing file (enzymes.xml)
+            // Automating this test turned out to be more difficult than I thought and not worth the effort.
+            //var skylineDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            //File.Move(System.IO.Path.Combine(skylineDir, "enzymes.xml"), System.IO.Path.Combine(skylineDir, "not-the-enzymes-you-are-looking-for.xml"));
+
             RunFunctionalTest();
         }
 
@@ -65,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Test that the "Match Modifications" page of the Import Peptide Search wizard gets skipped.
+        /// Quick test that DDA search works with MSAmanda.
         /// </summary>
         private void TestAmandaSearch()
         {
