@@ -1175,8 +1175,7 @@ namespace pwiz.Skyline.Model
                 int bestCandidateIndex = -1;
                 int iLabelType = -1;
                 int iFragmentName = -1;
-                List<int> labelTypeColumns = new List<int>();
-
+                
                 double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
 
                 foreach (var line in lines)
@@ -1188,9 +1187,7 @@ namespace pwiz.Skyline.Model
                     // Choose precursor field candidates from the first row
                     if (sequenceCandidates == null)
                     {
-                        labelTypeColumns = FindLabelType(fields, lines, separator);
-                        if (labelTypeColumns.Count != 0)
-                            iLabelType = labelTypeColumns[0];
+                        iLabelType = FindLabelType(fields, lines, separator);
                         iFragmentName = FindFragmentName(fields, lines, separator);
 
                         // If no sequence column found, return null.  After this, all errors throw.
@@ -1408,43 +1405,35 @@ namespace pwiz.Skyline.Model
             }
 
             //Finds the index of the Label Type columns
-            private static List<int> FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
+            private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
             {
                 // Look for columns containing just L, H, light or heavy
-                var labelTypeFields = new List<int>();
-                var candidates = new List<int>();
 
+                int iLabelType = -1;
 
                 for (int i = 0; i < fields.Length; i++)
                 {
                     if (ContainsLabelType(fields[i]))
                     {
-                        labelTypeFields.Add(i);
+                        iLabelType = i;
+                        break;
                     }
                 }
 
-                if (labelTypeFields.Count == 0)
-                    return new List<int>();
+                if (iLabelType == -1)
+                    return -1;
 
-                foreach (int i in labelTypeFields)
+                foreach(string line in lines)
                 {
-                    bool noExcepetions = true;
-                    foreach (string line in lines)
+                    string[] fieldsNext = line.ParseDsvFields(separator);
+
+                    if (!ContainsLabelType(fieldsNext[iLabelType]))
                     {
-                        string[] fieldsNext = line.ParseDsvFields(separator);
-                        if (!ContainsLabelType(fieldsNext[i]))
-                        {
-                            noExcepetions = false;
-                            break;
-                        }
-                    }
-                    if (noExcepetions)
-                    {
-                        candidates.Add(i);
+                        return -1;
                     }
                 }
  
-                return candidates;
+                return iLabelType;
             }
 
             // Helper method for FindLabelType
