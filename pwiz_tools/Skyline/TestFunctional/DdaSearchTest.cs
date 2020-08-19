@@ -40,7 +40,8 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
-            // test error parsing an MSAmanda installed file (enzymes.xml)
+            // Test that correct error is issued when MSAmanda tries to parse a missing file (enzymes.xml)
+            // Automating this test turned out to be more difficult than I thought and not worth the effort.
             //var skylineDir = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             //File.Move(System.IO.Path.Combine(skylineDir, "enzymes.xml"), System.IO.Path.Combine(skylineDir, "not-the-enzymes-you-are-looking-for.xml"));
 
