@@ -467,13 +467,15 @@ bool MaxQuantReader::parseFile()
     {
         psms_.assign(filePsmListPair.second.begin(), filePsmListPair.second.end());
 
+        string specFileName = filePsmListPair.first;
         if (preferEmbeddedSpectra_) //use deconv
             setSpecFileName(filePsmListPair.first.c_str(), false);
         else
         {
             try
             {
-            setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
+                setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
+                specFileName = bfs::path(getSpecFileName()).filename().string();
             }
             catch (BlibException& e)
             {
@@ -483,7 +485,7 @@ bool MaxQuantReader::parseFile()
             }
         }
 
-        buildTables(MAXQUANT_SCORE, filePsmListPair.first, false);
+        buildTables(MAXQUANT_SCORE, specFileName, false);
     }
     
     return true;
