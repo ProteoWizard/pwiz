@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class PeptideResult : Result
     {
         private readonly CachedValue<PeptideChromInfo> _chromInfo;
-        private readonly CachedValue<PeptideQuantificationResult> _quantificationResult;
+        private readonly CachedValue<QuantificationResult> _quantificationResult;
         private readonly CachedValue<CalibrationCurveFitter> _calibrationCurveFitter;
 
         public PeptideResult(Peptide peptide, ResultFile file) : base(peptide, file)
@@ -189,11 +189,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public LinkValue<PeptideQuantificationResult> Quantification
+        public LinkValue<QuantificationResult> Quantification
         {
             get
             {
-                return new LinkValue<PeptideQuantificationResult>(_quantificationResult.Value, (sender, args) =>
+                return new LinkValue<QuantificationResult>(_quantificationResult.Value, (sender, args) =>
                 {
                     SkylineWindow skylineWindow = DataSchema.SkylineWindow;
                     if (skylineWindow != null)
@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        private PeptideQuantificationResult GetQuantification()
+        private QuantificationResult GetQuantification()
         {
             return _calibrationCurveFitter.Value.GetPeptideQuantificationResult(ResultFile.Replicate.ReplicateIndex);
         }

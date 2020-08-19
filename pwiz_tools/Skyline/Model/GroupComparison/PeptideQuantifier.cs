@@ -182,31 +182,28 @@ namespace pwiz.Skyline.Model.GroupComparison
             return totalArea;
         }
 
-        public double? GetQualitativeIonRatio(SrmSettings settings, int replicateIndex)
+        public double? GetQualitativeIonRatio(SrmSettings settings, TransitionGroupDocNode precursor, int replicateIndex)
         {
             double numerator = 0;
             int numeratorCount = 0;
             double denominator = 0;
             int denominatorCount = 0;
-            foreach (var precursor in PeptideDocNode.TransitionGroups)
+            foreach (var transition in precursor.Transitions)
             {
-                foreach (var transition in precursor.Transitions)
+                var quantity = GetTransitionQuantity(settings, null, NormalizationMethod.NONE, replicateIndex,
+                    precursor, transition, false);
+                if (quantity != null)
                 {
-                    var quantity = GetTransitionQuantity(settings, null, NormalizationMethod.NONE, replicateIndex,
-                        precursor, transition, false);
-                    if (quantity != null)
+                    double value = quantity.Intensity / quantity.Denominator;
+                    if (transition.ExplicitQuantitative)
                     {
-                        double value = quantity.Intensity / quantity.Denominator;
-                        if (transition.ExplicitQuantitative)
-                        {
-                            denominator += value;
-                            denominatorCount++;
-                        }
-                        else
-                        {
-                            numerator += value;
-                            numeratorCount++;
-                        }
+                        denominator += value;
+                        denominatorCount++;
+                    }
+                    else
+                    {
+                        numerator += value;
+                        numeratorCount++;
                     }
                 }
             }
