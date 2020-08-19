@@ -543,6 +543,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [Format(Formats.STANDARD_RATIO)]
+        public double? TargetQualitativeIonRatio
+        {
+            get
+            {
+                var calibrationCurveFitter = Peptide.GetCalibrationCurveFitter();
+                return calibrationCurveFitter.GetTargetIonRatio(DocNode);
+            }
+        }
+
         [InvariantDisplayName("PrecursorLocator")]
         public string Locator { get { return GetLocator(); } }
 
