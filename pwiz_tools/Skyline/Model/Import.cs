@@ -725,7 +725,6 @@ namespace pwiz.Skyline.Model
                 get { return DecoyColumn != -1 && Equals(Fields[DecoyColumn].ToLowerInvariant(), @"true"); }
             }
 
-            
             public PeptideModifications GetModifications(SrmDocument document)
             {
                 return ModMatcher.GetDocModifications(document);
@@ -1175,7 +1174,6 @@ namespace pwiz.Skyline.Model
                 int bestCandidateIndex = -1;
                 int iLabelType = -1;
                 int iFragmentName = -1;
-                
                 double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
 
                 foreach (var line in lines)
@@ -1250,6 +1248,7 @@ namespace pwiz.Skyline.Model
                     tolerance, provider, settings);
                 if (iProduct == -1)
                     throw new MzMatchException(Resources.GeneralRowReader_Create_No_valid_product_m_z_column_found, 1, -1);
+
                 int iProt = indices.ProteinColumn;
                 if (iProt == -1)
                     iProt = FindProtein(fieldsFirstRow, iSequence, lines, indices.Headers, provider, separator);
@@ -1408,9 +1407,7 @@ namespace pwiz.Skyline.Model
             private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
             {
                 // Look for columns containing just L, H, light or heavy
-
                 int iLabelType = -1;
-
                 for (int i = 0; i < fields.Length; i++)
                 {
                     if (ContainsLabelType(fields[i]))
@@ -1419,7 +1416,6 @@ namespace pwiz.Skyline.Model
                         break;
                     }
                 }
-
                 if (iLabelType == -1)
                     return -1;
 
@@ -1953,7 +1949,6 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> DecoyNames { get { return new[] { @"decoy" }; } }
         public static IEnumerable<string> FragmentNameNames { get { return new[] { @"fragmentname" }; } }
         public static IEnumerable<string> LabelTypeNames { get { return new[] { @"labeltype" }; } }
-
         // ReSharper restore StringLiteralTypo
     }
 
