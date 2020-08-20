@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Model
         /// Returns the search result (e.g. pepXML, mzIdentML) filenpath corresponding with the given searchFilepath.
         /// </summary>
         /// <param name="searchFilepath">The raw data filepath (e.g. RAW, WIFF, mzML)</param>
-        public string GetSearchResultFilepath(MsDataFileUri searchFilepath)
+        public virtual string GetSearchResultFilepath(MsDataFileUri searchFilepath)
         {
             return Path.ChangeExtension(searchFilepath.GetFilePath(), @".mzid");
         }
