@@ -525,6 +525,12 @@
       <Component Id="PeakItgLSS.dll">
         <File Source="$(var.Skyline.TargetDir)/PeakItgLSS.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="PrmPasefScheduler.dll">
+        <File Source="$(var.Skyline.TargetDir)/PrmPasefScheduler.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="prmscheduler.dll">
+        <File Source="$(var.Skyline.TargetDir)/prmscheduler.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="ProteomeDb.dll">
         <File Source="$(var.Skyline.TargetDir)/ProteomeDb.dll" KeyPath="yes"/>
       </Component>
