@@ -130,6 +130,13 @@ namespace AutoQC
             Settings.Default.SkylineType = skylineType;
             Settings.Default.SkylineCmdLineExePath = skylineCmdLineExePath;
             Settings.Default.Save();
+            Program.LogInfo(new StringBuilder("Skyline settings changed. ").Append(GetSkylineSettingsStr()).ToString());
+        }
+
+        public static string GetSkylineSettingsStr()
+        {
+            return new StringBuilder().Append($"Skyline type: {Settings.Default.SkylineType}; ")
+                .Append($"Skyline command-line exe: {Settings.Default.SkylineCmdLineExePath}").ToString();
         }
 
         public static bool UpdateSettings(bool useSkyline, bool useClickOnceInstaller, string installDir,
