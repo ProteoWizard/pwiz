@@ -149,7 +149,6 @@ Method\AbSciex\TQ\StdType.dll
 Method\Agilent\BuildAgilentMethod.exe
 Method\Agilent\MethodCreator.dll
 Method\Bruker\BDal.Submethod.Wrapper.dll
-Method\Bruker\BDal.Submethod.Wrapper.xml
 Method\Bruker\BdalRetentionTimeMassList.dll
 Method\Bruker\BuildBrukerMethod.exe
 Method\Thermo\BuildLTQMethod.exe
