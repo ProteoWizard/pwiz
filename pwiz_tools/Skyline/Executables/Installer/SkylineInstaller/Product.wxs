@@ -49,6 +49,7 @@
       <ComponentGroupRef Id="Method_Thermo_files"/>
       <ComponentGroupRef Id="Method_Waters_files"/>
       <ComponentGroupRef Id="Microsoft.VC90.MFC_files"/>
+      <ComponentGroupRef Id="percolator_files"/>
       <ComponentGroupRef Id="ApplicationShortcuts"/>
     </Feature>
 
@@ -92,6 +93,7 @@
         <Directory Id="Method_Waters_directory" Name="Waters"/>
       </Directory>
       <Directory Id="Microsoft.VC90.MFC_directory" Name="Microsoft.VC90.MFC"/>
+      <Directory Id="percolator_directory" Name="percolator"/>
     </DirectoryRef>
   </Fragment>
 
@@ -962,6 +964,17 @@
         <File Source="$(var.Skyline.TargetDir)/Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest" KeyPath="yes"/>
       </Component>
       <?endif?>
+    </ComponentGroup>
+    <ComponentGroup Id="percolator_files" Directory="percolator_directory">
+      <Component Id="percolator_percolator.exe">
+        <File Source="$(var.Skyline.TargetDir)/percolator/percolator.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="percolator_qvality.exe">
+        <File Source="$(var.Skyline.TargetDir)/percolator/qvality.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="percolator_xerces_c_3_1.dll">
+        <File Source="$(var.Skyline.TargetDir)/percolator/xerces-c_3_1.dll" KeyPath="yes" />
+      </Component>
     </ComponentGroup>
   </Fragment>
 </Wix>
