@@ -10893,4 +10893,10 @@ Invalid peptide sequence at position 18
   <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
     <value>Could not read the precursor m/z value "{0}"</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name" xml:space="preserve">
+    <value>Fragment Name</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge" xml:space="preserve">
+    <value>Precursor Charge</value>
+  </data>
 </root>

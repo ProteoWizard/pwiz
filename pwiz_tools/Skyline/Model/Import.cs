@@ -1502,7 +1502,7 @@ namespace pwiz.Skyline.Model
                         listCandidates.Add(i);
                     }
                 }
-                int[] ListCandidates = listCandidates.ToArray();
+                var ListCandidates = listCandidates.ToArray();
 
                 // We test every cell in each candidate column and return the first column that has no exceptions to our criteria
                 foreach (int i in ListCandidates)

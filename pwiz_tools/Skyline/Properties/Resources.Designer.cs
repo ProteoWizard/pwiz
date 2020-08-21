@@ -14763,6 +14763,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fragment Name.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ignore Column.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column {
@@ -14795,6 +14804,15 @@ namespace pwiz.Skyline.Properties {
         public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence {
             get {
                 return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Charge.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge", resourceCulture);
             }
         }
         
@@ -14915,7 +14933,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct components  [rest of string was truncated]&quot;;.
+        ///Recognized adduct com [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -19407,7 +19425,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
