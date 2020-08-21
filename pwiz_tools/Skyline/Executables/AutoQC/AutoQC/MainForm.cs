@@ -774,6 +774,7 @@ namespace AutoQC
             if (SkylineSettings.IsInitialized())
             {
                 UpdateSkylineTypeAndInstallPathControls();
+                Program.LogInfo(new StringBuilder("Skyline settings are: ").Append(SkylineSettings.GetSkylineSettingsStr()).ToString());
             }
             else
             {
