@@ -1403,7 +1403,7 @@ namespace pwiz.Skyline.Model
                 return -1;
             }
 
-            //Finds the index of the Label Type columns
+            // Finds the index of the Label Type columns
             private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
             {
                 // Look for columns containing just L, H, light or heavy
@@ -1435,22 +1435,22 @@ namespace pwiz.Skyline.Model
             // Helper method for FindLabelType
             private static bool ContainsLabelType(string field)
             {
-                field = field.ToLower(); //now our detection is not case sensitive
-                if (Equals(field, IsotopeLabelType.LIGHT_NAME.Substring(0, 1)) || //checks for "L"
-                    (Equals(field, IsotopeLabelType.HEAVY_NAME.Substring(0, 1)) || //checks for "H"
-                    (Equals(field, IsotopeLabelType.LIGHT_NAME)) || //checks for "light"
-                    (Equals(field, IsotopeLabelType.HEAVY_NAME)))) //checks for "heavy"
+                field = field.ToLower(); // Now our detection is not case sensitive
+                if (Equals(field, IsotopeLabelType.LIGHT_NAME.Substring(0, 1)) || // Checks for "L"
+                    (Equals(field, IsotopeLabelType.HEAVY_NAME.Substring(0, 1)) || // Checks for "H"
+                    (Equals(field, IsotopeLabelType.LIGHT_NAME)) || // Checks for "light"
+                    (Equals(field, IsotopeLabelType.HEAVY_NAME)))) // Checks for "heavy"
                 {
                     return true;
                 }
                 return false;
             }
 
-            //Finds the index of the Fragment Name Column
+            // Finds the index of the Fragment Name Column
             private static int FindFragmentName(string[] fields, IEnumerable<string> lines, char separator)
             {
                 int iFragmentName = -1;
-                //Look for the first column that contains something that looks like a Fragment Name
+                // Look for the first column that contains something that looks like a Fragment Name
                 for (int i = 0; i < fields.Length; i++)
                 {
                     if (ContainsFragmentName(fields[i]))
@@ -1465,7 +1465,7 @@ namespace pwiz.Skyline.Model
                     return -1;
                 }
 
-                //Confirm that the rest of the column has only entries that look like Fragment Names
+                // Confirm that the rest of the column has only entries that look like Fragment Names
                 foreach (string line in lines)
                 {
                     string[] fieldsNext = line.ParseDsvFields(separator);
@@ -1496,7 +1496,7 @@ namespace pwiz.Skyline.Model
 
                 for (int i = 0; i < fields.Length; i++)
                 {
-                    //if any of the cells in the first row look like precursor charges, we add their index to the list of candidates
+                    // If any of the cells in the first row look like precursor charges, we add their index to the list of candidates
                     if (ContainsPrecursorCharge(fields[i]))
                     {
                         listCandidates.Add(i);
@@ -1504,7 +1504,7 @@ namespace pwiz.Skyline.Model
                 }
                 int[] ListCandidates = listCandidates.ToArray();
 
-                //We test every cell in each candidate column and return the first column that has no exceptions to our criteria
+                // We test every cell in each candidate column and return the first column that has no exceptions to our criteria
                 foreach (int i in ListCandidates)
                 {
                     bool noExcepetions = true;
@@ -1514,7 +1514,7 @@ namespace pwiz.Skyline.Model
                         if (!ContainsPrecursorCharge(fieldsNext[i]))
                         {
                            noExcepetions = false;
-                            break;
+                           break;
                         }
                     }
                     if (noExcepetions)
@@ -1528,10 +1528,10 @@ namespace pwiz.Skyline.Model
             // Helper method for FindPrecursorCharge
             private static bool ContainsPrecursorCharge(string field)
             {
-                //checks if we can turn the string into an integer
+                // Checks if we can turn the string into an integer
                 if (int.TryParse(field, out int j))
                 {
-                    //checks if the integer is between the range of possible charges
+                    // Checks if the integer is between the range of possible charges
                     if (j >= TransitionGroup.MIN_PRECURSOR_CHARGE && j <= TransitionGroup.MAX_PRECURSOR_CHARGE)
                     {
                         return true;

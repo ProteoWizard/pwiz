@@ -143,12 +143,12 @@ namespace pwiz.Skyline.FileUI
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
             Console.WriteLine(Settings.Default.CustomImportTransitionListColumnsList.Count());
-            //If there are items on our saved column list, the combo box text is set using that list
+            // If there are items on our saved column list, the combo box text is set using that list
             if (Settings.Default.CustomImportTransitionListColumnsList.Count() != 0)
             {
                 for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
                 {
-                    //The method is called for every tuplet on the list. Item 1 is the index position and item 2 is the name
+                    // The method is called for every tuplet on the list. Item 1 is the index position and item 2 is the name
                     SetComboBoxText(Settings.Default.CustomImportTransitionListColumnsList[i].Item1, Settings.Default.CustomImportTransitionListColumnsList[i].Item2);
                 }
             }
@@ -292,12 +292,12 @@ namespace pwiz.Skyline.FileUI
                 if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
             }
         }
-        //Saves column positions between transition lists
+        // Saves column positions between transition lists
         private void updateColumnsList()
         {
             var ColumnList = new List<Tuple<int, string>>();
             var columns = Importer.RowReader.Indices;
-            //Adds columns to the list as pairs: the index position and the name
+            // Adds columns to the list as pairs: the index position and the name
             ColumnList.Add(new Tuple<int, string>(columns.DecoyColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy));
             ColumnList.Add(new Tuple<int, string>(columns.IrtColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT));
             ColumnList.Add(new Tuple<int, string> (columns.LabelTypeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type));
@@ -325,7 +325,7 @@ namespace pwiz.Skyline.FileUI
         {
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
         }
-        //saves the column indices in a list when the OK button is clicked
+        // Saves the column indices in a list when the OK button is clicked
         private void buttonOk_Click(object sender, EventArgs e)
         {
             updateColumnsList();
