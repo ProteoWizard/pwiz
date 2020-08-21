@@ -540,6 +540,9 @@
       <Component Id="protobuf_net.dll">
         <File Source="$(var.Skyline.TargetDir)/protobuf-net.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="psi_ms.obo">
+        <File Source="$(var.Skyline.TargetDir)/psi-ms.obo" KeyPath="yes"/>
+      </Component>
       <Component Id="pwiz.Common.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz.Common.dll" KeyPath="yes"/>
       </Component>
@@ -682,6 +685,9 @@
       </Component>
       <Component Id="UIMFLibrary.dll">
         <File Source="$(var.Skyline.TargetDir)/UIMFLibrary.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="unimod.obo">
+        <File Source="$(var.Skyline.TargetDir)/unimod.obo" KeyPath="yes"/>
       </Component>
       <Component Id="unimod.xml">
         <File Source="$(var.Skyline.TargetDir)/unimod.xml" KeyPath="yes"/>
