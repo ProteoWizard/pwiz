@@ -81,6 +81,7 @@
     <Content Include="AutoQCStarter.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\Copy.bmp" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -90,6 +91,9 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <EmbeddedResource Include="AlertDlg.resx">
+      <DependentUpon>AlertDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="AutoQC-daily.ico" />
     <Content Include="FileAcquisitionTime.skyr">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -101,6 +105,12 @@
     <None Include="University of Washington %28MacCoss Lab%29.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlertDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AlertDlg.Designer.cs">
+      <DependentUpon>AlertDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="AutoQcConfig.cs" />
     <Compile Include="AutoQcLogger.cs" />
     <Compile Include="SkylineSettings.cs" />
@@ -140,6 +150,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="TextUtil.cs" />
     <Compile Include="XmlUtil.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -198,9 +209,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">
       <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>

@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -157,7 +158,7 @@ namespace AutoQC
             {
                 var title = string.Format("Error Starting Configuration \"{0}\"", configRunner.Config.Name);
                 var msg = string.Format("{0}\n\nMore details can be found in the program log: {1}", e.Message, Program.GetProgramLogFilePath());
-                ShowErrorDialog(title, msg);
+                ShowErrorWithExceptionDialog(title, msg, e);
                 Program.LogError(title, e);
             }
         }
@@ -184,17 +185,27 @@ namespace AutoQC
 
         private void ShowErrorDialog(string title, string message)
         {
-            MessageBox.Show(this, message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            AlertDlg.ShowError(this, message, title);
         }
 
         private void ShowWarningDialog(string title, string message)
         {
-            MessageBox.Show(this, message, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            AlertDlg.ShowWarning(this, message, title);
         }
 
         private void ShowInfoDialog(string title, string message)
         {
-            MessageBox.Show(this, message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            AlertDlg.ShowInfo(this, message, title);
+        }
+
+        private void ShowErrorWithExceptionDialog(string title, string message, Exception exception)
+        {
+            AlertDlg.ShowErrorWithException(this, message, title, exception);
+        }
+
+        private DialogResult ShowQuestionDialog(string title, string message)
+        {
+            return AlertDlg.ShowQuestion(this, message, title);
         }
 
 
@@ -268,18 +279,13 @@ namespace AutoQC
                             @"Please wait for the configuration ""{0}"" to stop and try again.",
                             configRunner.GetConfigName());
                 }
-                MessageBox.Show(message,
-                    "Cannot Delete",
-                    MessageBoxButtons.OK);
+                ShowWarningDialog("Cannot Delete", message);
                 return;
             }
-            var doDelete =
-                MessageBox.Show(
-                    string.Format(@"Are you sure you want to delete configuration ""{0}""?",
-                        configRunner.GetConfigName()),
-                    "Confirm Delete",
-                    MessageBoxButtons.YesNo);
 
+            var doDelete = ShowQuestionDialog("Confirm Delete",
+                string.Format(@"Are you sure you want to delete configuration ""{0}""?", configRunner.GetConfigName()));
+            
             if (doDelete != DialogResult.Yes) return;
 
             RemoveConfiguration(configRunner.Config);
@@ -324,19 +330,16 @@ namespace AutoQC
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MessageBox.Show(string.Format("Could not import configurations from file {0}", filePath),
-                    "Import Configurations Error",
-                    MessageBoxButtons.OK);
+                ShowErrorWithExceptionDialog("Import Configurations Error",
+                    string.Format("Could not import configurations from file {0}", filePath), ex);
                 return;
             }
 
             if (readConfigs.Count == 0)
             {
-                MessageBox.Show(string.Format("Could not import configurations from file {0}", filePath),
-                    "Import Configurations",
-                    MessageBoxButtons.OK);
+                ShowWarningDialog("Import Configurations", string.Format("Could not import configurations from file {0}", filePath));
             }
 
             var validationErrors = new List<string>();
@@ -387,7 +390,7 @@ namespace AutoQC
                     message.Append(error).Append(Environment.NewLine);
                 }
             }
-            MessageBox.Show(message.ToString(), "Import Configurations", MessageBoxButtons.OK);
+            ShowInfoDialog("Import Configurations", message.ToString());
 
         }
 
@@ -409,19 +412,15 @@ namespace AutoQC
                 var message = string.Format("Configuration is {0}. Please wait.",
                     configRunner.IsStarting() ? "starting" : "stopping");
 
-                MessageBox.Show(message,
-                    "Please Wait",
-                    MessageBoxButtons.OK);
+                ShowWarningDialog("Please Wait", message);
                 return;
             }
 
             if (e.NewValue == CheckState.Checked) return;
 
             var doChange =
-                MessageBox.Show(
-                    string.Format(@"Are you sure you want to stop configuration ""{0}""?", configRunner.GetConfigName()),
-                    "Confirm Stop",
-                    MessageBoxButtons.YesNo);
+                ShowQuestionDialog("Confirm Stop",
+                    string.Format(@"Are you sure you want to stop configuration ""{0}""?", configRunner.GetConfigName()));
 
             if (doChange != DialogResult.Yes)
             {
@@ -542,15 +541,13 @@ namespace AutoQC
 
             if (runner == null)
             {
-                MessageBox.Show(string.Format("No configuration found for name \"{0}\"", configName), "",
-                    MessageBoxButtons.OK);
+                ShowErrorDialog("", string.Format("No configuration found for name \"{0}\"", configName));
                 return;
             }
 
             if (logger == null)
             {
-                MessageBox.Show("Log for this configuration is not yet initialized.", "",
-                    MessageBoxButtons.OK);
+                ShowErrorDialog("", "Log for this configuration is not yet initialized.");
                 return;
             }
 
@@ -567,7 +564,7 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                ShowErrorDialog("Error Reading Log", ex.Message);
+                ShowErrorWithExceptionDialog("Error Reading Log", ex.Message, ex);
             }
 
             ScrollToLogEnd();
@@ -975,8 +972,8 @@ namespace AutoQC
             {
                 var err = $"Error {(enable ? "enabling" : "disabling")} \"Keep AutoQC Loader running\"";
                 Program.LogError(err, ex);
-                ShowErrorDialog("Error Changing Settings",
-                    $"{err}.{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}{(ex.InnerException != null ? ex.InnerException.StackTrace : ex.StackTrace)}");
+               
+                ShowErrorWithExceptionDialog("Error Changing Settings", $"{err}.{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}{(ex.InnerException != null ? ex.InnerException.StackTrace : ex.StackTrace)}", ex);
 
                 cb_keepRunning.CheckedChanged -= cb_keepRunning_CheckedChanged;
                 cb_keepRunning.Checked = !enable;
@@ -1071,8 +1068,8 @@ namespace AutoQC
                 if (SkylineSettings.SettingsChanged(radioButtonUseSkyline.Checked, radioButtonWebBasedSkyline.Checked,
                     textBoxSkylinePath.Text))
                 {
-                    var result = MessageBox.Show("Skyline settings have not been saved. Would you like to save them?",
-                        "Unsaved Skyline Settings", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    var result = ShowQuestionDialog("Unsaved Skyline Settings",
+                        "Skyline settings have not been saved. Would you like to save them?");
                     if (result == DialogResult.Yes)
                     {
                         ApplyChangesToSkylineSettings();
