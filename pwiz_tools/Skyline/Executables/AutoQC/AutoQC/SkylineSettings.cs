@@ -21,32 +21,34 @@ namespace AutoQC
         {
             // Check for the new settings.  If they are empty it means that this is a new installation
             // OR the first time the program is being run after the upgrade that added the settings.
-            return !string.IsNullOrWhiteSpace(Settings.Default.SkylineType) &&
-                   !string.IsNullOrWhiteSpace(Settings.Default.SkylineCmdLineExePath);
+            return !string.IsNullOrWhiteSpace(Settings.Default.SkylineType);
         }
 
         public static bool FindSkyline(out IList<string> pathsChecked)
         {
             pathsChecked = new List<string>();
-            string skylineCmdLineExePath = null;
+            string skyineInstallDir = null;
             string skylineType = null;
-            if (AdminInstallExists(ref skylineCmdLineExePath, ref skylineType, pathsChecked) ||
-                ClickOnceInstallExists(ref skylineCmdLineExePath, ref skylineType, pathsChecked))
+            if (AdminInstallExists(ref skyineInstallDir, ref skylineType, pathsChecked))
             {
-                ChangeSettings(skylineType, skylineCmdLineExePath);
+                SaveSettings(skylineType, skyineInstallDir);
+                return true;
+            }
+            if(ClickOnceInstallExists(ref skylineType, pathsChecked))
+            {
+                SaveSettings(skylineType);
                 return true;
             }
 
             return false;
         }
 
-        private static bool ClickOnceInstallExists(ref string skylineCmdLineExePath, ref string skylineType, ICollection<string> pathsChecked)
+        private static bool ClickOnceInstallExists(ref string skylineType, ICollection<string> pathsChecked)
         {
             // ClickOnce Skyline installation
             if (ClickOnceInstallExists(Skyline, pathsChecked))
             {
                 skylineType = Skyline;
-                skylineCmdLineExePath = GetSkylineRunnerPath(true);
                 return true;
             }
 
@@ -54,7 +56,6 @@ namespace AutoQC
             if (ClickOnceInstallExists(SkylineDaily, pathsChecked))
             {
                 skylineType = SkylineDaily;
-                skylineCmdLineExePath = GetSkylineRunnerPath(false);
                 return true;
             }
 
@@ -68,7 +69,7 @@ namespace AutoQC
             return paths.Any(File.Exists);
         }
 
-        private static bool AdminInstallExists(ref string skylineCmdLineExePath, ref string skylineType, ICollection<string> pathsChecked)
+        private static bool AdminInstallExists(ref string skylineInstallDir, ref string skylineType, ICollection<string> pathsChecked)
         {
             var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             var installDirs = new[]
@@ -91,7 +92,7 @@ namespace AutoQC
 
                 if (File.Exists(skyCmdExe) && skyType != null)
                 {
-                    skylineCmdLineExePath = skyCmdExe;
+                    skylineInstallDir = installDir;
                     skylineType = skyType;
                     return true;
                 }
@@ -102,18 +103,13 @@ namespace AutoQC
 
         public static bool UseSkyline => Settings.Default.SkylineType.Equals(Skyline);
 
-        public static bool UseClickOnceInstaller => GetSkylineRunnerPath().Equals(GetSkylineCmdExePath);
+        public static bool UseClickOnceInstall => string.IsNullOrWhiteSpace(Settings.Default.SkylineInstallDir);
 
-        public static string GetSkylineCmdExePath => Settings.Default.SkylineCmdLineExePath;
+        public static string SkylineInstallDir => Settings.Default.SkylineInstallDir;
 
-        public static string GetSkylineCmdExeDir
-        {
-            get
-            {
-                var exePath = GetSkylineCmdExePath;
-                return string.IsNullOrWhiteSpace(exePath) ? "" : Path.GetDirectoryName(exePath);
-            }
-        }
+        public static string GetSkylineCmdLineExePath => UseClickOnceInstall
+            ? GetSkylineRunnerPath()
+            : Path.Combine(SkylineInstallDir, SKYLINE_CMD_EXE);
 
         private static string GetSkylineRunnerPath()
         {
@@ -125,18 +121,24 @@ namespace AutoQC
             return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, useSkyline ? SKYLINE_RUNNER_EXE : SKYLINE_DAILY_RUNNER_EXE);
         }
 
-        private static void ChangeSettings(string skylineType, string skylineCmdLineExePath)
+        private static void SaveSettings(string skylineType)
+        {
+            SaveSettings(skylineType, string.Empty);
+        }
+
+        private static void SaveSettings(string skylineType, string skylineInstallPath)
         {
             Settings.Default.SkylineType = skylineType;
-            Settings.Default.SkylineCmdLineExePath = skylineCmdLineExePath;
+            Settings.Default.SkylineInstallDir = skylineInstallPath;
             Settings.Default.Save();
             Program.LogInfo(new StringBuilder("Skyline settings changed. ").Append(GetSkylineSettingsStr()).ToString());
         }
 
         public static string GetSkylineSettingsStr()
         {
-            return new StringBuilder().Append($"Skyline type: {Settings.Default.SkylineType}; ")
-                .Append($"Skyline command-line exe: {Settings.Default.SkylineCmdLineExePath}").ToString();
+            var str = new StringBuilder($"Skyline type: {Settings.Default.SkylineType}; ");
+            str.Append(UseClickOnceInstall ? "Using web-based Skyline install" : $"Skyline installation directory {Settings.Default.SkylineInstallDir}");
+            return str.ToString();
         }
 
         public static bool UpdateSettings(bool useSkyline, bool useClickOnceInstaller, string installDir,
@@ -165,7 +167,7 @@ namespace AutoQC
                     return false;
                 }
                 
-                ChangeSettings(skylineTypeClicked, skylineRunnerPath);
+                SaveSettings(skylineTypeClicked);
             }
 
             else
@@ -196,7 +198,7 @@ namespace AutoQC
                     return false;
                 }
 
-                ChangeSettings(skylineTypeClicked, skylineCmdExePath);
+                SaveSettings(skylineTypeClicked, installDir);
             }
 
             return true;
@@ -216,8 +218,8 @@ namespace AutoQC
         public static bool SettingsChanged(bool useSkylineSelected, bool clickOnceInstallSelected, string installDirEntered)
         {
             return UseSkyline != useSkylineSelected
-                   || UseClickOnceInstaller != clickOnceInstallSelected
-                   || (!clickOnceInstallSelected && !GetSkylineCmdExeDir.Equals(installDirEntered));
+                   || UseClickOnceInstall != clickOnceInstallSelected
+                   || (!clickOnceInstallSelected && !SkylineInstallDir.Equals(installDirEntered));
         }
     }
 }
