@@ -541,13 +541,14 @@ namespace AutoQC
 
             if (runner == null)
             {
-                ShowErrorDialog("", string.Format("No configuration found for name \"{0}\"", configName));
+
+                ShowWarningDialog("", string.Format("No configuration found for name \"{0}\"", configName));
                 return;
             }
 
             if (logger == null)
             {
-                ShowErrorDialog("", "Log for this configuration is not yet initialized.");
+                ShowWarningDialog("", "Log for this configuration is not yet initialized.");
                 return;
             }
 
