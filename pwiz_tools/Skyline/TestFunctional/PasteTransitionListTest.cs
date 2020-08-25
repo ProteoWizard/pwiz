@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Windows.Forms;
 using pwiz.Skyline.FileUI;
@@ -40,6 +41,19 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            RunUI(() => SkylineWindow.NewDocument());
+
+            WaitForDocumentLoaded();
+
+            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("ThermoTransitionList.csv")));
+            var therm = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            
+            RunUI(() => {
+                var thermBoxes = therm.ComboBoxes;
+                Assert.AreEqual("Precursor m/z", thermBoxes[0].Text);
+                Assert.AreEqual("Fragment Name", thermBoxes[5].Text);
+            });
+
             RunUI(() => SkylineWindow.NewDocument());
 
             WaitForDocumentLoaded();
@@ -71,6 +85,8 @@ namespace pwiz.SkylineTestFunctional
             importTransitionListErrorDlg = ShowDialog<ImportTransitionListErrorDlg>(() => dlg.DialogResult = DialogResult.OK);
 
             OkDialog(importTransitionListErrorDlg, () => importTransitionListErrorDlg.DialogResult = DialogResult.OK);
+
+            
         }
     }
 }

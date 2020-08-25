@@ -1482,11 +1482,14 @@ namespace pwiz.Skyline.Model
             private static bool ContainsFragmentName(string field)
             {
                 field = field.ToLower();
-                
-                if ("abcxyz".Contains(field[0]) && char.IsDigit(field, 1))
+                if (field.Length != 0)
                 {
-                    return true;
+                    if ("abcxyz".Contains(field[0]) && char.IsDigit(field, 1))
+                    {
+                        return true;
+                    }
                 }
+                
                 return false;
             }
 
