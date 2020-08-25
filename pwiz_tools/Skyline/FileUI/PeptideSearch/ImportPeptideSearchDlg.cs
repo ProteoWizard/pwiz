@@ -469,6 +469,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         }
                         else
                         {
+                            ImportPeptideSearch.SpectrumSourceFiles.Clear();
+
                             // in PerformDDA mode, set SpectrumSourceFiles and offer to remove prefix
                             for (int i = 0; i < BuildPepSearchLibControl.DdaSearchDataSources.Length; ++i)
                             {
