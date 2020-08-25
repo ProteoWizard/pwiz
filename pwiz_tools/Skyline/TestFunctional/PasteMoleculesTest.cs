@@ -719,7 +719,7 @@ namespace pwiz.SkylineTestFunctional
                     "Proteins!*.Peptides!*.HMDB",
                     "Proteins!*.Peptides!*.SMILES",
                     "Proteins!*.Peptides!*.CAS",
-                    "Proteins!*.Peptides!*.KEGG"});
+                    "Proteins!*.Peptides!*.KEGG"}, null, 32);
                 const double explicitCE2= 123.45;
                 var colCE = FindDocumentGridColumn(documentGrid, "ExplicitCollisionEnergy");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCE.Index].Value = explicitCE2);

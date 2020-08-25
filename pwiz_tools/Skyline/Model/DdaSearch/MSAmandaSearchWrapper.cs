@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.DocSettings;
 using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
 using OperationCanceledException = System.OperationCanceledException;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -61,16 +62,15 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string MAX_LOADED_PROTEINS_AT_ONCE = "MaxLoadedProteinsAtOnce";
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
 
-        private readonly string _baseDir =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"MSAmanda2.0");
+        private readonly TemporaryDirectory _baseDir = new TemporaryDirectory();
 
         public MSAmandaSearchWrapper()
         {
             Settings = new MSAmandaSettings();
             helper = new MSHelper();
-            helper.InitLogWriter(_baseDir);
+            helper.InitLogWriter(_baseDir.DirPath);
             helper.SearchProgressChanged += Helper_SearchProgressChanged;
-            var folderForMappings = Path.Combine(_baseDir, AmandaMap);
+            var folderForMappings = Path.Combine(_baseDir.DirPath, AmandaMap);
             // creates dir if not existing
             Directory.CreateDirectory(folderForMappings);
             mzID = new OutputMzid(folderForMappings);
@@ -103,13 +103,14 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             helper.Dispose();
             mzID.Dispose();
+            _baseDir.Dispose();
             //AvailableSettings = new SettingsFile(null, Settings, mzID);
         }
 
         private void Helper_SearchProgressChanged(string message)
         {
             int percentProgress = 0;
-            if (amandaInputParser != null)
+            if (amandaInputParser != null && amandaInputParser.TotalSpectra > 0 && TotalFiles > 0)
             {
                 percentProgress = CurrentFile * 100 / TotalFiles;
                 percentProgress += amandaInputParser.CurrentSpectrum * 100 / amandaInputParser.TotalSpectra / TotalFiles;
@@ -199,7 +200,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             Settings.ChemicalData.UseMonoisotopicMass = true;
             Settings.ReportBothBestHitsForTD = false;
             mzID.Settings = Settings;
-            SearchEngine = new MSAmandaSearch(helper, _baseDir, _outputParameters, Settings, token);
+            SearchEngine = new MSAmandaSearch(helper, _baseDir.DirPath, _outputParameters, Settings, token);
             SearchEngine.InitializeOutputMZ(mzID);
             Settings.LoadedProteinsAtOnce = (int) AdditionalSettings[MAX_LOADED_PROTEINS_AT_ONCE].Value;
             Settings.LoadedSpectraAtOnce = (int) AdditionalSettings[MAX_LOADED_SPECTRA_AT_ONCE].Value;
@@ -211,6 +212,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             try
             {
                 using (var c = new CurrentCultureSetter(CultureInfo.InvariantCulture))
+                using (var d = new CurrentDirectorySetter(_baseDir.DirPath))
                 {
                     foreach (var rawFileName in SpectrumFileNames)
                     {
