@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private Modification GenerateNewModification(StaticMod mod, char a)
         {
             return new Modification(mod.ShortName ?? mod.Name, mod.Name, mod.MonoisotopicMass ?? 0.0,
-                mod.AverageMass ?? 0.0, a, !mod.IsVariable, mod.Losses?.Select(l => l.MonoisotopicMass)?.ToArray() ?? new double[0],
+                mod.AverageMass ?? 0.0, a, !mod.IsVariable, mod.Losses?.Select(l => l.MonoisotopicMass).ToArray() ?? new double[0],
                 mod.Terminus.HasValue && mod.Terminus.Value == ModTerminus.N,
                 mod.Terminus.HasValue && mod.Terminus.Value == ModTerminus.C,
                 mod.UnimodId ?? 0, false);
