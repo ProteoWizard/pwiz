@@ -31,6 +31,13 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PasteTransitionListTest : AbstractFunctionalTest
     {
+        private string precursor = "Precursor m/z";
+        private string product = "Product m/z";
+        private string peptide = "Peptide Modified Sequence";
+        private string protName = "Protein Name";
+        private string fragName = "Fragment Name";
+        private string preCharge = "Precursor Charge";
+        private string label = "Label Type";
 
         [TestMethod]
         public void TestPasteTransitionList()
@@ -41,6 +48,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            
             RunUI(() => SkylineWindow.NewDocument());
 
             WaitForDocumentLoaded();
@@ -50,12 +58,18 @@ namespace pwiz.SkylineTestFunctional
             
             RunUI(() => {
                 var thermBoxes = therm.ComboBoxes;
-                
-                Assert.AreEqual("Precursor m/z", thermBoxes[0].Text);
-                Assert.AreEqual("Fragment Name", thermBoxes[5].Text);
+
+                // Checks that automatically assigning column headers works properly
+                Assert.AreEqual(precursor, thermBoxes[0].Text);
+                Assert.AreEqual(product, thermBoxes[1].Text);
+                Assert.AreEqual(peptide, thermBoxes[3].Text);
+                Assert.AreEqual(protName, thermBoxes[4].Text);
+                Assert.AreEqual(fragName, thermBoxes[5].Text);
+                Assert.AreEqual(preCharge, thermBoxes[6].Text);
+                Assert.AreEqual(label, thermBoxes[7].Text);
                 therm.CancelDialog();
             });
-            
+
             RunUI(() => SkylineWindow.NewDocument());
 
             WaitForDocumentLoaded();
@@ -65,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => {
                 var comboBoxes = dlg.ComboBoxes;
-                
+
                 comboBoxes[0].SelectedIndex = 1;
                 comboBoxes[1].SelectedIndex = 1;
                 Assert.AreNotEqual(comboBoxes[0], comboBoxes[1]);
