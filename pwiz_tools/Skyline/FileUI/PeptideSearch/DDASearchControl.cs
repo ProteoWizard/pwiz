@@ -91,11 +91,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public async void RunSearch()
         {
-            if (string.IsNullOrEmpty(txtSearchProgress.Text))
-            {
-                //search for first time
-                ImportPeptideSearch.SearchEngine.SearchProgressChanged += SearchEngine_MessageNotificationEvent;
-            }
+            ImportPeptideSearch.SearchEngine.SearchProgressChanged += SearchEngine_MessageNotificationEvent;
             txtSearchProgress.Text = string.Empty;
             _progressTextItems.Clear();
             btnCancel.Enabled = true;
@@ -123,6 +119,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, 0);
             btnCancel.Enabled = false;
             OnSearchFinished?.Invoke(t.Result);
+            ImportPeptideSearch.SearchEngine.SearchProgressChanged -= SearchEngine_MessageNotificationEvent;
         }
 
         private void SearchEngine_MessageNotificationEvent(object sender, IProgressStatus status)
@@ -133,10 +130,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
+        public void Cancel()
         {
             cancelToken.Cancel();
             btnCancel.Enabled = false;
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Cancel();
         }
 
         private void showTimestampsCheckbox_CheckedChanged(object sender, EventArgs e)

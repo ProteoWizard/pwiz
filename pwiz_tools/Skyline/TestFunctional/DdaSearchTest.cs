@@ -88,27 +88,12 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch = true;
-                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => new MsDataFilePath(o)).ToArray();
+                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri) new MsDataFilePath(o)).Take(1).ToArray();
                 Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
-            });
-
-            // Remove prefix/suffix dialog pops up; accept default behavior
-            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
-            OkDialog(removeSuffix, () => removeSuffix.YesDialog());
-            WaitForDocumentLoaded();
-
-            // We're on the "Extract Chromatograms" page of the wizard.
-            // All the test results files are in the same directory as the 
-            // document file, so all the files should be found, and we should
-            // just be able to move to the next page.
-            // TODO: DDA searches should not look for result files (for DDA, the result files are the same as the search input, and for DIA, I'm not sure yet)
-            /*
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-            */
+
+            // With only 1 source, no add/remove prefix/suffix dialog
 
             // We're on the "Match Modifications" page. Add M+16 mod.
             RunUI(() =>
@@ -124,6 +109,13 @@ namespace pwiz.SkylineTestFunctional
                 editModDlg.SetModification("Oxidation (M)", true); // Not L10N
                 editModDlg.OkDialog();
             });
+
+            // Test a non-Unimod mod that won't affect the search
+            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+            {
+                editModDlg.Modification = new StaticMod("NotUniModMod (U)", "U", null, "C3P1O1", LabelAtoms.None, null, null);
+                editModDlg.OkDialog();
+            });
             OkDialog(editListUI, editListUI.OkDialog);
 
             // Test back/next buttons
@@ -132,9 +124,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                // We're on the "Match Modifications" page again.
-                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, false); // uncheck C+57
-                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(1, true); // check M=16
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
@@ -168,6 +159,44 @@ namespace pwiz.SkylineTestFunctional
 
                 importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
+
+                // Cancel search
+                importPeptideSearchDlg.SearchControl.Cancel();
+            });
+
+            WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            Assert.IsFalse(searchSucceeded.Value);
+            searchSucceeded = null;
+
+            // Go back and add another file
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+
+                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri) new MsDataFilePath(o)).ToArray();
+            });
+
+
+            // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
+            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            OkDialog(removeSuffix, () => removeSuffix.YesDialog());
+            WaitForDocumentLoaded();
+
+            RunUI(() =>
+            {
+                // We're on the "Match Modifications" page again.
+                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, false); // uncheck C+57
+                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(1, true); // check M+16
+                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(2, true); // check U+C3P0
+
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
