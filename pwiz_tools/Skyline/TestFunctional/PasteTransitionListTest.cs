@@ -50,10 +50,12 @@ namespace pwiz.SkylineTestFunctional
             
             RunUI(() => {
                 var thermBoxes = therm.ComboBoxes;
+                
                 Assert.AreEqual("Precursor m/z", thermBoxes[0].Text);
                 Assert.AreEqual("Fragment Name", thermBoxes[5].Text);
+                therm.CancelDialog();
             });
-
+            
             RunUI(() => SkylineWindow.NewDocument());
 
             WaitForDocumentLoaded();
@@ -63,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => {
                 var comboBoxes = dlg.ComboBoxes;
-
+                
                 comboBoxes[0].SelectedIndex = 1;
                 comboBoxes[1].SelectedIndex = 1;
                 Assert.AreNotEqual(comboBoxes[0], comboBoxes[1]);
@@ -76,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
                 dlg.dataGrid.Columns[0].Width -= 20;
                 Assert.AreNotEqual(oldBoxWidth, comboBoxes[0].Width);
             });
-
+            
             var importTransitionListErrorDlg = ShowDialog<ImportTransitionListErrorDlg>(() => dlg.buttonCheckForErrors.PerformClick());
 
             // ReSharper disable once AccessToModifiedClosure (The okAction is executed immediately inside OkDialog so there is no chance of importTransitionListErrorDlg being modified)
