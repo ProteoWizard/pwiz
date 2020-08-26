@@ -1099,8 +1099,10 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            if (row.GetCellAsDouble(INDEX_COLLISION_ENERGY, out dtmp))
+            if (row.GetCellAsDouble(INDEX_COLLISION_ENERGY, out dtmp) && dtmp > 0)
+            {
                 collisionEnergy = dtmp;
+            }
             else if (!String.IsNullOrEmpty(GetCellTrimmed(row, INDEX_COLLISION_ENERGY)))
             {
                 ShowTransitionError(new PasteError
@@ -1135,8 +1137,10 @@ namespace pwiz.Skyline.Model
                 });
                 return null;
             }
-            if (row.GetCellAsDouble(INDEX_DECLUSTERING_POTENTIAL, out dtmp))
+            if (row.GetCellAsDouble(INDEX_DECLUSTERING_POTENTIAL, out dtmp) && dtmp > 0)
+            {
                 declusteringPotential = dtmp;
+            }
             else if (!String.IsNullOrEmpty(GetCellTrimmed(row, INDEX_DECLUSTERING_POTENTIAL)))
             {
                 ShowTransitionError(new PasteError
