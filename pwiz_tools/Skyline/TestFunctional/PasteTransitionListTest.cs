@@ -67,7 +67,14 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(fragName, thermBoxes[5].Text);
                 Assert.AreEqual(preCharge, thermBoxes[6].Text);
                 Assert.AreEqual(label, thermBoxes[7].Text);
+                // Modifies the selected index of one of the combo boxes and then verifies that it was saved 
+                thermBoxes[4].SelectedIndex = 2;
                 therm.CancelDialog();
+                SkylineWindow.NewDocument();
+                WaitForDocumentLoaded();
+                Assert.AreEqual(2, thermBoxes[4].SelectedIndex);
+                Assert.AreNotEqual(protName, thermBoxes[4].Text);
+
             });
 
             RunUI(() => SkylineWindow.NewDocument());
@@ -75,9 +82,9 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
 
             SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("Peptide Transition List.csv")));
-            var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
 
             RunUI(() => {
+                var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
                 var comboBoxes = dlg.ComboBoxes;
 
                 comboBoxes[0].SelectedIndex = 1;
