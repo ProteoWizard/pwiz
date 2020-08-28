@@ -156,10 +156,14 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                var title = string.Format("Error Starting Configuration \"{0}\"", configRunner.Config.Name);
-                var msg = string.Format("{0}\n\nMore details can be found in the program log: {1}", e.Message, Program.GetProgramLogFilePath());
+                var title = string.Format(Resources.MainForm_StartConfigRunner_Error_Starting_Configuration___0__, configRunner.Config.Name);
+                var msg = TextUtil.LineSeparate(e.Message,
+                    string.Format(
+                        Resources.MainForm_StartConfigRunner_More_details_can_be_found_in_the_program_log___0_,
+                        Program.GetProgramLogFilePath()));
                 ShowErrorWithExceptionDialog(title, msg, e);
-                Program.LogError(title, e);
+                // ReSharper disable once LocalizableElement
+                Program.LogError(string.Format("Error Starting Configuration \"{0}\"", configRunner.Config.Name), e);
             }
         }
 
@@ -186,7 +190,7 @@ namespace AutoQC
         private void ShowErrorDialog(string title, string message)
         {
             AlertDlg.ShowError(this, message, title);
-        }
+        }   
 
         private void ShowWarningDialog(string title, string message)
         {
@@ -269,22 +273,22 @@ namespace AutoQC
                 {
                     message =
                         string.Format(
-                            @"Configuration ""{0}"" is running. Please stop the configuration and try again. ",
+                            Resources.MainForm_btnDelete_Click_Configuration___0___is_running__Please_stop_the_configuration_and_try_again__,
                             configRunner.GetConfigName());
                 }
                 else if (configRunner.IsStopping())
                 {
                     message =
                         string.Format(
-                            @"Please wait for the configuration ""{0}"" to stop and try again.",
+                            Resources.MainForm_btnDelete_Click_Please_wait_for_the_configuration___0___to_stop_and_try_again_,
                             configRunner.GetConfigName());
                 }
-                ShowWarningDialog("Cannot Delete", message);
+                ShowWarningDialog(Resources.MainForm_btnDelete_Click_Cannot_Delete, message);
                 return;
             }
 
-            var doDelete = ShowQuestionDialog("Confirm Delete",
-                string.Format(@"Are you sure you want to delete configuration ""{0}""?", configRunner.GetConfigName()));
+            var doDelete = ShowQuestionDialog(Resources.MainForm_btnDelete_Click_Confirm_Delete,
+                string.Format(Resources.MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_configuration___0___, configRunner.GetConfigName()));
             
             if (doDelete != DialogResult.Yes) return;
 
@@ -332,14 +336,16 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                ShowErrorWithExceptionDialog("Import Configurations Error",
-                    string.Format("Could not import configurations from file {0}", filePath), ex);
+                ShowErrorWithExceptionDialog(Resources.MainForm_btnImport_Click_Import_Configurations_Error,
+                    string.Format(Resources.MainForm_btnImport_Click_Could_not_import_configurations_from_file__0_, filePath), ex);
                 return;
             }
 
             if (readConfigs.Count == 0)
             {
-                ShowWarningDialog("Import Configurations", string.Format("Could not import configurations from file {0}", filePath));
+                ShowWarningDialog(Resources.MainForm_btnImport_Click_Import_Configurations,
+                    string.Format(Resources.MainForm_btnImport_Click_Could_not_import_configurations_from_file__0_,
+                        filePath));
             }
 
             var validationErrors = new List<string>();
@@ -370,11 +376,11 @@ namespace AutoQC
                 numAdded++;
             }
 
-            var message = new StringBuilder("Number of configurations imported: ");
+            var message = new StringBuilder(Resources.MainForm_btnImport_Click_Number_of_configurations_imported__);
             message.Append(numAdded).Append(Environment.NewLine);
             if (duplicateConfigs.Count > 0)
             {
-                message.Append("The following configurations already exist and were not imported:")
+                message.Append(Resources.MainForm_btnImport_Click_The_following_configurations_already_exist_and_were_not_imported_)
                     .Append(Environment.NewLine);
                 foreach (var name in duplicateConfigs)
                 {
@@ -383,14 +389,14 @@ namespace AutoQC
             }
             if (validationErrors.Count > 0)
             {
-                message.Append("The following configurations could not be validated and were not imported:")
+                message.Append(Resources.MainForm_btnImport_Click_The_following_configurations_could_not_be_validated_and_were_not_imported_)
                     .Append(Environment.NewLine);
                 foreach (var error in validationErrors)
                 {
                     message.Append(error).Append(Environment.NewLine);
                 }
             }
-            ShowInfoDialog("Import Configurations", message.ToString());
+            ShowInfoDialog(Resources.MainForm_btnImport_Click_Import_Configurations, message.ToString());
 
         }
 
@@ -409,18 +415,18 @@ namespace AutoQC
             if (configRunner.IsStarting() || configRunner.IsStopping())
             {
                 e.NewValue = e.CurrentValue;
-                var message = string.Format("Configuration is {0}. Please wait.",
-                    configRunner.IsStarting() ? "starting" : "stopping");
+                var message = string.Format(Resources.MainForm_listViewConfigs_ItemCheck_Configuration_is__0___Please_wait_,
+                    configRunner.IsStarting() ? Resources.MainForm_listViewConfigs_ItemCheck_starting : Resources.MainForm_listViewConfigs_ItemCheck_stopping);
 
-                ShowWarningDialog("Please Wait", message);
+                ShowWarningDialog(Resources.MainForm_listViewConfigs_ItemCheck_Please_Wait, message);
                 return;
             }
 
             if (e.NewValue == CheckState.Checked) return;
 
             var doChange =
-                ShowQuestionDialog("Confirm Stop",
-                    string.Format(@"Are you sure you want to stop configuration ""{0}""?", configRunner.GetConfigName()));
+                ShowQuestionDialog(Resources.MainForm_listViewConfigs_ItemCheck_Confirm_Stop,
+                    string.Format(Resources.MainForm_listViewConfigs_ItemCheck_Are_you_sure_you_want_to_stop_configuration___0___, configRunner.GetConfigName()));
 
             if (doChange != DialogResult.Yes)
             {
@@ -541,14 +547,13 @@ namespace AutoQC
 
             if (runner == null)
             {
-
-                ShowWarningDialog("", string.Format("No configuration found for name \"{0}\"", configName));
+                ShowWarningDialog(string.Empty, string.Format(Resources.MainForm_ViewLog_No_configuration_found_for_name___0__, configName));
                 return;
             }
 
             if (logger == null)
             {
-                ShowWarningDialog("", "Log for this configuration is not yet initialized.");
+                ShowWarningDialog(string.Empty, Resources.MainForm_ViewLog_Log_for_this_configuration_is_not_yet_initialized_);
                 return;
             }
 
@@ -565,7 +570,7 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                ShowErrorWithExceptionDialog("Error Reading Log", ex.Message, ex);
+                ShowErrorWithExceptionDialog(Resources.MainForm_ViewLog_Error_Reading_Log, ex.Message, ex);
             }
 
             ScrollToLogEnd();
@@ -599,8 +604,8 @@ namespace AutoQC
             }
             else
             {
-                var err = string.Format("Directory does not exist: {0}", runner.GetLogDirectory());
-                ShowErrorDialog("Directory Not Found", err);
+                var err = string.Format(Resources.MainForm_btnOpenFolder_Click_Directory_does_not_exist___0_, runner.GetLogDirectory());
+                ShowErrorDialog(Resources.MainForm_btnOpenFolder_Click_Directory_Not_Found, err);
             }
 
         }
@@ -972,10 +977,15 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                var err = $"Error {(enable ? "enabling" : "disabling")} \"Keep AutoQC Loader running\"";
-                Program.LogError(err, ex);
-               
-                ShowErrorWithExceptionDialog("Error Changing Settings", $"{err}.{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}{(ex.InnerException != null ? ex.InnerException.StackTrace : ex.StackTrace)}", ex);
+                var err = enable ? string.Format(Resources.MainForm_cb_keepRunning_CheckedChanged_Error_enabling__Keep__0__running_, Program.AppName)
+                    : string.Format(Resources.MainForm_cb_keepRunning_CheckedChanged_Error_disabling__Keep__0__running_, Program.AppName);
+                // ReSharper disable once LocalizableElement
+                Program.LogError($"Error {(enable ? "enabling" : "disabling")} \"Keep AutoQC Loader running\"", ex);
+
+                ShowErrorWithExceptionDialog(Resources.MainForm_cb_keepRunning_CheckedChanged_Error_Changing_Settings,
+                    TextUtil.LineSeparate(
+                        $"{err},{ex.Message},{(ex.InnerException != null ? ex.InnerException.StackTrace : ex.StackTrace)}"),
+                    ex);
 
                 cb_keepRunning.CheckedChanged -= cb_keepRunning_CheckedChanged;
                 cb_keepRunning.Checked = !enable;
@@ -1012,7 +1022,9 @@ namespace AutoQC
             if (!SkylineSettings.UpdateSettings(radioButtonUseSkyline.Checked, radioButtonWebBasedSkyline.Checked,
                 textBoxSkylinePath.Text, out var errors))
             {
-                ShowWarningDialog("Cannot Update Skyline Settings", errors);
+                ShowWarningDialog(
+                    string.Format(Resources.MainForm_ApplyChangesToSkylineSettings_Cannot_Update__0__Settings,
+                        SkylineSettings.Skyline), errors);
                 UpdateSkylineTypeAndInstallPathControls(); // Reset controls to saved settings
                 return false;
             }
@@ -1022,7 +1034,13 @@ namespace AutoQC
                 {
                     textBoxSkylinePath.Text = string.Empty;
                 }
-                ShowInfoDialog("Skyline Settings Updated", "Skyline settings were updated successfully!");
+
+                ShowInfoDialog(
+                    string.Format(Resources.MainForm_ApplyChangesToSkylineSettings__0__Settings_Updated,
+                        SkylineSettings.Skyline),
+                    string.Format(
+                        Resources.MainForm_ApplyChangesToSkylineSettings__0__settings_were_updated_successfully_,
+                        SkylineSettings.Skyline));
             }
 
             return true;
@@ -1032,7 +1050,10 @@ namespace AutoQC
         {
             using (var folderBrowserDlg = new FolderBrowserDialog())
             {
-                folderBrowserDlg.Description = "Select the Skyline installation directory.";
+                folderBrowserDlg.Description =
+                    string.Format(
+                        Resources.MainForm_buttonFileDialogSkylineInstall_click_Select_the__0__installation_directory_,
+                        SkylineSettings.Skyline);
                 folderBrowserDlg.ShowNewFolderButton = false;
                 folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                 if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
@@ -1066,16 +1087,27 @@ namespace AutoQC
                 if (!SkylineSettings.IsInitialized())
                 {
                     // Do not let the user switch to another tab without specifying a valid Skyline installation.
-                    ShowErrorDialog("Skyline Settings Not Initialized", 
-                        "An installation of Skyline or Skyline-daily is required to use AutoQC Loader. Please select Skyline installation details to continue.");
+                    ShowErrorDialog(
+                        string.Format(Resources.MainForm_TabMain_Deselecting__0__Settings_Not_Initialized,
+                            SkylineSettings.Skyline),
+                        string.Format(
+                            Resources
+                                .MainForm_TabMain_Deselecting_An_installation_of__0__or__1__is_required_to_use__2___Please_select__3__installation_details_to_continue_,
+                            SkylineSettings.Skyline, SkylineSettings.SkylineDaily, Program.AppName,
+                            SkylineSettings.Skyline));
                     e.Cancel = true;
                     return;
                 }
                 if (SkylineSettings.SettingsChanged(radioButtonUseSkyline.Checked, radioButtonWebBasedSkyline.Checked,
                     textBoxSkylinePath.Text))
                 {
-                    var result = ShowQuestionDialog("Unsaved Skyline Settings",
-                        "Skyline settings have not been saved. Would you like to save them?");
+                    var result = ShowQuestionDialog(
+                        string.Format(Resources.MainForm_TabMain_Deselecting_Unsaved__0__Settings,
+                            SkylineSettings.Skyline),
+                        string.Format(
+                            Resources
+                                .MainForm_TabMain_Deselecting__0__settings_have_not_been_saved__Would_you_like_to_save_them_,
+                            SkylineSettings.Skyline));
                     if (result == DialogResult.Yes)
                     {
                         if (!ApplyChangesToSkylineSettings())

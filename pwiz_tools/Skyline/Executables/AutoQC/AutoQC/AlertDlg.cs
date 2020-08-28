@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using AutoQC.Properties;
 
 
 namespace AutoQC
@@ -236,19 +237,19 @@ namespace AutoQC
             switch (dialogResult)
             {
                 case DialogResult.OK:
-                    return "OK";
+                    return Resources.AlertDlg_GetDefaultButtonText_OK;
                 case DialogResult.Cancel:
-                    return "Cancel";
+                    return Resources.AlertDlg_GetDefaultButtonText_Cancel;
                 case DialogResult.Yes:
-                    return "Yes";
+                    return Resources.AlertDlg_GetDefaultButtonText_Yes;
                 case DialogResult.No:
-                    return "No";
+                    return Resources.AlertDlg_GetDefaultButtonText_No;
                 case DialogResult.Abort:
-                    return "Abort";
+                    return Resources.AlertDlg_GetDefaultButtonText_Abort;
                 case DialogResult.Retry:
-                    return "Retry";
+                    return Resources.AlertDlg_GetDefaultButtonText_Retry;
                 case DialogResult.Ignore:
-                    return "Ignore";
+                    return Resources.AlertDlg_GetDefaultButtonText_Ignore;
                 default:
                     throw new ArgumentException();
             }
@@ -313,7 +314,7 @@ namespace AutoQC
                 return message;
             }
             return TextUtil.LineSeparate(message.Substring(0, MAX_MESSAGE_LENGTH),
-                "Message truncated. Press Ctrl+C to copy entire message to the clipboard.");
+                Resources.AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_);
         }
 
     }

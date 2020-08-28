@@ -53,6 +53,8 @@ namespace AutoQC
 
         public FileFilter QcFileFilter { get; set; }
 
+        public bool RemoveResults { get; set;  } 
+
         public int ResultsWindow { get; set; }
 
         public string InstrumentType { get; set; }
@@ -69,6 +71,7 @@ namespace AutoQC
             var settings = new MainSettings
             {
                 InstrumentType = THERMO,
+                RemoveResults = true,
                 ResultsWindow = ACCUM_TIME_WINDOW,
                 AcquisitionTime = ACQUISITION_TIME,
                 QcFileFilter = FileFilter.GetFileFilter(AllFileFilter.NAME, string.Empty)
@@ -84,6 +87,7 @@ namespace AutoQC
                 FolderToWatch = FolderToWatch,
                 IncludeSubfolders = IncludeSubfolders,
                 QcFileFilter = QcFileFilter,
+                RemoveResults = RemoveResults,
                 ResultsWindow = ResultsWindow,
                 AcquisitionTime = AcquisitionTime,
                 InstrumentType = InstrumentType
@@ -192,8 +196,12 @@ namespace AutoQC
                 importOnOrAfter = string.Format(" --import-on-or-after={0}",
                     accumulationWindow.StartDate.ToShortDateString());
 
-                // Add arguments to remove files older than the start of the rolling window.   
-                args.Append(string.Format(" --remove-before={0}", accumulationWindow.StartDate.ToShortDateString()));
+                if (RemoveResults)
+                {
+                    // Add arguments to remove files older than the start of the rolling window.   
+                    args.Append(string.Format(" --remove-before={0}",
+                        accumulationWindow.StartDate.ToShortDateString()));
+                }
             }
 
             // Add arguments to import the results file
@@ -314,6 +322,7 @@ namespace AutoQC
             include_subfolders,
             file_filter_type,
             qc_file_pattern,
+            remove_results,
             results_window,
             instrument_type,
             acquisition_time
@@ -337,6 +346,7 @@ namespace AutoQC
                 filterType = RegexFilter.NAME;
             }
             QcFileFilter = FileFilter.GetFileFilter(filterType, pattern);
+            RemoveResults = reader.GetBoolAttribute(ATTR.remove_results, true);
             ResultsWindow = reader.GetIntAttribute(ATTR.results_window);
             InstrumentType = reader.GetAttribute(ATTR.instrument_type);
             AcquisitionTime = reader.GetIntAttribute(ATTR.acquisition_time);
@@ -350,6 +360,7 @@ namespace AutoQC
             writer.WriteAttribute(ATTR.include_subfolders, IncludeSubfolders);
             writer.WriteAttributeIfString(ATTR.qc_file_pattern, QcFileFilter.Pattern);
             writer.WriteAttributeString(ATTR.file_filter_type, QcFileFilter.Name());   
+            writer.WriteAttribute(ATTR.remove_results, RemoveResults, true);
             writer.WriteAttributeNullable(ATTR.results_window, ResultsWindow);
             writer.WriteAttributeIfString(ATTR.instrument_type, InstrumentType);
             writer.WriteAttributeNullable(ATTR.acquisition_time, AcquisitionTime);
@@ -366,6 +377,7 @@ namespace AutoQC
                    && IncludeSubfolders == other.IncludeSubfolders
                    && Equals(QcFileFilter, other.QcFileFilter)
                    && ResultsWindow == other.ResultsWindow
+                   && RemoveResults == other.RemoveResults
                    && string.Equals(InstrumentType, other.InstrumentType)
                    && AcquisitionTime == other.AcquisitionTime
                    && LastAcquiredFileDate.Equals(other.LastAcquiredFileDate);
