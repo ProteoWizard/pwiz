@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Windows.Forms;
 using pwiz.Skyline.FileUI;
@@ -47,8 +46,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         protected override void DoTest()
-        {
-            
+        { 
             RunUI(() => SkylineWindow.NewDocument());
 
             WaitForDocumentLoaded();
@@ -68,21 +66,23 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(label, thermBoxes[7].Text);
                 // Modifies the selected index of one box so later we can test if it saved 
                 thermBoxes[4].SelectedIndex = 2;
+                therm.buttonOk.PerformClick();
                 therm.CancelDialog();
             });
             RunUI(() => SkylineWindow.NewDocument());
 
             WaitForDocumentLoaded();
 
-            var second = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            // This will paste in the ThermoTransitionList a second time
+            var secondtherm = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
 
             RunUI(() => {
-                var secondBoxes = therm.ComboBoxes;
+                var secondBoxes = secondtherm.ComboBoxes;
                 // Checks that the modified index was saved 
                 Assert.AreEqual(2, secondBoxes[4].SelectedIndex);
                 // Checks that the the text in the combo box reflects the change
                 Assert.AreNotEqual(protName, secondBoxes[4].Text);
-                second.CancelDialog();
+                secondtherm.CancelDialog();
             });
             RunUI(() => SkylineWindow.NewDocument());
 
@@ -90,12 +90,14 @@ namespace pwiz.SkylineTestFunctional
 
             SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("Peptide Transition List.csv")));
             var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+
             RunUI(() => {
                 var comboBoxes = dlg.ComboBoxes;
                 // Checks that two comboboxes cannot have the same header (unless it is Ignore Column)
                 comboBoxes[0].SelectedIndex = 1;
                 comboBoxes[1].SelectedIndex = 1;
                 Assert.AreNotEqual(comboBoxes[0], comboBoxes[1]);
+
                 comboBoxes[2].SelectedIndex = 0;
                 comboBoxes[3].SelectedIndex = 0;
                 Assert.AreEqual(comboBoxes[2].Text, comboBoxes[3].Text);
@@ -104,6 +106,7 @@ namespace pwiz.SkylineTestFunctional
                 dlg.dataGrid.Columns[0].Width -= 20;
                 Assert.AreNotEqual(oldBoxWidth, comboBoxes[0].Width);
             });
+
             var importTransitionListErrorDlg = ShowDialog<ImportTransitionListErrorDlg>(() => dlg.buttonCheckForErrors.PerformClick());
 
             // ReSharper disable once AccessToModifiedClosure (The okAction is executed immediately inside OkDialog so there is no chance of importTransitionListErrorDlg being modified)
@@ -111,7 +114,7 @@ namespace pwiz.SkylineTestFunctional
 
             importTransitionListErrorDlg = ShowDialog<ImportTransitionListErrorDlg>(() => dlg.DialogResult = DialogResult.OK);
 
-            OkDialog(importTransitionListErrorDlg, () => importTransitionListErrorDlg.DialogResult = DialogResult.OK);      
+            OkDialog(importTransitionListErrorDlg, () => importTransitionListErrorDlg.DialogResult = DialogResult.OK);
         }
     }
 }

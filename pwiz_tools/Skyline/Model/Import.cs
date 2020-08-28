@@ -1173,7 +1173,7 @@ namespace pwiz.Skyline.Model
                 PrecursorCandidate[] sequenceCandidates = null;
                 int bestCandidateIndex = -1;
                 int iLabelType = -1;
-                int iFragmentName = -1;
+
                 double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
 
                 foreach (var line in lines)
@@ -1186,7 +1186,6 @@ namespace pwiz.Skyline.Model
                     if (sequenceCandidates == null)
                     {
                         iLabelType = FindLabelType(fields, lines, separator);
-                        iFragmentName = FindFragmentName(fields, lines, separator);
 
                         // If no sequence column found, return null.  After this, all errors throw.
                         var newSeqCandidates = FindSequenceCandidates(fields);
@@ -1254,7 +1253,10 @@ namespace pwiz.Skyline.Model
                     iProt = FindProtein(fieldsFirstRow, iSequence, lines, indices.Headers, provider, separator);
                 int iPrecursorCharge = indices.PrecursorChargeColumn;
                 if (iPrecursorCharge == -1)
-                    iPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator); 
+                    iPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator);
+                int iFragmentName = indices.FragmentNameColumn;
+                if (iFragmentName == -1)
+                    iFragmentName = FindFragmentName(fieldsFirstRow, lines, separator);
 
                 indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, iFragmentName, iPrecursorCharge);
 
@@ -1415,7 +1417,6 @@ namespace pwiz.Skyline.Model
                         labelCandidates.Add(i);
                     }
                 }
-
                 if (labelCandidates.Count == 0)
                 {
                     return -1;
@@ -1510,7 +1511,6 @@ namespace pwiz.Skyline.Model
                         return true;
                     }
                 }
-                
                 return false;
             }
 
