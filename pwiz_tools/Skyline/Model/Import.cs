@@ -1406,36 +1406,48 @@ namespace pwiz.Skyline.Model
             // Finds the index of the Label Type columns
             private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
             {
-                // Look for columns containing just L, H, light or heavy
-                int iLabelType = -1;
+                var labelCandidates = new List<int>();
+                // Look for any columns that contain something that looks like a Label Type and add them to a list
                 for (int i = 0; i < fields.Length; i++)
                 {
                     if (ContainsLabelType(fields[i]))
                     {
-                        iLabelType = i;
-                        break;
+                        labelCandidates.Add(i);
                     }
                 }
-                if (iLabelType == -1)
-                    return -1;
 
-                foreach(string line in lines)
+                if (labelCandidates.Count == 0)
                 {
-                    string[] fieldsNext = line.ParseDsvFields(separator);
+                    return -1;
+                }
+                var LabelCandidates = labelCandidates.ToArray();
 
-                    if (!ContainsLabelType(fieldsNext[iLabelType]))
+                // Confirm that the rest of the column has only entries that look like Label Types and return its index,
+                // if not move onto the next entry in the array
+                foreach (int i in LabelCandidates)
+                {
+                    bool noExcepetions = true;
+                    foreach (string line in lines)
                     {
-                        return -1;
+                        string[] fieldsNext = line.ParseDsvFields(separator);
+                        if (!ContainsLabelType(fieldsNext[i]))
+                        {
+                            noExcepetions = false;
+                            break;
+                        }
+                    }
+                    if (noExcepetions)
+                    {
+                        return i;
                     }
                 }
- 
-                return iLabelType;
+                return -1;
             }
 
             // Helper method for FindLabelType
             private static bool ContainsLabelType(string field)
             {
-                field = field.ToLower(); // Now our detection is not case sensitive
+                field = field.ToLower(); // Now our detection is case insensitive
                 if (Equals(field, IsotopeLabelType.LIGHT_NAME.Substring(0, 1)) || // Checks for "L"
                     (Equals(field, IsotopeLabelType.HEAVY_NAME.Substring(0, 1)) || // Checks for "H"
                     (Equals(field, IsotopeLabelType.LIGHT_NAME)) || // Checks for "light"
@@ -1449,33 +1461,42 @@ namespace pwiz.Skyline.Model
             // Finds the index of the Fragment Name Column
             private static int FindFragmentName(string[] fields, IEnumerable<string> lines, char separator)
             {
-                int iFragmentName = -1;
-                // Look for the first column that contains something that looks like a Fragment Name
+                var fragCandidates = new List<int>();
+                // Look for any columns that contain something that looks like a Fragment Name and add them to a list
                 for (int i = 0; i < fields.Length; i++)
                 {
                     if (ContainsFragmentName(fields[i]))
                     {
-                        iFragmentName = i;
-                        break;
+                        fragCandidates.Add(i);
                     }
                 }
-
-                if (iFragmentName == -1)
+                
+                if (fragCandidates.Count == 0)
                 {
                     return -1;
                 }
+                var FragCandidates = fragCandidates.ToArray();
 
-                // Confirm that the rest of the column has only entries that look like Fragment Names
-                foreach (string line in lines)
+                // Confirm that the rest of the column has only entries that look like Fragment Names and return its index,
+                // if not move onto the next entry in the array
+                foreach (int i in FragCandidates)
                 {
-                    string[] fieldsNext = line.ParseDsvFields(separator);
-
-                    if (!ContainsFragmentName(fieldsNext[iFragmentName]))
+                    bool noExcepetions = true;
+                    foreach (string line in lines)
                     {
-                        return -1;
+                        string[] fieldsNext = line.ParseDsvFields(separator);
+                        if (!ContainsFragmentName(fieldsNext[i]))
+                        {
+                            noExcepetions = false;
+                            break;
+                        }
+                    }
+                    if (noExcepetions)
+                    {
+                        return i;
                     }
                 }
-                return iFragmentName;
+                return -1;
             }
 
             // Helper method for FindFragmentName

@@ -58,7 +58,6 @@ namespace pwiz.SkylineTestFunctional
             
             RunUI(() => {
                 var thermBoxes = therm.ComboBoxes;
-
                 // Checks that automatically assigning column headers works properly
                 Assert.AreEqual(precursor, thermBoxes[0].Text);
                 Assert.AreEqual(product, thermBoxes[1].Text);
@@ -70,7 +69,6 @@ namespace pwiz.SkylineTestFunctional
                 // Modifies the selected index of one box so later we can test if it saved 
                 thermBoxes[4].SelectedIndex = 2;
                 therm.CancelDialog();
-
             });
             RunUI(() => SkylineWindow.NewDocument());
 
@@ -94,15 +92,14 @@ namespace pwiz.SkylineTestFunctional
             var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             RunUI(() => {
                 var comboBoxes = dlg.ComboBoxes;
-
+                // Checks that two comboboxes cannot have the same header (unless it is Ignore Column)
                 comboBoxes[0].SelectedIndex = 1;
                 comboBoxes[1].SelectedIndex = 1;
                 Assert.AreNotEqual(comboBoxes[0], comboBoxes[1]);
-
                 comboBoxes[2].SelectedIndex = 0;
                 comboBoxes[3].SelectedIndex = 0;
                 Assert.AreEqual(comboBoxes[2].Text, comboBoxes[3].Text);
-
+                // Checks resizing of comboboxes 
                 var oldBoxWidth = comboBoxes[0].Width;
                 dlg.dataGrid.Columns[0].Width -= 20;
                 Assert.AreNotEqual(oldBoxWidth, comboBoxes[0].Width);
