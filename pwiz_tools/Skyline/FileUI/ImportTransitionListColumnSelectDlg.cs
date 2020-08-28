@@ -21,7 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Text;
 using System.Linq;
+using System.Management.Instrumentation;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -142,10 +144,9 @@ namespace pwiz.Skyline.FileUI
             // It's not unusual to see lines like "744.8 858.39 10 APR.AGLCQTFVYGGCR.y7.light 105 40" where protein, peptide, and label are all stuck together,
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
-            Console.WriteLine(Settings.Default.CustomImportTransitionListColumnsList.Count());
             // If there are items on our saved column list and the file does not contain headers, the combo box text is set using that list
             var headers = Importer.RowReader.Indices.Headers;
-            if ((Settings.Default.CustomImportTransitionListColumnsList.Count() != 0) && (headers == null))
+            if ((Settings.Default.CustomImportTransitionListColumnsList.Count() != 0) && (headers == null) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == FindTrueCount(Settings.Default.CustomImportTransitionListColumnsList))
             {
                 for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
                 {
@@ -313,6 +314,19 @@ namespace pwiz.Skyline.FileUI
             Settings.Default.CustomImportTransitionListColumnsList = ColumnList;
         }
 
+        private int FindTrueCount(List<Tuple<int, string>> List)
+        {
+            var FilteredList = new List<Tuple<int, string>>();
+            var items = List;
+            foreach (var item in items)
+            {
+                if (item.Item1 != -1)
+                {
+                    FilteredList.Add(item);
+                }
+            }
+            return FilteredList.Count;
+        }
         private void dataGrid_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
             ResizeComboBoxes();
