@@ -508,6 +508,24 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
+        public int CustomImportTransitionListColumnCount
+        {
+            get
+            {
+                if (this[@"CustomImportTransitionListColumnCount"] == null)
+                {
+                    var i = new int();
+                    CustomImportTransitionListColumnCount = i;
+                }
+                return (int)this[@"CustomImportTransitionListColumnCount"];
+            }
+            set
+            {
+                this[@"CustomImportTransitionListColumnCount"] = value;
+            }
+        }
+
+        [UserScopedSettingAttribute]
         public EnzymeList EnzymeList
         {
             get

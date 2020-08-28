@@ -144,9 +144,10 @@ namespace pwiz.Skyline.FileUI
             // It's not unusual to see lines like "744.8 858.39 10 APR.AGLCQTFVYGGCR.y7.light 105 40" where protein, peptide, and label are all stuck together,
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
-            // If there are items on our saved column list and the file does not contain headers, the combo box text is set using that list
+            // If there are items on our saved column list and the file does not contain headers, and the number of columns matches the saved column count,
+            // the combo box text is set using that list
             var headers = Importer.RowReader.Indices.Headers;
-            if ((Settings.Default.CustomImportTransitionListColumnsList.Count() != 0) && (headers == null) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == FindTrueCount(Settings.Default.CustomImportTransitionListColumnsList))
+            if ((Settings.Default.CustomImportTransitionListColumnsList.Count() != 0) && (headers == null) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
             {
                 for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
                 {
@@ -313,19 +314,10 @@ namespace pwiz.Skyline.FileUI
 
             Settings.Default.CustomImportTransitionListColumnsList = ColumnList;
         }
-
-        private int FindTrueCount(List<Tuple<int, string>> List)
+        private void updateColumnCount()
         {
-            var FilteredList = new List<Tuple<int, string>>();
-            var items = List;
-            foreach (var item in items)
-            {
-                if (item.Item1 != -1)
-                {
-                    FilteredList.Add(item);
-                }
-            }
-            return FilteredList.Count;
+            Settings.Default.CustomImportTransitionListColumnCount =
+                Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
         }
         private void dataGrid_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
@@ -340,10 +332,11 @@ namespace pwiz.Skyline.FileUI
         {
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
         }
-        // Saves the column indices in a list when the OK button is clicked
+        // Saves the column indices and column count when the OK button is clicked
         private void buttonOk_Click(object sender, EventArgs e)
         {
             updateColumnsList();
+            updateColumnCount();
         }
         private void buttonCheckForErrors_Click(object sender, EventArgs e)
         {
