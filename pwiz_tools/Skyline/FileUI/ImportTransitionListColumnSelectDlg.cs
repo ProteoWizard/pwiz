@@ -143,8 +143,9 @@ namespace pwiz.Skyline.FileUI
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
             Console.WriteLine(Settings.Default.CustomImportTransitionListColumnsList.Count());
-            // If there are items on our saved column list, the combo box text is set using that list
-            if (Settings.Default.CustomImportTransitionListColumnsList.Count() != 0)
+            // If there are items on our saved column list and the file does not contain headers, the combo box text is set using that list
+            var headers = Importer.RowReader.Indices.Headers;
+            if ((Settings.Default.CustomImportTransitionListColumnsList.Count() != 0) && (headers == null))
             {
                 for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
                 {
