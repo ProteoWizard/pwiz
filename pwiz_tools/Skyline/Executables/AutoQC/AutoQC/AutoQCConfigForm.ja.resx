@@ -193,6 +193,36 @@
   <data name="tabSettings.Text" xml:space="preserve">
     <value>設定</value>
   </data>
+  <data name="cbPublishToPanorama.Size" type="System.Drawing.Size, System.Drawing">
+    <value>107, 17</value>
+  </data>
+  <data name="cbPublishToPanorama.Text" xml:space="preserve">
+    <value>Panoramaに公開</value>
+  </data>
+  <data name="labelPanoramaFolder.Size" type="System.Drawing.Size, System.Drawing">
+    <value>223, 13</value>
+  </data>
+  <data name="labelPanoramaFolder.Text" xml:space="preserve">
+    <value>パノラマ上のフォルダー（例：/ MacCoss / QC）：</value>
+  </data>
+  <data name="lblPanoramaUrl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 13</value>
+  </data>
+  <data name="lblPanoramaUrl.Text" xml:space="preserve">
+    <value>URL（例：https://panoramaweb.org/）：</value>
+  </data>
+  <data name="lblPanoramaPasswd.Size" type="System.Drawing.Size, System.Drawing">
+    <value>60, 13</value>
+  </data>
+  <data name="lblPanoramaPasswd.Text" xml:space="preserve">
+    <value>パスワード：</value>
+  </data>
+  <data name="lblPanoramaEmail.Size" type="System.Drawing.Size, System.Drawing">
+    <value>48, 13</value>
+  </data>
+  <data name="lblPanoramaEmail.Text" xml:space="preserve">
+    <value>Eメール：</value>
+  </data>
   <data name="tabPanoramaSettings.Text" xml:space="preserve">
     <value>Panorama設定</value>
   </data>
