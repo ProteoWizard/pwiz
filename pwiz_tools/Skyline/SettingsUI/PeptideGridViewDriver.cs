@@ -225,7 +225,7 @@ namespace pwiz.Skyline.SettingsUI
                 return true;
             var cell = row.Cells[COLUMN_SEQUENCE];
             string errorText;
-            TryResolveTarget(cell.FormattedValue.ToString(), rowIndex, out errorText);
+            TryResolveTarget(cell.FormattedValue?.ToString(), rowIndex, out errorText);
             if (errorText == null)
             {
                 cell = row.Cells[COLUMN_TIME];
