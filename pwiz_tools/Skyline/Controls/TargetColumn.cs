@@ -59,6 +59,7 @@ namespace pwiz.Skyline.Controls
                 // Can we construct a target from what we find in the other columns?
                 target = SmallMoleculeColumnsManager.TryGetSmallMoleculeTargetFromDetails(targetName, cells, rowIndex, out errorMessage);
             }
+            SmallMoleculeColumnsManager.UpdateSmallMoleculeDetails(target, rowIndex);
             return target;
         }
         public Target TryResolveTarget(string targetName, IEnumerable<string> values, int rowIndex, out string errorMessage)
@@ -69,6 +70,7 @@ namespace pwiz.Skyline.Controls
                 // Can we construct a target from what we find in the other columns?
                 target = SmallMoleculeColumnsManager.TryGetSmallMoleculeTargetFromDetails(targetName, values, rowIndex, out errorMessage);
             }
+            SmallMoleculeColumnsManager.UpdateSmallMoleculeDetails(target, rowIndex);
             return target;
         }
 

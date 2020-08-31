@@ -363,7 +363,7 @@ namespace pwiz.Skyline.SettingsUI
             foreach (DbOptimization optimization in optimizationList)
             {
                 string seqModified = optimization.Target.ToSerializableString();
-                if (_gridViewLibraryDriver.ValidateSequence(seqModified) != null)
+                if (_gridViewLibraryDriver.ValidateSequence(seqModified, new object[]{}, -1) != null)
                 {
                     MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_,
                                                         seqModified));
@@ -402,7 +402,8 @@ namespace pwiz.Skyline.SettingsUI
 
             public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
                                          SortableBindingList<DbOptimization> items, EditOptimizationLibraryDlg form, SrmDocument document, TargetResolver targetResolver)
-                : base(gridView, bindingSource, items, targetResolver, form.ModeUI)
+                : base(gridView, bindingSource, items, targetResolver, form.ModeUI, 
+                    true) // Don't allow editing of small molecule detail columns
             {
                 gridView.UserDeletingRow += gridView_UserDeletingRow;
                 gridView.UserDeletedRow += gridView_UserDeletedRow;
@@ -534,7 +535,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     case COLUMN_SEQUENCE:
                         {
-                            var seqCharge = new SequenceAndCharge(value, this);
+                            var seqCharge = new SequenceAndCharge(value, null, e.RowIndex, this);
                             e.Value = seqCharge.ModifiedSequence;
                             Items[e.RowIndex].Adduct = seqCharge.Charge;
                             e.ParsingApplied = true;
@@ -553,24 +554,39 @@ namespace pwiz.Skyline.SettingsUI
 
             private class SequenceAndCharge
             {
-                public SequenceAndCharge(string sequenceAndCharge, LibraryGridViewDriver driver)
+
+                public SequenceAndCharge(string sequenceAndCharge, string[] values, int rowIndex, LibraryGridViewDriver driver)
                 {
                     const int min = TransitionGroup.MIN_PRECURSOR_CHARGE;
                     const int max = TransitionGroup.MAX_PRECURSOR_CHARGE;
 
+                    if (values == null)
+                    {
+                        // Assume values are already pasted into grid
+                        var strings = new List<string>();
+                        var cells = driver.GridView.Rows[rowIndex].Cells;
+                        for (int i = 0; i < cells.Count; i++)
+                        {
+                            var val = cells[i].FormattedValue;
+                            strings.Add(val?.ToString());
+                        }
+
+                        values = strings.ToArray();
+                    }
+
                     Target target;
                     Adduct adduct;
-                    if (driver.IsMoleculeWithAdduct(sequenceAndCharge, out target, out adduct))
+                    if (driver.IsMoleculeWithAdduct(sequenceAndCharge, values, rowIndex, out target, out adduct))
                     {
                         ModifiedSequence = target;
                         Charge = adduct;
                     }
                     else
                     {
-                    string seq = Transition.StripChargeIndicators(sequenceAndCharge, min, max);
-                    ModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(new Target(seq));
-                    Charge = Transition.GetChargeFromIndicator(sequenceAndCharge, min, max, Adduct.SINGLY_PROTONATED);
-                }
+                        string seq = Transition.StripChargeIndicators(sequenceAndCharge, min, max);
+                        ModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(new Target(seq));
+                        Charge = Transition.GetChargeFromIndicator(sequenceAndCharge, min, max, Adduct.SINGLY_PROTONATED);
+                    }
                 }
 
                 public Target ModifiedSequence { get; private set; }
@@ -620,9 +636,9 @@ namespace pwiz.Skyline.SettingsUI
                 if (Equals(ViewType, ExportOptimize.CE))
                 {
                     add = GridView.DoPaste(MessageParent, ValidateOptimizationRow,
-                        values =>
+                        (values, rowIndex) =>
                         {
-                            var seqCharge = new SequenceAndCharge(values[0], this);
+                            var seqCharge = new SequenceAndCharge(values[0], values, rowIndex, this);
                             var fragCharge = new FragmentAndCharge(values[1]);
                             libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
                                 seqCharge.ModifiedSequence,
@@ -635,9 +651,9 @@ namespace pwiz.Skyline.SettingsUI
                 else if (Equals(ViewType, ExportOptimize.COV))
                 {
                     add = GridView.DoPaste(MessageParent, ValidateOptimizationRow,
-                        values =>
+                        (values, rowIndex) =>
                         {
-                            var seqCharge = new SequenceAndCharge(values[0], this);
+                            var seqCharge = new SequenceAndCharge(values[0], values, rowIndex,this);
                             libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
                                 seqCharge.ModifiedSequence,
                                 seqCharge.Charge,
@@ -677,12 +693,13 @@ namespace pwiz.Skyline.SettingsUI
                 string seq = columns[0] as string;
                 string prod = prodVisible ? columns[1] as string : null;
                 string val = columns.Last() as string;
-                string message; 
+                string message;
+                var values = columns.Select(c => c.ToString()).ToArray();
                 if (string.IsNullOrWhiteSpace(seq))
                 {
                     message = _form.ModeUIAwareStringFormat(Resources.PeptideGridViewDriver_ValidateRow_Missing_peptide_sequence_on_line__0_, lineNumber);
                 }
-                else if (ValidateSequence(seq) != null)
+                else if (ValidateSequence(seq, values, lineNumber) != null)
                 {
                     message = _form.ModeUIAwareStringFormat(Resources.PeptideGridViewDriver_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1_, seq, lineNumber);
                 }
@@ -721,14 +738,14 @@ namespace pwiz.Skyline.SettingsUI
                 if (columnIndex == COLUMN_SEQUENCE && GridView.IsCurrentCellInEditMode)
                 {
                     string sequence = value;
-                    errorText = ValidateSequence(sequence);
+                    errorText = ValidateSequence(sequence, GridView.Rows[rowIndex].Cells, rowIndex);
                 }
                 else if (columnIndex == COLUMN_PRODUCT_ION && GridView.IsCurrentCellInEditMode)
                 {
                     string chargeText = value;
                     var formattedValue = GridView.Rows[rowIndex].Cells[COLUMN_SEQUENCE].FormattedValue;
                     if (formattedValue != null)
-                        ValidateSequence(formattedValue.ToString());
+                        ValidateSequence(formattedValue.ToString(), GridView.Rows[rowIndex].Cells, rowIndex);
                     errorText = ValidateProductIon(chargeText);
                 }
                 else if (columnIndex == COLUMN_VALUE && GridView.IsCurrentCellInEditMode)
@@ -745,7 +762,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         case COLUMN_SEQUENCE:
                         {
-                            var seqCharge = new SequenceAndCharge(value, this);
+                            var seqCharge = new SequenceAndCharge(value, null, rowIndex,this);
                             curKey.PeptideModSeq = seqCharge.ModifiedSequence;
                             curKey.PrecursorAdduct = seqCharge.Charge;
                             break;
@@ -790,7 +807,7 @@ namespace pwiz.Skyline.SettingsUI
                 return true;
             }
 
-            public bool IsMoleculeWithAdduct(string text, out Target target, out Adduct adduct)
+            public bool IsMoleculeWithAdduct(string text, IEnumerable<object> columns, int rowIndex, out Target target, out Adduct adduct)
             {
                 target = Target.EMPTY;
                 adduct = Adduct.EMPTY;
@@ -803,19 +820,31 @@ namespace pwiz.Skyline.SettingsUI
                     text = text.Substring(0, adductPosition);
                 }
 
-                target = TryResolveTarget(text, out var msg) ?? Target.FromSerializableString(text);
+                target = TryResolveTarget(text, columns, rowIndex, out var msg) ?? Target.FromSerializableString(text);
                 return !target.IsProteomic;
             }
 
-            public string ValidateSequence(string sequenceText)
+            public string ValidateSequence(string sequenceText, DataGridViewCellCollection cells, int rowIndex)
+            {
+                var strings = new List<string>();
+                for (int i = 0; i < cells.Count; i++)
+                {
+                    var val = cells[i].FormattedValue;
+                    strings.Add( val?.ToString());
+                }
+
+                return ValidateSequence(sequenceText, strings, rowIndex);
+            }
+
+            public string ValidateSequence(string sequenceText, IEnumerable<object> columns, int rowIndex)
             {
                 if (string.IsNullOrWhiteSpace(sequenceText))
                     return Resources.LibraryGridViewDriver_ValidateSequence_Sequence_cannot_be_empty_;
                 if (!FastaSequence.IsExSequence(Transition.StripChargeIndicators(sequenceText, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE)))
                 {
-                    if (IsMoleculeWithAdduct(sequenceText, out var target, out var adduct))
+                    if (IsMoleculeWithAdduct(sequenceText, columns, rowIndex, out _, out _))
                     {
-                        return null;
+                        return null; // No error
                     }
 
                     return _form.ModeUIAwareStringFormat(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_, sequenceText);
@@ -860,7 +889,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (row.IsNewRow)
                     return true;
                 var cell = row.Cells[COLUMN_SEQUENCE];
-                string errorText = ValidateSequence(cell.FormattedValue != null ? cell.FormattedValue.ToString() : null);
+                string errorText = ValidateSequence(cell.FormattedValue != null ? cell.FormattedValue.ToString() : null, row.Cells, rowIndex);
                 if (errorText == null && !row.Cells[COLUMN_TYPE].Value.Equals((int) OptimizationType.compensation_voltage_fine))
                 {
                     cell = row.Cells[COLUMN_PRODUCT_ION];

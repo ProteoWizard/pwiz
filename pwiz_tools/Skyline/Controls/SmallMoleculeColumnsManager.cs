@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
@@ -32,6 +33,10 @@ namespace pwiz.Skyline.Controls
     /// </summary>
     public class SmallMoleculeColumnsManager
     {
+        public const string DATA_PROPERTY_NAME_FORMULA = @"Formula"; // This must agree with the member name in DbAbstractPeptide
+        public const string DATA_PROPERTY_NAME_MONOISOTOPICMASS = @"MonoisotopicMass"; // This must agree with the member name in DbAbstractPeptide
+        public const string DATA_PROPERTY_NAME_AVERAGEMASS = @"AverageMass"; // This must agree with the member name in DbAbstractPeptide
+
         /// <summary>
         /// Examines all targets in the targetResolver's document to see what kind of detail columns are needed
         /// </summary>
@@ -51,21 +56,22 @@ namespace pwiz.Skyline.Controls
             {
                 InsertColumnsAt = gridView.Columns.Count; // Just add detail columns to the right of everything else
             }
-            var smallMoleculeLibraryAttributes = new List<SmallMoleculeLibraryAttributes>();
+            var smallMoleculeLibraryAttributes = new List<KeyValuePair<Target, SmallMoleculeLibraryAttributes>>();
 
             var targets = targetResolver.AvailableTargets;
 
             if (targets != null)
             {
                 smallMoleculeLibraryAttributes = targets.Where(t => !t.IsProteomic)
-                    .Select(t => t.Molecule.GetSmallMoleculeLibraryAttributes()).ToList();
+                    .Select(t => new KeyValuePair<Target, SmallMoleculeLibraryAttributes>(t, t.Molecule.GetSmallMoleculeLibraryAttributes())).ToList();
             }
-            if (!smallMoleculeLibraryAttributes.Any() && modeUI != SrmDocument.DOCUMENT_TYPE.proteomic)
+            if (!smallMoleculeLibraryAttributes.Any() && modeUI != SrmDocument.DOCUMENT_TYPE.proteomic && !ReadOnly)
             {
-                // No targets to inspect, assume we want all the detail columns
+                // No targets to inspect, assume we want all the detail columns so we can paste in a list
                 var dummy = @"dummy";
                 var otherKeys = MoleculeAccessionNumbers.PREFERRED_DISPLAY_ORDER.ToDictionary(tag => tag, tag => dummy);
-                smallMoleculeLibraryAttributes.Add(SmallMoleculeLibraryAttributes.Create(dummy, @"CH", dummy, otherKeys));
+                smallMoleculeLibraryAttributes.Add(new KeyValuePair<Target, SmallMoleculeLibraryAttributes>(null, 
+                    SmallMoleculeLibraryAttributes.Create(dummy, @"CH", dummy, otherKeys)));
             }
 
             if (!smallMoleculeLibraryAttributes.Any())
@@ -74,29 +80,109 @@ namespace pwiz.Skyline.Controls
             }
 
             var formulaHeader = Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula;
-            if (smallMoleculeLibraryAttributes.Any(a => !string.IsNullOrEmpty(a.ChemicalFormula)) &&
-                !gridView.Columns.Contains(formulaHeader))
+            var hasFormulaColumn = gridView.Columns.Contains(formulaHeader);
+            if (!hasFormulaColumn && smallMoleculeLibraryAttributes.Any(a => !string.IsNullOrEmpty(a.Value.ChemicalFormula)))
             {
+                // Add a column for chemical formula
                 gridView.Columns.Insert(InsertColumnsAt, new DataGridViewTextBoxColumn());
                 FormulaColumnIndex = InsertColumnsAt;
                 var dataGridViewColumn = gridView.Columns[InsertColumnsAt++];
                 dataGridViewColumn.Name = dataGridViewColumn.HeaderText = formulaHeader;
+                dataGridViewColumn.DataPropertyName = DATA_PROPERTY_NAME_FORMULA;
                 dataGridViewColumn.Visible = true;
-                dataGridViewColumn.ReadOnly = ReadOnly;
+                dataGridViewColumn.ReadOnly = readOnly;
             }
+            else if (hasFormulaColumn)
+            {
+                // Already has a formula column - note which one
+                for (var i = 0; i < gridView.ColumnCount; i++)
+                {
+                    if (Equals(formulaHeader, gridView.Columns[i].HeaderText))
+                    {
+                        FormulaColumnIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            // Deal with mass-only descriptions
+            if (smallMoleculeLibraryAttributes.Any(a => string.IsNullOrEmpty(a.Value.ChemicalFormula)))
+            {
+                foreach (var massType in new[]{MassType.Monoisotopic, MassType.Average})
+                {
+                    var header = massType == MassType.Monoisotopic ? 
+                        Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Monoisotopic_mass : 
+                        Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Average_mass;
+                    var hasColumn = gridView.Columns.Contains(header);
+                    if (!hasColumn)
+                    {
+                        // Add a column for mass
+                        gridView.Columns.Insert(InsertColumnsAt, new DataGridViewTextBoxColumn());
+                        var dataGridViewColumn = gridView.Columns[InsertColumnsAt];
+                        if (massType == MassType.Monoisotopic)
+                        {
+                            MonoisotopicMassColumnIndex = InsertColumnsAt++;
+                            dataGridViewColumn.DataPropertyName = DATA_PROPERTY_NAME_MONOISOTOPICMASS;
+                        }
+                        else
+                        {
+                            AverageMassColumnIndex = InsertColumnsAt++;
+                            dataGridViewColumn.DataPropertyName = DATA_PROPERTY_NAME_AVERAGEMASS;
+                        }
+                        dataGridViewColumn.Name = dataGridViewColumn.HeaderText = header;
+                        dataGridViewColumn.Visible = true;
+                        dataGridViewColumn.ReadOnly = readOnly;
+                    }
+                    else if (hasColumn)
+                    {
+                        // Already has a mass column - note which one
+                        for (var i = 0; i < gridView.ColumnCount; i++)
+                        {
+                            if (Equals(header, gridView.Columns[i].HeaderText))
+                            {
+                                if (massType == MassType.Monoisotopic)
+                                {
+                                    MonoisotopicMassColumnIndex = i;
+                                }
+                                else
+                                {
+                                    AverageMassColumnIndex = i;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             AccessionColumnIndexes = new Dictionary<string, int>();
             foreach (var tag in MoleculeAccessionNumbers.PREFERRED_DISPLAY_ORDER)
             {
-                if (!gridView.Columns.Contains(tag) && 
-                    ((Equals(tag, MoleculeAccessionNumbers.TagInChiKey) && smallMoleculeLibraryAttributes.Any(a => !string.IsNullOrEmpty(a.InChiKey)))
-                     || smallMoleculeLibraryAttributes.Any(a => a.CreateMoleculeID().AccessionNumbers.Keys.Contains(tag))))
+                var hasAccessionColumnForTag = gridView.Columns.Contains(tag);
+                var hasValueForAccessionTag = Equals(tag, MoleculeAccessionNumbers.TagInChiKey) ?
+                    smallMoleculeLibraryAttributes.Any(a => !string.IsNullOrEmpty(a.Value.InChiKey)) :
+                    smallMoleculeLibraryAttributes.Any(a => a.Value.CreateMoleculeID().AccessionNumbers.Keys.Contains(tag));
+                if (!hasAccessionColumnForTag && hasValueForAccessionTag)
                 {
                     gridView.Columns.Insert(InsertColumnsAt, new DataGridViewTextBoxColumn());
                     AccessionColumnIndexes.Add(tag, InsertColumnsAt);
                     var dataGridViewColumn = gridView.Columns[InsertColumnsAt++];
                     dataGridViewColumn.Name = dataGridViewColumn.HeaderText = tag;
+                    dataGridViewColumn.DataPropertyName = tag;
                     dataGridViewColumn.Visible = true;
                     dataGridViewColumn.ReadOnly = readOnly;
+                }
+                else if (hasAccessionColumnForTag && !AccessionColumnIndexes.TryGetValue(tag, out _))
+                {
+                    // Already has a column for this accession detail - note which one
+                    for (var i = 0; i < gridView.ColumnCount; i++)
+                    {
+                        if (Equals(tag, gridView.Columns[i].HeaderText))
+                        {
+                            AccessionColumnIndexes.Add(tag, i);
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -125,65 +211,31 @@ namespace pwiz.Skyline.Controls
                     return 0;
                 }
 
-                if (DataGridView.Rows.Count > 0)
+                var nVisibleLeftOfFormula = 0;
+                for (var i = 0; i < DataGridView.Columns.Count; i++)
                 {
-                    var row = DataGridView.Rows[0];
-                    var nVisibleLeftOfFormula = 0;
-                    for (var i = 0; i < row.Cells.Count; i++)
+                    if (Equals(DataGridView.Columns[i].HeaderText,
+                        Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula))
                     {
-                        if (Equals(row.Cells[i].OwningColumn.HeaderText,
-                            Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula))
-                        {
-                            return FormulaColumnIndex.Value - nVisibleLeftOfFormula;
-                        }
-                        if (row.Cells[i].Displayed || row.Cells[i].Value != null)
-                        {
-                            nVisibleLeftOfFormula++;
-                        }
+                        return FormulaColumnIndex.Value - nVisibleLeftOfFormula;
+                    }
+                    if (DataGridView.Columns[i].Displayed)
+                    {
+                        nVisibleLeftOfFormula++;
                     }
                 }
+
                 return 0;
             }
         }
 
-        /// <summary>
-        /// Helps deal with hidden columns and their effect on column indexing
-        /// </summary>
-        public string[] PadHiddenColumns(string[] columns)
-        {
-            var nHidden = FormulaColumnShift;
-            if (nHidden != 0)
-            {
-                var columnCount = columns.Length;
-                if (columnCount + nHidden > FormulaColumnIndex)
-                {
-                    // Shift any pasted small mol details into the proper column
-                    var expanded = columns.ToList();
-                    for (var i = 0; i < nHidden; i++)
-                    {
-                        expanded.Add(null);
-                    }
-                    var expandedCount = expanded.Count;
-                    int index;
-                    for (index = expandedCount; index-- > FormulaColumnIndex;)
-                    {
-                        expanded[index] = expanded[index-1];
-                    }
-                    for (var i = 0; i < nHidden; i++)
-                    {
-                        expanded[index--] = null;
-                    }
-                    return expanded.ToArray();
-                }
-            }
-            return columns;
-        }
-
         private DataGridView DataGridView { get; }
-        private int? FormulaColumnIndex { get; } // Always leftmost of inserted detail columns
+        private int? FormulaColumnIndex { get; } // Always leftmost of inserted detail columns (when formula is available)
+        private int? MonoisotopicMassColumnIndex { get; } // Always leftmost of inserted detail columns (when formula is unavailable)
+        private int? AverageMassColumnIndex { get; }  // Always next-to-leftmost of inserted detail columns (when formula is unavailable)
         public TargetResolver TargetResolver { get; private set; }
         private int InsertColumnsAt;
-        private bool ReadOnly;
+        private bool ReadOnly; // When true, small molecule details are display only (i.e. not for pasting in new lists)
         private SrmDocument.DOCUMENT_TYPE ModeUI;
         private Dictionary<string, int> AccessionColumnIndexes { get; } // Inserted in order of MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER
 
@@ -207,6 +259,16 @@ namespace pwiz.Skyline.Controls
                     row.Cells[FormulaColumnIndex.Value].Value = string.Empty;
                 }
 
+                if (MonoisotopicMassColumnIndex.HasValue)
+                {
+                    row.Cells[MonoisotopicMassColumnIndex.Value].Value = string.Empty;
+                }
+
+                if (AverageMassColumnIndex.HasValue)
+                {
+                    row.Cells[AverageMassColumnIndex.Value].Value = string.Empty;
+                }
+
                 if (AccessionColumnIndexes != null)
                 {
                     foreach (var col in AccessionColumnIndexes)
@@ -221,7 +283,17 @@ namespace pwiz.Skyline.Controls
             var mol = target.Molecule;
             if (FormulaColumnIndex.HasValue)
             {
-                row.Cells[FormulaColumnIndex.Value].Value = mol.Formula;
+                row.Cells[FormulaColumnIndex.Value].Value = mol.Formula ?? string.Empty;
+            }
+
+            if (MonoisotopicMassColumnIndex.HasValue)
+            {
+                row.Cells[MonoisotopicMassColumnIndex.Value].Value = string.IsNullOrEmpty(mol.Formula) ? mol.MonoisotopicMass.ToString() : string.Empty;
+            }
+
+            if (AverageMassColumnIndex.HasValue)
+            {
+                row.Cells[AverageMassColumnIndex.Value].Value = string.IsNullOrEmpty(mol.Formula) ? mol.AverageMass.ToString() : string.Empty;
             }
 
             var accessionNumbers = mol.AccessionNumbers.AccessionNumbers;
@@ -229,7 +301,7 @@ namespace pwiz.Skyline.Controls
             {
                 if (accessionNumbers.TryGetValue(col.Key, out var value))
                 {
-                    row.Cells[col.Value].Value = value;
+                    row.Cells[col.Value].Value = value ?? string.Empty;
                 }
                 else
                 {
@@ -246,22 +318,26 @@ namespace pwiz.Skyline.Controls
         }
 
         // Get details from a set of values not yet pasted into the grid, taking hidden columns into account 
-        public Target TryGetSmallMoleculeTargetFromDetails(string name, IEnumerable<string> values, int rowIndex,
+        public Target TryGetSmallMoleculeTargetFromDetails(string name, IEnumerable<object> values, int rowIndex,
             out string errorMessage)
         {
-            return TryGetSmallMoleculeTargetFromDetails(name, values.ToArray(), FormulaColumnShift, rowIndex, out errorMessage);
+            return TryGetSmallMoleculeTargetFromDetails(name, values, FormulaColumnShift, rowIndex, out errorMessage);
         }
 
-        private Target TryGetSmallMoleculeTargetFromDetails(string name, string[] strings, int nHiddenColumns, int rowIndex, out string errorMessage)
+        private Target TryGetSmallMoleculeTargetFromDetails(string name, IEnumerable<object> values, int nHiddenColumns, int rowIndex, out string errorMessage)
         {
             errorMessage = null;
+            var strings = values.Select(v => v.ToString()).ToArray();
             var formula = FormulaColumnIndex.HasValue && strings.Length > FormulaColumnIndex.Value - nHiddenColumns ?  strings[FormulaColumnIndex.Value - nHiddenColumns] : null;
             var accessionNumbers = new Dictionary<string, string>();
-            foreach (var pair in AccessionColumnIndexes)
+            if (AccessionColumnIndexes != null)
             {
-                if (pair.Value > -1 && strings.Length > pair.Value - nHiddenColumns && !string.IsNullOrEmpty(strings[pair.Value - nHiddenColumns]))
+                foreach (var pair in AccessionColumnIndexes)
                 {
-                    accessionNumbers.Add(pair.Key, strings[pair.Value - nHiddenColumns]);
+                    if (pair.Value > -1 && strings.Length > pair.Value - nHiddenColumns && !string.IsNullOrEmpty(strings[pair.Value - nHiddenColumns]))
+                    {
+                        accessionNumbers.Add(pair.Key, strings[pair.Value - nHiddenColumns]);
+                    }
                 }
             }
 

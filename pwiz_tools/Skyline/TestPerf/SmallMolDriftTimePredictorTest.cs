@@ -23,11 +23,13 @@ using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -90,8 +92,17 @@ namespace TestPerf
             return line;
         }
 
+        private const string inchikeySulfamethizole = "VACCAVUAMIDAGB-UHFFFAOYSA-N";
+        private const string inchiSulfamethizole = "InChI=1S/C9H10N4O2S2/c1-6-11-12-9(16-6)13-17(14,15)8-4-2-7(10)3-5-8/h2-5H,10H2,1H3,(H,12,13)";
+        private const string keggSulfamethizole = "D00870";
+        private const string smilesSulfamethizole = "O=S(=O)(Nc1nnc(s1)C)c2ccc(N)cc2";
+        private const string casSulfadimidine = "57-68-1";
+
+
         protected override void DoTest()
         {
+            TestPopulateLibraryFromClipboard();
+
             // Empty doc with suitable full scan settings
             RunUI(() => SkylineWindow.OpenFile(
                 TestFilesDirs[0].GetTestPath(@"DriftTimePredictorSmallMoleculesTest.sky")));
@@ -99,11 +110,6 @@ namespace TestPerf
             var transitionListFile = TestFilesDirs[0].GetTestPath(@"Skyline Transition List wo CCS.csv");
             var transitionList = GetCsvFileText(transitionListFile);
             // Add a bit more detail to molecules
-            var inchikeySulfamethizole = "VACCAVUAMIDAGB-UHFFFAOYSA-N";
-            var inchiSulfamethizole = "InChI=1S/C9H10N4O2S2/c1-6-11-12-9(16-6)13-17(14,15)8-4-2-7(10)3-5-8/h2-5H,10H2,1H3,(H,12,13)";
-            var keggSulfamethizole = "D00870";
-            var smilesSulfamethizole = "O=S(=O)(Nc1nnc(s1)C)c2ccc(N)cc2";
-            var casSulfadimidine = "57-68-1";
             transitionList = AddSmallMolDetails(transitionList, 
                     new Tuple<string, string>("\r\n", ",,,,,\r\n"),
                     new Tuple<string, string>(" Time,,,,,", " Time,CAS,KEGG,SMILES,InChI,InChiKey"),
@@ -136,21 +142,17 @@ namespace TestPerf
             AssertEx.IsTrue(area > 0);
 
             // Locate drift peaks
-            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-            RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
-            RunUI(() => transitionSettingsUI.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
-            RunUI(() => transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50);
-            var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
             const string libName = "Sulfa";
-            var databasePath = TestFilesDir.GetTestPath(libName + IonMobilityDb.EXT);
+            var transitionSettingsUI = InitializeNewIonMobilityLibrary(libName, false, out var editIonMobilityLibraryDlg);
+
             RunUI(() =>
             {
-                editIonMobilityLibraryDlg.LibraryName = libName;
-                editIonMobilityLibraryDlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
                 editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
             });
+// PauseTest(); // Uncomment for a convenient informal demo stopping point
+             
             // Check that a new value was calculated for all precursors
-            RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, driftPredictor.Predictor.IonMobilityRows.Count));
+            RunUI(() => Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroupCount, editIonMobilityLibraryDlg.LibraryMobilitiesFlatCount));
             RunUI(() =>
             {
                 for (var loop = 0; loop < 2; loop++)
@@ -164,16 +166,16 @@ namespace TestPerf
                         {MoleculeAccessionNumbers.TagHMDB, null}, // No HMDB values at all
                         {MoleculeAccessionNumbers.TagCAS, loop == 1 ? casSulfadimidine : string.Empty}
                     };
-                    var cells = driftPredictor.MeasuredDriftTimes.Rows[loop*2].Cells;
+                    var cells = editIonMobilityLibraryDlg.CellValues(loop*2);
                     var expectedDetails = MoleculeAccessionNumbers.PREFERRED_DISPLAY_ORDER.Where(tag => ids[tag]!=null).Select(tag => ids[tag]).ToList();
                     expectedDetails.Insert(0,   loop == 0 ? "C9H10N4O2S2" : "C12H14N4O2S");
                     for (var i = 0; i < expectedDetails.Count; i++)
                     {
-                        AssertEx.AreEqual(expectedDetails[i], cells[i+5].FormattedValue);
+                        AssertEx.AreEqual(expectedDetails[i], cells[i+6]);
                     }
                 }
             });
-            OkDialog(driftPredictor, () => driftPredictor.OkDialog());
+            OkDialog(editIonMobilityLibraryDlg, () => editIonMobilityLibraryDlg.OkDialog());
 
             RunUI(() =>
             {
@@ -201,5 +203,101 @@ namespace TestPerf
 
         }
 
+        private TransitionSettingsUI InitializeNewIonMobilityLibrary(string libName, bool withOffsetHE, out EditIonMobilityLibraryDlg editIonMobilityLibraryDlg)
+        {
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
+            RunUI(() => transitionSettingsUI.IonMobilityControl.WindowWidthType =
+                IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
+            RunUI(() => transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50);
+            editIonMobilityLibraryDlg =
+                ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
+            var databasePath = TestFilesDir.GetTestPath(libName + IonMobilityDb.EXT);
+            var dlg = editIonMobilityLibraryDlg;
+            RunUI(() =>
+            {
+                dlg.SetOffsetHighEnergySpectraCheckbox(withOffsetHE);
+                dlg.LibraryName = libName;
+                dlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
+            });
+            return transitionSettingsUI;
+        }
+
+        private void TestPopulateLibraryFromClipboard()
+        {
+
+            for (var mode = 0; mode < 4; mode++)
+            {
+                bool withOffsetHE = mode < 2;
+                bool ccsOnly = mode % 2 == 0;
+                bool imOnly = mode == 1;
+                var pasteText = // PrecursorName  PrecursorAdduct  CCS IM IM Units HEOffset PrecursorFormula CAS KEGG HMDB InChiKey InChI SMILES
+                    "Sulfamethizole\t[M+H]\t11\t1\tDrift Time (ms)\t-1\tC9H10N4O2S2\t\tD00870\t\tVACCAVUAMIDAGB-UHFFFAOYSA-N\tInChI=1S/C9H10N4O2S2/c1-6-11-12-9(16-6)13-17(14,15)8-4-2-7(10)3-5-8/h2-5H,10H2,1H3,(H,12,13)\tO=S(=O)(Nc1nnc(s1)C)c2ccc(N)cc2\n" +
+                    "Sulfachloropyridazine\t[M+H]\t11\t1\tDrift Time (ms)\t-1\tC10H9ClN4O2S\t\t\t\t\t\t\n" +
+                    "Sulfamethazine\t[M+H]\t11\t1\tDrift Time (ms)\t-1\tC12H14N4O2S\t57-68-1\t\t\t\t\t\n" +
+                    "Sulfadimethoxine\t[M+H]\t11\t1\tDrift Time (ms)\t-1\tC12H14N4O4S\t\t\t\t\t\t";
+                if (ccsOnly)
+                {
+                    pasteText = pasteText.Replace("\t1\tDrift Time (ms)\t", "\t\t\t");
+                }
+                if (imOnly)
+                {
+                    pasteText = pasteText.Replace("\t11\t", "\t\t");
+                }
+                if (!withOffsetHE)
+                {
+                    pasteText = pasteText.Replace("\t-1\t", "\t"); // Remove the column from the paste text
+                }
+
+                // Empty doc with suitable full scan settings
+                RunUI(() => SkylineWindow.OpenFile(
+                    TestFilesDirs[0].GetTestPath(@"DriftTimePredictorSmallMoleculesTest.sky")));
+                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
+
+                var libName = "pasted" + mode;
+                var transitionSettingsUI = InitializeNewIonMobilityLibrary(libName, withOffsetHE, out var editIonMobilityLibraryDlg);
+
+                RunUI(() =>
+                {
+                    SetClipboardText(pasteText);
+                    editIonMobilityLibraryDlg.DoPasteLibrary();
+                });
+
+                // Check that all precursors imported properly
+                RunUI(() => Assert.AreEqual(4, editIonMobilityLibraryDlg.LibraryMobilitiesFlatCount));
+                RunUI(() =>
+                {
+                    for (var loop = 0; loop < 2; loop++)
+                    {
+                        var ids = new SerializableDictionary<string, string>
+                        {
+                            {MoleculeAccessionNumbers.TagInChiKey, loop==0 ? inchikeySulfamethizole : string.Empty},
+                            {MoleculeAccessionNumbers.TagInChI, loop==0 ? inchiSulfamethizole : string.Empty},
+                            {MoleculeAccessionNumbers.TagKEGG, loop==0 ? keggSulfamethizole : string.Empty},
+                            {MoleculeAccessionNumbers.TagSMILES, loop==0 ? smilesSulfamethizole : string.Empty},
+                            {MoleculeAccessionNumbers.TagHMDB, string.Empty}, 
+                            {MoleculeAccessionNumbers.TagCAS, loop == 1 ? casSulfadimidine : string.Empty}
+                        };
+                        var cells = editIonMobilityLibraryDlg.CellValues(loop * 2);
+                        var expectedDetails = MoleculeAccessionNumbers.PREFERRED_DISPLAY_ORDER.Where(tag => ids[tag] != null).Select(tag => ids[tag]).ToList();
+                        expectedDetails.Insert(0, loop == 0 ? "C9H10N4O2S2" : "C12H14N4O2S");
+                        for (var i = 0; i < expectedDetails.Count; i++)
+                        {
+                            AssertEx.AreEqual(expectedDetails[i], cells[i + 6]);
+                        }
+                    }
+                });
+                OkDialog(editIonMobilityLibraryDlg, () => editIonMobilityLibraryDlg.OkDialog());
+
+                RunUI(() =>
+                {
+                    Assert.AreEqual(libName, transitionSettingsUI.IonMobilityControl.SelectedIonMobilityLibrary);
+                });
+                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+
+                // Clean up
+                RunUI(() => { SkylineWindow.NewDocument(true); });
+            }
+        }
     }
 }

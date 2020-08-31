@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model
         public string PrimaryAccessionValue { get { return AccessionNumbers == null ? null : AccessionNumbers.Values.FirstOrDefault(); } } // Value of key, if any, in first order of PREFERRED_ACCESSION_TYPE_ORDER
 
         // Familiar molecule ID formats
+        // N.B. DbAbstractPeptide must provide members with these names for BindingList use
         public const string TagInChiKey = "InChiKey";
         public const string TagCAS = "CAS";
         public const string TagHMDB = "HMDB";

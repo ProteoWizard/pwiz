@@ -71,6 +71,21 @@ namespace pwiz.Skyline.Model.Irt
         {
             return _peptideModSeq;
         }
+
+        /// <summary>
+        /// Fields for use with SmallMoleculeColumnsManager in displaying small molecule details in PeptideGridView
+        /// </summary>
+        public virtual string Formula { get { return Target.IsProteomic ? string.Empty : Target.Molecule.Formula; } }
+        public virtual double? MonoisotopicMass { get { return Target.IsProteomic ? (double?)null : Target.Molecule.MonoisotopicMass.Value; } }
+        public virtual double? AverageMass { get { return Target.IsProteomic ? (double?)null : Target.Molecule.AverageMass.Value; } }
+        // N.B. the following members should agree by name and count with the list of options in MoleculeAccessionNumbers.PRIORITY_ORDER
+        public virtual string InChiKey { get { return Target.IsProteomic ? string.Empty : Target.Molecule.AccessionNumbers.GetInChiKey(); } }
+        public virtual string CAS { get { return Target.IsProteomic ? string.Empty : Target.Molecule.AccessionNumbers.GetCAS(); } }
+        public virtual string HMDB { get { return Target.IsProteomic ? string.Empty : Target.Molecule.AccessionNumbers.GetHMDB(); } }
+        public virtual string InChI { get { return Target.IsProteomic ? string.Empty : Target.Molecule.AccessionNumbers.GetInChI(); }}
+        public virtual string SMILES { get { return Target.IsProteomic ? string.Empty : Target.Molecule.AccessionNumbers.GetSMILES(); } }
+        public virtual string KEGG { get { return Target.IsProteomic ? string.Empty : Target.Molecule.AccessionNumbers.GetKEGG(); } }
+
     }
 
     public class DbIrtPeptide : DbAbstractPeptide

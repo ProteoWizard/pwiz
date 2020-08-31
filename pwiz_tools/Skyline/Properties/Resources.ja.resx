@@ -2076,9 +2076,6 @@
   <data name="AnnotationDef_AnnotationTarget_TransitionResults" xml:space="preserve">
     <value>トランジション結果</value>
   </data>
-  <data name="PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_" xml:space="preserve">
-    <value>貼り付けたテキストは2列でなければなりません。</value>
-  </data>
   <data name="ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__" xml:space="preserve">
     <value>このドキュメントの設定は装置タイプ{0}に適合しません：</value>
   </data>

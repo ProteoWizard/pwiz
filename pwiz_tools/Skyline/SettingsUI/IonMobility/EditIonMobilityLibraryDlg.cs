@@ -72,7 +72,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             _gridViewLibraryDriver = new CollisionalCrossSectionGridViewDriver(gridViewIonMobilities,
                 bindingSourceLibrary,
-                new SortableBindingList<ValidatingIonMobilityPrecursor>());
+                new SortableBindingList<ValidatingIonMobilityPrecursor>(),
+                Program.MainWindow.ModeUI, 
+                false); // Allow editing of small molecule details (i.e. accept pasted lists)
 
             // Show window width caclulation types in L10N, watch out for special type "unknown" which does not display
             object[] namesL10n = Enumerable.Range(0, Enum.GetNames(typeof(eIonMobilityUnits)).Length)
@@ -542,6 +544,18 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return cbOffsetHighEnergySpectra.Checked;
         }
 
+        public List<string> CellValues(int row)
+        {
+            var result = new List<string>();
+            var count = gridViewIonMobilities.Rows[row].Cells.Count;
+            for (var i = 0; i < count; i++)
+            {
+                var formattedValue = gridViewIonMobilities.Rows[row].Cells[i].FormattedValue;
+                result.Add(formattedValue == null ? string.Empty : formattedValue.ToString());
+            }
+            return result;
+        }
+
         #endregion
 
         private void btnUseResults_Click(object sender, EventArgs e)
@@ -652,20 +666,21 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
     {
         public CollisionalCrossSectionGridViewDriver(DataGridViewEx gridView,
                                          BindingSource bindingSource,
-                                         SortableBindingList<ValidatingIonMobilityPrecursor> items)
-            : base(gridView, bindingSource, items)
+                                         SortableBindingList<ValidatingIonMobilityPrecursor> items, 
+                                         SrmDocument.DOCUMENT_TYPE modeUI, bool smallMolDetailColumnsReadOnly)
+            : base(gridView, bindingSource, items, modeUI, smallMolDetailColumnsReadOnly)
         {
         }
 
         protected override void DoPaste()
         {
             var mMeasuredCollisionalCrossSectionsNew = new List<ValidatingIonMobilityPrecursor>();
-            var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
             GridView.DoPaste(MessageParent, ValidateRow,
-                values =>
+                (values, rowNum) =>
                 {
                     var columnCount = values.Length;
-                    var target = targetResolver.TryResolveTarget(values[EditIonMobilityLibraryDlg.COLUMN_TARGET], out _)  ?? new Target(values[EditIonMobilityLibraryDlg.COLUMN_TARGET]);
+                    var sequence = values[EditIonMobilityLibraryDlg.COLUMN_TARGET];
+                    var target = this.SmallMoleculeColumnsManager.TryGetSmallMoleculeTargetFromDetails(sequence, values, rowNum, out _)  ?? new Target(sequence);
                     var precursorAdduct = columnCount <= EditIonMobilityLibraryDlg.COLUMN_ADDUCT ? Adduct.EMPTY : 
                         target.IsProteomic
                             ? Adduct.FromStringAssumeProtonated(values[EditIonMobilityLibraryDlg.COLUMN_ADDUCT]) // e.g. "1" -> M+H
@@ -679,7 +694,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     var units = columnCount > EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY_UNITS ?
                         IonMobilityFilter.IonMobilityUnitsFromL10NString(values[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY_UNITS]) :
                         eIonMobilityUnits.none;
-                    var offset = columnCount <= EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET || string.IsNullOrEmpty(values[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET])
+                    var offset = columnCount <= EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET || 
+                                 !GridView.Columns[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET].Visible ||
+                                 string.IsNullOrEmpty(values[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET])
                         ? 0
                         : double.Parse(values[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET]);
                     mMeasuredCollisionalCrossSectionsNew.Add(new ValidatingIonMobilityPrecursor(
@@ -928,17 +945,17 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
 
 
-    public abstract class CollisionalCrossSectionGridViewDriverBase<TItem> : SimpleGridViewDriver<TItem>
+    public abstract class CollisionalCrossSectionGridViewDriverBase<TItem> : TargetGridViewDriver<TItem>
         where TItem : ValidatingIonMobilityPrecursor
     {
 
-        protected CollisionalCrossSectionGridViewDriverBase(DataGridViewEx gridView, BindingSource bindingSource, SortableBindingList<TItem> items)
-            : base(gridView, bindingSource, items)
+        protected CollisionalCrossSectionGridViewDriverBase(DataGridViewEx gridView, BindingSource bindingSource, SortableBindingList<TItem> items, SrmDocument.DOCUMENT_TYPE modeUI, bool readOnly)
+            : base(gridView, bindingSource, items, items?.Select(p => p.PeptideModSeq), null, modeUI, readOnly)
         {
             GridView.RowValidating += gridView_RowValidating;
         }
 
-        public static string ValidateRow(object[] columns, DataGridView grid, int lineNumber)
+        public static string ValidateRow(object[] columns, DataGridView grid, int lineNumber, out int badCell)
         {
             badCell = 0;
             if (columns.Length < 3)
@@ -959,7 +976,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                               columns[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY] != null
                 ? columns[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY].ToString()
                 : string.Empty;
-            var highEnergyOffset = (columns.Length > EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET) &&
+            var visibleHighEnergyOffsetColumn = grid == null || 
+                                                grid.ColumnCount > EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET &&
+                                                grid.Columns[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET].Visible;
+            var highEnergyOffset = visibleHighEnergyOffsetColumn &&
+                                   (columns.Length > EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET) &&
                                    columns[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET] != null
                 ? columns[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET].ToString()
                 : string.Empty;
@@ -975,13 +996,15 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_peptide_sequence_on_line__0__, lineNumber));
                 badCell = EditIonMobilityLibraryDlg.COLUMN_TARGET;
             }
-            else if (targetResolver.TryResolveTarget(target, out _) == null && !FastaSequence.IsExSequence(target))
+            else if (!FastaSequence.IsExSequence(target))
             {
-                // Use target resolver if available
-                var targetColumn = grid?.Columns[EditIonMobilityLibraryDlg.COLUMN_SEQUENCE] as TargetColumn;
-                if (targetColumn == null || targetColumn.TryResolveTarget(seq, columns.Select(c=>c as string).ToArray(), lineNumber, out _) == null)
+                // Use target resolver if available to see if this can be understood as a small molecule
+                if (grid == null || 
+                    !(grid.Columns[EditIonMobilityLibraryDlg.COLUMN_TARGET] is TargetColumn targetColumn) || 
+                    targetColumn.TryResolveTarget(target, columns.Select(c=>c as string).ToArray(), lineNumber, out _) == null)
                 {
-                    message = string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1__, seq, lineNumber);
+                    messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1__, target, lineNumber));
+                    badCell = EditIonMobilityLibraryDlg.COLUMN_TARGET;
                 }
             }
             else
@@ -1087,10 +1110,23 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public static bool ValidateRow(object[] columns, IWin32Window parent, DataGridView grid, int lineNumber)
         {
-            string message = ValidateRow(columns, grid, lineNumber);
+            string message = ValidateRow(columns, grid, lineNumber, out _);
             if (message == null)
                 return true;
-            MessageDlg.Show(parent, message);
+            // Show values in dialog as they are likely to be too broken to show in grid
+            var list = new List<string>();
+            var hdrIndex = 0;
+            for (var i = 0; i < columns.Length; i++)
+            {
+                while (hdrIndex < grid.Columns.Count && !grid.Columns[hdrIndex].Visible)
+                {
+                    hdrIndex++;
+                }
+                var hdrText = hdrIndex < grid.Columns.Count ? grid.Columns[hdrIndex].HeaderText : @"?";
+                list.Add(hdrText + @": " + columns[i]);
+                hdrIndex++;
+            }
+            MessageDlg.Show(parent, message + Environment.NewLine + Environment.NewLine + TextUtil.LineSeparate(list));
             return false;
         }
 
@@ -1105,13 +1141,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var row = GridView.Rows[rowIndex];
             if (row.IsNewRow)
                 return true;
-            var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
             var cells = new List<object>();
             for (var i = 0; i < row.Cells.Count; i++)
             {
                 cells.Add(row.Cells[i].Value);
             }
-            var errorText = ValidateRow(cells.ToArray(), rowIndex, targetResolver, out var badCol);
+            var errorText = ValidateRow(cells.ToArray(), GridView, rowIndex,  out var badCol);
             if (errorText != null)
             {
                 bool messageShown = false;

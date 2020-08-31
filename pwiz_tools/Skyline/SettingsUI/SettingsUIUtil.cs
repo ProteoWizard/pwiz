@@ -87,7 +87,7 @@ namespace pwiz.Skyline.SettingsUI
             return grid.DoPaste(parent, validate, (s, i) => addRow(s));
         }
 
-        private static bool DoPaste(this DataGridView grid, Control parent, ValidateCellValues validate, Action<string[], int> addRow)
+        public static bool DoPaste(this DataGridView grid, Control parent, ValidateCellValues validate, Action<string[], int> addRow)
         {
             string textClip = ClipboardHelper.GetClipboardText(parent);
             if (string.IsNullOrEmpty(textClip) || !grid.EndEdit())
@@ -101,20 +101,18 @@ namespace pwiz.Skyline.SettingsUI
             TextReader reader = new StringReader(textClip);
 
             int columnCount = grid.Columns.Cast<DataGridViewColumn>().Count(column => column.Visible);
-            int nHidden = grid.Columns.Cast<DataGridViewColumn>().Count() - columnCount;
 
             int lineNum = 0;
             String line;
             while ((line = reader.ReadLine()) != null)
             {
-                lineNum++;
                 String[] columns = line.Split(TextUtil.SEPARATOR_TSV);
                 if (columns.Length == 0)
                     continue;
                 if (columns.Length > columnCount)
                 {
                     string message = string.Format(Resources.SettingsUIUtil_DoPasteText_Incorrect_number_of_columns__0__found_on_line__1__,
-                                                   columns.Length, lineNum);
+                                                   columns.Length, lineNum+1);
                     MessageDlg.Show(parent, message);
                     return false;
                 }
@@ -124,21 +122,9 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (!validate(columns, parent, grid, lineNum))
                     return false;
-
-                // If there is a SmallMoleculeColumnsManager for this grid, make sure to adjust for hidden columns if user is pasting in small molecule details
-                if (nHidden != 0 && // Hidden columns
-                    grid.Columns.Cast<DataGridViewColumn>().FirstOrDefault(column => column is TargetColumn) is TargetColumn targetColumn)
-                {
-                    var smDetailsManager = targetColumn.SmallMoleculeColumnsManager;
-                    if (smDetailsManager != null)
-                    {
-                        columns = smDetailsManager.PadHiddenColumns(columns);
-                    }
-                }
-
                 addRow(columns, lineNum);
+                lineNum++;
             }
-
             return true;
         }
 

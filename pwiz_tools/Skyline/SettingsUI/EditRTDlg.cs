@@ -285,7 +285,8 @@ namespace pwiz.Skyline.SettingsUI
             public RetentionTimeGridViewDriver(EditRTDlg parent, DataGridViewEx gridView,
                                              BindingSource bindingSource,
                                              SortableBindingList<MeasuredPeptide> items)
-                : base(gridView, bindingSource, items, null, parent.ModeUI)
+                : base(gridView, bindingSource, items, null, parent.ModeUI,
+                    false) // Allow editing of small molecule detail columns (i.e. allow pasting of lists)
             {
             }
 
@@ -293,13 +294,15 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var measuredPeptidesNew = new List<MeasuredPeptide>();
                 GridView.DoPaste(MessageParent, ValidateRowWithTime,
-                                          values =>
-                                          measuredPeptidesNew.Add(new MeasuredPeptide
-                                          {
-                                              Target = new Target(values[0]),  // CONSIDER(bspratt) small molecule equivalent?
-                                              RetentionTime = double.Parse(values[1])
-                                          }));
-
+                    (values, rowIndex) =>
+                    {
+                        var target = TryResolveTarget(values[0], values, rowIndex, out _);
+                        measuredPeptidesNew.Add(new MeasuredPeptide
+                        {
+                            Target = target,
+                            RetentionTime = double.Parse(values[1])
+                        });
+                    });
                 SetTablePeptides(measuredPeptidesNew);
             }
 
@@ -748,6 +751,7 @@ namespace pwiz.Skyline.SettingsUI
         public Target Target { get; set; }
         public double RetentionTime { get; set; }
         public string Sequence { get { return Target == null ? string.Empty : Target.ToSerializableString(); } }
+        public string DisplayName { get { return Target == null ? string.Empty : Target.DisplayName; } }
 
         public static string ValidateSequence(Target sequence)
         {

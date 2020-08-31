@@ -21197,11 +21197,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The pasted text must have two columns..
+        ///   Looks up a localized string similar to The pasted text must include columns for target and time..
         /// </summary>
-        public static string PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_ {
+        public static string PeptideGridViewDriver_ValidateRow_The_pasted_text_must_include_columns_for_target_and_time_ {
             get {
-                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_", resourceCulture);
+                return ResourceManager.GetString("PeptideGridViewDriver_ValidateRow_The_pasted_text_must_include_columns_for_target" +
+                        "_and_time_", resourceCulture);
             }
         }
         
@@ -28702,6 +28703,7 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("SkypSupport_Open_Failure_opening_skyp_file_", resourceCulture);
             }
         }
+        
         /// <summary>
         ///   Looks up a localized string similar to Molecule description on line {0} requires at least a name and chemical formula.
         /// </summary>

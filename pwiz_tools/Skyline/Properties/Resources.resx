@@ -2082,9 +2082,6 @@
   <data name="AnnotationDef_AnnotationTarget_TransitionResults" xml:space="preserve">
     <value>Transition Results</value>
   </data>
-  <data name="PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_" xml:space="preserve">
-    <value>The pasted text must have two columns.</value>
-  </data>
   <data name="ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__" xml:space="preserve">
     <value>The settings for this document do not match the instrument type {0}:</value>
   </data>
@@ -11069,5 +11066,8 @@ Invalid peptide sequence at position 18
   </data>
   <data name="MetadataRuleSetList_Label_Rule_Set" xml:space="preserve">
     <value>Rule Set</value>
+  </data>
+  <data name="PeptideGridViewDriver_ValidateRow_The_pasted_text_must_include_columns_for_target_and_time_" xml:space="preserve">
+    <value>The pasted text must include columns for target and time.</value>
   </data>
 </root>

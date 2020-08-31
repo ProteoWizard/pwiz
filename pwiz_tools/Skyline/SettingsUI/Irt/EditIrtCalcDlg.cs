@@ -664,7 +664,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             public StandardGridViewDriver(EditIrtCalcDlg parent, DataGridViewEx gridView, BindingSource bindingSource,
                 SortableBindingList<DbIrtPeptide> items)
-                : base(gridView, bindingSource, items, null, parent.ModeUI)
+                : base(gridView, bindingSource, items, null, parent.ModeUI,
+                    false) // Allow editing of small mol detail columns (i.e. accept pasted lists)
             {
                 AllowNegativeTime = true;
                 GridView.CellValueChanged += parent.HandleStandardsChanged;
@@ -681,8 +682,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
             protected override void DoPaste()
             {
                 var standardPeptidesNew = new List<DbIrtPeptide>();
-                GridView.DoPaste(MessageParent, ValidateRowWithIrt, values =>
-                    standardPeptidesNew.Add(new DbIrtPeptide(new Target(values[0]), double.Parse(values[1]), true, TimeSource.peak)));
+                GridView.DoPaste(MessageParent, ValidateRowWithIrt,
+                    (values, rowIndex) =>
+                    {
+                        var target = TryResolveTarget(values[0], values, rowIndex, out _);
+                        standardPeptidesNew.Add(new DbIrtPeptide(target, double.Parse(values[1]), true,
+                            TimeSource.peak));
+                    });
 
                 Reset(standardPeptidesNew);
             }
@@ -745,7 +751,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private class LibraryGridViewDriver : PeptideGridViewDriver<DbIrtPeptide>
         {
             public LibraryGridViewDriver(EditIrtCalcDlg parent, DataGridViewEx gridView, BindingSource bindingSource, SortableBindingList<DbIrtPeptide> items)
-                : base(gridView, bindingSource, items, null, parent.ModeUI)
+                : base(gridView, bindingSource, items, null, parent.ModeUI, 
+                    false) // Allow editing of small molecule detail columns (i.e. accept pasted lists)
             {
                 AllowNegativeTime = true;
             }
@@ -760,7 +767,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
             protected override void DoPaste()
             {
                 var libraryPeptidesNew = new List<DbIrtPeptide>();
-                if (!GridView.DoPaste(MessageParent, ValidateRowWithIrt, values => libraryPeptidesNew.Add(new DbIrtPeptide(new Target(values[0]), double.Parse(values[1]), false, TimeSource.peak))))
+                if (!GridView.DoPaste(MessageParent, ValidateRowWithIrt,
+                    (values, rowIndex) =>
+                    {
+                        var target = TryResolveTarget(values[0], values, rowIndex, out _);
+                        libraryPeptidesNew.Add(
+                            new DbIrtPeptide(target, double.Parse(values[1]), false, TimeSource.peak));
+                    }))
                     return;
 
                 foreach (var peptide in libraryPeptidesNew)

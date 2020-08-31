@@ -556,7 +556,7 @@ namespace pwiz.SkylineTestFunctional
             var dtValues = InitializeIonMobilityTestColumns();
             dtValues[errCol] = errVal;
             var message = CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(dtValues,
-                1, TargetResolver.EMPTY, out _);
+                null, 1,  out _);
             if (string.IsNullOrEmpty(expectedMessage))
                 AssertEx.AreEqualLines(string.Empty, message ?? string.Empty);
             else
@@ -570,7 +570,6 @@ namespace pwiz.SkylineTestFunctional
         public void TestEditIonMobilityLibraryDlgErrorHandling()
         {
             var peptides = new List<ValidatingIonMobilityPrecursor>();
-            var targetResolver = TargetResolver.EMPTY;
 
             var seq = "JKLMN";
             const double HIGH_ENERGY_DRIFT_OFFSET_MSEC = -0.5;
@@ -630,7 +629,7 @@ namespace pwiz.SkylineTestFunctional
             TestParser(EditIonMobilityLibraryDlg.COLUMN_ADDUCT, "99",String.Format(
                 Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow__0__is_not_a_valid_charge__Precursor_charges_must_be_integers_with_absolute_value_between_1_and__1__,
                 99, TransitionGroup.MAX_PRECURSOR_CHARGE));
-            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(new[] { "", "" }, lineNumber, TargetResolver.EMPTY, out _),
+            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(new[] { "", "" }, null, lineNumber, out _),
                 Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_at_a_minimum_contain_columns_for_peptide_and_adduct__along_with_collisional_cross_section_and_or_ion_mobility_);
             TestParser(EditIonMobilityLibraryDlg.COLUMN_TARGET, "",
                 string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_peptide_sequence_on_line__0__, lineNumber));
@@ -643,7 +642,7 @@ namespace pwiz.SkylineTestFunctional
                 string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_adduct_description_on_line__0_, lineNumber));
 
             object[] column = { "1" };
-            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(column, 1, targetResolver, out _),
+            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(column, null, 1, out _),
                 Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_at_a_minimum_contain_columns_for_peptide_and_adduct__along_with_collisional_cross_section_and_or_ion_mobility_);
 
             var dtValues = InitializeIonMobilityTestColumns();
@@ -651,26 +650,26 @@ namespace pwiz.SkylineTestFunctional
                 dtValues[EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY] = "";
             AssertEx.Contains(
                 CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(dtValues,
-                    1, TargetResolver.EMPTY, out _), string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_collisional_cross_section_value_on_line__0__, lineNumber));
+                    null,1, out _), string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_collisional_cross_section_value_on_line__0__, lineNumber));
             AssertEx.Contains(
                 CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(dtValues,
-                    1, TargetResolver.EMPTY, out _), string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_ion_mobility_value_on_line__0__, lineNumber));
+                    null, 1, out _), string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_ion_mobility_value_on_line__0__, lineNumber));
 
             dtValues = InitializeIonMobilityTestColumns();
             dtValues[EditIonMobilityLibraryDlg.COLUMN_ADDUCT] = "M+H";
-            AssertEx.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(dtValues, lineNumber, TargetResolver.EMPTY, out _));
+            AssertEx.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(dtValues, null, lineNumber, out _));
 
             dtValues = InitializeIonMobilityTestColumns();
             dtValues[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET] = "zeke"; // HighEnergyDriftTimeOffsetMsec
-            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(dtValues, lineNumber, TargetResolver.EMPTY, out _),
+            AssertEx.Contains(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(dtValues, null, lineNumber, out _),
                 string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Cannot_read_high_energy_ion_mobility_offset_value___0___on_line__1__,
                     "zeke", lineNumber));
 
             dtValues[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET] = ""; // HighEnergyDriftTimeOffset
-            AssertEx.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(dtValues, lineNumber, TargetResolver.EMPTY, out _));
+            AssertEx.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(dtValues, null, lineNumber, out _));
 
             dtValues[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_OFFSET] = "1"; // HighEnergyDriftTimeOffset (usually negative, but we don't demand it)
-            AssertEx.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(dtValues, lineNumber, TargetResolver.EMPTY, out _));
+            AssertEx.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPrecursor>.ValidateRow(dtValues, null, lineNumber, out _));
 
             var pep = BuildValidatingIonMobilityPeptide(string.Empty, Adduct.EMPTY, 0, 0, 0);
             AssertEx.Contains(pep.Validate(), Resources.ValidatingIonMobilityPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry_);

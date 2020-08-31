@@ -2079,9 +2079,6 @@
   <data name="AnnotationDef_AnnotationTarget_TransitionResults" xml:space="preserve">
     <value>离子对结果（多个）</value>
   </data>
-  <data name="PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_" xml:space="preserve">
-    <value>粘贴的文本必须有两列。</value>
-  </data>
   <data name="ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__" xml:space="preserve">
     <value>此文档的设置不匹配仪器类型{0}：</value>
   </data>

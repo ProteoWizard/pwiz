@@ -383,7 +383,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return;
 
             var oldPeps = comboMinPeptide.Items.Cast<string>().ToArray();
-            var newPeps = StandardPeptidesSorted.Select(pep => pep.Sequence).ToArray();
+            var newPeps = StandardPeptidesSorted.Select(pep => pep.DisplayName).ToArray();
 
             if (oldPeps.SequenceEqual(newPeps))
                 return;
@@ -443,7 +443,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     var pepMax = StandardPeptidesSorted[comboMaxPeptide.SelectedIndex];
                     pepMinTime = pepMin.RetentionTime;
                     pepMaxTime = pepMax.RetentionTime;
-                    tooltips = new Dictionary<int, string> {{0, pepMin.Sequence}, {1, pepMax.Sequence}};
+                    tooltips = new Dictionary<int, string> {{0, pepMin.DisplayName}, {1, pepMax.DisplayName}};
                 }
                 else
                 {
@@ -451,7 +451,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     var pepMax = _standardPeptidesSorted[comboMaxPeptide.SelectedIndex];
                     pepMinTime = pepMin.Irt;
                     pepMaxTime = pepMax.Irt;
-                    tooltips = new Dictionary<int, string> {{0, pepMin.PeptideModSeq}, {1, pepMax.PeptideModSeq}};
+                    tooltips = new Dictionary<int, string> {{0, pepMin.ModifiedTarget.DisplayName}, {1, pepMax.ModifiedTarget.DisplayName } };
                 }
                 xValues = new[] {pepMinTime, pepMaxTime};
                 yValues = xValues.Select(x => regression.GetY(x)).ToArray();
@@ -466,7 +466,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     xValues[i] = nodePep.PercentileMeasuredRetentionTime.Value;
                     yValues[i] = standardPeptide.Irt;
-                    tooltips[i] = standardPeptide.PeptideModSeq;
+                    tooltips[i] = standardPeptide.ModifiedTarget.DisplayName;
                     i++;
                 }
                 regression = SelectedRegressionOption.Regression;
@@ -614,7 +614,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             private readonly IrtPeptidePicker _picker;
 
             public CalibrationGridViewDriver(CalibrateIrtDlg parent, DataGridViewEx gridView, BindingSource bindingSource,
-                SortableBindingList<StandardPeptide> items) : base(gridView, bindingSource, items, null, parent.ModeUI)
+                SortableBindingList<StandardPeptide> items) : base(gridView, bindingSource, items, null, parent.ModeUI,
+                false) // Allow editing of small molecule detail columns (i.e. accept pasted lists)
             {
                 _parent = parent;
                 _picker = new IrtPeptidePicker();
@@ -628,8 +629,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 var standardPeptidesNew = new List<MeasuredPeptide>();
                 GridView.DoPaste(MessageParent, ValidateRowWithTime,
-                    values => standardPeptidesNew.Add(new MeasuredPeptide
-                        {Target = new Target(values[0]), RetentionTime = double.Parse(values[1])}));
+                    (values, rowIndex) =>
+                    {
+                        var target = TryResolveTarget(values[0], values, rowIndex, out _);
+                        standardPeptidesNew.Add(new MeasuredPeptide
+                            {Target = target, RetentionTime = double.Parse(values[1])});
+                    });
 
                 var message = ValidateUniquePeptides(standardPeptidesNew.Select(p => p.Target), null, null);
                 if (message != null)
@@ -780,6 +785,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             comboMinPeptide.SelectedIndex = one;
             comboMaxPeptide.SelectedIndex = two;
+        }
+
+        public string MinFixedPointName => (string)comboMinPeptide.SelectedItem;
+        public string MaxFixedPointName => (string)comboMaxPeptide.SelectedItem;
+
+        public void PasteCalibration()
+        {
+            _gridViewDriver.OnPaste();
         }
         #endregion
     }
