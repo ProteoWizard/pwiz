@@ -64,17 +64,18 @@ namespace pwiz.SkylineTestFunctional
                     .Property(nameof(Protein.Peptides)).LookupAllItems();
                 columnsTab.AddColumn(ppPeptides);
                 columnsTab.AddColumn(PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems());
-                columnsTab.AddColumn(ppPeptides.Property(nameof(Peptide.FiguresOfMerit)).Property(nameof(FiguresOfMerit.TargetQualitativeIonRatio)));
-                PropertyPath ppPeptideResults =
-                    ppPeptides.Property(nameof(Peptide.Results)).DictionaryValues();
-                PropertyPath ppQuantification = ppPeptideResults.Property(nameof(PeptideResult.Quantification));
-                columnsTab.AddColumn(ppQuantification.Property(nameof(PeptideQuantificationResult.QualitativeIonRatio)));
-                columnsTab.AddColumn(ppQuantification.Property(nameof(PeptideQuantificationResult.QualitativeIonRatioStatus)));
+                PropertyPath ppPrecursors = ppPeptides.Property(nameof(Peptide.Precursors)).LookupAllItems();
+                columnsTab.AddColumn(ppPrecursors.Property(nameof(Precursor.TargetQualitativeIonRatio)));
+                PropertyPath ppPrecursorResults =
+                    ppPrecursors.Property(nameof(Precursor.Results)).DictionaryValues();
+                PropertyPath ppQuantification = ppPrecursorResults.Property(nameof(PrecursorResult.PrecursorQuantification));
+                columnsTab.AddColumn(ppQuantification.Property(nameof(PrecursorQuantificationResult.QualitativeIonRatio)));
+                columnsTab.AddColumn(ppQuantification.Property(nameof(PrecursorQuantificationResult.QualitativeIonRatioStatus)));
                 viewEditor.ViewName = "IonRatios";
                 viewEditor.OkDialog();
             });
             WaitForConditionUI(() => documentGrid.IsComplete);
-            PropertyPath ppTargetIonRatio = PropertyPath.Root.Property(nameof(Peptide.FiguresOfMerit)).Property(nameof(FiguresOfMerit.TargetQualitativeIonRatio));
+            PropertyPath ppTargetIonRatio = PropertyPath.Root.Property(nameof(Precursor.TargetQualitativeIonRatio));
             RunUI(() =>
             {
                 var colTargetIonRatio = documentGrid.FindColumn(ppTargetIonRatio);
@@ -105,15 +106,17 @@ namespace pwiz.SkylineTestFunctional
             });
             RunUI(() =>
             {
-                var ppPeptideResults = PropertyPath.Root.Property(nameof(Peptide.Results))
+                var ppPrecursorResults = PropertyPath.Root.Property(nameof(Precursor.Results))
                     .DictionaryValues();
-                var ppIonRatio = ppPeptideResults
-                    .Property(nameof(PeptideResult.Quantification))
-                    .Property(nameof(PeptideQuantificationResult.QualitativeIonRatio));
-                var ppReplicate = ppPeptideResults.Property(nameof(PeptideResult.ResultFile))
+                var ppIonRatio = ppPrecursorResults
+                    .Property(nameof(PrecursorResult.PrecursorQuantification))
+                    .Property(nameof(PrecursorQuantificationResult.QualitativeIonRatio));
+                var ppReplicate = ppPrecursorResults
+                    .Property(nameof(PrecursorResult.PeptideResult))
+                    .Property(nameof(PeptideResult.ResultFile))
                     .Property(nameof(ResultFile.Replicate));
                 var colIonRatio = documentGrid.DataboundGridControl.FindColumn(ppIonRatio);
-                var colPeptide = documentGrid.DataboundGridControl.FindColumn(PropertyPath.Root);
+                var colPeptide = documentGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property(nameof(Precursor.Peptide)));
                 var colReplicate = documentGrid.DataboundGridControl.FindColumn(ppReplicate);
                 for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
                 {

@@ -49,9 +49,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 case 0.01f:
                     rbQValue01.Select();
                     break;
-                case 0.05f:
-                    rbQValue05.Select();
-                    break;
                 default:
                     rbQValueCustom.Select();
                     break;
@@ -79,8 +76,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (rbQValue01.Checked)
                 Settings.QValueCutoff = 0.01f;
-            if (rbQValue05.Checked)
-                Settings.QValueCutoff = 0.05f;
             if (rbQValueCustom.Checked)
             {
                 var qValueCutoff = double.NaN;
@@ -128,14 +123,11 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (qValue == .01f)
                 rbQValue01.Select();
-            else if(qValue == .05f)
-                rbQValue05.Select();
             else
             {
                 rbQValueCustom.Select();
                 txtQValueCustom.Text = qValue.ToString(CultureInfo.CurrentCulture);
             }
-
         }
         #endregion
     }

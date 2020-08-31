@@ -760,11 +760,11 @@ double BuildParser::getScoreThreshold(BUILD_INPUT fileType) {
     return blibMaker_.getScoreThreshold(fileType);
 }
 
-string BuildParser::getFileName() {
+const string& BuildParser::getFileName() {
     return fullFilename_;
 }
 
-string BuildParser::getSpecFileName() {
+const string& BuildParser::getSpecFileName() {
     return curSpecFileName_;
 }
 

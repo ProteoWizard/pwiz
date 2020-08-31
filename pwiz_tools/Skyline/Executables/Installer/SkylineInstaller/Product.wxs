@@ -49,6 +49,7 @@
       <ComponentGroupRef Id="Method_Thermo_files"/>
       <ComponentGroupRef Id="Method_Waters_files"/>
       <ComponentGroupRef Id="Microsoft.VC90.MFC_files"/>
+      <ComponentGroupRef Id="percolator_files"/>
       <ComponentGroupRef Id="ApplicationShortcuts"/>
     </Feature>
 
@@ -92,6 +93,7 @@
         <Directory Id="Method_Waters_directory" Name="Waters"/>
       </Directory>
       <Directory Id="Microsoft.VC90.MFC_directory" Name="Microsoft.VC90.MFC"/>
+      <Directory Id="percolator_directory" Name="percolator"/>
     </DirectoryRef>
   </Fragment>
 
@@ -361,6 +363,18 @@
       <Component Id="DualProbeInterfaceParametersCS.dll">
         <File Source="$(var.Skyline.TargetDir)/DualProbeInterfaceParametersCS.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="enzymes.xml">
+        <File Source="$(var.Skyline.TargetDir)/enzymes.xml" KeyPath="yes"/>
+      </Component>
+      <Component Id="FHOOE_IMP.MSAmanda.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/FHOOE_IMP.MSAmanda.Core.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="FHOOE_IMP.MSAmanda.InOutput.dll">
+        <File Source="$(var.Skyline.TargetDir)/FHOOE_IMP.MSAmanda.InOutput.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="FHOOE_IMP.MSAmanda.Utils.dll">
+        <File Source="$(var.Skyline.TargetDir)/FHOOE_IMP.MSAmanda.Utils.dll" KeyPath="yes"/>
+      </Component>
       <?if $(sys.BUILDARCH) != x64 ?>
       <Component Id="fileio.dll">
         <File Source="$(var.Skyline.TargetDir)/fileio.dll" KeyPath="yes"/>
@@ -389,6 +403,9 @@
       </Component>
       <Component Id="Iesi.Collections.dll">
         <File Source="$(var.Skyline.TargetDir)/Iesi.Collections.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Instruments.xml">
+        <File Source="$(var.Skyline.TargetDir)/Instruments.xml" KeyPath="yes"/>
       </Component>
       <?if $(sys.BUILDARCH) != x64 ?>
       <Component Id="Interop.DataExplorer.dll">
@@ -510,6 +527,12 @@
       <Component Id="PeakItgLSS.dll">
         <File Source="$(var.Skyline.TargetDir)/PeakItgLSS.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="PrmPasefScheduler.dll">
+        <File Source="$(var.Skyline.TargetDir)/PrmPasefScheduler.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="prmscheduler.dll">
+        <File Source="$(var.Skyline.TargetDir)/prmscheduler.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="ProteomeDb.dll">
         <File Source="$(var.Skyline.TargetDir)/ProteomeDb.dll" KeyPath="yes"/>
       </Component>
@@ -524,6 +547,9 @@
       </Component>
       <Component Id="protobuf_net.dll">
         <File Source="$(var.Skyline.TargetDir)/protobuf-net.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="psi_ms.obo">
+        <File Source="$(var.Skyline.TargetDir)/psi-ms.obo" KeyPath="yes"/>
       </Component>
       <Component Id="pwiz.Common.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz.Common.dll" KeyPath="yes"/>
@@ -667,6 +693,9 @@
       </Component>
       <Component Id="UIMFLibrary.dll">
         <File Source="$(var.Skyline.TargetDir)/UIMFLibrary.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="unimod.obo">
+        <File Source="$(var.Skyline.TargetDir)/unimod.obo" KeyPath="yes"/>
       </Component>
       <Component Id="unimod.xml">
         <File Source="$(var.Skyline.TargetDir)/unimod.xml" KeyPath="yes"/>
@@ -894,9 +923,6 @@
       <Component Id="Method_Bruker_BDal.Submethod.Wrapper.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BDal.Submethod.Wrapper.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="Method_Bruker_BDal.Submethod.Wrapper.xml">
-        <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BDal.Submethod.Wrapper.xml" KeyPath="yes"/>
-      </Component>
       <Component Id="Method_Bruker_BdalRetentionTimeMassList.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BdalRetentionTimeMassList.dll" KeyPath="yes"/>
       </Component>
@@ -938,6 +964,17 @@
         <File Source="$(var.Skyline.TargetDir)/Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest" KeyPath="yes"/>
       </Component>
       <?endif?>
+    </ComponentGroup>
+    <ComponentGroup Id="percolator_files" Directory="percolator_directory">
+      <Component Id="percolator_percolator.exe">
+        <File Source="$(var.Skyline.TargetDir)/percolator/percolator.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="percolator_qvality.exe">
+        <File Source="$(var.Skyline.TargetDir)/percolator/qvality.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="percolator_xerces_c_3_1.dll">
+        <File Source="$(var.Skyline.TargetDir)/percolator/xerces-c_3_1.dll" KeyPath="yes" />
+      </Component>
     </ComponentGroup>
   </Fragment>
 </Wix>

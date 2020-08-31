@@ -359,11 +359,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 figuresOfMerit = figuresOfMerit.ChangeUnits(QuantificationSettings.Units);
             }
 
-            figuresOfMerit = figuresOfMerit.ChangeTargetQualitativeIonRatio(GetTargetIonRatio());
             return figuresOfMerit;
         }
 
-        public double? GetTargetIonRatio()
+        public double? GetTargetIonRatio(TransitionGroupDocNode transitionGroupDocNode)
         {
             var measuredResults = SrmSettings.MeasuredResults;
             double totalQualitativeIonRatio = 0;
@@ -380,7 +379,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     continue;
                 }
 
-                var qualitativeIonRatio = PeptideQuantifier.GetQualitativeIonRatio(SrmSettings, replicateIndex);
+                var qualitativeIonRatio = PeptideQuantifier.GetQualitativeIonRatio(SrmSettings, transitionGroupDocNode, replicateIndex);
                 if (qualitativeIonRatio.HasValue)
                 {
                     totalQualitativeIonRatio += qualitativeIonRatio.Value;
@@ -628,44 +627,51 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
 
 
-        public PeptideQuantificationResult GetPeptideQuantificationResult(int replicateIndex)
+        public QuantificationResult GetPeptideQuantificationResult(int replicateIndex)
         {
             CalibrationCurve calibrationCurve = GetCalibrationCurve();
-            PeptideQuantificationResult result = new PeptideQuantificationResult();
-            result = (PeptideQuantificationResult) result.ChangeNormalizedArea(GetNormalizedPeakArea(new CalibrationPoint(replicateIndex, null)));
+            QuantificationResult result = new QuantificationResult();
+            result = result.ChangeNormalizedArea(GetNormalizedPeakArea(new CalibrationPoint(replicateIndex, null)));
             if (HasExternalStandards() || HasInternalStandardConcentration())
             {
                 double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, new CalibrationPoint(replicateIndex, null));
-                result = (PeptideQuantificationResult) result.ChangeCalculatedConcentration(calculatedConcentration);
+                result = result.ChangeCalculatedConcentration(calculatedConcentration);
                 double? expectedConcentration = GetPeptideConcentration(replicateIndex);
-                result = (PeptideQuantificationResult) result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
-                result = (PeptideQuantificationResult) result.ChangeUnits(QuantificationSettings.Units);
+                result = result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
+                result = result.ChangeUnits(QuantificationSettings.Units);
             }
 
-            var ionRatio = PeptideQuantifier.GetQualitativeIonRatio(SrmSettings, replicateIndex);
-            if (ionRatio.HasValue)
-            {
-                var status = ValueStatus.GetStatus(ionRatio, GetTargetIonRatio(),
-                    SrmSettings.PeptideSettings.Quantification.QualitativeIonRatioThreshold / 100);
-                result = result.ChangeIonRatio(ionRatio, status);
-            }
 
             return result;
         }
 
-        public QuantificationResult GetPrecursorQuantificationResult(int replicateIndex, TransitionGroupDocNode transitionGroupDocNode)
+        public PrecursorQuantificationResult GetPrecursorQuantificationResult(int replicateIndex, TransitionGroupDocNode transitionGroupDocNode)
         {
-            QuantificationResult result = new QuantificationResult();
-            var calibrationPoint = new CalibrationPoint(replicateIndex, transitionGroupDocNode.LabelType);
-            CalibrationCurve calibrationCurve = GetCalibrationCurve();
-            result = result.ChangeNormalizedArea(GetNormalizedPeakArea(calibrationPoint));
-            if (HasExternalStandards() || HasInternalStandardConcentration())
+            PrecursorQuantificationResult result = null;
+            if (IsotopologResponseCurve)
             {
-                double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, calibrationPoint);
-                result = result.ChangeCalculatedConcentration(calculatedConcentration);
-                double? expectedConcentration = transitionGroupDocNode.PrecursorConcentration;
-                result = result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
-                result = result.ChangeUnits(QuantificationSettings.Units);
+                result = new PrecursorQuantificationResult();
+                var calibrationPoint = new CalibrationPoint(replicateIndex, transitionGroupDocNode.LabelType);
+                CalibrationCurve calibrationCurve = GetCalibrationCurve();
+                result = (PrecursorQuantificationResult)result.ChangeNormalizedArea(GetNormalizedPeakArea(calibrationPoint));
+                if (HasExternalStandards() || HasInternalStandardConcentration())
+                {
+                    double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, calibrationPoint);
+                    result = (PrecursorQuantificationResult)result.ChangeCalculatedConcentration(calculatedConcentration);
+                    double? expectedConcentration = transitionGroupDocNode.PrecursorConcentration;
+                    result = (PrecursorQuantificationResult)result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
+                    result = (PrecursorQuantificationResult)result.ChangeUnits(QuantificationSettings.Units);
+                }
+            }
+
+            var targetIonRatio = GetTargetIonRatio(transitionGroupDocNode);
+            var ionRatio = PeptideQuantifier.GetQualitativeIonRatio(SrmSettings, transitionGroupDocNode, replicateIndex);
+            if (targetIonRatio.HasValue || ionRatio.HasValue)
+            {
+                result = result ?? new PrecursorQuantificationResult();
+                var status = ValueStatus.GetStatus(ionRatio, GetTargetIonRatio(transitionGroupDocNode),
+                    SrmSettings.PeptideSettings.Quantification.QualitativeIonRatioThreshold / 100);
+                result = result.ChangeIonRatio(targetIonRatio, ionRatio, status);
             }
             return result;
         }
