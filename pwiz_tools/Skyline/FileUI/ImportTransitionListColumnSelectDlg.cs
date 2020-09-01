@@ -21,9 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
-using System.Drawing.Text;
 using System.Linq;
-using System.Management.Instrumentation;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -147,7 +145,7 @@ namespace pwiz.Skyline.FileUI
             // If there are items on our saved column list and the file does not contain headers, and the number of columns matches the saved column count,
             // the combo box text is set using that list
             var headers = Importer.RowReader.Indices.Headers;
-            if ((Settings.Default.CustomImportTransitionListColumnsList.Count() != 0) && (headers == null) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
+            if ((Settings.Default.CustomImportTransitionListColumnsList.Count != 0) && (headers == null) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
             {
                 for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
                 {
