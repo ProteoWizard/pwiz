@@ -1127,7 +1127,8 @@ namespace pwiz.Skyline.Model
 
             private static IsotopeLabelType GetLabelType(string typeId)
             {
-                return (Equals(typeId, @"H") ? IsotopeLabelType.heavy : IsotopeLabelType.light);
+                typeId = typeId.ToLower();
+                return ((Equals(typeId, IsotopeLabelType.HEAVY_NAME.Substring(0, 1)) || Equals(typeId, IsotopeLabelType.HEAVY_NAME)) ? IsotopeLabelType.heavy : IsotopeLabelType.light);
             }
 
             protected override ExTransitionInfo CalcTransitionInfo(long lineNum)
