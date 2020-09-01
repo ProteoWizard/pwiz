@@ -1466,7 +1466,7 @@ namespace pwiz.Skyline.Model
                 // Look for any columns that contain something that looks like a Fragment Name and add them to a list
                 for (int i = 0; i < fields.Length; i++)
                 {
-                    if (ContainsFragmentName(fields[i]))
+                    if (RGX_FRAGMENT_NAME.IsMatch(fields[i]))
                     {
                         fragCandidates.Add(i);
                     }
@@ -1486,7 +1486,7 @@ namespace pwiz.Skyline.Model
                     foreach (string line in lines)
                     {
                         string[] fieldsNext = line.ParseDsvFields(separator);
-                        if (!ContainsFragmentName(fieldsNext[i]))
+                        if (!RGX_FRAGMENT_NAME.IsMatch(fieldsNext[i]))
                         {
                             noExcepetions = false;
                             break;
@@ -1500,8 +1500,11 @@ namespace pwiz.Skyline.Model
                 return -1;
             }
 
+            // Regular expression for finding a fragment name. Checks if the first character is a,b,c,x,y, or z and the second character is a digit
+            private static readonly Regex RGX_FRAGMENT_NAME = new Regex(@"precursor|([abcxyz][\d]+)", RegexOptions.IgnoreCase);
+            
             // Helper method for FindFragmentName
-            private static bool ContainsFragmentName(string field)
+            /*private static bool ContainsFragmentName(string field)
             {
                 field = field.ToLower();
                 if (field.Length != 0)
@@ -1514,7 +1517,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
                 return false;
-            }
+            }*/
 
             private static int FindPrecursorCharge (string[] fields, IList<string> lines, char separator)
             {
