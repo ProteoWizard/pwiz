@@ -1406,7 +1406,7 @@ namespace pwiz.Skyline.Model
             }
 
             // Finds the index of the Label Type columns
-            private static int FindLabelType(string[] fields, IEnumerable<string> lines, char separator)
+            private static int FindLabelType(string[] fields, IList<string> lines, char separator)
             {
                 var labelCandidates = new List<int>();
                 // Look for any columns that contain something that looks like a Label Type and add them to a list
@@ -1460,7 +1460,7 @@ namespace pwiz.Skyline.Model
             }
 
             // Finds the index of the Fragment Name Column
-            private static int FindFragmentName(string[] fields, IEnumerable<string> lines, char separator)
+            private static int FindFragmentName(string[] fields, IList<string> lines, char separator)
             {
                 var fragCandidates = new List<int>();
                 // Look for any columns that contain something that looks like a Fragment Name and add them to a list
@@ -1506,6 +1506,8 @@ namespace pwiz.Skyline.Model
                 field = field.ToLower();
                 if (field.Length != 0)
                 {
+                    // TODO(Henry*): use a regex here for consistency with pwiz_tools\Skyline\SettingsUI\EditOptimizationLibraryDlg.cs(401) which is case insensitive
+                    // something like private static readonly Regex RGX_PRODUCT_ION = new Regex(@"precursor|([abcxyz][\d]+)", RegexOptions.IgnoreCase); 
                     if ("abcxyz".Contains(field[0]) && char.IsDigit(field, 1))
                     {
                         return true;
@@ -1514,7 +1516,7 @@ namespace pwiz.Skyline.Model
                 return false;
             }
 
-            private static int FindPrecursorCharge (string[] fields, IEnumerable<string> lines, char separator)
+            private static int FindPrecursorCharge (string[] fields, IList<string> lines, char separator)
             {
                 var listCandidates = new List<int>();
 
