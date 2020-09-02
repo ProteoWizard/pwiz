@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model
             Adduct = Adduct.EMPTY;
         }
 
-        public CustomIon ChangeName(string name)
+        public new CustomIon ChangeName(string name)
         {
             if (Equals(Name, name))
                 return this;
