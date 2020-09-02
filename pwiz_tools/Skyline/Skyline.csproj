@@ -3071,9 +3071,6 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
     <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
-    <Content Include="unimod.obo">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Protobuf Include="ProtocolBuffers\model.proto" />
     <Protobuf Include="ProtocolBuffers\predict.proto" />
     <Protobuf Include="ProtocolBuffers\prediction_service.proto" />
@@ -3084,11 +3081,16 @@
     <EmbeddedResource Include="Model\Prosit\Config\PrositConfig.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
-    <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
-    <Content Include="psi-ms.obo">
+    <Content Include="..\..\pwiz\data\common\psi-ms.obo">
+      <Link>psi-ms.obo</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\pwiz\data\common\unimod.obo">
+      <Link>unimod.obo</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
+    <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
     <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />
