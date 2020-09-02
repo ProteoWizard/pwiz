@@ -392,6 +392,7 @@ namespace pwiz.Skyline
             this.removeDuplicatePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeRepeatedPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator35 = new System.Windows.Forms.ToolStripSeparator();
+            this.permuteIsotopeModificationsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refineAdvancedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -587,7 +588,6 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.permuteIsotopeModificationsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
@@ -3153,6 +3153,12 @@ namespace pwiz.Skyline
             this.toolStripSeparator35.Name = "toolStripSeparator35";
             resources.ApplyResources(this.toolStripSeparator35, "toolStripSeparator35");
             // 
+            // permuteIsotopeModificationsMenuItem
+            // 
+            this.permuteIsotopeModificationsMenuItem.Name = "permuteIsotopeModificationsMenuItem";
+            resources.ApplyResources(this.permuteIsotopeModificationsMenuItem, "permuteIsotopeModificationsMenuItem");
+            this.permuteIsotopeModificationsMenuItem.Click += new System.EventHandler(this.permuteIsotopeModificationsMenuItem_Click);
+            // 
             // refineAdvancedMenuItem
             // 
             this.refineAdvancedMenuItem.Name = "refineAdvancedMenuItem";
@@ -4545,12 +4551,6 @@ namespace pwiz.Skyline
             // 
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
-            // 
-            // permuteIsotopeModificationsMenuItem
-            // 
-            this.permuteIsotopeModificationsMenuItem.Name = "permuteIsotopeModificationsMenuItem";
-            resources.ApplyResources(this.permuteIsotopeModificationsMenuItem, "permuteIsotopeModificationsMenuItem");
-            this.permuteIsotopeModificationsMenuItem.Click += new System.EventHandler(this.permuteIsotopeModificationsMenuItem_Click);
             // 
             // SkylineWindow
             // 

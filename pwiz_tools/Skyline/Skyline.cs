@@ -5776,7 +5776,8 @@ namespace pwiz.Skyline
                 var changedTargets = count == 1 ? SelectedNode.Text : string.Format(AuditLogStrings.SkylineWindow_ChangeQuantitative_0_transitions, count);
                 ModifyDocument(message, doc =>
                 {
-                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));  // CONSIDER: Might not be true if background processing is happening
+                    // Will always be true because we have acquired the lock on GetDocumentChangeLock()
+                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));
                     return newDocument;
                 }, docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, changedTargets));
             }
@@ -5878,20 +5879,9 @@ namespace pwiz.Skyline
 
         public void ShowPermuteIsotopeModificationsDlg()
         {
-            var heavyModifications = Settings.Default.HeavyModList;
-            if (!heavyModifications.Any())
+            using (var dlg = new PermuteIsotopeModificationsDlg(this))
             {
-                MessageDlg.Show(this, "No isotope modifications chosen." +
-                                      "\r\nGo to Peptide Modification Settings and add some isotope modifications.");
-            }
-            using (var dlg = new PermuteIsotopeModificationsDlg(Settings.Default.HeavyModList))
-            {
-                if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                {
-                    return;
-                }
-
-                ModifyDocument("Permute isotope modifications", dlg.PermuteDocument, dlg.GetAuditLogEntry);
+                dlg.ShowDialog(this);
             }
         }
     }

@@ -35,6 +35,7 @@ namespace pwiz.Skyline.EditUI
             this.comboIsotopeModification.FormattingEnabled = true;
             resources.ApplyResources(this.comboIsotopeModification, "comboIsotopeModification");
             this.comboIsotopeModification.Name = "comboIsotopeModification";
+            this.comboIsotopeModification.SelectedIndexChanged += new System.EventHandler(this.comboIsotopeModification_SelectedIndexChanged);
             // 
             // groupBoxPermutationStyle
             // 
@@ -70,9 +71,9 @@ namespace pwiz.Skyline.EditUI
             // btnOK
             // 
             resources.ApplyResources(this.btnOK, "btnOK");
-            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // PermuteIsotopeModificationsDlg
             // 
@@ -82,6 +83,7 @@ namespace pwiz.Skyline.EditUI
             this.Controls.Add(this.groupBoxPermutationStyle);
             this.Controls.Add(this.comboIsotopeModification);
             this.Controls.Add(this.label1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PermuteIsotopeModificationsDlg";

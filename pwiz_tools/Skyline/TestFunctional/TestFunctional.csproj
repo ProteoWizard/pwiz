@@ -172,6 +172,7 @@
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
     <Compile Include="LongWaitDlgResizeTest.cs" />
     <Compile Include="MetadataRuleTest.cs" />
+    <Compile Include="ModificationPermuterTest.cs" />
     <Compile Include="PeptideSettingsTooltipTest.cs" />
     <Compile Include="ProxlTest.cs" />
     <Compile Include="QualitativeIonRatioTest.cs" />
