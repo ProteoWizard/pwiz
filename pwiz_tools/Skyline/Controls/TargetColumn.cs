@@ -114,6 +114,17 @@ namespace pwiz.Skyline.Controls
             public override object ParseFormattedValue(object formattedValue, DataGridViewCellStyle cellStyle,
                 TypeConverter formattedValueTypeConverter, TypeConverter valueTypeConverter)
             {
+                var target = Value as Target;
+                if (target != null && !target.IsProteomic)
+                {
+                    // Understand this as just a name, not a complete description as with a peptide
+                    var name = formattedValue as string;
+                    if (!string.Equals(target.Molecule.Name, name))
+                    {
+                        var molecule = target.Molecule.ChangeName(name);
+                        return new Target(molecule);
+                    }
+                }
                 return TargetResolver.ResolveTarget(formattedValue as string);
             }
 

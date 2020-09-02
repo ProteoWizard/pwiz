@@ -373,7 +373,7 @@ namespace pwiz.Skyline.Model
         public TypedMass MonoisotopicMass { get; private set; }
         public TypedMass AverageMass { get; private set; }
 
-        protected const int DEFAULT_ION_MASS_PRECISION = 6;
+        public const int DEFAULT_ION_MASS_PRECISION = 6;
         protected static readonly string massFormat = @"{0} [{1:F0"+DEFAULT_ION_MASS_PRECISION+@"}/{2:F0"+DEFAULT_ION_MASS_PRECISION+@"}]";
         protected static readonly string massFormatSameMass = @"{0} [{1:F0" + DEFAULT_ION_MASS_PRECISION + @"}]";
         protected const string massFormatRegex = @"(?:[a-z][a-z]+)\s+\[([+-]?\d*\.\d+)(?![-+0-9\.])\/([+-]?\d*\.\d+)(?![-+0-9\.])\]";
@@ -459,6 +459,13 @@ namespace pwiz.Skyline.Model
                 }
             }
             return new CustomMolecule(formula, null, null, name, new MoleculeAccessionNumbers(keysTSV));
+        }
+
+        public CustomMolecule ChangeName(string name)
+        {
+            if (Equals(Name, name))
+                return this;
+            return new CustomMolecule(Formula, MonoisotopicMass, AverageMass, name, AccessionNumbers);
         }
 
         public CustomMolecule ChangeFormula(string formula)

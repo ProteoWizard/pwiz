@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -33,9 +34,9 @@ namespace pwiz.Skyline.Controls
     /// </summary>
     public class SmallMoleculeColumnsManager
     {
-        public const string DATA_PROPERTY_NAME_FORMULA = @"Formula"; // This must agree with the member name in DbAbstractPeptide
-        public const string DATA_PROPERTY_NAME_MONOISOTOPICMASS = @"MonoisotopicMass"; // This must agree with the member name in DbAbstractPeptide
-        public const string DATA_PROPERTY_NAME_AVERAGEMASS = @"AverageMass"; // This must agree with the member name in DbAbstractPeptide
+        public const string DATA_PROPERTY_NAME_FORMULA = nameof(DbAbstractPeptide.Formula);
+        public const string DATA_PROPERTY_NAME_MONOISOTOPICMASS = nameof(DbAbstractPeptide.MonoisotopicMass);
+        public const string DATA_PROPERTY_NAME_AVERAGEMASS = nameof(DbAbstractPeptide.AverageMass);
 
         /// <summary>
         /// Examines all targets in the targetResolver's document to see what kind of detail columns are needed
@@ -119,6 +120,11 @@ namespace pwiz.Skyline.Controls
                         // Add a column for mass
                         gridView.Columns.Insert(InsertColumnsAt, new DataGridViewTextBoxColumn());
                         var dataGridViewColumn = gridView.Columns[InsertColumnsAt];
+                        var dataGridViewCellStyle = new DataGridViewCellStyle();
+                        var format = @"0." + new string('0', CustomMolecule.DEFAULT_ION_MASS_PRECISION); // N.B. the "N" format provides a thousands separator which we don't want
+                        dataGridViewCellStyle.Format = format;
+                        dataGridViewCellStyle.NullValue = null;
+                        dataGridViewColumn.DefaultCellStyle = dataGridViewCellStyle;
                         if (massType == MassType.Monoisotopic)
                         {
                             MonoisotopicMassColumnIndex = InsertColumnsAt++;
@@ -185,13 +191,6 @@ namespace pwiz.Skyline.Controls
                     }
                 }
             }
-
-            // Let system handle width setting for these newly added columns
-            DataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells; 
-            for (var c = 0; c <  DataGridView.ColumnCount; c++)
-            {
-                DataGridView.Columns[c].AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells;
-            }
         }
 
         public SmallMoleculeColumnsManager ChangeTargetResolver(TargetResolver targetResolver)
@@ -249,6 +248,13 @@ namespace pwiz.Skyline.Controls
                 UpdateSmallMoleculeDetails(target, DataGridView.Rows[rowIndex]);
             }
         }
+
+        public string FormatMass(double mass)
+        {
+            var massFormat = @"{0:F0" + CustomMolecule.DEFAULT_ION_MASS_PRECISION + @"}";
+            return string.Format(massFormat, mass);
+        }
+
         public void UpdateSmallMoleculeDetails(Target target, DataGridViewRow row)
         {
             if (target == null || target.IsProteomic)
@@ -288,12 +294,12 @@ namespace pwiz.Skyline.Controls
 
             if (MonoisotopicMassColumnIndex.HasValue)
             {
-                row.Cells[MonoisotopicMassColumnIndex.Value].Value = string.IsNullOrEmpty(mol.Formula) ? mol.MonoisotopicMass.ToString() : string.Empty;
+                row.Cells[MonoisotopicMassColumnIndex.Value].Value = string.IsNullOrEmpty(mol.Formula) ? FormatMass(mol.MonoisotopicMass) : string.Empty;
             }
 
             if (AverageMassColumnIndex.HasValue)
             {
-                row.Cells[AverageMassColumnIndex.Value].Value = string.IsNullOrEmpty(mol.Formula) ? mol.AverageMass.ToString() : string.Empty;
+                row.Cells[AverageMassColumnIndex.Value].Value = string.IsNullOrEmpty(mol.Formula) ? FormatMass(mol.AverageMass) : string.Empty;
             }
 
             var accessionNumbers = mol.AccessionNumbers.AccessionNumbers;
@@ -349,6 +355,32 @@ namespace pwiz.Skyline.Controls
                     return null;
                 }
                 var molecule = new CustomMolecule(formula, name, new MoleculeAccessionNumbers(accessionNumbers));
+                return new Target(molecule);
+            }
+
+            double? averageMass = null;
+            double? monoisotopicMass = null;
+            if (AverageMassColumnIndex.HasValue)
+            {
+                if (double.TryParse(strings[AverageMassColumnIndex.Value], out var mass))
+                {
+                    averageMass = mass;
+                }
+            }
+            if (MonoisotopicMassColumnIndex.HasValue)
+            {
+                if (double.TryParse(strings[MonoisotopicMassColumnIndex.Value], out var mass))
+                {
+                    monoisotopicMass = mass;
+                }
+            }
+
+            if (monoisotopicMass.HasValue && averageMass.HasValue)
+            {
+                var molecule = new CustomMolecule(
+                    new TypedMass(monoisotopicMass.Value, MassType.Monoisotopic), 
+                    new TypedMass(averageMass.Value, MassType.Average),
+                    name, new MoleculeAccessionNumbers(accessionNumbers));
                 return new Target(molecule);
             }
 
