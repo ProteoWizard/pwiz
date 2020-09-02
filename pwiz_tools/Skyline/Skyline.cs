@@ -5871,7 +5871,29 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
+        private void permuteIsotopeModificationsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPermuteIsotopeModificationsDlg();
+        }
 
+        public void ShowPermuteIsotopeModificationsDlg()
+        {
+            var heavyModifications = Settings.Default.HeavyModList;
+            if (!heavyModifications.Any())
+            {
+                MessageDlg.Show(this, "No isotope modifications chosen." +
+                                      "\r\nGo to Peptide Modification Settings and add some isotope modifications.");
+            }
+            using (var dlg = new PermuteIsotopeModificationsDlg(Settings.Default.HeavyModList))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+
+                ModifyDocument("Permute isotope modifications", dlg.PermuteDocument, dlg.GetAuditLogEntry);
+            }
+        }
     }
 }
 

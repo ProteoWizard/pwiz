@@ -395,6 +395,12 @@
     <Compile Include="EditUI\EditLinkedPeptideDlg.Designer.cs">
       <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditUI\PermuteIsotopeModificationsDlg.designer.cs">
+      <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\PermuteIsotopeModificationsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -526,6 +532,7 @@
     <Compile Include="Model\DdaSearch\MSAmandaSearchWrapper.cs" />
     <Compile Include="Model\DdaSearch\MSAmandaSpectrumParser.cs" />
     <Compile Include="Model\DdaSearch\MsgfPlusSearchEngine.cs" />
+    <Compile Include="Model\IsotopeModificationPermutationGenerator.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
     <Compile Include="Model\Prosit\Config\PrositConfig.cs" />
     <Compile Include="Model\Prosit\Models\PrositIntensityModel.cs" />
@@ -2374,6 +2381,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.zh-CHS.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\PermuteIsotopeModificationsDlg.resx">
+      <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineProteinListDlg.ja.resx">
       <DependentUpon>RefineProteinListDlg.cs</DependentUpon>

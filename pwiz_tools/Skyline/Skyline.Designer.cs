@@ -583,10 +583,11 @@ namespace pwiz.Skyline
             this.detectionsShowAtLeastNToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsYScaleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsYScaleOneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.detectionsYScalePercentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.detectionsYScalePercentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.permuteIsotopeModificationsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
@@ -3013,6 +3014,7 @@ namespace pwiz.Skyline
             this.removeDuplicatePeptidesMenuItem,
             this.removeRepeatedPeptidesMenuItem,
             this.toolStripSeparator35,
+            this.permuteIsotopeModificationsMenuItem,
             this.refineAdvancedMenuItem});
             this.refineToolStripMenuItem.Name = "refineToolStripMenuItem";
             resources.ApplyResources(this.refineToolStripMenuItem, "refineToolStripMenuItem");
@@ -4525,8 +4527,8 @@ namespace pwiz.Skyline
             // 
             this.detectionsYScalePercentToolStripMenuItem.Name = "detectionsYScalePercentToolStripMenuItem";
             resources.ApplyResources(this.detectionsYScalePercentToolStripMenuItem, "detectionsYScalePercentToolStripMenuItem");
-            this.detectionsYScalePercentToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScalePercentToolStripMenuItem_Click);
             this.detectionsYScalePercentToolStripMenuItem.Tag = 0;
+            this.detectionsYScalePercentToolStripMenuItem.Click += new System.EventHandler(this.detectionsYScalePercentToolStripMenuItem_Click);
             // 
             // detectionsToolStripSeparator2
             // 
@@ -4543,6 +4545,12 @@ namespace pwiz.Skyline
             // 
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
+            // 
+            // permuteIsotopeModificationsMenuItem
+            // 
+            this.permuteIsotopeModificationsMenuItem.Name = "permuteIsotopeModificationsMenuItem";
+            resources.ApplyResources(this.permuteIsotopeModificationsMenuItem, "permuteIsotopeModificationsMenuItem");
+            this.permuteIsotopeModificationsMenuItem.Click += new System.EventHandler(this.permuteIsotopeModificationsMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -5132,6 +5140,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem detectionsPropertiesToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator detectionsToolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem detectionsYScalePercentToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem permuteIsotopeModificationsMenuItem;
     }
 }
 

@@ -180,7 +180,8 @@ namespace pwiz.Skyline.Model.AuditLog
         undocumented_change,
         modified_outside_of_skyline,
         start_log_existing_doc,
-        edited_ion_mobility_library
+        edited_ion_mobility_library,
+        permuted_isotope_label,
     } // N.B. as you add to this, consider whether or not the human-readable message may want to refuse the "peptide"->"molecule" translation for small molecule UI (see ModeUIInvariantMesdsageTypes below)
 
     /// <summary>
