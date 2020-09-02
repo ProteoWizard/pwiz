@@ -222,9 +222,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         ) > "$(<)"
     }
 
-    make unimod.obo : ../../pwiz/data/common/unimod.obo : @common.copy : <location>$(SKYLINE_PATH) ;
-    make psi-ms.obo : ../../pwiz/data/common/psi-ms.obo : @common.copy : <location>$(SKYLINE_PATH) ;
-
     rule build-location ( properties * )
     {
         local result ;
@@ -280,8 +277,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibToMs2/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
-            <dependency>unimod.obo
-            <dependency>psi-ms.obo
     ;
 
     make InspectCode
