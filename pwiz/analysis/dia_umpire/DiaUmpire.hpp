@@ -45,6 +45,8 @@ struct PWIZ_API_DECL TargetWindow
 
     TargetWindow(MzRange mzRange) : mzRange(mzRange) {}
 
+    bool operator== (const TargetWindow& rhs) const { return mzRange == rhs.mzRange; }
+
     MzRange mzRange;
     std::vector<size_t> spectraInRange;
 };
