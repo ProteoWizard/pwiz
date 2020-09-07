@@ -358,7 +358,7 @@ namespace pwiz {
 						if (!binaryParamsData_[idx.presetScanConfigurationIndex - 1][idx.localSpectrumIndex].empty())
 						{
 							std::vector<double> mz, inten;
-							std::vector<unsigned int> mz_indices;
+							std::vector<unsigned long> mz_indices;
 				
 							conn_->getData(mz_indices, DataSetType_triMS5::SpectrumMassIndices, idx.presetScanConfigurationIndex,  start, end);
 							//translate indices back

@@ -235,7 +235,7 @@ public:
      * @param v dataset
      * @return chunk size. EMPTY_CHUNK_SIZE if no chunking should be used.
      */
-    const hsize_t& getChunkSizeFor(const DataSetType_triMS5 v);
+    const hsize_t getChunkSizeFor(const DataSetType_triMS5 v);
 
 
 	/**
@@ -243,7 +243,7 @@ public:
 	* @param v dataset
 	* @return chunk size. EMPTY_CHUNK_SIZE if no chunking should be used.
 	*/
-	const hsize_t& getBufferSizeFor(const DataSetType_triMS5 v);
+	const hsize_t getBufferSizeFor(const DataSetType_triMS5 v);
 
 
 	/**
@@ -293,7 +293,7 @@ public:
 	* The mz5 cache is used for chunked datasets. This effects the random read time.
 	* @return mz5 cache size
 	*/
-	const size_t& getBufferInMB(){	return config_mz5_.getBufferInMb();	}
+	const size_t getBufferInMB(){	return config_mz5_.getBufferInMb();	}
 
 	/**
 	* Returns mz5 cache in byte.
@@ -307,7 +307,7 @@ public:
 	* This is currently constant 41957L, but should be the the next prime after 10-100 times the number of chunks fitting into the cache.
 	* @return number of rdcc slots
 	*/
-	const size_t& getRdccSlots() { return config_mz5_.getRdccSlots(); }
+	const size_t getRdccSlots() { return config_mz5_.getRdccSlots(); }
 
 private:
     /**

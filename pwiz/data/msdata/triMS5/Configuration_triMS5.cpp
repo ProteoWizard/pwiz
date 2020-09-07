@@ -208,7 +208,7 @@ void Configuration_triMS5::init()
 }
 
 
-const hsize_t& Configuration_triMS5::getChunkSizeFor(const DataSetType_triMS5 v)
+const hsize_t Configuration_triMS5::getChunkSizeFor(const DataSetType_triMS5 v)
 {
 	auto it = variableChunkSizes_.find(v);
 
@@ -219,7 +219,7 @@ const hsize_t& Configuration_triMS5::getChunkSizeFor(const DataSetType_triMS5 v)
 	return Configuration_mz5::EMPTY_CHUNK_SIZE;
 }
 
-const hsize_t& Configuration_triMS5::getBufferSizeFor(const DataSetType_triMS5 v)
+const hsize_t Configuration_triMS5::getBufferSizeFor(const DataSetType_triMS5 v)
 {
 	auto it = variableBufferSizes_.find(v);
 	if (it != variableBufferSizes_.end())
