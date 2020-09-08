@@ -490,6 +490,57 @@ const std::vector<PrmPasefSchedulingEntry> testSchedulingEntries =
     { 3, 14, 20 },
 };
 
+const std::vector<::PrmVisualizationDataPoint> testConcurrentFrames =
+{
+    { -53.2, 1 },
+    { -15.4, 1 },
+    { -15.4, 1 },
+    { 5, 1 },
+    { 5, 2 },
+    { 10.4, 2 },
+    { 10.4, 2 },
+    { 27.8, 2 },
+    { 27.8, 2 },
+    { 52.4, 2 },
+    { 52.4, 3 },
+    { 146.8, 3 },
+    { 146.8, 3 },
+    { 184.6, 3 },
+    { 184.6, 2 },
+    { 205, 2 },
+    { 205, 1 },
+    { 210.4, 1 },
+    { 210.4, 1 },
+    { 227.8, 1 },
+    { 227.8, 1 },
+    { 252.4, 1 },
+    { 252.4, 1 },
+    { 324.2, 1 },
+    { 324.2, 1 },
+    { 377.6, 1 },
+    { 377.6, 1 },
+    { 430.4, 1 },
+    { 430.4, 2 },
+    { 440, 2 },
+    { 440, 3 },
+    { 444.2, 3 },
+    { 444.2, 3 },
+    { 454.4, 3 },
+    { 454.4, 4 },
+    { 470, 4 },
+    { 470, 4 },
+    { 497, 4 },
+    { 497, 4 },
+    { 519.2, 4 },
+    { 519.2, 4 },
+    { 524.2, 4 },
+    { 524.2, 4 },
+    { 532.4, 4 },
+    { 532.4, 5 },
+    { 537.8, 5 },
+    { 537.8, 5 }
+};
+
 bool ShowProgressNoCancel(double progressPercentage)
 {
     Console::WriteLine("{0:0.0}%", progressPercentage);
@@ -556,6 +607,13 @@ void test()
     auto timeSegments = gcnew TimeSegmentList();
     auto schedulingEntries = gcnew SchedulingEntryList();
     s->GetScheduling(timeSegments, schedulingEntries, gcnew ProgressUpdate(ShowProgressNoCancel));
+
+    if (os_)
+        for each (const auto& entry in schedulingEntries)
+            Console::WriteLine(String::Format("{0} {1} [{2}-{3}]", entry->frame_id, entry->target_id,
+                                              timeSegments[entry->time_segment_id]->time_in_seconds_begin,
+                                              timeSegments[entry->time_segment_id]->time_in_seconds_end));
+
     //unit_assert_operator_equal(testSchedulingEntries.size(), schedulingEntries->Count);
     unit_assert(testSchedulingEntries.size() <= schedulingEntries->Count);
     for (size_t i=0; i < testSchedulingEntries.size(); ++i)
@@ -566,13 +624,9 @@ void test()
         unit_assert_operator_equal(testEntry.time_segment_id, entry->time_segment_id);
         unit_assert_operator_equal(testEntry.frame_id, entry->frame_id);
         unit_assert_operator_equal(testEntry.target_id, entry->target_id);
-
-        if (os_)
-            Console::WriteLine(String::Format("{0} {1} [{2}-{3}]", entry->frame_id, entry->target_id,
-                                              timeSegments[entry->time_segment_id]->time_in_seconds_begin,
-                                              timeSegments[entry->time_segment_id]->time_in_seconds_end));
     }
 
+    unit_assert(testTimeSegments.size() <= timeSegments->Count);
     for (size_t i = 0; i < testTimeSegments.size(); ++i)
     {
         auto testTimeSegment = testTimeSegments[i];
@@ -580,6 +634,22 @@ void test()
 
         unit_assert_equal(testTimeSegment.time_in_seconds_begin, timeSegment->time_in_seconds_begin, 0);
         unit_assert_equal(testTimeSegment.time_in_seconds_end, timeSegment->time_in_seconds_end, 0);
+    }
+
+    // test visualizations
+    auto concurrentFrames = s->GetSchedulingMetrics(SchedulingMetrics::CONCURRENT_FRAMES);
+    if (os_)
+        for each (const auto& xyPair in concurrentFrames)
+            Console::WriteLine(String::Format("{0} {1}", xyPair->x, xyPair->y));
+
+    unit_assert(testConcurrentFrames.size() <= concurrentFrames->Count);
+    for (size_t i = 0; i < testConcurrentFrames.size(); ++i)
+    {
+        auto testFrame = testConcurrentFrames[i];
+        auto xyPair = concurrentFrames[i];
+
+        unit_assert_equal(testFrame.x, xyPair->x, 1e-8);
+        unit_assert_equal(testFrame.y, xyPair->y, 1e-8);
     }
 
     s->WriteScheduling();

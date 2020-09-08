@@ -2056,6 +2056,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        // Helper function for emitting CE, Dxp and CoV values consistent with ionization mode, for Sciex
+        private double AdjustParameterPolarity(TransitionDocNode nodeTran, double paramValue)
+        {
+            return nodeTran.Transition.Charge < 0 ? -paramValue : paramValue;
+        }
 
         protected override void WriteTransition(TextWriter writer,
                                                 int fileNumber,
@@ -2085,9 +2090,11 @@ namespace pwiz.Skyline.Model
                     return;
                 ceValue = 10;
             }
+            ceValue = AdjustParameterPolarity(nodeTran, ceValue); // Sciex wants negative CE values for negative ion mode
             string ce = Math.Round(ceValue, 1).ToString(CultureInfo);
             double dpValue = GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step);
             // CONSIDER: Is there a minimum DP value?
+            dpValue = AdjustParameterPolarity(nodeTran, dpValue); // Sciex wants negative DxP values for negative ion mode
             string dp = Math.Round(dpValue, 1).ToString(CultureInfo);
 
             string precursorWindow = string.Empty;
@@ -2117,9 +2124,13 @@ namespace pwiz.Skyline.Model
             }
 
             // TODO: Need better way to handle case where user give all CoV as explicit
-            string compensationVoltage = Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null
-                ? string.Format(@",{0}", GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).GetValueOrDefault().ToString(@"0.00", CultureInfo))
-                : null;
+            string compensationVoltage = null;
+            if (Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null)
+            {
+                var coV = GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).GetValueOrDefault();
+                coV = AdjustParameterPolarity(nodeTran, coV); // Sciex wants negative CoV values for negative ion mode
+                compensationVoltage =  string.Format(@",{0}", coV.ToString(@"0.00", CultureInfo));
+            }
 
            string oneLine = string.Format(@"{0},{1},{2},{3}{4}{5}", q1, q3, dwellOrRt, extPeptideId,
                                            GetOptionalColumns(dp,
@@ -2256,7 +2267,10 @@ namespace pwiz.Skyline.Model
                 }
 
                 if (optPrefix != null)
+                {
+                    optValue = AdjustParameterPolarity(nodeTran, optValue);  // Sciex wants negative values for negative ion mode
                     return string.Format(@"{0}_{1}.", optPrefix, optValue.ToString(@"0.0", CultureInfo.InvariantCulture));
+                }
             }
             return string.Empty;
         }

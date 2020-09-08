@@ -507,6 +507,20 @@ bool SpectrumList_IonMobility::accept(msdata::SpectrumList^ inner)
 }
 
 
+SpectrumList_DiaUmpire::SpectrumList_DiaUmpire(msdata::MSData^ msd, msdata::SpectrumList^ inner, Config^ config)
+    : msdata::SpectrumList(0)
+{
+    base_ = new b::SpectrumList_DiaUmpire(msd->base(), *inner->base_, config->base());
+    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+}
+
+SpectrumList_DiaUmpire::SpectrumList_DiaUmpire(msdata::MSData^ msd, msdata::SpectrumList^ inner, Config^ config, util::IterationListenerRegistry^ ilr)
+    : msdata::SpectrumList(0)
+{
+    base_ = new b::SpectrumList_DiaUmpire(msd->base(), *inner->base_, config->base(), &ilr->base());
+    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+}
+
 
 ChromatogramList_XICGenerator::ChromatogramList_XICGenerator(msdata::ChromatogramList^ inner)
     : msdata::ChromatogramList(0)

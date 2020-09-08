@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class PrecursorResult : Result
     {
         private readonly CachedValue<TransitionGroupChromInfo> _chromInfo;
-        private readonly CachedValue<QuantificationResult> _quantificationResult;
+        private readonly CachedValue<PrecursorQuantificationResult> _quantificationResult;
         public PrecursorResult(Precursor precursor, ResultFile file) : base(precursor, file)
         {
             _chromInfo = CachedValue.Create(DataSchema, ()=>GetResultFile().FindChromInfo(precursor.DocNode.Results));
@@ -165,12 +165,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public string IonMobilityUnits { get { return IonMobilityFilter.IonMobilityUnitsL10NString(ChromInfo.IonMobilityInfo.IonMobilityUnits); } }
 
-        [ChildDisplayName("Precursor{0}")]
-        public LinkValue<QuantificationResult> PrecursorQuantification
+        public LinkValue<PrecursorQuantificationResult> PrecursorQuantification
         {
             get
             {
-                return new LinkValue<QuantificationResult>(_quantificationResult.Value, (sender, args) =>
+                return new LinkValue<PrecursorQuantificationResult>(_quantificationResult.Value, (sender, args) =>
                 {
                     SkylineWindow skylineWindow = DataSchema.SkylineWindow;
                     if (skylineWindow != null)
@@ -245,16 +244,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return !ChromInfo.RetentionTime.HasValue;
         }
-        private QuantificationResult GetQuantification()
+        private PrecursorQuantificationResult GetQuantification()
         {
             var calibrationCurveFitter = PeptideResult.GetCalibrationCurveFitter();
-            if (!calibrationCurveFitter.IsotopologResponseCurve)
-            {
-                return null;
-            }
             return calibrationCurveFitter.GetPrecursorQuantificationResult(GetResultFile().Replicate.ReplicateIndex,
                 Precursor.DocNode);
         }
-
     }
 }

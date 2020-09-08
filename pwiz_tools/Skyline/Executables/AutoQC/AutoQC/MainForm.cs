@@ -42,13 +42,6 @@ namespace AutoQC
         // ItemCheck and ItemChecked events on the listview are ignored until then.
         private bool _loaded;
 
-        public const string SKYLINE_RUNNER = Program.IsDaily ? "SkylineDailyRunner.exe" : "SkylineRunner.exe";
-
-        // Path to SkylineRunner.exe / SkylineDailyRunner.exe
-        // Expect SkylineRunner to be in the same directory as AutoQC
-        public static readonly string SkylineRunnerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
-            SKYLINE_RUNNER);
-
         private IAutoQcLogger _currentAutoQcLogger;
 
         public MainForm()
@@ -76,6 +69,31 @@ namespace AutoQC
                     RunEnabledConfigurations();
                 }
             });
+
+        }
+        
+        private void UpdateSkylineTypeAndInstallPathControls()
+        {
+            if (!SkylineSettings.IsInitialized())
+            {
+                return;
+            }
+
+            radioButtonUseSkyline.Checked = SkylineSettings.UseSkyline;
+            radioButtonUseSkylineDaily.Checked = !SkylineSettings.UseSkyline;
+
+            var useClickOnce = SkylineSettings.UseClickOnceInstall;
+            radioButtonWebBasedSkyline.Checked = useClickOnce;
+            radioButtonSpecifySkylinePath.Checked = !useClickOnce;
+            textBoxSkylinePath.Text = SkylineSettings.SkylineInstallDir;
+
+            textBoxSkylinePath.Enabled = !useClickOnce;
+            buttonFileDialogSkylineInstall.Enabled = !useClickOnce;
+        }
+
+        public static string GetExePath()
+        {
+            return SkylineSettings.GetSkylineCmdLineExePath;
         }
 
         private void ReadSavedConfigurations()
@@ -166,8 +184,19 @@ namespace AutoQC
 
         private void ShowErrorDialog(string title, string message)
         {
-            MessageBox.Show(this, message, title, MessageBoxButtons.OK);
+            MessageBox.Show(this, message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+
+        private void ShowWarningDialog(string title, string message)
+        {
+            MessageBox.Show(this, message, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        private void ShowInfoDialog(string title, string message)
+        {
+            MessageBox.Show(this, message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
 
         #region event handlers
 
@@ -741,6 +770,19 @@ namespace AutoQC
 
             cb_minimizeToSysTray.CheckedChanged += cb_minimizeToSysTray_CheckedChanged;
             cb_keepRunning.CheckedChanged += cb_keepRunning_CheckedChanged;
+
+            if (SkylineSettings.IsInitialized())
+            {
+                UpdateSkylineTypeAndInstallPathControls();
+                Program.LogInfo(new StringBuilder("Skyline settings are: ").Append(SkylineSettings.GetSkylineSettingsStr()).ToString());
+            }
+            else
+            {
+                // If Skyline settings are not initialized (most likely because we could not find a valid Skyline installation at first startup)
+                // show the "Settings" tab for the user to enter the details of the Skyline installation they want to use. 
+                // If they try to switch to another tab before saving valid Skyline settings a warning will be displayed.
+                tabMain.SelectedTab = tabSettings;
+            }
         }
 
         public void UpdateConfiguration(AutoQcConfig oldConfig, AutoQcConfig newConfig)
@@ -965,6 +1007,90 @@ namespace AutoQC
         {
             Settings.Default.MinimizeToSystemTray = cb_minimizeToSysTray.Checked;
             Settings.Default.Save();
+        }
+
+        private bool ApplyChangesToSkylineSettings()
+        {
+            if (!SkylineSettings.UpdateSettings(radioButtonUseSkyline.Checked, radioButtonWebBasedSkyline.Checked,
+                textBoxSkylinePath.Text, out var errors))
+            {
+                ShowWarningDialog("Cannot Update Skyline Settings", errors);
+                UpdateSkylineTypeAndInstallPathControls(); // Reset controls to saved settings
+                return false;
+            }
+            else
+            {
+                if (radioButtonWebBasedSkyline.Checked)
+                {
+                    textBoxSkylinePath.Text = string.Empty;
+                }
+                ShowInfoDialog("Skyline Settings Updated", "Skyline settings were updated successfully!");
+            }
+
+            return true;
+        }
+
+        private void buttonFileDialogSkylineInstall_click(object sender, EventArgs e)
+        {
+            using (var folderBrowserDlg = new FolderBrowserDialog())
+            {
+                folderBrowserDlg.Description = "Select the Skyline installation directory.";
+                folderBrowserDlg.ShowNewFolderButton = false;
+                folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
+                {
+                    textBoxSkylinePath.Text = folderBrowserDlg.SelectedPath;
+                }
+            }
+        }
+
+        private void WebBasedInstall_Click(object sender, EventArgs e)
+        {
+            textBoxSkylinePath.Enabled = false;
+            buttonFileDialogSkylineInstall.Enabled = false;
+        }
+
+        private void SpecifyInstall_Click(object sender, EventArgs e)
+        {
+            textBoxSkylinePath.Enabled = true;
+            buttonFileDialogSkylineInstall.Enabled = true;
+        }
+
+        private void ApplySkylineSettings_Click(object sender, EventArgs e)
+        {
+            ApplyChangesToSkylineSettings();
+        }
+
+        private void TabMain_Deselecting(object sender, TabControlCancelEventArgs e)
+        {
+            if (e.TabPage.Name.Equals("tabSettings"))
+            {
+                if (!SkylineSettings.IsInitialized())
+                {
+                    // Do not let the user switch to another tab without specifying a valid Skyline installation.
+                    ShowErrorDialog("Skyline Settings Not Initialized", 
+                        "An installation of Skyline or Skyline-daily is required to use AutoQC Loader. Please select Skyline installation details to continue.");
+                    e.Cancel = true;
+                    return;
+                }
+                if (SkylineSettings.SettingsChanged(radioButtonUseSkyline.Checked, radioButtonWebBasedSkyline.Checked,
+                    textBoxSkylinePath.Text))
+                {
+                    var result = MessageBox.Show("Skyline settings have not been saved. Would you like to save them?",
+                        "Unsaved Skyline Settings", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (result == DialogResult.Yes)
+                    {
+                        if (!ApplyChangesToSkylineSettings())
+                        {
+                            e.Cancel = true;
+                        };
+                    }
+                    else
+                    {
+                        UpdateSkylineTypeAndInstallPathControls();
+                    }
+                }
+            }
         }
     }
 

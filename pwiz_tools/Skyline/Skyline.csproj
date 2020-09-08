@@ -47,8 +47,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>213</ApplicationRevision>
-    <ApplicationVersion>20.1.1.213</ApplicationVersion>
+    <ApplicationRevision>229</ApplicationRevision>
+    <ApplicationVersion>20.1.9.229</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -3071,9 +3071,6 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
     <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
-    <None Include="unimod.obo">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <Protobuf Include="ProtocolBuffers\model.proto" />
     <Protobuf Include="ProtocolBuffers\predict.proto" />
     <Protobuf Include="ProtocolBuffers\prediction_service.proto" />
@@ -3084,11 +3081,16 @@
     <EmbeddedResource Include="Model\Prosit\Config\PrositConfig.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <Content Include="..\..\pwiz\data\common\psi-ms.obo">
+      <Link>psi-ms.obo</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz\data\common\unimod.obo">
+      <Link>unimod.obo</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
     <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
-    <None Include="psi-ms.obo">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />
@@ -4718,9 +4720,6 @@
     <Content Include="Method\Bruker\BDal.Submethod.Wrapper.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\Bruker\BDal.Submethod.Wrapper.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Method\Bruker\BdalRetentionTimeMassList.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -5103,6 +5102,26 @@
   </ItemGroup>
   <ItemGroup>
     <PublishFile Include="BiblioSpec.pdb">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="enzymes.xml">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="Instruments.xml">
       <Visible>False</Visible>
       <Group>
       </Group>
