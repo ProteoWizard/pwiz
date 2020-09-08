@@ -126,8 +126,8 @@ namespace AutoQC
             sb.Append("Name: ").AppendLine(Name);
             sb.Append("Enabled: ").AppendLine(IsEnabled.ToString());
             sb.Append("Panorama User: ").AppendLine(User);
-            sb.Append("Created: ").Append(Created.ToShortDateString()).AppendLine(Created.ToShortTimeString());
-            sb.Append("Modified: ").Append(Modified.ToShortDateString()).AppendLine(Modified.ToShortTimeString());
+            sb.Append("Created: ").Append(Created.ToShortDateString()).Append(" ").AppendLine(Created.ToShortTimeString());
+            sb.Append("Modified: ").Append(Modified.ToShortDateString()).Append(" ").AppendLine(Modified.ToShortTimeString());
             sb.AppendLine("").AppendLine("Main Settings");
             sb.Append(MainSettings);
             sb.AppendLine("").AppendLine("Panorama Settings");

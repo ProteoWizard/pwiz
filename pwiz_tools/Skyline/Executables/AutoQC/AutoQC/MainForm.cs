@@ -24,7 +24,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -37,7 +36,7 @@ namespace AutoQC
     {
         private Dictionary<string, ConfigRunner> _configRunners;
 
-        private readonly ListViewColumnSorter columnSorter;
+        private readonly ListViewColumnSorter _columnSorter;
 
         // Flag that gets set to true in the "Shown" event handler. 
         // ItemCheck and ItemChecked events on the listview are ignored until then.
@@ -49,8 +48,8 @@ namespace AutoQC
         {
             InitializeComponent();
 
-            columnSorter = new ListViewColumnSorter();
-            listViewConfigs.ListViewItemSorter = columnSorter;
+            _columnSorter = new ListViewColumnSorter();
+            listViewConfigs.ListViewItemSorter = _columnSorter;
 
             btnCopy.Enabled = false;
             btnDelete.Enabled = false;
@@ -157,24 +156,15 @@ namespace AutoQC
             catch (Exception e)
             {
                 var title = string.Format(Resources.MainForm_StartConfigRunner_Error_Starting_Configuration___0__, configRunner.Config.Name);
-                var msg = TextUtil.LineSeparate(e.Message,
-                    string.Format(
-                        Resources.MainForm_StartConfigRunner_More_details_can_be_found_in_the_program_log___0_,
-                        Program.GetProgramLogFilePath()));
-                ShowErrorWithExceptionDialog(title, msg, e);
+                ShowErrorWithExceptionDialog(title, e.Message, e);
                 // ReSharper disable once LocalizableElement
                 Program.LogError(string.Format("Error Starting Configuration \"{0}\"", configRunner.Config.Name), e);
             }
         }
 
-        private void ChangeConfigState(AutoQcConfig config)
+        private void ChangeConfigState(ConfigRunner configRunner)
         {
-            ConfigRunner configRunner;
-            _configRunners.TryGetValue(config.Name, out configRunner);
-            if (configRunner == null)
-            {
-                return;
-            }
+            var config = configRunner.Config;
             if (config.IsEnabled)
             {
                 Program.LogInfo(string.Format("Starting configuration \"{0}\"", config.Name));
@@ -444,7 +434,7 @@ namespace AutoQC
 
             if (configRunner != null)
             {
-                ChangeConfigState(configRunner.Config);
+                ChangeConfigState(configRunner);
             }
         }
 
@@ -482,23 +472,23 @@ namespace AutoQC
         private void listViewConfigs_ColumnClick(object sender, ColumnClickEventArgs e)
         {
             // Determine if clicked column is already the column that is being sorted.
-            if (e.Column == columnSorter.SortColumn)
+            if (e.Column == _columnSorter.SortColumn)
             {
                 // Reverse the current sort direction for this column.
-                if (columnSorter.Order == SortOrder.Ascending)
+                if (_columnSorter.Order == SortOrder.Ascending)
                 {
-                    columnSorter.Order = SortOrder.Descending;
+                    _columnSorter.Order = SortOrder.Descending;
                 }
                 else
                 {
-                    columnSorter.Order = SortOrder.Ascending;
+                    _columnSorter.Order = SortOrder.Ascending;
                 }
             }
             else
             {
                 // Set the column number that is to be sorted; default to ascending.
-                columnSorter.SortColumn = e.Column;
-                columnSorter.Order = SortOrder.Ascending;
+                _columnSorter.SortColumn = e.Column;
+                _columnSorter.Order = SortOrder.Ascending;
             }
 
             // Perform the sort with these new sort options.

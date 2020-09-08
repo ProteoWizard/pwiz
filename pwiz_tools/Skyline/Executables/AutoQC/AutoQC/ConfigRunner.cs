@@ -40,14 +40,13 @@ namespace AutoQC
         private IAutoQcLogger _logger;
         private ProcessRunner _processRunner;
 
-        public AutoQcConfig Config { get; private set; }
+        public AutoQcConfig Config { get; }
 
         private PanoramaPinger _panoramaPinger;
 
         
         public const int WAIT_FOR_NEW_FILE = 5000;
         private const string CANCELLED = "Cancelled";
-        //private const string ERROR = "Error";
         private const string COMPLETED = "Completed";
 
         private readonly object _lock = new object();
@@ -110,6 +109,40 @@ namespace AutoQC
             return _logger;
         }
 
+        private string GetConfigDir()
+        {
+            return Path.Combine(Config.MainSettings.SkylineFileDir, GetSafeName(Config.Name));
+        }
+
+        private void CreateConfigDir()
+        {
+            var configDir = GetConfigDir();
+            if (!Directory.Exists(configDir))
+            {
+                try
+                {
+                    Directory.CreateDirectory(configDir);
+                }
+                catch (Exception e)
+                {
+                    var sb = new StringBuilder(string.Format("Configuration directory \"{0}\" could not be created for configuration \"{1}\""
+                        , configDir, GetConfigName()));
+                    sb.AppendLine();
+                    sb.AppendLine(e.Message);
+                    throw new ConfigRunnerException(sb.ToString(), e);
+                }
+            }
+        }
+
+        private static string GetSafeName(string name)
+        {
+            var invalidChars = new List<char>();
+            invalidChars.AddRange(Path.GetInvalidFileNameChars());
+            invalidChars.AddRange(Path.GetInvalidPathChars());
+            var safeName = string.Join("_", name.Split(invalidChars.ToArray()));
+            return safeName.TrimStart('.').TrimEnd('.');
+        }
+
         public string GetLogDirectory()
         {
             return Path.GetDirectoryName(_logger.GetFile());
@@ -131,6 +164,7 @@ namespace AutoQC
 
             try
             {
+                CreateConfigDir();
                 InitLogger();
             }
             catch (Exception)
@@ -146,10 +180,6 @@ namespace AutoQC
         {
             lock (_lock)
             {
-                if (_runnerStatus == runnerStatus)
-                {
-                    return;
-                }
                 _runnerStatus = runnerStatus;
             }
             _uiControl.ChangeConfigUiStatus(this);
@@ -157,9 +187,7 @@ namespace AutoQC
 
         private void CreateLogger()
         {
-            // Initialize logging to log in the folder with the Skyline document.
-            var skylineFileDir = Config.MainSettings.SkylineFileDir;
-            var logFile = Path.Combine(skylineFileDir, "AutoQC.log");
+            var logFile = Path.Combine(GetConfigDir(), "AutoQC.log");
             _logger = new AutoQcLogger(logFile, GetConfigName());   
         }
 
@@ -171,12 +199,11 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                var sb = new StringBuilder(string.Format("Logger could not be initialized for confuguration \"{0}\"", GetConfigName()));
-                sb.AppendLine().AppendLine();
-                sb.AppendLine("Log file: " + _logger.GetFile());
-                sb.AppendLine().AppendLine();
-                sb.AppendLine(e.Message);
-                throw new ConfigRunnerException(sb.ToString(), e);
+                var err = TextUtil.LineSeparate(
+                    string.Format("Logger could not be initialized for configuration \"{0}\"", GetConfigName()),
+                    string.Format("Log file: {0}", _logger.GetFile()), 
+                        e.Message);
+                throw new ConfigRunnerException(err, e);
             }
 
             var msg = new StringBuilder("Logging initialized...").AppendLine();
@@ -644,12 +671,12 @@ namespace AutoQC
             var exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             if (exeDir == null)
             {
-                logger.LogError("Cound not get path to the Skyline report file");
+                logger.LogError("Could not get path to the Skyline report file");
                 return false;
 
             }
             var skyrFile = Path.Combine(exeDir, "FileAcquisitionTime.skyr");
-            var reportFile = Path.Combine(Config.MainSettings.SkylineFileDir, "AcquisitionTimes.csv");
+            var reportFile = Path.Combine(GetConfigDir(), "AcquisitionTimes.csv");
 
             // Export a report from the given Skyline file
             var args =
