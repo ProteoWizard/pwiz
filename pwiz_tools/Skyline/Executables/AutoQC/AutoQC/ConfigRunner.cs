@@ -140,7 +140,7 @@ namespace AutoQC
             invalidChars.AddRange(Path.GetInvalidFileNameChars());
             invalidChars.AddRange(Path.GetInvalidPathChars());
             var safeName = string.Join("_", name.Split(invalidChars.ToArray()));
-            return safeName.TrimStart('.').TrimEnd('.');
+            return safeName; // .TrimStart('.').TrimEnd('.');
         }
 
         public string GetLogDirectory()
