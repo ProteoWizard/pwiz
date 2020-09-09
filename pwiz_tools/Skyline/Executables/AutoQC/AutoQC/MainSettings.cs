@@ -40,31 +40,48 @@ namespace AutoQC
         public const string BRUKER = "Bruker";
         public const string SHIMADZU = "Shimadzu";
 
-        public string SkylineFilePath { get; set; }
+        public string SkylineFilePath { get; private set; }
 
         public string SkylineFileDir
         {
             get { return string.IsNullOrEmpty(SkylineFilePath) ? "" : Path.GetDirectoryName(SkylineFilePath); }
         }
 
-        public string FolderToWatch { get; set; }
+        public string FolderToWatch { get; private set; }
 
-        public bool IncludeSubfolders { get; set; }
+        public bool IncludeSubfolders { get; private set; }
 
-        public FileFilter QcFileFilter { get; set; }
+        public FileFilter QcFileFilter { get; private set; }
 
-        public bool RemoveResults { get; set;  } 
+        public bool RemoveResults { get; private set;  } 
 
-        public int ResultsWindow { get; set; }
+        public int ResultsWindow { get; private set; }
 
-        public string InstrumentType { get; set; }
+        public string InstrumentType { get; private set; }
 
-        public int AcquisitionTime { get; set; }
+        public int AcquisitionTime { get; private set; }
 
 
         public DateTime LastAcquiredFileDate { get; set; } // Not saved to Properties.Settings
         public DateTime LastArchivalDate { get; set; }
 
+
+        public MainSettings()
+        {
+        }
+
+        public MainSettings(string skylineFilePath, string folderToWatch, bool includeSubfolders, FileFilter qcFileFilter, bool removeResults, 
+            int resultsWindow, string instrumentType, int acquisitionTime)
+        {
+            SkylineFilePath = skylineFilePath;
+            FolderToWatch = folderToWatch;
+            IncludeSubfolders = includeSubfolders;
+            QcFileFilter = qcFileFilter;
+            RemoveResults = removeResults;
+            ResultsWindow = resultsWindow;
+            InstrumentType = instrumentType;
+            AcquisitionTime = acquisitionTime;
+        }
 
         public static MainSettings GetDefault()
         {

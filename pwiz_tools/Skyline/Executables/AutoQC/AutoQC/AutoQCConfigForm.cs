@@ -181,19 +181,18 @@ namespace AutoQC
 
         private MainSettings GetMainSettingsFromUI()
         {
-            var mainSettings = new MainSettings();
-            mainSettings.SkylineFilePath = textSkylinePath.Text;
-            mainSettings.FolderToWatch = textFolderToWatchPath.Text;
-            mainSettings.IncludeSubfolders = includeSubfoldersCb.Checked;
-            mainSettings.QcFileFilter = FileFilter.GetFileFilter(comboBoxFileFilter.SelectedItem.ToString(),
+            var skylineFilePath = textSkylinePath.Text;
+            var folderToWatch = textFolderToWatchPath.Text;
+            var includeSubfolders = includeSubfoldersCb.Checked;
+            var qcFileFilter = FileFilter.GetFileFilter(comboBoxFileFilter.SelectedItem.ToString(),
                 textQCFilePattern.Text);
-            mainSettings.RemoveResults = checkBoxRemoveResults.Checked;
-            mainSettings.ResultsWindow = ValidateIntTextField(textResultsTimeWindow.Text,
+            var removeResults = checkBoxRemoveResults.Checked;
+            var resultsWindow = ValidateIntTextField(textResultsTimeWindow.Text,
                 Resources.AutoQcConfigForm_GetMainSettingsFromUI_Results_Window);
-            mainSettings.InstrumentType = comboBoxInstrumentType.SelectedItem.ToString();
-            mainSettings.AcquisitionTime = ValidateIntTextField(textAquisitionTime.Text,
+            var instrumentType = comboBoxInstrumentType.SelectedItem.ToString();
+            var acquisitionTime = ValidateIntTextField(textAquisitionTime.Text,
                 Resources.AutoQcConfigForm_GetMainSettingsFromUI_Acquisition_Time);
-            return mainSettings;
+            return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
         }
 
         private int ValidateIntTextField(string textToParse, string fieldName)

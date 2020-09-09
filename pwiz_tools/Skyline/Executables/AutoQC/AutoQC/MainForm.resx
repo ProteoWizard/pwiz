@@ -199,6 +199,9 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="listViewStatus.Text" xml:space="preserve">
     <value>Status</value>
   </data>
+  <data name="radioButtonSpecifySkylinePath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
   <data name="btnExportConfigs.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
@@ -232,11 +235,11 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="&gt;&gt;tabFront.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="radioButtonSpecifySkylinePath.Text" xml:space="preserve">
-    <value>Specify Skyline installation directory</value>
-  </data>
   <data name="label_Skylinecmd.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="&gt;&gt;btnImportConfigs.Parent" xml:space="preserve">
+    <value>panel1</value>
   </data>
   <data name="&gt;&gt;textBoxSkylinePath.Parent" xml:space="preserve">
     <value>groupBoxSkylineSettings</value>
@@ -304,8 +307,11 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="&gt;&gt;radioButtonWebBasedSkyline.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="groupBoxAutoQcSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>53, 257</value>
+  <data name="groupBoxSkylineSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>53, 27</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>763, 573</value>
   </data>
   <data name="groupBoxAutoQcSettings.Text" xml:space="preserve">
     <value>AutoQC Loader Settings</value>
@@ -358,8 +364,8 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="cb_keepRunning.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 22</value>
   </data>
-  <data name="&gt;&gt;btnEdit.Name" xml:space="preserve">
-    <value>btnEdit</value>
+  <data name="&gt;&gt;labelSavedConfigurations.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="tabFront.Text" xml:space="preserve">
     <value>Configurations</value>
@@ -384,11 +390,11 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="radioButtonUseSkylineDaily.Text" xml:space="preserve">
     <value>Use Skyline-daily</value>
   </data>
-  <data name="&gt;&gt;toolTip_MainForm.Name" xml:space="preserve">
-    <value>toolTip_MainForm</value>
-  </data>
   <data name="&gt;&gt;groupBoxAutoQcSettings.ZOrder" xml:space="preserve">
     <value>2</value>
+  </data>
+  <data name="comboConfigs.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
   <data name="&gt;&gt;listViewStatus.Name" xml:space="preserve">
     <value>listViewStatus</value>
@@ -417,6 +423,9 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="&gt;&gt;textBoxSkylinePath.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="groupBoxAutoQcSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>53, 257</value>
+  </data>
   <data name="panelSkylineType.Size" type="System.Drawing.Size, System.Drawing">
     <value>611, 39</value>
   </data>
@@ -435,6 +444,9 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="cb_minimizeToSysTray.Size" type="System.Drawing.Size, System.Drawing">
     <value>227, 17</value>
   </data>
+  <data name="&gt;&gt;btnEdit.Name" xml:space="preserve">
+    <value>btnEdit</value>
+  </data>
   <data name="textBoxLog.Location" type="System.Drawing.Point, System.Drawing">
     <value>24, 59</value>
   </data>
@@ -450,6 +462,9 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="btnOpenFolder.ToolTip" xml:space="preserve">
     <value />
   </data>
+  <data name="&gt;&gt;btnViewLog2.Parent" xml:space="preserve">
+    <value>tabLog</value>
+  </data>
   <data name="&gt;&gt;btnViewLog1.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
@@ -458,9 +473,6 @@ Any configurations that were running when AutoQC Loader was last running are als
   </data>
   <data name="&gt;&gt;comboConfigs.Parent" xml:space="preserve">
     <value>tabLog</value>
-  </data>
-  <data name="&gt;&gt;listViewCreated.Name" xml:space="preserve">
-    <value>listViewCreated</value>
   </data>
   <data name="cb_keepRunning.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -522,8 +534,8 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="cb_minimizeToSysTray.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 51</value>
   </data>
-  <data name="&gt;&gt;comboConfigs.ZOrder" xml:space="preserve">
-    <value>4</value>
+  <data name="&gt;&gt;listViewCreated.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="tabMain.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>
@@ -1090,11 +1102,11 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="tabLog.Text" xml:space="preserve">
     <value>Log</value>
   </data>
-  <data name="radioButtonWebBasedSkyline.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 76</value>
-  </data>
   <data name="listViewConfigs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="btnViewLog2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>546, 19</value>
   </data>
   <data name="&gt;&gt;btnDelete.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -1111,8 +1123,8 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="btnCopy.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="listViewCreated.Text" xml:space="preserve">
-    <value>Created</value>
+  <data name="&gt;&gt;toolTip_MainForm.Name" xml:space="preserve">
+    <value>toolTip_MainForm</value>
   </data>
   <data name="&gt;&gt;cb_minimizeToSysTray.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -1138,8 +1150,8 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="&gt;&gt;btnDelete.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;listViewCreated.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;tabSettings.Name" xml:space="preserve">
+    <value>tabSettings</value>
   </data>
   <data name="groupBoxSkylineSettings.Text" xml:space="preserve">
     <value>Skyline Settings</value>
@@ -1147,11 +1159,14 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="btnImportConfigs.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
   </data>
+  <data name="&gt;&gt;btnEdit.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="&gt;&gt;panel2.Name" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;btnViewLog2.Parent" xml:space="preserve">
-    <value>tabLog</value>
+  <data name="radioButtonSpecifySkylinePath.Text" xml:space="preserve">
+    <value>Specify Skyline installation directory</value>
   </data>
   <data name="textBoxSkylinePath.ToolTip" xml:space="preserve">
     <value />
@@ -1170,9 +1185,6 @@ Any configurations that were running when AutoQC Loader was last running are als
   </data>
   <data name="&gt;&gt;btnExportConfigs.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
-    <value>tabFront</value>
   </data>
   <data name="labelSavedConfigurations.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -1200,9 +1212,6 @@ Any configurations that were running when AutoQC Loader was last running are als
   </data>
   <data name="&gt;&gt;btnCopy.Parent" xml:space="preserve">
     <value>panel1</value>
-  </data>
-  <data name="groupBoxSkylineSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>53, 27</value>
   </data>
   <data name="tabLog.Size" type="System.Drawing.Size, System.Drawing">
     <value>731, 525</value>
@@ -1261,8 +1270,8 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 306</value>
   </data>
-  <data name="comboConfigs.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="&gt;&gt;radioButtonUseSkylineDaily.Name" xml:space="preserve">
+    <value>radioButtonUseSkylineDaily</value>
   </data>
   <data name="textBoxSkylinePath.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1290,6 +1299,387 @@ Any configurations that were running when AutoQC Loader was last running are als
   </data>
   <data name="&gt;&gt;cb_minimizeToSysTray.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="&gt;&gt;btnNewConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabMain.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="radioButtonWebBasedSkyline.Size" type="System.Drawing.Size, System.Drawing">
+    <value>188, 17</value>
+  </data>
+  <data name="&gt;&gt;toolTip_MainForm.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboConfigs.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="btnCopy.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;listViewCreated.Name" xml:space="preserve">
+    <value>listViewCreated</value>
+  </data>
+  <data name="btnEdit.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="buttonFileDialogSkylineInstall.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="lblConfigSelect.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;btnNewConfig.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>MainForm</value>
+  </data>
+  <data name="&gt;&gt;btnOpenFolder.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;btnEdit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelSkylineType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="radioButtonUseSkylineDaily.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
+  <data name="lblNoConfigs.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9.75pt</value>
+  </data>
+  <data name="&gt;&gt;buttonApplySkylineSettings.Parent" xml:space="preserve">
+    <value>groupBoxSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;cb_keepRunning.Parent" xml:space="preserve">
+    <value>groupBoxAutoQcSettings</value>
+  </data>
+  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;lblNoConfigs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
+    <value>tabFront</value>
+  </data>
+  <data name="groupBoxSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>629, 196</value>
+  </data>
+  <data name="&gt;&gt;textBoxSkylinePath.Name" xml:space="preserve">
+    <value>textBoxSkylinePath</value>
+  </data>
+  <data name="systray_icon.Text" xml:space="preserve">
+    <value>AutoQC Loader</value>
+  </data>
+  <data name="label_Skylinecmd.Size" type="System.Drawing.Size, System.Drawing">
+    <value>0, 13</value>
+  </data>
+  <data name="&gt;&gt;radioButtonUseSkyline.Parent" xml:space="preserve">
+    <value>panelSkylineType</value>
+  </data>
+  <data name="comboConfigs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>114, 19</value>
+  </data>
+  <data name="tabLog.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="&gt;&gt;tabSettings.Parent" xml:space="preserve">
+    <value>tabMain</value>
+  </data>
+  <data name="$this.AutoScroll" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;btnViewLog1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="tabSettings.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="textBoxLog.Size" type="System.Drawing.Size, System.Drawing">
+    <value>684, 446</value>
+  </data>
+  <data name="&gt;&gt;btnCopy.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="textBoxLog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;lblNoConfigs.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="buttonApplySkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 26</value>
+  </data>
+  <data name="tabLog.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;lblConfigSelect.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;radioButtonUseSkylineDaily.Parent" xml:space="preserve">
+    <value>panelSkylineType</value>
+  </data>
+  <data name="&gt;&gt;btnDelete.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="buttonApplySkylineSettings.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;btnViewLog2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="textBoxLog.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;btnNewConfig.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;btnImportConfigs.Name" xml:space="preserve">
+    <value>btnImportConfigs</value>
+  </data>
+  <data name="buttonFileDialogSkylineInstall.Size" type="System.Drawing.Size, System.Drawing">
+    <value>26, 20</value>
+  </data>
+  <data name="&gt;&gt;radioButtonWebBasedSkyline.Name" xml:space="preserve">
+    <value>radioButtonWebBasedSkyline</value>
+  </data>
+  <data name="&gt;&gt;btnImportConfigs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="btnNewConfig.Size" type="System.Drawing.Size, System.Drawing">
+    <value>202, 23</value>
+  </data>
+  <data name="btnExportConfigs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 216</value>
+  </data>
+  <data name="listViewConfigName.Width" type="System.Int32, mscorlib">
+    <value>257</value>
+  </data>
+  <data name="tabFront.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;lblConfigSelect.Name" xml:space="preserve">
+    <value>lblConfigSelect</value>
+  </data>
+  <data name="textBoxLog.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;systray_icon.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NotifyIcon, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cb_keepRunning.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="buttonFileDialogSkylineInstall.Text" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
+    <value>tabFront</value>
+  </data>
+  <data name="&gt;&gt;comboConfigs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="cb_keepRunning.Size" type="System.Drawing.Size, System.Drawing">
+    <value>165, 17</value>
+  </data>
+  <data name="radioButtonUseSkyline.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>tabFront</value>
+  </data>
+  <data name="&gt;&gt;tabSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="btnImportConfigs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 256</value>
+  </data>
+  <data name="lblNoConfigs.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;comboConfigs.Name" xml:space="preserve">
+    <value>comboConfigs</value>
+  </data>
+  <data name="tabSettings.Text" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="buttonApplySkylineSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>267, 159</value>
+  </data>
+  <data name="&gt;&gt;tabMain.Name" xml:space="preserve">
+    <value>tabMain</value>
+  </data>
+  <data name="listViewCreated.Text" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="buttonApplySkylineSettings.Text" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="btnNewConfig.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;textBoxLog.Parent" xml:space="preserve">
+    <value>tabLog</value>
+  </data>
+  <data name="&gt;&gt;label_Skylinecmd.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;panelSkylineType.Parent" xml:space="preserve">
+    <value>groupBoxSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;radioButtonUseSkylineDaily.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="radioButtonWebBasedSkyline.Text" xml:space="preserve">
+    <value>Use web-based Skyline installation</value>
+  </data>
+  <data name="radioButtonWebBasedSkyline.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="btnViewLog1.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="btnEdit.Text" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="lblConfigSelect.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="btnDelete.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="lblConfigSelect.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Parent" xml:space="preserve">
+    <value>groupBoxSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSkylineSettings.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;label_Skylinecmd.Parent" xml:space="preserve">
+    <value>tabSettings</value>
+  </data>
+  <data name="radioButtonUseSkyline.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
+  <data name="btnExportConfigs.ToolTip" xml:space="preserve">
+    <value>Export saved configurations...</value>
+  </data>
+  <data name="radioButtonUseSkyline.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 14</value>
+  </data>
+  <data name="radioButtonWebBasedSkyline.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 76</value>
+  </data>
+  <data name="&gt;&gt;cb_minimizeToSysTray.Parent" xml:space="preserve">
+    <value>groupBoxAutoQcSettings</value>
+  </data>
+  <data name="tabMain.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="cb_minimizeToSysTray.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioButtonUseSkylineDaily.Location" type="System.Drawing.Point, System.Drawing">
+    <value>122, 14</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value> AutoQC</value>
+  </data>
+  <data name="btnOpenFolder.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;btnExportConfigs.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnOpenFolder.Text" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
+  <data name="&gt;&gt;btnImportConfigs.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;labelSavedConfigurations.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnExportConfigs.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;groupBoxAutoQcSettings.Name" xml:space="preserve">
+    <value>groupBoxAutoQcSettings</value>
+  </data>
+  <data name="listViewConfigs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>539, 351</value>
+  </data>
+  <data name="listViewUser.Width" type="System.Int32, mscorlib">
+    <value>117</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="buttonFileDialogSkylineInstall.Location" type="System.Drawing.Point, System.Drawing">
+    <value>562, 122</value>
+  </data>
+  <data name="groupBoxSkylineSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;listViewUser.Name" xml:space="preserve">
+    <value>listViewUser</value>
+  </data>
+  <data name="&gt;&gt;lblNoConfigs.Name" xml:space="preserve">
+    <value>lblNoConfigs</value>
+  </data>
+  <data name="groupBoxAutoQcSettings.ToolTip" xml:space="preserve">
+    <value />
+  </data>
+  <data name="panel1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="tabFront.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="radioButtonSpecifySkylinePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>192, 17</value>
+  </data>
+  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>612, 77</value>
+  </data>
+  <data name="radioButtonUseSkylineDaily.Size" type="System.Drawing.Size, System.Drawing">
+    <value>105, 17</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSkylineSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="label_Skylinecmd.Location" type="System.Drawing.Point, System.Drawing">
+    <value>53, 147</value>
+  </data>
+  <data name="&gt;&gt;radioButtonUseSkyline.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabFront.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="btnViewLog1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="systray_icon.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -1829,396 +2219,6 @@ Any configurations that were running when AutoQC Loader was last running are als
         AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
 </value>
   </data>
-  <data name="&gt;&gt;btnNewConfig.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabMain.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="radioButtonWebBasedSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>188, 17</value>
-  </data>
-  <data name="&gt;&gt;groupBoxSkylineSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolTip_MainForm.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="btnCopy.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="radioButtonSpecifySkylinePath.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="btnEdit.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="buttonFileDialogSkylineInstall.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="lblConfigSelect.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;btnNewConfig.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>MainForm</value>
-  </data>
-  <data name="&gt;&gt;btnOpenFolder.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnEdit.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelSkylineType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="radioButtonUseSkylineDaily.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleRight</value>
-  </data>
-  <data name="lblNoConfigs.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 9.75pt</value>
-  </data>
-  <data name="&gt;&gt;buttonApplySkylineSettings.Parent" xml:space="preserve">
-    <value>groupBoxSkylineSettings</value>
-  </data>
-  <data name="&gt;&gt;tabSettings.Name" xml:space="preserve">
-    <value>tabSettings</value>
-  </data>
-  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="&gt;&gt;lblNoConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
-    <value>tabFront</value>
-  </data>
-  <data name="groupBoxSkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>629, 196</value>
-  </data>
-  <data name="&gt;&gt;textBoxSkylinePath.Name" xml:space="preserve">
-    <value>textBoxSkylinePath</value>
-  </data>
-  <data name="systray_icon.Text" xml:space="preserve">
-    <value>AutoQC Loader</value>
-  </data>
-  <data name="label_Skylinecmd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>0, 13</value>
-  </data>
-  <data name="&gt;&gt;radioButtonUseSkyline.Parent" xml:space="preserve">
-    <value>panelSkylineType</value>
-  </data>
-  <data name="comboConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>114, 19</value>
-  </data>
-  <data name="tabLog.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="&gt;&gt;tabSettings.Parent" xml:space="preserve">
-    <value>tabMain</value>
-  </data>
-  <data name="$this.AutoScroll" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="&gt;&gt;btnViewLog1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="tabSettings.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="textBoxLog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>684, 446</value>
-  </data>
-  <data name="&gt;&gt;btnCopy.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="textBoxLog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="&gt;&gt;lblNoConfigs.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="buttonApplySkylineSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 26</value>
-  </data>
-  <data name="tabLog.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;lblConfigSelect.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;radioButtonUseSkylineDaily.Parent" xml:space="preserve">
-    <value>panelSkylineType</value>
-  </data>
-  <data name="&gt;&gt;btnDelete.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="buttonApplySkylineSettings.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="&gt;&gt;btnViewLog2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="textBoxLog.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="label_Skylinecmd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>53, 147</value>
-  </data>
-  <data name="&gt;&gt;btnNewConfig.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;btnImportConfigs.Name" xml:space="preserve">
-    <value>btnImportConfigs</value>
-  </data>
-  <data name="buttonFileDialogSkylineInstall.Size" type="System.Drawing.Size, System.Drawing">
-    <value>26, 20</value>
-  </data>
-  <data name="&gt;&gt;radioButtonWebBasedSkyline.Name" xml:space="preserve">
-    <value>radioButtonWebBasedSkyline</value>
-  </data>
-  <data name="&gt;&gt;btnImportConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="btnNewConfig.Size" type="System.Drawing.Size, System.Drawing">
-    <value>202, 23</value>
-  </data>
-  <data name="btnExportConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 216</value>
-  </data>
-  <data name="listViewConfigName.Width" type="System.Int32, mscorlib">
-    <value>257</value>
-  </data>
-  <data name="tabFront.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="&gt;&gt;lblConfigSelect.Name" xml:space="preserve">
-    <value>lblConfigSelect</value>
-  </data>
-  <data name="textBoxLog.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="&gt;&gt;systray_icon.Type" xml:space="preserve">
-    <value>System.Windows.Forms.NotifyIcon, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cb_keepRunning.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="buttonFileDialogSkylineInstall.Text" xml:space="preserve">
-    <value>...</value>
-  </data>
-  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
-    <value>tabFront</value>
-  </data>
-  <data name="&gt;&gt;comboConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="cb_keepRunning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>165, 17</value>
-  </data>
-  <data name="radioButtonUseSkyline.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="radioButtonWebBasedSkyline.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="&gt;&gt;tabSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="btnImportConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 256</value>
-  </data>
-  <data name="lblNoConfigs.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="&gt;&gt;comboConfigs.Name" xml:space="preserve">
-    <value>comboConfigs</value>
-  </data>
-  <data name="tabSettings.Text" xml:space="preserve">
-    <value>Settings</value>
-  </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="buttonApplySkylineSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>267, 159</value>
-  </data>
-  <data name="&gt;&gt;tabMain.Name" xml:space="preserve">
-    <value>tabMain</value>
-  </data>
-  <data name="&gt;&gt;cb_keepRunning.Parent" xml:space="preserve">
-    <value>groupBoxAutoQcSettings</value>
-  </data>
-  <data name="buttonApplySkylineSettings.Text" xml:space="preserve">
-    <value>Apply</value>
-  </data>
-  <data name="btnNewConfig.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;textBoxLog.Parent" xml:space="preserve">
-    <value>tabLog</value>
-  </data>
-  <data name="&gt;&gt;label_Skylinecmd.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;labelSavedConfigurations.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;radioButtonUseSkylineDaily.Name" xml:space="preserve">
-    <value>radioButtonUseSkylineDaily</value>
-  </data>
-  <data name="&gt;&gt;panelSkylineType.Parent" xml:space="preserve">
-    <value>groupBoxSkylineSettings</value>
-  </data>
-  <data name="&gt;&gt;radioButtonUseSkylineDaily.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="radioButtonWebBasedSkyline.Text" xml:space="preserve">
-    <value>Use web-based Skyline installation</value>
-  </data>
-  <data name="&gt;&gt;btnEdit.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="btnViewLog1.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="btnEdit.Text" xml:space="preserve">
-    <value>Edit</value>
-  </data>
-  <data name="lblConfigSelect.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="btnDelete.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="lblConfigSelect.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Parent" xml:space="preserve">
-    <value>groupBoxSkylineSettings</value>
-  </data>
-  <data name="&gt;&gt;groupBoxSkylineSettings.Parent" xml:space="preserve">
-    <value>tabSettings</value>
-  </data>
-  <data name="&gt;&gt;label_Skylinecmd.Parent" xml:space="preserve">
-    <value>tabSettings</value>
-  </data>
-  <data name="radioButtonUseSkyline.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleRight</value>
-  </data>
-  <data name="btnExportConfigs.ToolTip" xml:space="preserve">
-    <value>Export saved configurations...</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>763, 573</value>
-  </data>
-  <data name="&gt;&gt;cb_minimizeToSysTray.Parent" xml:space="preserve">
-    <value>groupBoxAutoQcSettings</value>
-  </data>
-  <data name="tabMain.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="cb_minimizeToSysTray.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioButtonUseSkylineDaily.Location" type="System.Drawing.Point, System.Drawing">
-    <value>122, 14</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value> AutoQC</value>
-  </data>
-  <data name="btnOpenFolder.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;btnExportConfigs.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnOpenFolder.Text" xml:space="preserve">
-    <value>Open folder</value>
-  </data>
-  <data name="&gt;&gt;btnImportConfigs.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;labelSavedConfigurations.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnExportConfigs.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;groupBoxAutoQcSettings.Name" xml:space="preserve">
-    <value>groupBoxAutoQcSettings</value>
-  </data>
-  <data name="listViewConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>539, 351</value>
-  </data>
-  <data name="listViewUser.Width" type="System.Int32, mscorlib">
-    <value>117</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="buttonFileDialogSkylineInstall.Location" type="System.Drawing.Point, System.Drawing">
-    <value>562, 122</value>
-  </data>
-  <data name="groupBoxSkylineSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;listViewUser.Name" xml:space="preserve">
-    <value>listViewUser</value>
-  </data>
-  <data name="&gt;&gt;lblNoConfigs.Name" xml:space="preserve">
-    <value>lblNoConfigs</value>
-  </data>
-  <data name="groupBoxAutoQcSettings.ToolTip" xml:space="preserve">
-    <value />
-  </data>
-  <data name="panel1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="tabFront.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="radioButtonSpecifySkylinePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>192, 17</value>
-  </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>612, 77</value>
-  </data>
-  <data name="radioButtonUseSkylineDaily.Size" type="System.Drawing.Size, System.Drawing">
-    <value>105, 17</value>
-  </data>
-  <data name="btnViewLog2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>546, 19</value>
-  </data>
-  <data name="radioButtonUseSkyline.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 14</value>
-  </data>
-  <data name="&gt;&gt;radioButtonUseSkyline.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="tabFront.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="btnViewLog1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;btnImportConfigs.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
   <data name="labelSavedConfigurations.Size" type="System.Drawing.Size, System.Drawing">
     <value>110, 13</value>
   </data>
@@ -2257,9 +2257,6 @@ Any configurations that were running when AutoQC Loader was last running are als
   </metadata>
   <metadata name="systray_icon.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>168, 17</value>
-  </metadata>
-  <metadata name="$this.Language" type="System.Globalization.CultureInfo, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>zh-Hans</value>
   </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

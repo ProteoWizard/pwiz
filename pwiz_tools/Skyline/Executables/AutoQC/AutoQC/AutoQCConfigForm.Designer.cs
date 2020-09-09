@@ -92,51 +92,41 @@
             // 
             // splitContainer1.Panel1
             // 
-            resources.ApplyResources(this.splitContainer1.Panel1, "splitContainer1.Panel1");
             this.splitContainer1.Panel1.Controls.Add(this.tabControl);
-            this.toolTip1.SetToolTip(this.splitContainer1.Panel1, resources.GetString("splitContainer1.Panel1.ToolTip"));
             // 
             // splitContainer1.Panel2
             // 
-            resources.ApplyResources(this.splitContainer1.Panel2, "splitContainer1.Panel2");
             this.splitContainer1.Panel2.Controls.Add(this.groupBox1);
-            this.toolTip1.SetToolTip(this.splitContainer1.Panel2, resources.GetString("splitContainer1.Panel2.ToolTip"));
-            this.toolTip1.SetToolTip(this.splitContainer1, resources.GetString("splitContainer1.ToolTip"));
             // 
             // tabControl
             // 
-            resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Controls.Add(this.tabSettings);
             this.tabControl.Controls.Add(this.tabPanoramaSettings);
+            resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.toolTip1.SetToolTip(this.tabControl, resources.GetString("tabControl.ToolTip"));
             // 
             // tabSettings
             // 
-            resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tabSettings.Controls.Add(this.textConfigName);
             this.tabSettings.Controls.Add(this.labelConfigName);
             this.tabSettings.Controls.Add(this.groupBoxMain);
+            resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.Name = "tabSettings";
-            this.toolTip1.SetToolTip(this.tabSettings, resources.GetString("tabSettings.ToolTip"));
             // 
             // textConfigName
             // 
             resources.ApplyResources(this.textConfigName, "textConfigName");
             this.textConfigName.Name = "textConfigName";
-            this.toolTip1.SetToolTip(this.textConfigName, resources.GetString("textConfigName.ToolTip"));
             // 
             // labelConfigName
             // 
             resources.ApplyResources(this.labelConfigName, "labelConfigName");
             this.labelConfigName.Name = "labelConfigName";
-            this.toolTip1.SetToolTip(this.labelConfigName, resources.GetString("labelConfigName.ToolTip"));
             // 
             // groupBoxMain
             // 
-            resources.ApplyResources(this.groupBoxMain, "groupBoxMain");
             this.groupBoxMain.Controls.Add(this.checkBoxRemoveResults);
             this.groupBoxMain.Controls.Add(this.labelQcFilePattern);
             this.groupBoxMain.Controls.Add(this.comboBoxFileFilter);
@@ -157,9 +147,9 @@
             this.groupBoxMain.Controls.Add(this.textFolderToWatchPath);
             this.groupBoxMain.Controls.Add(this.btnSkylineFilePath);
             this.groupBoxMain.Controls.Add(this.textSkylinePath);
+            resources.ApplyResources(this.groupBoxMain, "groupBoxMain");
             this.groupBoxMain.Name = "groupBoxMain";
             this.groupBoxMain.TabStop = false;
-            this.toolTip1.SetToolTip(this.groupBoxMain, resources.GetString("groupBoxMain.ToolTip"));
             // 
             // checkBoxRemoveResults
             // 
@@ -175,28 +165,24 @@
             // 
             resources.ApplyResources(this.labelQcFilePattern, "labelQcFilePattern");
             this.labelQcFilePattern.Name = "labelQcFilePattern";
-            this.toolTip1.SetToolTip(this.labelQcFilePattern, resources.GetString("labelQcFilePattern.ToolTip"));
             // 
             // comboBoxFileFilter
             // 
-            resources.ApplyResources(this.comboBoxFileFilter, "comboBoxFileFilter");
             this.comboBoxFileFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxFileFilter.FormattingEnabled = true;
+            resources.ApplyResources(this.comboBoxFileFilter, "comboBoxFileFilter");
             this.comboBoxFileFilter.Name = "comboBoxFileFilter";
-            this.toolTip1.SetToolTip(this.comboBoxFileFilter, resources.GetString("comboBoxFileFilter.ToolTip"));
             this.comboBoxFileFilter.SelectedIndexChanged += new System.EventHandler(this.comboBoxFileFilter_SelectedIndexChanged);
             // 
             // label5
             // 
             resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
-            this.toolTip1.SetToolTip(this.label5, resources.GetString("label5.ToolTip"));
             // 
             // includeSubfoldersCb
             // 
             resources.ApplyResources(this.includeSubfoldersCb, "includeSubfoldersCb");
             this.includeSubfoldersCb.Name = "includeSubfoldersCb";
-            this.toolTip1.SetToolTip(this.includeSubfoldersCb, resources.GetString("includeSubfoldersCb.ToolTip"));
             this.includeSubfoldersCb.UseVisualStyleBackColor = true;
             // 
             // textQCFilePattern
@@ -209,7 +195,6 @@
             // 
             resources.ApplyResources(this.labelMinutes, "labelMinutes");
             this.labelMinutes.Name = "labelMinutes";
-            this.toolTip1.SetToolTip(this.labelMinutes, resources.GetString("labelMinutes.ToolTip"));
             // 
             // labelAquisitionTime
             // 
@@ -227,7 +212,6 @@
             // 
             resources.ApplyResources(this.labelDays, "labelDays");
             this.labelDays.Name = "labelDays";
-            this.toolTip1.SetToolTip(this.labelDays, resources.GetString("labelDays.ToolTip"));
             // 
             // textResultsTimeWindow
             // 
@@ -239,17 +223,14 @@
             // 
             resources.ApplyResources(this.labelAccumulationTimeWindow, "labelAccumulationTimeWindow");
             this.labelAccumulationTimeWindow.Name = "labelAccumulationTimeWindow";
-            this.toolTip1.SetToolTip(this.labelAccumulationTimeWindow, resources.GetString("labelAccumulationTimeWindow.ToolTip"));
             // 
             // labelInstrumentType
             // 
             resources.ApplyResources(this.labelInstrumentType, "labelInstrumentType");
             this.labelInstrumentType.Name = "labelInstrumentType";
-            this.toolTip1.SetToolTip(this.labelInstrumentType, resources.GetString("labelInstrumentType.ToolTip"));
             // 
             // comboBoxInstrumentType
             // 
-            resources.ApplyResources(this.comboBoxInstrumentType, "comboBoxInstrumentType");
             this.comboBoxInstrumentType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxInstrumentType.FormattingEnabled = true;
             this.comboBoxInstrumentType.Items.AddRange(new object[] {
@@ -259,14 +240,13 @@
             resources.GetString("comboBoxInstrumentType.Items3"),
             resources.GetString("comboBoxInstrumentType.Items4"),
             resources.GetString("comboBoxInstrumentType.Items5")});
+            resources.ApplyResources(this.comboBoxInstrumentType, "comboBoxInstrumentType");
             this.comboBoxInstrumentType.Name = "comboBoxInstrumentType";
-            this.toolTip1.SetToolTip(this.comboBoxInstrumentType, resources.GetString("comboBoxInstrumentType.ToolTip"));
             // 
             // btnFolderToWatch
             // 
             resources.ApplyResources(this.btnFolderToWatch, "btnFolderToWatch");
             this.btnFolderToWatch.Name = "btnFolderToWatch";
-            this.toolTip1.SetToolTip(this.btnFolderToWatch, resources.GetString("btnFolderToWatch.ToolTip"));
             this.btnFolderToWatch.UseVisualStyleBackColor = true;
             this.btnFolderToWatch.Click += new System.EventHandler(this.btnFolderToWatch_Click);
             // 
@@ -274,13 +254,11 @@
             // 
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.toolTip1.SetToolTip(this.label2, resources.GetString("label2.ToolTip"));
             // 
             // label3
             // 
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
-            this.toolTip1.SetToolTip(this.label3, resources.GetString("label3.ToolTip"));
             // 
             // textFolderToWatchPath
             // 
@@ -292,7 +270,6 @@
             // 
             resources.ApplyResources(this.btnSkylineFilePath, "btnSkylineFilePath");
             this.btnSkylineFilePath.Name = "btnSkylineFilePath";
-            this.toolTip1.SetToolTip(this.btnSkylineFilePath, resources.GetString("btnSkylineFilePath.ToolTip"));
             this.btnSkylineFilePath.UseVisualStyleBackColor = true;
             this.btnSkylineFilePath.Click += new System.EventHandler(this.btnSkylineFilePath_Click);
             // 
@@ -304,24 +281,21 @@
             // 
             // tabPanoramaSettings
             // 
-            resources.ApplyResources(this.tabPanoramaSettings, "tabPanoramaSettings");
             this.tabPanoramaSettings.BackColor = System.Drawing.Color.WhiteSmoke;
             this.tabPanoramaSettings.Controls.Add(this.cbPublishToPanorama);
             this.tabPanoramaSettings.Controls.Add(this.groupBoxPanorama);
+            resources.ApplyResources(this.tabPanoramaSettings, "tabPanoramaSettings");
             this.tabPanoramaSettings.Name = "tabPanoramaSettings";
-            this.toolTip1.SetToolTip(this.tabPanoramaSettings, resources.GetString("tabPanoramaSettings.ToolTip"));
             // 
             // cbPublishToPanorama
             // 
             resources.ApplyResources(this.cbPublishToPanorama, "cbPublishToPanorama");
             this.cbPublishToPanorama.Name = "cbPublishToPanorama";
-            this.toolTip1.SetToolTip(this.cbPublishToPanorama, resources.GetString("cbPublishToPanorama.ToolTip"));
             this.cbPublishToPanorama.UseVisualStyleBackColor = true;
             this.cbPublishToPanorama.CheckedChanged += new System.EventHandler(this.cbPublishToPanorama_CheckedChanged);
             // 
             // groupBoxPanorama
             // 
-            resources.ApplyResources(this.groupBoxPanorama, "groupBoxPanorama");
             this.groupBoxPanorama.Controls.Add(this.labelPanoramaFolder);
             this.groupBoxPanorama.Controls.Add(this.textPanoramaFolder);
             this.groupBoxPanorama.Controls.Add(this.lblPanoramaUrl);
@@ -330,76 +304,66 @@
             this.groupBoxPanorama.Controls.Add(this.lblPanoramaPasswd);
             this.groupBoxPanorama.Controls.Add(this.lblPanoramaEmail);
             this.groupBoxPanorama.Controls.Add(this.textPanoramaEmail);
+            resources.ApplyResources(this.groupBoxPanorama, "groupBoxPanorama");
             this.groupBoxPanorama.Name = "groupBoxPanorama";
             this.groupBoxPanorama.TabStop = false;
-            this.toolTip1.SetToolTip(this.groupBoxPanorama, resources.GetString("groupBoxPanorama.ToolTip"));
             // 
             // labelPanoramaFolder
             // 
             resources.ApplyResources(this.labelPanoramaFolder, "labelPanoramaFolder");
             this.labelPanoramaFolder.Name = "labelPanoramaFolder";
-            this.toolTip1.SetToolTip(this.labelPanoramaFolder, resources.GetString("labelPanoramaFolder.ToolTip"));
             // 
             // textPanoramaFolder
             // 
             resources.ApplyResources(this.textPanoramaFolder, "textPanoramaFolder");
             this.textPanoramaFolder.Name = "textPanoramaFolder";
-            this.toolTip1.SetToolTip(this.textPanoramaFolder, resources.GetString("textPanoramaFolder.ToolTip"));
             // 
             // lblPanoramaUrl
             // 
             resources.ApplyResources(this.lblPanoramaUrl, "lblPanoramaUrl");
             this.lblPanoramaUrl.Name = "lblPanoramaUrl";
-            this.toolTip1.SetToolTip(this.lblPanoramaUrl, resources.GetString("lblPanoramaUrl.ToolTip"));
             // 
             // textPanoramaUrl
             // 
             resources.ApplyResources(this.textPanoramaUrl, "textPanoramaUrl");
             this.textPanoramaUrl.Name = "textPanoramaUrl";
-            this.toolTip1.SetToolTip(this.textPanoramaUrl, resources.GetString("textPanoramaUrl.ToolTip"));
             // 
             // textPanoramaPasswd
             // 
             resources.ApplyResources(this.textPanoramaPasswd, "textPanoramaPasswd");
             this.textPanoramaPasswd.Name = "textPanoramaPasswd";
-            this.toolTip1.SetToolTip(this.textPanoramaPasswd, resources.GetString("textPanoramaPasswd.ToolTip"));
             this.textPanoramaPasswd.UseSystemPasswordChar = true;
             // 
             // lblPanoramaPasswd
             // 
             resources.ApplyResources(this.lblPanoramaPasswd, "lblPanoramaPasswd");
             this.lblPanoramaPasswd.Name = "lblPanoramaPasswd";
-            this.toolTip1.SetToolTip(this.lblPanoramaPasswd, resources.GetString("lblPanoramaPasswd.ToolTip"));
             // 
             // lblPanoramaEmail
             // 
             resources.ApplyResources(this.lblPanoramaEmail, "lblPanoramaEmail");
             this.lblPanoramaEmail.Name = "lblPanoramaEmail";
-            this.toolTip1.SetToolTip(this.lblPanoramaEmail, resources.GetString("lblPanoramaEmail.ToolTip"));
             // 
             // textPanoramaEmail
             // 
             resources.ApplyResources(this.textPanoramaEmail, "textPanoramaEmail");
             this.textPanoramaEmail.Name = "textPanoramaEmail";
-            this.toolTip1.SetToolTip(this.textPanoramaEmail, resources.GetString("textPanoramaEmail.ToolTip"));
             // 
             // groupBox1
             // 
-            resources.ApplyResources(this.groupBox1, "groupBox1");
             this.groupBox1.BackColor = System.Drawing.SystemColors.ControlLight;
             this.groupBox1.Controls.Add(this.btnOkConfig);
             this.groupBox1.Controls.Add(this.lblConfigRunning);
             this.groupBox1.Controls.Add(this.btnCancelConfig);
             this.groupBox1.Controls.Add(this.btnSaveConfig);
+            resources.ApplyResources(this.groupBox1, "groupBox1");
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.TabStop = false;
-            this.toolTip1.SetToolTip(this.groupBox1, resources.GetString("groupBox1.ToolTip"));
             // 
             // btnOkConfig
             // 
             resources.ApplyResources(this.btnOkConfig, "btnOkConfig");
             this.btnOkConfig.Name = "btnOkConfig";
-            this.toolTip1.SetToolTip(this.btnOkConfig, resources.GetString("btnOkConfig.ToolTip"));
             this.btnOkConfig.UseVisualStyleBackColor = true;
             this.btnOkConfig.Click += new System.EventHandler(this.btnOkConfig_Click);
             // 
@@ -408,21 +372,18 @@
             resources.ApplyResources(this.lblConfigRunning, "lblConfigRunning");
             this.lblConfigRunning.ForeColor = System.Drawing.Color.DarkRed;
             this.lblConfigRunning.Name = "lblConfigRunning";
-            this.toolTip1.SetToolTip(this.lblConfigRunning, resources.GetString("lblConfigRunning.ToolTip"));
             // 
             // btnCancelConfig
             // 
-            resources.ApplyResources(this.btnCancelConfig, "btnCancelConfig");
             this.btnCancelConfig.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            resources.ApplyResources(this.btnCancelConfig, "btnCancelConfig");
             this.btnCancelConfig.Name = "btnCancelConfig";
-            this.toolTip1.SetToolTip(this.btnCancelConfig, resources.GetString("btnCancelConfig.ToolTip"));
             this.btnCancelConfig.UseVisualStyleBackColor = true;
             // 
             // btnSaveConfig
             // 
             resources.ApplyResources(this.btnSaveConfig, "btnSaveConfig");
             this.btnSaveConfig.Name = "btnSaveConfig";
-            this.toolTip1.SetToolTip(this.btnSaveConfig, resources.GetString("btnSaveConfig.ToolTip"));
             this.btnSaveConfig.UseVisualStyleBackColor = true;
             this.btnSaveConfig.Click += new System.EventHandler(this.btnSaveConfig_Click);
             // 
@@ -436,7 +397,6 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AutoQcConfigForm";
-            this.toolTip1.SetToolTip(this, resources.GetString("$this.ToolTip"));
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
