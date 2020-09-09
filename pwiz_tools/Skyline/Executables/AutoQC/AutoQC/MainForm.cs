@@ -44,6 +44,8 @@ namespace AutoQC
 
         private IAutoQcLogger _currentAutoQcLogger;
 
+        private const string XML_FILES_FILTER = "XML Files(*.xml)|*.xml";
+
         public MainForm()
         {
             InitializeComponent();
@@ -104,7 +106,7 @@ namespace AutoQC
             _configRunners = new Dictionary<string, ConfigRunner>();
             foreach (var config in sortedConfig)
             {
-                if (config.IsEnabled && !Properties.Settings.Default.KeepAutoQcRunning)
+                if (config.IsEnabled && !Settings.Default.KeepAutoQcRunning)
                 {
                     // If the config was running last time AutoQC Loader was running (and properties saved), but we are not 
                     // automatically starting configs on startup, change its IsEnabled state
@@ -289,7 +291,7 @@ namespace AutoQC
         {
             Settings.Default.Save();
 
-            var dialog = new SaveFileDialog {Title = "Save configurations...", Filter = "XML Files(*.xml)|*.xml"};
+            var dialog = new SaveFileDialog {Title = Resources.MainForm_btnExport_Click_Save_configurations___, Filter = XML_FILES_FILTER};
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
             var filePath = dialog.FileName;
@@ -300,7 +302,7 @@ namespace AutoQC
         private void btnImport_Click(object sender, EventArgs e)
         {
             var dialog = new OpenFileDialog();
-            dialog.Filter = "XML Files(*.xml)|*.xml";
+            dialog.Filter = XML_FILES_FILTER;
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
             var filePath = dialog.FileName;
@@ -312,14 +314,13 @@ namespace AutoQC
                 {
                     using (var reader = XmlReader.Create(stream))
                     {
-                        while (reader.IsStartElement())
+                        while (reader.Read())
                         {
-                            if (reader.Name == "autoqc_config")
+                            if (reader.IsStartElement() && reader.Name.Equals(@"autoqc_config"))
                             {
                                 AutoQcConfig config = AutoQcConfig.Deserialize(reader);
                                 readConfigs.Add(config);
                             }
-                            reader.Read();
                         }
                     }
                 }
@@ -334,8 +335,9 @@ namespace AutoQC
             if (readConfigs.Count == 0)
             {
                 ShowWarningDialog(Resources.MainForm_btnImport_Click_Import_Configurations,
-                    string.Format(Resources.MainForm_btnImport_Click_Could_not_import_configurations_from_file__0_,
+                    string.Format(Resources.MainForm_btnImport_Click_No_configurations_were_found_in_file__0__,
                         filePath));
+                return;
             }
 
             var validationErrors = new List<string>();
@@ -440,8 +442,7 @@ namespace AutoQC
 
         private ConfigRunner ChangeConfigEnabledSetting(string configName, bool enabled)
         {
-            ConfigRunner configRunner;
-            _configRunners.TryGetValue(configName, out configRunner);
+            _configRunners.TryGetValue(configName, out var configRunner);
             if (configRunner == null)
                 return null;
             configRunner.Config.IsEnabled = enabled;
@@ -664,7 +665,7 @@ namespace AutoQC
             if (configRunner == null)
             {
                 btnCopy.Enabled = false;
-                btnEdit.Text = "Edit";
+                btnEdit.Text = Resources.MainForm_UpdateButtons_Edit;
                 btnEdit.Enabled = false;
                 btnDelete.Enabled = false;
             }
@@ -673,7 +674,7 @@ namespace AutoQC
                 btnCopy.Enabled = true;
                 btnDelete.Enabled = true;
                 btnEdit.Enabled = true;
-                btnEdit.Text = configRunner.IsStopped() ? "Edit" : "View";
+                btnEdit.Text = configRunner.IsStopped() ? Resources.MainForm_UpdateButtons_Edit : Resources.MainForm_UpdateButtons_View;
             }
         }
 
@@ -825,12 +826,12 @@ namespace AutoQC
         private void TrimDisplayedLog()
         {
             var numLines = textBoxLog.Lines.Length;
-            const int buffer = AutoQcLogger.MaxLogLines / 10;
-            if (numLines > AutoQcLogger.MaxLogLines + buffer)
+            const int buffer = AutoQcLogger.MAX_LOG_LINES / 10;
+            if (numLines > AutoQcLogger.MAX_LOG_LINES + buffer)
             {
                 textBoxLog.ReadOnly = false; // Make text box editable. This is required for the following to work
                 textBoxLog.SelectionStart = 0;
-                textBoxLog.SelectionLength = textBoxLog.GetFirstCharIndexFromLine(numLines - AutoQcLogger.MaxLogLines);
+                textBoxLog.SelectionLength = textBoxLog.GetFirstCharIndexFromLine(numLines - AutoQcLogger.MAX_LOG_LINES);
                 textBoxLog.SelectedText = string.Empty;
 
                 var message = (_currentAutoQcLogger != null) ? 
@@ -920,25 +921,6 @@ namespace AutoQC
             }
         }
 
-        private T RunUI<T>(Func<T> function)
-        {
-            if (InvokeRequired)
-            {
-                try
-                {
-                    return (T) Invoke(function);
-                }
-                catch (ObjectDisposedException)
-                {
-                }
-            }
-            else
-            {
-                return function();
-            }
-            return default(T);
-        }
-
         private void systray_icon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             Show();
@@ -950,7 +932,7 @@ namespace AutoQC
         {
             //If the form is minimized hide it from the task bar  
             //and show the system tray icon (represented by the NotifyIcon control)  
-            if (WindowState == FormWindowState.Minimized && Properties.Settings.Default.MinimizeToSystemTray)
+            if (WindowState == FormWindowState.Minimized && Settings.Default.MinimizeToSystemTray)
             {
                 Hide();
                 systray_icon.Visible = true;
@@ -1103,7 +1085,7 @@ namespace AutoQC
                         if (!ApplyChangesToSkylineSettings())
                         {
                             e.Cancel = true;
-                        };
+                        }
                     }
                     else
                     {
@@ -1122,11 +1104,11 @@ namespace AutoQC
         /// <summary>
         /// Specifies the column to be sorted
         /// </summary>
-        private int ColumnToSort;
+        private int _columnToSort;
         /// <summary>
         /// Specifies the order in which to sort (i.e. 'Ascending').
         /// </summary>
-        private SortOrder OrderOfSort;
+        private SortOrder _orderOfSort;
         /// <summary>
         /// Case insensitive comparer object
         /// </summary>
@@ -1138,10 +1120,10 @@ namespace AutoQC
         public ListViewColumnSorter()
         {
             // Initialize the column to '0'
-            ColumnToSort = 0;
+            _columnToSort = 0;
 
             // Initialize the sort order to 'none'
-            OrderOfSort = SortOrder.None;
+            _orderOfSort = SortOrder.None;
 
             // Initialize the CaseInsensitiveComparer object
             ObjectCompare = new CaseInsensitiveComparer();
@@ -1154,11 +1136,11 @@ namespace AutoQC
         {
             set
             {
-                ColumnToSort = value;
+                _columnToSort = value;
             }
             get
             {
-                return ColumnToSort;
+                return _columnToSort;
             }
         }
 
@@ -1169,11 +1151,11 @@ namespace AutoQC
         {
             set
             {
-                OrderOfSort = value;
+                _orderOfSort = value;
             }
             get
             {
-                return OrderOfSort;
+                return _orderOfSort;
             }
         }
 
@@ -1194,10 +1176,10 @@ namespace AutoQC
             listviewY = (ListViewItem)y;
 
             // Compare the two items
-            var compareResult = ObjectCompare.Compare(listviewX.SubItems[ColumnToSort].Text, listviewY.SubItems[ColumnToSort].Text);
+            var compareResult = ObjectCompare.Compare(listviewX?.SubItems[_columnToSort].Text, listviewY?.SubItems[_columnToSort].Text);
 
             // Calculate correct return value based on object comparison
-            switch (OrderOfSort)
+            switch (_orderOfSort)
             {
                 case SortOrder.Ascending:
                     // Ascending sort is selected, return normal result of compare operation

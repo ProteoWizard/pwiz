@@ -26,7 +26,6 @@ using System.Threading;
 namespace AutoQC
 {
 
-    // ReSharper disable once InconsistentNaming
     public class AutoQCFileSystemWatcher
     {
         private readonly IAutoQcLogger _logger;

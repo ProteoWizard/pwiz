@@ -178,11 +178,16 @@ namespace AutoQC
 
         public void ChangeStatus(RunnerStatus runnerStatus)
         {
+            SetStatus(runnerStatus);
+            _uiControl.ChangeConfigUiStatus(this);
+        }
+
+        private void SetStatus(RunnerStatus runnerStatus)
+        {
             lock (_lock)
             {
                 _runnerStatus = runnerStatus;
             }
-            _uiControl.ChangeConfigUiStatus(this);
         }
 
         private void CreateLogger()
@@ -586,33 +591,28 @@ namespace AutoQC
 
             Task.Run(() =>
             {
-                if (_fileWatcher != null)
-                {
-                    _fileWatcher.Stop();
-                }
+                _fileWatcher?.Stop();
+
                 _totalImportCount = 0;
 
                 if (_worker != null && _worker.IsBusy)
                 {
-                    _runnerStatus = RunnerStatus.Stopping;
+                    SetStatus(RunnerStatus.Stopping);
                     CancelAsync();
                 }
                 else if(_runnerStatus != RunnerStatus.Error)
                 {
-                    _runnerStatus = RunnerStatus.Stopped;
+                    SetStatus(RunnerStatus.Stopped);
                 }
 
                 if (_runnerStatus == RunnerStatus.Stopped && _panoramaUploadError)
                 {
-                    _runnerStatus = RunnerStatus.Error;
+                    SetStatus(RunnerStatus.Error);
                 }
 
                 _uiControl.ChangeConfigUiStatus(this);
 
-                if (_panoramaPinger != null)
-                {
-                    _panoramaPinger.Stop();
-                }
+                _panoramaPinger?.Stop();
             });
         }
 

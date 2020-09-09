@@ -79,7 +79,7 @@ namespace AutoQC
             return settings;
         }
 
-        public MainSettings Clone()
+        public MainSettings Copy()
         {
             return new MainSettings
             {
@@ -155,7 +155,7 @@ namespace AutoQC
             }
             try
             {
-               DateTime.Now.AddDays(-(ResultsWindow - 1));
+                var unused = DateTime.Now.AddDays(-(ResultsWindow - 1));
             }
             catch (ArgumentOutOfRangeException)
             {

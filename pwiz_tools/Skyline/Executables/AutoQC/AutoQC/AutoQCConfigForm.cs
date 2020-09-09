@@ -223,17 +223,12 @@ namespace AutoQC
 
         private PanoramaSettings GetPanoramaSettingsFromUI()
         {
-            var panoramaSettings = new PanoramaSettings();
-            panoramaSettings.PublishToPanorama = cbPublishToPanorama.Checked;
-            if (panoramaSettings.PublishToPanorama)
+            if (cbPublishToPanorama.Checked)
             {
-                panoramaSettings.PanoramaServerUrl = textPanoramaUrl.Text;
-                panoramaSettings.PanoramaUserEmail = textPanoramaEmail.Text;
-                panoramaSettings.PanoramaPassword = textPanoramaPasswd.Text;
-                panoramaSettings.PanoramaFolder = textPanoramaFolder.Text;
+                return new PanoramaSettings(cbPublishToPanorama.Checked, textPanoramaUrl.Text, textPanoramaFolder.Text, textPanoramaEmail.Text, textPanoramaPasswd.Text);
             }
 
-            return panoramaSettings;
+            return new PanoramaSettings();
         }
 
         public void RunUI(Action action)

@@ -317,5 +317,14 @@ namespace AutoQC
                 Resources.AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_);
         }
 
+        /// <summary>
+        /// Sealed to keep ReSharper happy, because we set it in constructors
+        /// </summary>
+        public sealed override string Text
+        {
+            get { return base.Text; }
+            set { base.Text = value; }
+        }
+
     }
 }

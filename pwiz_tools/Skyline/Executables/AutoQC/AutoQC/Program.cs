@@ -19,11 +19,9 @@ using System;
 using System.ComponentModel;
 using System.Configuration;
 using System.Deployment.Application;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -119,7 +117,7 @@ namespace AutoQC
                         LogError($"Unable to update {AutoQcStarter} shortcut.", eventArgs.Error);
                         form.DisplayError(string.Format(Resources.Program_Main__0__Update_Error, AutoQcStarter),
                             string.Format(Resources.Program_Main_Unable_to_update__0__shortcut___Error_was___1_,
-                                AutoQcStarter, eventArgs.Error.ToString()));
+                                AutoQcStarter, eventArgs.Error));
                     }
                 };
 
@@ -131,11 +129,11 @@ namespace AutoQC
             }
         }
 
-        private static bool InitSkylineSettings()
+        private static void InitSkylineSettings()
         {
             if (SkylineSettings.IsInitialized() || SkylineSettings.FindSkyline(out var pathsChecked))
             {
-                return true;
+                return;
             }
 
             var message = new StringBuilder();
@@ -153,12 +151,11 @@ namespace AutoQC
             MessageBox.Show(message.ToString(),
                 string.Format(Resources.Program_InitSkylineSettings_Unable_To_Find__0_, SkylineSettings.Skyline),
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
         }
 
         private static void UpdateAutoQcStarter(object sender, DoWorkEventArgs e)
         {
-            if (!Properties.Settings.Default.KeepAutoQcRunning) return;
+            if (!Settings.Default.KeepAutoQcRunning) return;
 
             if (ApplicationDeployment.IsNetworkDeployed)
             {
@@ -183,15 +180,15 @@ namespace AutoQC
                 return false;
 
             var currentVersion = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-            var installedVersion = Properties.Settings.Default.InstalledVersion ?? string.Empty;
+            var installedVersion = Settings.Default.InstalledVersion ?? string.Empty;
             if (!currentVersion.Equals(installedVersion))
             {
                 LogInfo(string.Empty.Equals(installedVersion)
                     ? $"This is a first install and run of version: {currentVersion}."
                     : $"Current version: {currentVersion} is newer than the last installed version: {installedVersion}.");
 
-                Properties.Settings.Default.InstalledVersion = currentVersion;
-                Properties.Settings.Default.Save();
+                Settings.Default.InstalledVersion = currentVersion;
+                Settings.Default.Save();
                 return true;
             }
             LogInfo($"Current version: {currentVersion} same as last installed version: {installedVersion}.");

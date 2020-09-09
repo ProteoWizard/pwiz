@@ -200,6 +200,15 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ... Log truncated. Full log is in {0}.
+        /// </summary>
+        internal static string AutoQcLogger_LogTruncatedMessage_____Log_truncated__Full_log_is_in__0_ {
+            get {
+                return ResourceManager.GetString("AutoQcLogger_LogTruncatedMessage_____Log_truncated__Full_log_is_in__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Settings Updated.
         /// </summary>
         internal static string MainForm_ApplyChangesToSkylineSettings__0__Settings_Updated {
@@ -274,6 +283,15 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Save configurations....
+        /// </summary>
+        internal static string MainForm_btnExport_Click_Save_configurations___ {
+            get {
+                return ResourceManager.GetString("MainForm_btnExport_Click_Save_configurations___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not import configurations from file {0}.
         /// </summary>
         internal static string MainForm_btnImport_Click_Could_not_import_configurations_from_file__0_ {
@@ -297,6 +315,15 @@ namespace AutoQC.Properties {
         internal static string MainForm_btnImport_Click_Import_Configurations_Error {
             get {
                 return ResourceManager.GetString("MainForm_btnImport_Click_Import_Configurations_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No configurations were found in file {0}..
+        /// </summary>
+        internal static string MainForm_btnImport_Click_No_configurations_were_found_in_file__0__ {
+            get {
+                return ResourceManager.GetString("MainForm_btnImport_Click_No_configurations_were_found_in_file__0__", resourceCulture);
             }
         }
         
@@ -492,6 +519,24 @@ namespace AutoQC.Properties {
         internal static string MainForm_TabMain_Deselecting_Unsaved__0__Settings {
             get {
                 return ResourceManager.GetString("MainForm_TabMain_Deselecting_Unsaved__0__Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit.
+        /// </summary>
+        internal static string MainForm_UpdateButtons_Edit {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateButtons_Edit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to View.
+        /// </summary>
+        internal static string MainForm_UpdateButtons_View {
+            get {
+                return ResourceManager.GetString("MainForm_UpdateButtons_View", resourceCulture);
             }
         }
         

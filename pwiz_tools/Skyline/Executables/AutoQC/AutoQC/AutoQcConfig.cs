@@ -115,8 +115,8 @@ namespace AutoQC
                 Name = Name,
                 IsEnabled = false, // Disable by default
                 User = PanoramaSettings.PanoramaUserEmail,
-                MainSettings = MainSettings.Clone(),
-                PanoramaSettings = PanoramaSettings.Clone()
+                MainSettings = MainSettings.Copy(),
+                PanoramaSettings = PanoramaSettings.Copy()
             };
         }
 

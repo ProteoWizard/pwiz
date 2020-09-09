@@ -123,9 +123,6 @@
   <data name="MainForm_btnImport_Click_Import_Configurations_Error" xml:space="preserve">
     <value>Import Configurations Error</value>
   </data>
-  <data name="MainForm_btnImport_Click_Could_not_import_configurations_from_file__0_" xml:space="preserve">
-    <value>Could not import configurations from file {0}</value>
-  </data>
   <data name="MainForm_btnImport_Click_Import_Configurations" xml:space="preserve">
     <value>Import Configurations</value>
   </data>
@@ -293,5 +290,23 @@
   </data>
   <data name="Program_InitSkylineSettings_Unable_To_Find__0_" xml:space="preserve">
     <value>Unable To Find {0}</value>
+  </data>
+  <data name="MainForm_btnImport_Click_No_configurations_were_found_in_file__0__" xml:space="preserve">
+    <value>No configurations were found in file {0}.</value>
+  </data>
+  <data name="MainForm_btnImport_Click_Could_not_import_configurations_from_file__0_" xml:space="preserve">
+    <value>Could not import configurations from file {0}</value>
+  </data>
+  <data name="MainForm_btnExport_Click_Save_configurations___" xml:space="preserve">
+    <value>Save configurations...</value>
+  </data>
+  <data name="MainForm_UpdateButtons_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="MainForm_UpdateButtons_View" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="AutoQcLogger_LogTruncatedMessage_____Log_truncated__Full_log_is_in__0_" xml:space="preserve">
+    <value>... Log truncated. Full log is in {0}</value>
   </data>
 </root>
