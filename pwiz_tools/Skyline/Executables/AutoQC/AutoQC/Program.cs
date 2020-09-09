@@ -25,6 +25,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using AutoQC.Properties;
 using log4net;
 using log4net.Appender;
 using log4net.Config;
@@ -54,22 +55,30 @@ namespace AutoQC
                 try
                 {
                     LOG.Error("AutoQC Loader encountered an unexpected error. ", (Exception)e.ExceptionObject);
-                    MessageBox.Show("AutoQC Loader encountered an unexpected error. " +
-                                    "Error details may be found in the AutoQCProgram.log file in this directory : "
-                                    + Path.GetDirectoryName(Application.ExecutablePath)
+
+                    const string logFile = "AutoQCProgram.log";
+                    MessageBox.Show(
+                        string.Format(
+                            Resources
+                                .Program_Main_AutoQC_Loader_encountered_an_unexpected_error__Error_details_may_be_found_in_the__0__file_in_this_directory___,
+                            logFile)
+                        + Path.GetDirectoryName(Application.ExecutablePath)
                     );
                 }
                 finally
                 {
-                    Application.Exit();
+                    Application.Exit(); 
                 }
             });
 
-            using (var mutex = new Mutex(false, $"University of Washington {AppName()}"))
+            using (var mutex = new Mutex(false, $"University of Washington {AppName}"))
             {
                 if (!mutex.WaitOne(TimeSpan.Zero))
                 {
-                    MessageBox.Show($"Another instance of {AppName()} is already running.", $"{AppName()} Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(
+                        string.Format(Resources.Program_Main_Another_instance_of__0__is_already_running_, AppName),
+                        string.Format(Resources.Program_Main__0__Error, AppName), MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                     return;
                 }
 
@@ -90,6 +99,7 @@ namespace AutoQC
 
                 InitSkylineSettings();
 
+                // Thread.CurrentThread.CurrentUICulture = new CultureInfo("ja");
                 var form = new MainForm();
 
                 // CurrentDeployment is null if it isn't network deployed.
@@ -105,7 +115,9 @@ namespace AutoQC
                     if (eventArgs.Error != null)
                     {
                         LogError($"Unable to update {AutoQcStarter} shortcut.", eventArgs.Error);
-                        form.DisplayError($"{AutoQcStarter} Update Error", $"Unable to update {AutoQcStarter} shortcut.  Error was: {eventArgs.Error.ToString()}");
+                        form.DisplayError(string.Format(Resources.Program_Main__0__Update_Error, AutoQcStarter),
+                            string.Format(Resources.Program_Main_Unable_to_update__0__shortcut___Error_was___1_,
+                                AutoQcStarter, eventArgs.Error));
                     }
                 };
 
@@ -117,28 +129,33 @@ namespace AutoQC
             }
         }
 
-        private static bool InitSkylineSettings()
+        private static void InitSkylineSettings()
         {
             if (SkylineSettings.IsInitialized() || SkylineSettings.FindSkyline(out var pathsChecked))
             {
-                return true;
+                return;
             }
 
             var message = new StringBuilder();
             message.AppendLine(
-                    $"AutoQC Loader requires {SkylineSettings.Skyline} or {SkylineSettings.SkylineDaily} to be installed on the computer.")
-                .AppendLine($"Unable to find {SkylineSettings.Skyline} at any of the following locations: ")
+                    string.Format(
+                        Resources.Program_InitSkylineSettings__0__requires__1__or__2__to_be_installed_on_the_computer_,
+                        AppName, SkylineSettings.Skyline, SkylineSettings.SkylineDaily))
+                .AppendLine(string.Format(
+                    Resources.Program_InitSkylineSettings_Unable_to_find__0__at_any_of_the_following_locations__,
+                    SkylineSettings.Skyline))
                 .AppendLine(string.Join(Environment.NewLine, pathsChecked)).AppendLine()
                 .AppendLine(
-                    $"Please install {SkylineSettings.Skyline} or {SkylineSettings.SkylineDaily} to use AutoQC Loader");
-            MessageBox.Show(message.ToString(), "Unable To Find Skyline",
+                    string.Format(Resources.Program_InitSkylineSettings_Please_install__0__or__1__to_use__2_,
+                        SkylineSettings.Skyline, SkylineSettings.SkylineDaily, AppName));
+            MessageBox.Show(message.ToString(),
+                string.Format(Resources.Program_InitSkylineSettings_Unable_To_Find__0_, SkylineSettings.Skyline),
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
         }
 
         private static void UpdateAutoQcStarter(object sender, DoWorkEventArgs e)
         {
-            if (!Properties.Settings.Default.KeepAutoQcRunning) return;
+            if (!Settings.Default.KeepAutoQcRunning) return;
 
             if (ApplicationDeployment.IsNetworkDeployed)
             {
@@ -163,15 +180,15 @@ namespace AutoQC
                 return false;
 
             var currentVersion = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-            var installedVersion = Properties.Settings.Default.InstalledVersion ?? string.Empty;
+            var installedVersion = Settings.Default.InstalledVersion ?? string.Empty;
             if (!currentVersion.Equals(installedVersion))
             {
                 LogInfo(string.Empty.Equals(installedVersion)
                     ? $"This is a first install and run of version: {currentVersion}."
                     : $"Current version: {currentVersion} is newer than the last installed version: {installedVersion}.");
 
-                Properties.Settings.Default.InstalledVersion = currentVersion;
-                Properties.Settings.Default.Save();
+                Settings.Default.InstalledVersion = currentVersion;
+                Settings.Default.Save();
                 return true;
             }
             LogInfo($"Current version: {currentVersion} same as last installed version: {installedVersion}.");
@@ -218,13 +235,10 @@ namespace AutoQC
 
         public static string Version()
         {
-            return $"{AppName()} {_version}";
+            return $"{AppName} {_version}";
         }
 
-        private static string AppName()
-        {
-            return "AutoQC Loader";
-        }
+        public static string AppName => "AutoQC Loader";
 
         private static void InitializeSecurityProtocol()
         {
