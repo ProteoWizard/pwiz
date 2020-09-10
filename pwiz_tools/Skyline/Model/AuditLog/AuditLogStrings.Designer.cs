@@ -1133,6 +1133,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Added complete permutations of isotope modification &apos;{0}&apos;.
+        /// </summary>
+        public static string permuted_isotope_label_complete {
+            get {
+                return ResourceManager.GetString("permuted_isotope_label_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added simple permutations of isotope modification &apos;{0}&apos;.
+        /// </summary>
+        public static string permuted_isotope_label_simple {
+            get {
+                return ResourceManager.GetString("permuted_isotope_label_simple", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Picked child {0} for {1}.
         /// </summary>
         public static string picked_child {
