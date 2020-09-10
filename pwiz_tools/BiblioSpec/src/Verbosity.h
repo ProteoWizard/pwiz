@@ -51,11 +51,41 @@ class Verbosity{
   static void set_verbosity(V_LEVEL level);
   static void open_logfile();
   static void close_logfile();
+
+  /**
+   * Print a message to stderr and exit.
+   * Equivalent to comment(V_ERROR,,)
+   */
   static void error(const char*, ...);
+
+  /**
+   * Print a message to stderr if the verbosity level is at or above "warn".
+   * Equivalent to comment(V_WARN,,)
+   */
   static void warn(const char*, ...);
+
+  /**
+   * Print a message to stderr if the verbosity level is at or above "status".
+   * Equivalent to comment(V_STATUS,,)
+   */
   static void status(const char*, ...);
+
+  /**
+   * Print a message to stderr if the verbosity level is at or above "debug".
+   * Equivalent to comment(V_DEBUG,,)
+   */
   static void debug(const char*, ...);
+
+  /**
+   * Print message to stderr if requested verbosity level is at or above
+   * the global verbosity level.  Prepend errors, warnings, and debug
+   * statements with ERROR, WARNING, DEBUG.  Exit on V_ERROR.
+   *
+   */
   static void comment(V_LEVEL, const char*, ...);
+
+private:
+  static void log(V_LEVEL, const char*, va_list args);
  
 };
 
