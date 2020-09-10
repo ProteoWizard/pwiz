@@ -13,7 +13,7 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 4	YQLEIPENFTTR	755.87887	2	YQLEIPENFTTR	-	-	1	150	1.0246093	0.0	0.0	2	60.01123809	N/A	N/A	1057.74871420	N/A	N/A	N/A	N/A	N/A	1	Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.7.7.2	4.377e-05	6
 5	LQQTQNQVDEVVDIMR	958.489305	2	LQQTQNQVDEVVDIMR	-	-	1	150	1.1342232	0.0	0.0	2	60.01123809	N/A	N/A	1255.91934108	N/A	N/A	N/A	N/A	N/A	1	Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.8.8.2	8.699e-07	6
 id	fileName	idFileName	cutoffScore
-1	/BiblioSpec/tests/inputs/Hela_QC_PASEF_Slot1-5_01_57_cutout_2min_uncalibrated.mgf	/BiblioSpec/tests/inputs/Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.pepXML	-1.0
+1	/BiblioSpec/tests/inputs/Hela%20QC_PASEF_Slot1-5_01_57_cutout_2min_uncalibrated.mgf	/BiblioSpec/tests/inputs/Hela%20QC_PASEF_Slot1-5_01_57_cutout_2min.pepXML	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

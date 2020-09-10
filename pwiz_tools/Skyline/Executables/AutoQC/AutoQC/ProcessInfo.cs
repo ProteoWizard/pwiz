@@ -23,10 +23,10 @@ namespace AutoQC
 {
     public class ProcessInfo
     {
-        public string Executable { get; private set; }
-        public string ExeName { get; private set; }
-        public string Args { get; private set; }
-        public string ArgsToPrint { get; private set; }
+        public string Executable { get; }
+        public string ExeName { get; }
+        public string Args { get; }
+        public string ArgsToPrint { get; }
         public string WorkingDirectory { get; set; }
 
         public ProcessInfo(string exePath, string args, string argsToPrint)
