@@ -16049,6 +16049,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Permuting isotope modifiations.
+        /// </summary>
+        public static string IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifiations {
+            get {
+                return ResourceManager.GetString("IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifia" +
+                        "tions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to KDE Aligner.
         /// </summary>
         public static string KdeAlignerFactory_ToString_KDE_Aligner {
@@ -22107,6 +22117,33 @@ namespace pwiz.Skyline.Properties {
         public static string PeptideTreeNode_RenderTip_Source {
             get {
                 return ResourceManager.GetString("PeptideTreeNode_RenderTip_Source", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Permute isotope modifications.
+        /// </summary>
+        public static string PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications {
+            get {
+                return ResourceManager.GetString("PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Permuting Isotope Modifications.
+        /// </summary>
+        public static string PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications {
+            get {
+                return ResourceManager.GetString("PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Updating settings.
+        /// </summary>
+        public static string PermuteIsotopeModificationsDlg_OkDialog_Updating_settings {
+            get {
+                return ResourceManager.GetString("PermuteIsotopeModificationsDlg_OkDialog_Updating_settings", resourceCulture);
             }
         }
         
