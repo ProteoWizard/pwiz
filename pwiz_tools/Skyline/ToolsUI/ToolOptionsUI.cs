@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Grpc.Core;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
@@ -231,7 +232,7 @@ namespace pwiz.Skyline.ToolsUI
                 var pr = new PrositPingRequest(PrositIntensityModelCombo,
                     PrositRetentionTimeModelCombo,
                     _settingsNoMod, _pingInput.NodePep, _pingInput.NodeGroup, _pingInput.NCE.Value,
-                    () => { Invoke((Action) UpdateServerStatus); });
+                    () => { CommonActionUtil.SafeBeginInvoke(this, UpdateServerStatus); });
                 if (_pingRequest == null || !_pingRequest.Equals(pr))
                 {
                     _pingRequest?.Cancel();
