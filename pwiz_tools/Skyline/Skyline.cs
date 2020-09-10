@@ -5781,7 +5781,8 @@ namespace pwiz.Skyline
                 var changedTargets = count == 1 ? SelectedNode.Text : string.Format(AuditLogStrings.SkylineWindow_ChangeQuantitative_0_transitions, count);
                 ModifyDocument(message, doc =>
                 {
-                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));  // CONSIDER: Might not be true if background processing is happening
+                    // Will always be true because we have acquired the lock on GetDocumentChangeLock()
+                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));
                     return newDocument;
                 }, docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, changedTargets));
             }
@@ -5876,7 +5877,18 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
+        private void permuteIsotopeModificationsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPermuteIsotopeModificationsDlg();
+        }
 
+        public void ShowPermuteIsotopeModificationsDlg()
+        {
+            using (var dlg = new PermuteIsotopeModificationsDlg(this))
+            {
+                dlg.ShowDialog(this);
+            }
+        }
     }
 }
 
