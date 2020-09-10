@@ -34,7 +34,8 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     /// <summary>
-    /// Summary description for RefineTest
+    /// Inspect files by mask, searching for prohibited strings.
+    /// For now, at least, this only looks at generated code to pick out problems that ReSharper ignores.
     /// </summary>
     [TestClass]
     public class CodeInspectionTest : AbstractUnitTest
