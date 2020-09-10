@@ -174,6 +174,16 @@ rule blib-test-search ( name : args * : output-name : reference-names + : inputs
     search-tests += $(name) ;
 }
 
+# Workaround for Boost.Build not handling percent signs in Windows batch scripts properly
+if NT = $(.os)
+{
+    .percent = "%%" ;
+}
+else
+{
+    .percent = "%" ;
+}
+
 # Add --unicode to optional arguments section to test that a format supports Unicode input paths
 # NB: it only works with formats that don't determine external spectra filepaths based on the input pathname (e.g. demo.sqt will look for demo.ms2)
 
@@ -220,7 +230,7 @@ blib-test-build smill : -o : output/smill.blib : smill.check : $(TEST_INPUTS_PAT
 blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check smill_ims.skip-lines : $(TEST_INPUTS_PATH)/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
 blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : $(TEST_INPUTS_PATH)/interact-prob-three-spec.pep.xml ;
 blib-test-build comet : -o : output/comet.blib : comet.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/comet.demo1.target.pep.xml ;
-blib-test-build msfragger-tims : -o : output/msfragger-tims.blib : msfragger-tims.check  : $(TEST_INPUTS_PATH)/Hela%20QC_PASEF_Slot1-5_01_57_cutout_2min.pepXML ;
+blib-test-build msfragger-tims : -o : output/msfragger-tims.blib : msfragger-tims.check  : "$(TEST_INPUTS_PATH)/Hela$(.percent)20QC_PASEF_Slot1-5_01_57_cutout_2min.pepXML" ;
 blib-test-build msfragger-thermo : -o : output/msfragger-thermo.blib : msfragger-thermo.check  : $(TEST_INPUTS_PATH)/BSA_min_21.pepXML ;
 blib-test-build peptideprophet-msfragger-thermo-mzml : -o : output/peptideprophet-msfragger-thermo-mzml.blib : peptideprophet-msfragger-thermo-mzml.check  : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-thermo-mzml.pep.xml ;
 blib-test-build peptideprophet-msfragger-bruker-mgf : -o : output/peptideprophet-msfragger-bruker-mgf.blib : peptideprophet-msfragger-bruker-mgf.check  : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-bruker-mgf.pep.xml ;
