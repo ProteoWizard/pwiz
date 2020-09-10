@@ -19,7 +19,7 @@
 
 
 //
-// Performs code inspections that ReSharper misses, particularly in generated code which ReSharper ignores by design.
+// Performs custom code inspections that ReSharper can't, particularly in generated code which ReSharper ignores by design.
 // 
 
 
@@ -47,9 +47,12 @@ namespace pwiz.SkylineTest
                 {
                     {
                         @".ImageScalingSize = new System.Drawing.Size(", // Forbidden pattern
-                        @"causes issues on HD monitors" // Explanation for prohibition
-                    }
-                }} 
+                        @"causes blurry icon issues on HD monitors" // Explanation for prohibition
+                    },
+                    // { @"DetectionsToolbar", @"fake, debug purposes only" }, // Uncomment for debug purposes
+                }
+            },
+            // { @"*.cs", new Dictionary<string, string> {{ @"DetectionsToolbar", @"fake, debug purposes only" }}} // Uncomment for debug purposes
         };
 
         [TestMethod]
@@ -63,11 +66,15 @@ namespace pwiz.SkylineTest
             else
             {
                 var root = thisFile.Replace("\\Test\\CodeInspectionTest.cs",string.Empty);
-                var result = string.Empty;
+                var result = new List<string>();
                 foreach (var fileMask in forbidden.Keys)
                 {
                     foreach (var filename in Directory.GetFiles(root, fileMask, SearchOption.AllDirectories))
                     {
+                        if (Equals(filename, thisFile))
+                        {
+                            continue; // Can't inspect yourself!
+                        }
                         var file = new StreamReader(filename);
                         string line;
                         var lineNum = 0;
@@ -77,19 +84,20 @@ namespace pwiz.SkylineTest
                             foreach (var pattern in forbidden[fileMask].Keys.Where(p => line.Contains(p)))
                             {
                                 var why = forbidden[fileMask][pattern];
-                                var error = @"Code inspection failure: prohibited use of" + Environment.NewLine + 
-                                            @"""" + pattern + @"""" + Environment.NewLine +
-                                            "(" + why + ") at" + Environment.NewLine + filename + "(" + lineNum + @"):" + Environment.NewLine;
-                                result += error ;
-                                result += line + Environment.NewLine + Environment.NewLine;
+                                result.Add(@"Code inspection failure: prohibited use of");
+                                result.Add(@"""" + pattern + @"""");
+                                result.Add("(" + why + ") at");
+                                result.Add(filename + "(" + lineNum + @"):");
+                                result.Add(line);
+                                result.Add(string.Empty);
                             }
                         }
                         file.Close();
                     }
                 }
-                if (!string.IsNullOrEmpty(result))
+                if (result.Any())
                 {
-                    AssertEx.Fail(result);
+                    AssertEx.Fail(string.Join(Environment.NewLine, result));
                 }
             }
         }
