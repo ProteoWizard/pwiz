@@ -346,7 +346,7 @@
     <value>gridViewCalibrate</value>
   </data>
   <data name="&gt;&gt;gridViewCalibrate.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=20.1.1.36, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewCalibrate.Parent" xml:space="preserve">
     <value>panelPeptides</value>
@@ -793,7 +793,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.36, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;bindingSourceStandard.Name" xml:space="preserve">
     <value>bindingSourceStandard</value>
@@ -805,7 +805,7 @@
     <value>calibratePeptides</value>
   </data>
   <data name="&gt;&gt;calibratePeptides.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.TargetColumn, Skyline-daily, Version=20.1.1.36, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.TargetColumn, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;calibrateMeasuredRt.Name" xml:space="preserve">
     <value>calibrateMeasuredRt</value>
@@ -823,6 +823,6 @@
     <value>CalibrateIrtDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.36, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
