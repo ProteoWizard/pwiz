@@ -34,16 +34,6 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class ThreadTracer
-    {
-        public static void TraceMessage(string msg, Type objType)
-        {
-
-            Trace.WriteLine(Thread.CurrentThread.Name + " : " + 
-                            objType.Name + " : " + msg);
-        }
-    }
-
     public sealed class DetectionsGraphController : GraphSummary.IControllerSplit
     {
 
