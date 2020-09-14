@@ -292,6 +292,7 @@ namespace pwiz.Skyline.FileUI
                 if (columns.FragmentNameColumn == comboBoxIndex) columns.FragmentNameColumn = -1;
                 if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
             }
+            updateColumnsList();
         }
         // Saves column positions between transition lists
         private void updateColumnsList()
@@ -311,12 +312,11 @@ namespace pwiz.Skyline.FileUI
             ColumnList.Add(new Tuple<int, string> (columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge));
 
             Settings.Default.CustomImportTransitionListColumnsList = ColumnList;
-        }
-        private void updateColumnCount()
-        {
+
             Settings.Default.CustomImportTransitionListColumnCount =
                 Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
         }
+
         private void dataGrid_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
             ResizeComboBoxes();
@@ -333,8 +333,7 @@ namespace pwiz.Skyline.FileUI
         // Saves the column indices and column count when the OK button is clicked
         private void buttonOk_Click(object sender, EventArgs e)
         {
-            updateColumnsList();
-            updateColumnCount();
+                       
         }
         private void buttonCheckForErrors_Click(object sender, EventArgs e)
         {
