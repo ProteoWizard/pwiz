@@ -162,7 +162,6 @@
 	<s:Boolean x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=B12E80652A0A4B468ADDFECD2ECF3D0A/MatchCatchClauseWithoutExceptionFilter/@EntryValue">False</s:Boolean>
 	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=B12E80652A0A4B468ADDFECD2ECF3D0A/SearchPattern/@EntryValue">this.$controlId$.ImageScalingSize = new System.Drawing.Size($args$);</s:String>
 	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=B12E80652A0A4B468ADDFECD2ECF3D0A/Severity/@EntryValue">ERROR</s:String>
-	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=B12E80652A0A4B468ADDFECD2ECF3D0A/SuppressionKey/@EntryValue">ImageScalingSize</s:String>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=adduct/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=adducts/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Agilent/@EntryIndexedValue">True</s:Boolean>

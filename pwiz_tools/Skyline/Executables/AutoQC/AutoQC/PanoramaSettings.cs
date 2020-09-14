@@ -30,20 +30,40 @@ namespace AutoQC
     [XmlRoot("panorama_settings")]
     public class PanoramaSettings: IXmlSerializable, IConfigSettings
     {
-        public bool PublishToPanorama { get; set; }
-        public string PanoramaServerUrl { get; set; }
-        public string PanoramaUserEmail { get; set; }
-        public string PanoramaPassword { get; set; }
-        public string PanoramaFolder { get; set; }
+        public bool PublishToPanorama { get; private set; }
+        public string PanoramaServerUrl { get; private set; }
+        public string PanoramaUserEmail { get; private set; }
+        public string PanoramaPassword { get; private set; }
+        public string PanoramaFolder { get; private set; }
 
         public Uri PanoramaServerUri { get; private set; }
 
-        public static PanoramaSettings GetDefault()
+        public PanoramaSettings()
         {
-            return new PanoramaSettings {PublishToPanorama = false};
+            PublishToPanorama = false;
         }
 
-        public PanoramaSettings Clone()
+        public PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaFolder)
+        {
+            PublishToPanorama = publishToPanorama;
+            PanoramaServerUrl = panoramaServerUrl;
+            PanoramaFolder = panoramaFolder;
+        }
+
+        public PanoramaSettings(bool publishToPanorama, string panoramaServerUrl, string panoramaFolder,
+            string panoramaUserEmail, string panoramaPassword) : this(publishToPanorama, panoramaServerUrl,
+            panoramaFolder)
+        {
+            PanoramaUserEmail = panoramaUserEmail;
+            PanoramaPassword = panoramaPassword;
+        }
+
+        public static PanoramaSettings GetDefault()
+        {
+            return new PanoramaSettings();
+        }
+
+        public PanoramaSettings Copy()
         {
             return new PanoramaSettings
             {
