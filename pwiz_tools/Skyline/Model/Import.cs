@@ -1151,18 +1151,20 @@ namespace pwiz.Skyline.Model
 
             private struct PrecursorCandidate
             {
-                public PrecursorCandidate(int sequenceIndex, int precursorMzIdex, string sequence, IList<TransitionExp> transitionExps) : this()
+                public PrecursorCandidate(int sequenceIndex, int precursorMzIdex, string sequence, IList<TransitionExp> transitionExps, int labelIndex) : this()
                 {
                     SequenceIndex = sequenceIndex;
                     PrecursorMzIdex = precursorMzIdex;
                     Sequence = sequence;
                     TransitionExps = transitionExps;
+                    LabelIndex = labelIndex;
                 }
 
                 public int SequenceIndex { get; private set; }
                 public int PrecursorMzIdex { get; private set; }
                 public string Sequence { get; private set; }
-                public IList<TransitionExp> TransitionExps { get; private set; } 
+                public IList<TransitionExp> TransitionExps { get; private set; }
+                public int LabelIndex { get; private set; }
             }
 
             public static GeneralRowReader Create(IFormatProvider provider, char separator, ColumnIndices indices, SrmSettings settings, IList<string> lines)
@@ -1198,31 +1200,50 @@ namespace pwiz.Skyline.Model
                         {
                             string sequence = RemoveSequenceNotes(fields[candidateIndex]);
                             string modifiedSequence = RemoveModifiedSequenceNotes(fields[candidateIndex]);
-                            IsotopeLabelType labelType = IsotopeLabelType.light;
-                            if (iLabelType != -1)
-                                labelType = GetLabelType(fields[iLabelType]);
-                            IList<TransitionExp> transitionExps;
-                            int candidateMzIndex = FindPrecursor(fields, sequence, modifiedSequence, labelType, candidateIndex, indices.DecoyColumn,
-                                                       tolerance, provider, settings, out transitionExps);
-                            // If no match, and no specific label type, then try heavy.
-                            if (settings.PeptideSettings.Modifications.HasHeavyModifications &&
-                                    candidateMzIndex == -1 && iLabelType == -1)
+                            var candidateMzIndex = -1;
+                            IList<TransitionExp> transitionExps = null;
+                            var usingLabelTypeColumn = iLabelType != -1;
+                            // Consider the possibility that label column has been misidentified (could be some other reason for a column full
+                            // of the word "light", as in CommandLineAssayImportTest\OpenSWATH_SM4_NoError.csv)
+                            for (var pass = 0; pass < (usingLabelTypeColumn ? 2 : 1) && candidateMzIndex == -1; pass++)
                             {
-                                var peptideMods = settings.PeptideSettings.Modifications;
-                                foreach (var typeMods in peptideMods.GetHeavyModifications())
+                                IsotopeLabelType labelType;
+                                if (pass == 0) 
                                 {
-                                    if (settings.TryGetPrecursorCalc(typeMods.LabelType, null) != null)
+                                    labelType = usingLabelTypeColumn ? GetLabelType(fields[iLabelType]) : IsotopeLabelType.light;
+                                }
+                                else
+                                {
+                                    // Perhaps label column was falsely identified
+                                    labelType = IsotopeLabelType.light;
+                                    usingLabelTypeColumn = false; 
+                                }
+                                candidateMzIndex = FindPrecursor(fields, sequence, modifiedSequence, labelType, candidateIndex, indices.DecoyColumn,
+                                    tolerance, provider, settings, out transitionExps);
+                                // If no match, and no specific label type, then try heavy.
+                                if (settings.PeptideSettings.Modifications.HasHeavyModifications &&
+                                    candidateMzIndex == -1 && !usingLabelTypeColumn)
+                                {
+                                    var peptideMods = settings.PeptideSettings.Modifications;
+                                    foreach (var typeMods in peptideMods.GetHeavyModifications())
                                     {
-                                        candidateMzIndex = FindPrecursor(fields, sequence, modifiedSequence, typeMods.LabelType, candidateIndex, indices.DecoyColumn,
-                                                                   tolerance, provider, settings, out transitionExps);
-                                        if (candidateMzIndex != -1)
-                                            break;
+                                        if (settings.TryGetPrecursorCalc(typeMods.LabelType, null) != null)
+                                        {
+                                            candidateMzIndex = FindPrecursor(fields, sequence, modifiedSequence, typeMods.LabelType, candidateIndex, indices.DecoyColumn,
+                                                tolerance, provider, settings, out transitionExps);
+                                            if (candidateMzIndex != -1)
+                                            {
+                                                break;
+                                            }
+                                        }
                                     }
                                 }
                             }
 
                             if (candidateMzIndex != -1)
-                                listNewCandidates.Add(new PrecursorCandidate(candidateIndex, candidateMzIndex, sequence, transitionExps));
+                            {
+                                listNewCandidates.Add(new PrecursorCandidate(candidateIndex, candidateMzIndex, sequence, transitionExps, usingLabelTypeColumn ? iLabelType : -1));
+                            }
                         }
 
                         if (listNewCandidates.Count == 0)
@@ -1258,6 +1279,7 @@ namespace pwiz.Skyline.Model
                 int iFragmentName = indices.FragmentNameColumn;
                 if (iFragmentName == -1)
                     iFragmentName = FindFragmentName(fieldsFirstRow, lines, separator);
+                iLabelType = prec.LabelIndex;
 
                 indices.AssignDetected(iProt, iSequence, iPrecursor, iProduct, iLabelType, iFragmentName, iPrecursorCharge);
 
@@ -1302,6 +1324,7 @@ namespace pwiz.Skyline.Model
 
             private static string RemoveSequenceNotes(string seq)
             {
+                seq = RemoveSpectronautQuoting(seq);
                 string seqClean = FastaSequence.StripModifications(seq);
                 int dotIndex = seqClean.IndexOf('.');
                 if (dotIndex != -1 || (dotIndex = seqClean.IndexOf('_')) != -1)
@@ -1310,9 +1333,18 @@ namespace pwiz.Skyline.Model
                 return seqClean;
             }
 
+            private static string RemoveSpectronautQuoting(string seq)
+            {
+                // Spectronaut adds underscores to the beginning and the end of most of its sequence column text
+                if (seq.StartsWith(@"_") && seq.EndsWith(@"_"))
+                    seq = seq.Substring(1, seq.Length - 2);
+                return seq;
+            }
+
             private static string RemoveModifiedSequenceNotes(string seq)
             {
-                // Find all occurances of . and _
+                seq = RemoveSpectronautQuoting(seq);
+                // Find all occurrences of . and _
                 var dotIndices = new List<int>();
                 for (int i = 0; i < seq.Length; ++i)
                 {
@@ -1322,10 +1354,14 @@ namespace pwiz.Skyline.Model
                     }
                 }
                 var matches = FastaSequence.RGX_ALL.Matches(seq);
+                int precedingNtermModLength = 0;
                 foreach (Match match in matches)
                 {
                     int start = match.Groups[0].Index;
                     int end = start + match.Groups[0].Length - 1;
+                    // Detect the case where an N-terminal modification is specified before the first AA
+                    if (start == 0)
+                        precedingNtermModLength = end + 1;
                     // Ignore instances of . or _ that are within a modification tag
                     dotIndices = dotIndices.Where(index => index < start || end < index).ToList();
                 }
@@ -1336,6 +1372,12 @@ namespace pwiz.Skyline.Model
                     seq = seq.Substring(0, dotIndices.First());
                 }
                 seq = seq.TrimEnd('+');
+                // If an N-terminal mod at the start, move it to after the first AA
+                if (precedingNtermModLength > 0 && precedingNtermModLength < seq.Length)
+                {
+                    seq = seq.ElementAt(precedingNtermModLength) + seq.Substring(0, precedingNtermModLength) +
+                          seq.Substring(precedingNtermModLength + 1);
+                }
                 return FastaSequence.NormalizeNTerminalMod(seq);  // Make sure any n-terminal mod gets moved to after the first AA
             }
 
@@ -1426,19 +1468,19 @@ namespace pwiz.Skyline.Model
 
                 // Confirm that the rest of the column has only entries that look like Label Types and return its index,
                 // if not move onto the next entry in the array
-                foreach (int i in LabelCandidates)
+                foreach (var i in LabelCandidates)
                 {
-                    bool noExcepetions = true;
-                    foreach (string line in lines)
+                    var allGood = true;
+                    foreach (var line in lines)
                     {
-                        string[] fieldsNext = line.ParseDsvFields(separator);
+                        var fieldsNext = line.ParseDsvFields(separator);
                         if (!ContainsLabelType(fieldsNext[i]))
                         {
-                            noExcepetions = false;
+                            allGood = false;
                             break;
                         }
                     }
-                    if (noExcepetions)
+                    if (allGood)
                     {
                         return i;
                     }
@@ -1483,17 +1525,17 @@ namespace pwiz.Skyline.Model
                 // if not move onto the next entry in the array
                 foreach (int i in FragCandidates)
                 {
-                    bool noExcepetions = true;
-                    foreach (string line in lines)
+                    bool allGood = true;
+                    foreach (var line in lines)
                     {
-                        string[] fieldsNext = line.ParseDsvFields(separator);
+                        var fieldsNext = line.ParseDsvFields(separator);
                         if (!RGX_FRAGMENT_NAME.IsMatch(fieldsNext[i]))
                         {
-                            noExcepetions = false;
+                            allGood = false;
                             break;
                         }
                     }
-                    if (noExcepetions)
+                    if (allGood)
                     {
                         return i;
                     }
@@ -1501,25 +1543,10 @@ namespace pwiz.Skyline.Model
                 return -1;
             }
 
+            // N.B. using a regex here for consistency with pwiz_tools\Skyline\SettingsUI\EditOptimizationLibraryDlg.cs(401)
             // Regular expression for finding a fragment name. Checks if the first character is a,b,c,x,y, or z and the second character is a digit
             private static readonly Regex RGX_FRAGMENT_NAME = new Regex(@"precursor|([abcxyz][\d]+)", RegexOptions.IgnoreCase);
             
-            // Helper method for FindFragmentName
-            /*private static bool ContainsFragmentName(string field)
-            {
-                field = field.ToLower();
-                if (field.Length != 0)
-                {
-                    // TODO(Henry*): use a regex here for consistency with pwiz_tools\Skyline\SettingsUI\EditOptimizationLibraryDlg.cs(401) which is case insensitive
-                    // something like private static readonly Regex RGX_PRODUCT_ION = new Regex(@"precursor|([abcxyz][\d]+)", RegexOptions.IgnoreCase); 
-                    if ("abcxyz".Contains(field[0]) && char.IsDigit(field, 1))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }*/
-
             private static int FindPrecursorCharge (string[] fields, IList<string> lines, char separator)
             {
                 var listCandidates = new List<int>();
@@ -1534,20 +1561,20 @@ namespace pwiz.Skyline.Model
                 }
                 var ListCandidates = listCandidates.ToArray();
 
-                // We test every cell in each candidate column and return the first column that has no exceptions to our criteria
-                foreach (int i in ListCandidates)
+                // We test every cell in each candidate column and return the first column whose contents consistently meet our criteria
+                foreach (var i in ListCandidates)
                 {
-                    bool noExcepetions = true;
-                    foreach (string line in lines)
+                    var allGood = true;
+                    foreach (var line in lines)
                     {
-                        string[] fieldsNext = line.ParseDsvFields(separator);
+                        var fieldsNext = line.ParseDsvFields(separator);
                         if (!ContainsPrecursorCharge(fieldsNext[i]))
                         {
-                           noExcepetions = false;
-                           break;
+                            allGood = false;
+                            break;
                         }
                     }
-                    if (noExcepetions)
+                    if (allGood)
                     {
                         return i;
                     }

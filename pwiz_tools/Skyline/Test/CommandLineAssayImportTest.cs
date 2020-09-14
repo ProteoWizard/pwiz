@@ -47,7 +47,8 @@ namespace pwiz.SkylineTest
         protected void TestAssayImportGeneral()
         {
             var documentExisting = TestFilesDir.GetTestPath("AQUA4_Human_Existing_Calc.sky");
-            var documentUpdated = TestFilesDir.GetTestPath("AQUA4_Human_Existing_Calc2.sky");
+            var documentUpdatedNoPath = "AQUA4_Human_Existing_Calc2.sky";
+            var documentUpdated = TestFilesDir.GetTestPath(documentUpdatedNoPath);
             // 1. Import mass list with iRT's into document, then cancel
             string textNoError = TestFilesDir.GetTestPath("OpenSWATH_SM4_NoError.csv");
 
@@ -55,6 +56,7 @@ namespace pwiz.SkylineTest
                 "--import-assay-library=" + textNoError,
                 "--out=" + documentUpdated);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportTransitionList_Importing_transiton_list__0____, Path.GetFileName(textNoError)));
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_SaveFile_File__0__saved_, documentUpdatedNoPath)); // Output file name appears in success message
             var docAfter = ResultsUtil.DeserializeDocument(documentUpdated);
             AssertEx.IsDocumentState(docAfter, null, 24, 294, 1170);
             ValidateIrtAndLibrary(docAfter);
