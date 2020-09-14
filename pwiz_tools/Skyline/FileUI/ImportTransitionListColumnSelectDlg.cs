@@ -23,6 +23,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using NHibernate.Mapping;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -212,12 +213,14 @@ namespace pwiz.Skyline.FileUI
             ComboBoxes[indexOfPreviousComboBox].SelectedIndex = newSelectedIndex;
         }
 
+        private bool comboBoxChanged;
         // Callback for when a combo box is changed. We use it to update the index of the PeptideColumnIndices and preventing combo boxes from overlapping.
         private void comboChanged(object sender, EventArgs e)  // CONSIDER(bspratt) no charge state columns?
         {
             var comboBox = (ComboBox) sender;
             var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
             var columns = Importer.RowReader.Indices;
+            comboBoxChanged = true;
 
             if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy)
             {
@@ -292,7 +295,6 @@ namespace pwiz.Skyline.FileUI
                 if (columns.FragmentNameColumn == comboBoxIndex) columns.FragmentNameColumn = -1;
                 if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
             }
-            updateColumnsList();
         }
         // Saves column positions between transition lists
         private void updateColumnsList()
@@ -330,10 +332,13 @@ namespace pwiz.Skyline.FileUI
         {
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
         }
-        // Saves the column indices and column count when the OK button is clicked
+        // If a combo box was changed, save the column indices and column count when the OK button is clicked
         private void buttonOk_Click(object sender, EventArgs e)
         {
-                       
+            if (comboBoxChanged)
+            {
+                updateColumnsList();
+            }
         }
         private void buttonCheckForErrors_Click(object sender, EventArgs e)
         {
