@@ -47,8 +47,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbDecoyMethod = new System.Windows.Forms.ComboBox();
             this.panelDecoys = new System.Windows.Forms.Panel();
             this.cbAutoTrain = new System.Windows.Forms.CheckBox();
+            this.cbImportFromSeparateFasta = new System.Windows.Forms.CheckBox();
+            this.tbxFastaTargets = new System.Windows.Forms.TextBox();
+            this.browseFastaTargetsBtn = new System.Windows.Forms.Button();
+            this.targetFastaPanel = new System.Windows.Forms.Panel();
             this.panelError.SuspendLayout();
             this.panelDecoys.SuspendLayout();
+            this.targetFastaPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // tbxFasta
@@ -173,11 +178,40 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbAutoTrain.Name = "cbAutoTrain";
             this.cbAutoTrain.UseVisualStyleBackColor = true;
             // 
+            // cbImportFromSeparateFasta
+            // 
+            resources.ApplyResources(this.cbImportFromSeparateFasta, "cbImportFromSeparateFasta");
+            this.cbImportFromSeparateFasta.Name = "cbImportFromSeparateFasta";
+            this.cbImportFromSeparateFasta.UseVisualStyleBackColor = true;
+            this.cbImportFromSeparateFasta.CheckedChanged += new System.EventHandler(this.cbImportFromSeparateFasta_CheckedChanged);
+            // 
+            // tbxFastaTargets
+            // 
+            resources.ApplyResources(this.tbxFastaTargets, "tbxFastaTargets");
+            this.tbxFastaTargets.Name = "tbxFastaTargets";
+            // 
+            // browseFastaTargetsBtn
+            // 
+            resources.ApplyResources(this.browseFastaTargetsBtn, "browseFastaTargetsBtn");
+            this.browseFastaTargetsBtn.Name = "browseFastaTargetsBtn";
+            this.browseFastaTargetsBtn.UseVisualStyleBackColor = true;
+            this.browseFastaTargetsBtn.Click += new System.EventHandler(this.browseFastaTargetsBtn_Click);
+            // 
+            // targetFastaPanel
+            // 
+            resources.ApplyResources(this.targetFastaPanel, "targetFastaPanel");
+            this.targetFastaPanel.Controls.Add(this.cbImportFromSeparateFasta);
+            this.targetFastaPanel.Controls.Add(this.tbxFastaTargets);
+            this.targetFastaPanel.Controls.Add(this.browseFastaTargetsBtn);
+            this.targetFastaPanel.Name = "targetFastaPanel";
+            // 
             // ImportFastaControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
+            this.Controls.Add(this.targetFastaPanel);
+            this.Controls.Add(this.tbxFasta);
             this.Controls.Add(this.panelDecoys);
             this.Controls.Add(this.comboEnzyme);
             this.Controls.Add(this.label3);
@@ -187,12 +221,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Controls.Add(this.clearBtn);
             this.Controls.Add(this.panelError);
             this.Controls.Add(this.browseFastaBtn);
-            this.Controls.Add(this.tbxFasta);
             this.Name = "ImportFastaControl";
             this.panelError.ResumeLayout(false);
             this.panelError.PerformLayout();
             this.panelDecoys.ResumeLayout(false);
             this.panelDecoys.PerformLayout();
+            this.targetFastaPanel.ResumeLayout(false);
+            this.targetFastaPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -217,5 +252,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.TextBox txtNumDecoys;
         private System.Windows.Forms.Panel panelDecoys;
         private System.Windows.Forms.CheckBox cbAutoTrain;
+        private System.Windows.Forms.CheckBox cbImportFromSeparateFasta;
+        private System.Windows.Forms.TextBox tbxFastaTargets;
+        private System.Windows.Forms.Button browseFastaTargetsBtn;
+        private System.Windows.Forms.Panel targetFastaPanel;
     }
 }

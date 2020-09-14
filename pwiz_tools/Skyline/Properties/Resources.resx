@@ -11319,4 +11319,9 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description" xml:space="preserve">
     <value>Inconsistent molecule description</value>
   </data>
-</root>
+  <data name="DiaUmpireDdaConverter_Run_Starting_DIA_Umpire_conversion" xml:space="preserve">
+    <value>Starting DIA-Umpire conversion</value>
+  </data>
+  <data name="Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__" xml:space="preserve">
+    <value>The value '{0}' is not valid for the argument {1} which must be either 'True' or 'False'.</value>
+  </data></root>

@@ -1,0 +1,108 @@
+Undo Redo : 离子对设置 -- 整合 > 全部整合 已更改为 真
+Summary   : 设置 > 离子对设置 -- 整合 > 全部整合 已更改为 真
+All Info  :
+离子对设置 -- 整合 > 全部整合 已更改为 真
+设置 > 离子对设置 -- 整合 > 全部整合 从 假 更改到 真
+
+Undo Redo : 已添加谱图库“DIA-QE-tutorial”
+Summary   : 已添加谱图库“DIA-QE-tutorial”
+All Info  :
+已添加谱图库“DIA-QE-tutorial”
+建立谱图库 > 截止值 是 "0.95"
+建立谱图库 > 搜索文件 : 包含 "collinsb_X1803_171-A-diaumpire.mzid"
+建立谱图库 > 搜索文件 : 包含 "collinsb_X1803_172-B-diaumpire.mzid"
+建立谱图库 > 搜索文件 : 包含 "collinsb_X1803_173-A-diaumpire.mzid"
+建立谱图库 > 搜索文件 : 包含 "collinsb_X1803_174-B-diaumpire.mzid"
+建立谱图库 > 搜索文件 : 包含 "collinsb_X1803_175-A-diaumpire.mzid"
+建立谱图库 > 搜索文件 : 包含 "collinsb_X1803_176-B-diaumpire.mzid"
+建立谱图库 > iRT 标准肽段 是 "Biognosys-11 (iRT-C18)"
+建立谱图库 > 包含不明确匹配项 是 真
+建立谱图库 > 文档肽段筛选器 是 假
+建立谱图库 > 工作流程 是 "DIA（数据非依赖性采集）"
+建立谱图库 > Input File Type 是 "DIA raw (deconvolute, search, and build library)"
+Extra Info: 截止值 = "0.95",
+搜索文件 = 
+[
+    "collinsb_X1803_171-A-diaumpire.mzid",
+    "collinsb_X1803_172-B-diaumpire.mzid",
+    "collinsb_X1803_173-A-diaumpire.mzid",
+    "collinsb_X1803_174-B-diaumpire.mzid",
+    "collinsb_X1803_175-A-diaumpire.mzid",
+    "collinsb_X1803_176-B-diaumpire.mzid"
+],
+iRT 标准肽段 = "Biognosys-11 (iRT-C18)",
+包含不明确匹配项 = 真,
+文档肽段筛选器 = 假,
+工作流程 = "DIA（数据非依赖性采集）",
+Input File Type = "DIA raw (deconvolute, search, and build library)"
+
+Undo Redo : 已导入肽段搜索
+Summary   : 已导入肽段搜索
+All Info  :
+已导入肽段搜索
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "collinsb_X1803_171-A.mzML"
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "collinsb_X1803_172-B.mzML"
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "collinsb_X1803_173-A.mzML"
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "collinsb_X1803_174-B.mzML"
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "collinsb_X1803_175-A.mzML"
+导入肽段搜索 > 提取色谱图 > 查找到结果文件 : 包含 "collinsb_X1803_176-B.mzML"
+导入肽段搜索 > 提取色谱图 > 要同步导入的文件 是 "许多个"
+导入肽段搜索 > 提取色谱图 > 已删除前缀 是 "collinsb_X1803_17"
+导入肽段搜索 > 提取色谱图 > 已删除后缀 是 ".mzML"
+导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Carbamidomethyl (C) = C[57] （固定）"
+导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Oxidation (M) = M[16] （可变）"
+导入肽段搜索 > 导入 FASTA > FASTA 文件 是 "nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta"
+导入肽段搜索 > 导入 FASTA > 诱饵生成方法 是 "随机序列"
+导入肽段搜索 > 导入 FASTA > 每个目标的诱饵数目 是 "1"
+导入肽段搜索 > 导入 FASTA > 自动训练 mProphet 模型 是 真
+导入肽段搜索 > DDA search settings > Precursor tolerance 是 10ppm
+导入肽段搜索 > DDA search settings > Fragment tolerance 是 20ppm
+导入肽段搜索 > DDA search settings > Max variable mods per peptide 是 "3"
+导入肽段搜索 > DDA search settings > Fragment ion types 是 "b, y"
+导入肽段搜索 > DDA converter settings > DDA conversion protocol 是 "DIA-Umpire"
+导入肽段搜索 > DDA converter settings > Instrument preset 是 "Q Exactive"
+导入肽段搜索 > DDA converter settings > DDA conversion non-default settings 是 缺失
+Extra Info: 提取色谱图 = 
+{
+    查找到结果文件 = 
+    [
+        "collinsb_X1803_171-A.mzML",
+        "collinsb_X1803_172-B.mzML",
+        "collinsb_X1803_173-A.mzML",
+        "collinsb_X1803_174-B.mzML",
+        "collinsb_X1803_175-A.mzML",
+        "collinsb_X1803_176-B.mzML"
+    ],
+    要同步导入的文件 = "许多个",
+    已删除前缀 = "collinsb_X1803_17",
+    已删除后缀 = ".mzML"
+},
+添加修饰 = 
+{
+    已添加修饰 = 
+    [
+        "Carbamidomethyl (C) = C[57] （固定）",
+        "Oxidation (M) = M[16] （可变）"
+    ]
+},
+导入 FASTA = 
+{
+    FASTA 文件 = "nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta",
+    诱饵生成方法 = "随机序列",
+    每个目标的诱饵数目 = "1",
+    自动训练 mProphet 模型 = 真
+},
+DDA search settings = 
+{
+    Precursor tolerance = 10ppm,
+    Fragment tolerance = 20ppm,
+    Max variable mods per peptide = "3",
+    Fragment ion types = "b, y"
+},
+DDA converter settings = 
+{
+    DDA conversion protocol = "DIA-Umpire",
+    Instrument preset = "Q Exactive",
+    DDA conversion non-default settings = 缺失
+}
+

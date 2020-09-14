@@ -453,6 +453,13 @@
     </Compile>
     <Compile Include="Model\AbstractDdaSearchEngine.cs" />
     <Compile Include="Model\AreaCVRefinementData.cs" />
+    <Compile Include="FileUI\PeptideSearch\ConverterSettingsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\ConverterSettingsControl.Designer.cs">
+      <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\AbstractDdaConverter.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -528,6 +535,7 @@
     <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
+    <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
@@ -2544,6 +2552,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.zh-CHS.resx">
       <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.resx">
+      <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.ja.resx">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>

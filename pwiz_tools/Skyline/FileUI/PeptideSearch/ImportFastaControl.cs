@@ -63,6 +63,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             cbDecoyMethod.Items.Add(DecoyGeneration.SHUFFLE_SEQUENCE);
             cbDecoyMethod.Items.Add(DecoyGeneration.REVERSE_SEQUENCE);
             cbDecoyMethod.SelectedIndex = 0;
+
+            tbxFasta.Resize += TbxFasta_Resize;
         }
 
         private IModifyDocumentContainer DocumentContainer { get; set; }
@@ -77,13 +79,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get { return !tbxFasta.Multiline; }
             set
             {
+                if (tbxFasta.Multiline != value)
+                    return;
+
                 tbxFasta.Multiline = !value;
                 if (tbxFasta.Multiline)
+                {
                     tbxFasta.Height = Height - tbxFastaHeightDifference;
+                    clearBtn.Visible = true;
+                }
+                else
+                {
+                    int buttonTextboxOffset = tbxFastaTargets.Location.Y - browseFastaTargetsBtn.Location.Y;
+                    tbxFasta.Location = new System.Drawing.Point(tbxFasta.Location.X, browseFastaBtn.Location.Y + buttonTextboxOffset);
+                    clearBtn.Visible = false;
+                }
             }
         }
         private readonly int tbxFastaHeightDifference;
+        private bool _decoyGenerationEnabled;
         private bool _isDdaSearch;
+
+        private void TbxFasta_Resize(object sender, EventArgs e)
+        {
+            targetFastaPanel.Location = new System.Drawing.Point(targetFastaPanel.Location.X, tbxFasta.Bounds.Bottom + 8);
+            targetFastaPanel.Width = Width; // not sure why this is necessary
+        }
 
         public bool ContainsFastaContent { get { return !string.IsNullOrWhiteSpace(tbxFasta.Text); } }
 
@@ -105,7 +126,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public class ImportFastaSettings
         {
             public ImportFastaSettings(ImportFastaControl control) : this(control.Enzyme, control.MaxMissedCleavages,
-                control.FastaFile, control.FastaText, control.DecoyGenerationMethod, control.NumDecoys,
+                control.FastaFile, control.FastaText, control.FastaImportTargetsFile, control.DecoyGenerationMethod, control.NumDecoys,
                 control.AutoTrain)
             {
             }
@@ -113,15 +134,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public static ImportFastaSettings GetDefault(PeptideSettings peptideSettings)
             {
                 return new ImportFastaSettings(peptideSettings.Enzyme,
-                    peptideSettings.DigestSettings.MaxMissedCleavages, null, null, string.Empty, null, false);
+                    peptideSettings.DigestSettings.MaxMissedCleavages, null, null, null, string.Empty, null, false);
             }
 
-            public ImportFastaSettings(Enzyme enzyme, int maxMissedCleavages, string fastaFile, string fastaText, string decoyGenerationMethod, double? numDecoys, bool autoTrain)
+            public ImportFastaSettings(Enzyme enzyme, int maxMissedCleavages, string fastaFile, string fastaText, string fastaImportTargetsFile, string decoyGenerationMethod, double? numDecoys, bool autoTrain)
             {
                 Enzyme = enzyme;
                 MaxMissedCleavages = maxMissedCleavages;
                 FastaFile = AuditLogPath.Create(fastaFile);
                 FastaText = fastaText;
+                FastaImportTargetsFile = AuditLogPath.Create(fastaImportTargetsFile);
                 DecoyGenerationMethod = decoyGenerationMethod;
                 NumDecoys = numDecoys;
                 AutoTrain = autoTrain;
@@ -143,6 +165,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public AuditLogPath FastaFile { get; private set; }
             [Track(defaultValues: typeof(FastaTextDefault))]
             public string FastaText { get; private set; }
+            [Track(defaultValues: typeof(DefaultValuesNull))]
+            public AuditLogPath FastaImportTargetsFile { get; private set; }
             [Track]
             public string DecoyGenerationMethod { get; private set; }
             [Track]
@@ -172,8 +196,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool DecoyGenerationEnabled
         {
-            get { return panelDecoys.Visible; }
-            set { panelDecoys.Visible = value; }
+            get { return _decoyGenerationEnabled; }
+            set { panelDecoys.Visible = _decoyGenerationEnabled = value; }
         }
 
         public string DecoyGenerationMethod
@@ -206,7 +230,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public string FastaFile { get; private set; }
         public string FastaText { get; private set; }
 
-        private void browseFastaBtn_Click(object sender, EventArgs e)
+        public string FastaImportTargetsFile
+        {
+            get { return tbxFastaTargets.Text; }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    tbxFastaTargets.Text = string.Empty;
+                    cbImportFromSeparateFasta.Checked = browseFastaTargetsBtn.Visible = false;
+                }
+                else
+                {
+                    tbxFastaTargets.Text = value;
+                    cbImportFromSeparateFasta.Checked = browseFastaTargetsBtn.Visible = true;
+                }
+            }
+        }
+
+        private bool browseForFasta(out string fastaFilepath)
         {
             string initialDir = Settings.Default.FastaDirectory;
             if (string.IsNullOrEmpty(initialDir))
@@ -217,16 +259,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 Title = Resources.ImportFastaControl_browseFastaBtn_Click_Open_FASTA,
                 InitialDirectory = initialDir,
-                CheckPathExists = true
-                // FASTA files often have no extension as well as .fasta and others
+                CheckPathExists = true,
+                Filter = @"FASTA files|*.fasta;*.fa;*.faa|All files|*.*"
             })
             {
                 if (dlg.ShowDialog(WizardForm) == DialogResult.OK)
                 {
-                    SetFastaContent(dlg.FileName);
+                    fastaFilepath = dlg.FileName;
+                    return true;
                 }
             }
 
+            fastaFilepath = null;
+            return false;
+        }
+
+        private void browseFastaBtn_Click(object sender, EventArgs e)
+        {
+            if (browseForFasta(out string fastaFilepath))
+                SetFastaContent(fastaFilepath);
         }
 
         private void tbxFasta_TextChanged(object sender, EventArgs e)
@@ -237,7 +288,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 FastaFile = tbxFasta.Text;
                 if (!File.Exists(FastaFile))
                     ImportFastaHelper.ShowFastaError(Resources.ToolDescription_RunTool_File_not_found_);
-            }
+        }
         }
 
         public void SetFastaContent(string fastaFilePath)
@@ -389,7 +440,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 else
                 {
                     // Import FASTA as file
-                    var fastaPath = tbxFasta.Text;
+                    var fastaPath = string.IsNullOrEmpty(FastaImportTargetsFile) ? tbxFasta.Text : FastaImportTargetsFile;
                     try
                     {
                         using (var longWaitDlg = new LongWaitDlg(DocumentContainer) {Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA})
@@ -485,6 +536,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 cbAutoTrain.Checked = false;
             }
+        }
+
+        private void browseFastaTargetsBtn_Click(object sender, EventArgs e)
+        {
+            if (browseForFasta(out string fastaFilepath))
+                FastaImportTargetsFile = fastaFilepath;
+        }
+
+        private void cbImportFromSeparateFasta_CheckedChanged(object sender, EventArgs e)
+        {
+            browseFastaTargetsBtn.Visible = tbxFastaTargets.Visible = cbImportFromSeparateFasta.Checked;
+        }
+
+        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }

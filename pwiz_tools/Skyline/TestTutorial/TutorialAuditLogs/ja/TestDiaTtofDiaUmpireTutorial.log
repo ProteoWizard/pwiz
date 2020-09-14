@@ -1,0 +1,109 @@
+Undo Redo : トランジションの設定－積分>すべて積分が真に変更されました
+Summary   : 設定>トランジションの設定－積分>すべて積分が真に変更されました
+All Info  :
+トランジションの設定－積分>すべて積分が真に変更されました
+設定>トランジションの設定－積分>すべて積分は偽から真に変更されました
+
+Undo Redo : スペクトルライブラリ「DIA-TTOF-tutorial」が追加されました
+Summary   : スペクトルライブラリ「DIA-TTOF-tutorial」が追加されました
+All Info  :
+スペクトルライブラリ「DIA-TTOF-tutorial」が追加されました
+スペクトルライブラリを構築>カットオフスコアは"0.95"です
+スペクトルライブラリを構築>ファイルを検索："collinsb_I180316_001_SW-A-diaumpire.mzid"が含まれています
+スペクトルライブラリを構築>ファイルを検索："collinsb_I180316_002_SW-B-diaumpire.mzid"が含まれています
+スペクトルライブラリを構築>iRT標準ペプチドは"Biognosys-11 (iRT-C18)"です
+スペクトルライブラリを構築>曖昧な一致を含めるは真です
+スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
+スペクトルライブラリを構築>ワークフローは"DIA"です
+スペクトルライブラリを構築>Input File Typeは"DIA raw (deconvolute, search, and build library)"です
+Extra Info: カットオフスコア = "0.95",
+ファイルを検索 = 
+[
+    "collinsb_I180316_001_SW-A-diaumpire.mzid",
+    "collinsb_I180316_002_SW-B-diaumpire.mzid"
+],
+iRT標準ペプチド = "Biognosys-11 (iRT-C18)",
+曖昧な一致を含める = 真,
+ドキュメント内のペプチドをフィルタリング = 偽,
+ワークフロー = "DIA",
+Input File Type = "DIA raw (deconvolute, search, and build library)"
+
+Undo Redo : ペプチド検索がインポートされました
+Summary   : ペプチド検索がインポートされました
+All Info  :
+ペプチド検索がインポートされました
+ペプチド検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："collinsb_I180316_001_SW-A.mzML"が含まれています
+ペプチド検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："collinsb_I180316_002_SW-B.mzML"が含まれています
+ペプチド検索のインポート>クロマトグラムを抽出>同時にインポートするファイルは"多く"です
+ペプチド検索のインポート>クロマトグラムを抽出>削除したプリフィックスは"collinsb_I180316_00"です
+ペプチド検索のインポート>クロマトグラムを抽出>削除したサフィックスは".mzML"です
+ペプチド検索のインポート>修飾を追加>修飾が追加されました："Carbamidomethyl (C) = C[57] （固定）"が含まれています
+ペプチド検索のインポート>修飾を追加>修飾が追加されました："Oxidation (M) = M[16] （変数）"が含まれています
+ペプチド検索のインポート>FASTAをインポート>FASTAファイルは"nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta"です
+ペプチド検索のインポート>FASTAをインポート>FASTA file for importing targetsは"target_protein_sequences.fasta"です
+ペプチド検索のインポート>FASTAをインポート>デコイ生成法は"シークエンスのシャッフル"です
+ペプチド検索のインポート>FASTAをインポート>ターゲット毎のデコイは"1"です
+ペプチド検索のインポート>FASTAをインポート>mProphetのモデルを自動的にトレーニングするは真です
+ペプチド検索のインポート>DDA search settings>Precursor toleranceは30ppmです
+ペプチド検索のインポート>DDA search settings>Fragment toleranceは40ppmです
+ペプチド検索のインポート>DDA search settings>Max variable mods per peptideは"3"です
+ペプチド検索のインポート>DDA search settings>Fragment ion typesは"b, y"です
+ペプチド検索のインポート>DDA converter settings>DDA conversion protocolは"DIA-Umpire"です
+ペプチド検索のインポート>DDA converter settings>Instrument presetは"TripleTOF"です
+ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：MS1PPM = 10.00が含まれています
+ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：MS2PPM = 20.00が含まれています
+ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：SNThreshold = 1.00が含まれています
+ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：MS2SNThreshold = 1.00が含まれています
+ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：MaxCurveRTRange = 4.00が含まれています
+ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：RTOverlapThreshold = 0.05が含まれています
+ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：CorrThreshold = 0.10が含まれています
+Extra Info: クロマトグラムを抽出 = 
+{
+    結果ファイルが見つかりました = 
+    [
+        "collinsb_I180316_001_SW-A.mzML",
+        "collinsb_I180316_002_SW-B.mzML"
+    ],
+    同時にインポートするファイル = "多く",
+    削除したプリフィックス = "collinsb_I180316_00",
+    削除したサフィックス = ".mzML"
+},
+修飾を追加 = 
+{
+    修飾が追加されました = 
+    [
+        "Carbamidomethyl (C) = C[57] （固定）",
+        "Oxidation (M) = M[16] （変数）"
+    ]
+},
+FASTAをインポート = 
+{
+    FASTAファイル = "nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta",
+    FASTA file for importing targets = "target_protein_sequences.fasta",
+    デコイ生成法 = "シークエンスのシャッフル",
+    ターゲット毎のデコイ = "1",
+    mProphetのモデルを自動的にトレーニングする = 真
+},
+DDA search settings = 
+{
+    Precursor tolerance = 30ppm,
+    Fragment tolerance = 40ppm,
+    Max variable mods per peptide = "3",
+    Fragment ion types = "b, y"
+},
+DDA converter settings = 
+{
+    DDA conversion protocol = "DIA-Umpire",
+    Instrument preset = "TripleTOF",
+    DDA conversion non-default settings = 
+    [
+        MS1PPM = 10.00,
+        MS2PPM = 20.00,
+        SNThreshold = 1.00,
+        MS2SNThreshold = 1.00,
+        MaxCurveRTRange = 4.00,
+        RTOverlapThreshold = 0.05,
+        CorrThreshold = 0.10
+    ]
+}
+

@@ -60,7 +60,26 @@ namespace pwiz.Common.SystemUtil
             }
             return dialogResult;
         }
-        
+
+        /// <summary>
+        /// Moves the control's X and Y coordinates according to the X and Y values.
+        /// </summary>
+        public static void Offset(this Control control, int x = 0, int y = 0)
+        {
+            var loc = control.Location;
+            loc.Offset(x, y);
+            control.Location = loc;
+        }
+
+        /// <summary>
+        /// Returns a point with its X and Y coordinates offset according to the given X and Y values.
+        /// </summary>
+        public static System.Drawing.Point Offset(this System.Drawing.Point point, int x = 0, int y = 0)
+        {
+            point.Offset(x, y);
+            return point;
+        }
+
         /// <summary>
         /// Finds the top level form which is suitable to pass to <see cref="Form.ShowDialog(IWin32Window)"/>.
         /// This function looks for a form for which ShowInTaskBar is true.  When dialogs are shown that are owned

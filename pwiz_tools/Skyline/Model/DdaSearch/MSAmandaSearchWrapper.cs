@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private MSAmandaSearch SearchEngine;
         private OutputParameters _outputParameters;
         private MSAmandaSpectrumParser amandaInputParser;
+        private IProgressStatus _progressStatus;
 
         public int CurrentFile { get; private set; }
         public int TotalFiles => SpectrumFileNames.Length;
@@ -112,13 +113,11 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void Helper_SearchProgressChanged(string message)
         {
-            int percentProgress = 0;
             if (amandaInputParser != null && amandaInputParser.TotalSpectra > 0 && TotalFiles > 0)
             {
-                percentProgress = CurrentFile * 100 / TotalFiles;
-                percentProgress += amandaInputParser.CurrentSpectrum * 100 / amandaInputParser.TotalSpectra / TotalFiles;
+                int percentProgress = amandaInputParser.CurrentSpectrum * 100 / amandaInputParser.TotalSpectra;
+                SearchProgressChanged?.Invoke(this, _progressStatus.ChangeMessage(message).ChangePercentComplete(percentProgress));
             }
-            SearchProgressChanged?.Invoke(this, new ProgressStatus(message).ChangePercentComplete(percentProgress));
         }
 
         public override void SetEnzyme(DocSettings.Enzyme enzyme, int maxMissedCleavages)
@@ -209,8 +208,10 @@ namespace pwiz.Skyline.Model.DdaSearch
             Settings.LoadedSpectraAtOnce = (int) AdditionalSettings[MAX_LOADED_SPECTRA_AT_ONCE].Value;
         }
     
-        public override bool Run(CancellationTokenSource tokenSource)
+        public override bool Run(CancellationTokenSource tokenSource, IProgressStatus status)
         {
+            _progressStatus = status;
+
             bool success = true;
             try
             {
@@ -222,6 +223,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         tokenSource.Token.ThrowIfCancellationRequested();
                         try
                         {
+                            // CONSIDER: move this to base.Run()?
                             string outputFilepath = GetSearchResultFilepath(rawFileName);
                             if (File.Exists(outputFilepath))
                             {
@@ -232,6 +234,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                                 {
                                     helper.WriteMessage($"Re-using existing mzIdentML file for {rawFileName.GetSampleOrFileName()}", true);
                                     CurrentFile++;
+                                    _progressStatus = _progressStatus.NextSegment();
                                     continue;
                                 }
                                 else*/
@@ -243,6 +246,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                             SearchEngine.SetInputParser(amandaInputParser);
                             SearchEngine.PerformSearch(_outputParameters.DBFile);
                             CurrentFile++;
+                            _progressStatus = _progressStatus.NextSegment();
                         }
                         finally
                         {
@@ -326,7 +330,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             List<Modification> mods = new List<Modification>();
             if (mod.AAs != null)
                 foreach (var a in mod.AAs)
-                    mods.Add(GenerateNewModification(mod, a));
+                mods.Add(GenerateNewModification(mod, a));
             else
                 mods.Add(GenerateNewModification(mod, ' '));
             return mods;

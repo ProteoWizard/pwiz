@@ -193,9 +193,9 @@ namespace TestPerf
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
-                importPeptideSearchDlg.SearchSettingsControl.SetPrecursorTolerance(new MzTolerance(5, MzTolerance.Units.ppm));
-                importPeptideSearchDlg.SearchSettingsControl.SetFragmentTolerance(new MzTolerance(10, MzTolerance.Units.ppm));
-                importPeptideSearchDlg.SearchSettingsControl.SetFragmentIons("b, y");
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(5, MzTolerance.Units.ppm);
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
+                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
 
                 importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
             });

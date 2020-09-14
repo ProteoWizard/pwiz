@@ -36,8 +36,8 @@ struct InstrumentParameter
     bool AdjustFragIntensity = true;
     int PrecursorRank = 25;
     int FragmentRank = 300;
-    float RTOverlapThreshold = (float) 0.1;
-    float CorrThreshold = (float) 0.1;
+    float RTOverlapThreshold = (float) 0.3;
+    float CorrThreshold = (float) 0.2;
     float ApexDelta = (float) 0.6;
     float SymThreshold = (float) 0.3;
     int NoMissedScan = 1;
@@ -69,6 +69,8 @@ struct InstrumentParameter
     float MassDefectOffset = (float) 0.1;
     int MS2PairTopN = 5;
     bool MS2Pairing = true;
+
+    std::map<std::string, std::string> GetParameterMap() const;
 
 
     static float CalcPPM(float valueA, float valueB)

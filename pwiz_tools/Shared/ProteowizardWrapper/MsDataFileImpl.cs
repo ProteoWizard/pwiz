@@ -83,10 +83,10 @@ namespace pwiz.ProteowizardWrapper
         }
 
         // Cached disposable objects
-        private MSData _msDataFile;
-        private ReaderConfig _config;
-        private SpectrumList _spectrumList;
-        private ChromatogramList _chromatogramList;
+        protected MSData _msDataFile;
+        protected ReaderConfig _config;
+        protected SpectrumList _spectrumList;
+        protected ChromatogramList _chromatogramList;
         private bool _providesConversionCCStoIonMobility;
         private SpectrumList_IonMobility.IonMobilityUnits _ionMobilityUnits;
         private SpectrumList_IonMobility _ionMobilitySpectrumList; // For Agilent and Bruker (and others, eventually?) conversion from CCS to ion mobility
@@ -520,7 +520,7 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private ChromatogramList ChromatogramList
+        protected virtual ChromatogramList ChromatogramList
         {
             get
             {
@@ -529,7 +529,7 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private SpectrumList SpectrumList
+        protected virtual SpectrumList SpectrumList
         {
             get
             {
@@ -1454,6 +1454,26 @@ namespace pwiz.ProteowizardWrapper
 
         public string FilePath { get; private set; }
         public int SampleIndex { get; private set; }
+
+        /// <summary>
+        /// Returns true iff MsDataFileImpl's reader list can read the filepath.
+        /// </summary>
+        public static bool IsValidFile(string filepath)
+        {
+            if (!File.Exists(filepath))
+                return false;
+
+            try
+            {
+                var msd = new MSData();
+                FULL_READER_LIST.read(filepath, msd);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
 
     public sealed class MsDataConfigInfo

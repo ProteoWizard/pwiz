@@ -601,11 +601,14 @@ public ref class SpectrumList_DiaUmpire : public msdata::SpectrumList
         {
             DEFINE_INTERNAL_BASE_CODE(TargetWindow, DiaUmpire::TargetWindow)
 
+            public:
             enum class Scheme
             {
                 SWATH_Fixed,
                 SWATH_Variable
             };
+
+            TargetWindow(double start, double end);
 
             DEFINE_REFERENCE_PROPERTY(MzRange, mzRange);
         };
@@ -615,7 +618,13 @@ public ref class SpectrumList_DiaUmpire : public msdata::SpectrumList
         DEFINE_REFERENCE_PROPERTY(InstrumentParameter, instrumentParameters);
 
         DEFINE_PRIMITIVE_PROPERTY(DiaUmpire::TargetWindow::Scheme, TargetWindow::Scheme, diaTargetWindowScheme);
-        TargetWindowList^ diaVariableWindows;
+
+        property TargetWindowList^ diaVariableWindows
+        {
+            TargetWindowList^ get();
+        }
+
+        Config();
 
         DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, diaFixedWindowSize);
         DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, exportMs1ClusterTable);

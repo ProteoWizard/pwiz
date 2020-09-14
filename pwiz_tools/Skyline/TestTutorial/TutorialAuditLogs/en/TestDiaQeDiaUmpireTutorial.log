@@ -1,0 +1,94 @@
+Undo Redo : Transition Settings -- Integration > Integrate All changed to True
+Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
+All Info  :
+Transition Settings -- Integration > Integrate All changed to True
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
+
+Undo Redo : Added spectral library "DIA-QE-tutorial"
+Summary   : Added spectral library "DIA-QE-tutorial"
+All Info  :
+Added spectral library "DIA-QE-tutorial"
+Build Spectral Library > Cut-off score is "0.95"
+Build Spectral Library > Search files : contains "collinsb_X1803_171-A-diaumpire.mzid"
+Build Spectral Library > Search files : contains "collinsb_X1803_172-B-diaumpire.mzid"
+Build Spectral Library > iRT standard peptides is "Biognosys-11 (iRT-C18)"
+Build Spectral Library > Include ambiguous matches is True
+Build Spectral Library > Filter for document peptides is False
+Build Spectral Library > Workflow is "DIA"
+Build Spectral Library > Input File Type is "DIA raw (deconvolute, search, and build library)"
+Extra Info: Cut-off score = "0.95",
+Search files = 
+[
+    "collinsb_X1803_171-A-diaumpire.mzid",
+    "collinsb_X1803_172-B-diaumpire.mzid"
+],
+iRT standard peptides = "Biognosys-11 (iRT-C18)",
+Include ambiguous matches = True,
+Filter for document peptides = False,
+Workflow = "DIA",
+Input File Type = "DIA raw (deconvolute, search, and build library)"
+
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
+All Info  :
+Imported a peptide search
+Import Peptide Search > Extract Chromatograms > Found results files : contains "collinsb_X1803_171-A.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "collinsb_X1803_172-B.mzML"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Peptide Search > Extract Chromatograms > Removed prefix is "collinsb_X1803_17"
+Import Peptide Search > Extract Chromatograms > Removed suffix is ".mzML"
+Import Peptide Search > Add Modifications > Added modifications : contains "Carbamidomethyl (C) = C[57] (fixed)"
+Import Peptide Search > Add Modifications > Added modifications : contains "Oxidation (M) = M[16] (variable)"
+Import Peptide Search > Import FASTA > FASTA file is "nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta"
+Import Peptide Search > Import FASTA > FASTA file for importing targets is "target_protein_sequences.fasta"
+Import Peptide Search > Import FASTA > Decoy generation method is "Shuffle Sequence"
+Import Peptide Search > Import FASTA > Decoys per target is "1"
+Import Peptide Search > Import FASTA > Automatically train mProphet model is True
+Import Peptide Search > DDA search settings > Precursor tolerance is 10ppm
+Import Peptide Search > DDA search settings > Fragment tolerance is 20ppm
+Import Peptide Search > DDA search settings > Max variable mods per peptide is "3"
+Import Peptide Search > DDA search settings > Fragment ion types is "b, y"
+Import Peptide Search > DDA converter settings > DDA conversion protocol is "DIA-Umpire"
+Import Peptide Search > DDA converter settings > Instrument preset is "Q Exactive"
+Import Peptide Search > DDA converter settings > DDA conversion non-default settings is Missing
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "collinsb_X1803_171-A.mzML",
+        "collinsb_X1803_172-B.mzML"
+    ],
+    Files to import simultaneously = "Many",
+    Removed prefix = "collinsb_X1803_17",
+    Removed suffix = ".mzML"
+},
+Add Modifications = 
+{
+    Added modifications = 
+    [
+        "Carbamidomethyl (C) = C[57] (fixed)",
+        "Oxidation (M) = M[16] (variable)"
+    ]
+},
+Import FASTA = 
+{
+    FASTA file = "nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta",
+    FASTA file for importing targets = "target_protein_sequences.fasta",
+    Decoy generation method = "Shuffle Sequence",
+    Decoys per target = "1",
+    Automatically train mProphet model = True
+},
+DDA search settings = 
+{
+    Precursor tolerance = 10ppm,
+    Fragment tolerance = 20ppm,
+    Max variable mods per peptide = "3",
+    Fragment ion types = "b, y"
+},
+DDA converter settings = 
+{
+    DDA conversion protocol = "DIA-Umpire",
+    Instrument preset = "Q Exactive",
+    DDA conversion non-default settings = Missing
+}
+

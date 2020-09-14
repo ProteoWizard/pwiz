@@ -163,9 +163,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
-                importPeptideSearchDlg.SearchSettingsControl.SetPrecursorTolerance(new MzTolerance(15, MzTolerance.Units.ppm));
-                importPeptideSearchDlg.SearchSettingsControl.SetFragmentTolerance(new MzTolerance(25, MzTolerance.Units.ppm));
-                importPeptideSearchDlg.SearchSettingsControl.SetFragmentIons("b, y");
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm);
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
+                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
 
                 // Run the search
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());

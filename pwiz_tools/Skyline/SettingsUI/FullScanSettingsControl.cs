@@ -892,9 +892,25 @@ namespace pwiz.Skyline.SettingsUI
             usercontrolIonMobilityFiltering.InitializeSettings(_documentContainer);
         }
 
+        private ImportPeptideSearchDlg.Workflow? _lastPeptideSearchWorkflow;
         public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow, bool libIonMobilities)
         {
             var settings = _documentContainer.Document.Settings;
+
+            if (_lastPeptideSearchWorkflow == workflow)
+                return;
+            _lastPeptideSearchWorkflow = workflow;
+
+            // reset controls to default (without reconstructing them like Initialize() would do)
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FullScanSettingsControl));
+            resources.ApplyResources(groupBoxMS1, "groupBoxMS1");
+            resources.ApplyResources(textPrecursorCharges, "textPrecursorCharges");
+            resources.ApplyResources(lblPrecursorCharges, "lblPrecursorCharges");
+            resources.ApplyResources(radioKeepAllTime, "radioKeepAllTime");
+            resources.ApplyResources(groupBoxMS2, "groupBoxMS2");
+            resources.ApplyResources(cbHighSelectivity, "cbHighSelectivity");
+            resources.ApplyResources(groupBoxRetentionTimeToKeep, "groupBoxRetentionTimeToKeep");
+            resources.ApplyResources(usercontrolIonMobilityFiltering, "usercontrolIonMobilityFiltering");
 
             // Reduce MS1 filtering groupbox
             int sepMS1FromMS2 = groupBoxMS2.Top - groupBoxMS1.Bottom;
@@ -953,7 +969,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 ProductMassAnalyzer = PrecursorMassAnalyzer;
 
-                if (workflow == ImportPeptideSearchDlg.Workflow.dia && Settings.Default.IsolationSchemeList.Count > 1)
+                if (workflow == ImportPeptideSearchDlg.Workflow.dia && Settings.Default.IsolationSchemeList.Count > 1/* && comboIsolationScheme.SelectedIndex < 1*/)
                 {
                     comboIsolationScheme.SelectedIndex = 1;
                 }
