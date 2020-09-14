@@ -40,6 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public SrmDocument Document { get; private set; }
         public float QValueCutoff { get; private set; }
         public bool IsValid { get; }
+        public string InvalidReason { get; }
         public int ReplicateCount { get; private set; }
 
         public DataSet GetTargetData(DetectionsGraphController.TargetType target)
@@ -69,12 +70,25 @@ namespace pwiz.Skyline.Controls.Graphs
         public DetectionPlotData(SrmDocument document, float qValueCutoff, 
             CancellationToken cancellationToken = default(CancellationToken), [CanBeNull] Action<int> progressReport = null)
         {
-            if (document == null || qValueCutoff == 0 || qValueCutoff == 1 ||
-                !document.Settings.HasResults) return;
+            if (document == null || !document.Settings.HasResults)
+            {
+                InvalidReason = "No data loaded.";
+                return;
+            }
+
+            if (qValueCutoff == 0 || qValueCutoff == 1)
+            {
+                InvalidReason = "Invalid Q-Value. Cannot be 0 or 1";
+                return;
+            }
+
 
             if (document.MoleculeTransitionGroupCount == 0 || document.PeptideCount == 0 ||
                 document.MeasuredResults.Chromatograms.Count == 0)
+            {
+                InvalidReason = "Document has no peptides or chromatograms.";
                 return;
+            }
 
             QValueCutoff = qValueCutoff;
             Document = document;
@@ -131,6 +145,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if(peptideCount++ == reportingStep * currentProgress)
                     progressReport?.Invoke(REPORTING_STEP * currentProgress++);
+            }
+
+            if(precursorData.All(p => p.IsEmpty))
+            {
+                InvalidReason = "Document has no Q-Values. Train your mProphet model.";
+                return;
             }
 
             _data[DetectionsGraphController.TargetType.PRECURSOR] = new DataSet(precursorData, ReplicateCount, QValueCutoff);
@@ -226,7 +246,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Calculate running mins and maxes while taking NaNs into account
                 var mins = Enumerable.Repeat(float.NaN, qValues.Count).ToList();
                 var maxes = Enumerable.Repeat(float.NaN, qValues.Count).ToList();
-                if (!qValues.All(float.IsNaN))
+                IsEmpty = qValues.All(float.IsNaN);
+                if (!IsEmpty)
                 {
                     var runningNaN = true;
                     for (var i = 0; i < qValues.Count; i++)
@@ -263,6 +284,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public ImmutableList<float> QValues { get; private set; }
             public ImmutableList<float> MinQValues { get; private set; }
             public ImmutableList<float> MaxQValues { get; private set; }
+            public bool IsEmpty { get; private set; }
 
         }
 
@@ -285,7 +307,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // by a dataset.
             private const int CACHE_CAPACITY = 200;
 
-            public event Action<CacheStatus> StatusChange;
+            public event Action<CacheStatus, string> StatusChange;
             public event Action<int> ReportProgress;
 
             public enum CacheStatus { idle, processing, error, canceled }
@@ -296,9 +318,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 get => _status;
                 set
                 {
-                    _status = value;
-                    StatusChange?.Invoke(_status);
                 }
+            }
+
+            public void SetCacheStatus(CacheStatus newStatus, string message)
+            {
+                _status = newStatus;
+                StatusChange?.Invoke(_status, message);
             }
 
             //exposing for testing purposes
@@ -312,7 +338,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _stackWorker.RunAsync(1, @"DetectionsDataCache");
                 _tokenSource = new CancellationTokenSource();
                 _datas = new ConcurrentQueue<DetectionPlotData>();
-                Status = CacheStatus.idle;
+                SetCacheStatus(CacheStatus.idle, "");
             }
 
             public bool TryGet(SrmDocument doc, float qValue, Action<DetectionPlotData> callback,  out DetectionPlotData data)
@@ -320,12 +346,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 data = INVALID;
                 if (IsDisposed) return false;
                 var request = new DataRequest() { qValue = qValue};
+                _callback = callback;
                 if (ReferenceEquals(doc, _document))
                 {
                     data = Get(request) ?? INVALID;
                     if (data.IsValid)
                         return true;
-                    _callback = callback;
                     _stackWorker.Add(request);
                 }
                 else
@@ -360,9 +386,15 @@ namespace pwiz.Skyline.Controls.Graphs
                                 _datas.Enqueue(dump);
                     }
                     if(userCancel)
-                        Status = CacheStatus.canceled;
+                        SetCacheStatus(CacheStatus.canceled,
+                            "Use properties dialog or modify the document to update the plot.");
                     else
-                        Status = CacheStatus.idle;
+                    {
+                        if (!_document.IsLoaded)
+                            SetCacheStatus(CacheStatus.idle, "Waiting for the document to load.");
+                        else
+                            SetCacheStatus(CacheStatus.idle, "");
+                    }
                 }
                 //if provided, add the new request to the queue after cancellation is complete
                 if (request != null)
@@ -381,6 +413,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 try
                 {
+                    if(!_document.IsLoaded)
+                        SetCacheStatus(CacheStatus.idle, "Waiting for the document to load.");
+                    while(!_document.IsLoaded)  Thread.Sleep(100);
                     lock (_statusLock)
                     {
                         //first make sure it hasn't been retrieved already
@@ -393,24 +428,27 @@ namespace pwiz.Skyline.Controls.Graphs
                             if (dat.IsValidFor(_document, request.qValue)) res = dat;
                         }
 
-                        if (res != null)
-                            return;
-                        Status = CacheStatus.processing;
+                        if (res != null) return;
+
+                        SetCacheStatus(CacheStatus.processing, "");
                         res = new DetectionPlotData(_document, request.qValue, _tokenSource.Token, ReportProgress);
                         Status = CacheStatus.idle;
 
                         if (res.IsValid)
                         {
+                            SetCacheStatus(CacheStatus.idle, "Data retrieved successfully.");
                             if (currentSize + res.ReplicateCount >= CACHE_CAPACITY) _datas.TryDequeue(out var dump);
                             _datas.Enqueue(res);
                             _callback.Invoke(res);
                         }
+                        else
+                            SetCacheStatus(CacheStatus.error, res.InvalidReason);
 
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    Status = CacheStatus.error;
+                    SetCacheStatus(CacheStatus.idle, e.Message);
                     throw;
                 }
             }

@@ -728,6 +728,8 @@ namespace pwiz.Skyline
                     return _listGraphPeakArea.FirstOrDefault(g => g.Type == type) ?? CreateGraphPeakArea(type);
                 else if (split[1] == typeof(MassErrorGraphController).Name)
                     return _listGraphMassError.FirstOrDefault(g => g.Type == type) ?? CreateGraphMassError(type);
+                else if (split[1] == typeof(DetectionsGraphController).Name)
+                    return _listGraphDetections.FirstOrDefault(g => g.Type == type) ?? CreateGraphDetections(type);
                 else
                     return null;
             }

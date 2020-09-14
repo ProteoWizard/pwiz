@@ -19,11 +19,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
+using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -31,6 +34,16 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
+    public class ThreadTracer
+    {
+        public static void TraceMessage(string msg, Type objType)
+        {
+
+            Trace.WriteLine(Thread.CurrentThread.Name + " : " + 
+                            objType.Name + " : " + msg);
+        }
+    }
+
     public sealed class DetectionsGraphController : GraphSummary.IControllerSplit
     {
 

@@ -83,7 +83,7 @@ namespace pwiz.SkylineTestFunctional
                 Trace.WriteLine(this.GetType().Name + ": set Q-Value to 0.003");
             });
             OkDialog(propDialog, propDialog.OkDialog);
-            Trace.WriteLine(this.GetType().Name + ": properties dialog for Q-Value to 0.003 has been processed.");
+            ThreadTracer.TraceMessage("properties dialog for Q-Value to 0.003 has been processed.", this.GetType());
             WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.003f));
             AssertDataCorrect(pane, 0, 0.003f);
 

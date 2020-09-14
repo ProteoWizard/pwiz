@@ -42,7 +42,6 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
             _timer = new Timer { Interval = 100 };
             _timer.Tick += Timer_OnTick;
-            IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);
         }
 
         private void Timer_OnTick(object sender, EventArgs e)
@@ -76,8 +75,32 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void UpdateUI()
         {
             IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);
+            DetectionsPlotPane pane;
+            if (!_graphSummary.TryGetGraphPane(out pane)) return;
+            if (pane.CurrentData.IsValid &&
+                DetectionPlotData.GetDataCache().Status != DetectionPlotData.DetectionDataCache.CacheStatus.error)
+            {
+                EnableControls(true);
+                IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);
+                this.toolStripAtLeastN.NumericUpDownControl.Minimum = 0;
+                this.toolStripAtLeastN.NumericUpDownControl.Maximum =
+                    _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
+                toolStripAtLeastN.NumericUpDownControl.Value = Settings.RepCount;
+                this.toolStripAtLeastN.NumericUpDownControl.ValueChanged += new EventHandler(toolStripAtLeastN_ValueChanged);
+            }
+            else
+            {
+                toolStripAtLeastN.NumericUpDownControl.Value = 0;
+                EnableControls(false);
+            }
         }
 
+        public void EnableControls(bool enable)
+        {
+            toolStripAtLeastN.Enabled = enable;
+            cbLevel.Enabled = enable;
+            pbProperties.Enabled = enable;
+        }
         //marked public for testing purposes
         public void pbProperties_Click(object sender, EventArgs e)
         {
@@ -100,6 +123,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 _timer.Stop();
                 _timer.Start();
             }
+        }
+
+        public void toolStripAtLeastN_ValueChanged(object sender, EventArgs e)
+        {
+            Settings.RepCount = (int)toolStripAtLeastN.NumericUpDownControl.Value;
+            _timer.Stop();
+            _timer.Start();
         }
     }
 }
