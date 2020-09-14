@@ -34,20 +34,17 @@ using namespace pwiz::util;
 
 #ifdef __INTELLISENSE__
 #using <Shimadzu.LabSolutions.IO.IoModule.dll>
-#using <DataReader.dll>
 #endif
 
 using System::String;
 using System::Math;
 using System::Collections::Generic::IList;
 using System::Collections::Generic::Dictionary;
-namespace ShimadzuAPI = Shimadzu::LabSolutions::DataReader;
 namespace ShimadzuIO = Shimadzu::LabSolutions::IO;
 namespace ShimadzuGeneric = ShimadzuIO::Generic;
 using ShimadzuIO::Data::DataObject;
 using ShimadzuIO::Method::MethodObject;
 typedef ShimadzuGeneric::Tool ShimadzuUtil;
-using ShimadzuAPI::ReaderResult;
 
 namespace pwiz {
 namespace vendor_api {
