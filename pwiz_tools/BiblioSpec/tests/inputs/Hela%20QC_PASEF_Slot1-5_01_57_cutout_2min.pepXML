@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="pepXML_std.xsl"?>
-<msms_pipeline_analysis date="2019-11-21T15:49:59" xmlns="http://regis-web.systemsbiology.net/pepXML" summary_xml="d:\test\bruker\tims\Hela_QC_PASEF_Slot1-5_01_57_cutout_2min.pepXML" xsi:schemaLocation="http://sashimi.sourceforge.net/schema_revision/pepXML/pepXML_v118.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-<msms_run_summary base_name="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min" raw_data_type="raw" raw_data="mzBIN">
+<msms_pipeline_analysis date="2019-11-21T15:49:59" xmlns="http://regis-web.systemsbiology.net/pepXML" summary_xml="d:\test\bruker\tims\Hela%2QC_PASEF_Slot1-5_01_57_cutout_2min.pepXML" xsi:schemaLocation="http://sashimi.sourceforge.net/schema_revision/pepXML/pepXML_v118.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<msms_run_summary base_name="Hela%20QC_PASEF_Slot1-5_01_57_cutout_2min" raw_data_type="raw" raw_data="mzBIN">
 <sample_enzyme name="trypsin">
 <specificity cut="KR" no_cut="P" sense="C"/>
 </sample_enzyme>
-<search_summary base_name="Hela_QC_PASEF_Slot1-5_01_57_cutout_2min" precursor_mass_type="monoisotopic" search_engine="X! Tandem" search_engine_version="MSFragger-2.2" fragment_mass_type="monoisotopic" search_id="1">
+<search_summary base_name="Hela%2QC_PASEF_Slot1-5_01_57_cutout_2min" precursor_mass_type="monoisotopic" search_engine="X! Tandem" search_engine_version="MSFragger-2.2" fragment_mass_type="monoisotopic" search_id="1">
 <search_database local_path="D:\oldD\fasta\20150928-RefSeq-human.protein.revCat.fasta" type="AA"/>
 <enzymatic_search_constraint enzyme="default" min_number_termini="2" max_num_internal_cleavages="1"/>
 <aminoacid_modification aminoacid="C" massdiff="57.0215" mass="160.0307" variable="N"/>

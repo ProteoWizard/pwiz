@@ -47,6 +47,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_3D.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_IonMobility.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_DiaUmpire.hpp"
 #include "pwiz/analysis/chromatogram_processing/ChromatogramList_XICGenerator.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/logic/tribool.hpp>
@@ -502,6 +503,128 @@ public ref class SpectrumList_IonMobility : public msdata::SpectrumList
 
     /// returns the ion mobility (units depend on equipment type) associated with the given collisional cross-section
     virtual double ccsToIonMobility(double ccs, double mz, int charge);
+};
+
+/// <summary>
+/// SpectrumList wrapper that generates pseudo-MS/MS spectra from DIA spectra using the DiaUmpire algorithm
+/// </summary>
+public ref class SpectrumList_DiaUmpire : public msdata::SpectrumList
+{
+    DEFINE_INTERNAL_LIST_WRAPPER_CODE(SpectrumList_DiaUmpire, pwiz::analysis::SpectrumList_DiaUmpire)
+
+    public:
+
+    ref class Config
+    {
+        DEFINE_INTERNAL_BASE_CODE(Config, DiaUmpire::Config)
+
+        public:
+
+        ref class InstrumentParameter
+        {
+            DEFINE_INTERNAL_BASE_CODE(InstrumentParameter, DiaUmpire::InstrumentParameter)
+
+            public:
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, Resolution);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MS1PPM);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MS2PPM);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, SNThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinMSIntensity);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinMSMSIntensity);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, NoPeakPerMin);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinRTRange);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, StartCharge);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, EndCharge);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MS2StartCharge);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MS2EndCharge);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MaxCurveRTRange);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RTtol);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MS2SNThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MaxNoPeakCluster);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinNoPeakCluster);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MaxMS2NoPeakCluster);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinMS2NoPeakCluster);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, Denoise);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, EstimateBG);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, DetermineBGByID);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, RemoveGroupedPeaks);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, Deisotoping);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, BoostComplementaryIon);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, AdjustFragIntensity);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, PrecursorRank);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, FragmentRank);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RTOverlapThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, CorrThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, ApexDelta);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, SymThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, NoMissedScan);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinPeakPerPeakCurve);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinMZ);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinFrag);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MiniOverlapP);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, CheckMonoIsotopicApex);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, DetectByCWT);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, FillGapByBK);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, IsoCorrThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RemoveGroupedPeaksCorr);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RemoveGroupedPeaksRTOverlap);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, HighCorrThreshold);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MinHighCorrCnt);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, TopNLocal);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, TopNLocalRange);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, IsoPattern);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, startRT);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, endRT);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, TargetIDOnly);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, MassDefectFilter);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MinPrecursorMass);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MaxPrecursorMass);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, UseOldVersion);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, RT_window_Targeted);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, SmoothFactor);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, DetectSameChargePairOnly);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, MassDefectOffset);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, MS2PairTopN);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, MS2Pairing);
+        };
+
+        ref class MzRange
+        {
+            DEFINE_INTERNAL_BASE_CODE(MzRange, DiaUmpire::MzRange)
+
+            public:
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, begin);
+            DEFINE_SIMPLE_PRIMITIVE_PROPERTY(float, end);
+        };
+
+        ref class TargetWindow
+        {
+            DEFINE_INTERNAL_BASE_CODE(TargetWindow, DiaUmpire::TargetWindow)
+
+            enum class Scheme
+            {
+                SWATH_Fixed,
+                SWATH_Variable
+            };
+
+            DEFINE_REFERENCE_PROPERTY(MzRange, mzRange);
+        };
+        
+        DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TargetWindowList, DiaUmpire::TargetWindow, TargetWindow, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+
+        DEFINE_REFERENCE_PROPERTY(InstrumentParameter, instrumentParameters);
+
+        DEFINE_PRIMITIVE_PROPERTY(DiaUmpire::TargetWindow::Scheme, TargetWindow::Scheme, diaTargetWindowScheme);
+        TargetWindowList^ diaVariableWindows;
+
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(int, diaFixedWindowSize);
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, exportMs1ClusterTable);
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, exportMs2ClusterTable);
+        DEFINE_SIMPLE_PRIMITIVE_PROPERTY(bool, exportSeparateQualityMGFs);
+    };
+
+    SpectrumList_DiaUmpire(pwiz::CLI::msdata::MSData^ msd, pwiz::CLI::msdata::SpectrumList^ inner, Config^ config);
+    SpectrumList_DiaUmpire(pwiz::CLI::msdata::MSData^ msd, pwiz::CLI::msdata::SpectrumList^ inner, Config^ config, util::IterationListenerRegistry^ ilr);
 };
 
 public ref class ChromatogramList_XICGenerator : public msdata::ChromatogramList

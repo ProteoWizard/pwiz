@@ -95,6 +95,11 @@ struct PWIZ_API_DECL MzRange
 
     float begin, end;
 
+    bool operator== (const MzRange& rhs) const
+    {
+        return begin == rhs.begin && end == rhs.end;
+    }
+
     bool operator< (const MzRange& rhs) const
     {
         return begin == rhs.begin ? end < rhs.end : begin < rhs.begin;
