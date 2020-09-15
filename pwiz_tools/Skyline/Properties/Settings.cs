@@ -490,6 +490,24 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
+        public List<string> CustomImportTransitionListHeaders
+        {
+            get
+            {
+                if (this[@"CustomImportTransitionListHeaders"] == null)
+                {
+                    var list = new List<string>();
+                    CustomImportTransitionListHeaders = list;
+                }
+                return (List<string>)this[@"CustomImportTransitionListHeaders"];
+            }
+            set
+            {
+                this[@"CustomImportTransitionListHeaders"] = value;
+            }
+        }
+
+        [UserScopedSettingAttribute]
         public List<Tuple<int, string>> CustomImportTransitionListColumnsList
         {
             get

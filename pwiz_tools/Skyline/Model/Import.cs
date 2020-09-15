@@ -1274,8 +1274,8 @@ namespace pwiz.Skyline.Model
                 if (iProt == -1)
                     iProt = FindProtein(fieldsFirstRow, iSequence, lines, indices.Headers, provider, separator);
                 int iPrecursorCharge = indices.PrecursorChargeColumn;
-                if (iPrecursorCharge == -1)
-                    iPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator);
+                //if (iPrecursorCharge == -1)
+                //    iPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator);
                 int iFragmentName = indices.FragmentNameColumn;
                 if (iFragmentName == -1)
                     iFragmentName = FindFragmentName(fieldsFirstRow, lines, separator);
@@ -1547,7 +1547,7 @@ namespace pwiz.Skyline.Model
             // Regular expression for finding a fragment name. Checks if the first character is a,b,c,x,y, or z and the second character is a digit
             private static readonly Regex RGX_FRAGMENT_NAME = new Regex(@"precursor|([abcxyz][\d]+)", RegexOptions.IgnoreCase);
             
-            private static int FindPrecursorCharge (string[] fields, IList<string> lines, char separator)
+            /*private static int FindPrecursorCharge (string[] fields, IList<string> lines, char separator)
             {
                 var listCandidates = new List<int>();
 
@@ -1595,7 +1595,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
                 return false;
-            }
+            }*/
 
             private static void AddCount(string key, IDictionary<string, int> dict)
             {

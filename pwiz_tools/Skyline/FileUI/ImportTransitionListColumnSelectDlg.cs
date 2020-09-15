@@ -143,10 +143,15 @@ namespace pwiz.Skyline.FileUI
             // It's not unusual to see lines like "744.8 858.39 10 APR.AGLCQTFVYGGCR.y7.light 105 40" where protein, peptide, and label are all stuck together,
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
+            var headers = Importer.RowReader.Indices.Headers;
+            bool sameHeaders = false;
+            if (headers != null)
+            {
+                sameHeaders = (headers.ToList().Equals(Settings.Default.CustomImportTransitionListHeaders));
+            }
             // If there are items on our saved column list and the file does not contain headers, and the number of columns matches the saved column count,
             // the combo box text is set using that list
-            var headers = Importer.RowReader.Indices.Headers;
-            if ((Settings.Default.CustomImportTransitionListColumnsList.Count != 0) && (headers == null) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
+            if ((Settings.Default.CustomImportTransitionListColumnsList.Count != 0) && ((headers == null) || (sameHeaders)) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
             {
                 for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
                 {
@@ -319,6 +324,15 @@ namespace pwiz.Skyline.FileUI
                 Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
         }
 
+        private void updateHeadersList()
+        {
+            var headers = Importer.RowReader.Indices.Headers;
+            if (headers != null && headers.Length > 0)
+            {
+                Settings.Default.CustomImportTransitionListHeaders = headers.ToList();
+            }
+        }
+
         private void dataGrid_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
             ResizeComboBoxes();
@@ -338,6 +352,7 @@ namespace pwiz.Skyline.FileUI
             if (comboBoxChanged)
             {
                 updateColumnsList();
+                updateHeadersList();
             }
         }
         private void buttonCheckForErrors_Click(object sender, EventArgs e)
