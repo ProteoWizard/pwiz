@@ -143,15 +143,26 @@ namespace pwiz.Skyline.FileUI
             // It's not unusual to see lines like "744.8 858.39 10 APR.AGLCQTFVYGGCR.y7.light 105 40" where protein, peptide, and label are all stuck together,
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
+            foreach (var item in Settings.Default.CustomImportTransitionListHeaders)
+            {
+                Console.WriteLine("Setting:" + item);
+            }
             var headers = Importer.RowReader.Indices.Headers;
             bool sameHeaders = false;
             if (headers != null)
             {
-                sameHeaders = (headers.ToList().Equals(Settings.Default.CustomImportTransitionListHeaders));
+                var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
+                var HeaderList = new List<string>();
+                for (var i = 0; i < numColumns; i++)
+                {
+                    HeaderList.Add(dataGrid.Columns[i].HeaderText);
+                }
+                sameHeaders = (HeaderList.Equals(Settings.Default.CustomImportTransitionListHeaders));
+                Console.WriteLine(sameHeaders);
             }
             // If there are items on our saved column list and the file does not contain headers, and the number of columns matches the saved column count,
             // the combo box text is set using that list
-            if ((Settings.Default.CustomImportTransitionListColumnsList.Count != 0) && ((headers == null) || (sameHeaders)) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
+            if ((Settings.Default.CustomImportTransitionListColumnsList.Count != 0) && (headers == null || sameHeaders) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
             {
                 for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
                 {
@@ -329,7 +340,19 @@ namespace pwiz.Skyline.FileUI
             var headers = Importer.RowReader.Indices.Headers;
             if (headers != null && headers.Length > 0)
             {
-                Settings.Default.CustomImportTransitionListHeaders = headers.ToList();
+                var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
+                var HeaderList = new List<string>();
+                for (var i = 0; i < numColumns; i++)
+                {
+                    HeaderList.Add(dataGrid.Columns[i].HeaderText);
+                }
+
+                Settings.Default.CustomImportTransitionListHeaders = HeaderList;
+                foreach (var item in HeaderList)
+                {
+                    Console.WriteLine(item);
+                }
+                
             }
         }
 
