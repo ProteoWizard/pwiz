@@ -143,25 +143,29 @@ namespace pwiz.Skyline.FileUI
             // It's not unusual to see lines like "744.8 858.39 10 APR.AGLCQTFVYGGCR.y7.light 105 40" where protein, peptide, and label are all stuck together,
             // so that all three lay claim to a single column. In such cases, prioritize peptide.
             columns.PrioritizePeptideColumn();
-            foreach (var item in Settings.Default.CustomImportTransitionListHeaders)
-            {
-                Console.WriteLine("Setting:" + item);
-            }
+            // If there are headers, check if they match the saved headers from last time. 
             var headers = Importer.RowReader.Indices.Headers;
-            bool sameHeaders = false;
+            var sameHeaders = false;
             if (headers != null)
             {
                 var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
-                var HeaderList = new List<string>();
+                var currentHeaderList = new List<string>();
                 for (var i = 0; i < numColumns; i++)
                 {
-                    HeaderList.Add(dataGrid.Columns[i].HeaderText);
+                    currentHeaderList.Add(dataGrid.Columns[i].HeaderText);
                 }
-                sameHeaders = (HeaderList.Equals(Settings.Default.CustomImportTransitionListHeaders));
-                Console.WriteLine(sameHeaders);
+
+                for (var i = 0; i < numColumns; i++)
+                {
+                    sameHeaders = Settings.Default.CustomImportTransitionListHeaders[i].Equals(currentHeaderList[i]);
+                    if (sameHeaders == false)
+                    {
+                        break;
+                    }
+                }
             }
-            // If there are items on our saved column list and the file does not contain headers, and the number of columns matches the saved column count,
-            // the combo box text is set using that list
+            // If there are items on our saved column list, and the file either does not contain headers or the headers match those from last time,
+            // and the number of columns matches the saved column count, the combo box text is set using the saved column list
             if ((Settings.Default.CustomImportTransitionListColumnsList.Count != 0) && (headers == null || sameHeaders) && Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length == Settings.Default.CustomImportTransitionListColumnCount)
             {
                 for (int i = 0; i < Settings.Default.CustomImportTransitionListColumnsList.Count; i++)
@@ -313,7 +317,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
         // Saves column positions between transition lists
-        private void updateColumnsList()
+        private void updateColumnsListandCount()
         {
             var ColumnList = new List<Tuple<int, string>>();
             var columns = Importer.RowReader.Indices;
@@ -335,24 +339,20 @@ namespace pwiz.Skyline.FileUI
                 Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
         }
 
+        // Saves a list of headers between transition lists
         private void updateHeadersList()
         {
             var headers = Importer.RowReader.Indices.Headers;
             if (headers != null && headers.Length > 0)
             {
                 var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
-                var HeaderList = new List<string>();
+                var headerList = new List<string>();
                 for (var i = 0; i < numColumns; i++)
                 {
-                    HeaderList.Add(dataGrid.Columns[i].HeaderText);
+                    headerList.Add(dataGrid.Columns[i].HeaderText);
                 }
 
-                Settings.Default.CustomImportTransitionListHeaders = HeaderList;
-                foreach (var item in HeaderList)
-                {
-                    Console.WriteLine(item);
-                }
-                
+                Settings.Default.CustomImportTransitionListHeaders = headerList;
             }
         }
 
@@ -369,12 +369,12 @@ namespace pwiz.Skyline.FileUI
         {
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
         }
-        // If a combo box was changed, save the column indices and column count when the OK button is clicked
+        // If a combo box was changed, save the column indices, column count, and headers when the OK button is clicked
         private void buttonOk_Click(object sender, EventArgs e)
         {
             if (comboBoxChanged)
             {
-                updateColumnsList();
+                updateColumnsListandCount();
                 updateHeadersList();
             }
         }
