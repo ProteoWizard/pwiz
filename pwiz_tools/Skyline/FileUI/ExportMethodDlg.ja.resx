@@ -283,7 +283,7 @@
     <value>3</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>305, 50</value>
+    <value>355, 50</value>
   </data>
   <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -310,7 +310,7 @@
     <value>21</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>305, 14</value>
+    <value>355, 14</value>
   </data>
   <data name="btnOk.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -397,7 +397,7 @@
     <value>19</value>
   </data>
   <data name="textRunLength.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 395</value>
+    <value>246, 395</value>
   </data>
   <data name="textRunLength.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -650,7 +650,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>False</value>
   </data>
   <data name="cbIgnoreProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 144</value>
+    <value>246, 144</value>
   </data>
   <data name="cbIgnoreProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -1460,7 +1460,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>True</value>
   </data>
   <data name="cbSortByMz.Location" type="System.Drawing.Point, System.Drawing">
-    <value>226, 115</value>
+    <value>246, 115</value>
   </data>
   <data name="cbSortByMz.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 1, 1, 1</value>
