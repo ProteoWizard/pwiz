@@ -298,15 +298,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     normalizedArea /= Math.Pow(2.0, medianAdjustment.Value);
                 }
-                else if (Equals(normalizationMethod, NormalizationMethod.TIC))
-                {
-                    var factor = srmSettings.GetTicNormalizationDenominator(replicateIndex, chromInfo.FileId);
-                    if (!factor.HasValue)
-                    {
-                        return null;
-                    }
-                    denominator = factor.Value;
-                }
             }
             return new Quantity(normalizedArea.Value, denominator);
         }

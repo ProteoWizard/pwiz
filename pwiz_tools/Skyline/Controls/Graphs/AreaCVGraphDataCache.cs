@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Add an entry for All
                 var annotations = annotationsArray.Concat(new string[] { null }).ToList();
 
-                var normalizationMethods = new List<AreaCVNormalizationMethod> { AreaCVNormalizationMethod.none, AreaCVNormalizationMethod.medians, AreaCVNormalizationMethod.tic, AreaCVNormalizationMethod.ratio };
+                var normalizationMethods = new List<AreaCVNormalizationMethod> { AreaCVNormalizationMethod.none, AreaCVNormalizationMethod.medians, AreaCVNormalizationMethod.ratio };
                 if (document.Settings.HasGlobalStandardArea)
                     normalizationMethods.Add(AreaCVNormalizationMethod.global_standards);
 

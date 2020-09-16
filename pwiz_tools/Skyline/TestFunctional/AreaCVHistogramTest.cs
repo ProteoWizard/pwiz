@@ -388,7 +388,6 @@ namespace pwiz.SkylineTestFunctional
 
             // Normalize to global standards
             refineDlg = ShowDialog<RefineDlg>(() => SkylineWindow.ShowRefineDlg());
-            PauseTest();
             RunUI(() =>
             {
                 refineDlg.CVCutoff = 20;

@@ -588,7 +588,6 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.areaCVTotalIonCurrentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
@@ -2163,8 +2162,7 @@ namespace pwiz.Skyline
             this.areaCVGlobalStandardsToolStripMenuItem,
             this.areaCVMediansToolStripMenuItem,
             this.toolStripSeparator54,
-            this.areaCVNoneToolStripMenuItem,
-            this.areaCVTotalIonCurrentToolStripMenuItem});
+            this.areaCVNoneToolStripMenuItem});
             this.areaCVNormalizedToToolStripMenuItem.Name = "areaCVNormalizedToToolStripMenuItem";
             resources.ApplyResources(this.areaCVNormalizedToToolStripMenuItem, "areaCVNormalizedToToolStripMenuItem");
             // 
@@ -4544,12 +4542,6 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
             // 
-            // areaCVTotalIonCurrentToolStripMenuItem
-            // 
-            this.areaCVTotalIonCurrentToolStripMenuItem.Name = "areaCVTotalIonCurrentToolStripMenuItem";
-            resources.ApplyResources(this.areaCVTotalIonCurrentToolStripMenuItem, "areaCVTotalIonCurrentToolStripMenuItem");
-            this.areaCVTotalIonCurrentToolStripMenuItem.Click += new System.EventHandler(this.areaCVTotalIonCurrentToolStripMenuItem_Click);
-            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -5139,7 +5131,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator detectionsToolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem detectionsYScalePercentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem permuteIsotopeModificationsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem areaCVTotalIonCurrentToolStripMenuItem;
     }
 }
 

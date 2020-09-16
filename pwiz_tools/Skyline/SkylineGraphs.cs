@@ -4538,7 +4538,6 @@ namespace pwiz.Skyline
                 {
                     areaCVGlobalStandardsToolStripMenuItem,
                     areaCVMediansToolStripMenuItem,
-                    areaCVTotalIonCurrentToolStripMenuItem,
                     toolStripSeparator54,
                     areaCVNoneToolStripMenuItem
                 });
@@ -5018,14 +5017,8 @@ namespace pwiz.Skyline
             }
 
             areaCVMediansToolStripMenuItem.Checked = AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.medians;
-
-            areaCVTotalIonCurrentToolStripMenuItem.Visible = DocumentUI.Settings.HasTicArea;
-            areaCVTotalIonCurrentToolStripMenuItem.Checked =
-                AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.tic;
-
             areaCVGlobalStandardsToolStripMenuItem.Visible = DocumentUI.Settings.HasGlobalStandardArea;
             areaCVGlobalStandardsToolStripMenuItem.Checked = AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.global_standards;
-
             areaCVNoneToolStripMenuItem.Checked = AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.none;
         }
 
@@ -5044,11 +5037,6 @@ namespace pwiz.Skyline
         private void areaCVMediansToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SetNormalizationMethod(AreaCVNormalizationMethod.medians);
-        }
-
-        private void areaCVTotalIonCurrentToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetNormalizationMethod(AreaCVNormalizationMethod.tic);
         }
 
         private void areaCVNoneToolStripMenuItem_Click(object sender, EventArgs e)

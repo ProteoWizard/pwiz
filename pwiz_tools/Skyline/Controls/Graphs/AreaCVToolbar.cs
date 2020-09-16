@@ -26,11 +26,10 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public sealed partial class AreaCVToolbar : GraphSummaryToolbar // UserControl // for designer
+    public sealed partial class AreaCVToolbar : GraphSummaryToolbar //UserControl // for designer
     {
         private readonly Timer _timer;
-        private List<Tuple<AreaCVNormalizationMethod, int>> _normalizationMethods 
-            = new List<Tuple<AreaCVNormalizationMethod, int>>();
+        private int _standardTypeCount;
 
         public AreaCVToolbar(GraphSummary graphSummary) :
             base(graphSummary)
@@ -105,8 +104,36 @@ namespace pwiz.Skyline.Controls.Graphs
             // TODO(Tobi): Fix this. It causes an error loading a saved layout with an Area CV graph and normalization meth
             if (Program.MainWindow == null)
                 return;
-            var entry = _normalizationMethods[index];
-            Program.MainWindow.SetNormalizationMethod(entry.Item1, entry.Item2, false);
+
+            if (index < _standardTypeCount)
+            {
+                Program.MainWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, index, false);
+            }
+            else
+            {
+                index -= _standardTypeCount;
+                if (!_graphSummary.DocumentUIContainer.DocumentUI.Settings.HasGlobalStandardArea)
+                    ++index;
+
+                var normalizationMethod = AreaCVNormalizationMethod.none;
+                switch (index)
+                {
+                    case 0:
+                        normalizationMethod =
+                            _graphSummary.DocumentUIContainer.Document.Settings.HasGlobalStandardArea
+                                ? AreaCVNormalizationMethod.global_standards
+                                : AreaCVNormalizationMethod.medians;
+                        break;
+                    case 1:
+                        normalizationMethod = AreaCVNormalizationMethod.medians;
+                        break;
+                    case 2:
+                        normalizationMethod = AreaCVNormalizationMethod.none;
+                        break;
+                }
+
+                Program.MainWindow.SetNormalizationMethod(normalizationMethod, -1, false);
+            }
 
             if (IsCurrentDataCached())
             {
@@ -218,42 +245,30 @@ namespace pwiz.Skyline.Controls.Graphs
             var standardTypes = mods.RatioInternalStandardTypes;
 
             toolStripComboNormalizedTo.Items.Clear();
-            _normalizationMethods.Clear();
+            _standardTypeCount = 0;
 
             if (mods.HasHeavyModifications)
             {
+                // ReSharper disable once CoVariantArrayConversion
                 toolStripComboNormalizedTo.Items.AddRange(standardTypes.Select(s => s.Title).ToArray());
-                _normalizationMethods.AddRange(Enumerable.Range(0, standardTypes.Count)
-                    .Select(i=>Tuple.Create(AreaCVNormalizationMethod.ratio, i)));
+                _standardTypeCount = standardTypes.Count;
             }
 
             var hasGlobalStandard = _graphSummary.DocumentUIContainer.DocumentUI.Settings.HasGlobalStandardArea;
             if (hasGlobalStandard)
-            {
                 toolStripComboNormalizedTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Global_standards);
-                _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.global_standards, -1));
-            }
-
             toolStripComboNormalizedTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Medians);
-            _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.medians, -1));
-
-            if (_graphSummary.DocumentUIContainer.DocumentUI.Settings.HasTicArea)
-            {
-                toolStripComboNormalizedTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Total_ion_current);
-                _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.tic, -1));
-            }
-
             toolStripComboNormalizedTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_None);
-            _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.none, -1));
 
-            Tuple<AreaCVNormalizationMethod, int> selectedItem;
             if (AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.ratio)
-                selectedItem = Tuple.Create(AreaCVNormalizationMethod.ratio, AreaGraphController.AreaCVRatioIndex);
+                toolStripComboNormalizedTo.SelectedIndex = AreaGraphController.AreaCVRatioIndex;
             else
             {
-                selectedItem = Tuple.Create(AreaGraphController.NormalizationMethod, -1);
-            }
-            toolStripComboNormalizedTo.SelectedIndex = _normalizationMethods.IndexOf(selectedItem);
+                var index = _standardTypeCount + (int) AreaGraphController.NormalizationMethod;
+                if (!hasGlobalStandard)
+                    --index;
+                toolStripComboNormalizedTo.SelectedIndex = index;
+            } 
         }
 
         #region Functional Test Support
