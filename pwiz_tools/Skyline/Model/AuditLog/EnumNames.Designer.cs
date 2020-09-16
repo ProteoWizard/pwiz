@@ -151,6 +151,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total Ion Current.
+        /// </summary>
+        public static string AreaCVNormalizationMethod_tic {
+            get {
+                return ResourceManager.GetString("AreaCVNormalizationMethod_tic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All.
         /// </summary>
         public static string AreaCVTransitions_all {
@@ -1308,6 +1317,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SingletonNormalizationMethod_quantile {
             get {
                 return ResourceManager.GetString("SingletonNormalizationMethod_quantile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Ion Current.
+        /// </summary>
+        public static string SingletonNormalizationMethod_tic {
+            get {
+                return ResourceManager.GetString("SingletonNormalizationMethod_tic", resourceCulture);
             }
         }
         

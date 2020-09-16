@@ -2483,8 +2483,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.zh-CHS.resx">
       <DependentUpon>EnumNames.resx</DependentUpon>
