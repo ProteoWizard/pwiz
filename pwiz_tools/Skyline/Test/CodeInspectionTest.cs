@@ -23,13 +23,12 @@
 // 
 
 
-
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
+using Environment = System.Environment;
 
 namespace pwiz.SkylineTest
 {
@@ -50,126 +49,129 @@ namespace pwiz.SkylineTest
                 @"causes blurry icon issues on HD monitors"); // Explanation for prohibition
 
             AddInspection(@"*.Designer.cs", Inspection.Required,
-                NonLocalizedProjectDirectories, // Ignore violations in areas we don't localize
-                "Windows Form Designer generated code", // Only worry about files that contain this text
+                NonLocalizedFiles(), // Ignore violations in files or directories we don't localize
+                string.Empty, // No file content required for inspection
                 @"System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager", // Required pattern
                 @"ensures that every dialog is localizable"); // Explanation for requirement
 
             // AddInspection(@"*.Designer.cs", Inspection.Required, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
-            // AddInspection(@"*.cs", Inspection.Forbidden, string.Empty, null, @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
-            // AddInspection(@"*.xml", Inspection.Required, "xml", null,  @"encoding=""utf-8""", @"fake, debug purposes only"); // Uncomment for debug purposes
+            // AddInspection(@"*.cs", Inspection.Forbidden, null, string.Empty, @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
+            // AddInspection(@"*.xml", Inspection.Required, null, "xml",  @"encoding=""utf-8""", @"fake, debug purposes only"); // Uncomment for debug purposes
 
             PerformInspections();
         }
 
-        private void PerformInspections()
+        private string GetCodeBaseRoot(out string thisFile)
         {
-            var thisFile = new System.Diagnostics.StackTrace(true).GetFrame(0).GetFileName();
+            thisFile = new System.Diagnostics.StackTrace(true).GetFrame(0).GetFileName();
             if (string.IsNullOrEmpty(thisFile))
             {
                 AssertEx.Fail("Could not get Skyline directory name for code inspection");
             }
-            else
+            // ReSharper disable once PossibleNullReferenceException
+            return thisFile.Replace("\\Test\\CodeInspectionTest.cs", string.Empty);
+         }
+
+        private void PerformInspections()
+        {
+            var root = GetCodeBaseRoot(out var thisFile);
+            if (!Directory.Exists(root))
             {
-                var root = thisFile.Replace("\\Test\\CodeInspectionTest.cs", string.Empty);
-                if (!Directory.Exists(root))
-                {
-                    return;
-                }
+                return; // Don't fail, this might be an install with no code in it
+            }
 
-                var results = new List<string>();
-                foreach (var fileMask in allFileMasks)
+            var results = new List<string>();
+            foreach (var fileMask in allFileMasks)
+            {
+                foreach (var filename in Directory.GetFiles(root, fileMask, SearchOption.AllDirectories))
                 {
-                    foreach (var filename in Directory.GetFiles(root, fileMask, SearchOption.AllDirectories))
+                    if (Equals(filename, thisFile))
                     {
-                        if (Equals(filename, thisFile))
-                        {
-                            continue; // Can't inspect yourself!
-                        }
+                        continue; // Can't inspect yourself!
+                    }
 
-                        var lines = File.ReadAllLines(filename);
-                        var lineNum = 0;
-                        var requiredPatternsObservedInThisFile = requiredPatternsByFileMask.ContainsKey(fileMask)
-                            ? requiredPatternsByFileMask[fileMask].Where(kvp =>
+                    var lines = File.ReadAllLines(filename);
+                    var lineNum = 0;
+                    var requiredPatternsObservedInThisFile = requiredPatternsByFileMask.ContainsKey(fileMask)
+                        ? requiredPatternsByFileMask[fileMask].Where(kvp =>
+                        {
+                            // Do we need to worry about this pattern for this file?
+                            var patternDetails = kvp.Value;
+                            return !patternDetails.IgnorePath(filename) &&
+                                   (string.IsNullOrEmpty(patternDetails.Cue) // No requirements for file content
+                                    || lines.Any(l => l.Contains(patternDetails.Cue))); // File contains required cue
+                        }).ToDictionary(k => k.Key, k => false)
+                        : null;
+                    var forbiddenPatternsForThisFile =
+                        forbiddenPatternsByFileMask
+                            .ContainsKey(fileMask) // Are there any forbidden patterns for this filemask?
+                            ? forbiddenPatternsByFileMask[fileMask].Where(kvp =>
                             {
                                 // Do we need to worry about this pattern for this file?
                                 var patternDetails = kvp.Value;
                                 return !patternDetails.IgnorePath(filename) &&
                                        (string.IsNullOrEmpty(patternDetails.Cue) // No requirements for file content
                                         || lines.Any(l => l.Contains(patternDetails.Cue))); // File contains required cue
-                            }).ToDictionary(k => k.Key, k => false)
+                            }).ToDictionary(k => k.Key, k => k.Value.Reason)
                             : null;
-                        var forbiddenPatternsForThisFile =
-                            forbiddenPatternsByFileMask
-                                .ContainsKey(fileMask) // Are there any forbidden patterns for this filemask?
-                                ? forbiddenPatternsByFileMask[fileMask].Where(kvp =>
-                                {
-                                    // Do we need to worry about this pattern for this file?
-                                    var patternDetails = kvp.Value;
-                                    return !patternDetails.IgnorePath(filename) &&
-                                           (string.IsNullOrEmpty(patternDetails.Cue) // No requirements for file content
-                                            || lines.Any(l => l.Contains(patternDetails.Cue))); // File contains required cue
-                                }).ToDictionary(k => k.Key, k => k.Value.Reason)
-                                : null;
 
-                        var result = new List<string>();
+                    var result = new List<string>();
 
-                        foreach (var line in lines)
+                    foreach (var line in lines)
+                    {
+                        lineNum++;
+                        if (forbiddenPatternsForThisFile != null)
                         {
-                            lineNum++;
-                            if (forbiddenPatternsForThisFile != null)
+                            foreach (var pattern in forbiddenPatternsForThisFile.Keys.Where(p => line.Contains(p)))
                             {
-                                foreach (var pattern in forbiddenPatternsForThisFile.Keys.Where(p => line.Contains(p)))
-                                {
-                                    var why = forbiddenPatternsByFileMask[fileMask][pattern].Reason;
-                                    result.Add(@"Found prohibited use of");
-                                    result.Add(@"""" + pattern + @"""");
-                                    result.Add("(" + why + ") at");
-                                    result.Add(filename + "(" + lineNum + @")");
-                                    result.Add(line);
-                                    result.Add(string.Empty);
-                                }
-                            }
-
-                            if (requiredPatternsObservedInThisFile != null)
-                            {
-                                foreach (var pattern in requiredPatternsObservedInThisFile.Keys)
-                                {
-                                    if (line.Contains(pattern))
-                                    {
-                                        requiredPatternsObservedInThisFile[pattern] = true;
-                                        break;
-                                    }
-                                }
+                                var why = forbiddenPatternsByFileMask[fileMask][pattern].Reason;
+                                result.Add(@"Found prohibited use of");
+                                result.Add(@"""" + pattern + @"""");
+                                result.Add("(" + why + ") at");
+                                result.Add(filename + "(" + lineNum + @")");
+                                result.Add(line);
+                                result.Add(string.Empty);
                             }
                         }
 
                         if (requiredPatternsObservedInThisFile != null)
                         {
-                            foreach (var requirement in requiredPatternsObservedInThisFile.Where(p => !p.Value))
+                            foreach (var pattern in requiredPatternsObservedInThisFile.Keys)
                             {
-                                var why = requiredPatternsByFileMask[fileMask][requirement.Key].Reason;
-                                result.Add(@"Did not find required use of");
-                                result.Add(@"""" + requirement.Key + @"""");
-                                result.Add("(" + why + ") in");
-                                result.Add(filename);
-                                result.Add(string.Empty);
+                                if (line.Contains(pattern))
+                                {
+                                    requiredPatternsObservedInThisFile[pattern] = true;
+                                    break;
+                                }
                             }
                         }
+                    }
 
-                        if (result.Any())
+                    if (requiredPatternsObservedInThisFile != null)
+                    {
+                        foreach (var requirement in requiredPatternsObservedInThisFile.Where(p => !p.Value))
                         {
-                            results.Add(string.Join(Environment.NewLine, result));
+                            var why = requiredPatternsByFileMask[fileMask][requirement.Key].Reason;
+                            result.Add(@"Did not find required use of");
+                            result.Add(@"""" + requirement.Key + @"""");
+                            result.Add("(" + why + ") in");
+                            result.Add(filename);
+                            result.Add(string.Empty);
                         }
                     }
-                }
 
-                if (results.Any())
-                {
-                    results.Insert(0, string.Empty);
-                    results.Insert(0, string.Format("{0} code inspection failures found:", results.Count));
-                    AssertEx.Fail(string.Join(Environment.NewLine, results));
+                    if (result.Any())
+                    {
+                        results.Add(string.Join(Environment.NewLine, result));
+                    }
                 }
+            }
+
+            if (results.Any())
+            {
+                results.Insert(0, string.Empty);
+                results.Insert(0, string.Format("{0} code inspection failures found:", results.Count));
+                AssertEx.Fail(string.Join(Environment.NewLine, results));
             }
         }
 
@@ -183,7 +185,7 @@ namespace pwiz.SkylineTest
             public bool IgnorePath(string path)
             {
                 return string.IsNullOrEmpty(path) ||
-                       IgnoredDirectories != null && IgnoredDirectories.Any(path.Contains);
+                       IgnoredDirectories != null && IgnoredDirectories.Any(d => path.ToLower().Contains(d.ToLower()));
             }
         }
         private readonly Dictionary<string, Dictionary<string, PatternDetails>> forbiddenPatternsByFileMask = new Dictionary<string, Dictionary<string, PatternDetails>>();
@@ -191,9 +193,33 @@ namespace pwiz.SkylineTest
 
         private enum Inspection { Forbidden, Required }
 
-        private string[] NonLocalizedProjectDirectories = { "Skyline\\Executables", "Skyline\\TestUtil", "Skyline\\SkylineNightly" };
-
         private HashSet<string> allFileMasks = new HashSet<string>();
+
+        private string[] NonLocalizedFiles()
+        {
+            var root = GetCodeBaseRoot(out var thisFile);
+            if (string.IsNullOrEmpty(root))
+            {
+                return null; // Not an installation with code alongside
+            }
+
+            var result = new List<string>();
+
+            // Get the list of files/directories that we don't localize per the KeepResx utility
+            foreach (var line in File.ReadAllLines(root + "\\Executables\\KeepResx\\Program.cs"))
+            {
+                if (line.Trim().StartsWith(@"@"""))
+                {
+                    var parts = line.Split('\"');
+                    result.Add(parts[1].Replace("*", string.Empty));
+                }
+            }
+
+            // Add any others we know don't require L10N
+            result.Add("settings.designer.cs"); 
+            result.Add("resources.designer.cs"); 
+            return result.ToArray();
+        }
 
         void AddInspection(string fileMask, Inspection inspectionType, string[] ignoredDirectories, string cue, string pattern, string reason)
         {
