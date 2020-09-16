@@ -23016,6 +23016,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total ion current.
+        /// </summary>
+        public static string RefineDlg_NormalizationMethod_Total_ion_current {
+            get {
+                return ResourceManager.GetString("RefineDlg_NormalizationMethod_Total_ion_current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} must be less than min peak found ratio..
         /// </summary>
         public static string RefineDlg_OkDialog__0__must_be_less_than_min_peak_found_ratio {

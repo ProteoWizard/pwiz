@@ -755,7 +755,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF = new RefineArgument(@"refine-cv-remove-above-cutoff", NUM_VALUE,
             (c,p) => c.Refinement.CVCutoff = p.ValueDouble >= 1 ? p.ValueDouble : p.ValueDouble * 100);  // If a value like 0.2, interpret as 20%
         public static readonly Argument ARG_REFINE_CV_GLOBAL_NORMALIZE = new RefineArgument(@"refine-cv-global-normalize",
-            new[] { NormalizationMethod.GLOBAL_STANDARDS.Name, NormalizationMethod.EQUALIZE_MEDIANS.Name },
+            new[] { NormalizationMethod.GLOBAL_STANDARDS.Name, NormalizationMethod.EQUALIZE_MEDIANS.Name, NormalizationMethod.TIC.Name },
             (c, p) =>
             {
                 c.Refinement.NormalizationMethod = p.Value.Equals(NormalizationMethod.GLOBAL_STANDARDS.Name)
