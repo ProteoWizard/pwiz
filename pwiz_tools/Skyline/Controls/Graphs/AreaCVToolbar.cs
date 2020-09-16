@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (_graphSummary.DocumentUIContainer.DocumentUI.Settings.HasTicArea)
             {
-                toolStripComboNormalizedTo.Items.Add("Total ion current");
+                toolStripComboNormalizedTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Total_ion_current);
                 _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.tic, -1));
             }
 

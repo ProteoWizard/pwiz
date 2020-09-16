@@ -758,9 +758,18 @@ namespace pwiz.Skyline
             new[] { NormalizationMethod.GLOBAL_STANDARDS.Name, NormalizationMethod.EQUALIZE_MEDIANS.Name, NormalizationMethod.TIC.Name },
             (c, p) =>
             {
-                c.Refinement.NormalizationMethod = p.Value.Equals(NormalizationMethod.GLOBAL_STANDARDS.Name)
-                    ? AreaCVNormalizationMethod.global_standards
-                    : AreaCVNormalizationMethod.medians;
+                if (p.Value == NormalizationMethod.GLOBAL_STANDARDS.Name)
+                {
+                    c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.global_standards;
+                }
+                else if (p.Value == NormalizationMethod.TIC.Name)
+                {
+                    c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.tic;
+                }
+                else
+                {
+                    c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.medians;
+                }
             }) { WrapValue = true };
         public static readonly Argument ARG_REFINE_CV_REFERENCE_NORMALIZE = new RefineArgument(@"refine-cv-reference-normalize", LABEL_VALUE,
             (c, p) =>

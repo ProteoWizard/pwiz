@@ -11082,4 +11082,7 @@ Invalid peptide sequence at position 18
   <data name="RefineDlg_NormalizationMethod_Total_ion_current" xml:space="preserve">
     <value>Total ion current</value>
   </data>
+  <data name="AreaCVToolbar_UpdateUI_Total_ion_current" xml:space="preserve">
+    <value>Total ion current</value>
+  </data>
 </root>
