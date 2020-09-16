@@ -101,10 +101,8 @@
             // toolStripComboNormalizedTo
             // 
             this.toolStripComboNormalizedTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.toolStripComboNormalizedTo.DropDownWidth = 150;
             this.toolStripComboNormalizedTo.Margin = new System.Windows.Forms.Padding(4);
             this.toolStripComboNormalizedTo.Name = "toolStripComboNormalizedTo";
-            this.toolStripComboNormalizedTo.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
             resources.ApplyResources(this.toolStripComboNormalizedTo, "toolStripComboNormalizedTo");
             this.toolStripComboNormalizedTo.SelectedIndexChanged += new System.EventHandler(this.toolStripComboNormalizedTo_SelectedIndexChanged);
             // 

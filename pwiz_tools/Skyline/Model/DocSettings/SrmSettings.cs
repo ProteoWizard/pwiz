@@ -760,37 +760,6 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public bool HasTicArea
-        {
-            get
-            {
-                if (!HasResults)
-                {
-                    // If we have no results yet then assume that the TIC would be available
-                    return true;
-                }
-
-                return MeasuredResults.GetMedianTicArea().HasValue;
-            }
-        }
-
-        public double? GetTicNormalizationDenominator(int replicateIndex, ChromFileInfoId fileId)
-        {
-            var fileInfo = MeasuredResults.Chromatograms[replicateIndex].GetFileInfo(fileId);
-            if (fileInfo == null || !fileInfo.TicArea.HasValue)
-            {
-                return null;
-            }
-
-            var medianTicArea = MeasuredResults.GetMedianTicArea();
-            if (!medianTicArea.HasValue)
-            {
-                return null;
-            }
-
-            return fileInfo.TicArea.Value / medianTicArea.Value;
-        }
-
         public double CalcGlobalStandardArea(int resultsIndex, ChromFileInfo fileInfo)
         {
             if (fileInfo.ExplicitGlobalStandardArea.HasValue)
