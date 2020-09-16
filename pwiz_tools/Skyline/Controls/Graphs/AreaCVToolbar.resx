@@ -169,7 +169,7 @@
     <value>Normalized to:</value>
   </data>
   <data name="toolStripComboNormalizedTo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>82, 23</value>
+    <value>120, 23</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
@@ -235,7 +235,7 @@
     <value>toolStripNumericDetections</value>
   </data>
   <data name="&gt;&gt;toolStripNumericDetections.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.ToolStripNumericUpDown, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.ToolStripNumericUpDown, Skyline-daily, Version=20.1.1.259, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;toolStripLabel3.Name" xml:space="preserve">
     <value>toolStripLabel3</value>
