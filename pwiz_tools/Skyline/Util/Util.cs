@@ -29,7 +29,6 @@ using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -2136,11 +2135,6 @@ namespace pwiz.Skyline.Util
     {
         // This can be set to true to make debugging easier.
         public static readonly bool SINGLE_THREADED = false;
-
-        private static readonly ParallelOptions PARALLEL_OPTIONS = new ParallelOptions
-        {
-            MaxDegreeOfParallelism = SINGLE_THREADED ? 1 : -1
-        };
 
         private class IntHolder
         {
