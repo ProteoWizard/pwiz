@@ -1743,6 +1743,18 @@ namespace pwiz.Skyline.Model.Results
             }
             return false;
         }
+
+        public double? GetMedianTicArea()
+        {
+            var ticAreas = new Statistics(Chromatograms.SelectMany(c => c.MSDataFileInfos)
+                .Where(fileInfo => fileInfo.TicArea.HasValue).Select(fileInfo => fileInfo.TicArea.Value));
+            if (ticAreas.Length == 0)
+            {
+                return null;
+            }
+
+            return ticAreas.Median();
+        }
     }
 
     public sealed class DataFileReplicates

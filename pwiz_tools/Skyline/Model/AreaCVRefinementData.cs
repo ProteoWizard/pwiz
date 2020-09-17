@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model
                             if (!Equals(a, _settings.Annotation) && (_settings.Group == null || _settings.Annotation != null))
                                 continue;
                             
-                            foreach (var i in AnnotationHelper.GetReplicateIndices(document, _settings.Group, a))
+                            foreach (var replicateIndex in AnnotationHelper.GetReplicateIndices(document, _settings.Group, a))
                             {
                                 if (progressMonitor != null && progressMonitor.IsCanceled())
                                     throw new OperationCanceledException();
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model
                                 {
                                     throw new Exception(@"Cancelled");
                                 }
-                                var groupChromInfo = transitionGroupDocNode.GetSafeChromInfo(i)
+                                var groupChromInfo = transitionGroupDocNode.GetSafeChromInfo(replicateIndex)
                                     .FirstOrDefault(c => c.OptimizationStep == 0);
                                 if (groupChromInfo == null)
                                     continue;
@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model
 
                                 if (!groupChromInfo.Area.HasValue)
                                     continue;
-                                var index = i;
+                                var index = replicateIndex;
                                 var sumArea = transitionGroupDocNode.Transitions.Where(t =>
                                 {
                                     if (ms1 != t.IsMs1 || !t.ExplicitQuantitative)
@@ -117,13 +117,29 @@ namespace pwiz.Skyline.Model
 
                                 var normalizedArea = sumArea;
                                 if (_settings.NormalizationMethod == AreaCVNormalizationMethod.medians)
-                                    normalizedArea /= medianInfo.Medians[i] / medianInfo.MedianMedian;
-                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.global_standards && hasGlobalStandards)
+                                {
+                                    normalizedArea /= medianInfo.Medians[replicateIndex] / medianInfo.MedianMedian;
+                                }
+                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.global_standards &&
+                                         hasGlobalStandards)
+                                {
                                     normalizedArea =
-                                        NormalizeToGlobalStandard(document, transitionGroupDocNode, i, sumArea);
+                                        NormalizeToGlobalStandard(document, transitionGroupDocNode, replicateIndex, sumArea);
+                                }
+                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.tic)
+                                {
+                                    var denominator = document.Settings.GetTicNormalizationDenominator(
+                                        replicateIndex, groupChromInfo.FileId);
+                                    if (!denominator.HasValue)
+                                    {
+                                        continue;
+                                    }
+
+                                    normalizedArea /= denominator.Value;
+                                }
                                 else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.ratio && hasHeavyMods && _settings.RatioIndex >= 0)
                                 {
-                                    var ci = transitionGroupDocNode.GetSafeChromInfo(i).FirstOrDefault(c => c.OptimizationStep == 0);
+                                    var ci = transitionGroupDocNode.GetSafeChromInfo(replicateIndex).FirstOrDefault(c => c.OptimizationStep == 0);
                                     if (ci != null)
                                     {
                                         var ratioValue = ci.GetRatio(_settings.RatioIndex);
