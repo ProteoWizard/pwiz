@@ -2068,7 +2068,7 @@
     <value>284, 22</value>
   </data>
   <data name="applyPeakAllToolStripMenuItem.Text" xml:space="preserve">
-    <value>Apply Peak to All</value>
+    <value>Apply Peak to &amp;All</value>
   </data>
   <data name="applyPeakSubsequentToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Shift+S</value>
@@ -2077,7 +2077,7 @@
     <value>284, 22</value>
   </data>
   <data name="applyPeakSubsequentToolStripMenuItem.Text" xml:space="preserve">
-    <value>Apply Peak to Subsequent</value>
+    <value>Apply Peak to &amp;Subsequent</value>
   </data>
   <data name="applyPeakGroupToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>284, 22</value>
@@ -2089,7 +2089,7 @@
     <value>284, 22</value>
   </data>
   <data name="groupApplyToByToolStripMenuItem.Text" xml:space="preserve">
-    <value>Group Apply to By</value>
+    <value>&amp;Group Apply to By</value>
   </data>
   <data name="removePeakToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Shift+R</value>
@@ -2098,7 +2098,7 @@
     <value>284, 22</value>
   </data>
   <data name="removePeakToolStripMenuItem.Text" xml:space="preserve">
-    <value>Remove Peak</value>
+    <value>&amp;Remove Peak</value>
   </data>
   <data name="integrationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>
@@ -6964,6 +6964,12 @@ first occurrence of any peptide.</value>
   </data>
   <data name="&gt;&gt;detectionsToolStripSeparator3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVTotalIonCurrentToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVTotalIonCurrentToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVTotalIonCurrentToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineWindow</value>
