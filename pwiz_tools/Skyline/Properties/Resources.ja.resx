@@ -10766,7 +10766,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>イオン{0}に複数のイオン移動度値があります。Skylineは複数の配座異性体をサポートしているため、これは意図的である可能性があります。</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_ValidateUniquePrecursors_The_following_ions_have_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_" xml:space="preserve">
-    <value>次のイオン{0}に複数のイオン移動度値があります。Skylineは複数の配座異性体をサポートしているため、これは意図的である可能性があります。</value>
+    <value>次のイオンに複数のイオン移動度値があります。Skylineは複数の配座異性体をサポートしているため、これは意図的である可能性があります。</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_ValidateUniquePrecursors_This_list_contains__0__ions_with_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_" xml:space="preserve">
     <value>このリストには複数のイオン移動度値を持つイオンが{0}個含まれています。Skylineは複数の配座異性体をサポートしているため、これは意図的である可能性があります。</value>
