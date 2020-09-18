@@ -118,6 +118,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="SkylineCmdResources.ja.resx">
+      <DependentUpon>SkylineCmdResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="SkylineCmdResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>SkylineCmdResources.Designer.cs</LastGenOutput>

@@ -2065,6 +2065,9 @@
     <EmbeddedResource Include="Controls\AuditLog\AuditLogExtraInfoForm.zh-CHS.resx">
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\AuditLog\AuditLogForm.resx">
+      <DependentUpon>AuditLogForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2140,6 +2143,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AsyncChromatogramsGraph2.zh-CHS.resx">
       <DependentUpon>AsyncChromatogramsGraph2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\DetectionsToolbar.ja.resx">
+      <DependentUpon>DetectionsToolbar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\DetectionToolbarProperties.ja.resx">
+      <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\ExportMethodScheduleGraph.ja.resx">
+      <DependentUpon>ExportMethodScheduleGraph.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\ExportMethodScheduleGraph.resx">
       <DependentUpon>ExportMethodScheduleGraph.cs</DependentUpon>
@@ -2363,6 +2375,9 @@
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditLinkedPeptideDlg.ja.resx">
+      <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditLinkedPeptideDlg.resx">
       <DependentUpon>EditLinkedPeptideDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2427,6 +2442,9 @@
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.ja.resx">
+      <DependentUpon>DDASearchControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.resx">
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -2438,6 +2456,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.zh-CHS.resx">
       <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.ja.resx">
+      <DependentUpon>SearchSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.resx">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
@@ -3276,6 +3297,18 @@
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.zh-CHS.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\IonMobility\IonMobilityFilteringUserControl.ja.resx">
+      <DependentUpon>IonMobilityFilteringUserControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\SelectIrtStandardDlg.ja.resx">
+      <DependentUpon>SelectIrtStandardDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\UseCurrentCalculatorDlg.ja.resx">
+      <DependentUpon>UseCurrentCalculatorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\MetadataRuleEditor.ja.resx">
+      <DependentUpon>MetadataRuleEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\MetadataRuleEditor.resx">
       <DependentUpon>MetadataRuleEditor.cs</DependentUpon>
     </EmbeddedResource>
@@ -3536,6 +3569,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\UseCurrentCalculatorDlg.resx">
       <DependentUpon>UseCurrentCalculatorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\MetadataRuleSetEditor.ja.resx">
+      <DependentUpon>MetadataRuleSetEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\MetadataRuleSetEditor.resx">
       <DependentUpon>MetadataRuleSetEditor.cs</DependentUpon>
