@@ -2150,6 +2150,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var iAdduct = reader.GetOrdinal("precursorAdduct");
                 var iIonMobility = reader.GetOrdinal("ionMobility");
+                var iIonMobilityHighEnergyOffset = reader.GetOrdinal("ionMobilityHighEnergyOffset");
                 var iCCS = reader.GetOrdinal("collisionalCrossSectionSqA");
                 var noMoleculeDetails = reader.GetOrdinal("moleculeName") < 0; // Also a cue for presence of chemicalFormula, inchiKey, and otherKeys
                 while (reader.Read())
@@ -2163,6 +2164,7 @@ namespace pwiz.SkylineTestUtil
                         PrecursorMZ = double.Parse(reader["precursorMZ"].ToString()),
                         RetentionTime = double.Parse(reader["retentionTime"].ToString()),
                         IonMobility = ParseNullable(reader, iIonMobility),
+                        IonMobilityHighEnergyOffset = ParseNullable(reader, iIonMobilityHighEnergyOffset),
                         CollisionalCrossSectionSqA = ParseNullable(reader, iCCS),
                         MoleculeName = noMoleculeDetails ? string.Empty : reader["moleculeName"].ToString(),
                         ChemicalFormula = noMoleculeDetails ? string.Empty : reader["chemicalFormula"].ToString(),
