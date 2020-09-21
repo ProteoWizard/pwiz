@@ -20,6 +20,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Windows.Forms;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -30,13 +31,13 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PasteTransitionListTest : AbstractFunctionalTest
     {
-        private string precursor = "Precursor m/z";
-        private string product = "Product m/z";
-        private string peptide = "Peptide Modified Sequence";
-        private string protName = "Protein Name";
-        private string fragName = "Fragment Name";
-        private string preCharge = "Precursor Charge";
-        private string label = "Label Type";
+        private string precursor = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z;
+        private string product = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z;
+        private string peptide = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence;
+        private string protName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
+        private string fragName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name;
+        private string preCharge =  Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge;
+        private string label  = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
 
         [TestMethod]
         public void TestPasteTransitionList()
@@ -62,7 +63,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(peptide, thermBoxes[3].Text);
                 Assert.AreEqual(protName, thermBoxes[4].Text);
                 Assert.AreEqual(fragName, thermBoxes[5].Text);
-                Assert.AreEqual(preCharge, thermBoxes[6].Text);
                 Assert.AreEqual(label, thermBoxes[7].Text);
                 // Modifies the selected index of one box so later we can test if it saved 
                 thermBoxes[4].SelectedIndex = 2;
@@ -84,12 +84,48 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreNotEqual(protName, secondBoxes[4].Text);
                 secondtherm.CancelDialog();
             });
+
+            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("Peptide Transition List.csv")));
+            // This will paste in a transition list with headers
+            var peptideTransitionList = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+
+            RunUI(() => SkylineWindow.NewDocument());
+
+            WaitForDocumentLoaded();
+            RunUI(() =>
+            {
+                var peptideBoxes = peptideTransitionList.ComboBoxes;
+                // Changes the contents of a combo box
+                peptideBoxes[4].SelectedIndex = 1;
+                // Clicking the Ok button will the change
+                peptideTransitionList.buttonOk.PerformClick();
+                peptideTransitionList.CancelDialog();
+            });
+
+            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("Peptide Transition List diff headers.csv")));
+            // This will paste in the same transition list, but with different headers. The program should realize it has
+            // different headers and not use the saved list of column names
+           
+
             RunUI(() => SkylineWindow.NewDocument());
 
             WaitForDocumentLoaded();
 
+            var peptideTransitionListDiffHeaders = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            RunUI(() =>
+            {
+                var diffPeptideBoxes = peptideTransitionListDiffHeaders.ComboBoxes;
+                // Checks that the program did not use the saved indices
+                Assert.AreNotEqual(diffPeptideBoxes[4].SelectedIndex, 1);
+                peptideTransitionList.CancelDialog();
+            });
+
             SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("Peptide Transition List.csv")));
             var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+
+            RunUI(() => SkylineWindow.NewDocument());
+
+            WaitForDocumentLoaded();
 
             RunUI(() => {
                 var comboBoxes = dlg.ComboBoxes;
