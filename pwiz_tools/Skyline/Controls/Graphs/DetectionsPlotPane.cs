@@ -170,78 +170,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        protected class ProgressBarImplementation : IDisposable
-        {
-            readonly LineObj _left = new LineObj()
-            {
-                IsClippedToChartRect = true,
-                Line = new Line() { Width = 4, Color = Color.Green, Style = DashStyle.Solid },
-                Location = new Location(0,0, CoordType.PaneFraction)
-            };
-            readonly LineObj _right = new LineObj()
-            {
-                IsClippedToChartRect = true,
-                Line = new Line() { Width = 4, Color = Color.LightGreen, Style = DashStyle.Solid },
-                Location = new Location(0, 0, CoordType.PaneFraction)
-            };
-            private SizeF _titleSize;
-            private PointF _barLocation;
-            private readonly DetectionsPlotPane _parent;
-
-            public ProgressBarImplementation(DetectionsPlotPane parent)
-            {
-                _parent = parent;
-                var scaleFactor = parent.CalcScaleFactor();
-                using (var g = parent.GraphSummary.CreateGraphics())
-                {
-                    _titleSize = parent.Title.FontSpec.BoundingBox(g, parent.Title.Text, scaleFactor);
-                }
-                _barLocation = new PointF(
-                    (parent.Rect.Left + parent.Rect.Right - _titleSize.Width) / (2 * parent.Rect.Width),
-                    (parent.Rect.Top + parent.Margin.Top * (1+scaleFactor) + _titleSize.Height)/ parent.Rect.Height);
-
-                _left.Location.X = _barLocation.X;
-                _left.Location.Y = _barLocation.Y;
-                _left.Location.Width = 0;
-                _left.Location.Height = 0;
-                _right.Location.X = _barLocation.X;
-                _right.Location.Y = _barLocation.Y;
-                _right.Location.Width = _titleSize.Width/ parent.Rect.Width;
-                _right.Location.Height = 0;
-                parent.GraphObjList.Add(_left);
-                parent.GraphObjList.Add(_right);
-            }
-
-            public void Dispose()
-            {
-                _parent.GraphObjList.Remove(_left);
-                _parent.GraphObjList.Remove(_right);
-            }
-
-            public void UpdateBar(int progress)
-            {
-                if(_parent.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _left)) == null)
-                    _parent.GraphObjList.Add(_left);
-                if (_parent.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _right)) == null)
-                    _parent.GraphObjList.Add(_right);
-
-                var len1 = _titleSize.Width * progress / 100 / _parent.Rect.Width;
-
-                _left.Location.X = _barLocation.X;
-                _left.Location.Y = _barLocation.Y;
-                _left.Location.Width = len1;
-                _left.Location.Height = 0;
-                _right.Location.X = _barLocation.X + len1;
-                _right.Location.Y = _barLocation.Y;
-                _right.Location.Width = _titleSize.Width/ _parent.Rect.Width - len1;
-                _right.Location.Height = 0;
-
-                
-                _parent.GraphSummary.GraphControl.Invalidate();
-                _parent.GraphSummary.GraphControl.Update();
-            }
-        }
-
         protected DetectionPlotData _detectionData = DetectionPlotData.INVALID;
         public int MaxRepCount { get; private set; }
         protected DetectionPlotData.DataSet TargetData => _detectionData.GetTargetData(Settings.TargetType);
@@ -255,9 +183,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         } 
 
-
         public ToolTipImplementation ToolTip { get; private set; }
-        protected ProgressBarImplementation ProgressBar { get; private set; }
+        protected PaneProgressBar ProgressBar { get; private set; }
 
         protected DetectionsPlotPane(GraphSummary graphSummary) : base(graphSummary)
         {
@@ -277,8 +204,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void UpdateProgressHandler(int progress)
         {
-            if(GraphSummary.GraphControl.IsHandleCreated)
-                GraphSummary.GraphControl.Invoke((Action) (() => { ProgressBar?.UpdateBar(progress); }));
+            ProgressBar?.UpdateProgress(progress);
         }
 
         public void UpdateStatusHandler(DetectionPlotData.DetectionDataCache.CacheStatus status)
@@ -288,7 +214,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     AddLabels();
                     if (status == DetectionPlotData.DetectionDataCache.CacheStatus.processing)
-                        ProgressBar = new ProgressBarImplementation(this);
+                        ProgressBar = new PaneProgressBar(this);
                     else
                     {
                         ProgressBar?.Dispose();

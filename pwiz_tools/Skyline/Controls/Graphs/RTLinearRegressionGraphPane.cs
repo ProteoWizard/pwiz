@@ -57,6 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private GraphData _data;
         private NodeTip _tip;
         private CancellationTokenSource _cancellationTokenSource;
+        public PaneProgressBar _progressBar;
 
         private bool _pendingUpdate;
 
@@ -263,7 +264,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private GraphData Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex, CancellationToken token)
         {
             bool bestResults = (ShowReplicate == ReplicateDisplay.best);
-            return new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, pointsType, regressionMethod, origIndex, this, new CustomCancellationToken(token));
+            return new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, 
+                pointsType, regressionMethod, origIndex, this, new CustomCancellationToken(token));
             
         }
 
@@ -292,7 +294,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void Draw(Graphics g)
         {
-            GraphObjList.Clear();
+            //GraphObjList.Clear();
 
             var data = Data;
             if (data != null && RTGraphController.PlotType == PlotTypeRT.correlation)
@@ -411,7 +413,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                 @"Update and refine regression data");
                         }
                         Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
+                        _progressBar = new PaneProgressBar(this);
                         shouldDrawGraph = false;
+                        Legend.IsVisible = false;
                     }
                 }
                 else
@@ -419,6 +423,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     lock (_requestLock)
                     {
                         _requestContext = null;
+                        _progressBar?.Dispose();
+                        _progressBar = null;
+                        Legend.IsVisible = true;
                     }
                 }
 
@@ -623,6 +630,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         sealed class GraphData : Immutable
         {
+            public const int REPORTING_STEP = 3;
+
             private readonly SrmDocument _document;
             private readonly RTLinearRegressionGraphPane _graphPane;
             private readonly RegressionMethodRT _regressionMethod;
@@ -700,11 +709,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Only used if we are comparing two runs
                 var origTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
                 var targetTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
-                
+
+                var peptideCount = 0;
+                var currentProgress = 0;
+                var reportingStep = document.PeptideCount / (90 / REPORTING_STEP);
                 foreach (var nodePeptide in document.Molecules)
                 {
                     ThreadingHelper.CheckCanceled(token);
                     index++;
+                    if (peptideCount++ == reportingStep * currentProgress)
+                        graphPane._progressBar?.UpdateProgress(REPORTING_STEP * currentProgress++);
 
                     switch (RTGraphController.PointsType)
                     {
@@ -1375,6 +1389,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     label = regression.Conversion.GetRegressionDescription(statistics.R, regression.TimeWindow);
                 }
+
+                graphPane.GraphObjList.RemoveAll(o => o is TextObj);
 
                 TextObj text = new TextObj(label, score, time,
                                            CoordType.AxisXYScale, AlignH.Left, AlignV.Top)
