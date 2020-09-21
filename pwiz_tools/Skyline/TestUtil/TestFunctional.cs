@@ -821,7 +821,11 @@ namespace pwiz.SkylineTestUtil
             {
                 var alertDlg = FindOpenForm<AlertDlg>();
                 if (alertDlg != null)
-                    Assert.Fail("Unexpected alert found: {0}", TextUtil.LineSeparate(alertDlg.Message, alertDlg.DetailMessage));
+                {
+                    AssertEx.Fail("Unexpected alert found: {0}{1}Open forms: {2}",
+                        TextUtil.LineSeparate(alertDlg.Message, alertDlg.DetailMessage),
+                        new string('\n', 3), GetOpenFormsString());
+                }
                 return SkylineWindow.DocumentUI.IsLoaded;
             });
             WaitForProteinMetadataBackgroundLoaderCompletedUI(millis);  // make sure document is stable
