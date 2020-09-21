@@ -504,6 +504,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 precursor.selectedIons.clear();
                 precursor.selectedIons.push_back(selectedIon);
 
+                double precursorIsolationMz = 0; // TODO: how to get precursor's isolation m/z in this branch? (i.e. the isolation m/z of the MS2 for an MS3 spectrum)
+                size_t precursorScanIndex = findPrecursorSpectrumIndex(raw, precursorInfo.msLevel, isolationMz, precursorIsolationMz, index);
+                if (precursorScanIndex < index_.size())
+                    precursor.spectrumID = index_[precursorScanIndex].id;
+
                 if (addMultiFill)
                 {
                     scan.userParams.push_back(UserParam("MultiFillTime", lexical_cast<string>(*fillTimeItr), "xsd:double"));

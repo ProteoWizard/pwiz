@@ -83,61 +83,46 @@
             // 
             // btnEdit
             // 
-            this.btnEdit.Location = new System.Drawing.Point(4, 3);
+            resources.ApplyResources(this.btnEdit, "btnEdit");
             this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Size = new System.Drawing.Size(75, 23);
-            this.btnEdit.TabIndex = 2;
-            this.btnEdit.Text = "Edit";
+            this.toolTip_MainForm.SetToolTip(this.btnEdit, resources.GetString("btnEdit.ToolTip"));
             this.btnEdit.UseVisualStyleBackColor = true;
             this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
             // 
             // btnDelete
             // 
-            this.btnDelete.Location = new System.Drawing.Point(4, 85);
+            resources.ApplyResources(this.btnDelete, "btnDelete");
             this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(75, 23);
-            this.btnDelete.TabIndex = 3;
-            this.btnDelete.Text = "Delete";
+            this.toolTip_MainForm.SetToolTip(this.btnDelete, resources.GetString("btnDelete.ToolTip"));
             this.btnDelete.UseVisualStyleBackColor = true;
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
             // btnCopy
             // 
-            this.btnCopy.Location = new System.Drawing.Point(4, 44);
+            resources.ApplyResources(this.btnCopy, "btnCopy");
             this.btnCopy.Name = "btnCopy";
-            this.btnCopy.Size = new System.Drawing.Size(75, 23);
-            this.btnCopy.TabIndex = 4;
-            this.btnCopy.Text = "Copy";
+            this.toolTip_MainForm.SetToolTip(this.btnCopy, resources.GetString("btnCopy.ToolTip"));
             this.btnCopy.UseVisualStyleBackColor = true;
             this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
             // lblNoConfigs
             // 
-            this.lblNoConfigs.AutoSize = true;
-            this.lblNoConfigs.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            resources.ApplyResources(this.lblNoConfigs, "lblNoConfigs");
             this.lblNoConfigs.ForeColor = System.Drawing.Color.Blue;
-            this.lblNoConfigs.Location = new System.Drawing.Point(1, 2);
             this.lblNoConfigs.Name = "lblNoConfigs";
-            this.lblNoConfigs.Size = new System.Drawing.Size(521, 16);
-            this.lblNoConfigs.TabIndex = 5;
-            this.lblNoConfigs.Text = "There are no saved configurations. Click the button below to create a new configu" +
-    "ration.";
+            this.toolTip_MainForm.SetToolTip(this.lblNoConfigs, resources.GetString("lblNoConfigs.ToolTip"));
             // 
             // btnNewConfig
             // 
-            this.btnNewConfig.Location = new System.Drawing.Point(160, 30);
+            resources.ApplyResources(this.btnNewConfig, "btnNewConfig");
             this.btnNewConfig.Name = "btnNewConfig";
-            this.btnNewConfig.Size = new System.Drawing.Size(202, 23);
-            this.btnNewConfig.TabIndex = 6;
-            this.btnNewConfig.Text = "Create a new configuration";
+            this.toolTip_MainForm.SetToolTip(this.btnNewConfig, resources.GetString("btnNewConfig.ToolTip"));
             this.btnNewConfig.UseVisualStyleBackColor = true;
             this.btnNewConfig.Click += new System.EventHandler(this.btnNewConfig_Click);
             // 
             // listViewConfigs
             // 
-            this.listViewConfigs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
             this.listViewConfigs.CheckBoxes = true;
             this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.listViewConfigName,
@@ -146,11 +131,9 @@
             this.listViewStatus});
             this.listViewConfigs.FullRowSelect = true;
             this.listViewConfigs.HideSelection = false;
-            this.listViewConfigs.Location = new System.Drawing.Point(48, 54);
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
-            this.listViewConfigs.Size = new System.Drawing.Size(539, 351);
-            this.listViewConfigs.TabIndex = 7;
+            this.toolTip_MainForm.SetToolTip(this.listViewConfigs, resources.GetString("listViewConfigs.ToolTip"));
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
             this.listViewConfigs.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewConfigs_ColumnClick);
@@ -160,354 +143,268 @@
             // 
             // listViewConfigName
             // 
-            this.listViewConfigName.Text = "Configuration";
-            this.listViewConfigName.Width = 257;
+            resources.ApplyResources(this.listViewConfigName, "listViewConfigName");
             // 
             // listViewUser
             // 
-            this.listViewUser.Text = "User";
-            this.listViewUser.Width = 117;
+            resources.ApplyResources(this.listViewUser, "listViewUser");
             // 
             // listViewCreated
             // 
-            this.listViewCreated.Text = "Created";
-            this.listViewCreated.Width = 80;
+            resources.ApplyResources(this.listViewCreated, "listViewCreated");
             // 
             // listViewStatus
             // 
-            this.listViewStatus.Text = "Status";
-            this.listViewStatus.Width = 69;
+            resources.ApplyResources(this.listViewStatus, "listViewStatus");
             // 
             // labelSavedConfigurations
             // 
-            this.labelSavedConfigurations.AutoSize = true;
-            this.labelSavedConfigurations.Location = new System.Drawing.Point(47, 35);
+            resources.ApplyResources(this.labelSavedConfigurations, "labelSavedConfigurations");
             this.labelSavedConfigurations.Name = "labelSavedConfigurations";
-            this.labelSavedConfigurations.Size = new System.Drawing.Size(110, 13);
-            this.labelSavedConfigurations.TabIndex = 8;
-            this.labelSavedConfigurations.Text = "Saved configurations:";
+            this.toolTip_MainForm.SetToolTip(this.labelSavedConfigurations, resources.GetString("labelSavedConfigurations.ToolTip"));
             // 
             // btnViewLog1
             // 
-            this.btnViewLog1.Location = new System.Drawing.Point(4, 151);
+            resources.ApplyResources(this.btnViewLog1, "btnViewLog1");
             this.btnViewLog1.Name = "btnViewLog1";
-            this.btnViewLog1.Size = new System.Drawing.Size(75, 23);
-            this.btnViewLog1.TabIndex = 9;
-            this.btnViewLog1.Text = "View log";
+            this.toolTip_MainForm.SetToolTip(this.btnViewLog1, resources.GetString("btnViewLog1.ToolTip"));
             this.btnViewLog1.UseVisualStyleBackColor = true;
             this.btnViewLog1.Click += new System.EventHandler(this.btnViewLog1_Click);
             // 
             // tabMain
             // 
-            this.tabMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.tabMain, "tabMain");
             this.tabMain.Controls.Add(this.tabFront);
             this.tabMain.Controls.Add(this.tabLog);
             this.tabMain.Controls.Add(this.tabSettings);
-            this.tabMain.Location = new System.Drawing.Point(12, 12);
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
-            this.tabMain.Size = new System.Drawing.Size(739, 551);
-            this.tabMain.TabIndex = 10;
+            this.toolTip_MainForm.SetToolTip(this.tabMain, resources.GetString("tabMain.ToolTip"));
             this.tabMain.Deselecting += new System.Windows.Forms.TabControlCancelEventHandler(this.TabMain_Deselecting);
             // 
             // tabFront
             // 
+            resources.ApplyResources(this.tabFront, "tabFront");
             this.tabFront.BackColor = System.Drawing.Color.Transparent;
             this.tabFront.Controls.Add(this.listViewConfigs);
             this.tabFront.Controls.Add(this.labelSavedConfigurations);
             this.tabFront.Controls.Add(this.panel1);
             this.tabFront.Controls.Add(this.panel2);
-            this.tabFront.Location = new System.Drawing.Point(4, 22);
             this.tabFront.Name = "tabFront";
-            this.tabFront.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFront.Size = new System.Drawing.Size(731, 525);
-            this.tabFront.TabIndex = 0;
-            this.tabFront.Text = "Configurations";
+            this.toolTip_MainForm.SetToolTip(this.tabFront, resources.GetString("tabFront.ToolTip"));
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Controls.Add(this.btnImportConfigs);
             this.panel1.Controls.Add(this.btnExportConfigs);
             this.panel1.Controls.Add(this.btnViewLog1);
             this.panel1.Controls.Add(this.btnEdit);
             this.panel1.Controls.Add(this.btnCopy);
             this.panel1.Controls.Add(this.btnDelete);
-            this.panel1.Location = new System.Drawing.Point(612, 77);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(93, 306);
-            this.panel1.TabIndex = 12;
+            this.toolTip_MainForm.SetToolTip(this.panel1, resources.GetString("panel1.ToolTip"));
             // 
             // btnImportConfigs
             // 
-            this.btnImportConfigs.Location = new System.Drawing.Point(4, 256);
+            resources.ApplyResources(this.btnImportConfigs, "btnImportConfigs");
             this.btnImportConfigs.Name = "btnImportConfigs";
-            this.btnImportConfigs.Size = new System.Drawing.Size(75, 23);
-            this.btnImportConfigs.TabIndex = 11;
-            this.btnImportConfigs.Text = "Import...";
-            this.toolTip_MainForm.SetToolTip(this.btnImportConfigs, "Import saved configurations...");
+            this.toolTip_MainForm.SetToolTip(this.btnImportConfigs, resources.GetString("btnImportConfigs.ToolTip"));
             this.btnImportConfigs.UseVisualStyleBackColor = true;
             this.btnImportConfigs.Click += new System.EventHandler(this.btnImport_Click);
             // 
             // btnExportConfigs
             // 
-            this.btnExportConfigs.Location = new System.Drawing.Point(4, 216);
+            resources.ApplyResources(this.btnExportConfigs, "btnExportConfigs");
             this.btnExportConfigs.Name = "btnExportConfigs";
-            this.btnExportConfigs.Size = new System.Drawing.Size(75, 23);
-            this.btnExportConfigs.TabIndex = 10;
-            this.btnExportConfigs.Text = "Export...";
-            this.toolTip_MainForm.SetToolTip(this.btnExportConfigs, "Export saved configurations...");
+            this.toolTip_MainForm.SetToolTip(this.btnExportConfigs, resources.GetString("btnExportConfigs.ToolTip"));
             this.btnExportConfigs.UseVisualStyleBackColor = true;
             this.btnExportConfigs.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // panel2
             // 
-            this.panel2.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Controls.Add(this.lblNoConfigs);
             this.panel2.Controls.Add(this.btnNewConfig);
-            this.panel2.Location = new System.Drawing.Point(56, 426);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(523, 69);
-            this.panel2.TabIndex = 13;
+            this.toolTip_MainForm.SetToolTip(this.panel2, resources.GetString("panel2.ToolTip"));
             // 
             // tabLog
             // 
+            resources.ApplyResources(this.tabLog, "tabLog");
             this.tabLog.BackColor = System.Drawing.Color.Transparent;
             this.tabLog.Controls.Add(this.btnOpenFolder);
             this.tabLog.Controls.Add(this.btnViewLog2);
             this.tabLog.Controls.Add(this.lblConfigSelect);
             this.tabLog.Controls.Add(this.textBoxLog);
             this.tabLog.Controls.Add(this.comboConfigs);
-            this.tabLog.Location = new System.Drawing.Point(4, 22);
             this.tabLog.Name = "tabLog";
-            this.tabLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLog.Size = new System.Drawing.Size(731, 525);
-            this.tabLog.TabIndex = 1;
-            this.tabLog.Text = "Log";
+            this.toolTip_MainForm.SetToolTip(this.tabLog, resources.GetString("tabLog.ToolTip"));
             // 
             // btnOpenFolder
             // 
-            this.btnOpenFolder.Location = new System.Drawing.Point(627, 19);
+            resources.ApplyResources(this.btnOpenFolder, "btnOpenFolder");
             this.btnOpenFolder.Name = "btnOpenFolder";
-            this.btnOpenFolder.Size = new System.Drawing.Size(81, 23);
-            this.btnOpenFolder.TabIndex = 5;
-            this.btnOpenFolder.Text = "Open folder";
+            this.toolTip_MainForm.SetToolTip(this.btnOpenFolder, resources.GetString("btnOpenFolder.ToolTip"));
             this.btnOpenFolder.UseVisualStyleBackColor = true;
             this.btnOpenFolder.Click += new System.EventHandler(this.btnOpenFolder_Click);
             // 
             // btnViewLog2
             // 
-            this.btnViewLog2.Location = new System.Drawing.Point(546, 19);
+            resources.ApplyResources(this.btnViewLog2, "btnViewLog2");
             this.btnViewLog2.Name = "btnViewLog2";
-            this.btnViewLog2.Size = new System.Drawing.Size(75, 23);
-            this.btnViewLog2.TabIndex = 4;
-            this.btnViewLog2.Text = "View log";
+            this.toolTip_MainForm.SetToolTip(this.btnViewLog2, resources.GetString("btnViewLog2.ToolTip"));
             this.btnViewLog2.UseVisualStyleBackColor = true;
             this.btnViewLog2.Click += new System.EventHandler(this.btnViewLog2_Click);
             // 
             // lblConfigSelect
             // 
-            this.lblConfigSelect.AutoSize = true;
-            this.lblConfigSelect.Location = new System.Drawing.Point(21, 19);
+            resources.ApplyResources(this.lblConfigSelect, "lblConfigSelect");
             this.lblConfigSelect.Name = "lblConfigSelect";
-            this.lblConfigSelect.Size = new System.Drawing.Size(72, 13);
-            this.lblConfigSelect.TabIndex = 2;
-            this.lblConfigSelect.Text = "Configuration:";
+            this.toolTip_MainForm.SetToolTip(this.lblConfigSelect, resources.GetString("lblConfigSelect.ToolTip"));
             // 
             // textBoxLog
             // 
-            this.textBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxLog.Location = new System.Drawing.Point(24, 59);
+            resources.ApplyResources(this.textBoxLog, "textBoxLog");
             this.textBoxLog.Name = "textBoxLog";
             this.textBoxLog.ReadOnly = true;
-            this.textBoxLog.Size = new System.Drawing.Size(684, 446);
-            this.textBoxLog.TabIndex = 1;
-            this.textBoxLog.Text = "";
+            this.toolTip_MainForm.SetToolTip(this.textBoxLog, resources.GetString("textBoxLog.ToolTip"));
             // 
             // comboConfigs
             // 
+            resources.ApplyResources(this.comboConfigs, "comboConfigs");
             this.comboConfigs.FormattingEnabled = true;
-            this.comboConfigs.Location = new System.Drawing.Point(114, 19);
             this.comboConfigs.Name = "comboConfigs";
-            this.comboConfigs.Size = new System.Drawing.Size(414, 21);
-            this.comboConfigs.TabIndex = 0;
+            this.toolTip_MainForm.SetToolTip(this.comboConfigs, resources.GetString("comboConfigs.ToolTip"));
             // 
             // tabSettings
             // 
+            resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.BackColor = System.Drawing.SystemColors.Control;
             this.tabSettings.Controls.Add(this.groupBoxSkylineSettings);
             this.tabSettings.Controls.Add(this.label_Skylinecmd);
             this.tabSettings.Controls.Add(this.groupBoxAutoQcSettings);
-            this.tabSettings.Location = new System.Drawing.Point(4, 22);
             this.tabSettings.Name = "tabSettings";
-            this.tabSettings.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSettings.Size = new System.Drawing.Size(731, 525);
-            this.tabSettings.TabIndex = 2;
-            this.tabSettings.Text = "Settings";
+            this.toolTip_MainForm.SetToolTip(this.tabSettings, resources.GetString("tabSettings.ToolTip"));
             // 
             // groupBoxSkylineSettings
             // 
+            resources.ApplyResources(this.groupBoxSkylineSettings, "groupBoxSkylineSettings");
             this.groupBoxSkylineSettings.Controls.Add(this.panelSkylineType);
             this.groupBoxSkylineSettings.Controls.Add(this.buttonFileDialogSkylineInstall);
             this.groupBoxSkylineSettings.Controls.Add(this.radioButtonWebBasedSkyline);
             this.groupBoxSkylineSettings.Controls.Add(this.buttonApplySkylineSettings);
             this.groupBoxSkylineSettings.Controls.Add(this.radioButtonSpecifySkylinePath);
             this.groupBoxSkylineSettings.Controls.Add(this.textBoxSkylinePath);
-            this.groupBoxSkylineSettings.Location = new System.Drawing.Point(53, 27);
             this.groupBoxSkylineSettings.Name = "groupBoxSkylineSettings";
-            this.groupBoxSkylineSettings.Size = new System.Drawing.Size(629, 196);
-            this.groupBoxSkylineSettings.TabIndex = 9;
             this.groupBoxSkylineSettings.TabStop = false;
-            this.groupBoxSkylineSettings.Text = "Skyline Settings";
+            this.toolTip_MainForm.SetToolTip(this.groupBoxSkylineSettings, resources.GetString("groupBoxSkylineSettings.ToolTip"));
             // 
             // panelSkylineType
             // 
+            resources.ApplyResources(this.panelSkylineType, "panelSkylineType");
             this.panelSkylineType.Controls.Add(this.radioButtonUseSkylineDaily);
             this.panelSkylineType.Controls.Add(this.radioButtonUseSkyline);
-            this.panelSkylineType.Location = new System.Drawing.Point(6, 19);
             this.panelSkylineType.Name = "panelSkylineType";
-            this.panelSkylineType.Size = new System.Drawing.Size(611, 39);
-            this.panelSkylineType.TabIndex = 10;
+            this.toolTip_MainForm.SetToolTip(this.panelSkylineType, resources.GetString("panelSkylineType.ToolTip"));
             // 
             // radioButtonUseSkylineDaily
             // 
-            this.radioButtonUseSkylineDaily.AutoSize = true;
-            this.radioButtonUseSkylineDaily.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.radioButtonUseSkylineDaily.Location = new System.Drawing.Point(122, 14);
+            resources.ApplyResources(this.radioButtonUseSkylineDaily, "radioButtonUseSkylineDaily");
             this.radioButtonUseSkylineDaily.Name = "radioButtonUseSkylineDaily";
-            this.radioButtonUseSkylineDaily.Size = new System.Drawing.Size(105, 17);
-            this.radioButtonUseSkylineDaily.TabIndex = 8;
             this.radioButtonUseSkylineDaily.TabStop = true;
-            this.radioButtonUseSkylineDaily.Text = "Use Skyline-daily";
+            this.toolTip_MainForm.SetToolTip(this.radioButtonUseSkylineDaily, resources.GetString("radioButtonUseSkylineDaily.ToolTip"));
             this.radioButtonUseSkylineDaily.UseVisualStyleBackColor = true;
             // 
             // radioButtonUseSkyline
             // 
-            this.radioButtonUseSkyline.AutoSize = true;
-            this.radioButtonUseSkyline.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.radioButtonUseSkyline.Location = new System.Drawing.Point(4, 14);
+            resources.ApplyResources(this.radioButtonUseSkyline, "radioButtonUseSkyline");
             this.radioButtonUseSkyline.Name = "radioButtonUseSkyline";
-            this.radioButtonUseSkyline.Size = new System.Drawing.Size(81, 17);
-            this.radioButtonUseSkyline.TabIndex = 7;
             this.radioButtonUseSkyline.TabStop = true;
-            this.radioButtonUseSkyline.Text = "Use Skyline";
+            this.toolTip_MainForm.SetToolTip(this.radioButtonUseSkyline, resources.GetString("radioButtonUseSkyline.ToolTip"));
             this.radioButtonUseSkyline.UseVisualStyleBackColor = true;
             // 
             // buttonFileDialogSkylineInstall
             // 
-            this.buttonFileDialogSkylineInstall.Enabled = false;
-            this.buttonFileDialogSkylineInstall.Location = new System.Drawing.Point(562, 122);
+            resources.ApplyResources(this.buttonFileDialogSkylineInstall, "buttonFileDialogSkylineInstall");
             this.buttonFileDialogSkylineInstall.Name = "buttonFileDialogSkylineInstall";
-            this.buttonFileDialogSkylineInstall.Size = new System.Drawing.Size(26, 20);
-            this.buttonFileDialogSkylineInstall.TabIndex = 11;
-            this.buttonFileDialogSkylineInstall.Text = "...";
+            this.toolTip_MainForm.SetToolTip(this.buttonFileDialogSkylineInstall, resources.GetString("buttonFileDialogSkylineInstall.ToolTip"));
             this.buttonFileDialogSkylineInstall.UseVisualStyleBackColor = true;
             this.buttonFileDialogSkylineInstall.Click += new System.EventHandler(this.buttonFileDialogSkylineInstall_click);
             // 
             // radioButtonWebBasedSkyline
             // 
-            this.radioButtonWebBasedSkyline.AutoSize = true;
-            this.radioButtonWebBasedSkyline.CheckAlign = System.Drawing.ContentAlignment.TopLeft;
-            this.radioButtonWebBasedSkyline.Location = new System.Drawing.Point(10, 76);
+            resources.ApplyResources(this.radioButtonWebBasedSkyline, "radioButtonWebBasedSkyline");
             this.radioButtonWebBasedSkyline.Name = "radioButtonWebBasedSkyline";
-            this.radioButtonWebBasedSkyline.Size = new System.Drawing.Size(188, 17);
-            this.radioButtonWebBasedSkyline.TabIndex = 9;
             this.radioButtonWebBasedSkyline.TabStop = true;
-            this.radioButtonWebBasedSkyline.Text = "Use web-based Skyline installation";
+            this.toolTip_MainForm.SetToolTip(this.radioButtonWebBasedSkyline, resources.GetString("radioButtonWebBasedSkyline.ToolTip"));
             this.radioButtonWebBasedSkyline.UseVisualStyleBackColor = true;
             this.radioButtonWebBasedSkyline.CheckedChanged += new System.EventHandler(this.WebBasedInstall_Click);
             // 
             // buttonApplySkylineSettings
             // 
-            this.buttonApplySkylineSettings.Location = new System.Drawing.Point(267, 159);
+            resources.ApplyResources(this.buttonApplySkylineSettings, "buttonApplySkylineSettings");
             this.buttonApplySkylineSettings.Name = "buttonApplySkylineSettings";
-            this.buttonApplySkylineSettings.Size = new System.Drawing.Size(75, 26);
-            this.buttonApplySkylineSettings.TabIndex = 6;
-            this.buttonApplySkylineSettings.Text = "Apply";
+            this.toolTip_MainForm.SetToolTip(this.buttonApplySkylineSettings, resources.GetString("buttonApplySkylineSettings.ToolTip"));
             this.buttonApplySkylineSettings.UseVisualStyleBackColor = true;
             this.buttonApplySkylineSettings.Click += new System.EventHandler(this.ApplySkylineSettings_Click);
             // 
             // radioButtonSpecifySkylinePath
             // 
-            this.radioButtonSpecifySkylinePath.AutoSize = true;
-            this.radioButtonSpecifySkylinePath.CheckAlign = System.Drawing.ContentAlignment.BottomLeft;
-            this.radioButtonSpecifySkylinePath.Location = new System.Drawing.Point(10, 99);
+            resources.ApplyResources(this.radioButtonSpecifySkylinePath, "radioButtonSpecifySkylinePath");
             this.radioButtonSpecifySkylinePath.Name = "radioButtonSpecifySkylinePath";
-            this.radioButtonSpecifySkylinePath.Size = new System.Drawing.Size(192, 17);
-            this.radioButtonSpecifySkylinePath.TabIndex = 10;
             this.radioButtonSpecifySkylinePath.TabStop = true;
-            this.radioButtonSpecifySkylinePath.Text = "Specify Skyline installation directory";
+            this.toolTip_MainForm.SetToolTip(this.radioButtonSpecifySkylinePath, resources.GetString("radioButtonSpecifySkylinePath.ToolTip"));
             this.radioButtonSpecifySkylinePath.UseVisualStyleBackColor = true;
             this.radioButtonSpecifySkylinePath.CheckedChanged += new System.EventHandler(this.SpecifyInstall_Click);
             // 
             // textBoxSkylinePath
             // 
-            this.textBoxSkylinePath.Enabled = false;
-            this.textBoxSkylinePath.Location = new System.Drawing.Point(10, 122);
+            resources.ApplyResources(this.textBoxSkylinePath, "textBoxSkylinePath");
             this.textBoxSkylinePath.Name = "textBoxSkylinePath";
-            this.textBoxSkylinePath.Size = new System.Drawing.Size(546, 20);
-            this.textBoxSkylinePath.TabIndex = 4;
+            this.toolTip_MainForm.SetToolTip(this.textBoxSkylinePath, resources.GetString("textBoxSkylinePath.ToolTip"));
             // 
             // label_Skylinecmd
             // 
-            this.label_Skylinecmd.AutoSize = true;
-            this.label_Skylinecmd.Location = new System.Drawing.Point(53, 147);
+            resources.ApplyResources(this.label_Skylinecmd, "label_Skylinecmd");
             this.label_Skylinecmd.Name = "label_Skylinecmd";
-            this.label_Skylinecmd.Size = new System.Drawing.Size(0, 13);
-            this.label_Skylinecmd.TabIndex = 5;
+            this.toolTip_MainForm.SetToolTip(this.label_Skylinecmd, resources.GetString("label_Skylinecmd.ToolTip"));
             // 
             // groupBoxAutoQcSettings
             // 
+            resources.ApplyResources(this.groupBoxAutoQcSettings, "groupBoxAutoQcSettings");
             this.groupBoxAutoQcSettings.Controls.Add(this.cb_minimizeToSysTray);
             this.groupBoxAutoQcSettings.Controls.Add(this.cb_keepRunning);
-            this.groupBoxAutoQcSettings.Location = new System.Drawing.Point(53, 257);
             this.groupBoxAutoQcSettings.Name = "groupBoxAutoQcSettings";
-            this.groupBoxAutoQcSettings.Size = new System.Drawing.Size(629, 81);
-            this.groupBoxAutoQcSettings.TabIndex = 3;
             this.groupBoxAutoQcSettings.TabStop = false;
-            this.groupBoxAutoQcSettings.Text = "AutoQC Loader Settings";
+            this.toolTip_MainForm.SetToolTip(this.groupBoxAutoQcSettings, resources.GetString("groupBoxAutoQcSettings.ToolTip"));
             // 
             // cb_minimizeToSysTray
             // 
-            this.cb_minimizeToSysTray.AutoSize = true;
-            this.cb_minimizeToSysTray.Location = new System.Drawing.Point(14, 51);
+            resources.ApplyResources(this.cb_minimizeToSysTray, "cb_minimizeToSysTray");
             this.cb_minimizeToSysTray.Name = "cb_minimizeToSysTray";
-            this.cb_minimizeToSysTray.Size = new System.Drawing.Size(227, 17);
-            this.cb_minimizeToSysTray.TabIndex = 2;
-            this.cb_minimizeToSysTray.Text = "Minimize program to Windows System Tray";
+            this.toolTip_MainForm.SetToolTip(this.cb_minimizeToSysTray, resources.GetString("cb_minimizeToSysTray.ToolTip"));
             this.cb_minimizeToSysTray.UseVisualStyleBackColor = true;
             // 
             // cb_keepRunning
             // 
-            this.cb_keepRunning.AutoSize = true;
-            this.cb_keepRunning.Location = new System.Drawing.Point(14, 22);
+            resources.ApplyResources(this.cb_keepRunning, "cb_keepRunning");
             this.cb_keepRunning.Name = "cb_keepRunning";
-            this.cb_keepRunning.Size = new System.Drawing.Size(165, 17);
-            this.cb_keepRunning.TabIndex = 0;
-            this.cb_keepRunning.Text = "Keep AutoQC Loader running\r\n";
             this.toolTip_MainForm.SetToolTip(this.cb_keepRunning, resources.GetString("cb_keepRunning.ToolTip"));
             this.cb_keepRunning.UseVisualStyleBackColor = true;
             // 
             // systray_icon
             // 
-            this.systray_icon.Icon = ((System.Drawing.Icon)(resources.GetObject("systray_icon.Icon")));
-            this.systray_icon.Text = "AutoQC Loader";
+            resources.ApplyResources(this.systray_icon, "systray_icon");
             this.systray_icon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.systray_icon_MouseDoubleClick);
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(763, 573);
             this.Controls.Add(this.tabMain);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainForm";
-            this.Text = " AutoQC";
+            this.toolTip_MainForm.SetToolTip(this, resources.GetString("$this.ToolTip"));
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.tabMain.ResumeLayout(false);

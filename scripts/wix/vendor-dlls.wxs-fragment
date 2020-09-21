@@ -233,7 +233,6 @@
 
 <!-- Shimadzu DLLs -->
 <Component Feature="MainFeature"><File Source="msvc-release\EULA.SFCS" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Source="msvc-release\DataReader.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\CABINET.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\DualProbeInterfaceParametersCS.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Google.Protobuf.dll" KeyPath="yes"/></Component>
