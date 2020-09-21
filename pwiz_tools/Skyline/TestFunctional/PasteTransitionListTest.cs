@@ -36,7 +36,7 @@ namespace pwiz.SkylineTestFunctional
         private string peptide = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence;
         private string protName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
         private string fragName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name;
-        private string preCharge =  Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge;
+        //private string preCharge =  Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge;
         private string label  = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
 
         [TestMethod]
@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestFunctional
                 secondtherm.CancelDialog();
             });
 
-            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("Peptide Transition List.csv")));
+            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             // This will paste in a transition list with headers
             var peptideTransitionList = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
 
@@ -101,26 +101,24 @@ namespace pwiz.SkylineTestFunctional
                 peptideTransitionList.buttonOk.PerformClick();
                 peptideTransitionList.CancelDialog();
             });
-
-            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("Peptide Transition List diff headers.csv")));
+            
             // This will paste in the same transition list, but with different headers. The program should realize it has
             // different headers and not use the saved list of column names
-           
+            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionListdiffheaders.csv")));
 
+            var peptideTransitionListDiffHeaders = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             RunUI(() => SkylineWindow.NewDocument());
 
             WaitForDocumentLoaded();
-
-            var peptideTransitionListDiffHeaders = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             RunUI(() =>
             {
                 var diffPeptideBoxes = peptideTransitionListDiffHeaders.ComboBoxes;
                 // Checks that the program did not use the saved indices
                 Assert.AreNotEqual(diffPeptideBoxes[4].SelectedIndex, 1);
-                peptideTransitionList.CancelDialog();
+                peptideTransitionListDiffHeaders.CancelDialog();
             });
 
-            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("Peptide Transition List.csv")));
+            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
 
             RunUI(() => SkylineWindow.NewDocument());
