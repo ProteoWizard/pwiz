@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void SetSelectedFile(string file)
         {
-            var group = _replicateGroups.FirstOrDefault(g => (g.FileInfo != null && g.FileInfo.FilePath.GetFileName() == file) || (g.FileInfo == null && file == null));
+            var group = _replicateGroups?.FirstOrDefault(g => (g.FileInfo != null && g.FileInfo.FilePath.GetFileName() == file) || (g.FileInfo == null && file == null));
             if (group != null)
             {
                 SelectedGroup = group;
