@@ -145,7 +145,7 @@
     <value>2</value>
   </data>
   <data name="lblRules.Text" xml:space="preserve">
-    <value>ルール(&amp;R)：</value>
+    <value>规则(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;lblRules.Name" xml:space="preserve">
     <value>lblRules</value>
@@ -193,7 +193,7 @@
     <value>0</value>
   </data>
   <data name="lblName.Text" xml:space="preserve">
-    <value>名前(&amp;N)：</value>
+    <value>名称(&amp;N)：</value>
   </data>
   <data name="&gt;&gt;lblName.Name" xml:space="preserve">
     <value>lblName</value>
@@ -289,7 +289,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>プレビュー(&amp;P)：</value>
+    <value>预览(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -409,7 +409,7 @@
     <value>True</value>
   </metadata>
   <data name="colSource.HeaderText" xml:space="preserve">
-    <value>ソース</value>
+    <value>源</value>
   </data>
   <data name="colSource.Width" type="System.Int32, mscorlib">
     <value>178</value>
@@ -418,7 +418,7 @@
     <value>True</value>
   </metadata>
   <data name="colPattern.HeaderText" xml:space="preserve">
-    <value>パターン</value>
+    <value>模式</value>
   </data>
   <data name="colPattern.Width" type="System.Int32, mscorlib">
     <value>178</value>
@@ -427,7 +427,7 @@
     <value>True</value>
   </metadata>
   <data name="colReplacement.HeaderText" xml:space="preserve">
-    <value>置換</value>
+    <value>替换</value>
   </data>
   <data name="colReplacement.Width" type="System.Int32, mscorlib">
     <value>178</value>
@@ -436,7 +436,7 @@
     <value>True</value>
   </metadata>
   <data name="colTarget.HeaderText" xml:space="preserve">
-    <value>ターゲット</value>
+    <value>目标</value>
   </data>
   <data name="colTarget.Width" type="System.Int32, mscorlib">
     <value>178</value>
@@ -481,7 +481,7 @@
     <value>21, 20</value>
   </data>
   <data name="btnRemove.Text" xml:space="preserve">
-    <value>削除</value>
+    <value>删除</value>
   </data>
   <data name="btnUp.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -490,7 +490,7 @@
     <value>21, 20</value>
   </data>
   <data name="btnUp.Text" xml:space="preserve">
-    <value>上へ</value>
+    <value>向上</value>
   </data>
   <data name="btnDown.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -499,7 +499,7 @@
     <value>21, 20</value>
   </data>
   <data name="btnDown.Text" xml:space="preserve">
-    <value>下へ</value>
+    <value>向下</value>
   </data>
   <data name="btnEdit.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -595,7 +595,7 @@
     <value>1</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-    <value>キャンセル</value>
+    <value>取消</value>
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
@@ -625,7 +625,7 @@
     <value>0</value>
   </data>
   <data name="btnOK.Text" xml:space="preserve">
-    <value>OK</value>
+    <value>确定</value>
   </data>
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
@@ -655,7 +655,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>ルールセットエディター</value>
+    <value>规则集编辑器</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>

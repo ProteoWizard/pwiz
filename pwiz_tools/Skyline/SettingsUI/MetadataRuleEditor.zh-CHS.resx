@@ -139,7 +139,7 @@
     <value>1</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-    <value>キャンセル</value>
+    <value>取消</value>
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
@@ -169,7 +169,7 @@
     <value>0</value>
   </data>
   <data name="btnOK.Text" xml:space="preserve">
-    <value>OK</value>
+    <value>确定</value>
   </data>
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
@@ -223,7 +223,7 @@
     <value>310, 17</value>
   </metadata>
   <data name="tbxRegularExpression.ToolTip" xml:space="preserve">
-    <value>ソーステキストと一致する正規表現</value>
+    <value>与源文本匹配的正则表达式</value>
   </data>
   <data name="&gt;&gt;tbxRegularExpression.Name" xml:space="preserve">
     <value>tbxRegularExpression</value>
@@ -250,7 +250,7 @@
     <value>6</value>
   </data>
   <data name="lblTarget.Text" xml:space="preserve">
-    <value>ターゲット(&amp;T)：</value>
+    <value>目标(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;lblTarget.Name" xml:space="preserve">
     <value>lblTarget</value>
@@ -274,7 +274,7 @@
     <value>7</value>
   </data>
   <data name="comboMetadataTarget.ToolTip" xml:space="preserve">
-    <value>置換テキストが入力される繰り返し測定の注釈または値です。</value>
+    <value>重复测定的注释或要使用替换文本填充的值。</value>
   </data>
   <data name="&gt;&gt;comboMetadataTarget.Name" xml:space="preserve">
     <value>comboMetadataTarget</value>
@@ -301,7 +301,7 @@
     <value>0</value>
   </data>
   <data name="lblSourceText.Text" xml:space="preserve">
-    <value>ソース値(&amp;S)：</value>
+    <value>源值(&amp;S)：</value>
   </data>
   <data name="&gt;&gt;lblSourceText.Name" xml:space="preserve">
     <value>lblSourceText</value>
@@ -325,7 +325,7 @@
     <value>1</value>
   </data>
   <data name="comboSourceText.ToolTip" xml:space="preserve">
-    <value>ソーステキストとして使用する結果ファイルプロパティを指定します</value>
+    <value>指定要用作源文本的结果文件属性</value>
   </data>
   <data name="&gt;&gt;comboSourceText.Name" xml:space="preserve">
     <value>comboSourceText</value>
@@ -352,7 +352,7 @@
     <value>8</value>
   </data>
   <data name="lblPreview.Text" xml:space="preserve">
-    <value>プレビュー(&amp;P)：</value>
+    <value>预览(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;lblPreview.Name" xml:space="preserve">
     <value>lblPreview</value>
@@ -382,7 +382,7 @@
     <value>2</value>
   </data>
   <data name="linkLabelRegularExpression.Text" xml:space="preserve">
-    <value>パターン（正規表現）(&amp;P)：</value>
+    <value>模式(正则表达式)(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;linkLabelRegularExpression.Name" xml:space="preserve">
     <value>linkLabelRegularExpression</value>
@@ -436,7 +436,7 @@
     <value>4</value>
   </data>
   <data name="lblReplacement.Text" xml:space="preserve">
-    <value>置換(&amp;R)：</value>
+    <value>替换(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;lblReplacement.Name" xml:space="preserve">
     <value>lblReplacement</value>
@@ -460,10 +460,10 @@
     <value>5</value>
   </data>
   <data name="tbxReplacement.ToolTip" xml:space="preserve">
-    <value>一致が見つかった場合に注釈に使用するテキストです。
-正規表現で括弧が使用されているときは、
-置換テキストに$1、$2、$3などを含んで
-一致するサブ表現に言及できます。</value>
+    <value>存在匹配时为注释使用的文本。
+在正则表达式中使用括号时，
+替换文本可以包含 $1、$2、$3 等来
+指向匹配的子表达式。</value>
   </data>
   <data name="&gt;&gt;tbxReplacement.Name" xml:space="preserve">
     <value>tbxReplacement</value>
@@ -493,7 +493,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>ルールエディター</value>
+    <value>规则编辑器</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>

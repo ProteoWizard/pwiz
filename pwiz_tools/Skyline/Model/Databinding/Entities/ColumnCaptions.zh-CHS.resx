@@ -198,6 +198,9 @@
   <data name="BatchName">
     <value>批次名称</value>
   </data>
+  <data name="BatchTargetQualitativeIonRatio">
+    <value>批次目标定性离子比</value>
+  </data>
   <data name="BeginPos">
     <value>开始 Pos</value>
   </data>
@@ -256,7 +259,7 @@
     <value>浓度系数</value>
   </data>
   <data name="ConfidenceLevel">
-    <value>置信级</value>
+    <value>置信水平</value>
   </data>
   <data name="CountTruncated">
     <value>截尾计数</value>
@@ -342,6 +345,9 @@
   <data name="ExcludeFromCalibration">
     <value>从校准中排除</value>
   </data>
+  <data name="ExplicitAnalyteConcentration">
+    <value>明确分析物浓度</value>
+  </data>
   <data name="ExplicitCollisionEnergy">
     <value>明确碰撞能量</value>
   </data>
@@ -393,25 +399,30 @@
   <data name="FileName">
     <value>文件名称</value>
   </data>
+  <data name="FilePath">
+    <value>文件路径</value>
+  </data>
   <data name="Files">
     <value>文件</value>
   </data>
   <data name="FoldChange">
-    <value>文件夹更改</value>
+    <value>倍数变化</value>
   </data>
   <data name="FoldChangeResult">
-    <value>文件夹更改结果</value>
+    <value>倍数变化结果</value>
   </data>
   <data name="FragmentIon">
-    <value>片段离子</value>
+    <value>碎片离子</value>
   </data>
   <data name="FragmentIonOrdinal">
-    <value>片段离子序数</value>
+    <value>碎片离子序数</value>
   </data>
   <data name="FragmentIonType">
-    <value>片段离子类型</value>
+    <value>碎片离子类型</value>
   </data>
-  <data name="FullNames"><value>全名</value></data>
+  <data name="FullNames">
+    <value>全名</value>
+  </data>
   <data name="FullScanFilterWidth">
     <value>全扫描过滤器宽度</value>
   </data>
@@ -466,6 +477,9 @@
   <data name="InterpolatedTimes">
     <value>内插时间</value>
   </data>
+  <data name="IonFormula">
+    <value>离子公式</value>
+  </data>
   <data name="IonMobilityFragment">
     <value>离子迁移碎片</value>
   </data>
@@ -480,9 +494,6 @@
   </data>
   <data name="IonName">
     <value>离子名称</value>
-  </data>
-  <data name="IonFormula">
-    <value>离子公式</value>
   </data>
   <data name="IsDecoy">
     <value>是诱饵</value>
@@ -545,7 +556,7 @@
     <value>线性拟合</value>
   </data>
   <data name="Log2FoldChange">
-    <value>记录 2 文件夹更改</value>
+    <value>记录 2 倍数变化</value>
   </data>
   <data name="Losses">
     <value>损失</value>
@@ -568,11 +579,14 @@
   <data name="MaxBestRetentionTime">
     <value>最佳保留时间最大值</value>
   </data>
+  <data name="MaxDetectionQValue" xml:space="preserve">
+    <value>最大检测 Q 值</value>
+  </data>
   <data name="MaxEndTime">
     <value>结束时间最大值</value>
   </data>
   <data name="MaxFoldChange">
-    <value>文件夹更改最大值</value>
+    <value>倍数变化最大值</value>
   </data>
   <data name="MaxFwhm">
     <value>半峰宽最大值</value>
@@ -582,6 +596,12 @@
   </data>
   <data name="MaxRetentionTime">
     <value>保留时间最大值</value>
+  </data>
+  <data name="Median">
+    <value>中位数</value>
+  </data>
+  <data name="MedianDetectionQValue" xml:space="preserve">
+    <value>中位数检测 Q 值</value>
   </data>
   <data name="Mean">
     <value>平均</value>
@@ -625,8 +645,11 @@
   <data name="MinBestRetentionTime">
     <value>最佳保留时间最小值</value>
   </data>
+  <data name="MinDetectionQValue" xml:space="preserve">
+    <value>最小检测 Q 值</value>
+  </data>
   <data name="MinFoldChange">
-    <value>文件夹更改最小值</value>
+    <value>倍数变化最小值</value>
   </data>
   <data name="MinRetentionTime">
     <value>保留时间最小值</value>
@@ -643,19 +666,38 @@
   <data name="ModifiedSequence">
     <value>修改的序列</value>
   </data>
-  <data name="ModifiedSequenceAverageMasses"><value>修改的序列平均质量</value></data>
-  <data name="ModifiedSequenceFullNames"><value>修改的序列全名</value></data>
-  <data name="ModifiedSequenceMonoisotopicMasses"><value>修改的序列同位素质量</value></data>
-  <data name="ModifiedSequenceThreeLetterCodes"><value>修改的序列三字母代码</value></data>
-  <data name="ModifiedSequenceUnimodIds"><value>修改的序列Unimod ID</value></data>
+  <data name="ModifiedSequenceAverageMasses">
+    <value>修改的序列平均质量</value>
+  </data>
+  <data name="ModifiedSequenceFullNames">
+    <value>修改的序列全名</value>
+  </data>
+  <data name="ModifiedSequenceMonoisotopicMasses">
+    <value>修改的序列同位素质量</value>
+  </data>
+  <data name="ModifiedSequenceThreeLetterCodes">
+    <value>修改的序列三字母代码</value>
+  </data>
+  <data name="ModifiedSequenceUnimodIds">
+    <value>修改的序列Unimod ID</value>
+  </data>
   <data name="ModifiedTime">
     <value>修改的时间</value>
   </data>
   <data name="Molecule">
     <value>分子</value>
   </data>
+  <data name="MoleculeListAbundance">
+    <value>分子列表丰度</value>
+  </data>
   <data name="MoleculeListLocator">
     <value>分子列表定位器</value>
+  </data>
+  <data name="MoleculeListResult">
+    <value>分子列表结果</value>
+  </data>
+  <data name="MoleculeListResults">
+    <value>分子列表结果</value>
   </data>
   <data name="MoleculeName">
     <value>分子名称</value>
@@ -699,7 +741,9 @@
   <data name="Molecules">
     <value>分子</value>
   </data>
-  <data name="MonoisotopicMasses"><value>单一同位素质量</value></data>
+  <data name="MonoisotopicMasses">
+    <value>单一同位素质量</value>
+  </data>
   <data name="MsLevel">
     <value>MS 级别</value>
   </data>
@@ -745,11 +789,21 @@
   <data name="PeptideModifiedSequence">
     <value>肽段修饰序列</value>
   </data>
-  <data name="PeptideModifiedSequenceAverageMasses"><value>肽段修饰序列平均质量</value></data>
-  <data name="PeptideModifiedSequenceFullNames"><value>肽段修饰序列全名</value></data>
-  <data name="PeptideModifiedSequenceMonoisotopicMasses"><value>肽段修饰序列单一同位素质量</value></data>
-  <data name="PeptideModifiedSequenceThreeLetterCodes"><value>肽段修饰序列三字母代码</value></data>
-  <data name="PeptideModifiedSequenceUnimodIds"><value>肽段修饰序列 Unimod ID</value></data>
+  <data name="PeptideModifiedSequenceAverageMasses">
+    <value>肽段修饰序列平均质量</value>
+  </data>
+  <data name="PeptideModifiedSequenceFullNames">
+    <value>肽段修饰序列全名</value>
+  </data>
+  <data name="PeptideModifiedSequenceMonoisotopicMasses">
+    <value>肽段修饰序列单一同位素质量</value>
+  </data>
+  <data name="PeptideModifiedSequenceThreeLetterCodes">
+    <value>肽段修饰序列三字母代码</value>
+  </data>
+  <data name="PeptideModifiedSequenceUnimodIds">
+    <value>肽段修饰序列 Unimod ID</value>
+  </data>
   <data name="PeptideNote">
     <value>肽段注释</value>
   </data>
@@ -803,6 +857,9 @@
   </data>
   <data name="PrecursorConcentration">
     <value>母离子浓度</value>
+  </data>
+  <data name="PrecursorExplicitCollisionEnergy">
+    <value>母离子明确碰撞能量</value>
   </data>
   <data name="PrecursorIonName">
     <value>母离子名称</value>
@@ -885,6 +942,9 @@
   <data name="Protein">
     <value>蛋白质</value>
   </data>
+  <data name="ProteinAbundance">
+    <value>蛋白质丰度</value>
+  </data>
   <data name="ProteinAccession">
     <value>蛋白质检索号</value>
   </data>
@@ -906,6 +966,12 @@
   <data name="ProteinPreferredName">
     <value>蛋白质首选名称</value>
   </data>
+  <data name="ProteinResult">
+    <value>蛋白质结果</value>
+  </data>
+  <data name="ProteinResults">
+    <value>蛋白质结果</value>
+  </data>
   <data name="Proteins">
     <value>蛋白质</value>
   </data>
@@ -920,6 +986,12 @@
   </data>
   <data name="QuadraticCoefficient">
     <value>二次项系数</value>
+  </data>
+  <data name="QualitativeIonRatio">
+    <value>定性离子比</value>
+  </data>
+  <data name="QualitativeIonRatioStatus">
+    <value>定性离子比状态</value>
   </data>
   <data name="Quantification">
     <value>定量</value>
@@ -1014,9 +1086,6 @@
   <data name="ResultFileLocator">
     <value>结果文件定位器</value>
   </data>
-  <data name="Results">
-    <value>结果</value>
-  </data>
   <data name="RetentionTime">
     <value>保留时间</value>
   </data>
@@ -1095,7 +1164,12 @@
   <data name="SummaryMessage">
     <value>总结消息</value>
   </data>
-  <data name="ThreeLetterCodes"><value>三字母代码</value></data>
+  <data name="TargetQualitativeIonRatio">
+    <value>目标定性离子比</value>
+  </data>
+  <data name="ThreeLetterCodes">
+    <value>三字母代码</value>
+  </data>
   <data name="TicArea">
     <value>总离子电流面积</value>
   </data>
@@ -1177,7 +1251,9 @@
   <data name="UndoRedoMessage">
     <value>撤销恢复消息</value>
   </data>
-  <data name="UnimodIds"><value>Unimod ID</value></data>
+  <data name="UnimodIds">
+    <value>Unimod ID</value>
+  </data>
   <data name="User">
     <value>用户</value>
   </data>

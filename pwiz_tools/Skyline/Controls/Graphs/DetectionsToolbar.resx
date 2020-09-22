@@ -226,6 +226,6 @@
     <value>DetectionsToolbar</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.GraphSummaryToolbar, Skyline-daily, Version=20.1.9.259, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Graphs.GraphSummaryToolbar, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
