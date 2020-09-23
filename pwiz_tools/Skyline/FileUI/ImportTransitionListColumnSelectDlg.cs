@@ -325,7 +325,6 @@ namespace pwiz.Skyline.FileUI
             Settings.Default.CustomImportTransitionListColumnCount =
                 Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
         }
-
         private void updateHeadersList()
         {
             var headers = Importer.RowReader.Indices.Headers;
@@ -334,7 +333,6 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.CustomImportTransitionListHeaders = headers.ToList();
             }
         }
-
         private void dataGrid_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
             ResizeComboBoxes();
