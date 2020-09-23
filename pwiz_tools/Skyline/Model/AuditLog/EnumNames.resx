@@ -240,6 +240,9 @@
   <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
     <value>Quantile</value>
   </data>
+  <data name="SingletonNormalizationMethod_tic" xml:space="preserve">
+    <value>Total Ion Current</value>
+  </data>
   <data name="OptimizedMethodType_None" xml:space="preserve">
     <value>None</value>
   </data>
@@ -533,6 +536,9 @@
   </data>
   <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
     <value>Ratio</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_tic" xml:space="preserve">
+    <value>Total Ion Current</value>
   </data>
   <data name="AreaCVMsLevel_precursors" xml:space="preserve">
     <value>Precursors</value>

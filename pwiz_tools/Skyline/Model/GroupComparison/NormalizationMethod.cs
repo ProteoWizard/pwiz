@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return ratioToSurrogate;
             }
-            foreach (var normalizationMethod in new[] {EQUALIZE_MEDIANS, QUANTILE, GLOBAL_STANDARDS})
+            foreach (var normalizationMethod in new[] {EQUALIZE_MEDIANS, QUANTILE, GLOBAL_STANDARDS, TIC})
             {
                 if (Equals(normalizationMethod.Name, name))
                 {
@@ -82,6 +82,10 @@ namespace pwiz.Skyline.Model.GroupComparison
         public static readonly NormalizationMethod GLOBAL_STANDARDS 
             = new SingletonNormalizationMethod("global_standards", 
                 () => GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards);
+        public static readonly NormalizationMethod TIC
+            = new SingletonNormalizationMethod("tic",
+                () => GroupComparisonStrings.NormalizationMethod_TIC_Total_Ion_Current);
+
         // ReSharper restore LocalizableElement
 
         public static NormalizationMethod GetNormalizationMethod(IsotopeLabelType isotopeLabelType)
@@ -119,11 +123,16 @@ namespace pwiz.Skyline.Model.GroupComparison
             var result = new List<NormalizationMethod>
             {
                 NONE,
-                EQUALIZE_MEDIANS,
+                EQUALIZE_MEDIANS
             };
             if (document.Settings.HasGlobalStandardArea)
             {
                 result.Add(GLOBAL_STANDARDS);
+            }
+
+            if (document.Settings.HasTicArea)
+            {
+                result.Add(TIC);
             }
 
             var modificationTypes = document.Settings.PeptideSettings.Modifications.GetModificationTypes().ToList();

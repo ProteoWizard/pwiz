@@ -1678,6 +1678,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total ion current.
+        /// </summary>
+        public static string AreaCVToolbar_UpdateUI_Total_ion_current {
+            get {
+                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_Total_ion_current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid CV cutoff entered.
         /// </summary>
         public static string AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered {
@@ -16049,6 +16058,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Permuting isotope modifiations.
+        /// </summary>
+        public static string IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifiations {
+            get {
+                return ResourceManager.GetString("IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifia" +
+                        "tions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to KDE Aligner.
         /// </summary>
         public static string KdeAlignerFactory_ToString_KDE_Aligner {
@@ -22111,6 +22130,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Permute isotope modifications.
+        /// </summary>
+        public static string PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications {
+            get {
+                return ResourceManager.GetString("PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Permuting Isotope Modifications.
+        /// </summary>
+        public static string PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications {
+            get {
+                return ResourceManager.GetString("PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Updating settings.
+        /// </summary>
+        public static string PermuteIsotopeModificationsDlg_OkDialog_Updating_settings {
+            get {
+                return ResourceManager.GetString("PermuteIsotopeModificationsDlg_OkDialog_Updating_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to External Tools.
         /// </summary>
         public static string PersistedViews_ExternalToolsGroup_External_Tools {
@@ -22975,6 +23021,15 @@ namespace pwiz.Skyline.Properties {
         public static string RefineDlg_NormalizationMethod_None {
             get {
                 return ResourceManager.GetString("RefineDlg_NormalizationMethod_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total ion current.
+        /// </summary>
+        public static string RefineDlg_NormalizationMethod_Total_ion_current {
+            get {
+                return ResourceManager.GetString("RefineDlg_NormalizationMethod_Total_ion_current", resourceCulture);
             }
         }
         

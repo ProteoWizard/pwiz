@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum PointsTypePeakArea { targets, decoys }
 
-    public enum AreaCVNormalizationMethod { global_standards, medians, none, ratio }
+    public enum AreaCVNormalizationMethod { global_standards, medians, tic, none, ratio }
 
     public enum AreaCVTransitions { all, best, count }
 
