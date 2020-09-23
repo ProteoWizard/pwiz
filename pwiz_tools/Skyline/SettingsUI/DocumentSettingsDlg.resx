@@ -361,7 +361,7 @@
     <value>9, 48</value>
   </data>
   <data name="checkedListBoxRuleSets.Size" type="System.Drawing.Size, System.Drawing">
-    <value>527, 199</value>
+    <value>526, 199</value>
   </data>
   <data name="checkedListBoxRuleSets.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -436,7 +436,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>520, 48</value>
+    <value>521, 48</value>
   </data>
   <data name="btnAddList.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 23</value>
@@ -466,7 +466,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnManageLists.Location" type="System.Drawing.Point, System.Drawing">
-    <value>520, 77</value>
+    <value>521, 77</value>
   </data>
   <data name="btnManageLists.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 23</value>
@@ -574,7 +574,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddGroupComparison.Location" type="System.Drawing.Point, System.Drawing">
-    <value>540, 48</value>
+    <value>541, 48</value>
   </data>
   <data name="btnAddGroupComparison.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -604,7 +604,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnEditGroupComparisonList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>540, 77</value>
+    <value>541, 77</value>
   </data>
   <data name="btnEditGroupComparisonList.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -775,7 +775,7 @@
     <value>9, 48</value>
   </data>
   <data name="chooseViewsControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>529, 199</value>
+    <value>526, 199</value>
   </data>
   <data name="chooseViewsControl.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
