@@ -1943,17 +1943,22 @@ namespace pwiz.Skyline.Model
             return ci;
         }
 
+        private string FormatHeader(string col)
+        {
+            // Remove spaces and make lowercase. This matches the format of the names they are tested against
+            return col.ToLowerInvariant().Replace(" ", "");
+        }
         public void FindColumns(string[] headers)
         {
             Headers = headers;
-            ProteinColumn = headers.IndexOf(col => ProteinNames.Contains(col.ToLowerInvariant()));
-            PrecursorChargeColumn = headers.IndexOf(col => PrecursorChargeNames.Contains(col.ToLowerInvariant()));
-            ProductChargeColumn = headers.IndexOf(col => ProductChargeNames.Contains(col.ToLowerInvariant()));
-            DecoyColumn = headers.IndexOf(col => DecoyNames.Contains(col.ToLowerInvariant()));
-            IrtColumn = headers.IndexOf(col => IrtColumnNames.Contains(col.ToLowerInvariant()));
-            LibraryColumn = headers.IndexOf(col => LibraryColumnNames.Contains(col.ToLowerInvariant()));
-            LabelTypeColumn = headers.IndexOf(col => LabelTypeNames.Contains(col.ToLowerInvariant()));
-            FragmentNameColumn = headers.IndexOf(col => FragmentNameNames.Contains(col.ToLowerInvariant()));
+            ProteinColumn = headers.IndexOf(col => ProteinNames.Contains(FormatHeader(col)));
+            PrecursorChargeColumn = headers.IndexOf(col => PrecursorChargeNames.Contains(FormatHeader(col)));
+            ProductChargeColumn = headers.IndexOf(col => ProductChargeNames.Contains(FormatHeader(col)));
+            DecoyColumn = headers.IndexOf(col => DecoyNames.Contains(FormatHeader(col)));
+            IrtColumn = headers.IndexOf(col => IrtColumnNames.Contains(FormatHeader(col)));
+            LibraryColumn = headers.IndexOf(col => LibraryColumnNames.Contains(FormatHeader(col)));
+            LabelTypeColumn = headers.IndexOf(col => LabelTypeNames.Contains(FormatHeader(col)));
+            FragmentNameColumn = headers.IndexOf(col => FragmentNameNames.Contains(FormatHeader(col)));
         }
 
         // Checks all the column indices and resets any that have the given index to -1
