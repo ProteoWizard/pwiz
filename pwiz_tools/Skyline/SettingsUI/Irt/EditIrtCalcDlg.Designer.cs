@@ -161,7 +161,6 @@
             // 
             // contextMenuAdd
             // 
-            this.contextMenuAdd.ImageScalingSize = new System.Drawing.Size(40, 40);
             this.contextMenuAdd.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addResultsContextMenuItem,
             this.addSpectralLibraryContextMenuItem,
