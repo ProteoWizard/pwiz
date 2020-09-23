@@ -3866,7 +3866,7 @@
     <value>アライン時間</value>
   </data>
   <data name="WizardBlankDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\StartPage\WizardBlankDocument.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Resources\StartPage\WizardBlankDocument-ja.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_OkDialog_An_ion_mobility_library_with_the_name__0__already_exists__Do_you_want_to_overwrite_it_" xml:space="preserve">
     <value>{0}という名前のイオン移動度ライブラリが既に存在しています。上書きしますか？</value>

@@ -126,6 +126,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>SkylineCmdResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="SkylineCmdResources.zh-CHS.resx">
+      <DependentUpon>SkylineCmdResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
