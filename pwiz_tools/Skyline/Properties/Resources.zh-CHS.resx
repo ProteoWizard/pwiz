@@ -10920,13 +10920,13 @@ Invalid peptide sequence at position 18
     <value>所有运行</value>
   </data>
   <data name="DetectionPlotPane_AtLeastLine_Name" xml:space="preserve">
-    <value>至少 {0} (/ {1}) - {2：#,##0}</value>
+    <value>至少 {0} (/ {1}) - {2:#,##0}</value>
   </data>
   <data name="DetectionPlotPane_Label_Mean" xml:space="preserve">
-    <value>  平均值：{0：#,##0}</value>
+    <value>  平均值：{0:#,##0}</value>
   </data>
   <data name="DetectionPlotPane_Label_Stddev" xml:space="preserve">
-    <value>  标准偏差：{1：#,##0}</value>
+    <value>  标准偏差：{1:#,##0}</value>
   </data>
   <data name="DetectionPlotPane_WaitingForData_Label" xml:space="preserve">
     <value>正在计算（按 Esc 取消）...</value>
