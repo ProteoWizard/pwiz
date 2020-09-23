@@ -36,7 +36,6 @@ namespace pwiz.SkylineTestFunctional
         private string peptide = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence;
         private string protName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
         private string fragName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name;
-        //private string preCharge =  Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge;
         private string label  = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type;
 
         [TestMethod]

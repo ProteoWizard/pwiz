@@ -1274,6 +1274,8 @@ namespace pwiz.Skyline.Model
                 if (iProt == -1)
                     iProt = FindProtein(fieldsFirstRow, iSequence, lines, indices.Headers, provider, separator);
                 int iPrecursorCharge = indices.PrecursorChargeColumn;
+                // Explicitly declaring the charge state interferes with downstream logic that matches m/z and peptide
+                // to plausible peptide modifications
                 //if (iPrecursorCharge == -1)
                 //    iPrecursorCharge = FindPrecursorCharge(fieldsFirstRow, lines, separator);
                 int iFragmentName = indices.FragmentNameColumn;
@@ -1547,7 +1549,7 @@ namespace pwiz.Skyline.Model
             // Regular expression for finding a fragment name. Checks if the first character is a,b,c,x,y, or z and the second character is a digit
             private static readonly Regex RGX_FRAGMENT_NAME = new Regex(@"precursor|([abcxyz][\d]+)", RegexOptions.IgnoreCase);
 
-            // This detection method for Precursor Charge is not precise enough and causes tests to fail
+            // This detection method for Precursor Charge interferes with downstream logic for guessing peptide modifications
             /*private static int FindPrecursorCharge (string[] fields, IList<string> lines, char separator)
             {
                 var listCandidates = new List<int>();

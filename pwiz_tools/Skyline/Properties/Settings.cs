@@ -490,6 +490,8 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
+        // Used to make sure that last seen Transition List headers match the current headers
+        // before proceeding with using saved column locations
         public List<string> CustomImportTransitionListHeaders
         {
             get
@@ -508,6 +510,8 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
+        // Saves column positions between transition lists. This way when a user tell us the correct column positions they are carried
+        // on to the next transition list
         public List<Tuple<int, string>> CustomImportTransitionListColumnsList
         {
             get
