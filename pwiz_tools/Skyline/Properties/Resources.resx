@@ -6835,7 +6835,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries" xml:space="preserve">
     <value>Edit Ion Mobility Libraries</value>
   </data>
-  <data name="DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_" xml:space="preserve">
+  <data name="GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_" xml:space="preserve">
     <value>The database for the calculator {0} could not be opened. Check that the file {1} was not moved or deleted.</value>
   </data>
   <data name="ExportStrategyExtension_LOCALIZED_VALUES_Protein" xml:space="preserve">
