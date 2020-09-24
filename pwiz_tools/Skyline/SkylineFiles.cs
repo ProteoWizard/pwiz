@@ -1241,16 +1241,13 @@ namespace pwiz.Skyline
         {
             try
             {
-                bool success = false;
-                Helpers.TryTwice(() =>
+                bool success;
+                using (var longWaitDlg = new LongWaitDlg { Text = Resources.SkylineWindow_ShareDocument_Compressing_Files, })
                 {
-                    using (var longWaitDlg = new LongWaitDlg { Text = Resources.SkylineWindow_ShareDocument_Compressing_Files, })
-                    {
-                        var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType);
-                        longWaitDlg.PerformWork(this, 1000, sharing.Share);
-                        success = !longWaitDlg.IsCanceled;
-                    }
-                });
+                    var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, shareType);
+                    longWaitDlg.PerformWork(this, 1000, sharing.Share);
+                    success = !longWaitDlg.IsCanceled;
+                }
                 return success;
             }
             catch (Exception x)
