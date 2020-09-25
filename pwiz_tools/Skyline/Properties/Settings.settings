@@ -737,7 +737,7 @@
     <Setting Name="BrukerPrmSqliteFile" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="DetectionsQValueCutoff" Type="System.Float" Scope="User">
+    <Setting Name="DetectionsQValueCutoff" Type="System.Single" Scope="User">
       <Value Profile="(Default)">0.01</Value>
     </Setting>
     <Setting Name="DetectionsTargetType" Type="System.String" Scope="User">
@@ -749,11 +749,8 @@
     <Setting Name="DetectionsYScaleFactor" Type="System.String" Scope="User">
       <Value Profile="(Default)">Thousands</Value>
     </Setting>
-    <Setting Name="DetectionsRepCount" Type="System.Integer" Scope="User">
+    <Setting Name="DetectionsRepCount" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">10</Value>
-    </Setting>
-    <Setting Name="DetectionsFontSize" Type="System.Float" Scope="User">
-      <Value Profile="(Default)"></Value>
     </Setting>
     <Setting Name="DetectionsShowAtLeastN" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>

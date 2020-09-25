@@ -2953,9 +2953,9 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.01")]
-        public global::System.Float DetectionsQValueCutoff {
+        public float DetectionsQValueCutoff {
             get {
-                return ((global::System.Float)(this["DetectionsQValueCutoff"]));
+                return ((float)(this["DetectionsQValueCutoff"]));
             }
             set {
                 this["DetectionsQValueCutoff"] = value;
@@ -3001,23 +3001,12 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("10")]
-        public global::System.Integer DetectionsRepCount {
+        public int DetectionsRepCount {
             get {
-                return ((global::System.Integer)(this["DetectionsRepCount"]));
+                return ((int)(this["DetectionsRepCount"]));
             }
             set {
                 this["DetectionsRepCount"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public global::System.Float DetectionsFontSize {
-            get {
-                return ((global::System.Float)(this["DetectionsFontSize"]));
-            }
-            set {
-                this["DetectionsFontSize"] = value;
             }
         }
         
