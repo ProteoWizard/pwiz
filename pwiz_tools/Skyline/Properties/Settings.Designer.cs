@@ -922,7 +922,7 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("detection")]
+        [global::System.Configuration.DefaultSettingValueAttribute("detections")]
         public string DetectionGraphType
         {
             get
