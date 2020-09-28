@@ -28,6 +28,8 @@ using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+
+
 // ReSharper disable InconsistentlySynchronizedField
 
 namespace pwiz.Skyline.Controls.Graphs
