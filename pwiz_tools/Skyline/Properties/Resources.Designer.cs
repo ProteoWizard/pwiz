@@ -1678,6 +1678,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total ion current.
+        /// </summary>
+        public static string AreaCVToolbar_UpdateUI_Total_ion_current {
+            get {
+                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_Total_ion_current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid CV cutoff entered.
         /// </summary>
         public static string AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered {
@@ -7870,16 +7879,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The database for the calculator {0} could not be opened. Check that the file {1} was not moved or deleted..
-        /// </summary>
-        public static string DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_ {
-            get {
-                return ResourceManager.GetString("DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_n" +
-                        "ot_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to An error occured while displaying the data rows:.
         /// </summary>
         public static string DataboundGridControl_DisplayError_An_error_occured_while_displaying_the_data_rows_ {
@@ -14008,6 +14007,16 @@ namespace pwiz.Skyline.Properties {
         public static string GraphData_Graph_Regression_Refined {
             get {
                 return ResourceManager.GetString("GraphData_Graph_Regression_Refined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The database for the calculator {0} could not be opened. Check that the file {1} was not moved or deleted..
+        /// </summary>
+        public static string GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_ {
+            get {
+                return ResourceManager.GetString("GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Chec" +
+                        "k_that_the_file__1__was_not_moved_or_deleted_", resourceCulture);
             }
         }
         
@@ -23012,6 +23021,15 @@ namespace pwiz.Skyline.Properties {
         public static string RefineDlg_NormalizationMethod_None {
             get {
                 return ResourceManager.GetString("RefineDlg_NormalizationMethod_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total ion current.
+        /// </summary>
+        public static string RefineDlg_NormalizationMethod_Total_ion_current {
+            get {
+                return ResourceManager.GetString("RefineDlg_NormalizationMethod_Total_ion_current", resourceCulture);
             }
         }
         
