@@ -1,0 +1,60 @@
+Undo Redo : Peptide Settings -- Modifications > Internal standard types : "Heavy" was removed
+Summary   : Settings > Peptide Settings -- Modifications > Internal standard types : "Heavy" was removed
+All Info  :
+Peptide Settings -- Modifications > Internal standard types : "Heavy" was removed
+Settings > Peptide Settings -- Modifications > Internal standard types: removed all
+
+Undo Redo : Added spectral library "TestDdaTutorial"
+Summary   : Added spectral library "TestDdaTutorial"
+All Info  :
+Added spectral library "TestDdaTutorial"
+Build Spectral Library > Cut-off score is "0,95"
+Build Spectral Library > Search files : contains "QE_140221_01_UPS1_100fmolspiked.mzid"
+Build Spectral Library > iRT standard peptides is None
+Build Spectral Library > Include ambiguous matches is False
+Build Spectral Library > Filter for document peptides is False
+Build Spectral Library > Workflow is "DDA with MS1 filtering"
+Extra Info: Cut-off score = "0,95",
+Search files = 
+[
+    "QE_140221_01_UPS1_100fmolspiked.mzid"
+],
+iRT standard peptides = None,
+Include ambiguous matches = False,
+Filter for document peptides = False,
+Workflow = "DDA with MS1 filtering"
+
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
+All Info  :
+Imported a peptide search
+Import Peptide Search > Extract Chromatograms > Found results files : contains "QE_140221_01_UPS1_100fmolspiked.mz5"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Peptide Search > Add Modifications > Added modifications : contains "Carbamidomethyl (C) = C[57] (fixed)"
+Import Peptide Search > Add Modifications > Added modifications : contains "Label:13C(6)15N(2) (C-term K) = K[8] (isotopic label)"
+Import Peptide Search > Add Modifications > Added modifications : contains "Label:13C(6)15N(4) (C-term R) = R[10] (isotopic label)"
+Import Peptide Search > Add Modifications > Added modifications : contains "Oxidation (M) = M[16] (variable)"
+Import Peptide Search > Import FASTA > FASTA file is "2014_01_HUMAN_UPS.fasta"
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "QE_140221_01_UPS1_100fmolspiked.mz5"
+    ],
+    Files to import simultaneously = "Many"
+},
+Add Modifications = 
+{
+    Added modifications = 
+    [
+        "Carbamidomethyl (C) = C[57] (fixed)",
+        "Label:13C(6)15N(2) (C-term K) = K[8] (isotopic label)",
+        "Label:13C(6)15N(4) (C-term R) = R[10] (isotopic label)",
+        "Oxidation (M) = M[16] (variable)"
+    ]
+},
+Import FASTA = 
+{
+    FASTA file = "2014_01_HUMAN_UPS.fasta"
+}
+

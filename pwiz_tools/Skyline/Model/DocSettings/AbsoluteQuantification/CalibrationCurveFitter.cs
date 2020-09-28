@@ -358,7 +358,41 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 figuresOfMerit = figuresOfMerit.ChangeUnits(QuantificationSettings.Units);
             }
+
             return figuresOfMerit;
+        }
+
+        public double? GetTargetIonRatio(TransitionGroupDocNode transitionGroupDocNode)
+        {
+            var measuredResults = SrmSettings.MeasuredResults;
+            double totalQualitativeIonRatio = 0;
+            int qualitativeIonRatioCount = 0;
+            foreach (var replicateIndex in EnumerateReplicates())
+            {
+                if (IsExcluded(replicateIndex))
+                {
+                    continue;
+                }
+                var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
+                if (!SampleType.STANDARD.Equals(chromatogramSet.SampleType))
+                {
+                    continue;
+                }
+
+                var qualitativeIonRatio = PeptideQuantifier.GetQualitativeIonRatio(SrmSettings, transitionGroupDocNode, replicateIndex);
+                if (qualitativeIonRatio.HasValue)
+                {
+                    totalQualitativeIonRatio += qualitativeIonRatio.Value;
+                    qualitativeIonRatioCount++;
+                }
+            }
+
+            if (qualitativeIonRatioCount != 0)
+            {
+                return totalQualitativeIonRatio / qualitativeIonRatioCount;
+            }
+
+            return null;
         }
 
         public double? GetLimitOfQuantification(CalibrationCurve calibrationCurve)
@@ -591,10 +625,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return PeptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel;
         }
 
-        public QuantificationResult GetQuantificationResult(int replicateIndex)
+
+
+        public QuantificationResult GetPeptideQuantificationResult(int replicateIndex)
         {
-            QuantificationResult result = new QuantificationResult();
             CalibrationCurve calibrationCurve = GetCalibrationCurve();
+            QuantificationResult result = new QuantificationResult();
             result = result.ChangeNormalizedArea(GetNormalizedPeakArea(new CalibrationPoint(replicateIndex, null)));
             if (HasExternalStandards() || HasInternalStandardConcentration())
             {
@@ -604,22 +640,38 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 result = result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
                 result = result.ChangeUnits(QuantificationSettings.Units);
             }
+
+
             return result;
         }
 
-        public QuantificationResult GetPrecursorQuantificationResult(int replicateIndex, TransitionGroupDocNode transitionGroupDocNode)
+        public PrecursorQuantificationResult GetPrecursorQuantificationResult(int replicateIndex, TransitionGroupDocNode transitionGroupDocNode)
         {
-            QuantificationResult result = new QuantificationResult();
-            var calibrationPoint = new CalibrationPoint(replicateIndex, transitionGroupDocNode.LabelType);
-            CalibrationCurve calibrationCurve = GetCalibrationCurve();
-            result = result.ChangeNormalizedArea(GetNormalizedPeakArea(calibrationPoint));
-            if (HasExternalStandards() || HasInternalStandardConcentration())
+            PrecursorQuantificationResult result = null;
+            if (IsotopologResponseCurve)
             {
-                double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, calibrationPoint);
-                result = result.ChangeCalculatedConcentration(calculatedConcentration);
-                double? expectedConcentration = transitionGroupDocNode.PrecursorConcentration;
-                result = result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
-                result = result.ChangeUnits(QuantificationSettings.Units);
+                result = new PrecursorQuantificationResult();
+                var calibrationPoint = new CalibrationPoint(replicateIndex, transitionGroupDocNode.LabelType);
+                CalibrationCurve calibrationCurve = GetCalibrationCurve();
+                result = (PrecursorQuantificationResult)result.ChangeNormalizedArea(GetNormalizedPeakArea(calibrationPoint));
+                if (HasExternalStandards() || HasInternalStandardConcentration())
+                {
+                    double? calculatedConcentration = GetCalculatedConcentration(calibrationCurve, calibrationPoint);
+                    result = (PrecursorQuantificationResult)result.ChangeCalculatedConcentration(calculatedConcentration);
+                    double? expectedConcentration = transitionGroupDocNode.PrecursorConcentration;
+                    result = (PrecursorQuantificationResult)result.ChangeAccuracy(calculatedConcentration / expectedConcentration);
+                    result = (PrecursorQuantificationResult)result.ChangeUnits(QuantificationSettings.Units);
+                }
+            }
+
+            var targetIonRatio = GetTargetIonRatio(transitionGroupDocNode);
+            var ionRatio = PeptideQuantifier.GetQualitativeIonRatio(SrmSettings, transitionGroupDocNode, replicateIndex);
+            if (targetIonRatio.HasValue || ionRatio.HasValue)
+            {
+                result = result ?? new PrecursorQuantificationResult();
+                var status = ValueStatus.GetStatus(ionRatio, GetTargetIonRatio(transitionGroupDocNode),
+                    SrmSettings.PeptideSettings.Quantification.QualitativeIonRatioThreshold / 100);
+                result = result.ChangeIonRatio(targetIonRatio, ionRatio, status);
             }
             return result;
         }
@@ -692,7 +744,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static bool AnyBatchNames(SrmSettings srmSettings)
         {
             return srmSettings.HasResults &&
-                srmSettings.MeasuredResults.Chromatograms.Any(c => !string.IsNullOrEmpty(c.BatchName));
+                   srmSettings.MeasuredResults.Chromatograms.Any(c => !string.IsNullOrEmpty(c.BatchName));
         }
     }
 

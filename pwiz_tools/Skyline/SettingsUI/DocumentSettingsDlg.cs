@@ -3,12 +3,15 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Properties;
@@ -19,36 +22,39 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class DocumentSettingsDlg : FormEx
     {
-        public enum TABS { annotations, lists, group_comparisons, reports }
+        public enum TABS { annotations, lists, group_comparisons, reports, metadata_rules }
         private readonly SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
         private readonly SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
         private readonly SettingsListBoxDriver<ListData> _listsListBoxDriver;
+        private readonly SettingsListBoxDriver<MetadataRuleSet> _metadataRuleSetsListBoxDriver;
+        private DataSettings _originalSettings;
 
         public DocumentSettingsDlg(IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
             Icon = Resources.Skyline;
             DocumentContainer = documentContainer;
+            var dataSettings = DocumentContainer.Document.Settings.DataSettings;
             _annotationsListBoxDriver = new SettingsListBoxDriver<AnnotationDef>(
                 checkedListBoxAnnotations, Settings.Default.AnnotationDefList);
-            _annotationsListBoxDriver.LoadList(
-                DocumentContainer.Document.Settings.DataSettings.AnnotationDefs);
+            _annotationsListBoxDriver.LoadList(dataSettings.AnnotationDefs);
             _groupComparisonsListBoxDriver = new SettingsListBoxDriver<GroupComparisonDef>(
                 checkedListBoxGroupComparisons, Settings.Default.GroupComparisonDefList);
-            _groupComparisonsListBoxDriver.LoadList(
-                DocumentContainer.Document.Settings.DataSettings.GroupComparisonDefs);
+            _groupComparisonsListBoxDriver.LoadList(dataSettings.GroupComparisonDefs);
             var listDataList = new ListDefList();
             listDataList.AddRange(Settings.Default.ListDefList);
-            listDataList.AddRange(documentContainer.Document.Settings.DataSettings.Lists);
+            listDataList.AddRange(dataSettings.Lists);
             _listsListBoxDriver = new SettingsListBoxDriver<ListData>(
                 checkedListBoxLists, listDataList);
-            _listsListBoxDriver.LoadList(documentContainer.Document.Settings.DataSettings.Lists);
+            _listsListBoxDriver.LoadList(dataSettings.Lists);
             var dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
             chooseViewsControl.ViewContext = new SkylineViewContext(dataSchema, new RowSourceInfo[0]);
             chooseViewsControl.ShowCheckboxes = true;
-            chooseViewsControl.CheckedViews =
-                documentContainer.Document.Settings.DataSettings.ViewSpecList.ViewSpecs.Select(
-                    viewSpec => PersistedViews.MainGroup.Id.ViewName(viewSpec.Name));
+            chooseViewsControl.CheckedViews = dataSettings.ViewSpecList.ViewSpecs.Select(
+                viewSpec => PersistedViews.MainGroup.Id.ViewName(viewSpec.Name));
+            _metadataRuleSetsListBoxDriver = new SettingsListBoxDriver<MetadataRuleSet>(checkedListBoxRuleSets, Settings.Default.MetadataRuleSets);
+            _metadataRuleSetsListBoxDriver.LoadList(dataSettings.MetadataRuleSets);
+            _originalSettings = dataSettings;
         }
 
         public IDocumentUIContainer DocumentContainer { get; private set; }
@@ -63,7 +69,8 @@ namespace pwiz.Skyline.SettingsUI
             return dataSettings.ChangeAnnotationDefs(_annotationsListBoxDriver.Chosen)
                 .ChangeGroupComparisonDefs(_groupComparisonsListBoxDriver.Chosen)
                 .ChangeViewSpecList(viewSpecs)
-                .ChangeListDefs(_listsListBoxDriver.Chosen);
+                .ChangeListDefs(_listsListBoxDriver.Chosen)
+                .ChangeExtractedMetadata(_metadataRuleSetsListBoxDriver.Chosen);
         }
 
         private void btnAddAnnotation_Click(object sender, System.EventArgs e)
@@ -167,9 +174,47 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 }
             }
+
+            if (!ValidateMetadataRules())
+            {
+                return;
+            }
+
             Settings.Default.ListDefList.Clear();
             Settings.Default.ListDefList.AddRange(_listsListBoxDriver.List.Select(list=>list.DeleteAllRows()));
+
             DialogResult = DialogResult.OK;
+        }
+
+        public void EditMetadataRuleList()
+        {
+            _metadataRuleSetsListBoxDriver.EditList(DocumentContainer);
+        }
+
+        public bool ValidateMetadataRules()
+        {
+            var newDataSettings = GetDataSettings(DocumentContainer.DocumentUI.Settings.DataSettings);
+            if (!newDataSettings.MetadataRuleSets.Any() || Equals(_originalSettings, newDataSettings))
+            {
+                return true;
+            }
+            var document = DocumentContainer.DocumentUI;
+            document = document.ChangeSettings(document.Settings.ChangeDataSettings(newDataSettings));
+            MetadataExtractor.ApplyRules(document, null, out CommonException<MetadataExtractor.RuleError> error);
+            if (error != null)
+            {
+                string message =
+                    string.Format(
+                        Resources.DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_,
+                        error.ExceptionDetail.RuleName);
+                var alertDlg = new AlertDlg(message, MessageBoxButtons.OKCancel) { Exception = error };
+                if (alertDlg.ShowAndDispose(this) == DialogResult.Cancel)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public TabControl GetTabControl()
@@ -246,6 +291,31 @@ namespace pwiz.Skyline.SettingsUI
                 chooseViewsControl.CheckedViews = chooseViewsControl.CheckedViews
                     .Append(PersistedViews.MainGroup.Id.ViewName(newView.Name));
             }
+        }
+
+        public void AddMetadataRule()
+        {
+            using (var editDlg = new MetadataRuleSetEditor(DocumentContainer, new MetadataRuleSet(typeof(ResultFile)),
+                Settings.Default.MetadataRuleSets))
+            {
+                if (editDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var chosen = _metadataRuleSetsListBoxDriver.Chosen.ToList();
+                    Settings.Default.MetadataRuleSets.Add(editDlg.MetadataRuleSet);
+                    chosen.Add(editDlg.MetadataRuleSet);
+                    _metadataRuleSetsListBoxDriver.LoadList(chosen);
+                }
+            }
+        }
+
+        private void btnAddMetadataRule_Click(object sender, System.EventArgs e)
+        {
+            AddMetadataRule();
+        }
+
+        private void btnEditMetadataRuleList_Click(object sender, System.EventArgs e)
+        {
+            EditMetadataRuleList();
         }
     }
 }

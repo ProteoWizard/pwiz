@@ -69,6 +69,7 @@ using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Prosit.Communication;
@@ -895,9 +896,8 @@ namespace pwiz.Skyline
         public bool InUndoRedo { get { return _undoManager.InUndoRedo; } }
 
         /// <summary>
-        /// Kills all background processing, and then restores a specific document
-        /// as the current document.  After which background processing is restarted
-        /// based on the contents of the restored document.
+        /// Restores a specific document as the current document regardless of the
+        /// state of background processing;
         /// 
         /// This heavy hammer is for use with undo/redo only.
         /// </summary>
@@ -909,11 +909,17 @@ namespace pwiz.Skyline
             // User will want to restore whatever was displayed in the UI at the time.
             SrmDocument docReplaced = DocumentUI;
 
-            bool replaced = SetDocument(docUndo, Document);
+            bool replaced;
+            lock (GetDocumentChangeLock())
+            {
+                replaced = SetDocument(docUndo, Document);
+            }
 
-            // If no background processing exists, this should succeed.
             if (!replaced)
+            {
+                // It should have succeeded because we had a lock on GetDocumentChangeLock()
                 throw new InvalidOperationException(Resources.SkylineWindow_RestoreDocument_Failed_to_restore_document);
+            }
 
             return docReplaced;
         }
@@ -1090,7 +1096,6 @@ namespace pwiz.Skyline
             _importPeptideSearchManager.ProgressUpdateEvent -= UpdateProgress;
             
             DestroyAllChromatogramsGraph();
-
             base.OnClosing(e);
         }
 
@@ -1111,8 +1116,10 @@ namespace pwiz.Skyline
             if (!Program.FunctionalTest)
                 // ReSharper disable LocalizableElement
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
-                // ReSharper restore LocalizableElement
-            
+            // ReSharper restore LocalizableElement
+
+            DetectionPlotData.ReleaseDataCache();
+
             base.OnClosed(e);
         }
 
@@ -3815,7 +3822,9 @@ namespace pwiz.Skyline
                             var dataSettingsNew = dlg.GetDataSettings(doc.Settings.DataSettings);
                             if (Equals(dataSettingsNew, doc.Settings.DataSettings))
                                 return doc;
-                            return doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
+                            doc = doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
+                            doc = MetadataExtractor.ApplyRules(doc, null, out _);
+                            return doc;
                         },
                         AuditLogEntry.SettingsLogFunction);
                     StoreNewSettings(DocumentUI.Settings);
@@ -4921,6 +4930,7 @@ namespace pwiz.Skyline
             SetResultIndexOnGraphs(_listGraphRetentionTime, true);
             SetResultIndexOnGraphs(_listGraphPeakArea, false);
             SetResultIndexOnGraphs(_listGraphMassError, false);
+            SetResultIndexOnGraphs(_listGraphDetections, false);
 
             var liveResultsGrid = (LiveResultsGrid)_resultsGridForm;
             if (null != liveResultsGrid)
@@ -5771,7 +5781,8 @@ namespace pwiz.Skyline
                 var changedTargets = count == 1 ? SelectedNode.Text : string.Format(AuditLogStrings.SkylineWindow_ChangeQuantitative_0_transitions, count);
                 ModifyDocument(message, doc =>
                 {
-                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));  // CONSIDER: Might not be true if background processing is happening
+                    // Will always be true because we have acquired the lock on GetDocumentChangeLock()
+                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));
                     return newDocument;
                 }, docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, changedTargets));
             }
@@ -5864,6 +5875,19 @@ namespace pwiz.Skyline
             DisplayModificationOption.Current = displayModificationOption;
             ShowSequenceTreeForm(true, true);
             UpdateGraphPanes();
+        }
+
+        private void permuteIsotopeModificationsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPermuteIsotopeModificationsDlg();
+        }
+
+        public void ShowPermuteIsotopeModificationsDlg()
+        {
+            using (var dlg = new PermuteIsotopeModificationsDlg(this))
+            {
+                dlg.ShowDialog(this);
+            }
         }
     }
 }

@@ -29,7 +29,6 @@ using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -797,9 +796,10 @@ namespace pwiz.Skyline.Util
                 return true;
             if (values1 == null || values2 == null)
                 return false;
-            if (values1.Count != values2.Count)
+            int count = values1.Count;
+            if (count != values2.Count)
                 return false;
-            for (int i = 0; i < values1.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 if (!Equals(values1[i], values2[i]))
                     return false;
@@ -872,9 +872,10 @@ namespace pwiz.Skyline.Util
                 return true;
             if (values1 == null || values2 == null)
                 return false;
-            if (values1.Count != values2.Count)
+            int count = values1.Count;
+            if (count != values2.Count)
                 return false;
-            for (int i = 0; i < values1.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 if (!ReferenceEquals(values1[i], values2[i]))
                     return false;
@@ -1477,16 +1478,13 @@ namespace pwiz.Skyline.Util
         /// <param name="value">The string to parse</param>
         /// <param name="defaultValue">The value to return, if parsing fails</param>
         /// <returns>An enum value of type <see cref="TEnum"/></returns>
-        public static TEnum ParseEnum<TEnum>(string value, TEnum defaultValue)
+        public static TEnum ParseEnum<TEnum>(string value, TEnum defaultValue) where TEnum : struct
         {
-            try
+            if (Enum.TryParse(value, true, out TEnum result))
             {
-                return (TEnum)Enum.Parse(typeof(TEnum), value, true);
+                return result;
             }
-            catch (Exception)
-            {
-                return defaultValue;
-            }                            
+            return defaultValue;
         }
 
         /// <summary>
@@ -2134,11 +2132,6 @@ namespace pwiz.Skyline.Util
     {
         // This can be set to true to make debugging easier.
         public static readonly bool SINGLE_THREADED = false;
-
-        private static readonly ParallelOptions PARALLEL_OPTIONS = new ParallelOptions
-        {
-            MaxDegreeOfParallelism = SINGLE_THREADED ? 1 : -1
-        };
 
         private class IntHolder
         {

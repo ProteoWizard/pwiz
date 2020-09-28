@@ -1678,6 +1678,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total ion current.
+        /// </summary>
+        public static string AreaCVToolbar_UpdateUI_Total_ion_current {
+            get {
+                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_Total_ion_current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid CV cutoff entered.
         /// </summary>
         public static string AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered {
@@ -2931,6 +2940,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Files to search:.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_Files_to_search_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_Files_to_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred attempting to import the {0} library..
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_ {
@@ -2946,6 +2964,15 @@ namespace pwiz.Skyline.Properties {
         public static string BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library {
             get {
                 return ResourceManager.GetString("BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Result files:.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_Result_files_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_Result_files_", resourceCulture);
             }
         }
         
@@ -8021,6 +8048,132 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enzymes file {0} not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instruments file {0} not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Obo files (psi-ms.obo and unimod.obo) not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unimod file {0} not found.
+        /// </summary>
+        public static string DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found {
+            get {
+                return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search failed: {0}.
+        /// </summary>
+        public static string DdaSearch_Search_failed__0 {
+            get {
+                return ResourceManager.GetString("DdaSearch_Search_failed__0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search is being canceled..
+        /// </summary>
+        public static string DdaSearch_Search_is_canceled {
+            get {
+                return ResourceManager.GetString("DdaSearch_Search_is_canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment ions must be selected.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to fragmentIons value not found in ComboBox items.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS1 Tolerance incorrect.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS2 Tolerance incorrect.
+        /// </summary>
+        public static string DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect {
+            get {
+                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search canceled..
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Search_canceled {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Search_canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search done..
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Search_done {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Search_done", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search failed..
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Search_failed {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Search_failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting search....
+        /// </summary>
+        public static string DDASearchControl_SearchProgress_Starting_search {
+            get {
+                return ResourceManager.GetString("DDASearchControl_SearchProgress_Starting_search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Declustering Potential Regressions:.
         /// </summary>
         public static string DeclusterPotentialList_Label_Declustering_Potential_Regressions {
@@ -8190,6 +8343,231 @@ namespace pwiz.Skyline.Properties {
         public static string Demultiplexer_GetDeconvRegionsForMz_TheIsolationSchemeIsInconsistentlySpecified {
             get {
                 return ResourceManager.GetString("Demultiplexer_GetDeconvRegionsForMz_TheIsolationSchemeIsInconsistentlySpecified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Count.
+        /// </summary>
+        public static string DetectionHistogramPane_Tooltip_Count {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_Tooltip_Count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Count.
+        /// </summary>
+        public static string DetectionHistogramPane_Tooltip_ReplicateCount {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_Tooltip_ReplicateCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Count.
+        /// </summary>
+        public static string DetectionHistogramPane_XAxis_Name {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_XAxis_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Frequency.
+        /// </summary>
+        public static string DetectionHistogramPane_YAxis_Name {
+            get {
+                return ResourceManager.GetString("DetectionHistogramPane_YAxis_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide.
+        /// </summary>
+        public static string DetectionPlot_TargetType_Peptide {
+            get {
+                return ResourceManager.GetString("DetectionPlot_TargetType_Peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor.
+        /// </summary>
+        public static string DetectionPlot_TargetType_Precursor {
+            get {
+                return ResourceManager.GetString("DetectionPlot_TargetType_Precursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Count.
+        /// </summary>
+        public static string DetectionPlot_YScale_One {
+            get {
+                return ResourceManager.GetString("DetectionPlot_YScale_One", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to % of all {0}s.
+        /// </summary>
+        public static string DetectionPlot_YScale_Percent {
+            get {
+                return ResourceManager.GetString("DetectionPlot_YScale_Percent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to all runs.
+        /// </summary>
+        public static string DetectionPlotPane_AllRunsLine_Name {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_AllRunsLine_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to at least {0} (of {1}) - {2:#,##0}.
+        /// </summary>
+        public static string DetectionPlotPane_AtLeastLine_Name {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_AtLeastLine_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to cumulative.
+        /// </summary>
+        public static string DetectionPlotPane_CumulativeLine_Name {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_CumulativeLine_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No data available for this plot..
+        /// </summary>
+        public static string DetectionPlotPane_EmptyPlot_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_EmptyPlot_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operation canceled..
+        /// </summary>
+        public static string DetectionPlotPane_EmptyPlotCanceled_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_EmptyPlotCanceled_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error when retrieving plot data..
+        /// </summary>
+        public static string DetectionPlotPane_EmptyPlotError_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_EmptyPlotError_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to   Mean: {0:#,##0}.
+        /// </summary>
+        public static string DetectionPlotPane_Label_Mean {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Label_Mean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to   Stddev:{1:#,##0}.
+        /// </summary>
+        public static string DetectionPlotPane_Label_Stddev {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Label_Stddev", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All Count.
+        /// </summary>
+        public static string DetectionPlotPane_Tooltip_AllCount {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Tooltip_AllCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Count.
+        /// </summary>
+        public static string DetectionPlotPane_Tooltip_Count {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Tooltip_Count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cumulative Count.
+        /// </summary>
+        public static string DetectionPlotPane_Tooltip_CumulativeCount {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Tooltip_CumulativeCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -log10 of Q-Value Median.
+        /// </summary>
+        public static string DetectionPlotPane_Tooltip_QMedian {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Tooltip_QMedian", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate.
+        /// </summary>
+        public static string DetectionPlotPane_Tooltip_Replicate {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_Tooltip_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating (Esc to cancel)....
+        /// </summary>
+        public static string DetectionPlotPane_WaitingForData_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_WaitingForData_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate.
+        /// </summary>
+        public static string DetectionPlotPane_XAxis_Name {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_XAxis_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detections.
+        /// </summary>
+        public static string DetectionPlotPane_YAxis_Name {
+            get {
+                return ResourceManager.GetString("DetectionPlotPane_YAxis_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At least {0} replicates.
+        /// </summary>
+        public static string DetectionToolbarProperties_AtLeastNReplicates {
+            get {
+                return ResourceManager.GetString("DetectionToolbarProperties_AtLeastNReplicates", resourceCulture);
             }
         }
         
@@ -8534,6 +8912,16 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_th" +
                         "at_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_t" +
                         "o_delete_those_items_from_that_list_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while applying the rule set &apos;{0}&apos;. Do you want to continue with the change to the Document Settings?.
+        /// </summary>
+        public static string DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_rule___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_ {
+            get {
+                return ResourceManager.GetString("DocumentSettingsDlg_ValidateMetadataRules_An_error_occurred_while_applying_the_ru" +
+                        "le___0____Do_you_want_to_continue_with_the_change_to_the_Document_Settings_", resourceCulture);
             }
         }
         
@@ -10967,6 +11355,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a recognized Unimod name..
+        /// </summary>
+        public static string EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_ {
+            get {
+                return ResourceManager.GetString("EditStaticModDlg_SetModification___0___is_not_a_recognized_Unimod_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;Show all...&gt;.
         /// </summary>
         public static string EditStaticModDlg_UpdateListAvailableMods_Show_all {
@@ -12291,6 +12688,24 @@ namespace pwiz.Skyline.Properties {
         public static string Extensions_CustomToString__2D_Histogram {
             get {
                 return ResourceManager.GetString("Extensions_CustomToString__2D_Histogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Histogram.
+        /// </summary>
+        public static string Extensions_CustomToString_Detections_Histogram {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Detections_Histogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicates.
+        /// </summary>
+        public static string Extensions_CustomToString_Detections_Replicates {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Detections_Replicates", resourceCulture);
             }
         }
         
@@ -14371,6 +14786,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A FASTA file is required for the DDA search..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_FastFileMissing_DDASearch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Finish.
         /// </summary>
         public static string ImportPeptideSearchDlg_NextPage_Finish {
@@ -14385,6 +14809,15 @@ namespace pwiz.Skyline.Properties {
         public static string ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_ {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Import_FASTA__optional_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import FASTA (required).
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_Import_FASTA__required_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Import_FASTA__required_", resourceCulture);
             }
         }
         
@@ -15350,6 +15783,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Automatic.
+        /// </summary>
+        public static string IrtStandard_AUTO_Automatic {
+            get {
+                return ResourceManager.GetString("IrtStandard_AUTO_Automatic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No document to import.
         /// </summary>
         public static string IrtStandard_DocumentStream_No_document_to_import {
@@ -15711,6 +16153,16 @@ namespace pwiz.Skyline.Properties {
         public static string IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments {
             get {
                 return ResourceManager.GetString("IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Permuting isotope modifiations.
+        /// </summary>
+        public static string IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifiations {
+            get {
+                return ResourceManager.GetString("IsotopeModificationPermuter_PermuteIsotopeModifications_Permuting_isotope_modifia" +
+                        "tions", resourceCulture);
             }
         }
         
@@ -16405,6 +16857,33 @@ namespace pwiz.Skyline.Properties {
         public static string LineColNumberedIoException_FormatMessage__0___line__1___col__2__ {
             get {
                 return ResourceManager.GetString("LineColNumberedIoException_FormatMessage__0___line__1___col__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (fixed).
+        /// </summary>
+        public static string ListBoxModification_ToString__fixed_ {
+            get {
+                return ResourceManager.GetString("ListBoxModification_ToString__fixed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (isotopic label).
+        /// </summary>
+        public static string ListBoxModification_ToString__isotopic_label_ {
+            get {
+                return ResourceManager.GetString("ListBoxModification_ToString__isotopic_label_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (variable).
+        /// </summary>
+        public static string ListBoxModification_ToString__variable_ {
+            get {
+                return ResourceManager.GetString("ListBoxModification_ToString__variable_", resourceCulture);
             }
         }
         
@@ -17149,6 +17628,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Edit modifications.
+        /// </summary>
+        public static string MatchModificationsControl_Initialize__Edit_modifications {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_Initialize__Edit_modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit &amp;heavy modifications....
+        /// </summary>
+        public static string MatchModificationsControl_Initialize_Edit__heavy_modifications___ {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_Initialize_Edit__heavy_modifications___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit &amp;structural modifications....
+        /// </summary>
+        public static string MatchModificationsControl_Initialize_Edit__structural_modifications___ {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_Initialize_Edit__structural_modifications___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify all modifications you want to include in the search:.
+        /// </summary>
+        public static string MatchModificationsControl_ModificationLabelText_DDA_Search {
+            get {
+                return ResourceManager.GetString("MatchModificationsControl_ModificationLabelText_DDA_Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Charge state values must be greater than 0..
         /// </summary>
         public static string MeasuredCollisionalCrossSection_Validate_Charge_state_values_must_be_greater_than_0_ {
@@ -17472,6 +17987,79 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("MessageBoxHelper_ValidateSignedNumberTextBox_Value__0__must_be_between__1__and__2" +
                         "__or__3__and__4__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error converting &apos;{0}&apos; to &apos;{1}&apos;:.
+        /// </summary>
+        public static string MetadataExtractor_ApplyStep_Error_converting___0___to___1___ {
+            get {
+                return ResourceManager.GetString("MetadataExtractor_ApplyStep_Error_converting___0___to___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find column {0}.
+        /// </summary>
+        public static string MetadataExtractor_ResolveColumn_Unable_to_find_column__0_ {
+            get {
+                return ResourceManager.GetString("MetadataExtractor_ResolveColumn_Unable_to_find_column__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} cannot be blank.
+        /// </summary>
+        public static string MetadataRuleEditor_OkDialog__0__cannot_be_blank {
+            get {
+                return ResourceManager.GetString("MetadataRuleEditor_OkDialog__0__cannot_be_blank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is already a result file rule set named &apos;{0}&apos;..
+        /// </summary>
+        public static string MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___ {
+            get {
+                return ResourceManager.GetString("MetadataRuleEditor_OkDialog_There_is_already_a_metadata_rule_named___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This is not a valid regular expression..
+        /// </summary>
+        public static string MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_ {
+            get {
+                return ResourceManager.GetString("MetadataRuleEditor_OkDialog_This_is_not_a_valid_regular_expression_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rule Set.
+        /// </summary>
+        public static string MetadataRuleSetList_Label_Rule_Set {
+            get {
+                return ResourceManager.GetString("MetadataRuleSetList_Label_Rule_Set", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rule Sets.
+        /// </summary>
+        public static string MetadataRuleSetList_Title_Rule_Sets {
+            get {
+                return ResourceManager.GetString("MetadataRuleSetList_Title_Rule_Sets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text &apos;{0}&apos; must either be a valid regular expression or blank.
+        /// </summary>
+        public static string MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_blank {
+            get {
+                return ResourceManager.GetString("MetadataRuleStepEditor_OkDialog__0__must_either_be_a_valid_regular_expression_or_" +
+                        "blank", resourceCulture);
             }
         }
         
@@ -18237,6 +18825,16 @@ namespace pwiz.Skyline.Properties {
         public static string MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape {
             get {
                 return ResourceManager.GetString("MQuestWeightedShapeCalc_MQuestWeightedShapeCalc_mQuest_weighted_shape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MSAmandaLogo {
+            get {
+                object obj = ResourceManager.GetObject("MSAmandaLogo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -21640,6 +22238,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Permute isotope modifications.
+        /// </summary>
+        public static string PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications {
+            get {
+                return ResourceManager.GetString("PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Permuting Isotope Modifications.
+        /// </summary>
+        public static string PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications {
+            get {
+                return ResourceManager.GetString("PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Updating settings.
+        /// </summary>
+        public static string PermuteIsotopeModificationsDlg_OkDialog_Updating_settings {
+            get {
+                return ResourceManager.GetString("PermuteIsotopeModificationsDlg_OkDialog_Updating_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to External Tools.
         /// </summary>
         public static string PersistedViews_ExternalToolsGroup_External_Tools {
@@ -22031,6 +22656,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_informati" +
                         "on_from_the_following_servers_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Go to Tools &gt; Options &gt; Panorama tab to update the username and password..
+        /// </summary>
+        public static string PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_ {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to" +
+                        "_update_the_username_and_password_", resourceCulture);
             }
         }
         
@@ -22494,6 +23129,15 @@ namespace pwiz.Skyline.Properties {
         public static string RefineDlg_NormalizationMethod_None {
             get {
                 return ResourceManager.GetString("RefineDlg_NormalizationMethod_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total ion current.
+        /// </summary>
+        public static string RefineDlg_NormalizationMethod_Total_ion_current {
+            get {
+                return ResourceManager.GetString("RefineDlg_NormalizationMethod_Total_ion_current", resourceCulture);
             }
         }
         
@@ -24381,6 +25025,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred applying the rule &apos;{0}&apos;:.
+        /// </summary>
+        public static string RuleError_ToString_An_error_occurred_applying_the_rule___0___ {
+            get {
+                return ResourceManager.GetString("RuleError_ToString_An_error_occurred_applying_the_rule___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Save {
@@ -24463,6 +25116,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SchedulingOptionsDlg_TrendsError_Using_trends_in_scheduling_requires_at_least__0_" +
                         "_replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Additional Settings.
+        /// </summary>
+        public static string SearchSettingsControl_Additional_Settings {
+            get {
+                return ResourceManager.GetString("SearchSettingsControl_Additional_Settings", resourceCulture);
             }
         }
         
@@ -25738,6 +26400,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ConnectLibrarySpecs_Spectral_Library {
             get {
                 return ResourceManager.GetString("SkylineWindow_ConnectLibrarySpecs_Spectral_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detection.
+        /// </summary>
+        public static string SkylineWindow_CreateGraphDetections_Counts {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CreateGraphDetections_Counts", resourceCulture);
             }
         }
         

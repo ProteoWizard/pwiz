@@ -84,6 +84,14 @@ namespace pwiz.Common.DataBinding
         {
             return new PropertyPath(this, null, false);
         }
+
+        /// <summary>
+        /// Returns a property path corresponding to the Values collection of an IDictionary
+        /// </summary>
+        public PropertyPath DictionaryValues()
+        {
+            return LookupAllItems().Property(@"Value");
+        }
         public PropertyPath Concat(PropertyPath propertyPath)
         {
             if (propertyPath.IsRoot)

@@ -142,6 +142,7 @@
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromPeakTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
+    <Compile Include="CodeInspectionTest.cs" />
     <Compile Include="CommandLineAssayImportTest.cs" />
     <Compile Include="CommandLineImportAnnotationsTest.cs" />
     <Compile Include="CommandLineImportDocTest.cs" />
@@ -158,6 +159,7 @@
     <Compile Include="EspTest.cs" />
     <Compile Include="ExplicitLossTest.cs" />
     <Compile Include="ExplicitModTest.cs" />
+    <Compile Include="ExtractedMetadataTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
     <Compile Include="FindNodeTest.cs" />
     <Compile Include="FragmentedMoleculeTest.cs" />

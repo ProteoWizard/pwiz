@@ -48,6 +48,7 @@ using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Themes;
@@ -300,6 +301,32 @@ namespace pwiz.Skyline.Properties
                 };
 
                 this[@"AreaGraphTypes"] = value;
+            }
+        }
+
+        [UserScopedSettingAttribute]
+        public UniqueList<GraphTypeSummary> DetectionGraphTypes
+        {
+            get
+            {
+                if (this[@"DetectionGraphTypes"] == null)
+                {
+                    DetectionGraphTypes = ShowDetectionGraph
+                        ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(DetectionGraphType, GraphTypeSummary.detections) }
+                        : new UniqueList<GraphTypeSummary>();
+                }
+
+                return (UniqueList<GraphTypeSummary>)this[@"DetectionGraphTypes"];
+            }
+            set
+            {
+                value.CollectionChanged += (sender, args) =>
+                {
+                    if (DetectionGraphTypes.Any())
+                        DetectionGraphType = DetectionGraphTypes.First().ToString();
+                };
+
+                this[@"DetectionGraphTypes"] = value;
             }
         }
 
@@ -1222,6 +1249,28 @@ namespace pwiz.Skyline.Properties
             }
             set { this[@"ColorSchemes"] = value; }
         }
+
+        [UserScopedSetting]
+        public MetadataRuleSetList MetadataRuleSets
+        {
+            get
+            {
+                var ruleSets = (MetadataRuleSetList) this[nameof(MetadataRuleSets)];
+                if (ruleSets == null)
+                {
+                    ruleSets = new MetadataRuleSetList();
+                    ruleSets.AddDefaults();
+                    MetadataRuleSets = ruleSets;
+                }
+
+                return ruleSets;
+            }
+            set
+            {
+                this[nameof(MetadataRuleSets)] = value;
+            }
+        }
+
     }
 
     /// <summary>
@@ -2218,6 +2267,12 @@ namespace pwiz.Skyline.Properties
         public override bool AcceptList(Control owner, IList<IonMobilityLibrary> listNew)
         {
             return true;
+        }
+
+        public override string GetDisplayName(IonMobilityLibrary item)
+        {
+            // Use the localized text in the UI
+            return Equals(item, IonMobilityLibrary.NONE) ? Resources.SettingsList_ELEMENT_NONE_None : base.GetDisplayName(item);
         }
 
         public override IonMobilityLibrary EditItem(Control owner, IonMobilityLibrary item,

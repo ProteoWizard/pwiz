@@ -163,11 +163,19 @@
     <Compile Include="CrosslinkChromatogramTest.cs" />
     <Compile Include="CrosslinkingTest.cs" />
     <Compile Include="CrosslinkNeutralLossTest.cs" />
+    <Compile Include="DdaSearchTest.cs" />
+    <Compile Include="DetectionsPlotTest.cs" />
+    <Compile Include="DocumentFileLockingTest.cs" />
     <Compile Include="ExplicitAnalyteConcentrationTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />
+    <Compile Include="InvalidPeptideRankIdTest.cs" />
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
     <Compile Include="LongWaitDlgResizeTest.cs" />
+    <Compile Include="MetadataRuleTest.cs" />
+    <Compile Include="ModificationPermuterTest.cs" />
+    <Compile Include="PeptideSettingsTooltipTest.cs" />
     <Compile Include="ProxlTest.cs" />
+    <Compile Include="QualitativeIonRatioTest.cs" />
     <Compile Include="ReimportPeakBoundariesTest.cs" />
     <Compile Include="RescoreImportDocumentTest.cs" />
     <Compile Include="RescoreRawChromatogramsTest.cs" />
@@ -330,6 +338,7 @@
     <Compile Include="ExportMethodDialogTest.cs" />
     <Compile Include="LabelPeakPickingTest.cs" />
     <Compile Include="TargetResolverTest.cs" />
+    <Compile Include="TicNormalizationTest.cs" />
     <Compile Include="ToolServiceTest.cs" />
     <Compile Include="ToolStoreDlgTest.cs" />
     <Compile Include="ToolUpdatesTest.cs" />
@@ -414,6 +423,7 @@
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="CrosslinkingTest.zip" />
+    <None Include="DetectionsPlotTest.zip" />
     <None Include="DocumentGridChromatogramDataTest.zip" />
     <None Include="DocumentGridTest.zip" />
     <None Include="DocumentSizeErrorTest.zip" />
@@ -447,6 +457,7 @@
     <None Include="ImportTransitionListTest.zip" />
     <None Include="InsertTest.zip" />
     <None Include="InstallToolsTest.zip" />
+    <None Include="InvalidPeptideRankIdTest.zip" />
     <None Include="InvalidPeptidesInLibraryTest.zip" />
     <None Include="IonMobilityTest.zip" />
     <None Include="IrtTest.zip" />
@@ -481,6 +492,7 @@
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="ProxlTest.zip" />
+    <None Include="QualitativeIonRatioTest.zip" />
     <None Include="QuantitativeTest.zip" />
     <None Include="ReimportPeakBoundariesTest.zip" />
     <None Include="ReintegrateDlgTest.zip" />
@@ -514,6 +526,7 @@
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
     <None Include="TargetResolverTest.zip" />
+    <None Include="TicNormalizationTest.zip" />
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />
     <None Include="ToolUpdatesTest.zip" />

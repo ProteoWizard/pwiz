@@ -86,7 +86,11 @@ de\ZedGraph.resources.dll
 DigitalRune.Windows.Docking.dll
 DotNetZip.dll
 DualProbeInterfaceParametersCS.dll
+enzymes.xml
 es\ZedGraph.resources.dll
+FHOOE_IMP.MSAmanda.Core.dll
+FHOOE_IMP.MSAmanda.InOutput.dll
+FHOOE_IMP.MSAmanda.Utils.dll
 fr\ZedGraph.resources.dll
 Google.Protobuf.dll
 Grpc.Core.Api.dll
@@ -96,6 +100,7 @@ grpc_csharp_ext.x86.dll
 hu\ZedGraph.resources.dll
 IdentityModel.dll
 Iesi.Collections.dll
+Instruments.xml
 IOModuleQTFL.dll
 it\ZedGraph.resources.dll
 ja\BiblioSpec.resources.dll
@@ -180,6 +185,11 @@ OFX.Logging.dll
 OFX.Security.Core.dll
 ParallelExtensionsExtras.dll
 PeakItgLSS.dll
+percolator\percolator.exe
+percolator\qvality.exe
+percolator\xerces-c_3_1.dll
+PrmPasefScheduler.dll
+prmscheduler.dll
 ProteomeDb.dll
 ProteomeDb.pdb
 ProteowizardWrapper.dll

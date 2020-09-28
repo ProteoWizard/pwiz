@@ -109,7 +109,7 @@ struct PSM{
 
   bool IsCompleteEnough() const
   {
-      return (specKey >= 0 || !specName.empty()) && 
+      return (specKey >= 0 || specIndex >= 0 || !specName.empty()) && 
           (smallMolMetadata.IsCompleteEnough() ||
            (charge != 0 && !unmodSeq.empty()));
   }

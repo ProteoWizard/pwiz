@@ -168,6 +168,56 @@ extern "C" {
         uint32_t measurement_mode_id;
     } PrmPasefSchedulingEntry;
 
+    /// This enum gives the numbers for the generation of metrics of
+    /// the prm-PASEF scheduling, which are thought for visualization
+    /// the function prm_get_visualization takes a uint32_t to avoid
+    /// inter-language conversion problems.
+    typedef enum {
+        CONCURRENT_FRAMES = 0 // get the number of frames which have to be measured
+                              // concurrently in each retention time segment, one after the other
+                              // x = start and end rt of each time segment
+                              // y = number of concurrent frames
+        , TARGETS_PER_FRAME = 1 // get the average number of targets per frame for
+                                // each retention time segment
+        , REDUNDANCY_OF_TARGETS = 2 // average number of times a target is measured in a time segment
+                                    // to fill up otherwise unused mobility space: total number of 
+                                    // fragmentations devided by the number of unique targets
+        , MEAN_SAMPLING_TIMES = 3 // average time between two measurements of a target in seconds, 
+                                  // x is the target id
+        , MAX_SAMPLING_TIMES = 4 // max time between two measurements of a target in seconds, 
+                                  // x is the target id
+    } PrmPasefSchedulingMetrics;
+
+    typedef struct {
+        double x; // usually but not limited to the time in min of a retention time segment point
+        double y; // function value, e.g. a number of frames
+    } PrmVisualizationDataPoint;
+
+    /// This structure holds the properties of retention time standard, except for
+    /// for the fragment ions which are modeled in PrmRetentionTimeStandardFragment
+    /// Done that away to avoid arrays which give memory management problems ...
+    typedef struct {
+        //< id for the target of this standard, which is the index of the target in the
+        //< PrmInputTarget table. The standards have to be scheduled like other targets do
+        uint32_t target_id;
+        //< threshold for the intensity summed up in the m/z ranges of the fragments ion
+        double intensity_threshold;
+        //< the retention time in seconds to be used as the reference value of this target
+        double reference_time_in_seconds;
+    } PrmRetentionTimeStandard;
+
+    /// This structure holds the fragment ion m/z and relative intensity in percent of the
+    /// most intensive fragment of each retention time standard.
+    typedef struct {
+        //< id of the retention time standard which is the order of the standard in which it
+        //< is added
+        uint32_t retention_time_standard_id;
+        //< m/z value to use for the fragment ion (might be monoisotopic or not)
+        double mz;
+        //< relative intensity in percent of the largest used fragment ion of this standard
+        double relative_intensity_percentage;
+    } PrmRetentionTimeStandardFragment;
+
     /// Open the prmsqlite file, read the PrmMethodInfo data and 
     /// erase eventually exisiting scheduling results which will later on
     /// be written to this file.
@@ -341,7 +391,7 @@ extern "C" {
     BdalPRMSchedulerDllSpec uint32_t prm_get_num_time_segments(
         uint64_t handle
     );
-    
+
     /// get the prm scheduling results for further evaluation and visualization
     ///
     /// \param num_pasef_scheduling_entries
@@ -361,6 +411,72 @@ extern "C" {
     BdalPRMSchedulerDllSpec uint32_t prm_write_scheduling(
         uint64_t handle
     );
+
+    /// get the number of value pairs for the visualization of the scheduling
+    ///
+    /// On success the number of data points are returned, required to allocate
+    /// the data container taking up the values in the user function
+    /// On failure, returns 0 and you can use scheduling_get_last_error_string() to
+    /// obtain a string describing the problem.
+    BdalPRMSchedulerDllSpec uint32_t prm_calculate_visualization(
+        uint64_t handle,
+        uint32_t pasef_scheduling_metric //< selected metric, see PRMPasefSchedulingMetric enum
+    );
+
+    /// function type that takes over the data for visualization
+    typedef void(prm_visualization_points_function)(
+        uint32_t num_entries, //< number of data points
+        const PrmVisualizationDataPoint *data_points, //< data points for visualization
+        void *user_data //< capture emulation for the user space for the data
+        );
+
+    /// get numeric values for a summary style visualization of the scheduling results
+    /// the selection and calculation of the visualization is done in prm_calculate_visualization()
+    ///
+    /// On success, returns 1
+    /// On failure, returns 0 and you can use scheduling_get_last_error_string() to
+    /// obtain a string describing the problem.
+    BdalPRMSchedulerDllSpec uint32_t prm_get_visualization(
+        uint64_t handle,
+        prm_visualization_points_function *callback_visualization_points,
+        void *user_data_visualization_points //< will be passed to callback, emulating a capture
+    );
+
+    /// add a retention time standard
+    ///
+    /// In addition to the values given here you also have to specify the fragment ions for
+    /// the standards. Consistency of the ids will be checked when prm_scheduling_prm_targets()
+    /// is called. 
+    /// In this function only a second definition with the same retention_time_standard_id
+    /// will be rejected here.
+    /// The order in which the retention time standards are added is important, since the
+    /// addition of the fragment ion properties relates to it!
+    ///
+    /// On success, returns 1
+    /// On failure, returns 0 and you can use scheduling_get_last_error_string() to
+    /// obtain a string describing the problem.
+    BdalPRMSchedulerDllSpec uint32_t prm_add_retention_time_standard(
+        uint64_t handle,
+        const PrmRetentionTimeStandard *retention_time_standard
+    );
+
+    /// add a retention time standard fragment
+    ///
+    /// Add the information required for the retention time fragments. The
+    /// retention_time_standard_id is defined by the order in which the standards
+    /// are added with prm_add_retention_time_standard. The first one has id = 0.
+    /// Consistency of the ids will be checked when prm_get_scheduling() or 
+    /// prm_write_scheduling() is called. A second fragment with the same m/z will
+    /// be rejected if the id is the same.
+    ///
+    /// On success, returns 1
+    /// On failure, returns 0 and you can use scheduling_get_last_error_string() to
+    /// obtain a string describing the problem.
+    BdalPRMSchedulerDllSpec uint32_t prm_add_retention_time_standard_fragment(
+        uint64_t handle,
+        const PrmRetentionTimeStandardFragment *retention_time_standard_fragment
+    );
+
 
 #ifdef __cplusplus
 }

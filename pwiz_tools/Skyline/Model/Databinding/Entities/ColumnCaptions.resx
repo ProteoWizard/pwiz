@@ -198,6 +198,9 @@
   <data name="BatchName">
     <value>Batch Name</value>
   </data>
+  <data name="BatchTargetQualitativeIonRatio">
+    <value>Batch Target Qualitative Ion Ratio</value>
+  </data>
   <data name="BeginPos">
     <value>Begin Pos</value>
   </data>
@@ -396,6 +399,9 @@
   <data name="FileName">
     <value>File Name</value>
   </data>
+  <data name="FilePath">
+    <value>File Path</value>
+  </data>
   <data name="Files">
     <value>Files</value>
   </data>
@@ -469,6 +475,9 @@
   <data name="InterpolatedTimes">
     <value>Interpolated Times</value>
   </data>
+  <data name="IonFormula">
+    <value>Ion Formula</value>
+  </data>
   <data name="IonMobilityFragment">
     <value>Ion Mobility Fragment</value>
   </data>
@@ -483,9 +492,6 @@
   </data>
   <data name="IonName">
     <value>Ion Name</value>
-  </data>
-  <data name="IonFormula">
-    <value>Ion Formula</value>
   </data>
   <data name="IsDecoy">
     <value>Is Decoy</value>
@@ -669,8 +675,17 @@
   <data name="Molecule">
     <value>Molecule</value>
   </data>
+  <data name="MoleculeListAbundance">
+    <value>Molecule List Abundance</value>
+  </data>
   <data name="MoleculeListLocator">
     <value>Molecule List Locator</value>
+  </data>
+  <data name="MoleculeListResult">
+    <value>Molecule List Result</value>
+  </data>
+  <data name="MoleculeListResults">
+    <value>Molecule List Results</value>
   </data>
   <data name="MoleculeName">
     <value>Molecule Name</value>
@@ -903,6 +918,9 @@
   <data name="Protein">
     <value>Protein</value>
   </data>
+  <data name="ProteinAbundance">
+    <value>Protein Abundance</value>
+  </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
   </data>
@@ -924,6 +942,12 @@
   <data name="ProteinPreferredName">
     <value>Protein Preferred Name</value>
   </data>
+  <data name="ProteinResult">
+    <value>Protein Result</value>
+  </data>
+  <data name="ProteinResults">
+    <value>Protein Results</value>
+  </data>
   <data name="Proteins">
     <value>Proteins</value>
   </data>
@@ -938,6 +962,12 @@
   </data>
   <data name="QuadraticCoefficient">
     <value>Quadratic Coefficient</value>
+  </data>
+  <data name="QualitativeIonRatio">
+    <value>Qualitative Ion Ratio</value>
+  </data>
+  <data name="QualitativeIonRatioStatus">
+    <value>Qualitative Ion Ratio Status</value>
   </data>
   <data name="Quantification">
     <value>Quantification</value>
@@ -1032,9 +1062,6 @@
   <data name="ResultFileLocator">
     <value>Result File Locator</value>
   </data>
-  <data name="Results">
-    <value>Results</value>
-  </data>
   <data name="RetentionTime">
     <value>Retention Time</value>
   </data>
@@ -1112,6 +1139,9 @@
   </data>
   <data name="SummaryMessage">
     <value>Summary Message</value>
+  </data>
+  <data name="TargetQualitativeIonRatio">
+    <value>Target Qualitative Ion Ratio</value>
   </data>
   <data name="ThreeLetterCodes"><value>Three Letter Codes</value></data>
   <data name="TicArea">

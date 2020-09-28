@@ -760,6 +760,37 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public bool HasTicArea
+        {
+            get
+            {
+                if (!HasResults)
+                {
+                    // If we have no results yet then assume that the TIC would be available
+                    return true;
+                }
+
+                return MeasuredResults.GetMedianTicArea().HasValue;
+            }
+        }
+
+        public double? GetTicNormalizationDenominator(int replicateIndex, ChromFileInfoId fileId)
+        {
+            var fileInfo = MeasuredResults.Chromatograms[replicateIndex].GetFileInfo(fileId);
+            if (fileInfo == null || !fileInfo.TicArea.HasValue)
+            {
+                return null;
+            }
+
+            var medianTicArea = MeasuredResults.GetMedianTicArea();
+            if (!medianTicArea.HasValue)
+            {
+                return null;
+            }
+
+            return fileInfo.TicArea.Value / medianTicArea.Value;
+        }
+
         public double CalcGlobalStandardArea(int resultsIndex, ChromFileInfo fileInfo)
         {
             if (fileInfo.ExplicitGlobalStandardArea.HasValue)
@@ -1042,15 +1073,23 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return null;
             }
-            var modifiedSequences = GetTypedSequences(nodePep.SourceUnmodifiedTarget, nodePep.SourceExplicitMods, Adduct.EMPTY, true)
-                .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
+
+            IEnumerable<Target> modifiedSequences = GetTypedSequences(
+                nodePep.SourceUnmodifiedTarget, nodePep.SourceExplicitMods,
+                Adduct.EMPTY, true).Select(typedSequence => typedSequence.ModifiedSequence);
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
                 if (library == null || !library.UseExplicitPeakBounds)
                 {
                     continue;
                 }
+
+                // ReSharper disable PossibleMultipleEnumeration
+                // Do not worry about multiple enumerations of modifiedSequences. Most libraries do not have 
+                // any explicit peak boundaries, so modifiedSequences gets enumerated zero times.
                 var peakBoundaries = library.GetExplicitPeakBounds(filePath, modifiedSequences);
+                // ReSharper restore PossibleMultipleEnumeration
+
                 if (peakBoundaries != null)
                 {
                     return peakBoundaries;
@@ -1610,6 +1649,14 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!defSet.GroupComparisonDefList.Contains(groupComparisonDef))
                 {
                     defSet.GroupComparisonDefList.SetValue(groupComparisonDef);
+                }
+            }
+
+            foreach (var metadataRuleSet in DataSettings.MetadataRuleSets)
+            {
+                if (!defSet.MetadataRuleSets.Contains(metadataRuleSet))
+                {
+                    defSet.MetadataRuleSets.SetValue(metadataRuleSet);
                 }
             }
             var mainViewSpecList = defSet.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
