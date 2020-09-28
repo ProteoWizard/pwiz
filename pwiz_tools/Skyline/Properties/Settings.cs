@@ -2210,6 +2210,12 @@ namespace pwiz.Skyline.Properties
             return true;
         }
 
+        public override string GetDisplayName(IonMobilityLibrary item)
+        {
+            // Use the localized text in the UI
+            return Equals(item, IonMobilityLibrary.NONE) ? Resources.SettingsList_ELEMENT_NONE_None : base.GetDisplayName(item);
+        }
+
         public override IonMobilityLibrary EditItem(Control owner, IonMobilityLibrary item,
             IEnumerable<IonMobilityLibrary> existing, object tag)
         {
