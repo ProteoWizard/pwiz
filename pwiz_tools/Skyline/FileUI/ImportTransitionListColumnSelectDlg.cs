@@ -130,7 +130,8 @@ namespace pwiz.Skyline.FileUI
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge
+                    // Commented out for consistency because there is no product charge column
+                    // Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge
                 });
                 comboBox.SelectedIndex = 0;
                 comboBox.SelectedIndexChanged += comboChanged;       
@@ -170,7 +171,8 @@ namespace pwiz.Skyline.FileUI
                 SetComboBoxText(columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
                 SetComboBoxText(columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
                 SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
-                SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);   
+                // Commented out for consistency because there is no product charge column
+                // SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);   
 
             }
         }
@@ -282,12 +284,13 @@ namespace pwiz.Skyline.FileUI
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.FragmentNameColumn = comboBoxIndex;
             }
-            else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge)
+            // Commented out for consistency because there is no product charge column
+            /*else if (comboBox.Text == Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge)
             {
                 CheckForComboBoxOverlap(columns.PrecursorChargeColumn, 0, comboBoxIndex);
                 columns.ResetDuplicateColumns(comboBoxIndex);
                 columns.PrecursorChargeColumn = comboBoxIndex;
-            }
+            }*/
             else
             {
                 if (columns.DecoyColumn == comboBoxIndex) columns.DecoyColumn = -1;
@@ -299,7 +302,8 @@ namespace pwiz.Skyline.FileUI
                 if (columns.ProductColumn == comboBoxIndex) columns.ProductColumn = -1;
                 if (columns.ProteinColumn == comboBoxIndex) columns.ProteinColumn = -1;
                 if (columns.FragmentNameColumn == comboBoxIndex) columns.FragmentNameColumn = -1;
-                if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
+                // Commented out for consistency because there is no product charge column
+                // if (columns.PrecursorChargeColumn == comboBoxIndex) columns.PrecursorChargeColumn = -1;
             }
         }
         // Saves column positions between transition lists
@@ -317,7 +321,8 @@ namespace pwiz.Skyline.FileUI
             ColumnList.Add(new Tuple<int, string> (columns.ProductColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
             ColumnList.Add(new Tuple<int, string> (columns.ProteinColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name));
             ColumnList.Add(new Tuple<int, string> (columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name));
-            ColumnList.Add(new Tuple<int, string> (columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge));
+            // Commented out for consistency because there is no product charge column yet
+            // ColumnList.Add(new Tuple<int, string> (columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge));
 
             Settings.Default.CustomImportTransitionListColumnsList = ColumnList;
 
