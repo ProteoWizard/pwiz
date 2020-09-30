@@ -5668,6 +5668,34 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} must be set when using CiRT peptides..
+        /// </summary>
+        public static string CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT standard set to {0}, but multiple iRT standards were found. iRT standard must be set explicitly..
+        /// </summary>
+        public static string CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standa" +
+                        "rds_were_found__iRT_standard_must_be_set_explicitly_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The iRT standard name &apos;{0}&apos; is invalid..
+        /// </summary>
+        public static string CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading {0}. 
         /// {1}.
         /// </summary>

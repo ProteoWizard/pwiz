@@ -258,6 +258,15 @@
   <data name="_import_search_cutoff_score" xml:space="preserve">
     <value>Defines a cutoff score (between 0 and 1) to be used when building a spectral library from peptide search results files, where 1 is for highest confidence matches and 0 includes everything. [default 0.95]</value>
   </data>
+  <data name="_import_search_irts" xml:space="preserve">
+    <value>Name of iRT standard to to be used when building a spectral library.</value>
+  </data>
+  <data name="_import_search_num_cirts" xml:space="preserve">
+    <value>Specify the number of CiRT peptides to use as iRT standards if building a spectral library with CiRT peptides as iRT standards.</value>
+  </data>
+  <data name="_import_search_recalibrate_irts" xml:space="preserve">
+    <value>If building a spectral library with iRT standards, recalibrate the iRT standard values relative to the peptides being added.</value>
+  </data>
   <data name="_import_search_file" xml:space="preserve">
     <value>Import a peptide search results file into the open document, building a document-specific spectral library. This may be specified multiple times for multiple files. Use –import-fasta argument to add matched peptides as targets.</value>
   </data>
