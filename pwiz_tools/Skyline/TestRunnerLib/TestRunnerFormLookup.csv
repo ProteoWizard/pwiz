@@ -81,7 +81,6 @@ ExportLiveReportDlg,TestReportSummary
 ExportMethodDlg.IsolationListView,TestExportDiaList
 ExportMethodDlg.MethodView,TestExportDiaList
 ExportMethodDlg.TransitionListView,TestExportMethodDlg
-ExportReportDlg,TestReportSummaryWithOldReports
 FilterMatchedPeptidesDlg,TestInsert
 FilterMidasLibraryDlg,TestMidas
 FindColumnDlg,TestFindColumn
@@ -97,7 +96,6 @@ GraphRegression,TestOptimization
 GraphSpectrum,TestMs1Tutorial
 GraphSummary.AreaGraphView,*
 GraphSummary.RTGraphView,*
-GroupComparisonSettingsForm,TestGroupedStudies1Tutorial
 ImmediateWindow,ImmediateWindowTestMethod
 ImportDocResultsDlg,TestImportDoc
 ImportIonMobilityFromSpectralLibraryDlg,TestIonMobility
@@ -154,7 +152,6 @@ PeptidesPerProteinDlg,TestImportPeptideSearch
 PermuteIsotopeModificationsDlg,TestModificationPermuter
 PivotEditor,TestPivotEditor
 PopupPickList,TestPrecursorIon
-PreviewReportDlg,TestReportSummaryWithOldReports
 PublishDocumentDlg,TestAccessServer
 PythonInstaller,TestPythonInstaller
 QuickFilterForm,TestLiveReportsFilter
@@ -171,7 +168,6 @@ ReportErrorDlg,TestReportErrorDlg
 DetailedReportErrorDlg,TestReportErrorDlg
 ReportShutdownDlg,TestMiscForms
 RescoreResultsDlg,TestManageResults
-ResultsGridForm,TestAnnotationsWithOldReports
 RTGraphController,TestEditDialogs
 RInstaller,TestRInstaller
 RTChartPropertyDlg,TestEditDialogs
