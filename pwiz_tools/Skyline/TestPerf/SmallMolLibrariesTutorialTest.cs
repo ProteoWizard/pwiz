@@ -337,6 +337,11 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
 
             //    Reimporting Data with Drift Time Filtering
 
+            // Prior to changing the settings and reimporting the data, you may want to save the current Skyline document and create a second file in order to compare the data before and after IMS filtering. To do so:
+            //    •	On the File menu, click Save As...
+            //    •	Save the file with a different name than your original Skyline document, such as “Drosophila_Lipids_Neg_IMS_Filtered”, in the tutorial folder you created.
+            RunUI(()=>SkylineWindow.SaveDocument(TestFilesDirs[0].GetTestPath(@"Drosophila_Lipids_Neg_IMS_Filtered.sky")));
+
             //   •	From the Settings menu, click Transition Settings.
             //   •	Click the Ion Mobility tab.
             transitionSettingsUI = ShowDialog<TransitionSettingsUI>(() =>
