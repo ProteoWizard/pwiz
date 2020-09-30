@@ -763,6 +763,9 @@
       <Component Id="ja_Skyline.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\$(var.Skyline.TargetName).resources.dll" Id="ja_Skyline.resources.dll_file" KeyPath="yes"/>
       </Component>
+      <Component Id="ja_SkylineCmd.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\SkylineCmd.resources.dll" Id="ja_SkylineCmd.resources.dll_file" KeyPath="yes"/>
+      </Component>
       <Component Id="ja_ZedGraph.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\ZedGraph.resources.dll" Id="ja_ZedGraph.resources.dll_file" KeyPath="yes"/>
       </Component>
@@ -810,6 +813,9 @@
       </Component>
       <Component Id="zh_CHS_Skyline.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\$(var.Skyline.TargetName).resources.dll" Id="zh_CHS_Skyline.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="zh_CHS_SkylineCmd.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\SkylineCmd.resources.dll" Id="zh_CHS_SkylineCmd.resources.dll_file" KeyPath="yes"/>
       </Component>
       <Component Id="zh_CHS_ZedGraph.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\ZedGraph.resources.dll" Id="zh_CHS_ZedGraph.resources.dll_file" KeyPath="yes"/>
