@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
@@ -44,6 +46,10 @@ namespace pwiz.SkylineTestData.Results
             using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("BSA-digest__MRM_optimisation_SL_scheduled_001" + extRaw)))
             {
                 Assert.IsTrue(msData.IsShimadzuFile);
+
+                // check time is minutes
+                msData.GetChromatogram(0, out _, out float[] times, out _);
+                Assert.AreEqual(new KeyValuePair<float, float>(1.335f, 8.905833f), new KeyValuePair<float, float>(times.First(), times.Last()));
             }
         }
 
