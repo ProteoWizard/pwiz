@@ -73,6 +73,8 @@ namespace pwiz.SkylineTest
             PerformInspections();
         }
 
+        private HashSet<string> TODOs = new HashSet<string>();
+
         /// <summary>
         /// Examine the CSV file containing the list that we use to conveniently summon run time images of forms in SkylineTester,
         /// especially for L10N development.  Look for forms that are not mentioned, and forms that are mentioned but no longer exist.
@@ -81,16 +83,24 @@ namespace pwiz.SkylineTest
         {
             var lines = File.ReadAllLines(GetCodeBaseRoot(out _) + "\\TestRunnerLib\\TestRunnerFormLookup.csv");
             var missing = new List<string>();
-            var names = new HashSet<string>();
+            var declaredForms = new HashSet<string>();
             foreach (var line in lines)
             {
                 // Pick out EditPeakScoringModelDlg.ModelTab from "EditPeakScoringModelDlg.ModelTab,TestPeakScoringModel"
-                var name = line.Split(',')[0].Trim();
-                names.Add(name);
+                var parts = line.Split(',');
+                var formName = parts[0].Trim();
+                declaredForms.Add(formName);
+
+                // Look for forms with no associated test, or acknowledged as TODO
+                var testName = parts.Length > 1 ? parts[1].Trim() : string.Empty;
+                if (string.IsNullOrEmpty(testName) || testName.StartsWith(@"TODO"))
+                {
+                    TODOs.Add(line);
+                }
             }
 
             // Collect forms that should be exercised in tutorials
-            var forms = FindForms(new[]
+            var foundForms = FindForms(new[]
                 {
                     typeof(Form),
                     typeof(FormEx),
@@ -117,12 +127,13 @@ namespace pwiz.SkylineTest
                 "BackgroundEventThreadsTestForm" // Used in tests itself, not a UI thing    
             };
 
-            foreach (var formName in forms)
+            foreach (var formName in foundForms)
             {
-                if (!names.Contains(formName))
+                if (!declaredForms.Contains(formName))
                 {
                     if (!FormNamesNotExpectedInTutorialTests.Contains(formName) &&
-                        !names.Any(n => n.StartsWith(formName + "."))) // Perhaps this is a parent to tab types
+                        !declaredForms.Any(n => n.StartsWith(formName + ".")) && // Perhaps this is a parent to tab types
+                        !declaredForms.Any(n => n.EndsWith("." + formName))) // Or perhaps lookup list declares parent.child
                     {
                         missing.Add(string.Format("Form \"{0}\" is not listed in TestRunnerLib\\TestRunnerFormLookup.csv", formName));
                     }
@@ -130,9 +141,11 @@ namespace pwiz.SkylineTest
             }
 
             // Sanity check - are there any names in TestRunnerLib\TestRunnerFormLookup.csv that we didn't find in forms search?
-            foreach (var name in names)
+            foreach (var name in declaredForms)
             {
-                if (!forms.Contains(name) && !FormNamesNotExpectedInTutorialTests.Contains(name))
+                if (!foundForms.Contains(name) && 
+                    !FormNamesNotExpectedInTutorialTests.Contains(name) && // Known exclusion?
+                    !foundForms.Any(f => name.EndsWith("." + f))) // Or perhaps lookup list declares parent.child
                 {
                     missing.Add(string.Format("Form \"{0}\" referenced in TestRunnerLib\\TestRunnerFormLookup.csv is unknown or has unanticipated parent form type", name));
                 }
@@ -284,6 +297,16 @@ namespace pwiz.SkylineTest
                     {
                         results.Add(string.Join(Environment.NewLine, result));
                     }
+                }
+            }
+
+            if (TODOs.Any())
+            {
+                Console.WriteLine();
+                Console.WriteLine(@"WARNING: Found these TODO entries (forms acknowledged as not yet appearing in any test) in TestRunnerLib\TestRunnerFormLookup.csv:");
+                foreach (var todo in TODOs)
+                {
+                    Console.WriteLine(todo);
                 }
             }
 
