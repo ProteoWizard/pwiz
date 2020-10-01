@@ -164,7 +164,7 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd,
     IO::write(xmlWriter, msd, bdeConfig, &spectrumPositions, &chromatogramPositions, iterationListenerRegistry, useWorkerThreads);
 
     // don't write indexes if writing was cancelled
-    if (IterationListener::Status_Cancel == iterationListenerRegistry->broadcastUpdateMessage(IterationListener::UpdateMessage(0, 0, "writing indexes")))
+    if (iterationListenerRegistry && IterationListener::Status_Cancel == iterationListenerRegistry->broadcastUpdateMessage(IterationListener::UpdateMessage(0, 0, "writing indexes")))
         return;
 
     // <indexedmzML> end
