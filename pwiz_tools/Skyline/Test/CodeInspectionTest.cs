@@ -51,24 +51,37 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void CodeInspection()
         {
+            // Looking for non-standard image scaling
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
                 null, // There are no parts of the codebase that should skip this check
                 string.Empty, // No file content required for inspection
                 @".ImageScalingSize = new System.Drawing.Size(", // Forbidden pattern
                 @"causes blurry icon issues on HD monitors"); // Explanation for prohibition, appears in report
 
+            // Looking for unlocalized dialogs
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask
                 Inspection.Required,  // This is a test for things that MUST be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
                 NonLocalizedFiles(), // Ignore violations in files or directories we don't localize
                 string.Empty, // No file content required for inspection
                 @"System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager", // Required pattern
                 @"ensures that every dialog is localizable"); // Explanation for requirement, appears in report
 
+            // Looking for non-standard scaling in form designer
+            AddTextInspection(@"*.resx", // Examine files with this mask
+                Inspection.Required,  // This is a test for things that MUST be in such files
+                Level.Warn, // Any failure is treated as a warning, and does not cause overall test failure
+                null, // There are no parts of the codebase that should skip this check
+                "<data name=\"$this.AutoScaleDimensions\" type=\"System.Drawing.SizeF, System.Drawing\">", // Only worry about it when this appears in file
+                "<data name=\"$this.AutoScaleDimensions\" type=\"System.Drawing.SizeF, System.Drawing\">\n<value>6, 13</value>", // Required pattern (two lines)
+                @"nonstandard {0} found instead"); // Explanation for requirement, appears in report
+
             // A few lines of fake tests that can be useful in development of this mechanism
-            // AddInspection(@"*.Designer.cs", Inspection.Required, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
-            // AddInspection(@"*.cs", Inspection.Forbidden, null, string.Empty, @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
-            // AddInspection(@"*.xml", Inspection.Required, null, "xml",  @"encoding=""utf-8""", @"fake, debug purposes only"); // Uncomment for debug purposes
+            // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
+            // AddInspection(@"*.cs", Inspection.Forbidden, Level.Error, null, string.Empty, @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
+            // AddInspection(@"*.xml", Inspection.Required, Level.Error, null, "xml",  @"encoding=""utf-8""", @"fake, debug purposes only"); // Uncomment for debug purposes
 
             PerformInspections();
         }
@@ -248,22 +261,41 @@ namespace pwiz.SkylineTest
                             }).ToDictionary(k => k.Key, k => k.Value.Reason)
                             : null;
 
-                    var result = new List<string>();
+                    var errors = new List<string>();
+                    var warnings = new List<string>();
+                    var multiLinePatternFaults = new Dictionary<string, string>();
+                    var multiLinePatternFaultLocations = new Dictionary<string, int>();
 
                     foreach (var line in lines)
                     {
                         lineNum++;
                         if (forbiddenPatternsForThisFile != null)
                         {
-                            foreach (var pattern in forbiddenPatternsForThisFile.Keys.Where(p => line.Contains(p)))
+                            // Watch for multi-line forbidden patterns
+                            foreach (var pattern in forbiddenPatternsForThisFile.Keys.Where(p => line.Contains(p.Split('\n')[0])))
                             {
-                                var why = forbiddenPatternsByFileMask[fileMask][pattern].Reason;
-                                result.Add(@"Found prohibited use of");
-                                result.Add(@"""" + pattern + @"""");
-                                result.Add("(" + why + ") at");
-                                result.Add(filename + "(" + lineNum + @")");
-                                result.Add(line);
-                                result.Add(string.Empty);
+                                var parts = pattern.Split('\n');
+                                var matched = true;
+                                for (var i = 1; i < parts.Length; i++)
+                                {
+                                    if (!lines[lineNum + i - 1].Contains(parts[i].Trim()))
+                                    {
+                                        matched = false;
+                                        break;
+                                    }
+                                }
+                                if (matched)
+                                {
+                                    var patternDetails = forbiddenPatternsByFileMask[fileMask][pattern];
+                                    var why = patternDetails.Reason;
+                                    var result = patternDetails.FailureType == Level.Error ? errors : warnings;
+                                    result.Add(@"Found prohibited use of");
+                                    result.Add(@"""" + pattern.Replace("\n","\\n") + @"""");
+                                    result.Add("(" + why + ") at");
+                                    result.Add(filename + "(" + lineNum + @")");
+                                    result.Add(line);
+                                    result.Add(string.Empty);
+                                }
                             }
                         }
 
@@ -271,9 +303,20 @@ namespace pwiz.SkylineTest
                         {
                             foreach (var pattern in requiredPatternsObservedInThisFile.Keys)
                             {
-                                if (line.Contains(pattern))
+                                // Watch for multi-line patterns - we may match first line of pattern but not next, and we want to report that
+                                var parts = pattern.Split('\n');
+                                if (line.Contains(parts[0].Trim()))
                                 {
                                     requiredPatternsObservedInThisFile[pattern] = true;
+                                    for (var i = 1; i < parts.Length; i++)
+                                    {
+                                        if (!lines[lineNum + i - 1].Contains(parts[i].Trim()))
+                                        {
+                                            multiLinePatternFaults[pattern] = lines[lineNum + i - 1].Trim();
+                                            multiLinePatternFaultLocations[pattern] = lineNum + 1;
+                                            requiredPatternsObservedInThisFile[pattern] = false;
+                                        }
+                                    }
                                     break;
                                 }
                             }
@@ -284,18 +327,41 @@ namespace pwiz.SkylineTest
                     {
                         foreach (var requirement in requiredPatternsObservedInThisFile.Where(p => !p.Value))
                         {
-                            var why = requiredPatternsByFileMask[fileMask][requirement.Key].Reason;
+                            multiLinePatternFaults.TryGetValue(requirement.Key, out var fault);
+                            var patternDetails = requiredPatternsByFileMask[fileMask][requirement.Key];
+                            var why = string.Format(patternDetails.Reason, fault ?? String.Empty);
+                            var result =
+                                patternDetails.FailureType == Level.Error ? errors : warnings;
+
                             result.Add(@"Did not find required use of");
-                            result.Add(@"""" + requirement.Key + @"""");
-                            result.Add("(" + why + ") in");
-                            result.Add(filename);
+                            result.Add(@"""" + requirement.Key.Replace("\n","\\n") + @"""");
+                            if (multiLinePatternFaultLocations.TryGetValue(requirement.Key, out var lineNumber))
+                            {
+                                result.Add("(" + why + ") at");
+                                result.Add(filename + "(" + lineNumber + ")");
+                            }
+                            else
+                            {
+                                result.Add("(" + why + ") in");
+                                result.Add(filename);
+                            }
                             result.Add(string.Empty);
                         }
                     }
 
-                    if (result.Any())
+                    if (errors.Any())
                     {
-                        results.Add(string.Join(Environment.NewLine, result));
+                        results.Add(string.Join(Environment.NewLine, errors));
+                    }
+
+                    if (warnings.Any())
+                    {
+                        Console.WriteLine();
+                        Console.Write(@"WARNING: ");
+                        foreach (var warning in warnings)
+                        {
+                            Console.WriteLine(warning);
+                        }
                     }
                 }
             }
@@ -325,6 +391,7 @@ namespace pwiz.SkylineTest
             public string Cue; // If non-empty, pattern only applies to files containing this cue
             public string Reason; // Note to show on failure
             public string[] IgnoredDirectories; // Don't flag on hits in these directories
+            public Level FailureType;  // Is failure an error, or just a warning?
 
             public bool IgnorePath(string path)
             {
@@ -336,6 +403,7 @@ namespace pwiz.SkylineTest
         private readonly Dictionary<string, Dictionary<string, PatternDetails>> requiredPatternsByFileMask = new Dictionary<string, Dictionary<string, PatternDetails>>();
 
         private enum Inspection { Forbidden, Required }
+        public enum Level { Warn, Error }
 
         private HashSet<string> allFileMasks = new HashSet<string>();
 
@@ -391,7 +459,13 @@ namespace pwiz.SkylineTest
         }
 
 
-        void AddTextInspection(string fileMask, Inspection inspectionType, string[] ignoredDirectories, string cue, string pattern, string reason)
+        void AddTextInspection(string fileMask,  // Which files?
+            Inspection inspectionType, // Required, or forbidden?
+            Level failureType, // Is a failure an error, or a warning
+            string[] ignoredDirectories, // Areas to disregard
+            string cue, // If non-empty, only perform the inspection if file contains this cue
+            string pattern,  // What we're looking out for (may contain \n)
+            string reason) // Explanation on failure
         {
             allFileMasks.Add(fileMask);
             var rules = inspectionType == Inspection.Forbidden ? forbiddenPatternsByFileMask : requiredPatternsByFileMask;
@@ -400,7 +474,7 @@ namespace pwiz.SkylineTest
                 rules.Add(fileMask, new Dictionary<string, PatternDetails>());
             }
             var patterns = rules[fileMask];
-            patterns.Add(pattern, new PatternDetails { Cue = cue, Reason = reason, IgnoredDirectories = ignoredDirectories });
+            patterns.Add(pattern, new PatternDetails { Cue = cue, Reason = reason, IgnoredDirectories = ignoredDirectories, FailureType = failureType});
         }
     }
 }
