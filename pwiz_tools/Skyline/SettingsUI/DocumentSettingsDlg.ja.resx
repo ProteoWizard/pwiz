@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tabControl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -169,7 +172,7 @@
     <value>7</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>注釈とは、Skylineドキュメントの各要素に付与できる追加データです。このダイアログを使用して、このドキュメントで利用可能な注釈を管理したり、新しい注釈を定義することができます。</value>
+    <value>注釈とは、Skylineドキュメントの各要素に関連付けられるユーザー定義の属性です。このダイアログを使用して、このドキュメントで利用可能な注釈を管理したり、新しい注釈を定義することができます。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -264,6 +267,168 @@
   <data name="&gt;&gt;tabPageAnnotations.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="btnAddMetadataRuleSet.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAddMetadataRuleSet.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnAddMetadataRuleSet.Location" type="System.Drawing.Point, System.Drawing">
+    <value>516, 48</value>
+  </data>
+  <data name="btnAddMetadataRuleSet.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 23</value>
+  </data>
+  <data name="btnAddMetadataRuleSet.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="btnAddMetadataRuleSet.Text" xml:space="preserve">
+    <value>追加(&amp;A)...</value>
+  </data>
+  <data name="&gt;&gt;btnAddMetadataRuleSet.Name" xml:space="preserve">
+    <value>btnAddMetadataRuleSet</value>
+  </data>
+  <data name="&gt;&gt;btnAddMetadataRuleSet.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddMetadataRuleSet.Parent" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;btnAddMetadataRuleSet.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnEditMetadataRuleSetList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnEditMetadataRuleSetList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnEditMetadataRuleSetList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>516, 77</value>
+  </data>
+  <data name="btnEditMetadataRuleSetList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 23</value>
+  </data>
+  <data name="btnEditMetadataRuleSetList.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="btnEditMetadataRuleSetList.Text" xml:space="preserve">
+    <value>リストを編集(&amp;E)...</value>
+  </data>
+  <data name="&gt;&gt;btnEditMetadataRuleSetList.Name" xml:space="preserve">
+    <value>btnEditMetadataRuleSetList</value>
+  </data>
+  <data name="&gt;&gt;btnEditMetadataRuleSetList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnEditMetadataRuleSetList.Parent" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;btnEditMetadataRuleSetList.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lblMetadataRulesDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="lblMetadataRulesDescription.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="lblMetadataRulesDescription.Size" type="System.Drawing.Size, System.Drawing">
+    <value>609, 39</value>
+  </data>
+  <data name="lblMetadataRulesDescription.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblMetadataRulesDescription.Text" xml:space="preserve">
+    <value>結果ファイルルールは、結果ファイルがSkylineドキュメントにインポートされたときに自動的に設定されるべき注釈や他のプロパティを指定します。これらの値のソースは、結果ファイルの他の属性と共に、結果ファイル名の一部となることがあります。</value>
+  </data>
+  <data name="&gt;&gt;lblMetadataRulesDescription.Name" xml:space="preserve">
+    <value>lblMetadataRulesDescription</value>
+  </data>
+  <data name="&gt;&gt;lblMetadataRulesDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMetadataRulesDescription.Parent" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;lblMetadataRulesDescription.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="checkedListBoxRuleSets.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="checkedListBoxRuleSets.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 48</value>
+  </data>
+  <data name="checkedListBoxRuleSets.Size" type="System.Drawing.Size, System.Drawing">
+    <value>501, 199</value>
+  </data>
+  <data name="checkedListBoxRuleSets.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxRuleSets.Name" xml:space="preserve">
+    <value>checkedListBoxRuleSets</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxRuleSets.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxRuleSets.Parent" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;checkedListBoxRuleSets.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="tabPageResultFileRules.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageResultFileRules.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageResultFileRules.Size" type="System.Drawing.Size, System.Drawing">
+    <value>622, 260</value>
+  </data>
+  <data name="tabPageResultFileRules.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="tabPageResultFileRules.Text" xml:space="preserve">
+    <value>結果ファイル</value>
+  </data>
+  <data name="&gt;&gt;tabPageResultFileRules.Name" xml:space="preserve">
+    <value>tabPageResultFileRules</value>
+  </data>
+  <data name="&gt;&gt;tabPageResultFileRules.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageResultFileRules.Parent" xml:space="preserve">
+    <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabPageResultFileRules.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lblListsDescription.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="lblListsDescription.Size" type="System.Drawing.Size, System.Drawing">
+    <value>609, 40</value>
+  </data>
+  <data name="lblListsDescription.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="lblListsDescription.Text" xml:space="preserve">
+    <value>リストには、Skylineドキュメントに関連付けられる任意データが含まれることがあります。ルックアップ注釈を定義すると、リスト項目をドキュメント内の要素に関連付けられます。</value>
+  </data>
+  <data name="&gt;&gt;lblListsDescription.Name" xml:space="preserve">
+    <value>lblListsDescription</value>
+  </data>
+  <data name="&gt;&gt;lblListsDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblListsDescription.Parent" xml:space="preserve">
+    <value>tabPageLists</value>
+  </data>
+  <data name="&gt;&gt;lblListsDescription.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="btnAddList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -271,7 +436,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>515, 31</value>
+    <value>516, 48</value>
   </data>
   <data name="btnAddList.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 23</value>
@@ -292,7 +457,7 @@
     <value>tabPageLists</value>
   </data>
   <data name="&gt;&gt;btnAddList.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnManageLists.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -301,7 +466,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnManageLists.Location" type="System.Drawing.Point, System.Drawing">
-    <value>515, 60</value>
+    <value>516, 77</value>
   </data>
   <data name="btnManageLists.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 23</value>
@@ -322,13 +487,13 @@
     <value>tabPageLists</value>
   </data>
   <data name="&gt;&gt;btnManageLists.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="checkedListBoxLists.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="checkedListBoxLists.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 31</value>
+    <value>9, 48</value>
   </data>
   <data name="checkedListBoxLists.Size" type="System.Drawing.Size, System.Drawing">
     <value>501, 199</value>
@@ -346,7 +511,7 @@
     <value>tabPageLists</value>
   </data>
   <data name="&gt;&gt;checkedListBoxLists.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tabPageLists.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -373,7 +538,34 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabPageLists.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
+  </data>
+  <data name="lblGroupComparisonsDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="lblGroupComparisonsDescription.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="lblGroupComparisonsDescription.Size" type="System.Drawing.Size, System.Drawing">
+    <value>609, 40</value>
+  </data>
+  <data name="lblGroupComparisonsDescription.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="lblGroupComparisonsDescription.Text" xml:space="preserve">
+    <value>グループ比較は、異なる繰り返し測定サブセットからの結果を相互比較するときに使用する設定を指定します。注釈は、どの繰り返し測定がどのサブセットに属するかを指定するのに使用します。</value>
+  </data>
+  <data name="&gt;&gt;lblGroupComparisonsDescription.Name" xml:space="preserve">
+    <value>lblGroupComparisonsDescription</value>
+  </data>
+  <data name="&gt;&gt;lblGroupComparisonsDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblGroupComparisonsDescription.Parent" xml:space="preserve">
+    <value>tabPageGroupComparisons</value>
+  </data>
+  <data name="&gt;&gt;lblGroupComparisonsDescription.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="btnAddGroupComparison.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -382,7 +574,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnAddGroupComparison.Location" type="System.Drawing.Point, System.Drawing">
-    <value>516, 31</value>
+    <value>516, 48</value>
   </data>
   <data name="btnAddGroupComparison.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 23</value>
@@ -403,7 +595,7 @@
     <value>tabPageGroupComparisons</value>
   </data>
   <data name="&gt;&gt;btnAddGroupComparison.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnEditGroupComparisonList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -412,7 +604,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnEditGroupComparisonList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>516, 60</value>
+    <value>516, 77</value>
   </data>
   <data name="btnEditGroupComparisonList.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 23</value>
@@ -433,13 +625,13 @@
     <value>tabPageGroupComparisons</value>
   </data>
   <data name="&gt;&gt;btnEditGroupComparisonList.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="checkedListBoxGroupComparisons.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="checkedListBoxGroupComparisons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 31</value>
+    <value>9, 48</value>
   </data>
   <data name="checkedListBoxGroupComparisons.Size" type="System.Drawing.Size, System.Drawing">
     <value>501, 199</value>
@@ -457,7 +649,7 @@
     <value>tabPageGroupComparisons</value>
   </data>
   <data name="&gt;&gt;checkedListBoxGroupComparisons.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tabPageGroupComparisons.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -484,7 +676,67 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabPageGroupComparisons.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
+  </data>
+  <data name="btnAddReport.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAddReport.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnAddReport.Location" type="System.Drawing.Point, System.Drawing">
+    <value>516, 48</value>
+  </data>
+  <data name="btnAddReport.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 23</value>
+  </data>
+  <data name="btnAddReport.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="btnAddReport.Text" xml:space="preserve">
+    <value>追加(&amp;A)...</value>
+  </data>
+  <data name="&gt;&gt;btnAddReport.Name" xml:space="preserve">
+    <value>btnAddReport</value>
+  </data>
+  <data name="&gt;&gt;btnAddReport.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddReport.Parent" xml:space="preserve">
+    <value>tabPageReports</value>
+  </data>
+  <data name="&gt;&gt;btnAddReport.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnEditReportList.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnEditReportList.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnEditReportList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>516, 77</value>
+  </data>
+  <data name="btnEditReportList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 23</value>
+  </data>
+  <data name="btnEditReportList.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="btnEditReportList.Text" xml:space="preserve">
+    <value>リストを編集(&amp;E)...</value>
+  </data>
+  <data name="&gt;&gt;btnEditReportList.Name" xml:space="preserve">
+    <value>btnEditReportList</value>
+  </data>
+  <data name="&gt;&gt;btnEditReportList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnEditReportList.Parent" xml:space="preserve">
+    <value>tabPageReports</value>
+  </data>
+  <data name="&gt;&gt;btnEditReportList.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="labelReports.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -502,7 +754,7 @@
     <value>8</value>
   </data>
   <data name="labelReports.Text" xml:space="preserve">
-    <value>Skylineドキュメント内でどのレポート定義を保存するかを選択します。 これらのレポートは、ドキュメントグリッド、結果グリッド、またはその他のウィンドウで利用することができます。</value>
+    <value>Skylineドキュメント内でどのレポート定義を保存するかを選択します。 これらのレポートは、ドキュメントグリッド、結果グリッド、またはその他のウィンドウで利用できます。</value>
   </data>
   <data name="&gt;&gt;labelReports.Name" xml:space="preserve">
     <value>labelReports</value>
@@ -514,16 +766,16 @@
     <value>tabPageReports</value>
   </data>
   <data name="&gt;&gt;labelReports.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="chooseViewsControl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="chooseViewsControl.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 48</value>
+    <value>9, 48</value>
   </data>
   <data name="chooseViewsControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>610, 206</value>
+    <value>501, 199</value>
   </data>
   <data name="chooseViewsControl.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -538,7 +790,7 @@
     <value>tabPageReports</value>
   </data>
   <data name="&gt;&gt;chooseViewsControl.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="tabPageReports.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -565,7 +817,7 @@
     <value>tabControl</value>
   </data>
   <data name="&gt;&gt;tabPageReports.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 12</value>
@@ -662,6 +914,12 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>ドキュメント設定</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>DocumentSettingsDlg</value>
