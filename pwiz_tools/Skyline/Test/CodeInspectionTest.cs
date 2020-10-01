@@ -413,7 +413,7 @@ namespace pwiz.SkylineTest
         private string[] NonLocalizedFiles()
         {
             var root = GetCodeBaseRoot(out var thisFile);
-            if (string.IsNullOrEmpty(root))
+            if (string.IsNullOrEmpty(root) || !File.Exists(root + "\\Executables\\KeepResx\\Program.cs"))
             {
                 return null; // Not an installation with code alongside
             }
