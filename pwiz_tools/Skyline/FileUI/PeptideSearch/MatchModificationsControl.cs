@@ -184,7 +184,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             // Update document modifications
             var newPeptideMods = document.Settings.PeptideSettings.Modifications.ChangeStaticModifications(structuralMods);
-            newPeptideMods = newPeptideMods.ChangeModifications(IsotopeLabelType.heavy, heavyMods);
+            var firstHeavyModificationType = document.Settings.PeptideSettings.Modifications.GetHeavyModificationTypes()
+                .FirstOrDefault();
+            newPeptideMods = newPeptideMods.ChangeModifications(firstHeavyModificationType, heavyMods);
             return ImportPeptideSearch.AddModifications(document, newPeptideMods);
         }
 
