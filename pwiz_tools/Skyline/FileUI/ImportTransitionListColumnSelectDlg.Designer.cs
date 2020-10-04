@@ -40,16 +40,16 @@
             this.comboPanelOuter.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).BeginInit();
             this.SuspendLayout();
-            this.Resize += new System.EventHandler(this.form_Resize);
             // 
             // buttonOk
             // 
             this.buttonOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.buttonOk.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.buttonOk.Location = new System.Drawing.Point(784, 30);
+            this.buttonOk.Location = new System.Drawing.Point(811, 481);
+            this.buttonOk.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.buttonOk.Name = "buttonOk";
-            this.buttonOk.Size = new System.Drawing.Size(75, 23);
+            this.buttonOk.Size = new System.Drawing.Size(100, 28);
             this.buttonOk.TabIndex = 5;
             this.buttonOk.Text = "OK";
             this.buttonOk.UseVisualStyleBackColor = true;
@@ -60,9 +60,10 @@
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.buttonCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.buttonCancel.Location = new System.Drawing.Point(784, 59);
+            this.buttonCancel.Location = new System.Drawing.Point(920, 481);
+            this.buttonCancel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(75, 23);
+            this.buttonCancel.Size = new System.Drawing.Size(100, 28);
             this.buttonCancel.TabIndex = 6;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
@@ -70,9 +71,10 @@
             // buttonCheckForErrors
             // 
             this.buttonCheckForErrors.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCheckForErrors.Location = new System.Drawing.Point(784, 89);
+            this.buttonCheckForErrors.Location = new System.Drawing.Point(652, 481);
+            this.buttonCheckForErrors.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.buttonCheckForErrors.Name = "buttonCheckForErrors";
-            this.buttonCheckForErrors.Size = new System.Drawing.Size(75, 34);
+            this.buttonCheckForErrors.Size = new System.Drawing.Size(151, 28);
             this.buttonCheckForErrors.TabIndex = 9;
             this.buttonCheckForErrors.Text = "Check For Errors";
             this.buttonCheckForErrors.UseVisualStyleBackColor = true;
@@ -81,9 +83,10 @@
             // comboPanelOuter
             // 
             this.comboPanelOuter.Controls.Add(this.comboPanelInner);
-            this.comboPanelOuter.Location = new System.Drawing.Point(26, 36);
+            this.comboPanelOuter.Location = new System.Drawing.Point(35, 44);
+            this.comboPanelOuter.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.comboPanelOuter.Name = "comboPanelOuter";
-            this.comboPanelOuter.Size = new System.Drawing.Size(739, 75);
+            this.comboPanelOuter.Size = new System.Drawing.Size(985, 92);
             this.comboPanelOuter.TabIndex = 8;
             // 
             // comboPanelInner
@@ -91,17 +94,19 @@
             this.comboPanelInner.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboPanelInner.Location = new System.Drawing.Point(0, 23);
+            this.comboPanelInner.Location = new System.Drawing.Point(0, 28);
+            this.comboPanelInner.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.comboPanelInner.Name = "comboPanelInner";
-            this.comboPanelInner.Size = new System.Drawing.Size(736, 35);
+            this.comboPanelInner.Size = new System.Drawing.Size(981, 43);
             this.comboPanelInner.TabIndex = 0;
             // 
             // fileLabel
             // 
             this.fileLabel.AutoSize = true;
-            this.fileLabel.Location = new System.Drawing.Point(23, 9);
+            this.fileLabel.Location = new System.Drawing.Point(31, 11);
+            this.fileLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.fileLabel.Name = "fileLabel";
-            this.fileLabel.Size = new System.Drawing.Size(47, 13);
+            this.fileLabel.Size = new System.Drawing.Size(61, 17);
             this.fileLabel.TabIndex = 7;
             this.fileLabel.Text = "CSV File";
             // 
@@ -114,11 +119,12 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGrid.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
             this.dataGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGrid.Location = new System.Drawing.Point(26, 36);
+            this.dataGrid.Location = new System.Drawing.Point(35, 44);
+            this.dataGrid.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.dataGrid.Name = "dataGrid";
             this.dataGrid.ReadOnly = true;
             this.dataGrid.RowHeadersVisible = false;
-            this.dataGrid.Size = new System.Drawing.Size(740, 290);
+            this.dataGrid.Size = new System.Drawing.Size(985, 429);
             this.dataGrid.TabIndex = 4;
             this.dataGrid.ColumnHeadersHeightChanged += new System.EventHandler(this.dataGrid_ColumnHeadersHeightChanged);
             this.dataGrid.ColumnAdded += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGrid_ColumnAdded);
@@ -128,10 +134,10 @@
             // ImportTransitionListColumnSelectDlg
             // 
             this.AcceptButton = this.buttonOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(884, 361);
+            this.ClientSize = new System.Drawing.Size(1041, 515);
             this.Controls.Add(this.buttonCheckForErrors);
             this.Controls.Add(this.comboPanelOuter);
             this.Controls.Add(this.fileLabel);
@@ -139,6 +145,7 @@
             this.Controls.Add(this.buttonOk);
             this.Controls.Add(this.buttonCancel);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ImportTransitionListColumnSelectDlg";
@@ -146,6 +153,7 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Import Transition List";
+            this.Resize += new System.EventHandler(this.form_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.comboPanelOuter.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).EndInit();
