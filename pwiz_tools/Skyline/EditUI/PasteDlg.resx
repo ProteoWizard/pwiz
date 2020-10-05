@@ -126,7 +126,10 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="tbxFasta.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 16</value>
+    <value>4, 21</value>
+  </data>
+  <data name="tbxFasta.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tbxFasta.MaxLength" type="System.Int32, mscorlib">
@@ -136,7 +139,7 @@
     <value>True</value>
   </data>
   <data name="tbxFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 384</value>
+    <value>1057, 475</value>
   </data>
   <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -157,10 +160,13 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnInsert.Location" type="System.Drawing.Point, System.Drawing">
-    <value>637, 9</value>
+    <value>849, 11</value>
+  </data>
+  <data name="btnInsert.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="btnInsert.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>100, 28</value>
   </data>
   <data name="btnInsert.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -184,10 +190,13 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>718, 9</value>
+    <value>957, 11</value>
+  </data>
+  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>100, 28</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -211,10 +220,13 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnValidate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>538, 9</value>
+    <value>717, 11</value>
+  </data>
+  <data name="btnValidate.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="btnValidate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>93, 23</value>
+    <value>124, 28</value>
   </data>
   <data name="btnValidate.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -241,10 +253,13 @@
     <value>Top</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>4, 4</value>
+  </data>
+  <data name="label1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>479, 13</value>
+    <value>640, 17</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -265,13 +280,16 @@
     <value>1</value>
   </data>
   <data name="tabPageFasta.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+    <value>4, 25</value>
+  </data>
+  <data name="tabPageFasta.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageFasta.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 403</value>
+    <value>1065, 500</value>
   </data>
   <data name="tabPageFasta.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -337,10 +355,13 @@
     <value>Fill</value>
   </data>
   <data name="gridViewProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>4, 4</value>
+  </data>
+  <data name="gridViewProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="gridViewProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 397</value>
+    <value>1057, 491</value>
   </data>
   <data name="gridViewProteins.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -349,7 +370,7 @@
     <value>gridViewProteins</value>
   </data>
   <data name="&gt;&gt;gridViewProteins.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=20.1.1.269, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewProteins.Parent" xml:space="preserve">
     <value>tabPageProteinList</value>
@@ -358,13 +379,16 @@
     <value>0</value>
   </data>
   <data name="tabPageProteinList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+    <value>4, 25</value>
+  </data>
+  <data name="tabPageProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageProteinList.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageProteinList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 403</value>
+    <value>1065, 499</value>
   </data>
   <data name="tabPageProteinList.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -406,10 +430,13 @@
     <value>Fill</value>
   </data>
   <data name="gridViewPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>4, 4</value>
+  </data>
+  <data name="gridViewPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="gridViewPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 397</value>
+    <value>1057, 491</value>
   </data>
   <data name="gridViewPeptides.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -418,7 +445,7 @@
     <value>gridViewPeptides</value>
   </data>
   <data name="&gt;&gt;gridViewPeptides.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=20.1.1.269, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewPeptides.Parent" xml:space="preserve">
     <value>tabPagePeptideList</value>
@@ -427,13 +454,16 @@
     <value>0</value>
   </data>
   <data name="tabPagePeptideList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+    <value>4, 25</value>
+  </data>
+  <data name="tabPagePeptideList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPagePeptideList.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPagePeptideList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 403</value>
+    <value>1065, 499</value>
   </data>
   <data name="tabPagePeptideList.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -487,10 +517,13 @@
     <value>Fill</value>
   </data>
   <data name="gridViewTransitionList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>4, 4</value>
+  </data>
+  <data name="gridViewTransitionList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="gridViewTransitionList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 397</value>
+    <value>1057, 491</value>
   </data>
   <data name="gridViewTransitionList.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -499,7 +532,7 @@
     <value>gridViewTransitionList</value>
   </data>
   <data name="&gt;&gt;gridViewTransitionList.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=20.1.1.269, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewTransitionList.Parent" xml:space="preserve">
     <value>tabPageTransitionList</value>
@@ -508,13 +541,16 @@
     <value>0</value>
   </data>
   <data name="tabPageTransitionList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+    <value>4, 25</value>
+  </data>
+  <data name="tabPageTransitionList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageTransitionList.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabPageTransitionList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 403</value>
+    <value>1065, 499</value>
   </data>
   <data name="tabPageTransitionList.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -538,10 +574,13 @@
     <value>Fill</value>
   </data>
   <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 45</value>
+    <value>0, 55</value>
+  </data>
+  <data name="tabControl1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>805, 429</value>
+    <value>1073, 529</value>
   </data>
   <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -562,10 +601,13 @@
     <value>True</value>
   </data>
   <data name="radioPeptide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 12</value>
+    <value>9, 15</value>
+  </data>
+  <data name="radioPeptide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="radioPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>66, 17</value>
+    <value>84, 21</value>
   </data>
   <data name="radioPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -594,11 +636,14 @@
   <data name="tbxError.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="tbxError.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
   <data name="tbxError.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="tbxError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>805, 45</value>
+    <value>1073, 55</value>
   </data>
   <data name="tbxError.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -621,8 +666,11 @@
   <data name="panelError.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="panelError.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
   <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>805, 45</value>
+    <value>1073, 55</value>
   </data>
   <data name="panelError.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -646,13 +694,13 @@
     <value>NoControl</value>
   </data>
   <data name="btnTransitionListHelp.Location" type="System.Drawing.Point, System.Drawing">
-    <value>277, 9</value>
+    <value>369, 11</value>
   </data>
   <data name="btnTransitionListHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
+    <value>3, 2, 3, 2</value>
   </data>
   <data name="btnTransitionListHelp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>69, 23</value>
+    <value>92, 28</value>
   </data>
   <data name="btnTransitionListHelp.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -676,13 +724,13 @@
     <value>NoControl</value>
   </data>
   <data name="btnCustomMoleculeColumns.Location" type="System.Drawing.Point, System.Drawing">
-    <value>204, 9</value>
+    <value>272, 11</value>
   </data>
   <data name="btnCustomMoleculeColumns.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
+    <value>3, 2, 3, 2</value>
   </data>
   <data name="btnCustomMoleculeColumns.Size" type="System.Drawing.Size, System.Drawing">
-    <value>69, 23</value>
+    <value>92, 28</value>
   </data>
   <data name="btnCustomMoleculeColumns.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -691,7 +739,7 @@
     <value>Col&amp;umns...</value>
   </data>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+    <value>178, 17</value>
   </metadata>
   <data name="btnCustomMoleculeColumns.ToolTip" xml:space="preserve">
     <value>Selects columns for display.  Columns can be reordered by dragging.</value>
@@ -715,10 +763,13 @@
     <value>NoControl</value>
   </data>
   <data name="radioMolecule.Location" type="System.Drawing.Point, System.Drawing">
-    <value>100, 12</value>
+    <value>133, 15</value>
+  </data>
+  <data name="radioMolecule.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="radioMolecule.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 17</value>
+    <value>92, 21</value>
   </data>
   <data name="radioMolecule.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -745,10 +796,13 @@
     <value>Bottom</value>
   </data>
   <data name="panelButtons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 474</value>
+    <value>0, 584</value>
+  </data>
+  <data name="panelButtons.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="panelButtons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>805, 44</value>
+    <value>1073, 54</value>
   </data>
   <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -772,10 +826,13 @@
     <value>48</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>8, 16</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>805, 518</value>
+    <value>1073, 638</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -787,7 +844,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.269, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;colProteinName.Name" xml:space="preserve">
     <value>colProteinName</value>
@@ -889,6 +946,6 @@
     <value>PasteDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.269, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

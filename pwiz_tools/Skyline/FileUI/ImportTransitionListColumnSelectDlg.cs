@@ -393,5 +393,10 @@ namespace pwiz.Skyline.FileUI
         {
             ResizeComboBoxes();
         }
+
+        private void buttonCancel_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }  
