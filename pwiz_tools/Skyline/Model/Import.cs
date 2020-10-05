@@ -978,6 +978,10 @@ namespace pwiz.Skyline.Model
             {
                 double result;
                 // CONSIDER: This does not allow exponents or thousands separators like the default double.Parse(). Should it?
+                if (column == -1)
+                {
+                    return 0;
+                }
                 if (double.TryParse(fields[column], NumberStyles.Number, provider, out result))
                     return result;
                 return 0;   // Invalid m/z
