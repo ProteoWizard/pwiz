@@ -360,7 +360,27 @@ namespace pwiz.Skyline.FileUI
                 updateHeadersList();
             }
         }
+
+        private void ImportTransitionListColumnSelectDlg_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (DialogResult == DialogResult.OK)
+            {
+                if (CheckForErrors(false)) // Look for errors, be silent on success
+                {
+                    e.Cancel = true; // Errors found, don't close yet
+                }
+            }
+        }
+
         private void buttonCheckForErrors_Click(object sender, EventArgs e)
+        {
+            CheckForErrors(false);
+        }
+
+        /// <summary>
+        /// Return false if no errors found.
+        /// </summary>
+        private bool CheckForErrors(bool silentSuccess)
         {
             IdentityPath testSelectPath = null;
             List<MeasuredRetentionTime> testIrtPeptides = null;
@@ -377,11 +397,15 @@ namespace pwiz.Skyline.FileUI
                 {
                     dlg.ShowDialog(this);
                 }
+
+                return true;
             }
-            else
+            else if (!silentSuccess)
             {
                 MessageDlg.Show(this, Resources.PasteDlg_ShowNoErrors_No_errors);
             }
+
+            return false;
         }
 
         private void dataGrid_ColumnAdded(object sender, DataGridViewColumnEventArgs e)
