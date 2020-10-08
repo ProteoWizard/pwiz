@@ -2228,7 +2228,8 @@ The Target Qualitative Ion Ratio is the average of the Qualitative Ion Ratios ac
     <value>&amp;Simple precursor ratios</value>
   </data>
   <data name="cbxSimpleRatios.ToolTip" xml:space="preserve">
-    <value>If checked, ratios between precursors will be calculated as the ratio of the sum of transition areas.</value>
+    <value>If checked, ratios between precursors will be calculated as the ratio of the sum of transition areas.
+Transitions from the two precursors will not be paired with each other for the purpose of handling missing peaks or calculating ratio dot products.</value>
   </data>
   <data name="&gt;&gt;cbxSimpleRatios.Name" xml:space="preserve">
     <value>cbxSimpleRatios</value>
