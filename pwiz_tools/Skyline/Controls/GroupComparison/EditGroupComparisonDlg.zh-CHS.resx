@@ -463,7 +463,7 @@
     <value>13</value>
   </data>
   <data name="lblConfidenceLevel.Text" xml:space="preserve">
-    <value>置信级(&amp;E)</value>
+    <value>置信水平(&amp;E)</value>
   </data>
   <data name="&gt;&gt;lblConfidenceLevel.Name" xml:space="preserve">
     <value>lblConfidenceLevel</value>
@@ -745,7 +745,7 @@
     <value>0</value>
   </data>
   <data name="lblQValueCutoff.Text" xml:space="preserve">
-    <value>将检测 Q 值大于界限值的峰视为丢失。</value>
+    <value>将检测 Q 值大于截止值的峰视为丢失。</value>
   </data>
   <data name="&gt;&gt;lblQValueCutoff.Name" xml:space="preserve">
     <value>lblQValueCutoff</value>
@@ -769,7 +769,7 @@
     <value>3</value>
   </data>
   <data name="groupBoxQValueCutoff.Text" xml:space="preserve">
-    <value>Q值界限</value>
+    <value>Q 值截止</value>
   </data>
   <data name="&gt;&gt;groupBoxQValueCutoff.Name" xml:space="preserve">
     <value>groupBoxQValueCutoff</value>

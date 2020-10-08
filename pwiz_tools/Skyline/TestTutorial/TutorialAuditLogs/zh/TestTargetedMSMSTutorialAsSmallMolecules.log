@@ -310,14 +310,14 @@ Undo Redo : 已添加谱图库“BSA_Protea_label_free_meth3”
 Summary   : 已添加谱图库“BSA_Protea_label_free_meth3”
 All Info  :
 已添加谱图库“BSA_Protea_label_free_meth3”
-建立谱图库 > 阈值 是 "0.99"
+建立谱图库 > 截止值 是 "0.99"
 建立谱图库 > 搜索文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
 建立谱图库 > 搜索文件 : 包含 "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
 建立谱图库 > iRT 标准肽段 是 无
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽段筛选器 是 真
 建立谱图库 > 工作流程 是 "PRM（并行反应离子监测）"
-Extra Info: 阈值 = "0.99",
+Extra Info: 截止值 = "0.99",
 搜索文件 = 
 [
     "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",

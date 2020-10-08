@@ -348,7 +348,7 @@
     <value>193, 22</value>
   </data>
   <data name="fragmentionsContextMenuItem.Text" xml:space="preserve">
-    <value>片段离子</value>
+    <value>碎片离子</value>
   </data>
   <data name="precursorIonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -496,6 +496,18 @@
   </data>
   <data name="applyPeakSubsequentGraphMenuItem.Text" xml:space="preserve">
     <value>将峰应用于后续</value>
+  </data>
+  <data name="applyPeakGroupGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="applyPeakGroupGraphMenuItem.Text" xml:space="preserve">
+    <value>对群组应用峰值</value>
+  </data>
+  <data name="groupApplyToByGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="groupApplyToByGraphMenuItem.Text" xml:space="preserve">
+    <value>通过此种方式进行群组应用</value>
   </data>
   <data name="removePeakGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
@@ -801,7 +813,7 @@
     <value>190, 22</value>
   </data>
   <data name="replicateComparisonContextMenuItem.Text" xml:space="preserve">
-    <value>样本比较</value>
+    <value>重复测定比较</value>
   </data>
   <data name="timePeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -989,11 +1001,17 @@
   <data name="kernelDensityEstimationContextMenuItem.Text" xml:space="preserve">
     <value>核密度估计</value>
   </data>
+  <data name="logRegressionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>296, 22</value>
+  </data>
+  <data name="logRegressionContextMenuItem.Text" xml:space="preserve">
+    <value>对数回归</value>
+  </data>
   <data name="loessContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>208, 22</value>
   </data>
   <data name="loessContextMenuItem.Text" xml:space="preserve">
-    <value>局部加权回归散点平滑法</value>
+    <value>局部加权回归</value>
   </data>
   <data name="setRegressionMethodContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -1074,7 +1092,7 @@
     <value>187, 6</value>
   </data>
   <data name="contextMenuRetentionTimes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>178, 342</value>
+    <value>191, 430</value>
   </data>
   <data name="&gt;&gt;contextMenuRetentionTimes.Name" xml:space="preserve">
     <value>contextMenuRetentionTimes</value>
@@ -1089,7 +1107,7 @@
     <value>190, 22</value>
   </data>
   <data name="areaReplicateComparisonContextMenuItem.Text" xml:space="preserve">
-    <value>样本比较</value>
+    <value>重复测定比较</value>
   </data>
   <data name="areaPeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -1392,7 +1410,7 @@
     <value>209, 22</value>
   </data>
   <data name="removeAboveCVCutoffToolStripMenuItem.Text" xml:space="preserve">
-    <value>删除 CV 阈值以上</value>
+    <value>删除 CV 截止值以上</value>
   </data>
   <data name="toolStripSeparator57.Size" type="System.Drawing.Size, System.Drawing">
     <value>206, 6</value>
@@ -1717,7 +1735,7 @@
     <value>197, 22</value>
   </data>
   <data name="openContainingFolderMenuItem.Text" xml:space="preserve">
-    <value>打开包含文件夹</value>
+    <value>打开包含文件夹(&amp;C)</value>
   </data>
   <data name="toolStripSeparator53.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>
@@ -2061,6 +2079,18 @@
   <data name="applyPeakSubsequentToolStripMenuItem.Text" xml:space="preserve">
     <value>将峰应用于后续</value>
   </data>
+  <data name="applyPeakGroupToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>284, 22</value>
+  </data>
+  <data name="applyPeakGroupToolStripMenuItem.Text" xml:space="preserve">
+    <value>toolStripMenuItem1</value>
+  </data>
+  <data name="groupApplyToByToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>284, 22</value>
+  </data>
+  <data name="groupApplyToByToolStripMenuItem.Text" xml:space="preserve">
+    <value>通过此种方式进行群组应用</value>
+  </data>
   <data name="removePeakToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Shift+R</value>
   </data>
@@ -2254,7 +2284,7 @@
     <value>218, 22</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
-    <value>重新整合(&amp;R)…</value>
+    <value>重新合并(&amp;R)…</value>
   </data>
   <data name="generateDecoysMenuItem.RightToLeftAutoMirrorImage" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2469,7 +2499,7 @@
     <value>191, 22</value>
   </data>
   <data name="userInterfaceToolStripMenuItem.Text" xml:space="preserve">
-    <value>用户界面(&amp;U)</value>
+    <value>用户界面(&amp;S)</value>
   </data>
   <data name="toolStripSeparator41.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
@@ -2677,6 +2707,18 @@
   </data>
   <data name="toolStripSeparator44.Size" type="System.Drawing.Size, System.Drawing">
     <value>216, 6</value>
+  </data>
+  <data name="closeChromatogramMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+F4</value>
+  </data>
+  <data name="closeChromatogramMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>219, 22</value>
+  </data>
+  <data name="closeChromatogramMenuItem.Text" xml:space="preserve">
+    <value>关闭(&amp;C)</value>
+  </data>
+  <data name="closeAllChromatogramsMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+Shift+F4</value>
   </data>
   <data name="closeAllChromatogramsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>219, 22</value>
@@ -2898,7 +2940,7 @@
     <value>228, 22</value>
   </data>
   <data name="replicateComparisonMenuItem.Text" xml:space="preserve">
-    <value>样本比较(&amp;R)</value>
+    <value>重复测定比较(&amp;R)</value>
   </data>
   <data name="timePeptideComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+F8</value>
@@ -2955,7 +2997,7 @@
     <value>228, 22</value>
   </data>
   <data name="areaReplicateComparisonMenuItem.Text" xml:space="preserve">
-    <value>样本比较(&amp;R)</value>
+    <value>重复测定比较(&amp;R)</value>
   </data>
   <data name="areaPeptideComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+F7</value>
@@ -2987,6 +3029,27 @@
   <data name="peakAreasMenuItem.Text" xml:space="preserve">
     <value>峰面积(&amp;K)</value>
   </data>
+  <data name="detectionsReplicateComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 26</value>
+  </data>
+  <data name="detectionsReplicateComparisonMenuItem.Text" xml:space="preserve">
+    <value>重复测定比较(&amp;R)</value>
+  </data>
+  <data name="detectionsHistogramMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 26</value>
+  </data>
+  <data name="detectionsHistogramMenuItem.Text" xml:space="preserve">
+    <value>直方图(&amp;H)</value>
+  </data>
+  <data name="detectionsPlotsMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="detectionsPlotsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>231, 26</value>
+  </data>
+  <data name="detectionsPlotsMenuItem.Text" xml:space="preserve">
+    <value>检测(&amp;D)</value>
+  </data>
   <data name="massErrorReplicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F6</value>
   </data>
@@ -2994,7 +3057,7 @@
     <value>228, 22</value>
   </data>
   <data name="massErrorReplicateComparisonMenuItem.Text" xml:space="preserve">
-    <value>样本比较(&amp;R)</value>
+    <value>重复测定比较(&amp;R)</value>
   </data>
   <data name="massErrorPeptideComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+F6</value>
@@ -3024,7 +3087,7 @@
     <value>191, 22</value>
   </data>
   <data name="massErrorsMenuItem.Text" xml:space="preserve">
-    <value>质量偏差(&amp;S)</value>
+    <value>质量偏差(&amp;E)</value>
   </data>
   <data name="calibrationCurveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
@@ -3039,7 +3102,7 @@
     <value>191, 22</value>
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
-    <value>文件栅格(&amp;D)</value>
+    <value>文件栅格(&amp;G)</value>
   </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -3360,19 +3423,19 @@
     <value>190, 22</value>
   </data>
   <data name="massErrorReplicateComparisonContextMenuItem.Text" xml:space="preserve">
-    <value>样本比较(&amp;R)</value>
+    <value>重复测定比较</value>
   </data>
   <data name="massErrorPeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
   <data name="massErrorPeptideComparisonContextMenuItem.Text" xml:space="preserve">
-    <value>肽段比较(&amp;P)</value>
+    <value>肽段比较</value>
   </data>
   <data name="massErrorHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
   <data name="massErrorHistogramContextMenuItem.Text" xml:space="preserve">
-    <value>直方图(&amp;H)</value>
+    <value>直方图</value>
   </data>
   <data name="massErrorHistogram2DContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -3516,6 +3579,129 @@
     <value>contextMenuMassErrors</value>
   </data>
   <data name="&gt;&gt;contextMenuMassErrors.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <metadata name="contextMenuDetections.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>381, 60</value>
+  </metadata>
+  <data name="detectionsTargetPrecursorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>145, 26</value>
+  </data>
+  <data name="detectionsTargetPrecursorToolStripMenuItem.Text" xml:space="preserve">
+    <value>母离子</value>
+  </data>
+  <data name="detectionsTargetPeptideToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>145, 26</value>
+  </data>
+  <data name="detectionsTargetPeptideToolStripMenuItem.Text" xml:space="preserve">
+    <value>肽段</value>
+  </data>
+  <data name="detectionsTargetToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 24</value>
+  </data>
+  <data name="detectionsTargetToolStripMenuItem.Text" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="detectionsGraphTypeReplicateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>154, 26</value>
+  </data>
+  <data name="detectionsGraphTypeReplicateToolStripMenuItem.Text" xml:space="preserve">
+    <value>重复测定</value>
+  </data>
+  <data name="detectionsGraphTypeHistogramToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>154, 26</value>
+  </data>
+  <data name="detectionsGraphTypeHistogramToolStripMenuItem.Text" xml:space="preserve">
+    <value>直方图</value>
+  </data>
+  <data name="detectionsGraphTypeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 24</value>
+  </data>
+  <data name="detectionsGraphTypeToolStripMenuItem.Text" xml:space="preserve">
+    <value>图形类型</value>
+  </data>
+  <data name="detectionsToolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>207, 6</value>
+  </data>
+  <data name="detectionsShowSelectionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>224, 26</value>
+  </data>
+  <data name="detectionsShowSelectionToolStripMenuItem.Text" xml:space="preserve">
+    <value>选择</value>
+  </data>
+  <data name="detectionsShowLegendToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>224, 26</value>
+  </data>
+  <data name="detectionsShowLegendToolStripMenuItem.Text" xml:space="preserve">
+    <value>图例</value>
+  </data>
+  <data name="detectionsShowMeanToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>224, 26</value>
+  </data>
+  <data name="detectionsShowMeanToolStripMenuItem.Text" xml:space="preserve">
+    <value>平均值与标准偏差</value>
+  </data>
+  <data name="detectionsShowAtLeastNToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>224, 26</value>
+  </data>
+  <data name="detectionsShowAtLeastNToolStripMenuItem.Text" xml:space="preserve">
+    <value>至少 N 个重复测定</value>
+  </data>
+  <data name="detectionsShowToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 24</value>
+  </data>
+  <data name="detectionsShowToolStripMenuItem.Text" xml:space="preserve">
+    <value>显示</value>
+  </data>
+  <data name="detectionsYScaleOneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>216, 26</value>
+  </data>
+  <data name="detectionsYScaleOneToolStripMenuItem.Text" xml:space="preserve">
+    <value>肽段计数</value>
+  </data>
+  <data name="detectionsYScaleHundredToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>216, 26</value>
+  </data>
+  <data name="detectionsYScaleHundredToolStripMenuItem.Text" xml:space="preserve">
+    <value>百</value>
+  </data>
+  <data name="detectionsYScaleThousandToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>216, 26</value>
+  </data>
+  <data name="detectionsYScaleThousandToolStripMenuItem.Text" xml:space="preserve">
+    <value>千</value>
+  </data>
+  <data name="detectionsYScalePercentToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>216, 26</value>
+  </data>
+  <data name="detectionsYScalePercentToolStripMenuItem.Text" xml:space="preserve">
+    <value>百分比</value>
+  </data>
+  <data name="detectionsYScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 24</value>
+  </data>
+  <data name="detectionsYScaleToolStripMenuItem.Text" xml:space="preserve">
+    <value>Y 轴标尺</value>
+  </data>
+  <data name="detectionsToolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>207, 6</value>
+  </data>
+  <data name="detectionsPropertiesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 24</value>
+  </data>
+  <data name="detectionsPropertiesToolStripMenuItem.Text" xml:space="preserve">
+    <value>属性…</value>
+  </data>
+  <data name="detectionsToolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>207, 6</value>
+  </data>
+  <data name="contextMenuDetections.Size" type="System.Drawing.Size, System.Drawing">
+    <value>211, 170</value>
+  </data>
+  <data name="&gt;&gt;contextMenuDetections.Name" xml:space="preserve">
+    <value>contextMenuDetections</value>
+  </data>
+  <data name="&gt;&gt;contextMenuDetections.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -3897,6 +4083,18 @@
     <value>applyPeakSubsequentGraphMenuItem</value>
   </data>
   <data name="&gt;&gt;applyPeakSubsequentGraphMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;applyPeakGroupGraphMenuItem.Name" xml:space="preserve">
+    <value>applyPeakGroupGraphMenuItem</value>
+  </data>
+  <data name="&gt;&gt;applyPeakGroupGraphMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupApplyToByGraphMenuItem.Name" xml:space="preserve">
+    <value>groupApplyToByGraphMenuItem</value>
+  </data>
+  <data name="&gt;&gt;groupApplyToByGraphMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;removePeakGraphMenuItem.Name" xml:space="preserve">
@@ -4413,6 +4611,12 @@
     <value>kernelDensityEstimationContextMenuItem</value>
   </data>
   <data name="&gt;&gt;kernelDensityEstimationContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;logRegressionContextMenuItem.Name" xml:space="preserve">
+    <value>logRegressionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;logRegressionContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;loessContextMenuItem.Name" xml:space="preserve">
@@ -5303,6 +5507,18 @@
   <data name="&gt;&gt;applyPeakSubsequentToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;applyPeakGroupToolStripMenuItem.Name" xml:space="preserve">
+    <value>applyPeakGroupToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;applyPeakGroupToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupApplyToByToolStripMenuItem.Name" xml:space="preserve">
+    <value>groupApplyToByToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;groupApplyToByToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;removePeakToolStripMenuItem.Name" xml:space="preserve">
     <value>removePeakToolStripMenuItem</value>
   </data>
@@ -5885,6 +6101,12 @@
   <data name="&gt;&gt;toolStripSeparator44.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;closeChromatogramMenuItem.Name" xml:space="preserve">
+    <value>closeChromatogramMenuItem</value>
+  </data>
+  <data name="&gt;&gt;closeChromatogramMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;closeAllChromatogramsMenuItem.Name" xml:space="preserve">
     <value>closeAllChromatogramsMenuItem</value>
   </data>
@@ -6123,6 +6345,24 @@
     <value>areaCVHistogram2DMenuItem</value>
   </data>
   <data name="&gt;&gt;areaCVHistogram2DMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsPlotsMenuItem.Name" xml:space="preserve">
+    <value>detectionsPlotsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsPlotsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsReplicateComparisonMenuItem.Name" xml:space="preserve">
+    <value>detectionsReplicateComparisonMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsReplicateComparisonMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsHistogramMenuItem.Name" xml:space="preserve">
+    <value>detectionsHistogramMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsHistogramMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;massErrorsMenuItem.Name" xml:space="preserve">
@@ -6615,6 +6855,126 @@
     <value>massErrorlogScaleContextMenuItem</value>
   </data>
   <data name="&gt;&gt;massErrorlogScaleContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsTargetToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsTargetToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsTargetToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsTargetPrecursorToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsTargetPrecursorToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsTargetPrecursorToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsTargetPeptideToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsTargetPeptideToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsTargetPeptideToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsGraphTypeToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsGraphTypeToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsGraphTypeToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsGraphTypeReplicateToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsGraphTypeReplicateToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsGraphTypeReplicateToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsGraphTypeHistogramToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsGraphTypeHistogramToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsGraphTypeHistogramToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsToolStripSeparator1.Name" xml:space="preserve">
+    <value>detectionsToolStripSeparator1</value>
+  </data>
+  <data name="&gt;&gt;detectionsToolStripSeparator1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsShowToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsShowToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsShowToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsShowSelectionToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsShowSelectionToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsShowSelectionToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsShowLegendToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsShowLegendToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsShowLegendToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsShowMeanToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsShowMeanToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsShowMeanToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsShowAtLeastNToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsShowAtLeastNToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsShowAtLeastNToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsYScaleToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsYScaleToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsYScaleToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsYScaleOneToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsYScaleOneToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsYScaleOneToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsYScaleHundredToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsYScaleHundredToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsYScaleHundredToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsYScaleThousandToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsYScaleThousandToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsYScaleThousandToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsToolStripSeparator2.Name" xml:space="preserve">
+    <value>detectionsToolStripSeparator2</value>
+  </data>
+  <data name="&gt;&gt;detectionsToolStripSeparator2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsPropertiesToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsPropertiesToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsPropertiesToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsToolStripSeparator3.Name" xml:space="preserve">
+    <value>detectionsToolStripSeparator3</value>
+  </data>
+  <data name="&gt;&gt;detectionsToolStripSeparator3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;detectionsYScalePercentToolStripMenuItem.Name" xml:space="preserve">
+    <value>detectionsYScalePercentToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;detectionsYScalePercentToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

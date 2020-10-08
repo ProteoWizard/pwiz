@@ -6835,7 +6835,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries" xml:space="preserve">
     <value>Edit Ion Mobility Libraries</value>
   </data>
-  <data name="DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_" xml:space="preserve">
+  <data name="GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_" xml:space="preserve">
     <value>The database for the calculator {0} could not be opened. Check that the file {1} was not moved or deleted.</value>
   </data>
   <data name="ExportStrategyExtension_LOCALIZED_VALUES_Protein" xml:space="preserve">
@@ -11084,5 +11084,14 @@ Invalid peptide sequence at position 18
   </data>
   <data name="AreaCVToolbar_UpdateUI_Total_ion_current" xml:space="preserve">
     <value>Total ion current</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
+    <value>The iRT standard name '{0}' is invalid.</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_" xml:space="preserve">
+    <value>{0} must be set when using CiRT peptides.</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
+    <value>iRT standard set to {0}, but multiple iRT standards were found. iRT standard must be set explicitly.</value>
   </data>
 </root>
