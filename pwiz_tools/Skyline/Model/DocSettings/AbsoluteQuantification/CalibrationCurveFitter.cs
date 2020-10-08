@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 quantitiesToSum = allTransitionQuantities.Values;
             }
-            return PeptideQuantifier.SumQuantities(quantitiesToSum, PeptideQuantifier.NormalizationMethod);
+            return PeptideQuantifier.SumQuantities(quantitiesToSum, PeptideQuantifier.NormalizationMethod, QuantificationSettings.SimpleRatios);
         }
 
         public CalibrationCurve GetCalibrationCurve()
