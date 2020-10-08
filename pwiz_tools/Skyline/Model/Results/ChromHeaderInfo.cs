@@ -1589,7 +1589,7 @@ namespace pwiz.Skyline.Model.Results
         {
             // BACKWARD COMPATIBILITY: Deal with legacy parameters which got stored on the file_path URI
             var filePath = fileUri as MsDataFilePath;
-            if (filePath != null && filePath.LegacyCombineIonMobilitySpectra) // Skyline-daily 19.1.9.338 or 350
+            if (filePath != null && filePath.LegacyCombineIonMobilitySpectra) // version 19.1.9.338 or 350
                 flags |= FlagValues.has_combined_ion_mobility;
             // Centroiding for a much longer time
             if (fileUri.LegacyGetCentroidMs1())

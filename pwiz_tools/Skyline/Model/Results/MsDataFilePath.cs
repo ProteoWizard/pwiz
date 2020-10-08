@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.Results
         public LockMassParameters LockMassParameters { get; private set; }
         public bool LegacyCentroidMs1 { get; private set; }
         public bool LegacyCentroidMs2 { get; private set; }
-        public bool LegacyCombineIonMobilitySpectra { get; private set; } // BACKWARD COMPATIBILITY: Skyline-daily 19.1.9.338 & 350 stored URLs with this parameter
+        public bool LegacyCombineIonMobilitySpectra { get; private set; } // BACKWARD COMPATIBILITY: version 19.1.9.338 & 350 stored URLs with this parameter
 
         public override MsDataFileUri GetLocation()
         {
