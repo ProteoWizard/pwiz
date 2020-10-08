@@ -19,6 +19,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -67,6 +68,17 @@ namespace pwiz.SkylineTestFunctional
             // When SimpleRatios is true, verify that all transitions contribute to the ratio
             StringAssert.Contains(lightTreeNode.Text, GetTransitionGroupRatioText(
                 lightTransitionAreas.Sum() / heavyTransitionAreas.Sum()));
+
+            // Verify that deleting a transition from the light precursor does not affect the heavy precursor
+            Assert.AreEqual(4, lightTreeNode.DocNode.TransitionCount);
+            Assert.AreEqual(2, heavyTreeNode.DocNode.TransitionCount);
+            RunUI(()=>
+            {
+                SkylineWindow.SelectPath(SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Transitions, 0));
+                SkylineWindow.EditDelete();
+            });
+            Assert.AreEqual(3, lightTreeNode.DocNode.TransitionCount);
+            Assert.AreEqual(2, heavyTreeNode.DocNode.TransitionCount);
         }
 
         private string GetTransitionGroupRatioText(float ratio)
