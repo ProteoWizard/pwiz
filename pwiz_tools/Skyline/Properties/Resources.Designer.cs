@@ -2514,6 +2514,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scheduling failure (no targets?).
+        /// </summary>
+        public static string BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__ {
+            get {
+                return ResourceManager.GetString("BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Template is required for method export..
         /// </summary>
         public static string BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_ {

@@ -3269,6 +3269,10 @@ namespace pwiz.Skyline.Model
                 }
 
                 s.GetScheduling(timeSegments, schedulingEntries, ProgressCallback);
+                if (timeSegments.Count == 0 || schedulingEntries.Count == 0)
+                {
+                    throw new Exception(Resources.BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__);
+                }
 
                 if (!string.IsNullOrEmpty(fileName) && (progressMonitor == null || !progressMonitor.IsCanceled))
                     s.WriteScheduling();
