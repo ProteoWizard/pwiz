@@ -364,6 +364,7 @@
             this.MinimizeBox = false;
             this.Name = "EditIrtCalcDlg";
             this.ShowInTaskbar = false;
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.EditIrtCalcDlg_FormClosing);
             this.Load += new System.EventHandler(this.OnLoad);
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).EndInit();

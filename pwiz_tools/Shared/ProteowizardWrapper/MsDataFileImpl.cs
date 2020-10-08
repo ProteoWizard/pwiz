@@ -635,10 +635,31 @@ namespace pwiz.ProteowizardWrapper
             using (Chromatogram chrom = ChromatogramList.chromatogram(chromIndex, true))
             {
                 id = chrom.id;
+                var timeArrayData = chrom.getTimeArray().data;
+
+                // convert time to minutes
+                var timeArrayParam = chrom.getTimeArray().cvParamChild(CVID.MS_binary_data_array);
+                float timeUnitMultiple;
+                switch (timeArrayParam.units)
+                {
+                    case CVID.UO_nanosecond: timeUnitMultiple = 60 * 1e9f; break;
+                    case CVID.UO_microsecond: timeUnitMultiple = 60 * 1e6f; break;
+                    case CVID.UO_millisecond: timeUnitMultiple = 60 * 1e3f; break;
+                    case CVID.UO_second: timeUnitMultiple = 60; break;
+                    case CVID.UO_minute: timeUnitMultiple = 1; break;
+                    case CVID.UO_hour: timeUnitMultiple = 1f / 60; break;
+
+                    default:
+                        throw new InvalidDataException($"unsupported time unit in chromatogram: {timeArrayParam.unitsName}");
+                }
+                timeUnitMultiple = 1 / timeUnitMultiple;
+
                 if (!onlyMs1OrFunction1)
                 {
-                    timeArray = ToFloatArray(chrom.binaryDataArrays[0].data);
-                    intensityArray = ToFloatArray(chrom.binaryDataArrays[1].data);
+                    timeArray = new float[timeArrayData.Count];
+                    for (int i = 0; i < timeArray.Length; ++i)
+                        timeArray[i] = (float) timeArrayData[i] * timeUnitMultiple;
+                    intensityArray = ToFloatArray(chrom.getIntensityArray().data);
                 }
                 else
                 {
@@ -653,11 +674,9 @@ namespace pwiz.ProteowizardWrapper
                         return;
                     }
 
-
                     var timeList = new List<float>();
                     var intensityList = new List<float>();
-                    var timeArrayData = chrom.binaryDataArrays[0].data;
-                    var intensityArrayData = chrom.binaryDataArrays[1].data;
+                    var intensityArrayData = chrom.getIntensityArray().data;
                     var msLevelOrFunctionArrayData = msLevelOrFunctionArray.data;
 
                     for (int i = 0; i < msLevelOrFunctionArrayData.Count; ++i)
@@ -665,7 +684,7 @@ namespace pwiz.ProteowizardWrapper
                         if (msLevelOrFunctionArrayData[i] != 1)
                             continue;
 
-                        timeList.Add((float) timeArrayData[i]);
+                        timeList.Add((float) timeArrayData[i] * timeUnitMultiple);
                         intensityList.Add((float) intensityArrayData[i]);
                     }
 

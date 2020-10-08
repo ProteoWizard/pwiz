@@ -118,9 +118,17 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="SkylineCmdResources.ja.resx">
+      <DependentUpon>SkylineCmdResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="SkylineCmdResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>SkylineCmdResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SkylineCmdResources.zh-CHS.resx">
+      <DependentUpon>SkylineCmdResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

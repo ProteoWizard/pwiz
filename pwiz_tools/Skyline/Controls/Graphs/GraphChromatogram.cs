@@ -1435,7 +1435,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int colorOffset = 0;
             if(displayType == DisplayTypeChrom.products && 
                 (nodeDisplayType != DisplayTypeChrom.single || 
-                (nodeDisplayType == DisplayTypeChrom.single && chromatograms.OptimizationFunction == null)))
+                 chromatograms.OptimizationFunction == null))
             {
                 colorOffset = GetDisplayTransitions(nodeGroup, DisplayTypeChrom.precursors).Count();
             }

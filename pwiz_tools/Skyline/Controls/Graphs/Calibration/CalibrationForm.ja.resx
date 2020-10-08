@@ -169,7 +169,7 @@
     <value>198, 22</value>
   </data>
   <data name="showSampleTypesContextMenuItem.Text" xml:space="preserve">
-    <value>サンプルタイプを表示</value>
+    <value>試料タイプを表示</value>
   </data>
   <data name="singleBatchContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>198, 22</value>
