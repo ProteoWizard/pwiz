@@ -365,7 +365,7 @@ namespace pwiz.Skyline.FileUI
         {
             if (DialogResult == DialogResult.OK)
             {
-                if (CheckForErrors(false)) // Look for errors, be silent on success
+                if (CheckForErrors(true)) // Look for errors, be silent on success
                 {
                     e.Cancel = true; // Errors found, don't close yet
                 }
