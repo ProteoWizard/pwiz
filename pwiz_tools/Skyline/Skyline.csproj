@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.Skyline</RootNamespace>
-    <AssemblyName>Skyline-daily</AssemblyName>
+    <AssemblyName>Skyline</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
@@ -30,7 +30,7 @@
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
-    <PublishUrl>T:\labkey\static\software\Skyline-daily13-64\</PublishUrl>
+    <PublishUrl>T:\labkey\static\software\Skyline-release-64_20_2\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -40,15 +40,15 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</InstallUrl>
-    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</UpdateUrl>
+    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_20_2/</InstallUrl>
+    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_20_2/</UpdateUrl>
     <SupportUrl>https://skyline.ms/support.url</SupportUrl>
-    <ProductName>Skyline-daily</ProductName>
+    <ProductName>Skyline</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>229</ApplicationRevision>
-    <ApplicationVersion>20.1.9.229</ApplicationVersion>
+    <ApplicationRevision>282</ApplicationRevision>
+    <ApplicationVersion>20.2.0.282</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -5310,7 +5310,7 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
-    <PublishFile Include="Skyline-daily.pdb">
+    <PublishFile Include="Skyline.pdb">
       <Visible>False</Visible>
       <Group>
       </Group>

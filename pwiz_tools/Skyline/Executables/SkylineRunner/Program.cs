@@ -41,7 +41,7 @@ namespace pwiz.SkylineRunner
 
         private int Run(IEnumerable<string> args)
         {
-            const string skylineAppName = "Skyline-daily"; // Not L10N
+            const string skylineAppName = "Skyline"; // Not L10N
             string[] possibleSkylinePaths = ListPossibleSkylineShortcutPaths(skylineAppName);
             string skylinePath = possibleSkylinePaths.FirstOrDefault(File.Exists);
             if (null == skylinePath)

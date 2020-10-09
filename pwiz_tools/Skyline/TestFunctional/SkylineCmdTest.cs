@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
             // Make sure the error message says it tries loading "Skyline.exe" and "Skyline-daily.exe" from the
             // same directory as SkylineCmd.exe
             StringAssert.Contains(output, "Skyline.exe");
-            StringAssert.Contains(output, "Skyline-daily.exe");
+            StringAssert.Contains(output, "Skyline-daily.exe"); // Keep -daily
             StringAssert.Contains(output, tempPath);
         }
 
