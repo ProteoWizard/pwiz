@@ -1953,7 +1953,7 @@ namespace pwiz.Skyline.Model
         private string FormatHeader(string col)
         {
             // Remove spaces and make lowercase. This matches the format of the names they are tested against
-            return col.ToLowerInvariant().Replace(" ", "");
+            return col.ToLowerInvariant().Replace(@" ", "");
         }
         public void FindColumns(string[] headers)
         {
