@@ -378,8 +378,13 @@ namespace pwiz.Skyline.FileUI
         }
 
         /// <summary>
+        /// Parse the mass list text, then show a status dialog if:
+        ///     errors are found, or
+        ///     errors are not found and "silentSuccess" arg is false
         /// Return false if no errors found.
         /// </summary>
+        /// <param name="silentSuccess">If true, don't show the confirmation dialog when there are no errors</param>
+        /// <returns>True iff list contains any errors</returns>
         private bool CheckForErrors(bool silentSuccess)
         {
             IdentityPath testSelectPath = null;
@@ -393,19 +398,21 @@ namespace pwiz.Skyline.FileUI
                 out testErrorList, out testPeptideGroups);
             if (testErrorList.Any())
             {
+                // There are errors, show them to user
                 using (var dlg = new ImportTransitionListErrorDlg(testErrorList, true))
                 {
                     dlg.ShowDialog(this);
                 }
 
-                return true;
+                return true; // There are errors
             }
-            else if (!silentSuccess)
+            else if (!silentSuccess) 
             {
+                // No errors, confirm this to user
                 MessageDlg.Show(this, Resources.PasteDlg_ShowNoErrors_No_errors);
             }
 
-            return false;
+            return false; // No errors
         }
 
         private void dataGrid_ColumnAdded(object sender, DataGridViewColumnEventArgs e)

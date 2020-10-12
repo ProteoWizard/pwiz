@@ -117,12 +117,12 @@ namespace pwiz.SkylineTestFunctional
                 peptideTransitionListDiffHeaders.CancelDialog();
             });
 
+            // Now check UI interactions with a bad import file
+            RunUI(() => SkylineWindow.NewDocument());
+            WaitForDocumentLoaded();
+
             SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-
-            RunUI(() => SkylineWindow.NewDocument());
-
-            WaitForDocumentLoaded();
 
             RunUI(() => {
                 var comboBoxes = dlg.ComboBoxes;
@@ -139,15 +139,17 @@ namespace pwiz.SkylineTestFunctional
                 dlg.dataGrid.Columns[0].Width -= 20;
                 Assert.AreNotEqual(oldBoxWidth, comboBoxes[0].Width);
             });
-
+            // Clicking the "Check for Errors" button should bring up the error list dialog
             var importTransitionListErrorDlg = ShowDialog<ImportTransitionListErrorDlg>(() => dlg.buttonCheckForErrors.PerformClick());
-
-            // ReSharper disable once AccessToModifiedClosure (The okAction is executed immediately inside OkDialog so there is no chance of importTransitionListErrorDlg being modified)
-            OkDialog(importTransitionListErrorDlg, () => importTransitionListErrorDlg.DialogResult = DialogResult.OK);
-
-            importTransitionListErrorDlg = ShowDialog<ImportTransitionListErrorDlg>(() => dlg.DialogResult = DialogResult.OK);
-
-            OkDialog(importTransitionListErrorDlg, () => importTransitionListErrorDlg.DialogResult = DialogResult.OK);
+            // Dismiss it
+            var errorDlg = importTransitionListErrorDlg;
+            OkDialog(importTransitionListErrorDlg, () => errorDlg.DialogResult = DialogResult.OK);
+            // Clicking OK while input is invalid should also pop up the error list
+            var importTransitionListErrorDlg2 = ShowDialog<ImportTransitionListErrorDlg>(() => dlg.DialogResult = DialogResult.OK);
+            // Dismiss it and should be back to import dialog again
+            OkDialog(importTransitionListErrorDlg2, () => importTransitionListErrorDlg2.DialogResult = DialogResult.OK);
+            // Only way out without fixing the columns is to cancel
+            OkDialog(dlg, () => dlg.DialogResult = DialogResult.Cancel);
         }
     }
 }
