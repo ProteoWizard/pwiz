@@ -138,6 +138,9 @@
   <data name="eIonMobilityUnits_none" xml:space="preserve">
     <value>无</value>
   </data>
+  <data name="eIonMobilityUnits_unknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
   <data name="FullScanAcquisitionMethod_DDA" xml:space="preserve">
     <value>DDA</value>
   </data>
@@ -188,6 +191,9 @@
   </data>
   <data name="IsolationWidthType_fixed_width" xml:space="preserve">
     <value>已修复</value>
+  </data>
+  <data name="IsolationWidthType_none" xml:space="preserve">
+    <value>无</value>
   </data>
   <data name="IsolationWidthType_results" xml:space="preserve">
     <value>结果</value>
@@ -542,5 +548,26 @@
   </data>
   <data name="AreaCVTransitions_count" xml:space="preserve">
     <value>计数</value>
+  </data>
+  <data name="IrtRegressionType_linear" xml:space="preserve">
+    <value>线性</value>
+  </data>
+  <data name="IrtRegressionType_lowess" xml:space="preserve">
+    <value>局部加权回归</value>
+  </data>
+  <data name="IrtRegressionType_logarithmic" xml:space="preserve">
+    <value>对数</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_linear_range" xml:space="preserve">
+    <value>线性范围</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_resolving_power" xml:space="preserve">
+    <value>分辨力</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_fixed_width" xml:space="preserve">
+    <value>固定宽度</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
+    <value>无</value>
   </data>
 </root>

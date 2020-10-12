@@ -199,7 +199,7 @@ namespace pwiz.SkylineTestFunctional
                     var replicateCalibrationCurve =
                         (LinkValue<CalibrationCurve>) row.Cells[colReplicateCalibrationCurve.Index].Value;
                     var quantificationResult =
-                        (LinkValue<QuantificationResult>) row.Cells[colQuantificationResult.Index].Value;
+                        (LinkValue<PrecursorQuantificationResult>) row.Cells[colQuantificationResult.Index].Value;
                     var precursor = (Precursor) row.Cells[colPrecursor.Index].Value;
                     var precursorResult = (PrecursorResult) row.Cells[colPrecursorResult.Index].Value;
                     var totalArea = precursorResult.TotalArea;

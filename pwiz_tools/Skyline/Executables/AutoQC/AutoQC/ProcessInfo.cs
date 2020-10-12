@@ -17,28 +17,23 @@
  */
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace AutoQC
 {
     public class ProcessInfo
     {
-        public string Executable { get; private set; }
-        public string ExeName { get; private set; }
-        public string Args { get; private set; }
-        public string ArgsToPrint { get; private set; }
+        public string Executable { get; }
+        public string ExeName { get; }
+        public string Args { get; }
+        public string ArgsToPrint { get; }
         public string WorkingDirectory { get; set; }
-        
-        public ProcessInfo(string exe, string args)
-        {
-            Executable = exe;
-            ExeName = Executable;
-            Args = args;
-            ArgsToPrint = args;
-        }
 
-        public ProcessInfo(string exe, string exeName, string args, string argsToPrint) : this (exe, args)
+        public ProcessInfo(string exePath, string args, string argsToPrint)
         {
-            ExeName = exeName;
+            Executable = exePath;
+            ExeName = Path.GetFileName(exePath);
+            Args = args;
             ArgsToPrint = argsToPrint;
         }
     }

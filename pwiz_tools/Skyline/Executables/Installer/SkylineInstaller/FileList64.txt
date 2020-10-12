@@ -86,7 +86,11 @@ de\ZedGraph.resources.dll
 DigitalRune.Windows.Docking.dll
 DotNetZip.dll
 DualProbeInterfaceParametersCS.dll
+enzymes.xml
 es\ZedGraph.resources.dll
+FHOOE_IMP.MSAmanda.Core.dll
+FHOOE_IMP.MSAmanda.InOutput.dll
+FHOOE_IMP.MSAmanda.Utils.dll
 fr\ZedGraph.resources.dll
 Google.Protobuf.dll
 Grpc.Core.Api.dll
@@ -96,6 +100,7 @@ grpc_csharp_ext.x86.dll
 hu\ZedGraph.resources.dll
 IdentityModel.dll
 Iesi.Collections.dll
+Instruments.xml
 IOModuleQTFL.dll
 it\ZedGraph.resources.dll
 ja\BiblioSpec.resources.dll
@@ -104,6 +109,7 @@ ja\MSGraph.resources.dll
 ja\ProteomeDb.resources.dll
 ja\pwiz.Common.resources.dll
 ja\pwiz.CommonUtil.resources.dll
+ja\SkylineCmd.resources.dll
 ja\Skyline-daily.resources.dll
 ja\ZedGraph.resources.dll
 Kajabity Tools.dll
@@ -144,7 +150,6 @@ Method\AbSciex\TQ\StdType.dll
 Method\Agilent\BuildAgilentMethod.exe
 Method\Agilent\MethodCreator.dll
 Method\Bruker\BDal.Submethod.Wrapper.dll
-Method\Bruker\BDal.Submethod.Wrapper.xml
 Method\Bruker\BdalRetentionTimeMassList.dll
 Method\Bruker\BuildBrukerMethod.exe
 Method\Thermo\BuildLTQMethod.exe
@@ -180,6 +185,9 @@ OFX.Logging.dll
 OFX.Security.Core.dll
 ParallelExtensionsExtras.dll
 PeakItgLSS.dll
+percolator\percolator.exe
+percolator\qvality.exe
+percolator\xerces-c_3_1.dll
 PrmPasefScheduler.dll
 prmscheduler.dll
 ProteomeDb.dll
@@ -187,6 +195,7 @@ ProteomeDb.pdb
 ProteowizardWrapper.dll
 ProteowizardWrapper.pdb
 protobuf-net.dll
+psi-ms.obo
 pt\ZedGraph.resources.dll
 pwiz.Common.dll
 pwiz.Common.pdb
@@ -233,6 +242,7 @@ timsdata.dll
 tr\ZedGraph.resources.dll
 ucrtbase.dll
 UIMFLibrary.dll
+unimod.obo
 unimod.xml
 unimod_2.xsd
 vcomp110.dll
@@ -244,6 +254,7 @@ zh-CHS\DigitalRune.Windows.Docking.resources.dll
 zh-CHS\MSGraph.resources.dll
 zh-CHS\ProteomeDb.resources.dll
 zh-CHS\pwiz.Common.resources.dll
+zh-CHS\SkylineCmd.resources.dll
 zh-CHS\Skyline-daily.resources.dll
 zh-CHS\ZedGraph.resources.dll
 zh-tw\ZedGraph.resources.dll

@@ -1534,7 +1534,12 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 var alignedTime = measuredTime.RetentionTime;
                 if (fileAlignment != null)
-                    alignedTime = fileAlignment.RegressionRefined.Conversion.GetY(alignedTime);
+                {
+                    if (fileAlignment.RegressionRefined != null)
+                    {
+                        alignedTime = fileAlignment.RegressionRefined.Conversion.GetY(alignedTime);
+                    }
+                }
                 peptideTimes.Add(alignedTime);
             }
         }

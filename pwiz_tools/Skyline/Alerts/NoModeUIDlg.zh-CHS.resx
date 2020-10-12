@@ -277,7 +277,7 @@
     <value>1</value>
   </data>
   <data name="buttonOK.Text" xml:space="preserve">
-    <value>好</value>
+    <value>确定</value>
   </data>
   <data name="&gt;&gt;buttonOK.Name" xml:space="preserve">
     <value>buttonOK</value>

@@ -182,31 +182,28 @@ namespace pwiz.Skyline.Model.GroupComparison
             return totalArea;
         }
 
-        public double? GetQualitativeIonRatio(SrmSettings settings, int replicateIndex)
+        public double? GetQualitativeIonRatio(SrmSettings settings, TransitionGroupDocNode precursor, int replicateIndex)
         {
             double numerator = 0;
             int numeratorCount = 0;
             double denominator = 0;
             int denominatorCount = 0;
-            foreach (var precursor in PeptideDocNode.TransitionGroups)
+            foreach (var transition in precursor.Transitions)
             {
-                foreach (var transition in precursor.Transitions)
+                var quantity = GetTransitionQuantity(settings, null, NormalizationMethod.NONE, replicateIndex,
+                    precursor, transition, false);
+                if (quantity != null)
                 {
-                    var quantity = GetTransitionQuantity(settings, null, NormalizationMethod.NONE, replicateIndex,
-                        precursor, transition, false);
-                    if (quantity != null)
+                    double value = quantity.Intensity / quantity.Denominator;
+                    if (transition.ExplicitQuantitative)
                     {
-                        double value = quantity.Intensity / quantity.Denominator;
-                        if (transition.ExplicitQuantitative)
-                        {
-                            denominator += value;
-                            denominatorCount++;
-                        }
-                        else
-                        {
-                            numerator += value;
-                            numeratorCount++;
-                        }
+                        denominator += value;
+                        denominatorCount++;
+                    }
+                    else
+                    {
+                        numerator += value;
+                        numeratorCount++;
                     }
                 }
             }
@@ -300,6 +297,15 @@ namespace pwiz.Skyline.Model.GroupComparison
                         return null;
                     }
                     normalizedArea /= Math.Pow(2.0, medianAdjustment.Value);
+                }
+                else if (Equals(normalizationMethod, NormalizationMethod.TIC))
+                {
+                    var factor = srmSettings.GetTicNormalizationDenominator(replicateIndex, chromInfo.FileId);
+                    if (!factor.HasValue)
+                    {
+                        return null;
+                    }
+                    denominator = factor.Value;
                 }
             }
             return new Quantity(normalizedArea.Value, denominator);

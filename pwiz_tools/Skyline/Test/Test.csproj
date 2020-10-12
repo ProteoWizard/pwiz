@@ -142,6 +142,7 @@
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromPeakTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
+    <Compile Include="CodeInspectionTest.cs" />
     <Compile Include="CommandLineAssayImportTest.cs" />
     <Compile Include="CommandLineImportAnnotationsTest.cs" />
     <Compile Include="CommandLineImportDocTest.cs" />
