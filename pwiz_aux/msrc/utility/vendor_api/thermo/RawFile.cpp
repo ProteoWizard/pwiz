@@ -955,7 +955,7 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
 #else
         if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
         {
-            auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
+            auto centroidStream = raw_->GetCentroidStream(scanNumber, true);
             if (centroidStream != nullptr && centroidStream->Length > 0)
             {
                 ToBinaryData(centroidStream->Masses, result->mzArray);
