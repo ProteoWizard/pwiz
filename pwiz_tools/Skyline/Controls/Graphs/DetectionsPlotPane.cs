@@ -427,9 +427,9 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 Title.Text = string.Empty;
-                YAxis.Title.Text = Resources.DetectionPlotPane_YAxis_Name +
-                                   @" (" + String.Format(CultureInfo.CurrentCulture, Settings.YScaleFactor.Label, Settings.TargetType.Label) + @")";
-
+                YAxis.Title.Text = string.Format(CultureInfo.CurrentCulture, 
+                    Resources.DetectionPlotPane_YAxis_Name, 
+                    string.Format(CultureInfo.CurrentCulture, Settings.YScaleFactor.Label, Settings.TargetType.Label) );
             }
         }
 

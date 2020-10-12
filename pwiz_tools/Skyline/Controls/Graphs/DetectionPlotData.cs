@@ -27,8 +27,8 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-
 
 // ReSharper disable InconsistentlySynchronizedField
 
@@ -74,13 +74,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (document == null || !document.Settings.HasResults)
             {
-                InvalidReason = "No data loaded.";
+                InvalidReason = Resources.DetectionPlotData_NoDataLoaded_Label;
                 return;
             }
 
             if (qValueCutoff == 0 || qValueCutoff == 1)
             {
-                InvalidReason = "Invalid Q-Value. Cannot be 0 or 1";
+                InvalidReason = Resources.DetectionPlotData_InvalidQValue_Label;
                 return;
             }
 
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (document.MoleculeTransitionGroupCount == 0 || document.PeptideCount == 0 ||
                 document.MeasuredResults.Chromatograms.Count == 0)
             {
-                InvalidReason = "Document has no peptides or chromatograms.";
+                InvalidReason = Resources.DetectionPlotData_NoResults_Label;
                 return;
             }
 
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if(precursorData.All(p => p.IsEmpty))
             {
-                InvalidReason = "Document has no Q-Values. Train your mProphet model.";
+                InvalidReason = Resources.DetectionPlotData_NoQValuesInDocument_Label;
                 return;
             }
 
@@ -318,9 +318,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public CacheStatus Status
             {
                 get => _status;
-                set
-                {
-                }
             }
 
             public void SetCacheStatus(CacheStatus newStatus, string message)
@@ -335,12 +332,12 @@ namespace pwiz.Skyline.Controls.Graphs
             public DetectionDataCache()
             {
                 _stackWorker = new StackWorker<DataRequest>(null, CacheData);
-                //single worker thread because we do not need to paralellize the calculations, 
+                //single worker thread because we do not need to paralelize the calculations, 
                 //only to offload them from the UI thread
                 _stackWorker.RunAsync(1, @"DetectionsDataCache");
                 _tokenSource = new CancellationTokenSource();
                 _datas = new ConcurrentQueue<DetectionPlotData>();
-                SetCacheStatus(CacheStatus.idle, "");
+                SetCacheStatus(CacheStatus.idle, string.Empty);
             }
 
             public bool TryGet(SrmDocument doc, float qValue, Action<DetectionPlotData> callback,  out DetectionPlotData data)
@@ -389,13 +386,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     if(userCancel)
                         SetCacheStatus(CacheStatus.canceled,
-                            "Use properties dialog or modify the document to update the plot.");
+                            Resources.DetectionPlotData_UsePropertiesDialog_Label);
                     else
                     {
                         if (!_document.IsLoaded)
-                            SetCacheStatus(CacheStatus.idle, "Waiting for the document to load.");
+                            SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_WaitingForDocumentLoad_Label);
                         else
-                            SetCacheStatus(CacheStatus.idle, "");
+                            SetCacheStatus(CacheStatus.idle, string.Empty);
                     }
                 }
                 //if provided, add the new request to the queue after cancellation is complete
@@ -416,7 +413,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 try
                 {
                     if(!_document.IsLoaded)
-                        SetCacheStatus(CacheStatus.idle, "Waiting for the document to load.");
+                        SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_WaitingForDocumentLoad_Label);
                     while(!_document.IsLoaded)  Thread.Sleep(100);
                     lock (_statusLock)
                     {
@@ -432,13 +429,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         if (res != null) return;
 
-                        SetCacheStatus(CacheStatus.processing, "");
+                        SetCacheStatus(CacheStatus.processing, string.Empty);
                         res = new DetectionPlotData(_document, request.qValue, _tokenSource.Token, ReportProgress);
-                        Status = CacheStatus.idle;
+                        SetCacheStatus(CacheStatus.idle, string.Empty);
 
                         if (res.IsValid)
                         {
-                            SetCacheStatus(CacheStatus.idle, "Data retrieved successfully.");
+                            SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_DataRetrieved_Label);
                             if (currentSize + res.ReplicateCount >= CACHE_CAPACITY) _datas.TryDequeue(out var dump);
                             _datas.Enqueue(res);
                             _callback.Invoke(res);

@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -55,8 +54,6 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument(TestFilesDir.GetTestPath(@"DIA-TTOF-tutorial.sky"));
 
-            Trace.WriteLine(this.GetType().Name + ": Test started.");
-
             RunUI(() => { SkylineWindow.ShowDetectionsReplicateComparisonGraph(); });
             WaitForGraphs();
 
@@ -80,7 +77,6 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 propDialog.SetQValueTo(0.003f);
-                Trace.WriteLine(this.GetType().Name + ": set Q-Value to 0.003");
             });
             OkDialog(propDialog, propDialog.OkDialog);
             WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.003f));
@@ -94,7 +90,6 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 propDialog.SetQValueTo(0.001f);
-                Trace.WriteLine(this.GetType().Name + ": set Q-Value to 0.001");
             });
             OkDialog(propDialog, propDialog.OkDialog);
             WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.001f));
@@ -107,7 +102,6 @@ namespace pwiz.SkylineTestFunctional
                 pane.CurveList[0].IsBar && pane.CurveList[0].Points.Count == REF_DATA[0].Length);
             });
 
-            Trace.WriteLine(this.GetType().Name + ": Display and hide tooltip");
             string[] tipText =
             {
                 Resources.DetectionPlotPane_Tooltip_Replicate + TextUtil.SEPARATOR_TSV_STR + @"2_SW-B",
@@ -128,7 +122,6 @@ namespace pwiz.SkylineTestFunctional
                 CollectionAssert.AreEqual(tipText, pane.ToolTip.TipLines);
             });
 
-            Trace.WriteLine(this.GetType().Name + ": deleting a peptide");
             //test the data correct after a doc change (delete peptide)
             RunUI(() =>
             {
@@ -149,14 +142,12 @@ namespace pwiz.SkylineTestFunctional
             });
             AssertDataCorrect(pane, 4, 0.001f);
 
-            Trace.WriteLine(this.GetType().Name + ": showing a histogram pane.");
             RunUI(() => { SkylineWindow.ShowDetectionsHistogramGraph(); });
             WaitForGraphs();
             DetectionsHistogramPane paneHistogram;
             var graphHistogram = SkylineWindow.DetectionsPlot;
             Assert.IsTrue(graphHistogram.TryGetGraphPane(out paneHistogram), "Cannot get histogram pane.");
             //display and hide tooltip
-            Trace.WriteLine(this.GetType().Name + ": showing histogram tooltip.");
             string[] histogramTipText =
             {
                 Resources.DetectionHistogramPane_Tooltip_ReplicateCount + TextUtil.SEPARATOR_TSV_STR +
@@ -177,13 +168,11 @@ namespace pwiz.SkylineTestFunctional
                 graphHistogram.Close();
             });
             WaitForGraphs();
-            Trace.WriteLine(this.GetType().Name + ": Test complete.");
         }
 
         private void AssertDataCorrect(DetectionsPlotPane pane, int refIndex, float qValue, bool record = false)
         {
             DetectionPlotData data = null;
-            Trace.WriteLine(this.GetType().Name + $": Waiting for data for qValue {qValue} .");
             WaitForConditionUI(() => (data = pane.CurrentData) != null 
                                            && pane.CurrentData.QValueCutoff == qValue
                                            && DetectionPlotData.GetDataCache().Status == DetectionPlotData.DetectionDataCache.CacheStatus.idle,
@@ -195,10 +184,10 @@ namespace pwiz.SkylineTestFunctional
             {
                 Console.WriteLine(@"Peptides");
                 pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PEPTIDE).TargetsCount
-                    .ForEach((cnt) => { Debug.Write($"{cnt}, "); });
+                    .ForEach((cnt) => { Console.Write($"{cnt}, "); });
                 Console.WriteLine(@"\nPrecursors");
                 pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PRECURSOR).TargetsCount
-                    .ForEach((cnt) => { Debug.Write($"{cnt}, "); });
+                    .ForEach((cnt) => { Console.Write($"{cnt}, "); });
             }
 
             Assert.IsTrue(

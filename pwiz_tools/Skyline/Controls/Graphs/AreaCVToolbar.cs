@@ -26,7 +26,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public sealed partial class AreaCVToolbar : GraphSummaryToolbar //GraphSummaryToolbar UserControl // for designer
+    public sealed partial class AreaCVToolbar : GraphSummaryToolbar //UserControl // for designer
     {
         private readonly Timer _timer;
         private int _standardTypeCount;
