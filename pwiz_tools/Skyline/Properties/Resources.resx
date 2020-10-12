@@ -11085,4 +11085,16 @@ Invalid peptide sequence at position 18
   <data name="AreaCVToolbar_UpdateUI_Total_ion_current" xml:space="preserve">
     <value>Total ion current</value>
   </data>
+  <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
+    <value>The iRT standard name '{0}' is invalid.</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_" xml:space="preserve">
+    <value>{0} must be set when using CiRT peptides.</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
+    <value>iRT standard set to {0}, but multiple iRT standards were found. iRT standard must be set explicitly.</value>
+  </data>
+  <data name="SkylineVersion_V20_2_Skyline_20_2" xml:space="preserve">
+    <value>Skyline 20.2</value>
+  </data>
 </root>
