@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -51,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForDocumentLoaded();
 
-            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("ThermoTransitionList.csv")));
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("ThermoTransitionList.csv")));
             var therm = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             
             RunUI(() => {
@@ -84,7 +86,7 @@ namespace pwiz.SkylineTestFunctional
                 secondtherm.CancelDialog();
             });
 
-            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             // This will paste in a transition list with headers
             var peptideTransitionList = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
 
@@ -103,7 +105,7 @@ namespace pwiz.SkylineTestFunctional
             
             // This will paste in the same transition list, but with different headers. The program should realize it has
             // different headers and not use the saved list of column names
-            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionListdiffheaders.csv")));
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionListdiffheaders.csv")));
 
             var peptideTransitionListDiffHeaders = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             RunUI(() => SkylineWindow.NewDocument());
@@ -121,7 +123,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.NewDocument());
             WaitForDocumentLoaded();
 
-            SetClipboardText(System.IO.File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
+            SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
 
             RunUI(() => {
@@ -147,9 +149,36 @@ namespace pwiz.SkylineTestFunctional
             // Clicking OK while input is invalid should also pop up the error list
             var importTransitionListErrorDlg2 = ShowDialog<ImportTransitionListErrorDlg>(() => dlg.DialogResult = DialogResult.OK);
             // Dismiss it and should be back to import dialog again
-            OkDialog(importTransitionListErrorDlg2, () => importTransitionListErrorDlg2.DialogResult = DialogResult.OK);
+            var dlg2 = importTransitionListErrorDlg2;
+            OkDialog(importTransitionListErrorDlg2, () => dlg2.DialogResult = DialogResult.OK);
             // Only way out without fixing the columns is to cancel
-            OkDialog(dlg, () => dlg.DialogResult = DialogResult.Cancel);
+            var dlg1 = dlg;
+            OkDialog(dlg, () => dlg1.DialogResult = DialogResult.Cancel);
+
+            // Now check UI interactions with a bad import file whose headers we correct in the dialog
+            using (new CheckDocumentState(1,2,2,9))
+            {
+                RunUI(() => SkylineWindow.NewDocument());
+                WaitForDocumentLoaded();
+
+                SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
+                dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+
+                // Correct the header assignments
+                RunUI(() => {
+                    var comboBoxes = dlg.ComboBoxes;
+                    comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
+                    comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                    comboBoxes[14].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
+                });
+
+                // Clicking the "Check for Errors" button should bring up the no-error list dialog
+                RunDlg<MessageDlg>(dlg.buttonCheckForErrors.PerformClick, messageDlg => { messageDlg.OkDialog(); });   // Dismiss it
+
+                // Clicking OK while input is valid should proceed without delay
+                var dlg3 = dlg;
+                OkDialog(dlg, () => dlg3.DialogResult = DialogResult.OK);
+            }
         }
     }
 }
