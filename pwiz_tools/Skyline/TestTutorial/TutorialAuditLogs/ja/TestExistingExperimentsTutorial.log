@@ -334,10 +334,10 @@ Extra Info: ファイル名 =
 ファイルにシングルインジェクション繰り返し測定を追加 = 真,
 同時にインポートするファイル = "多く"
 
-Undo Redo : Changed quantitative on 4 transitions
+Undo Redo : 4個のトランジションで定量イオンを変更しました
 Summary   : ターゲット>YDL055C>K.ETFPILVEEK.Q [196, 205]が変更されました
 All Info  :
-Changed quantitative on 4 transitions
+4個のトランジションで定量イオンを変更しました
 ターゲット>YDL055C>K.ETFPILVEEK.Q [196, 205]>602.8266++>V [y4] - 504.2664+ (ランク3)>定量は真から偽に変更されました
 ターゲット>YDL055C>K.ETFPILVEEK.Q [196, 205]>602.8266++>E [y3] - 405.1980+ (ランク2)>定量は真から偽に変更されました
 ターゲット>YDL055C>K.ETFPILVEEK.Q [196, 205]>606.8337++ (heavy)>V [y4] - 512.2806+ (ランク3)>定量は真から偽に変更されました
@@ -517,11 +517,11 @@ All Info  :
 トランジションの設定－装置>メソッド許容誤差m/zが"0.065"に変更されました
 設定>トランジションの設定－装置>メソッド許容誤差m/zは"0.055"から"0.065"に変更されました
 
-Undo Redo : トランジションの設定－Integration>Integrate Allが真に変更されました
-Summary   : 設定>トランジションの設定－Integration>Integrate Allが真に変更されました
+Undo Redo : トランジションの設定－積分>すべて積分が真に変更されました
+Summary   : 設定>トランジションの設定－積分>すべて積分が真に変更されました
 All Info  :
-トランジションの設定－Integration>Integrate Allが真に変更されました
-設定>トランジションの設定－Integration>Integrate Allは偽から真に変更されました
+トランジションの設定－積分>すべて積分が真に変更されました
+設定>トランジションの設定－積分>すべて積分は偽から真に変更されました
 
 Undo Redo : A_01のアナライト濃度が"0"に設定されました
 Summary   : A_01のアナライト濃度が"0"に設定されました

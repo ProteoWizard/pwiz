@@ -334,10 +334,10 @@ Extra Info: 文件名称 =
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个"
 
-Undo Redo : Changed quantitative on 4 transitions
+Undo Redo : 已更改4 个离子对 定量
 Summary   : 目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] 已更改
 All Info  :
-Changed quantitative on 4 transitions
+已更改4 个离子对 定量
 目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > V [y4] - 504.2664+ (排名 3) > 定量 从 真 更改到 假
 目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] > 602.8266++ > E [y3] - 405.1980+ (排名 2) > 定量 从 真 更改到 假
 目标 > YDL055C > K.ETFPILVEEK.Q [196, 205] > 606.8337++ (heavy) > V [y4] - 512.2806+ (排名 3) > 定量 从 真 更改到 假
@@ -517,11 +517,11 @@ All Info  :
 离子对设置 -- 仪器 > 方法匹配耐受性质荷比 已更改为 "0.065"
 设置 > 离子对设置 -- 仪器 > 方法匹配耐受性质荷比 从 "0.055" 更改到 "0.065"
 
-Undo Redo : 离子对设置 -- Integration > Integrate All 已更改为 真
-Summary   : 设置 > 离子对设置 -- Integration > Integrate All 已更改为 真
+Undo Redo : 离子对设置 -- 整合 > 全部整合 已更改为 真
+Summary   : 设置 > 离子对设置 -- 整合 > 全部整合 已更改为 真
 All Info  :
-离子对设置 -- Integration > Integrate All 已更改为 真
-设置 > 离子对设置 -- Integration > Integrate All 从 假 更改到 真
+离子对设置 -- 整合 > 全部整合 已更改为 真
+设置 > 离子对设置 -- 整合 > 全部整合 从 假 更改到 真
 
 Undo Redo : 将 A_01 的 分析物浓度 设定为 "0"
 Summary   : 将 A_01 的 分析物浓度 设定为 "0"
