@@ -61,7 +61,6 @@ rule vendor-api-usage-requirements ( properties * )
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
         }
 
-        result += <assembly>$(dll_location)/DataReader.dll ;
         result += <assembly-dependency>$(dll_location)/CLFIO32.dll ;
         result += <assembly-dependency>$(dll_location)/CRHAKEI2.dll ;
         result += <assembly-dependency>$(dll_location)/IOModuleQTFL.dll ;
@@ -127,7 +126,7 @@ rule install-requirements ( properties * )
     local dll_location = [ shimadzu-dll-location $(API_PATH) : $(properties) ] ;
     if $(dll_location)
     {
-        result += <source>$(dll_location)/DataReader.dll ;
+        result += <source>$(dll_location)/DataReader.dll ; # not used by pwiz, but used by Shimadzu's method exporter from Skyline
         result += <source>$(dll_location)/CLFIO32.dll ;
         result += <source>$(dll_location)/CRHAKEI2.dll ;
         result += <source>$(dll_location)/IOModuleQTFL.dll ;

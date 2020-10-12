@@ -358,8 +358,17 @@ namespace ZedGraph
 			{
 				if ( value != _size )
 				{
-					Remake( _scaledSize / _size * value, _size, ref _scaledSize,
-								ref _font );
+					if (_size == 0)
+					{
+						Font newFont = null;
+						Remake(value, 1, ref _scaledSize, ref newFont);
+						_font = newFont; 
+					}
+					else
+					{
+						Remake(_scaledSize / _size * value, _size, 
+							ref _scaledSize, ref _font);
+					}
 					_size = value;
 				}
 			}

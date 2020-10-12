@@ -1,8 +1,8 @@
-Undo Redo : トランジションの設定－Integration>Integrate Allが真に変更されました
-Summary   : 設定>トランジションの設定－Integration>Integrate Allが真に変更されました
+Undo Redo : トランジションの設定－積分>すべて積分が真に変更されました
+Summary   : 設定>トランジションの設定－積分>すべて積分が真に変更されました
 All Info  :
-トランジションの設定－Integration>Integrate Allが真に変更されました
-設定>トランジションの設定－Integration>Integrate Allは偽から真に変更されました
+トランジションの設定－積分>すべて積分が真に変更されました
+設定>トランジションの設定－積分>すべて積分は偽から真に変更されました
 
 Undo Redo : スペクトルライブラリ「DIA-QE-tutorial」が追加されました
 Summary   : スペクトルライブラリ「DIA-QE-tutorial」が追加されました
@@ -228,7 +228,7 @@ Undo Redo : ドキュメントグリッドに12個の値が貼り付けられま
 Summary   : ドキュメントグリッドに12個の値が貼り付けられました
 All Info  :
 ドキュメントグリッドに12個の値が貼り付けられました
-ドキュメントグリッド>ビュー名は"繰り返し測定"です
+ドキュメントグリッド>レポート名は"繰り返し測定"です
 1-AのConditionが"A"に設定されました
 1-AのBioReplicateが"1"に設定されました
 2-BのConditionが"B"に設定されました
@@ -248,7 +248,7 @@ B	2
 A	3
 B	3
 
-ビュー名 = "繰り返し測定"
+レポート名 = "繰り返し測定"
 
 Undo Redo : グループ比較："By Condition"が追加されました
 Summary   : 設定>ドキュメント設定－グループ比較："By Condition"が追加されました
