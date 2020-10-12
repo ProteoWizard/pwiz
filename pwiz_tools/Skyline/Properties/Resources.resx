@@ -11067,4 +11067,7 @@ Invalid peptide sequence at position 18
   <data name="MetadataRuleSetList_Label_Rule_Set" xml:space="preserve">
     <value>Rule Set</value>
   </data>
+  <data name="SkylineVersion_V20_2_Skyline_20_2" xml:space="preserve">
+    <value>Skyline 20.2</value>
+  </data>
 </root>
