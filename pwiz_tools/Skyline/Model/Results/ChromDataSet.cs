@@ -700,7 +700,7 @@ namespace pwiz.Skyline.Model.Results
 
                     peak.CalcChromPeak(peakMax, flags, intersectedTimeIntervals);
 
-                    if (intersectedTimeIntervals != null)
+                    if (intersectedTimeIntervals != null && peakMax != null)
                     {
                         float startTime = Times[peakMax.StartIndex];
                         float endTime = Times[peakMax.EndIndex];

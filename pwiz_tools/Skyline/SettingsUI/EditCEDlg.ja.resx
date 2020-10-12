@@ -258,7 +258,7 @@
     <value>3</value>
   </data>
   <data name="gridRegression.ToolTip" xml:space="preserve">
-    <value>プリカーサーイオンのm/zからコリジョンエネルギー（CE）の最適値を計算する傾きと切片の値は、次の式で用いられます：
+    <value>プリカーサーイオンのm/zから衝突エネルギー（CE）の最適値を計算する傾きと切片の値は、次の式で用いられます：
 
 CE = 傾き * プリカーサーイオンのm/z +切片
 

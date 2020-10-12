@@ -1735,7 +1735,7 @@
     <value>197, 22</value>
   </data>
   <data name="openContainingFolderMenuItem.Text" xml:space="preserve">
-    <value>Open containing folder</value>
+    <value>Open &amp;containing folder</value>
   </data>
   <data name="toolStripSeparator53.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>
@@ -2505,7 +2505,7 @@ first occurrence of any peptide.</value>
     <value>191, 22</value>
   </data>
   <data name="userInterfaceToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;User Interface</value>
+    <value>U&amp;ser Interface</value>
   </data>
   <data name="toolStripSeparator41.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
@@ -3039,13 +3039,13 @@ first occurrence of any peptide.</value>
     <value>190, 22</value>
   </data>
   <data name="detectionsReplicateComparisonMenuItem.Text" xml:space="preserve">
-    <value>Replicate Comparison</value>
+    <value>&amp;Replicate Comparison</value>
   </data>
   <data name="detectionsHistogramMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
   </data>
   <data name="detectionsHistogramMenuItem.Text" xml:space="preserve">
-    <value>Histogram</value>
+    <value>&amp;Histogram</value>
   </data>
   <data name="detectionsPlotsMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -3054,7 +3054,7 @@ first occurrence of any peptide.</value>
     <value>191, 22</value>
   </data>
   <data name="detectionsPlotsMenuItem.Text" xml:space="preserve">
-    <value>Detections</value>
+    <value>&amp;Detections</value>
   </data>
   <data name="massErrorReplicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F6</value>
@@ -3093,7 +3093,7 @@ first occurrence of any peptide.</value>
     <value>191, 22</value>
   </data>
   <data name="massErrorsMenuItem.Text" xml:space="preserve">
-    <value>Ma&amp;ss Errors</value>
+    <value>Mass &amp;Errors</value>
   </data>
   <data name="calibrationCurveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
@@ -3108,7 +3108,7 @@ first occurrence of any peptide.</value>
     <value>191, 22</value>
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
-    <value>&amp;Document Grid</value>
+    <value>Document &amp;Grid</value>
   </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -3330,7 +3330,7 @@ first occurrence of any peptide.</value>
     <value>171, 22</value>
   </data>
   <data name="webinarsMenuItem.Text" xml:space="preserve">
-    <value>Webinars</value>
+    <value>&amp;Webinars</value>
   </data>
   <data name="tutorialsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>
@@ -3342,25 +3342,25 @@ first occurrence of any peptide.</value>
     <value>156, 22</value>
   </data>
   <data name="reportsHelpMenuItem.Text" xml:space="preserve">
-    <value>Reports</value>
+    <value>&amp;Reports</value>
   </data>
   <data name="commandLineHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 22</value>
   </data>
   <data name="commandLineHelpMenuItem.Text" xml:space="preserve">
-    <value>Command Line</value>
+    <value>&amp;Command Line</value>
   </data>
   <data name="otherDocsHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 22</value>
   </data>
   <data name="otherDocsHelpMenuItem.Text" xml:space="preserve">
-    <value>Other</value>
+    <value>&amp;Other</value>
   </data>
   <data name="documentationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>
   </data>
   <data name="documentationToolStripMenuItem.Text" xml:space="preserve">
-    <value>Documentation</value>
+    <value>&amp;Documentation</value>
   </data>
   <data name="supportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>

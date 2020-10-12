@@ -79,7 +79,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_20_13 = new DocumentFormat(20.13); // Add decoy_match_proportion
         public static readonly DocumentFormat VERSION_20_14 = new DocumentFormat(20.14); // Moves ion mobility settings from PeptideSettings to TransitionSettings, introduces ion mobility libraries (.imsdb files)
         public static readonly DocumentFormat TRANSITION_SETTINGS_ION_MOBILITY = VERSION_20_14; // First version with ion mobility settings moved from PeptideSettings to TransitionSettings, and using .imsdb IMS libraries
-        public static readonly DocumentFormat CURRENT = VERSION_20_14;
+        public static readonly DocumentFormat VERSION_20_2 = new DocumentFormat(20.2); // Release format
+        public static readonly DocumentFormat CURRENT = VERSION_20_2;
 
 
         private readonly double _versionNumber;
