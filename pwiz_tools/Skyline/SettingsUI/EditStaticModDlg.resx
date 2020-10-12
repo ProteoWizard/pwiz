@@ -804,9 +804,6 @@
   <data name="&gt;&gt;comboMod.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="cbCrosslinker.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
   <data name="cbCrosslinker.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>

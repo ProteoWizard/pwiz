@@ -80,6 +80,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             comboRegressionType.Items.AddRange(IrtRegressionType.ALL.Cast<object>().ToArray());
             _originalRegressionType = SelectedRegressionType = IrtRegressionType.DEFAULT;
 
+            Settings.Default.IrtStandardList.Remove(IrtStandard.AUTO);
             _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
@@ -105,6 +106,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
             // exception if the the cursor is positioned over the record selector column during loading.
             gridViewStandard.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             gridViewLibrary.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        }
+
+        private void EditIrtCalcDlg_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
         }
 
         private bool DatabaseChanged

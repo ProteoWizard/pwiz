@@ -60,7 +60,8 @@ namespace pwiz.Skyline.Controls.Graphs
             private GraphDataProperties _requested;
             private Action<AreaCVGraphData> _callback;
 
-            private static readonly int MAX_THREADS = Math.Max(1, Environment.ProcessorCount / 2);
+            private static readonly int MAX_THREADS =
+                ParallelEx.SINGLE_THREADED ? 1 : Math.Max(1, Environment.ProcessorCount / 2);
 
             public AreaCVGraphDataCache()
             {
@@ -201,6 +202,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var normalizationMethods = new List<AreaCVNormalizationMethod> { AreaCVNormalizationMethod.none, AreaCVNormalizationMethod.medians, AreaCVNormalizationMethod.ratio };
                 if (document.Settings.HasGlobalStandardArea)
                     normalizationMethods.Add(AreaCVNormalizationMethod.global_standards);
+                if (document.Settings.HasTicArea)
+                    normalizationMethods.Add(AreaCVNormalizationMethod.tic);
 
                 // First cache for current normalization method
                 if (normalizationMethods.Remove(graphSettings.NormalizationMethod))

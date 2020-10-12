@@ -322,6 +322,7 @@ RawFileImpl::RawFileImpl(const string& filename)
         rawManager_ = RawFileReaderAdapter::ThreadedFileFactory(managedFilename);
         raw_ = rawManager_->CreateThreadAccessor();
         //raw_ = RawFileReaderAdapter::FileFactory(managedFilename);
+        raw_->IncludeReferenceAndExceptionData = true;
 
         // CONSIDER: throwing C++ exceptions in managed code may cause Wine to crash?
         if (raw_->IsError || raw_->InAcquisition)
@@ -955,7 +956,7 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
 #else
         if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
         {
-            auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
+            auto centroidStream = raw_->GetCentroidStream(scanNumber, true);
             if (centroidStream != nullptr && centroidStream->Length > 0)
             {
                 ToBinaryData(centroidStream->Masses, result->mzArray);
@@ -2387,6 +2388,7 @@ RawFileThreadImpl::RawFileThreadImpl(const RawFileImpl* raw) : rawFile_(raw)
     currentControllerNumber_ = 0;
 
     raw_ = raw->rawManager_->CreateThreadAccessor();
+    raw_->IncludeReferenceAndExceptionData = true;
 }
 
 
@@ -2610,7 +2612,7 @@ MassListPtr RawFileThreadImpl::getMassList(long scanNumber,
 
         if (centroidResult && raw_->GetFilterForScanNumber(scanNumber)->MassAnalyzer == ThermoEnum::MassAnalyzerType::MassAnalyzerFTMS)
         {
-            auto centroidStream = raw_->GetCentroidStream(scanNumber, false);
+            auto centroidStream = raw_->GetCentroidStream(scanNumber, true);
             if (centroidStream != nullptr && centroidStream->Length > 0)
             {
                 ToBinaryData(centroidStream->Masses, result->mzArray);
