@@ -286,6 +286,14 @@ namespace pwiz.Skyline.SettingsUI
                     messageBoxHelper.ShowTextBoxError(checkedListBoxAppliesTo, Resources.DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to);
                     return;
                 }
+                if (new ListPropertyType(AnnotationDef.AnnotationType.value_list, null).Equals(ListPropertyType))
+                {
+                    if (Items.Count == 0)
+                    {
+                        messageBoxHelper.ShowTextBoxError(tbxValues, Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty);
+                        return;
+                    }
+                }
             }
             else
             {

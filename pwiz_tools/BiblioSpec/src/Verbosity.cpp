@@ -78,28 +78,28 @@ V_LEVEL Verbosity::string_to_level(const char* level_str) {
 void Verbosity::error(const char* format, ...){
     va_list args;
     va_start(args, format);
-    Verbosity::comment(V_ERROR, format, args);
+    Verbosity::log(V_ERROR, format, args);
     va_end(args);
 }
 
 void Verbosity::warn(const char* format, ...){
     va_list args;
     va_start(args, format);
-    Verbosity::comment(V_WARN, format, args);
+    Verbosity::log(V_WARN, format, args);
     va_end(args);
 }
 
 void Verbosity::status(const char* format, ...){
     va_list args;
     va_start(args, format);
-    Verbosity::comment(V_STATUS, format, args);
+    Verbosity::log(V_STATUS, format, args);
     va_end(args);
 }
 
 void Verbosity::debug(const char* format, ...){
     va_list args;
     va_start(args, format);
-    Verbosity::comment(V_DEBUG, format, args);
+    Verbosity::log(V_DEBUG, format, args);
     va_end(args);
 }
 
