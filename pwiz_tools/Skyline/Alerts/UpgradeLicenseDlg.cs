@@ -29,7 +29,8 @@ namespace pwiz.Skyline.Alerts
             InitializeComponent();
 
             // Designer has problems with getting images from resources
-            pictureSkyline.Image = Resources.SkylineImg;
+            pictureSkyline.Image = Install.Type == Install.InstallType.release
+                ? Resources.Skyline_Release : Resources.SkylineImg;
         }
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

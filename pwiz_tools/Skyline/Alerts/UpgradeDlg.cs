@@ -38,7 +38,8 @@ namespace pwiz.Skyline.Alerts
             UpdateFound = updateFound;
 
             // Designer has problems with getting images from resources
-            pictureSkyline.Image = Resources.SkylineImg;
+            pictureSkyline.Image = Install.Type == Install.InstallType.release
+                ? Resources.Skyline_Release : Resources.SkylineImg;
 
             if (!updateFound)
             {
