@@ -692,8 +692,13 @@ namespace pwiz.Skyline
             var split = persistentString.Split('|');
             var splitLength = split.Length;
             var graphSummaryTypeName = split[0];
-            var controllerTypeName = split[1];
-            var graphTypeName = split[2];
+            var controllerTypeName = string.Empty;
+            var graphTypeName = string.Empty;
+
+            if (splitLength > 1)
+                controllerTypeName = split[1];
+            if (splitLength > 2)
+                graphTypeName = split[2];
 
             // Backward compatibility
             if (persistentString.EndsWith(@"Skyline.Controls.GraphRetentionTime") ||
