@@ -50,7 +50,7 @@ namespace TestPerf
             // TIC chromatogram includes MS2 scans
             ticAreas.Add("DemuxedMzML.mzML", 231215169536);
             // TIC chromatogram has zero points because MS1 scans were marked as SIM
-            ticAreas.Add("SIMRawFile.raw", 233751478272);
+            ticAreas.Add("SIMRawFile.raw", 231215169536);
             // TIC chromatogram is usable
             ticAreas.Add("XlinkRawFile.raw", 1021147086848);
             // TIC chromatogram includes MS2 scans, but is otherwise the same as XlinkRawFile.raw

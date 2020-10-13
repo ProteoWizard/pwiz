@@ -20,7 +20,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -218,7 +217,6 @@ namespace pwiz.SkylineTestData.Results
             DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
         }
 
-        [MethodImpl(MethodImplOptions.NoOptimization)]
         public void DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
