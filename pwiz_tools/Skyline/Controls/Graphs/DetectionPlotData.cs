@@ -41,8 +41,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public SrmDocument Document { get; private set; }
         public float QValueCutoff { get; private set; }
-        public bool IsValid { get; }
-        public string InvalidReason { get; }
+        public bool IsValid { get; private set; }
         public int ReplicateCount { get; private set; }
 
         public DataSet GetTargetData(DetectionsGraphController.TargetType target)
@@ -69,53 +68,47 @@ namespace pwiz.Skyline.Controls.Graphs
         public static DetectionPlotData INVALID = new DetectionPlotData(null, 0.001f);
         public const int REPORTING_STEP = 3;
 
-        public DetectionPlotData(SrmDocument document, float qValueCutoff, 
-            CancellationToken cancellationToken = default(CancellationToken), [CanBeNull] Action<int> progressReport = null)
+
+        public DetectionPlotData(SrmDocument document, float qValueCutoff)
         {
-            if (document == null || !document.Settings.HasResults)
-            {
-                InvalidReason = Resources.DetectionPlotData_NoDataLoaded_Label;
-                return;
-            }
-
-            if (qValueCutoff == 0 || qValueCutoff == 1)
-            {
-                InvalidReason = Resources.DetectionPlotData_InvalidQValue_Label;
-                return;
-            }
-
-
-            if (document.MoleculeTransitionGroupCount == 0 || document.PeptideCount == 0 ||
-                document.MeasuredResults.Chromatograms.Count == 0)
-            {
-                InvalidReason = Resources.DetectionPlotData_NoResults_Label;
-                return;
-            }
-
-            QValueCutoff = qValueCutoff;
             Document = document;
+            QValueCutoff = qValueCutoff;
+        }
+        public string Init(CancellationToken cancellationToken = default(CancellationToken), 
+                [CanBeNull] Action<int> progressReport = null)
+        {
+            if (Document == null || !Document.Settings.HasResults)
+                return Resources.DetectionPlotData_NoDataLoaded_Label;
 
-            var precursorData = new List<QData>(document.MoleculeTransitionGroupCount);
-            var peptideData = new List<QData>(document.PeptideCount);
-            ReplicateCount = document.MeasuredResults.Chromatograms.Count;
+            if (QValueCutoff == 0 || QValueCutoff == 1)
+                return Resources.DetectionPlotData_InvalidQValue_Label;
 
 
-            ReplicateNames = (from chromatogram in document.MeasuredResults.Chromatograms
+            if (Document.MoleculeTransitionGroupCount == 0 || Document.PeptideCount == 0 ||
+                Document.MeasuredResults.Chromatograms.Count == 0)
+                return Resources.DetectionPlotData_NoResults_Label;
+
+            var precursorData = new List<QData>(Document.MoleculeTransitionGroupCount);
+            var peptideData = new List<QData>(Document.PeptideCount);
+            ReplicateCount = Document.MeasuredResults.Chromatograms.Count;
+
+
+            ReplicateNames = (from chromatogram in Document.MeasuredResults.Chromatograms
                 select chromatogram.Name).ToList();
 
             var thisPeptideData = new List<List<float>>();
             var peptideCount = 0;
             var currentProgress = 0;
-            var reportingStep = document.PeptideCount / (90/REPORTING_STEP);
+            var reportingStep = Document.PeptideCount / (90/REPORTING_STEP);
 
-            foreach (var peptide in document.Peptides)
+            foreach (var peptide in Document.Peptides)
             {
                 thisPeptideData.Clear();
                 //iterate over peptide's precursors
                 foreach (var precursor in peptide.TransitionGroups)
                 {
                     if (cancellationToken.IsCancellationRequested)
-                        return;
+                        return Resources.DetectionPlotPane_EmptyPlotCanceled_Label;
 
                     if (precursor.IsDecoy) continue;
                     var qs = new List<float>(ReplicateCount);
@@ -150,15 +143,13 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             if(precursorData.All(p => p.IsEmpty))
-            {
-                InvalidReason = Resources.DetectionPlotData_NoQValuesInDocument_Label;
-                return;
-            }
+                return Resources.DetectionPlotData_NoQValuesInDocument_Label;
 
             _data[DetectionsGraphController.TargetType.PRECURSOR] = new DataSet(precursorData, ReplicateCount, QValueCutoff);
             _data[DetectionsGraphController.TargetType.PEPTIDE] = new DataSet(peptideData, ReplicateCount, QValueCutoff);
 
             IsValid = true;
+            return string.Empty;
         }
 
         private bool IsValidFor(SrmDocument document, float qValue)
@@ -412,9 +403,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 try
                 {
-                    if(!_document.IsLoaded)
+                    if (!_document.IsLoaded)
                         SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_WaitingForDocumentLoad_Label);
-                    while(!_document.IsLoaded)  Thread.Sleep(100);
+                    while (!_document.IsLoaded) Thread.Sleep(100);
                     lock (_statusLock)
                     {
                         //first make sure it hasn't been retrieved already
@@ -430,7 +421,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (res != null) return;
 
                         SetCacheStatus(CacheStatus.processing, string.Empty);
-                        res = new DetectionPlotData(_document, request.qValue, _tokenSource.Token, ReportProgress);
+                        res = new DetectionPlotData(_document, request.qValue);
+                        var statusMessage = res.Init(_tokenSource.Token, ReportProgress);
                         SetCacheStatus(CacheStatus.idle, string.Empty);
 
                         if (res.IsValid)
@@ -441,8 +433,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             _callback.Invoke(res);
                         }
                         else
-                            SetCacheStatus(CacheStatus.error, res.InvalidReason);
-
+                            SetCacheStatus(CacheStatus.error, statusMessage);
                     }
                 }
                 catch (Exception e)

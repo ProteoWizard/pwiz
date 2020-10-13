@@ -60,9 +60,15 @@ namespace pwiz.Skyline.Controls.Graphs
             cbShowLegend.Checked = Settings.ShowLegend;
             GraphFontSize.PopulateCombo(cmbFontSize, Settings.FontSize);
 
-            tbAtLeastN.Maximum = _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
-            if(_graphSummary.DocumentUIContainer.DocumentUI.IsLoaded && _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count > 0)
-                tbAtLeastN.Value = Settings.RepCount;
+            if (_graphSummary.DocumentUIContainer.DocumentUI.IsLoaded &&
+                _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count > 0)
+            {
+                tbAtLeastN.Maximum = _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
+                if(Settings.RepCount < tbAtLeastN.Maximum)
+                    tbAtLeastN.Value = Settings.RepCount;
+                else
+                    tbAtLeastN.Value = tbAtLeastN.Maximum / 2;
+            }
             cmbTargetType.Focus();
         }
 
