@@ -61,7 +61,8 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphFontSize.PopulateCombo(cmbFontSize, Settings.FontSize);
 
             tbAtLeastN.Maximum = _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
-            tbAtLeastN.Value = Settings.RepCount;
+            if(_graphSummary.DocumentUIContainer.DocumentUI.IsLoaded && _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count > 0)
+                tbAtLeastN.Value = Settings.RepCount;
             cmbTargetType.Focus();
         }
 

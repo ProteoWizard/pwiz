@@ -53,6 +53,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             OpenDocument(TestFilesDir.GetTestPath(@"DIA-TTOF-tutorial.sky"));
+            WaitForDocumentLoaded();
 
             RunUI(() => { SkylineWindow.ShowDetectionsReplicateComparisonGraph(); });
             WaitForGraphs();
