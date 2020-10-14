@@ -11097,4 +11097,7 @@ Invalid peptide sequence at position 18
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__" xml:space="preserve">
     <value>Scheduling failure (no targets?)</value>
   </data>
+  <data name="SkylineVersion_V20_2_Skyline_20_2" xml:space="preserve">
+    <value>Skyline 20.2</value>
+  </data>
 </root>
