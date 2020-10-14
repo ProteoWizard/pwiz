@@ -21,19 +21,32 @@ using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public abstract class GraphSummaryToolbar : UserControl
+    public class GraphSummaryToolbar : UserControl
     {
         protected GraphSummary _graphSummary;
 
-        protected GraphSummaryToolbar(GraphSummary graphSummary)
+        protected GraphSummaryToolbar()
         {
-            _graphSummary = graphSummary;
             // ReSharper disable once VirtualMemberCallInConstructor
             Dock = DockStyle.Top;
         }
 
-        public new abstract bool Visible { get; }
-        public abstract void OnDocumentChanged(SrmDocument oldDocument, SrmDocument newDocument);
-        public abstract void UpdateUI();
+        protected GraphSummaryToolbar(GraphSummary graphSummary) : this()
+        {
+            _graphSummary = graphSummary;
+        }
+
+        public new virtual bool Visible
+        {
+            get { return true; }
+        }
+
+        public virtual void OnDocumentChanged(SrmDocument oldDocument, SrmDocument newDocument)
+        {
+        }
+
+        public virtual void UpdateUI()
+        {
+        }
     }
 }

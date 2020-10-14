@@ -1678,6 +1678,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total ion current.
+        /// </summary>
+        public static string AreaCVToolbar_UpdateUI_Total_ion_current {
+            get {
+                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_Total_ion_current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid CV cutoff entered.
         /// </summary>
         public static string AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered {
@@ -5659,6 +5668,34 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} must be set when using CiRT peptides..
+        /// </summary>
+        public static string CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT standard set to {0}, but multiple iRT standards were found. iRT standard must be set explicitly..
+        /// </summary>
+        public static string CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standa" +
+                        "rds_were_found__iRT_standard_must_be_set_explicitly_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The iRT standard name &apos;{0}&apos; is invalid..
+        /// </summary>
+        public static string CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure loading {0}. 
         /// {1}.
         /// </summary>
@@ -7866,16 +7903,6 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("DatabaseNotConnectedException_DatabaseNotConnectedException_The_database_for_the_" +
                         "calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_del" +
                         "eted", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The database for the calculator {0} could not be opened. Check that the file {1} was not moved or deleted..
-        /// </summary>
-        public static string DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_ {
-            get {
-                return ResourceManager.GetString("DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_n" +
-                        "ot_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_", resourceCulture);
             }
         }
         
@@ -14008,6 +14035,16 @@ namespace pwiz.Skyline.Properties {
         public static string GraphData_Graph_Regression_Refined {
             get {
                 return ResourceManager.GetString("GraphData_Graph_Regression_Refined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The database for the calculator {0} could not be opened. Check that the file {1} was not moved or deleted..
+        /// </summary>
+        public static string GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_ {
+            get {
+                return ResourceManager.GetString("GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Chec" +
+                        "k_that_the_file__1__was_not_moved_or_deleted_", resourceCulture);
             }
         }
         
@@ -23016,6 +23053,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total ion current.
+        /// </summary>
+        public static string RefineDlg_NormalizationMethod_Total_ion_current {
+            get {
+                return ResourceManager.GetString("RefineDlg_NormalizationMethod_Total_ion_current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} must be less than min peak found ratio..
         /// </summary>
         public static string RefineDlg_OkDialog__0__must_be_less_than_min_peak_found_ratio {
@@ -25779,6 +25825,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineVersion_V20_1_Skyline_20_1 {
             get {
                 return ResourceManager.GetString("SkylineVersion_V20_1_Skyline_20_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline 20.2.
+        /// </summary>
+        public static string SkylineVersion_V20_2_Skyline_20_2 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_V20_2_Skyline_20_2", resourceCulture);
             }
         }
         
