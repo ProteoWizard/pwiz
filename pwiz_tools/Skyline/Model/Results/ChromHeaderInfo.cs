@@ -1908,10 +1908,7 @@ namespace pwiz.Skyline.Model.Results
 
         public double? OptionalMinTime
         {
-            get
-            {
-                return _hasOptionalTimes ? (double?) _optionalMinTime : null;
-            }
+            get { return _hasOptionalTimes ? (double?) _optionalMinTime : null; }
         }
 
         public double? OptionalMaxTime

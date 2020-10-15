@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void DumpTypeAndFields(Type type, TextWriter writer)
         {
-            writer.WriteLine(TabSeparate("Type: " + type.FullName, "Object size: " + GetObjectSize(type)));
+            writer.WriteLine(TabSeparate("Type: " + EscapeCode(type.FullName), "Object size: " + GetObjectSize(type)));
             DumpFields(type, writer);
             while (true)
             {
@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     return;
                 }
-                writer.WriteLine(TabSeparate("BaseType: " + type.FullName, "Object size: " + GetObjectSize(type)));
+                writer.WriteLine(TabSeparate("BaseType: " + EscapeCode(type.FullName), "Object size: " + GetObjectSize(type)));
                 DumpFields(type, writer);
             }
         }
@@ -70,13 +70,18 @@ namespace pwiz.SkylineTestUtil
                     writer.WriteLine(TabSeparate("Field Name", "Type", "Field Size"));
                     first = false;
                 }
-                writer.WriteLine(TabSeparate(field.Name, field.FieldType, GetFieldSize(field.FieldType)));
+                writer.WriteLine(TabSeparate(EscapeCode(field.Name), EscapeCode(field.FieldType.FullName), GetFieldSize(field.FieldType)));
             }
         }
 
         private static string TabSeparate(params object[] values)
         {
             return string.Join("\t", values);
+        }
+
+        private static string EscapeCode(string code)
+        {
+            return "`" + code + "`";
         }
 
         /// <summary>
