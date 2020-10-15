@@ -141,6 +141,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public SrmSettings AddCheckedModifications(SrmDocument document)
         {
+            var firstHeavyModificationType = document.Settings.PeptideSettings.Modifications
+                .GetHeavyModificationTypes().FirstOrDefault();
             // in the non-DDA case, AddCheckedModifications is only additive, so no checked items is a no-op
             if (modificationsListBox.CheckedItems.Count == 0)
             {
@@ -153,11 +155,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     // in DDA-case, return empty mod lists
                     var emptyPeptideMods = document.Settings.PeptideSettings.Modifications
                         .ChangeStaticModifications(new List<StaticMod>());
-                    emptyPeptideMods = emptyPeptideMods.ChangeModifications(IsotopeLabelType.heavy, new List<StaticMod>());
+                    emptyPeptideMods = emptyPeptideMods.ChangeModifications(firstHeavyModificationType, new List<StaticMod>());
                     return ImportPeptideSearch.AddModifications(document, emptyPeptideMods);
                 }
             }
-
             // Find checked mods
             List<StaticMod> structuralMods;
             List<StaticMod> heavyMods; 
@@ -184,7 +185,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             // Update document modifications
             var newPeptideMods = document.Settings.PeptideSettings.Modifications.ChangeStaticModifications(structuralMods);
-            newPeptideMods = newPeptideMods.ChangeModifications(IsotopeLabelType.heavy, heavyMods);
+            newPeptideMods = newPeptideMods.ChangeModifications(firstHeavyModificationType, heavyMods);
             return ImportPeptideSearch.AddModifications(document, newPeptideMods);
         }
 

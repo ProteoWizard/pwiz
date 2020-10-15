@@ -20,8 +20,8 @@
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.pbProperties = new System.Windows.Forms.ToolStripButton();
-            this.cbLevel = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.cbLevel = new System.Windows.Forms.ToolStripComboBox();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -33,49 +33,40 @@
             this.pbProperties,
             this.toolStripLabel1,
             this.cbLevel});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(646, 28);
-            this.toolStrip1.TabIndex = 0;
-            this.toolStrip1.Text = "toolStrip1";
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 28);
+            resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
             // 
             // pbProperties
             // 
             this.pbProperties.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.pbProperties.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.pbProperties.Image = ((System.Drawing.Image)(resources.GetObject("pbProperties.Image")));
-            this.pbProperties.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.pbProperties, "pbProperties");
             this.pbProperties.Name = "pbProperties";
-            this.pbProperties.Size = new System.Drawing.Size(80, 25);
-            this.pbProperties.Text = "Properties";
-            this.pbProperties.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
             this.pbProperties.Click += new System.EventHandler(this.pbProperties_Click);
+            // 
+            // toolStripLabel1
+            // 
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            resources.ApplyResources(this.toolStripLabel1, "toolStripLabel1");
             // 
             // cbLevel
             // 
             this.cbLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbLevel.Name = "cbLevel";
-            this.cbLevel.Size = new System.Drawing.Size(121, 28);
+            resources.ApplyResources(this.cbLevel, "cbLevel");
             this.cbLevel.SelectedIndexChanged += new System.EventHandler(this.cbLevel_SelectedIndexChanged);
-            // 
-            // toolStripLabel1
-            // 
-            this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(111, 25);
-            this.toolStripLabel1.Text = "Level: ";
             // 
             // DetectionsToolbar
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.toolStrip1);
             this.Name = "DetectionsToolbar";
-            this.Size = new System.Drawing.Size(646, 35);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);

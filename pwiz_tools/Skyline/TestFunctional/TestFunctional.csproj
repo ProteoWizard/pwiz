@@ -337,6 +337,7 @@
     <Compile Include="ExportMethodDialogTest.cs" />
     <Compile Include="LabelPeakPickingTest.cs" />
     <Compile Include="TargetResolverTest.cs" />
+    <Compile Include="TicNormalizationTest.cs" />
     <Compile Include="ToolServiceTest.cs" />
     <Compile Include="ToolStoreDlgTest.cs" />
     <Compile Include="ToolUpdatesTest.cs" />
@@ -523,6 +524,7 @@
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
     <None Include="TargetResolverTest.zip" />
+    <None Include="TicNormalizationTest.zip" />
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />
     <None Include="ToolUpdatesTest.zip" />

@@ -120,6 +120,14 @@ namespace pwiz.Skyline.SettingsUI
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
         }
 
+        private void BuildLibraryDlg_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (!Settings.Default.IrtStandardList.Contains(IrtStandard.AUTO))
+            {
+                Settings.Default.IrtStandardList.Insert(0, IrtStandard.AUTO);
+            }
+        }
+
         public ILibraryBuilder Builder { get; private set; }
 
         public string[] InputFileNames
@@ -772,14 +780,20 @@ namespace pwiz.Skyline.SettingsUI
             {
                 iRTPeptidesLabel.Location = _iRTLabelPos;
                 comboStandards.Location = _iRTComboPos;
+                if (!Settings.Default.IrtStandardList.Contains(IrtStandard.AUTO))
+                {
+                    Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
+                }
             }
             else
             {
                 iRTPeptidesLabel.Location = _actionLabelPos;
                 comboStandards.Location = _actionComboPos;
+                Settings.Default.IrtStandardList.Remove(IrtStandard.AUTO);
 
                 PrositUIHelpers.CheckPrositSettings(this, _skylineWindow);
             }
+            _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
             btnNext.Text = dataSourceFilesRadioButton.Checked ? Resources.BuildLibraryDlg_btnPrevious_Click__Next__ : Resources.BuildLibraryDlg_OkWizardPage_Finish;
         }

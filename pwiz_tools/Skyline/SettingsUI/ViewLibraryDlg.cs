@@ -1996,6 +1996,8 @@ namespace pwiz.Skyline.SettingsUI
             set { listPeptide.SelectedIndex = value; }
         }
 
+        public bool HasSelectedLibrary => _selectedLibrary != null;
+
         public string SourceFile
         {
             get { return GetLabelValue(labelFilename); }
