@@ -404,8 +404,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 try
                 {
                     if (!_document.IsLoaded)
+                    {
                         SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_WaitingForDocumentLoad_Label);
-                    while (!_document.IsLoaded) Thread.Sleep(100);
+                        return;
+                    }
+
                     lock (_statusLock)
                     {
                         //first make sure it hasn't been retrieved already
