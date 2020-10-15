@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count > 0)
             {
                 tbAtLeastN.Maximum = _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
-                if(Settings.RepCount < tbAtLeastN.Maximum)
+                if(Settings.RepCount < tbAtLeastN.Maximum && Settings.RepCount > tbAtLeastN.Minimum)
                     tbAtLeastN.Value = Settings.RepCount;
                 else
                     tbAtLeastN.Value = tbAtLeastN.Maximum / 2;
