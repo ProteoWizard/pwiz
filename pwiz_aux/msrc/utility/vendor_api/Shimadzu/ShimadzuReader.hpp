@@ -44,7 +44,7 @@ PWIZ_API_DECL enum Polarity
 {
     Positive = 0,
     Negative = 1,
-    Undefined = 2
+    Undefined = -1
 };
 
 struct PWIZ_API_DECL SRMTransition
@@ -54,7 +54,10 @@ struct PWIZ_API_DECL SRMTransition
     short event;
     short segment;
     double collisionEnergy;
-    short polarity;
+    Polarity polarity;
+    int startMz;
+    int endMz;
+
     double Q1;
     double Q3;
     //TimeRange acquiredTimeRange;

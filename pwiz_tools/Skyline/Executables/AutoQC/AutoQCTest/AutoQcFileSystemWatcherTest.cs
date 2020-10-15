@@ -44,11 +44,12 @@ namespace AutoQCTest
             var mainSettings = MainSettings.GetDefault();
             config.MainSettings = mainSettings;
 
-            Assert.AreEqual(mainSettings.QcFileFilter, FileFilter.GetFileFilter(AllFileFilter.NAME, string.Empty));
-            mainSettings.SkylineFilePath = skyFile;
-            mainSettings.IncludeSubfolders = false;
-            mainSettings.InstrumentType = instrument;
-            mainSettings.FolderToWatch = folderToWatch;
+            var defaultFileFilter = FileFilter.GetFileFilter(AllFileFilter.NAME, string.Empty);
+            Assert.AreEqual(mainSettings.QcFileFilter, defaultFileFilter);
+            mainSettings = new MainSettings(skyFile, folderToWatch, false, defaultFileFilter, true, 
+                MainSettings.ACCUM_TIME_WINDOW, instrument, MainSettings.ACQUISITION_TIME);
+
+            config.MainSettings = mainSettings;
             mainSettings.ValidateSettings();
 
             watcher.Init(config);
@@ -56,7 +57,10 @@ namespace AutoQCTest
             Assert.AreEqual(1, files.Count);
             Assert.AreEqual(dataFiles[0], files[0]);
 
-            mainSettings.IncludeSubfolders = true;
+            // mainSettings.IncludeSubfolders = true;
+            mainSettings = new MainSettings(skyFile, folderToWatch, true, defaultFileFilter, true,
+                MainSettings.ACCUM_TIME_WINDOW, instrument, MainSettings.ACQUISITION_TIME);
+            config.MainSettings = mainSettings;
             mainSettings.ValidateSettings();
 
             watcher.Init(config);
@@ -75,7 +79,11 @@ namespace AutoQCTest
               "one_1_b_QC"
               "two_qc_"
              */
-            mainSettings.QcFileFilter = FileFilter.GetFileFilter(ContainsFilter.NAME, "QC");
+            var fileFilter = FileFilter.GetFileFilter(ContainsFilter.NAME, "QC");
+            // mainSettings.QcFileFilter = FileFilter.GetFileFilter(ContainsFilter.NAME, "QC");
+            mainSettings = new MainSettings(skyFile, folderToWatch, true, fileFilter, true,
+                MainSettings.ACCUM_TIME_WINDOW, instrument, MainSettings.ACQUISITION_TIME);
+            config.MainSettings = mainSettings;
             watcher.Init(config);
             files = watcher.GetExistingFiles();
             Assert.AreEqual(4, files.Count);
@@ -84,20 +92,32 @@ namespace AutoQCTest
             Assert.IsTrue(files.Contains(dataFiles[2]));
             Assert.IsTrue(files.Contains(dataFiles[3]));
 
-            mainSettings.QcFileFilter = FileFilter.GetFileFilter(StartsWithFilter.NAME, "QC_");
+            fileFilter = FileFilter.GetFileFilter(StartsWithFilter.NAME, "QC_");
+            // mainSettings.QcFileFilter = FileFilter.GetFileFilter(StartsWithFilter.NAME, "QC_");
+            mainSettings = new MainSettings(skyFile, folderToWatch, true, fileFilter, true,
+                MainSettings.ACCUM_TIME_WINDOW, instrument, MainSettings.ACQUISITION_TIME);
+            config.MainSettings = mainSettings;
             watcher.Init(config);
             files = watcher.GetExistingFiles();
             Assert.AreEqual(1, files.Count);
             Assert.IsTrue(files.Contains(dataFiles[1]));
 
-            mainSettings.QcFileFilter = FileFilter.GetFileFilter(EndsWithFilter.NAME, "_QC_");
+            fileFilter = FileFilter.GetFileFilter(EndsWithFilter.NAME, "_QC_");
+            // mainSettings.QcFileFilter = FileFilter.GetFileFilter(EndsWithFilter.NAME, "_QC_");
+            mainSettings = new MainSettings(skyFile, folderToWatch, true, fileFilter, true,
+                MainSettings.ACCUM_TIME_WINDOW, instrument, MainSettings.ACQUISITION_TIME);
+            config.MainSettings = mainSettings;
             watcher.Init(config);
             files = watcher.GetExistingFiles();
             Assert.AreEqual(2, files.Count);
             Assert.IsTrue(files.Contains(dataFiles[0]));
             Assert.IsTrue(files.Contains(dataFiles[2]));
 
-            mainSettings.QcFileFilter = FileFilter.GetFileFilter(RegexFilter.NAME, "[ab]_QC");
+            fileFilter = FileFilter.GetFileFilter(RegexFilter.NAME, "[ab]_QC");
+            // mainSettings.QcFileFilter = FileFilter.GetFileFilter(RegexFilter.NAME, "[ab]_QC");
+            mainSettings = new MainSettings(skyFile, folderToWatch, true, fileFilter, true,
+                MainSettings.ACCUM_TIME_WINDOW, instrument, MainSettings.ACQUISITION_TIME);
+            config.MainSettings = mainSettings;
             watcher.Init(config);
             files = watcher.GetExistingFiles();
             Assert.AreEqual(2, files.Count);
@@ -187,15 +207,13 @@ namespace AutoQCTest
 
             // 1. Look for files in folderToWatchOnly
             var watcher = new AutoQCFileSystemWatcher(logger, configRunner);
-            var mainSettings = MainSettings.GetDefault();
+
+            var defaultFileFilter = FileFilter.GetFileFilter(AllFileFilter.NAME, string.Empty);
+            var mainSettings = new MainSettings(skyFile, folderToWatch, false, defaultFileFilter, true,
+                MainSettings.ACCUM_TIME_WINDOW, instrument, MainSettings.ACQUISITION_TIME);
+
             config.MainSettings = mainSettings;
-
-            mainSettings.SkylineFilePath = skyFile;
-            mainSettings.IncludeSubfolders = false;
-            mainSettings.InstrumentType = instrument;
-            mainSettings.FolderToWatch = folderToWatch;
             mainSettings.ValidateSettings();
-
             watcher.Init(config);
             watcher.StartWatching(); // Start watching
             Assert.AreEqual(0, watcher.GetExistingFiles().Count); // No existing files
@@ -224,10 +242,11 @@ namespace AutoQCTest
             folderToWatch = CreateDirectory(testDir, instrument + "_2");
             // Create a .sky files
             skyFile = CreateFile(folderToWatch, "test2_b.sky");
-            mainSettings.SkylineFilePath = skyFile;
-            mainSettings.InstrumentType = instrument;
-            mainSettings.FolderToWatch = folderToWatch;
-            mainSettings.IncludeSubfolders = true; // watch sub-folders
+            // mainSettings.IncludeSubfolders = true; // watch sub-folders
+            mainSettings = new MainSettings(skyFile, folderToWatch, true, defaultFileFilter, true,
+                MainSettings.ACCUM_TIME_WINDOW, instrument, MainSettings.ACQUISITION_TIME);
+
+            config.MainSettings = mainSettings;
             mainSettings.ValidateSettings();
             watcher.Init(config);
 
@@ -257,11 +276,12 @@ namespace AutoQCTest
             folderToWatch = CreateDirectory(testDir, instrument + "_3");
             // Create a .sky files
             skyFile = CreateFile(folderToWatch, "test2_c.sky");
-            mainSettings.SkylineFilePath = skyFile;
-            mainSettings.InstrumentType = instrument;
-            mainSettings.FolderToWatch = folderToWatch;
-            mainSettings.IncludeSubfolders = true; // watch sub-folders
-            mainSettings.QcFileFilter = FileFilter.GetFileFilter(ContainsFilter.NAME, "_QC_"); // file name pattern
+            // mainSettings.IncludeSubfolders = true; // watch sub-folders
+            var fileFilter = FileFilter.GetFileFilter(ContainsFilter.NAME, "_QC_"); // file name pattern
+            mainSettings = new MainSettings(skyFile, folderToWatch, true, fileFilter, true,
+                MainSettings.ACCUM_TIME_WINDOW, instrument, MainSettings.ACQUISITION_TIME);
+
+            config.MainSettings = mainSettings;
             mainSettings.ValidateSettings();
             watcher.Init(config);
 
@@ -289,11 +309,10 @@ namespace AutoQCTest
             folderToWatch = CreateDirectory(testDir, instrument + "_4");
             // Create a .sky files
             skyFile = CreateFile(folderToWatch, "test2_d.sky");
-            mainSettings.SkylineFilePath = skyFile;
-            mainSettings.InstrumentType = instrument;
-            mainSettings.FolderToWatch = folderToWatch;
-            mainSettings.IncludeSubfolders = false;
-            mainSettings.QcFileFilter = FileFilter.GetFileFilter(AllFileFilter.NAME, string.Empty);
+            mainSettings = new MainSettings(skyFile, folderToWatch, false, defaultFileFilter, true,
+                MainSettings.ACCUM_TIME_WINDOW, instrument, MainSettings.ACQUISITION_TIME);
+
+            config.MainSettings = mainSettings;
             mainSettings.ValidateSettings();
             watcher.Init(config);
 

@@ -32,13 +32,13 @@ All Info  :
 トランジションの設定が変更されました
 設定>トランジションの設定－フルスキャン>保持時間フィルタタイプは"一致する全てのスキャンを含める"から"予測された保持時間内のスキャンのみを使用する"に変更されました
 設定>トランジションの設定－フルスキャン>保持時間フィルタ長は"0"から"3"に変更されました
-設定>トランジションの設定－Ion mobility>Ion mobility libraryは"None"から"BSA"に変更されました
-設定>トランジションの設定－Ion mobility>Ion mobility library>File pathは"BSA.imsdb"です
-設定>トランジションの設定－Ion mobility>Ion mobility library>Contents changed>Items addedは"38"です
-設定>トランジションの設定－Ion mobility>Ion mobility library>Contents changed>LSIDは"urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:f05d02df-c70e-4800-87b5-950db1a11ea4:1.1"です
-設定>トランジションの設定－Ion mobility>Ion mobility library>Contents changed>Timestampは"2020-07-10T10:54:58-07:00"です
-設定>トランジションの設定－Ion mobility>Ion mobility filter window width calculation typeは"None"から"Resolving power"に変更されました
-設定>トランジションの設定－Ion mobility>分解能は"0"から"50"に変更されました
+設定>トランジションの設定－イオン移動度>イオン移動度ライブラリは"None"から"BSA"に変更されました
+設定>トランジションの設定－イオン移動度>イオン移動度ライブラリ>ファイルパスは"BSA.imsdb"です
+設定>トランジションの設定－イオン移動度>イオン移動度ライブラリ>内容が変更されました>項目が追加されましたは"38"です
+設定>トランジションの設定－イオン移動度>イオン移動度ライブラリ>内容が変更されました>LSIDは"urn:lsid:proteome.gs.washington.edu:ion_mobility_library:skyline:BSA:f7ec5daf-cff5-4a19-b77a-a6e723fe8503:1.1"です
+設定>トランジションの設定－イオン移動度>イオン移動度ライブラリ>内容が変更されました>タイムスタンプは"2020-09-20T14:26:32-07:00"です
+設定>トランジションの設定－イオン移動度>イオン移動度フィルタウィンドウ幅計算タイプは"なし"から"分解能"に変更されました
+設定>トランジションの設定－イオン移動度>分解能は"0"から"50"に変更されました
 
 Undo Redo : 「Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d」から結果がインポートされました
 Summary   : 「Yeast_0pt1ug_BSA_100nM_18May15_Fir_15-04-01.d」から結果がインポートされました

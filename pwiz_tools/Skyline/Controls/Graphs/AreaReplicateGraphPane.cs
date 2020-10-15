@@ -376,7 +376,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var nodeDisplayType = GraphChromatogram.GetDisplayType(document, parentGroupNode);
                 if (displayType == DisplayTypeChrom.products && 
                     (nodeDisplayType != DisplayTypeChrom.single || 
-                    (nodeDisplayType == DisplayTypeChrom.single && !optimizationPresent)))
+                     !optimizationPresent))
                 {
                     colorOffset =
                         GraphChromatogram.GetDisplayTransitions(parentGroupNode, DisplayTypeChrom.precursors).Count();

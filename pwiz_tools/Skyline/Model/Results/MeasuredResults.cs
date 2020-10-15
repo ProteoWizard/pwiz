@@ -80,7 +80,17 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < count; i++)
                 {
                     var set = _chromatograms[i];
-                    dictNameToIndex.Add(set.Name, i);
+                    try
+                    {
+                        dictNameToIndex.Add(set.Name, i);
+                    }
+                    catch (ArgumentException argumentException)
+                    {
+                        throw new ArgumentException(
+                            set.Name + @" appears multiple times in the list ('" +
+                            string.Join(@"','", value.Select(c => c.Name)) + @"')", argumentException);
+                    }
+
                     dictIdToIndex.Add(set.Id.GlobalIndex, i);
                     foreach (var path in set.MSDataFilePaths)
                         _setFiles.Add(path.GetLocation());
@@ -1748,6 +1758,18 @@ namespace pwiz.Skyline.Model.Results
                 catch (IOException) { }
             }
             return false;
+        }
+
+        public double? GetMedianTicArea()
+        {
+            var ticAreas = new Statistics(Chromatograms.SelectMany(c => c.MSDataFileInfos)
+                .Where(fileInfo => fileInfo.TicArea.HasValue).Select(fileInfo => fileInfo.TicArea.Value));
+            if (ticAreas.Length == 0)
+            {
+                return null;
+            }
+
+            return ticAreas.Median();
         }
     }
 

@@ -59,7 +59,8 @@ namespace pwiz.Skyline.EditUI
 
         private readonly SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
 
-        private int _standardTypeCount;
+        private readonly List<Tuple<AreaCVNormalizationMethod, IsotopeLabelType>> _normalizationMethods
+            = new List<Tuple<AreaCVNormalizationMethod, IsotopeLabelType>>();
 
         public RefineDlg(IDocumentUIContainer documentContainer)
         {
@@ -107,18 +108,30 @@ namespace pwiz.Skyline.EditUI
                 var mods = _document.Settings.PeptideSettings.Modifications;
                 var standardTypes = mods.RatioInternalStandardTypes;
                 comboNormalizeTo.Items.Clear();
+                _normalizationMethods.Clear();
 
                 if (mods.HasHeavyModifications)
                 {
                     comboNormalizeTo.Items.AddRange(standardTypes.Select((s) => s.Title).ToArray());
-                    _standardTypeCount = standardTypes.Count;
+                    _normalizationMethods.AddRange(standardTypes
+                        .Select(labelType=>Tuple.Create(AreaCVNormalizationMethod.ratio, labelType)));
                 }
 
                 var hasGlobalStandard = _document.Settings.HasGlobalStandardArea;
                 if (hasGlobalStandard)
+                {
                     comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_Global_standards);
+                    _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.global_standards, (IsotopeLabelType) null));
+                }
                 comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_Medians);
+                _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.medians, (IsotopeLabelType) null));
+                if (_document.Settings.HasTicArea)
+                {
+                    comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_Total_ion_current);
+                    _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.tic, (IsotopeLabelType) null));
+                }
                 comboNormalizeTo.Items.Add(Resources.RefineDlg_NormalizationMethod_None);
+                _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.none, (IsotopeLabelType) null));
                 comboNormalizeTo.SelectedIndex = comboNormalizeTo.Items.Count - 1;
 
                 comboTransitions.Items.Add(Resources.RefineDlg_RefineDlg_all);
@@ -178,38 +191,6 @@ namespace pwiz.Skyline.EditUI
             {
                 comboMSGroupComparisons.Enabled = false;
             }
-        }
-
-        private AreaCVNormalizationMethod GetNormalizationMethod(int idx)
-        {
-            if (idx < 0)
-                return AreaCVNormalizationMethod.none;
-            if (idx < _standardTypeCount)
-            {
-                return AreaCVNormalizationMethod.ratio;
-            }
-            idx -= _standardTypeCount;
-            if (!_document.Settings.HasGlobalStandardArea)
-                idx++;
-
-            var normalizationMethod = AreaCVNormalizationMethod.none;
-            switch (idx)
-            {
-                case 0:
-                    normalizationMethod =
-                        _document.Settings.HasGlobalStandardArea
-                            ? AreaCVNormalizationMethod.global_standards
-                            : AreaCVNormalizationMethod.medians;
-                    break;
-                case 1:
-                    normalizationMethod = AreaCVNormalizationMethod.medians;
-                    break;
-                case 2:
-                    normalizationMethod = AreaCVNormalizationMethod.none;
-                    break;
-            }
-
-            return normalizationMethod;
         }
 
         protected override void OnShown(EventArgs e)
@@ -304,26 +285,18 @@ namespace pwiz.Skyline.EditUI
         {
             get
             {
-                var selected = comboNormalizeTo.SelectedItem.ToString();
-                
-                if (Equals(selected, Resources.RefineDlg_NormalizationMethod_None))
+                if (comboNormalizeTo.SelectedIndex < 0)
+                {
                     return AreaCVNormalizationMethod.none;
-                else if (Equals(selected, Resources.RefineDlg_NormalizationMethod_Medians))
-                    return AreaCVNormalizationMethod.medians;
-                else if (Equals(selected, Resources.RefineDlg_NormalizationMethod_Global_standards))
-                    return AreaCVNormalizationMethod.global_standards;
-                else
-                    return AreaCVNormalizationMethod.ratio;
+                }
+                return _normalizationMethods[comboNormalizeTo.SelectedIndex].Item1;
             }
             set
             {
                 if (!Equals(value, AreaCVNormalizationMethod.ratio))
-                    if (value == AreaCVNormalizationMethod.global_standards)
-                        comboNormalizeTo.SelectedItem = Resources.RefineDlg_NormalizationMethod_Global_standards;
-                    else if (value == AreaCVNormalizationMethod.medians)
-                        comboNormalizeTo.SelectedItem = Resources.RefineDlg_NormalizationMethod_Medians;
-                    else
-                        comboNormalizeTo.SelectedItem = Resources.RefineDlg_NormalizationMethod_None;
+                {
+                    comboNormalizeTo.SelectedIndex = _normalizationMethods.IndexOf(Tuple.Create(value, (IsotopeLabelType) null));
+                }
             }
         }
 
@@ -343,14 +316,12 @@ namespace pwiz.Skyline.EditUI
         {
             get
             {
-                if (comboNormalizeTo.Items.Count == 0) return null;
-                string cvRefineTypeName = comboNormalizeTo.SelectedItem.ToString();
-                if (string.IsNullOrEmpty(cvRefineTypeName) || Equals(cvRefineTypeName, Resources.RefineDlg_NormalizationMethod_None)
-                    || Equals(cvRefineTypeName, Resources.RefineDlg_NormalizationMethod_Medians) || Equals(cvRefineTypeName, Resources.RefineDlg_NormalizationMethod_Global_standards))
+                if (comboNormalizeTo.SelectedIndex < 0)
+                {
                     return null;
-                cvRefineTypeName = char.ToLowerInvariant(cvRefineTypeName[0]) + cvRefineTypeName.Substring(1);
-                var typedMods = _settings.PeptideSettings.Modifications.GetModificationsByName(cvRefineTypeName);
-                return typedMods.LabelType;
+                }
+
+                return _normalizationMethods[comboNormalizeTo.SelectedIndex].Item2;
             }
 
             set { comboNormalizeTo.SelectedItem = value.Title; }
@@ -527,8 +498,7 @@ namespace pwiz.Skyline.EditUI
                 minimumDetections = (int) numericUpDownDetections.Value;
             }
 
-            var normIdx = comboNormalizeTo.SelectedIndex;
-            var normMethod = GetNormalizationMethod(normIdx);
+            var normMethod = NormalizationMethod;
 
             IsotopeLabelType referenceType = CVRefineLabelType;
 
