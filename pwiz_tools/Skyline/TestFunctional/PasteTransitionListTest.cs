@@ -179,6 +179,8 @@ namespace pwiz.SkylineTestFunctional
                 var dlg3 = dlg;
                 OkDialog(dlg, () => dlg3.DialogResult = DialogResult.OK);
             }
+
+            RunUI(() => SkylineWindow.NewDocument(true)); // Tidy up
         }
     }
 }
