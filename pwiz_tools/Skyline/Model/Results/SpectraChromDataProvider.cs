@@ -486,9 +486,7 @@ namespace pwiz.Skyline.Model.Results
                         chromMap.ChromSource,
                         modSeq.Extractor,
                         true,
-                        true,
-                        null,
-                        null);
+                        true);
 
                     _collectors.AddSrmCollector(key, chromCollector);
                 }
