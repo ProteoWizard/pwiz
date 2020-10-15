@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Model
             var docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
             var docReference = docNew;
             var sequenceToNode = MakeSequenceDictionary(Document);
-            var fileNameToFileMatch = new Dictionary<string, ChromSetFileMatch>();
+            var fileNameToFileMatch = new Dictionary<Tuple<string, string>, ChromSetFileMatch>();
             var trackAdjustedResults = new HashSet<ResultsKey>();
             var modMatcher = new ModificationMatcher();
             var canonicalSequenceDict = new Dictionary<string, string>();
@@ -303,12 +303,14 @@ namespace pwiz.Skyline.Model
                         throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Missing_end_time_on_line__0_, linesRead));
                     startTime = null;
                 }
+
+                Tuple<string, string> fileKey = Tuple.Create(fileName, sampleName);
                 // Add filename to second dictionary if not yet encountered
                 ChromSetFileMatch fileMatch;
-                if (!fileNameToFileMatch.TryGetValue(fileName, out fileMatch) && Document.Settings.HasResults)
+                if (!fileNameToFileMatch.TryGetValue(fileKey, out fileMatch) && Document.Settings.HasResults)
                 {
                     fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(fileName));
-                    fileNameToFileMatch.Add(fileName, fileMatch);
+                    fileNameToFileMatch.Add(fileKey, fileMatch);
                 }
                 if (fileMatch == null)
                 {

@@ -339,13 +339,19 @@ namespace pwiz.Skyline.Model.Results
         private ChromSetFileMatch FindExactNameMatchingMSDataFile(MsDataFileUri fileUri)
         {
             var filePathFind = fileUri.GetFilePath();
+            string sampleName = fileUri.GetSampleName();
             int fileOrder = 0;
             foreach (ChromatogramSet chromSet in Chromatograms)
             {
                 foreach (var filePath in chromSet.MSDataFilePaths)
                 {
                     if (Equals(filePath.GetFilePath(), filePathFind))
-                        return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                    {
+                        if (sampleName == null || sampleName.Equals(filePath.GetSampleName()))
+                        {
+                            return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                        }
+                    }
                     fileOrder++;
                 }
             }
