@@ -45,6 +45,10 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
         private static bool LooksLikeCrosslinkSequence(string str)
         {
+            if (string.IsNullOrEmpty(str))
+            {
+                return false;
+            }
             return FastaSequence.StripModifications(str).IndexOf('-') >= 0;
         }
 

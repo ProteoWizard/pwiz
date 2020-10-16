@@ -2,8 +2,8 @@ Undo Redo : トランジションの設定－フィルタが変更されまし�
 Summary   : 設定>トランジションの設定－フィルタが変更されました
 All Info  :
 トランジションの設定－フィルタが変更されました
-設定>トランジションの設定－フィルタ>プロダクトイオン選択開始は"m/z >プリカーサー"から"イオン3"に変更されました
-設定>トランジションの設定－フィルタ>プロダクトイオン選択終了は"3個のイオン"から"最後のイオン - 1"に変更されました
+設定>トランジションの設定－フィルタ>プロダクトイオンの選択開始は"m/z >プリカーサー"から"イオン3"に変更されました
+設定>トランジションの設定－フィルタ>プロダクトイオンの選択終了は"3個のイオン"から"最後のイオン - 1"に変更されました
 
 Undo Redo : ペプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
 Summary   : 設定>ペプチド設定－修飾>同位体修飾>"heavy"："Label:13C(6)15N(2) (C-term K)"が追加されました
@@ -65,7 +65,7 @@ Undo Redo : ドキュメントグリッドに16個の値が貼り付けられま
 Summary   : ドキュメントグリッドに16個の値が貼り付けられました
 All Info  :
 ドキュメントグリッドに16個の値が貼り付けられました
-ドキュメントグリッド>ビュー名は"繰り返し測定"です
+ドキュメントグリッド>レポート名は"繰り返し測定"です
 Standard_1の試料タイプが"標準"に設定されました
 Standard_1のアナライト濃度が"40"に設定されました
 Standard_2の試料タイプが"標準"に設定されました
@@ -91,7 +91,7 @@ Extra Info: 標準	40
 標準	0.25
 標準	0.1
 
-ビュー名 = "繰り返し測定"
+レポート名 = "繰り返し測定"
 
 Undo Redo : GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました
 Summary   : GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました
@@ -103,35 +103,35 @@ GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました
 Reason Changed: GST-tag>IEAIPQIDK>517.8022++ (heavy)のピーク境界が変更されました 
 Reason: '' to 'Changed peak integration as instructed by the tutorial'
 
-Undo Redo : 繰り返し測定Standard_5の校正でペプチドIEAIPQIDKを除外しています
-Summary   : 繰り返し測定Standard_5の校正でペプチドIEAIPQIDKを除外しています
+Undo Redo : 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_5を除外しています
+Summary   : 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_5を除外しています
 All Info  :
-繰り返し測定Standard_5の校正でペプチドIEAIPQIDKを除外しています
+校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_5を除外しています
 
-Undo Redo : 繰り返し測定Standard_6の校正でペプチドIEAIPQIDKを除外しています
-Summary   : 繰り返し測定Standard_6の校正でペプチドIEAIPQIDKを除外しています
+Undo Redo : 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_6を除外しています
+Summary   : 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_6を除外しています
 All Info  :
-繰り返し測定Standard_6の校正でペプチドIEAIPQIDKを除外しています
+校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_6を除外しています
 
-Undo Redo : 繰り返し測定Standard_7の校正でペプチドIEAIPQIDKを除外しています
-Summary   : 繰り返し測定Standard_7の校正でペプチドIEAIPQIDKを除外しています
+Undo Redo : 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_7を除外しています
+Summary   : 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_7を除外しています
 All Info  :
-繰り返し測定Standard_7の校正でペプチドIEAIPQIDKを除外しています
+校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_7を除外しています
 
-Undo Redo : 繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています
-Summary   : 繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています
+Undo Redo : 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_8を除外しています
+Summary   : 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_8を除外しています
 All Info  :
-繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています
+校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_8を除外しています
 
-Reason Changed: 繰り返し測定Standard_8の校正でペプチドIEAIPQIDKを除外しています 
+Reason Changed: 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_8を除外しています 
 Reason: '' to 'Excluded standard below LOD'
 
-Reason Changed: 繰り返し測定Standard_7の校正でペプチドIEAIPQIDKを除外しています 
+Reason Changed: 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_7を除外しています 
 Reason: '' to 'Excluded standard below LOD'
 
-Reason Changed: 繰り返し測定Standard_6の校正でペプチドIEAIPQIDKを除外しています 
+Reason Changed: 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_6を除外しています 
 Reason: '' to 'Excluded standard below LOD'
 
-Reason Changed: 繰り返し測定Standard_5の校正でペプチドIEAIPQIDKを除外しています 
+Reason Changed: 校正曲線からペプチドIEAIPQIDKの繰り返し測定Standard_5を除外しています 
 Reason: '' to 'Excluded standard below LOD'
 

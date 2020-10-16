@@ -116,6 +116,7 @@ namespace pwiz.SkylineTestFunctional
 
             var modDlg = ShowDialog<AddModificationsDlg>(() => libExplore.ChangeSelectedLibrary("ManageLibraryRunsTestScores"));
             OkDialog(modDlg, modDlg.OkDialog);
+            WaitForConditionUI(() => libExplore.HasSelectedLibrary);
             specLibInfoDlg = ShowDialog<SpectrumLibraryInfoDlg>(libExplore.ShowLibDetails);
             datafiles = specLibInfoDlg.GetGridView();
             Assert.AreEqual(datafiles.Count, 4);

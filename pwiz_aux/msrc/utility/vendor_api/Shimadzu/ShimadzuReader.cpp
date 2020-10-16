@@ -255,6 +255,10 @@ class ShimadzuReaderImpl : public ShimadzuReader
                         continue;
                     }
 
+                    // if eventLastScanNumber is 0 then there is no scan near endTime for this event
+                    if (eventLastScanNumber == 0)
+                        continue;
+
                     if (msLevels_.size() < 2)
                     {
                         auto spectrumPtr = getSpectrum(eventLastScanNumber, false);
@@ -376,7 +380,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
             ShimadzuGeneric::MassSpectrumObject^ spectrum;
             auto result = dataObject_->MS->Spectrum->GetMSSpectrumByScan(spectrum, scanNumber, profileDesired);
             if (ShimadzuUtil::Failed(result))
-                throw runtime_error("[ShimadzuReader::getSpectrum] GetMSSpectrumByScan: " + ToStdString(System::Enum::GetName(result.GetType(), (System::Object^) result)));
+                throw runtime_error("[ShimadzuReader::getSpectrum] GetMSSpectrumByScan for scan " + lexical_cast<string>(scanNumber) + ": " + ToStdString(System::Enum::GetName(result.GetType(), (System::Object^) result)));
 
             const pair<double, int>* precursorInfo = nullptr;
             auto findItr = precursorInfoByScan_.find(scanNumber);

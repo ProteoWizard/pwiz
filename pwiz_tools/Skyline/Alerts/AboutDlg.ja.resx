@@ -467,12 +467,12 @@ http://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2020 University of Washington, 禁無断転載。
+    <value>Copyright © 2008-2020 University of Washington, 無断複写・転載を禁じます。
 
 MacCoss Lab, Department of Genome Sciences, UW
 
-このソフトウェアは、連邦政府および民間からの助成金を受け、
-MacCoss Labにより作成されました。詳細については、
+ このソフトウェアは、連邦政府および民間からの助成金を受け、
+MacCoss labにより作成されました。詳細については、
 Skylineウェブサイトをご覧ください。</value>
   </data>
   <data name="&gt;&gt;linkLabel1.Name" xml:space="preserve">
