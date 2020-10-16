@@ -309,7 +309,12 @@ namespace pwiz.Skyline.Model
                 ChromSetFileMatch fileMatch;
                 if (!fileNameToFileMatch.TryGetValue(fileKey, out fileMatch) && Document.Settings.HasResults)
                 {
-                    fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(fileName));
+                    var dataFileUri = MsDataFileUri.Parse(fileName);
+                    if (sampleName != null && dataFileUri is MsDataFilePath msDataFilePath)
+                    {
+                        dataFileUri = new MsDataFilePath(msDataFilePath.FilePath, sampleName, msDataFilePath.SampleIndex, msDataFilePath.LockMassParameters);
+                    }
+                    fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFileUri);
                     fileNameToFileMatch.Add(fileKey, fileMatch);
                 }
                 if (fileMatch == null)
