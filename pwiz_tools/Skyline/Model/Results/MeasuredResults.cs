@@ -80,7 +80,17 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < count; i++)
                 {
                     var set = _chromatograms[i];
-                    dictNameToIndex.Add(set.Name, i);
+                    try
+                    {
+                        dictNameToIndex.Add(set.Name, i);
+                    }
+                    catch (ArgumentException argumentException)
+                    {
+                        throw new ArgumentException(
+                            set.Name + @" appears multiple times in the list ('" +
+                            string.Join(@"','", value.Select(c => c.Name)) + @"')", argumentException);
+                    }
+
                     dictIdToIndex.Add(set.Id.GlobalIndex, i);
                     foreach (var path in set.MSDataFilePaths)
                         _setFiles.Add(path.GetLocation());
