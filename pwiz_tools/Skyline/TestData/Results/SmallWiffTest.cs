@@ -266,7 +266,6 @@ namespace pwiz.SkylineTestData.Results
             doc = doc.ImportMassList(inputs, null, out selectPath);
 
             AssertEx.IsDocumentState(doc, 2, 9, 9, 18, 54);
-            AssertEx.Serializable(doc);
             return doc;
         }
     }
