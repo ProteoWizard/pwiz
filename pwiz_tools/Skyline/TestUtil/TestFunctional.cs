@@ -989,7 +989,7 @@ namespace pwiz.SkylineTestUtil
         }
 
         // Pause a test's UI thread by posting a simple MessageBox.
-        // Doesn't allow for UI manipulation, but can be handy for
+        // Doesn't allow for UI manipulation, but can be handy for 
         // debugging multiline RunUI() statements.
         public static void PauseTestUI(string description = null)
         {
