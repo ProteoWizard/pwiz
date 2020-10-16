@@ -337,18 +337,25 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>Skyline.exe
         ;
     
-    make TestData
-        : # sources
-        : # actions
-            @do_skyline_test_a
-        : # requirements
-            <link>shared:<build>no
-            <conditional>@no-express-requirement
-            <conditional>@msvc-dotnet-requirement
-            <conditional>@build-location
-            <dependency>Skyline.exe
-        ;
-    
+    if [ modules.peek : WIX ]
+    {
+        alias TestData : Executables/Installer//Test ;
+    }
+    else
+    {
+        make TestData
+            : # sources
+            : # actions
+                @do_skyline_test_a
+            : # requirements
+                <link>shared:<build>no
+                <conditional>@no-express-requirement
+                <conditional>@msvc-dotnet-requirement
+                <conditional>@build-location
+                <dependency>Skyline.exe
+            ;
+    }
+
     make TestPass1Subset
         : # sources
         : # actions
