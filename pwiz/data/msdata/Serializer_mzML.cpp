@@ -163,6 +163,10 @@ void Serializer_mzML::Impl::write(ostream& os, const MSData& msd,
     bdeConfig.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian; // mzML always little endian
     IO::write(xmlWriter, msd, bdeConfig, &spectrumPositions, &chromatogramPositions, iterationListenerRegistry, useWorkerThreads);
 
+    // don't write indexes if writing was cancelled
+    if (iterationListenerRegistry && IterationListener::Status_Cancel == iterationListenerRegistry->broadcastUpdateMessage(IterationListener::UpdateMessage(0, 0, "writing indexes")))
+        return;
+
     // <indexedmzML> end
 
     if (config_.indexed)
