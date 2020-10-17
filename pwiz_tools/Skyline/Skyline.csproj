@@ -1307,6 +1307,7 @@
     <Compile Include="Model\Lib\ChromLib\ChromatogramLibrarySpec.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\ChromLibEntity.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\IrtLibrary.cs" />
+    <Compile Include="Model\Lib\ChromLib\Data\IsotopeModification.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\Peptide.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\Precursor.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\PrecursorRetentionTime.cs" />
