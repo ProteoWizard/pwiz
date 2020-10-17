@@ -297,7 +297,6 @@
     <Compile Include="DataBinding\RowSourceInfo.cs" />
     <Compile Include="DataBinding\RowSources\IListChanged.cs" />
     <Compile Include="DataBinding\RowSources\PropertyChangeSupport.cs" />
-    <Compile Include="DataBinding\RowSources\WrappedCollection.cs" />
     <Compile Include="DataBinding\SerializableViewGroups.cs" />
     <Compile Include="DataBinding\SortableBindingList.cs" />
     <Compile Include="DataBinding\TotalOperation.cs" />
