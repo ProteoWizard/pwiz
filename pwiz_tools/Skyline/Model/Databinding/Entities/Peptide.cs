@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -314,7 +315,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [DataGridViewColumnType(typeof(NormalizationMethodDataGridViewColumn))]
-        [Importable]
+        [Importable(Formatter = typeof(NormalizationMethod.PropertyFormatter))]
         public NormalizationMethod NormalizationMethod
         {
             get { return DocNode.NormalizationMethod; }
