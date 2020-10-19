@@ -546,7 +546,62 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
                     Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem); 
                     configureToolsDlg.RemoveAllTools();
+                    configureToolsDlg.SaveTools();
                 });
+
+            string reportFromSkyPath = TestFilesDir.GetTestPath("TestSkylineReportSky.zip");
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(reportFromSkyPath), resolveReportConflict5 =>
+            {
+                string messageForm =
+                    TextUtil.LineSeparate(
+                        Resources
+                            .ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report_titled__0_,
+                        string.Empty, Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_);
+                AssertEx.AreComparableStrings(messageForm, resolveReportConflict5.Message, 1);
+                resolveReportConflict5.Btn0Click(); //Overwrite report
+            });
+            WaitForConditionUI(3 * 1000, () => configureToolsDlg.listTools.Items.Count == 1);
+            RunUI(() =>
+            {
+                Assert.AreEqual(0, configureToolsDlg.listTools.SelectedIndex);
+                Assert.AreEqual("HelloWorld", configureToolsDlg.textTitle.Text);
+                Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
+                Assert.AreEqual(string.Empty, configureToolsDlg.textArguments.Text);
+                Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
+                Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem);
+                toolDir = configureToolsDlg.ToolDir;
+                Assert.IsTrue(Directory.Exists(toolDir));
+                configureToolsDlg.RemoveAllTools();
+                configureToolsDlg.SaveTools();
+            });
+
+            string reportFromBothPath = TestFilesDir.GetTestPath("TestSkylineReportBoth.zip");
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(reportFromBothPath), resolveReportConflict6 =>
+            {
+                string messageForm =
+                    TextUtil.LineSeparate(
+                        Resources
+                            .ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report_titled__0_,
+                        string.Empty, Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_);
+                AssertEx.AreComparableStrings(messageForm, resolveReportConflict6.Message, 1);
+                resolveReportConflict6.Btn0Click(); //Overwrite report
+            });
+            WaitForConditionUI(3 * 1000, () => configureToolsDlg.listTools.Items.Count == 1);
+            RunUI(() =>
+            {
+                Assert.AreEqual(0, configureToolsDlg.listTools.SelectedIndex);
+                Assert.AreEqual("HelloWorld", configureToolsDlg.textTitle.Text);
+                Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
+                Assert.AreEqual(string.Empty, configureToolsDlg.textArguments.Text);
+                Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
+                Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem);
+                toolDir = configureToolsDlg.ToolDir;
+                Assert.IsTrue(Directory.Exists(toolDir));
+                configureToolsDlg.RemoveAllTools();
+                configureToolsDlg.SaveTools();
+            });
             OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
         }
 
