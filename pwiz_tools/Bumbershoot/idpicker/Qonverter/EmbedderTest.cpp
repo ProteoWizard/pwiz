@@ -115,14 +115,27 @@ void createExampleWithArrays(const vector<double>& mzArray, const vector<double>
         for (size_t i = 0; i < 500; ++i)
         {
             sl->spectra.push_back(SpectrumPtr(new Spectrum));
-            sl->spectra.back()->id = "controllerType=0 controllerNumber=1 scan=" + lexical_cast<string>(i + 1);
-            sl->spectra.back()->index = i;
-            sl->spectra.back()->set((i % 10 == 0) ? MS_MS1_spectrum : MS_MSn_spectrum);
-            sl->spectra.back()->set(MS_ms_level, (i % 10 == 0) ? 1 : 2);
-            sl->spectra.back()->set(MS_centroid_spectrum);
-            sl->spectra.back()->setMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts);
-            sl->spectra.back()->scanList.scans.push_back(Scan());
-            sl->spectra.back()->scanList.scans[0].set(MS_scan_start_time, (i+1) / 100.0, UO_second);
+            auto& s = *sl->spectra.back();
+            s.id = "controllerType=0 controllerNumber=1 scan=" + lexical_cast<string>(i + 1);
+            s.index = i;
+            if (i % 10 == 0)
+            {
+                s.set(MS_MS1_spectrum);
+                s.set(MS_ms_level, 1);
+            }
+            else
+            {
+                s.set(MS_MSn_spectrum);
+                s.set(MS_ms_level, 2);
+                s.precursors.push_back(Precursor(123.45));
+                size_t precursorScanIndex = i / 10;
+                s.precursors.back().spectrumID = sl->spectrumIdentity(precursorScanIndex).id;
+            }
+
+            s.set(MS_centroid_spectrum);
+            s.setMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts);
+            s.scanList.scans.push_back(Scan());
+            s.scanList.scans[0].set(MS_scan_start_time, (i+1) / 100.0, UO_second);
         }
 
         bfs::create_directories("testEmbedder.dir");

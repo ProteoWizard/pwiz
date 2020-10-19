@@ -336,7 +336,7 @@ namespace IDPicker.Forms
 
             ClearData();
 
-            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
+            foreach (var o in Controls.OfType<Control>()) o.Enabled = true;
         }
 
         public void ClearData ()
@@ -357,7 +357,7 @@ namespace IDPicker.Forms
             if (clearBasicFilter)
             {
                 basicDataFilter = null;
-                Controls.OfType<Control>().ForEach(o => o.Enabled = false);
+                foreach (var o in Controls.OfType<Control>()) o.Enabled = false;
             }
 
             ClearData();
@@ -389,9 +389,9 @@ namespace IDPicker.Forms
 
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
-            Text = TabText = "Peak Statistics";  
+            Text = TabText = "Peak Statistics";
 
-            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
+            foreach (var o in Controls.OfType<Control>()) o.Enabled = true;
         }
 
         #region Export stuff

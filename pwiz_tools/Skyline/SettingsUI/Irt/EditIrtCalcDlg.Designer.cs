@@ -161,7 +161,6 @@
             // 
             // contextMenuAdd
             // 
-            this.contextMenuAdd.ImageScalingSize = new System.Drawing.Size(40, 40);
             this.contextMenuAdd.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addResultsContextMenuItem,
             this.addSpectralLibraryContextMenuItem,
@@ -365,6 +364,7 @@
             this.MinimizeBox = false;
             this.Name = "EditIrtCalcDlg";
             this.ShowInTaskbar = false;
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.EditIrtCalcDlg_FormClosing);
             this.Load += new System.EventHandler(this.OnLoad);
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).EndInit();

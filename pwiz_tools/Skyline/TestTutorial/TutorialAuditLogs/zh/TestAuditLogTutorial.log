@@ -65,7 +65,7 @@ Undo Redo : 已将 16 值粘贴到文档网格
 Summary   : 已将 16 值粘贴到文档网格
 All Info  :
 已将 16 值粘贴到文档网格
-文档网格 > 查看名称 是 "重复测定"
+文档网格 > 报告名称 是 "重复测定"
 将 Standard_1 的 样品类型 设定为 "标准"
 将 Standard_1 的 分析物浓度 设定为 "40"
 将 Standard_2 的 样品类型 设定为 "标准"
@@ -91,7 +91,7 @@ Extra Info: 标准	40
 标准	0.25
 标准	0.1
 
-查看名称 = "重复测定"
+报告名称 = "重复测定"
 
 Undo Redo : 已更改 GST-tag > IEAIPQIDK > 517.8022++ (heavy) 的峰界限
 Summary   : 已更改 GST-tag > IEAIPQIDK > 517.8022++ (heavy) 的峰界限
@@ -103,35 +103,35 @@ All Info  :
 Reason Changed: 已更改 GST-tag > IEAIPQIDK > 517.8022++ (heavy) 的峰界限 
 Reason: '' to 'Changed peak integration as instructed by the tutorial'
 
-Undo Redo : 在校准重复测定 Standard_5 中排除肽段 IEAIPQIDK
-Summary   : 在校准重复测定 Standard_5 中排除肽段 IEAIPQIDK
+Undo Redo : 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_5
+Summary   : 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_5
 All Info  :
-在校准重复测定 Standard_5 中排除肽段 IEAIPQIDK
+从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_5
 
-Undo Redo : 在校准重复测定 Standard_6 中排除肽段 IEAIPQIDK
-Summary   : 在校准重复测定 Standard_6 中排除肽段 IEAIPQIDK
+Undo Redo : 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_6
+Summary   : 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_6
 All Info  :
-在校准重复测定 Standard_6 中排除肽段 IEAIPQIDK
+从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_6
 
-Undo Redo : 在校准重复测定 Standard_7 中排除肽段 IEAIPQIDK
-Summary   : 在校准重复测定 Standard_7 中排除肽段 IEAIPQIDK
+Undo Redo : 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_7
+Summary   : 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_7
 All Info  :
-在校准重复测定 Standard_7 中排除肽段 IEAIPQIDK
+从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_7
 
-Undo Redo : 在校准重复测定 Standard_8 中排除肽段 IEAIPQIDK
-Summary   : 在校准重复测定 Standard_8 中排除肽段 IEAIPQIDK
+Undo Redo : 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_8
+Summary   : 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_8
 All Info  :
-在校准重复测定 Standard_8 中排除肽段 IEAIPQIDK
+从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_8
 
-Reason Changed: 在校准重复测定 Standard_8 中排除肽段 IEAIPQIDK 
+Reason Changed: 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_8 
 Reason: '' to 'Excluded standard below LOD'
 
-Reason Changed: 在校准重复测定 Standard_7 中排除肽段 IEAIPQIDK 
+Reason Changed: 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_7 
 Reason: '' to 'Excluded standard below LOD'
 
-Reason Changed: 在校准重复测定 Standard_6 中排除肽段 IEAIPQIDK 
+Reason Changed: 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_6 
 Reason: '' to 'Excluded standard below LOD'
 
-Reason Changed: 在校准重复测定 Standard_5 中排除肽段 IEAIPQIDK 
+Reason Changed: 从校准曲线中排除肽段 IEAIPQIDK 重复测定 Standard_5 
 Reason: '' to 'Excluded standard below LOD'
 

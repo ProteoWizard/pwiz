@@ -24,6 +24,7 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -357,6 +358,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                     resultsAvailable = results.Chromatograms.Count > targetIndex &&
                                        results.IsChromatogramSetLoaded(targetIndex);
+            }
+
+            if (RunToRun && originalIndex < 0)
+            {
+                resultsAvailable = false;
             }
 
             if (!resultsAvailable)
@@ -839,7 +845,10 @@ namespace pwiz.Skyline.Controls.Graphs
                             if (dataPrevious != null && !ReferenceEquals(calc, dataPrevious.Calculator) &&
                                 tryIrtCalc != null)
                             {
-                                throw new DatabaseNotConnectedException(tryIrtCalc);
+                                MessageDlg.Show(Program.MainWindow, string.Format(
+                                    Resources.GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_,
+                                    tryIrtCalc.Name, tryIrtCalc.DatabasePath));
+                                return;
                             }
                         }
                     }

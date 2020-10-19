@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
@@ -155,15 +156,31 @@ namespace pwiz.Skyline.Model.DocSettings
             reader.ReadEndElement();
         }
 
+        private static IDictionary<string, Type> _tableTypes = new[]
+        {
+            typeof(DbPeptide),
+            typeof(DbPeptideResult),
+            typeof(DbPrecursor),
+            typeof(DbPrecursorResult),
+            typeof(DbPrecursorResultSummary),
+            typeof(DbProtein),
+            typeof(DbProteinResult),
+            typeof(DbRatioResult),
+            typeof(DbReplicate),
+            typeof(DbResultFile),
+            typeof(DbTransition),
+            typeof(DbTransitionResult),
+            typeof(DbTransitionResultSummary)
+        }.ToDictionary(type => type.Name);
+
         private static Type GetTable(string tableTypeName)
         {
-            tableTypeName = typeof(DbProtein).Namespace + '.' + tableTypeName;
-
-            Type table = Type.GetType(tableTypeName);
-            if (table == null)
+            Type table;
+          
+            if (!_tableTypes.TryGetValue(tableTypeName, out table))
             {
-                throw new InvalidDataException(String.Format(Resources.ReportSpec_GetTable_The_name__0__is_not_a_valid_table_name,
-                    tableTypeName.Substring(tableTypeName.LastIndexOf('.') + 1)));
+                throw new InvalidDataException(string.Format(Resources.ReportSpec_GetTable_The_name__0__is_not_a_valid_table_name,
+                    tableTypeName));
             }
 
             return table;
