@@ -399,11 +399,4 @@ namespace pwiz.Common.DataBinding
             public string ErrorMessage { get; private set; }
         }
     }
-
-    public enum LookupType
-    {
-        Unbound,
-        Property,
-        Index,
-    }
 }

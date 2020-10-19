@@ -73,7 +73,7 @@ namespace IDPicker.Forms
             // 
             this.saveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.saveButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.saveButton.Location = new System.Drawing.Point(942, 363);
+            this.saveButton.Location = new System.Drawing.Point(1867, 363);
             this.saveButton.Name = "saveButton";
             this.saveButton.Size = new System.Drawing.Size(75, 23);
             this.saveButton.TabIndex = 1;
@@ -85,7 +85,7 @@ namespace IDPicker.Forms
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancelButton.Location = new System.Drawing.Point(1023, 363);
+            this.cancelButton.Location = new System.Drawing.Point(1948, 363);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 23);
             this.cancelButton.TabIndex = 130;
@@ -111,7 +111,7 @@ namespace IDPicker.Forms
             this.msGroups.Name = "msGroups";
             this.msGroups.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.msGroups.ShowItemToolTips = true;
-            this.msGroups.Size = new System.Drawing.Size(1105, 24);
+            this.msGroups.Size = new System.Drawing.Size(2030, 24);
             this.msGroups.TabIndex = 1;
             this.msGroups.Text = "menuStrip1";
             // 
@@ -127,7 +127,7 @@ namespace IDPicker.Forms
             this.isobaricMappingDataGridView.Margin = new System.Windows.Forms.Padding(0);
             this.isobaricMappingDataGridView.Name = "isobaricMappingDataGridView";
             this.isobaricMappingDataGridView.RowHeadersVisible = false;
-            this.isobaricMappingDataGridView.Size = new System.Drawing.Size(1097, 304);
+            this.isobaricMappingDataGridView.Size = new System.Drawing.Size(2022, 304);
             this.isobaricMappingDataGridView.TabIndex = 3;
             this.isobaricMappingDataGridView.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.isobaricMappingDataGridView_EditingControlShowing);
             // 
@@ -148,7 +148,7 @@ namespace IDPicker.Forms
             this.quantitationMethodsTabPanel.Location = new System.Drawing.Point(0, 27);
             this.quantitationMethodsTabPanel.Name = "quantitationMethodsTabPanel";
             this.quantitationMethodsTabPanel.SelectedIndex = 0;
-            this.quantitationMethodsTabPanel.Size = new System.Drawing.Size(1105, 330);
+            this.quantitationMethodsTabPanel.Size = new System.Drawing.Size(2030, 330);
             this.quantitationMethodsTabPanel.TabIndex = 3;
             // 
             // isobaricSampleMappingTabPage
@@ -156,7 +156,7 @@ namespace IDPicker.Forms
             this.isobaricSampleMappingTabPage.Controls.Add(this.isobaricMappingDataGridView);
             this.isobaricSampleMappingTabPage.Location = new System.Drawing.Point(4, 22);
             this.isobaricSampleMappingTabPage.Name = "isobaricSampleMappingTabPage";
-            this.isobaricSampleMappingTabPage.Size = new System.Drawing.Size(1097, 304);
+            this.isobaricSampleMappingTabPage.Size = new System.Drawing.Size(2022, 304);
             this.isobaricSampleMappingTabPage.TabIndex = 0;
             this.isobaricSampleMappingTabPage.Text = "Isobaric Sample Mapping Table";
             this.isobaricSampleMappingTabPage.UseVisualStyleBackColor = true;
@@ -189,7 +189,7 @@ namespace IDPicker.Forms
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;
-            this.ClientSize = new System.Drawing.Size(1105, 398);
+            this.ClientSize = new System.Drawing.Size(2030, 398);
             this.Controls.Add(this.msGroups);
             this.Controls.Add(this.quantitationMethodsTabPanel);
             this.Controls.Add(this.saveButton);
