@@ -205,8 +205,6 @@ namespace pwiz.Common.DataBinding
             return Convert.ChangeType(value, type);
         }
 
-        public delegate bool MatchingFunc(object columnValue, object operandValue);
-
         abstract class FilterOperation : IFilterOperation
         {
             protected FilterOperation(string opName)

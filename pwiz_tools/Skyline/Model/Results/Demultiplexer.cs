@@ -40,17 +40,6 @@ namespace pwiz.Skyline.Model.Results
     }
 
     /// <summary>
-    /// Comparer for sorting and binary search of key-value pair list by key only.
-    /// </summary>
-    public class KvpKeyComparer : IComparer<KeyValuePair<double, int>>
-    {
-        public int Compare(KeyValuePair<double, int> x, KeyValuePair<double, int> y)
-        {
-            return x.Key.CompareTo(y.Key);
-        }
-    }
-
-    /// <summary>
     /// A method of hashing an isolation window to a unique long value
     /// isolationCenter is the m/z of the center of the isolation window,
     /// this value is multiplied by 100000000 and rounded to convert the
