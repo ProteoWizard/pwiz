@@ -431,7 +431,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (res.IsValid)
                         {
                             SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_DataRetrieved_Label);
-                            if (currentSize + res.ReplicateCount >= CACHE_CAPACITY) _datas.TryDequeue(out var dump);
+                            if (currentSize + res.ReplicateCount >= CACHE_CAPACITY) _datas.TryDequeue(out _);
                             _datas.Enqueue(res);
                             _callback.Invoke(res);
                         }

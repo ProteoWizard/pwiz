@@ -11117,4 +11117,7 @@ Invalid peptide sequence at position 18
   <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
     <value>iRT standard set to {0}, but multiple iRT standards were found. iRT standard must be set explicitly.</value>
   </data>
+  <data name="SkylineVersion_V20_2_Skyline_20_2" xml:space="preserve">
+    <value>Skyline 20.2</value>
+  </data>
 </root>
