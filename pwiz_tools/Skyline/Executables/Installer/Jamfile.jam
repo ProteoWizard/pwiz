@@ -152,7 +152,7 @@ actions test_msi
     copy "$(SKYLINE_BUILD_PATH)\*Test*.dll" "$(INSTALL_PATH)"
     copy "$(SKYLINE_BUILD_PATH)\Microsoft*.dll" "$(INSTALL_PATH)"
     copy "$(SKYLINE_BUILD_PATH)\TestRunner.exe*" "$(INSTALL_PATH)"
-    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 600000 "$(INSTALL_PATH)\TestRunner.exe" test=TestData.dll,TestDdaSearch loop=1 offscreen=0 language=en $(.teamcity-test-decoration)
+    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 600000 "$(INSTALL_PATH)\TestRunner.exe" log=TestDataInstalled.log test=TestData.dll,TestDdaSearch loop=1 offscreen=0 language=en $(.teamcity-test-decoration)
     set TEST_EXIT=%ERRORLEVEL%
     IF %TEST_EXIT% NEQ 0 echo Deployment test failed with code %TEST_EXIT%.
     set PATH=%PATH_TMP%
