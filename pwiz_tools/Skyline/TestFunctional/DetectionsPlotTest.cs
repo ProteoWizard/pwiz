@@ -185,10 +185,10 @@ namespace pwiz.SkylineTestFunctional
             {
                 Console.WriteLine(@"Peptides");
                 pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PEPTIDE).TargetsCount
-                    .ForEach((cnt) => { Console.Write($"{cnt}, "); });
+                    .ForEach((cnt) => { Console.Write($@"{cnt}, "); });
                 Console.WriteLine(@"\nPrecursors");
                 pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PRECURSOR).TargetsCount
-                    .ForEach((cnt) => { Console.Write($"{cnt}, "); });
+                    .ForEach((cnt) => { Console.Write($@"{cnt}, "); });
             }
 
             Assert.IsTrue(
