@@ -583,7 +583,6 @@ namespace pwiz.Skyline.Model
             CrosslinkBuilder crosslinkBuilder,
             SkylineDocumentProto.Types.Transition transitionProto)
         {
-            var stringPool = scrubber.StringPool;
             IonType ionType = DataValues.FromIonType(transitionProto.FragmentType);
             MeasuredIon measuredIon = null;
             if (transitionProto.MeasuredIonName != null)
