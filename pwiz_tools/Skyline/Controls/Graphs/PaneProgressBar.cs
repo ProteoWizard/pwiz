@@ -101,7 +101,8 @@ namespace pwiz.Skyline.Controls.Graphs
         //Thread-safe method to update the progress bar
         public void UpdateProgress(int progress)
         {
-            if (_parent.GraphSummary.GraphControl.IsHandleCreated)
+            var graph = _parent.GraphSummary.GraphControl;
+            if (graph != null && !graph.IsDisposed && graph.IsHandleCreated)
                 _parent.GraphSummary.GraphControl.Invoke((Action)(() => { this.DrawBar(progress); }));
         }
 

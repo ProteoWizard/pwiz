@@ -131,6 +131,7 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(targetIndex, summary.StateProvider.SelectedResultsIndex);
                     });
                     WaitForGraphs();
+                    WaitForConditionUI(() => regressionPane._progressBar == null);
                     var window = TestRegressionStatistics(regressionPane, i, j);
 
                     RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));

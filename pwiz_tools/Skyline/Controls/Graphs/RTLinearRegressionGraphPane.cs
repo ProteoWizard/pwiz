@@ -718,7 +718,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     ThreadingHelper.CheckCanceled(token);
                     index++;
                     if (peptideCount++ == reportingStep * currentProgress)
-                        graphPane._progressBar?.UpdateProgress(REPORTING_STEP * currentProgress++);
+                        graphPane?._progressBar?.UpdateProgress(REPORTING_STEP * currentProgress++);
 
                     switch (RTGraphController.PointsType)
                     {
