@@ -431,35 +431,5 @@ namespace pwiz.Common.DataBinding.Internal
             return columnName;
             
         }
-
-        public class TickCounter
-        {
-            private long _tickCount;
-            public TickCounter(CancellationToken cancellationToken) : this(cancellationToken, long.MaxValue)
-            {
-            }
-            public TickCounter(CancellationToken cancellationToken, long maxTickCount)
-            {
-                CancellationToken = cancellationToken;
-                MaxTickCount = maxTickCount;
-            }
-            public TickCounter(long maxTickCount) : this(CancellationToken.None, maxTickCount)
-            {
-            }
-            public TickCounter() : this(10000000)
-            {
-            }
-            public long TickCount {get { return _tickCount; }}
-            public void Tick()
-            {
-                CancellationToken.ThrowIfCancellationRequested();
-                if (Interlocked.Increment(ref _tickCount) >= MaxTickCount)
-                {
-                    throw new OperationCanceledException(string.Format(@"Number of steps exceeded {0}", MaxTickCount));
-                }
-            }
-            public long MaxTickCount { get; private set; }
-            public CancellationToken CancellationToken { get; private set; }
-        }
     }
 }
