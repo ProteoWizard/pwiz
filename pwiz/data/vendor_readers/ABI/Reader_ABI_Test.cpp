@@ -34,11 +34,7 @@ struct IsWiffFile : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
     {
-        return bal::iends_with(rawpath, ".wiff")
-#ifdef _WIN64
-            || bal::iends_with(rawpath, ".wiff2")
-#endif
-            ;
+        return bal::iends_with(rawpath, ".wiff");
     }
 };
 
@@ -115,6 +111,13 @@ int main(int argc, char* argv[])
         newConfig.globalChromatogramsAreMs1Only = true;
         newConfig.indexRange = make_pair(0, 0);
         result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile("PressureTrace1.wiff"), newConfig);
+
+        {
+            auto subsetConfig = config;
+            subsetConfig.peakPicking = true;
+            subsetConfig.indexRange = make_pair(0, 200);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("swath.api.wiff2"), subsetConfig);
+        }
 
         result.check();
     }
