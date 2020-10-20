@@ -58,7 +58,6 @@
       <ComponentGroupRef Id="Method_Bruker_files"/>
       <ComponentGroupRef Id="Method_Thermo_files"/>
       <ComponentGroupRef Id="Method_Waters_files"/>
-      <ComponentGroupRef Id="Microsoft.VC90.MFC_files"/>
       <ComponentGroupRef Id="percolator_files"/>
       <ComponentGroupRef Id="ApplicationShortcuts"/>
     </Feature>
@@ -205,11 +204,11 @@
       <Component Id="MSGraph.pdb">
         <File Source="$(var.Skyline.TargetDir)/MSGraph.pdb" KeyPath="yes"/>
       </Component>
-      <!--<?if $(sys.BUILDARCH) != x64 ?>
+      <?if $(sys.BUILDARCH) != x64 ?>
       <Component Id="Native.ProteowizardWrapper.manifest">
         <File Source="$(var.Skyline.TargetDir)/Native.ProteowizardWrapper.manifest" KeyPath="yes"/>
       </Component>
-      <?endif?>-->
+      <?endif?>
       <Component Id="NHibernate.dll">
         <File Source="$(var.Skyline.TargetDir)/NHibernate.dll" KeyPath="yes"/>
       </Component>
@@ -573,16 +572,6 @@
       <Component Id="Method_Waters_VerifyESkylineLibrary.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Waters\VerifyESkylineLibrary.dll" KeyPath="yes"/>
       </Component>
-    </ComponentGroup>
-    <ComponentGroup Id="Microsoft.VC90.MFC_files" Directory="Microsoft.VC90.MFC_directory">
-      <?if $(sys.BUILDARCH) != x64 ?>
-      <Component Id="Microsoft.VC90.MFC_mfc90u.dll">
-        <File Source="$(var.Skyline.TargetDir)/Microsoft.VC90.MFC\mfc90u.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="Microsoft.VC90.MFC_Microsoft.VC90.MFC.manifest">
-        <File Source="$(var.Skyline.TargetDir)/Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest" KeyPath="yes"/>
-      </Component>
-      <?endif?>
     </ComponentGroup>
     <ComponentGroup Id="percolator_files" Directory="percolator_directory">
       <Component Id="percolator_percolator.exe">
