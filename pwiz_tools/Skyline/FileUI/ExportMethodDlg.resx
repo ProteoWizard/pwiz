@@ -270,7 +270,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>8</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>259, 41</value>
+    <value>264, 41</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -294,7 +294,7 @@ if peptide or protein boundaries do not allow the maximum.</value>
     <value>26</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>259, 11</value>
+    <value>264, 11</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -372,7 +372,7 @@ until primary transitions reach a certain intensity threshold.</value>
     <value>24</value>
   </data>
   <data name="textRunLength.Location" type="System.Drawing.Point, System.Drawing">
-    <value>175, 321</value>
+    <value>185, 321</value>
   </data>
   <data name="textRunLength.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -601,7 +601,7 @@ A single template transition may also be required for transition values not cont
     <value>False</value>
   </data>
   <data name="cbIgnoreProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>175, 117</value>
+    <value>185, 117</value>
   </data>
   <data name="cbIgnoreProteins.Size" type="System.Drawing.Size, System.Drawing">
     <value>96, 17</value>
@@ -832,7 +832,7 @@ and base name as the Analyst acquisition method.</value>
     <value>True</value>
   </data>
   <data name="cbSortByMz.Location" type="System.Drawing.Point, System.Drawing">
-    <value>175, 93</value>
+    <value>185, 93</value>
   </data>
   <data name="cbSortByMz.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 1, 1, 1</value>
