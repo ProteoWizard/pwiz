@@ -271,7 +271,7 @@
     <value>2</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>P 值阀值(&amp;P)：</value>
+    <value>P 值截止(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -325,7 +325,7 @@
     <value>0</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>倍数变化阈值(&amp;F)：</value>
+    <value>倍数变化截止值(&amp;F)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>

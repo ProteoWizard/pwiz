@@ -66,6 +66,10 @@ namespace pwiz.SkylineTest
             else
             {
                 var root = thisFile.Replace("\\Test\\CodeInspectionTest.cs",string.Empty);
+                if (!Directory.Exists(root))
+                {
+                    return; // Don't fail if being run after installation without codebase
+                }
                 var result = new List<string>();
                 foreach (var fileMask in forbidden.Keys)
                 {

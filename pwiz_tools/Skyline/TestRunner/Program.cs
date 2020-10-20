@@ -30,6 +30,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 //WARNING: Including TestUtil in this project causes a strange build problem, where the first
 //         build from Visual Studio after a full bjam build removes all of the Skyline project
 //         root files from the Skyline bin directory, leaving it un-runnable until a full
@@ -417,6 +418,8 @@ namespace TestRunner
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
             var formList = commandLineArgs.ArgAsString("form");
+            if (!formList.IsNullOrEmpty())
+                perftests = true;
             var pauseDialogs = (string.IsNullOrEmpty(formList)) ? null : formList.Split(',');
             var results = commandLineArgs.ArgAsString("results");
             var maxSecondsPerTest = commandLineArgs.ArgAsDouble("maxsecondspertest");
@@ -513,7 +516,7 @@ namespace TestRunner
             }
             else
             {
-                if (!randomOrder && perftests)
+                if (!randomOrder && formList.IsNullOrEmpty() && perftests)
                     runTests.Log("Perf tests will run last, for maximum overall test coverage.\r\n");
                 runTests.Log("Running {0}{1} tests{2}{3}...\r\n",
                     testList.Count,

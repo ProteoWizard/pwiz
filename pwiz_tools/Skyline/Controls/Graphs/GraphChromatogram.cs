@@ -322,10 +322,20 @@ namespace pwiz.Skyline.Controls.Graphs
             var retentionTime = clickedItem.GetValidPeakBoundaryTime(displayTime);
             if (retentionTime.IsZero)
                 return;
+            IList<CurveItem> curveList;
+            if (_nodeGroups.Length == 1)
+            {
+                // If there is only one precursor, then use the curves from all graph panes.
+                curveList = graphControl.MasterPane.PaneList.SelectMany(GetCurveList).ToList();
+            }
+            else
+            {
+                curveList = GetCurveList(graphPane);
+            }
             int scanIndex = MsDataFileScanHelper.FindScanIndex(chromatogramGroupInfo, retentionTime.MeasuredTime);
-            var transitions = new List<TransitionFullScanInfo>(graphPane.CurveList.Count);
+            var transitions = new List<TransitionFullScanInfo>(curveList.Count);
             int transitionIndex = 0;
-            foreach (var curve in GetCurveList(graphPane))
+            foreach (var curve in curveList)
             {
                 var graphItem = (ChromGraphItem) curve.Tag;
                 if (ReferenceEquals(curve, _closestCurve))
@@ -1435,7 +1445,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int colorOffset = 0;
             if(displayType == DisplayTypeChrom.products && 
                 (nodeDisplayType != DisplayTypeChrom.single || 
-                (nodeDisplayType == DisplayTypeChrom.single && chromatograms.OptimizationFunction == null)))
+                 chromatograms.OptimizationFunction == null))
             {
                 colorOffset = GetDisplayTransitions(nodeGroup, DisplayTypeChrom.precursors).Count();
             }
