@@ -101,6 +101,7 @@
             // toolStripComboNormalizedTo
             // 
             this.toolStripComboNormalizedTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.toolStripComboNormalizedTo.DropDownWidth = 150;
             this.toolStripComboNormalizedTo.Margin = new System.Windows.Forms.Padding(4);
             this.toolStripComboNormalizedTo.Name = "toolStripComboNormalizedTo";
             resources.ApplyResources(this.toolStripComboNormalizedTo, "toolStripComboNormalizedTo");

@@ -32,7 +32,8 @@ namespace AutoQCTest
             TestValidateMainSettings(mainSettings, "Please specify path to a Skyline file.");
 
             const string skyPath = "C:\\dummy\\path\\Test.sky";
-            mainSettings.SkylineFilePath = skyPath;
+            mainSettings = new MainSettings(skyPath, "", false, null, true,
+                MainSettings.ACCUM_TIME_WINDOW, "Thermo", MainSettings.ACQUISITION_TIME);
             TestValidateMainSettings(mainSettings, string.Format("Skyline file {0} does not exist.", skyPath));
         }
 
@@ -52,7 +53,8 @@ namespace AutoQCTest
         [TestMethod]
         public void TestGetLastArchivalDate()
         {
-            var mainSettings = new MainSettings() { SkylineFilePath = @"C:\Dummy\path\Test_file.sky" };
+            var mainSettings = new MainSettings(@"C:\Dummy\path\Test_file.sky", "", false, null, true,
+                MainSettings.ACCUM_TIME_WINDOW, "Thermo", MainSettings.ACQUISITION_TIME);
             var fsUtil = new TestFileSystemUtil();
 
             Assert.AreEqual(new DateTime(2015, 06, 01), mainSettings.GetLastArchivalDate(fsUtil));
@@ -61,7 +63,8 @@ namespace AutoQCTest
         [TestMethod]
         public void TestAddArchiveArgs()
         {
-            var mainSettings = new MainSettings() { SkylineFilePath = @"C:\Dummy\path\Test_file.sky" };
+            var mainSettings = new MainSettings(@"C:\Dummy\path\Test_file.sky", "", false, null, true,
+                MainSettings.ACCUM_TIME_WINDOW, "Thermo", MainSettings.ACQUISITION_TIME);
             var date = new DateTime(2015, 6, 17);
             mainSettings.LastArchivalDate = date;
             
@@ -88,9 +91,9 @@ namespace AutoQCTest
             const string skyFile = @"C:\Dummy\path\Test_file.sky";
             const string dataFile1 = @"C:\Dummy\path\Test1.raw";
 
-            var mainSettings = MainSettings.GetDefault();
-            mainSettings.SkylineFilePath = skyFile;
-            
+            var mainSettings = new MainSettings(skyFile, "", false, null, true,
+                MainSettings.ACCUM_TIME_WINDOW, "Thermo", MainSettings.ACQUISITION_TIME);
+
             var accumulationWindow = AccumulationWindow.Get(DateTime.Now, MainSettings.ACCUM_TIME_WINDOW);
             Assert.AreEqual(accumulationWindow.EndDate.Subtract(accumulationWindow.StartDate).Days + 1,
                 MainSettings.ACCUM_TIME_WINDOW);
@@ -114,8 +117,8 @@ namespace AutoQCTest
             const string dataFile1 = @"C:\Dummy\path\Test1.raw";
             const string dataFile2 = @"C:\Dummy\path\Test2.raw";
 
-            var mainSettings = MainSettings.GetDefault();
-            mainSettings.SkylineFilePath = skyFile;
+            var mainSettings = new MainSettings(skyFile, "", false, null, true,
+                MainSettings.ACCUM_TIME_WINDOW, "Thermo", MainSettings.ACQUISITION_TIME);
 
             // Create an import context.
             var importContext = new ImportContext(new List<string>() { dataFile1, dataFile2 });

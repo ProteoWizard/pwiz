@@ -93,11 +93,11 @@ Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844+
 All Info  :
 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
 
-Undo Redo : 离子对设置 -- Integration > Integrate All 已更改为 真
-Summary   : 设置 > 离子对设置 -- Integration > Integrate All 已更改为 真
+Undo Redo : 离子对设置 -- 整合 > 全部整合 已更改为 真
+Summary   : 设置 > 离子对设置 -- 整合 > 全部整合 已更改为 真
 All Info  :
-离子对设置 -- Integration > Integrate All 已更改为 真
-设置 > 离子对设置 -- Integration > Integrate All 从 假 更改到 真
+离子对设置 -- 整合 > 全部整合 已更改为 真
+设置 > 离子对设置 -- 整合 > 全部整合 从 假 更改到 真
 
 Undo Redo : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]
 Summary   : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]
@@ -206,7 +206,7 @@ Undo Redo : 已将 72 值粘贴到文档网格
 Summary   : 已将 72 值粘贴到文档网格
 All Info  :
 已将 72 值粘贴到文档网格
-文档网格 > 查看名称 是 "重复测定"
+文档网格 > 报告名称 是 "重复测定"
 将 D_103_REP1 的 SubjectId 设定为 "D102"
 将 D_103_REP1 的 BioReplicate 设定为 "102"
 将 D_103_REP1 的 Condition 设定为 "Diseased"
@@ -323,7 +323,7 @@ H162	162	Healthy
 H162	162	Healthy
 
 
-查看名称 = "重复测定"
+报告名称 = "重复测定"
 
 Undo Redo : 注释 : "MissingData" 已添加
 Summary   : 设置 > 文档设置 -- 注释 : "MissingData" 已添加
@@ -342,7 +342,7 @@ Undo Redo : 已将 149 值粘贴到文档网格
 Summary   : 已将 149 值粘贴到文档网格
 All Info  :
 已将 149 值粘贴到文档网格
-文档网格 > 查看名称 是 "Truncated Precursors"
+文档网格 > 报告名称 是 "Truncated Precursors"
 文档网格 > 列设置 > 列分类 : 包含 { 列 = "截尾计数", 方位 = "降序" }
 将 DFATVYVDAVK 的 MissingData 设定为 真
 将 DFATVYVDAVK 的 MissingData 设定为 真
@@ -643,7 +643,7 @@ TRUE
 TRUE
 TRUE
 
-查看名称 = "Truncated Precursors",
+报告名称 = "Truncated Precursors",
 列设置 = 
 {
     列分类 = 
@@ -689,7 +689,7 @@ All Info  :
 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 置信水平 是 "99"
 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 蛋白质范围 是 真
 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 用零作为缺失峰值 是 假
-设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > Q值界限 是 缺失
+设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > Q 值截止 是 缺失
 设置 > 文档设置 -- 群组比较 > "Healthy v. Diseased" > 格式化行 是 空
 
 Undo Redo : 群组比较 > "Healthy v. Diseased" > 身份注释 已更改为 缺失

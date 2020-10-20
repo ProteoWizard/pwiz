@@ -183,7 +183,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public void CreateDatabaseFile(string fileName)
         {
             Settings.Default.ActiveDirectory = Path.GetDirectoryName(fileName);
-
+            if (string.IsNullOrEmpty(LibraryName))
+            {
+                // User has not provided a library name - use file name as a reasonable guess
+                LibraryName = Path.GetFileNameWithoutExtension(fileName);
+            }
             CreateDatabase(fileName, LibraryName);
             textDatabase.Focus();
         }

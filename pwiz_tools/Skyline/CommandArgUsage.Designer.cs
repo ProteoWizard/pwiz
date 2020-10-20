@@ -628,11 +628,38 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name of iRT standard to to be used when building a spectral library..
+        /// </summary>
+        internal static string _import_search_irts {
+            get {
+                return ResourceManager.GetString("_import_search_irts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify the number of CiRT peptides to use as iRT standards if building a spectral library with CiRT peptides as iRT standards..
+        /// </summary>
+        internal static string _import_search_num_cirts {
+            get {
+                return ResourceManager.GetString("_import_search_num_cirts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to For MaxQuant msms.txt files to force use of the spectra in the file rather than opening raw data files for the original spectra. The MaxQuant msms.txt files contain charge-state deconvoluted spectra which may not be appropriate for target selection..
         /// </summary>
         internal static string _import_search_prefer_embedded_spectra {
             get {
                 return ResourceManager.GetString("_import_search_prefer_embedded_spectra", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If building a spectral library with iRT standards, recalibrate the iRT standard values relative to the peptides being added..
+        /// </summary>
+        internal static string _import_search_recalibrate_irts {
+            get {
+                return ResourceManager.GetString("_import_search_recalibrate_irts", resourceCulture);
             }
         }
         

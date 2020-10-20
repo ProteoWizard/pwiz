@@ -2272,8 +2272,7 @@ namespace pwiz.Skyline.Model
                         continue;
 
                     var optType = chromatogram.OptimizationFunction.OptType;
-                    if (highestTuneLevel < CompensationVoltageParameters.Tuning.fine &&
-                        OptimizationType.compensation_voltage_fine.Equals(optType))
+                    if (OptimizationType.compensation_voltage_fine.Equals(optType))
                     {
                         return CompensationVoltageParameters.Tuning.fine;
                     }

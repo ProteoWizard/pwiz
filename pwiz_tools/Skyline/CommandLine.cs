@@ -1731,10 +1731,21 @@ namespace pwiz.Skyline
         private bool ImportSearchInternal(CommandArgs commandArgs, ref SrmDocument doc)
         {
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
+            IrtStandard irtStandard = null;
+            if (!string.IsNullOrEmpty(commandArgs.IrtStandardName))
+            {
+                irtStandard = Settings.Default.IrtStandardList.FirstOrDefault(standard => Equals(standard.Name, commandArgs.IrtStandardName));
+                if (irtStandard == null)
+                {
+                    _out.WriteLine(Resources.CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_, commandArgs.IrtStandardName);
+                    return false;
+                }
+            }
             var import = new ImportPeptideSearch
             {
                 SearchFilenames = commandArgs.SearchResultsFiles.ToArray(),
-                CutoffScore = commandArgs.CutoffScore.GetValueOrDefault()
+                CutoffScore = commandArgs.CutoffScore.GetValueOrDefault(),
+                IrtStandard = irtStandard
             };
 
             // Build library
@@ -1760,6 +1771,64 @@ namespace pwiz.Skyline
             doc = import.AddDocumentSpectralLibrary(doc, docLibSpec);
             if (doc == null)
                 return false;
+
+            // Add iRTs
+            if (import.IrtStandard != null && !import.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+            {
+                ImportPeptideSearch.GetLibIrtProviders(import.DocLib, import.IrtStandard, progressMonitor,
+                    out var irtProviders, out var autoStandards, out var cirtPeptides);
+                int? numCirt = null;
+                if (cirtPeptides.Length >= RCalcIrt.MIN_PEPTIDES_COUNT)
+                {
+                    if (!commandArgs.NumCirts.HasValue)
+                    {
+                        _out.WriteLine(Resources.CommandLine_ImportSearchInternal__0__must_be_set_when_using_CiRT_peptides_, CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS.Name);
+                        return false;
+                    }
+                    numCirt = commandArgs.NumCirts.Value;
+                }
+                else if (ReferenceEquals(import.IrtStandard, IrtStandard.AUTO))
+                {
+                    switch (autoStandards.Count)
+                    {
+                        case 0:
+                            import.IrtStandard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, IrtPeptidePicker.Pick(irtProviders, 10));
+                            break;
+                        case 1:
+                            import.IrtStandard = autoStandards[0];
+                            break;
+                        default:
+                            _out.WriteLine(Resources.CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
+                                IrtStandard.AUTO.Name);
+                            return false;
+                    }
+                }
+
+                var standardPeptides = import.IrtStandard.Peptides.ToArray();
+                ProcessedIrtAverages processed;
+                try
+                {
+                    processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders, standardPeptides,
+                        cirtPeptides, IrtRegressionType.DEFAULT, progressMonitor, out var newStandardPeptides);
+                    if (newStandardPeptides != null)
+                        standardPeptides = newStandardPeptides;
+                }
+                catch (Exception x)
+                {
+                    _out.WriteLine(TextUtil.LineSeparate(
+                        Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_,
+                        x.Message));
+                    return false;
+                }
+
+                var processedDbIrtPeptides = processed.DbIrtPeptides.ToArray();
+                if (processedDbIrtPeptides.Any())
+                {
+                    ImportPeptideSearch.CreateIrtDb(docLibSpec.FilePath, processed, standardPeptides,
+                        processed.CanRecalibrateStandards(standardPeptides) && commandArgs.RecalibrateIrts, IrtRegressionType.DEFAULT, progressMonitor);
+                }
+                doc = ImportPeptideSearch.AddRetentionTimePredictor(doc, docLibSpec);
+            }
 
             if (!import.VerifyRetentionTimes(import.GetFoundResultsFiles().Select(f => f.Path)))
             {

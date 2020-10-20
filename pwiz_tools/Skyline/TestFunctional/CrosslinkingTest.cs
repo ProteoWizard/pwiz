@@ -40,6 +40,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CrosslinkingTest.sky")));
+            WaitForDocumentLoaded();
             const string crosslinkerName = "DSS";
             var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(()=>
