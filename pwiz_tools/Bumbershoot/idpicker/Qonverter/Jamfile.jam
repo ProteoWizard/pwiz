@@ -88,6 +88,7 @@ lib Qonverter
         <library>$(PWIZ_ROOT_PATH)/pwiz_tools/common//pwiz_tools_common
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
+        <include>$(PWIZ_LIBRARIES_PATH)/Eigen
         <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
         <library>IdpSqlExtensions
         <toolset>msvc:<cxxflags>/bigobj
@@ -139,6 +140,8 @@ unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATI
 unit-test EmbedderTest : EmbedderTest.cpp Qonverter $(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) <dependency>gene2protein.db3 ;
 unit-test FilterTest : FilterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 unit-test LoggerTest : LoggerTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
+
+doctest EmbedderDoctest : Embedder.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 
 path-constant TEST_DATA_PATH : ../TestData ;
 run CommandlineTest.cpp

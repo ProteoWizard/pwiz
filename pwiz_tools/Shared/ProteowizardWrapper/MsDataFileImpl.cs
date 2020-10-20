@@ -53,7 +53,9 @@ namespace pwiz.ProteowizardWrapper
             {
                 // Forces pwiz_data_cli.dll to be loaded with all its dependencies
                 // Throws and exception if the DLL load fails
+                // ReSharper disable UnusedVariable
                 var test = new MSData();
+                // ReSharper restore UnusedVariable
                 // Return the version string once the load succeeds
                 return Version.ToString();
             }
