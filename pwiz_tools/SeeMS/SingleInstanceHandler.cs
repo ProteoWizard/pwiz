@@ -65,25 +65,25 @@ public sealed class SingleInstanceHandler
     }
 
     /// <summary>
-    /// Launch a new instance using 'args' or consolidate 'args' into a recent instance.
+    /// Launch a new instance using 'args' or consolidate 'args' into a recent instance. Returns exit code of the Launching event if new instance was launched.
     /// </summary>
-    public void Connect (string[] args)
+    public int Connect (string[] args)
     {
         if (Launching == null)
-            return; // nothing to do
+            return 1; // nothing to do
 
         // create global named mutex
         using (ipcMutex = new Mutex(false, ipcMutexGuid))
         {
             // if the global mutex is not locked, wait for args from additional instances
             if (ipcMutex.WaitOne(0))
-                waitForAdditionalInstances(args);
+                return waitForAdditionalInstances(args);
             else
-                sendArgsToExistingInstance(args);
+                return sendArgsToExistingInstance(args);
         }
     }
 
-    private void waitForAdditionalInstances (string[] args)
+    private int waitForAdditionalInstances (string[] args)
     {
         var accumulatedArgs = new List<string>(args);
 
@@ -124,10 +124,12 @@ public sealed class SingleInstanceHandler
         }
 
         ipcMutex.Close();
-        Launching(this, new SingleInstanceEventArgs(accumulatedArgs.ToArray()));
+        var eventArgs = new SingleInstanceEventArgs(accumulatedArgs.ToArray());
+        Launching?.Invoke(this, eventArgs);
+        return eventArgs.ExitCode;
     }
 
-    private void sendArgsToExistingInstance (string[] args)
+    private int sendArgsToExistingInstance (string[] args)
     {
         var pipeClient = new NamedPipeClientStream(".", ipcNamedPipeGuid, PipeDirection.Out);
 
@@ -148,6 +150,7 @@ public sealed class SingleInstanceHandler
                 throw new Exception("did not throw exception");
 
             pipeClient.Write(buffer, 0, buffer.Length);
+            return 0;
         }
         catch (Exception e)
         {
@@ -155,7 +158,9 @@ public sealed class SingleInstanceHandler
                 throw;
 
             // no server was running; launch a new instance
-            Launching(this, new SingleInstanceEventArgs(args));
+            var eventArgs = new SingleInstanceEventArgs(args);
+            Launching?.Invoke(this, eventArgs);
+            return eventArgs.ExitCode;
         }
     }
 
@@ -175,4 +180,9 @@ public sealed class SingleInstanceEventArgs : EventArgs
     /// The consolidated argument list from one or more instances of an application.
     /// </summary>
     public string[] Args { get; private set; }
+
+    /// <summary>
+    /// A return code from the launched instance.
+    /// </summary>
+    public int ExitCode { get; set; }
 }
