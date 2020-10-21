@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model
                 return new AAModInfo[0];
             if (_libKeys.Current.LibraryKey is PeptideLibraryKey peptideLibraryKey)
             {
-                return EnumerateSequenceInfos(_libKeys.Current.LibraryKey as PeptideLibraryKey, false);
+                return EnumerateSequenceInfos(peptideLibraryKey, false);
             }
             else if (_libKeys.Current.LibraryKey is CrosslinkLibraryKey crosslinkLibraryKey)
             {

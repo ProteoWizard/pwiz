@@ -342,8 +342,6 @@ namespace pwiz.Skyline.Controls
         private readonly TextBox _box;
         private readonly Control _immediateWindow;
 
-        public delegate void Del(string text);
-
         public TextBoxStreamWriter(TextBox box, Control immediateWindow, TextBoxStreamWriterHelper writerHelper)
         {
             _box = box;
