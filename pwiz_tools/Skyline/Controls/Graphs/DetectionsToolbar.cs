@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 this.toolStripAtLeastN.NumericUpDownControl.Maximum =
                     _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
                 toolStripAtLeastN.NumericUpDownControl.Value = Settings.RepCount;
-                this.toolStripAtLeastN.NumericUpDownControl.ValueChanged += new EventHandler(toolStripAtLeastN_ValueChanged);
+                this.toolStripAtLeastN.NumericUpDownControl.ValueChanged += toolStripAtLeastN_ValueChanged;
             }
             else
             {
