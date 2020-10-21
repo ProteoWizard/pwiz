@@ -548,6 +548,8 @@ namespace IDPicker.Forms
 
         private TotalCounts totalCounts, basicTotalCounts;
 
+        private DataGridViewColumn ReferenceColumn { get; set; }
+
         // map source/group id to row index to pivot data
         private Map<long, Map<long, PivotData>> statsBySpectrumSource, basicStatsBySpectrumSource;
         private Map<long, Map<long, PivotData>> statsBySpectrumSourceGroup, basicStatsBySpectrumSourceGroup;
@@ -1036,20 +1038,26 @@ namespace IDPicker.Forms
                 var itr = stats.second.Find(rowId);
                 if (itr.IsValid)
                 {
-                    if (stats.first)
+                    double value;
+                    if (itr.Current.Value.IsArray)
                     {
-                        if (itr.Current.Value.IsArray)
-                            return ((double[]) itr.Current.Value.Value)[Convert.ToInt32(pivotColumn.DataPropertyName)];
-                        else
-                            return itr.Current.Value.Value;
+                        value = ((double[]) itr.Current.Value.Value)[Convert.ToInt32(pivotColumn.DataPropertyName)];
+                        if (ReferenceColumn != null)
+                        {
+                            var referenceStats = ReferenceColumn.Tag as Pair<bool, Map<long, PivotData>>;
+                            var refItr = referenceStats.second.Find(rowId);
+                            if (refItr.IsValid)
+                            {
+                                double refValue = ((double[]) refItr.Current.Value.Value)[Convert.ToInt32(ReferenceColumn.DataPropertyName)];
+                                if (refValue > 0)
+                                    value /= refValue;
+                            }
+                        }
                     }
                     else
-                    {
-                        if (itr.Current.Value.IsArray)
-                            return ((double[]) itr.Current.Value.Value)[Convert.ToInt32(pivotColumn.DataPropertyName)];
-                        else
-                            return itr.Current.Value.Value;
-                    }
+                        value = (double) itr.Current.Value.Value;
+
+                    return value;
                 }
             }
             else if (baseRow is ClusterRow)
@@ -1628,17 +1636,20 @@ namespace IDPicker.Forms
                 {
                     var quantColumns = checkedPivots.Any(o => o.Text.Contains("TMT")) ? TMT_ReporterIonColumns : iTRAQ_ReporterIonColumns;
                     var sampleNames = isobaricSampleMapping.ContainsKey(groupName.TrimEnd('/')) ? isobaricSampleMapping[groupName.TrimEnd('/')] : null;
-
+                    ReferenceColumn = null;
                     int sampleMapIndex = 0;
                     for (int i = 0; i < quantColumns.Count; ++i)
                     {
                         string sampleName = groupName;
+                        bool isReferenceColumn = false;
                         if (quantColumns[i].Visible && sampleNames != null)
                         {
                             sampleName = sampleNames[sampleMapIndex];
                             ++sampleMapIndex;
-                            if (sampleName == "Empty")
+                            if (sampleName.Equals("Empty", StringComparison.InvariantCultureIgnoreCase))
                                 continue;
+                            if (sampleName.Equals("Reference", StringComparison.InvariantCultureIgnoreCase))
+                                isReferenceColumn = true;
                         }
 
                         DataGridViewColumn newColumn = quantColumns[i].Clone() as DataGridViewColumn;
@@ -1647,8 +1658,10 @@ namespace IDPicker.Forms
                         newColumn.DataPropertyName = i.ToString();
                         newColumn.Name = "pivotQuantColumn" + i.ToString();
                         newColumn.FillWeight = 1;
-                        // preserve the visibility of the cloned column
                         pivotColumns.Add(newColumn);
+
+                        if (isReferenceColumn)
+                            ReferenceColumn = newColumn;
                     }
 
                     continue;
@@ -1702,6 +1715,12 @@ namespace IDPicker.Forms
             {
                 treeDataGridView.ResumeLayout(true);
                 return;
+            }
+
+            if (statsBySpectrumSourceGroup != null && pivotColumns.Count > 0)
+            {
+                foreach (var c in TMT_ReporterIonColumns) c.Visible = false;
+                foreach (var c in iTRAQ_ReporterIonColumns) c.Visible = false;
             }
 
             var sourceNames = sourceById.Select(o => o.Value.Name);
