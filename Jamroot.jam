@@ -797,6 +797,69 @@ explicit idconvert ;
 alias all-tests : pwiz pwiz_tools pwiz_aux ;
 
 
+if ! --without-compassxtract in [ modules.peek : ARGV ]
+{
+    .installer-vendor-files-location = $(PWIZ_BUILD_PATH)/$(PLATFORM) ;
+}
+else
+{
+    .installer-vendor-files-location = $(PWIZ_BUILD_PATH)/without-cxt/$(PLATFORM) ;
+}
+
+rule make_INSTALLER_VENDOR_FILES ( targets * : sources * : properties * )
+{
+    # enumerate .NET assemblies and their native DLL dependencies
+    local assemblies = [ feature.get-values <assembly> : $(properties) ] ;
+    assemblies += [ feature.get-values <assembly-dependency> : $(properties) ] ;
+    if $(assemblies)
+    {
+        for local assembly in $(assemblies)
+        {
+            local assembly-path = [ path.basename [ $(assembly).name ] ] ;
+            if ! $(assembly-path:L) in $(.unique-vendor-files:L)
+            {
+                .unique-vendor-files += $(assembly-path) ;
+            }
+        }
+    }
+    
+    # TODO: figure out a better way to specify subdirectories for assembly-dependencies
+    local assemblies-ex = [ feature.get-values <assembly-dependency-ex> : $(properties) ] ;
+    if $(assemblies-ex)
+    {
+        for local assembly in $(assemblies-ex)
+        {
+            local assembly-parts = [ SPLIT_BY_CHARACTERS $(assembly) : "|" ] ;
+            local assembly-path = [ path.basename $(assembly-parts[1]) ] ;
+            if ( $(assembly-parts[2]) )
+            {
+                local features = [ feature.split $(assembly-parts[2]) ] ;
+                assembly-path = [ path.join [ feature.get-values <location-prefix> : $(features) ] $(assembly-path) ] ;
+            }
+
+            if ! $(assembly-path:L) in $(.unique-vendor-files:L)
+            {
+                .unique-vendor-files += $(assembly-path) ;
+            }
+        }
+    }
+
+    local rule case-insensitive-compare ( a b ) { if $(a:L) < $(b:L) { return true ; } }
+    local sorted-vendor-files = [ sequence.insertion-sort $(.unique-vendor-files) : case-insensitive-compare ] ;
+    local .nl = [ common.newline-char ] ;
+    TARGETS on $(<) = $(sorted-vendor-files:J=$(.nl)) ;
+}
+
+actions make_INSTALLER_VENDOR_FILES bind TARGETS
+{
+@($(STDOUT):E=$(TARGETS)
+) > "$(<)"
+}
+
+make INSTALLER_VENDOR_FILES.txt : msconvert : @make_INSTALLER_VENDOR_FILES : <location>$(.installer-vendor-files-location) ;
+explicit INSTALLER_VENDOR_FILES.txt ;
+
+
 # for copying all libraries and headers to one dir each
 alias libraries : install-pwiz-lib install-boost-headers ;
 explicit libraries ;
@@ -922,7 +985,7 @@ rule wiff-dll-location ( api-path : properties * )
     # .NET 4 DLLs should work for anything .NET 4 or greater (hopefully); there's no Boost.Build property for .NET version
     local result = $(api-path) ;
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
-       [ path.exists $(result)\\SciexToolKit.dll ]
+       [ path.exists $(result)\\Clearcore2.Data.dll ]
     {
         return $(result) ;
     }
