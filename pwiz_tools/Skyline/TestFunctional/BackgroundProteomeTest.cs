@@ -19,12 +19,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -119,6 +121,11 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SwitchDocument(new SrmDocument(SrmSettingsList.GetDefault()), null);
             });
             Assert.AreEqual(0, SkylineWindow.Document.PeptideCount);
+
+            // Wait until protein metadata manager is finished before trying to rename the background proteome database.
+            WaitForCondition(() => !SkylineWindow.BackgroundLoaders.OfType<ProteinMetadataManager>()
+                .Any(loader => loader.AnyProcessing()));
+
             File.Move(protdbPath, TestFilesDir.GetTestPath(_backgroundProteomeName + "-copy" + ProteomeDb.EXT_PROTDB));
             RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath),
                 dlg => dlg.OkDialog());
