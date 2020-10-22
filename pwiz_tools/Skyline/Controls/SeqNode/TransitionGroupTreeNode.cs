@@ -326,6 +326,10 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             get
             {
+                if (DocSettings.PeptideSettings.Quantification.SimpleRatios)
+                {
+                    return null;
+                }
                 return HasSiblingsToSynch(false)
                            ? Resources.TransitionGroupTreeNode_SynchSiblingsLabel_Synchronize_isotope_label_types
                            : null;
