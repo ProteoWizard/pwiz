@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" 
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
+  <?define ProductVersion="__VERSION__" ?>
+  <?if $(sys.BUILDARCH) = x64 ?>
+    <?if $(var.Skyline.TargetName) = Skyline?>
+      <?define UpgradeCode="{AADA455D-DB0C-4245-A844-AB81329B9E4F}"?>
+      <?define ProductName="Skyline (64 bit)"?>
+    <?else?>
+      <?define UpgradeCode="{08F72B41-9E5D-4A20-8CFF-8DAAE033CF34}"?>
+      <?define ProductName="Skyline-Daily (64 bit)"?>
+    <?endif?>
+  <?else?>
+    <?if $(var.Skyline.TargetName) = Skyline?>
+      <?define UpgradeCode="{739F7586-A500-4183-B944-3250AD369F78}"?>
+      <?define ProductName="Skyline (32 bit)"?>
+    <?else?>
+      <?define UpgradeCode="{4358D79A-28D8-45C2-B1AC-6692149C6FCC}"?>
+      <?define ProductName="Skyline-Daily (32 bit)"?>
+    <?endif?>
+  <?endif?>
+
+  <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.ProductVersion)" Manufacturer="MacCoss Lab, UW" UpgradeCode="$(var.UpgradeCode)">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Skyline is already installed." />
+    <MediaTemplate EmbedCab="yes"/>
+    <FeatureRef Id="ProductFeature"/>
+    <PropertyRef Id='NETFRAMEWORK45'/>
+    <Condition Message="Requires Microsoft .NET 4.7.2 Framework">
+      <![CDATA[Installed OR (NETFRAMEWORK45 >= "#461808")]]>
+    </Condition>
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <UIRef Id="WixUI_InstallDir" />
+    <WixVariable Id="WixUILicenseRtf" Value="__TEMPLATE_DIR__\SkylineLicense.rtf"/>
+  </Product>
+
+  <Fragment>
+    <Feature Id="ProductFeature" Title="Skyline Application" Level="1">
+      <ComponentGroupRef Id="SkylineComponents" />
+      <ComponentGroupRef Id="de_files"/>
+      <ComponentGroupRef Id="es_files"/>
+      <ComponentGroupRef Id="fr_files"/>
+      <ComponentGroupRef Id="hu_files"/>
+      <ComponentGroupRef Id="it_files"/>
+      <ComponentGroupRef Id="ja_files"/>
+      <ComponentGroupRef Id="pt_files"/>
+      <ComponentGroupRef Id="ru_files"/>
+      <ComponentGroupRef Id="sk_files"/>
+      <ComponentGroupRef Id="sv_files"/>
+      <ComponentGroupRef Id="tr_files"/>
+      <ComponentGroupRef Id="zh_CHS_files"/>
+      <ComponentGroupRef Id="zh_tw_files"/>
+      <ComponentGroupRef Id="Method_AbSciex_TOF_files"/>
+      <ComponentGroupRef Id="Method_AbSciex_TQ_files"/>
+      <ComponentGroupRef Id="Method_Agilent_files"/>
+      <ComponentGroupRef Id="Method_Bruker_files"/>
+      <ComponentGroupRef Id="Method_Thermo_files"/>
+      <ComponentGroupRef Id="Method_Waters_files"/>
+      <ComponentGroupRef Id="percolator_files"/>
+      <ComponentGroupRef Id="ApplicationShortcuts"/>
+    </Feature>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <?if $(sys.BUILDARCH) = x64 ?>
+        <Directory Id="ProgramFiles64Folder" >
+          <Directory Id="INSTALLFOLDER" Name="$(var.Skyline.TargetName)"/>
+        </Directory>
+      <?else?>
+        <Directory Id="ProgramFilesFolder">
+          <Directory Id="INSTALLFOLDER" Name="$(var.Skyline.TargetName)"/>
+        </Directory>
+      <?endif?>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="MacCoss Lab, UW"/>
+      </Directory>
+    </Directory>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="de_directory" Name="de"/>
+      <Directory Id="es_directory" Name="es"/>
+      <Directory Id="fr_directory" Name="fr"/>
+      <Directory Id="hu_directory" Name="hu"/>
+      <Directory Id="it_directory" Name="it"/>
+      <Directory Id="ja_directory" Name="ja"/>
+      <Directory Id="pt_directory" Name="pt"/>
+      <Directory Id="ru_directory" Name="ru"/>
+      <Directory Id="sk_directory" Name="sk"/>
+      <Directory Id="sv_directory" Name="sv"/>
+      <Directory Id="tr_directory" Name="tr"/>
+      <Directory Id="zh_CHS_directory" Name="zh-CHS"/>
+      <Directory Id="zh_tw_directory" Name="zh-tw"/>
+      
+      <Directory Id="Method_directory" Name="Method">
+        <Directory Id="Method_AbSciex_directory" Name="AbSciex">
+          <Directory Id="Method_AbSciex_TOF_directory" Name="TOF"/>
+          <Directory Id="Method_AbSciex_TQ_directory" Name="TQ"/>
+        </Directory>
+        <Directory Id="Method_Agilent_directory" Name="Agilent"/>
+        <Directory Id="Method_Bruker_directory" Name="Bruker"/>
+        <Directory Id="Method_Thermo_directory" Name="Thermo"/>
+        <Directory Id="Method_Waters_directory" Name="Waters"/>
+      </Directory>
+      <Directory Id="Microsoft.VC90.MFC_directory" Name="Microsoft.VC90.MFC"/>
+      <Directory Id="percolator_directory" Name="percolator"/>
+    </DirectoryRef>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ApplicationShortcuts" Directory="ApplicationProgramsFolder">
+      <?if $(sys.BUILDARCH) = x64 ?>
+      <Component Id="ApplicationShortcut64">
+        <Shortcut Id="ApplicationMenuShortcut64" Name="$(var.ProductName)" Target="[#Skyline.exe_file]"/>
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU" Key="Software\MacCossLabUW\Skyline64" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+      <?else?>
+      <Component Id="ApplicationShortcut32" Guid="{0FC0030E-EE86-4B41-8A69-FE2EDED596E7}">
+        <Shortcut Id="ApplicationMenuShortcut32" Name="$(var.ProductName)" Target="[#Skyline.exe_file]"/>
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\MacCossLabUW\Skyline32" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+      <?endif?>
+    </ComponentGroup>
+    <ComponentGroup Id="SkylineComponents" Directory="INSTALLFOLDER">
+      <Component Id="Antlr3.Runtime.dll">
+        <File Source="$(var.Skyline.TargetDir)/Antlr3.Runtime.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="BiblioSpec.dll">
+        <File Source="$(var.Skyline.TargetDir)/BiblioSpec.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="BiblioSpec.pdb">
+        <File Source="$(var.Skyline.TargetDir)/BiblioSpec.pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="BlibBuild.exe">
+        <File Source="$(var.Skyline.TargetDir)/BlibBuild.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="BlibFilter.exe">
+        <File Source="$(var.Skyline.TargetDir)/BlibFilter.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="DataReader.dll"> <!-- no longer used by pwiz but required by Shimadzu method export -->
+        <File Source="$(var.Skyline.TargetDir)/DataReader.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="DigitalRune.Windows.Docking.dll">
+        <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="DotNetZip.dll">
+        <File Source="$(var.Skyline.TargetDir)/DotNetZip.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="enzymes.xml">
+        <File Source="$(var.Skyline.TargetDir)/enzymes.xml" KeyPath="yes"/>
+      </Component>
+      <Component Id="FHOOE_IMP.MSAmanda.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/FHOOE_IMP.MSAmanda.Core.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="FHOOE_IMP.MSAmanda.InOutput.dll">
+        <File Source="$(var.Skyline.TargetDir)/FHOOE_IMP.MSAmanda.InOutput.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="FHOOE_IMP.MSAmanda.Utils.dll">
+        <File Source="$(var.Skyline.TargetDir)/FHOOE_IMP.MSAmanda.Utils.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Grpc.Core.Api.dll">
+        <File Source="$(var.Skyline.TargetDir)/Grpc.Core.Api.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Grpc.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/Grpc.Core.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="grpc_csharp_ext.x64.dll">
+        <File Source="$(var.Skyline.TargetDir)/grpc_csharp_ext.x64.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="grpc_csharp_ext.x86.dll">
+        <File Source="$(var.Skyline.TargetDir)/grpc_csharp_ext.x86.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Iesi.Collections.dll">
+        <File Source="$(var.Skyline.TargetDir)/Iesi.Collections.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Instruments.xml">
+        <File Source="$(var.Skyline.TargetDir)/Instruments.xml" KeyPath="yes"/>
+      </Component>
+      <Component Id="Kajabity_Tools.dll">
+        <File Source="$(var.Skyline.TargetDir)/Kajabity Tools.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="log4net.dll">
+        <File Source="$(var.Skyline.TargetDir)/log4net.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="MathNet.Numerics.dll">
+        <File Source="$(var.Skyline.TargetDir)/MathNet.Numerics.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="MethodConverter.dll">
+        <File Source="$(var.Skyline.TargetDir)/MethodConverter.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="MethodWriter.dll">
+        <File Source="$(var.Skyline.TargetDir)/MethodWriter.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Microsoft.ConcurrencyVisualizer.Markers.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.ConcurrencyVisualizer.Markers.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="modifications.xml">
+        <File Source="$(var.Skyline.TargetDir)/modifications.xml" KeyPath="yes"/>
+      </Component>
+      <Component Id="MSGraph.dll">
+        <File Source="$(var.Skyline.TargetDir)/MSGraph.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="MSGraph.pdb">
+        <File Source="$(var.Skyline.TargetDir)/MSGraph.pdb" KeyPath="yes"/>
+      </Component>
+      <?if $(sys.BUILDARCH) != x64 ?>
+      <Component Id="Native.ProteowizardWrapper.manifest">
+        <File Source="$(var.Skyline.TargetDir)/Native.ProteowizardWrapper.manifest" KeyPath="yes"/>
+      </Component>
+      <?endif?>
+      <Component Id="NHibernate.dll">
+        <File Source="$(var.Skyline.TargetDir)/NHibernate.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="PrmPasefScheduler.dll">
+        <File Source="$(var.Skyline.TargetDir)/PrmPasefScheduler.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="prmscheduler.dll">
+        <File Source="$(var.Skyline.TargetDir)/prmscheduler.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="ProteomeDb.dll">
+        <File Source="$(var.Skyline.TargetDir)/ProteomeDb.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="ProteomeDb.pdb">
+        <File Source="$(var.Skyline.TargetDir)/ProteomeDb.pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="ProteowizardWrapper.dll">
+        <File Source="$(var.Skyline.TargetDir)/ProteowizardWrapper.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="ProteowizardWrapper.pdb">
+        <File Source="$(var.Skyline.TargetDir)/ProteowizardWrapper.pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="psi_ms.obo">
+        <File Source="$(var.Skyline.TargetDir)/psi-ms.obo" KeyPath="yes"/>
+      </Component>
+      <Component Id="pwiz.Common.dll">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.Common.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="pwiz.Common.pdb">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.Common.pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="pwiz.CommonUtil.dll">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.CommonUtil.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="pwiz.CommonUtil.pdb">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.CommonUtil.pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="pwiz_data_cli.dll">
+        <File Source="$(var.Skyline.TargetDir)/pwiz_data_cli.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Remotion.Linq.dll">
+        <File Source="$(var.Skyline.TargetDir)/Remotion.Linq.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Remotion.Linq.EagerFetching.dll">
+        <File Source="$(var.Skyline.TargetDir)/Remotion.Linq.EagerFetching.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Skyline.exe" Guid="{9C43D011-2748-480D-95EF-E7298E4E1B55}">
+        <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe" Id="Skyline.exe_file" KeyPath="yes"/>
+        <ProgId Id="Skyline.Document.0" Description="Skyline Document" Icon="SkylineDoc.ico">
+          <Extension Id="sky" ContentType="application/sky">
+            <Verb Id="open" Command="Open" TargetFile="Skyline.exe_file" Argument="--opendoc &quot;%1&quot;"/>
+          </Extension>
+        </ProgId>
+        <ProgId Id="Skyline.Data.0" Description="Skyline Chromatogram Data" Icon="SkylineData.ico">
+          <Extension Id="skyd" ContentType="application/skyd">
+            <Verb Id="open" Command="Open" TargetFile="Skyline.exe_file" Argument="--opendoc &quot;%1&quot;"/>
+          </Extension>
+        </ProgId>
+        <ProgId Id="Skyline.Pointer.0" Description="Skyline Document Pointer" Icon="SkylineDocPointer.ico">
+          <Extension Id="skyp" ContentType="application/skyp">
+            <Verb Id="open" Command="Open" TargetFile="Skyline.exe_file" Argument="--opendoc &quot;%1&quot;"/>
+          </Extension>
+        </ProgId>
+      </Component>
+      <Component Id="Skyline.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe.config" KeyPath="yes" Id="Skyline_exe_config"/>
+      </Component>
+      <Component Id="Skyline.exe.manifest">
+        <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe.manifest" KeyPath="yes"/>
+      </Component>
+      <Component Id="Skyline.pdb">
+        <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineCmd.exe">
+        <File Source="$(var.Skyline.TargetDir)/SkylineCmd.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineCmd.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/SkylineCmd.exe.config" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineCmd.pdb">
+        <File Source="$(var.Skyline.TargetDir)/SkylineCmd.pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineData.ico">
+        <File Source="$(var.Skyline.ProjectDir)/SkylineData.ico" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineDoc.ico">
+        <File Source="$(var.Skyline.ProjectDir)/SkylineDoc.ico" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineDocPointer.ico">
+        <File Source="$(var.Skyline.ProjectDir)/SkylineDocPointer.ico" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineProcessRunner.exe">
+        <File Source="$(var.Skyline.TargetDir)/SkylineProcessRunner.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineTool.dll">
+        <File Source="$(var.Skyline.TargetDir)/SkylineTool.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineTool.pdb">
+        <File Source="$(var.Skyline.TargetDir)/SkylineTool.pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="System.Interactive.Async.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Interactive.Async.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="System.Memory.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Memory.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="System.Runtime.CompilerServices.Unsafe.dll">
+        <File Source="$(var.Skyline.TargetDir)/System.Runtime.CompilerServices.Unsafe.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="unimod.obo">
+        <File Source="$(var.Skyline.TargetDir)/unimod.obo" KeyPath="yes"/>
+      </Component>
+      <Component Id="unimod.xml">
+        <File Source="$(var.Skyline.TargetDir)/unimod.xml" KeyPath="yes"/>
+      </Component>
+      <Component Id="ZedGraph.dll">
+        <File Source="$(var.Skyline.TargetDir)/ZedGraph.dll" KeyPath="yes"/>
+      </Component>
+      __VENDOR_DLLS__
+    </ComponentGroup>
+    <ComponentGroup Id="de_files" Directory="de_directory">
+      <Component Id="de_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/de/ZedGraph.resources.dll" Id="de_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="es_files" Directory="es_directory">
+      <Component Id="es_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/es\ZedGraph.resources.dll" Id="es_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="fr_files" Directory="fr_directory">
+      <Component Id="fr_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/fr\ZedGraph.resources.dll" Id="fr_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="hu_files" Directory="hu_directory">
+      <Component Id="hu_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/hu\ZedGraph.resources.dll" Id="hu_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="it_files" Directory="it_directory">
+      <Component Id="it_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/it\ZedGraph.resources.dll" Id="it_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="ja_files" Directory="ja_directory">
+      <Component Id="ja_BiblioSpec.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\BiblioSpec.resources.dll" Id="ja_BiblioSpec.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="ja_DigitalRune.Windows.Docking.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\DigitalRune.Windows.Docking.resources.dll" Id="ja_DigitalRune.Windows.Docking.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="ja_MSGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\MSGraph.resources.dll" Id="ja_MSGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="ja_ProteomeDb.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\ProteomeDb.resources.dll" Id="ja_ProteomeDb.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="ja_pwiz.Common.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\pwiz.Common.resources.dll" Id="ja_pwiz.Common.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="ja_pwiz.CommonUtil.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\pwiz.CommonUtil.resources.dll" Id="ja_pwiz.CommonUtil.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="ja_Skyline.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\$(var.Skyline.TargetName).resources.dll" Id="ja_Skyline.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="ja_SkylineCmd.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\SkylineCmd.resources.dll" Id="ja_SkylineCmd.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="ja_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\ZedGraph.resources.dll" Id="ja_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="pt_files" Directory="pt_directory">
+      <Component Id="pt_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/pt\ZedGraph.resources.dll" Id="pt_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="ru_files" Directory="ru_directory">
+      <Component Id="ru_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ru\ZedGraph.resources.dll" Id="ru_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="sk_files" Directory="sk_directory">
+      <Component Id="sk_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/sk\ZedGraph.resources.dll" Id="sk_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="sv_files" Directory="sv_directory">
+      <Component Id="sv_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/sv\ZedGraph.resources.dll" Id="sv_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="tr_files" Directory="tr_directory">
+      <Component Id="tr_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/tr\ZedGraph.resources.dll" Id="tr_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="zh_CHS_files" Directory="zh_CHS_directory">
+      <Component Id="zh_CHS_BiblioSpec.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\BiblioSpec.resources.dll" Id="zh_CHS_BiblioSpec.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="zh_CHS_DigitalRune.Windows.Docking.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\DigitalRune.Windows.Docking.resources.dll" Id="zh_CHS_DigitalRune.Windows.Docking.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="zh_CHS_MSGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\MSGraph.resources.dll" Id="zh_CHS_MSGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="zh_CHS_ProteomeDb.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\ProteomeDb.resources.dll" Id="zh_CHS_ProteomeDb.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="zh_CHS_pwiz.Common.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\pwiz.Common.resources.dll" Id="zh_CHS_pwiz.Common.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="zh_CHS_Skyline.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\$(var.Skyline.TargetName).resources.dll" Id="zh_CHS_Skyline.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="zh_CHS_SkylineCmd.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\SkylineCmd.resources.dll" Id="zh_CHS_SkylineCmd.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="zh_CHS_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\ZedGraph.resources.dll" Id="zh_CHS_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="zh_tw_files" Directory="zh_tw_directory">
+      <Component Id="zh_tw_ZedGraph.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-tw\ZedGraph.resources.dll" Id="zh_tw_ZedGraph.resources.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="Method_AbSciex_TOF_files" Directory="Method_AbSciex_TOF_directory">
+      <Component Id="Method_AbSciex_TOF_BuildAnalystFullScanMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_BuildAnalystMethod.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method/AbSciex/TOF/BuildAnalystMethod.dll" Id="Method_AbSciex_TOF_BuildAnalystMethod.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_Interop.AcqMethodDir.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\Interop.AcqMethodDir.dll" Id="Method_AbSciex_TOF_Interop.AcqMethodDir.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_Interop.AcqMethodSvr.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\Interop.AcqMethodSvr.dll" Id="Method_AbSciex_TOF_Interop.AcqMethodSvr.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_Interop.Analyst.dll" Guid="A2CCA70B-B2A8-481C-8EC8-F37FE2E5C8D9">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\Interop.Analyst.dll" Id="Method_AbSciex_TOF_Interop.Analyst.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_Interop.AnalystService.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\Interop.AnalystService.dll" Id="Method_AbSciex_TOF_Interop.AnalystService.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_Interop.DDEMethodSvr.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\Interop.DDEMethodSvr.dll" Id="Method_AbSciex_TOF_Interop.DDEMethodSvr.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_Interop.IDAMethodSvr.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\Interop.IDAMethodSvr.dll" Id="Method_AbSciex_TOF_Interop.IDAMethodSvr.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_Interop.MSMethodSvr.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\Interop.MSMethodSvr.dll" Id="Method_AbSciex_TOF_Interop.MSMethodSvr.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_Interop.ParameterSvr.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\Interop.ParameterSvr.dll" Id="Method_AbSciex_TOF_Interop.ParameterSvr.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_Interop.QueueDispatcher.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\Interop.QueueDispatcher.dll" Id="Method_AbSciex_TOF_Interop.QueueDispatcher.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_Interop.ROTMan.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\Interop.ROTMan.dll" Id="Method_AbSciex_TOF_Interop.ROTMan.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_ROTMANLib.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\ROTMANLib.dll" Id="Method_AbSciex_TOF_ROTMANLib.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TOF_StdType.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\StdType.dll" Id="Method_AbSciex_TOF_StdType.dll_file" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="Method_AbSciex_TQ_files" Directory="Method_AbSciex_TQ_directory">
+      <Component Id="Method_AbSciex_TQ_BuildAnalystMethod.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method/AbSciex/TQ/BuildAnalystMethod.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_BuildQTRAPMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\BuildQTRAPMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_Interop.AcqMethodDir.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.AcqMethodDir.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_Interop.AcqMethodSvr.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.AcqMethodSvr.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_Interop.Analyst.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.Analyst.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_Interop.AnalystService.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.AnalystService.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_Interop.DDEMethodSvr.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.DDEMethodSvr.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_Interop.IDAMethodSvr.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.IDAMethodSvr.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_Interop.MSMethodSvr.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.MSMethodSvr.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_Interop.ParameterSvr.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.ParameterSvr.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_Interop.QueueDispatcher.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.QueueDispatcher.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_Interop.ROTMan.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\Interop.ROTMan.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_QueueDispatcherLib.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\QueueDispatcherLib.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_ROTMANLib.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\ROTMANLib.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_TQ_StdType.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\StdType.dll" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="Method_Agilent_files" Directory="Method_Agilent_directory">
+      <Component Id="Method_Agilent_BuildAgilentMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\Agilent\BuildAgilentMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Agilent_MethodCreator.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MethodCreator.dll" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="Method_Bruker_files" Directory="Method_Bruker_directory">
+      <Component Id="Method_Bruker_BDal.Submethod.Wrapper.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BDal.Submethod.Wrapper.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Bruker_BdalRetentionTimeMassList.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BdalRetentionTimeMassList.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Bruker_BuildBrukerMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\Bruker\BuildBrukerMethod.exe" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="Method_Thermo_files" Directory="Method_Thermo_directory">
+      <Component Id="Method_Thermo_BuildLTQMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\Thermo\BuildLTQMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Thermo_BuildThermoMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\Thermo\BuildThermoMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Thermo_BuildTSQEZMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\Thermo\BuildTSQEZMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Thermo_Thermo.TNG.MethodXMLFactory.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Thermo\Thermo.TNG.MethodXMLFactory.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Thermo_Thermo.TNG.MethodXMLInterface.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Thermo\Thermo.TNG.MethodXMLInterface.dll" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="Method_Waters_files" Directory="Method_Waters_directory">
+      <Component Id="Method_Waters_BuildWatersMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\Waters\BuildWatersMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Waters_VerifyESkylineLibrary.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Waters\VerifyESkylineLibrary.dll" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="percolator_files" Directory="percolator_directory">
+      <Component Id="percolator_percolator.exe">
+        <File Source="$(var.Skyline.TargetDir)/percolator/percolator.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="percolator_qvality.exe">
+        <File Source="$(var.Skyline.TargetDir)/percolator/qvality.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="percolator_xerces_c_3_1.dll">
+        <File Source="$(var.Skyline.TargetDir)/percolator/xerces-c_3_1.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="percolator_vcomp140.dll">
+        <File Id="percolator_vcomp140.dll" Source="$(var.Skyline.TargetDir)/vcomp140.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="percolator_msvcp140.dll">
+        <File Id="percolator_msvcp140.dll" Source="$(var.Skyline.TargetDir)/msvcp140.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="percolator_vcruntime140.dll">
+        <File Id="percolator_vcruntime140.dll" Source="$(var.Skyline.TargetDir)/vcruntime140.dll" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
