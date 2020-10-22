@@ -1560,6 +1560,8 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     "exclude:pwiz_tools/Shared/Crawdad"
     "exclude:pwiz_tools/Shared/ProteomeDb"
     "exclude:pwiz_tools/Shared/ProteowizardWrapper"
+    "exclude:pwiz_tools/Shared/Lib/Microsoft.Diagnostics.Runtime"
+    "exclude:pwiz_tools/Shared/Lib/MSAmanda"
     "exclude:pwiz_tools/Shared/Lib/DotNetZip"
     "exclude:pwiz_tools/Shared/Lib/NHibernate"
     "exclude:pwiz_tools/Shared/Lib/npgsql"
@@ -1567,6 +1569,10 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     "exclude:pwiz_tools/Shared/Lib/x64"
     "exclude:pwiz_tools/Shared/Lib/mysql.*"
     "exclude:pwiz_tools/Shared/Lib/zlib.*"
+    "exclude:pwiz_tools/Shared/Lib/*.pdb"
+    "exclude:pwiz_tools/Shared/Lib/grpc*"
+    "exclude:pwiz_tools/Shared/Lib/log4net*"
+    "exclude:pwiz_tools/Shared/Lib/MathNet.Numerics*"
 ;
 
 # the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
