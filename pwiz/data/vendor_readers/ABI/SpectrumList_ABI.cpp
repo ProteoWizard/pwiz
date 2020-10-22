@@ -162,7 +162,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
 
     if (spectrum->getHasPrecursorInfo())
     {
-        double selectedMz, intensity;
+        double selectedMz, intensity, collisionEnergy = 0;
         int charge;
         spectrum->getPrecursorInfo(selectedMz, intensity, charge);
 
@@ -170,7 +170,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
         if (spectrum->getHasIsolationInfo())
         {
             double centerMz, lowerLimit, upperLimit;
-            spectrum->getIsolationInfo(centerMz, lowerLimit, upperLimit);
+            spectrum->getIsolationInfo(centerMz, lowerLimit, upperLimit, collisionEnergy);
             precursor.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
             precursor.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
             precursor.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
@@ -184,6 +184,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
             selectedIon.set(MS_charge_state, charge);
 
         precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all ABI instruments that write WIFFs are either QqTOF or QqLIT
+        if (collisionEnergy > 0)
+            precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
 
         precursor.selectedIons.push_back(selectedIon);
         result->precursors.push_back(precursor);
@@ -198,7 +200,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
     //result->set(MS_lowest_observed_m_z, spectrum->getMinX(), MS_m_z);
     //result->set(MS_highest_observed_m_z, spectrum->getMaxX(), MS_m_z);
 
-    if (!config_.acceptZeroLengthSpectra)
+    if (!config_.acceptZeroLengthSpectra && spectrum->getBasePeakY() > 0)
     {
         result->set(MS_base_peak_intensity, spectrum->getBasePeakY(), MS_number_of_detector_counts);
         result->set(MS_base_peak_m_z, spectrum->getBasePeakX(), MS_m_z);
@@ -257,6 +259,8 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
             else
             {
                 msExperiment->getBPC(times, intensities);
+                if (times.empty())
+                    msExperiment->getTIC(times, intensities);
 
                 for (int i = 0, end = (int)times.size(); i < end; ++i)
                     if (intensities[i] > 0 && wifffile_->getSpectrum(msExperiment, i + 1)->getDataSize(false, true) > 0)
