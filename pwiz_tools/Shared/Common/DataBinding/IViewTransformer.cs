@@ -29,17 +29,4 @@ namespace pwiz.Common.DataBinding
         KeyValuePair<ViewInfo, IEnumerable<PropertyPath>> TransformView(ViewInfo view, IEnumerable<PropertyPath> propertyPaths);
         KeyValuePair<ViewInfo, IEnumerable<PropertyPath>> UntransformView(ViewInfo view, IEnumerable<PropertyPath> propertyPaths);
     }
-
-    public class IdentityViewTransformer : IViewTransformer
-    {
-        public KeyValuePair<ViewInfo, IEnumerable<PropertyPath>> TransformView(ViewInfo view, IEnumerable<PropertyPath> propertyPaths)
-        {
-            return new KeyValuePair<ViewInfo, IEnumerable<PropertyPath>>(view, propertyPaths);
-        }
-
-        public KeyValuePair<ViewInfo, IEnumerable<PropertyPath>> UntransformView(ViewInfo view, IEnumerable<PropertyPath> propertyPaths)
-        {
-            return new KeyValuePair<ViewInfo, IEnumerable<PropertyPath>>(view, propertyPaths);
-        }
-    }
 }

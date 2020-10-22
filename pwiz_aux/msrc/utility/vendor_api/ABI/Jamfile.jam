@@ -45,50 +45,34 @@ rule vendor-api-requirements ( properties * )
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
         }
-        result += <assembly>$(dll_location)/Clearcore2.Compression.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Data.Acquisition.Client.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Data.Acquisition.Contracts.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Data.AnalystDataProvider.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Data.Client.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Data.Common.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Data.CommonInterfaces.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Data.Contracts.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Data.Core.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Data.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Data.Wiff2.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Data.WiffReader.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.DataService.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Devices.Types.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Domain.Acquisition.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Domain.Acquisition.Methods.MassSpec.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Infrastructure.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.InternalRawXYProcessing.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Muni.dll ;
         result += <assembly>$(dll_location)/Clearcore2.RawXYProcessing.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.StructuredStorage.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.UserLog.Types.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.Utility.dll ;
-        result += <assembly>$(dll_location)/Clearcore2.XmlHelpers.dll ;
-        result += <assembly>$(dll_location)/Microsoft.Practices.ServiceLocation.dll ;
-        result += <assembly>$(dll_location)/Microsoft.Practices.Unity.Configuration.dll ;
-        result += <assembly>$(dll_location)/Microsoft.Practices.Unity.dll ;
-        result += <assembly>$(dll_location)/OFX.Core.Contracts.dll ;
-        result += <assembly>$(dll_location)/OFX.Core.dll ;
-        result += <assembly>$(dll_location)/OFX.EventServices.dll ;
-        result += <assembly>$(dll_location)/OFX.Logging.dll ;
-        result += <assembly>$(dll_location)/OFX.Security.Core.dll ;
-        #result += <assembly>$(dll_location)/OFX.Security.Library.dll ;
-        #result += <assembly>$(dll_location)/OFX.Security.SQLiteProviders.dll ;
-        result += <assembly>$(dll_location)/protobuf-net.dll ;
-        result += <assembly>$(dll_location)/Sciex.Clearcore.FMan.dll ;
-        result += <assembly>$(dll_location)/Sciex.Data.Processing.DLL ;
-        result += <assembly>$(dll_location)/Sciex.Data.SimpleTypes.dll ;
+        result += <assembly>$(dll_location)/Clearcore2.Data.CommonInterfaces.dll ;
         result += <assembly>$(dll_location)/Sciex.Data.XYData.dll ;
-        result += <assembly>$(dll_location)/Sciex.FMan.dll ;
-        result += <assembly>$(dll_location)/Sciex.Wiff.dll ;
-        result += <assembly>$(dll_location)/SciexToolKit.dll ;
-        result += <assembly-dependency-ex>$(dll_location)/$(PLATFORM)/SQLite_v1.0.98/System.Data.SQLite.DLL|<location-prefix>SQLite_v1.0.98 ;
+        result += <assembly>$(dll_location)/SCIEX.Apis.Data.v1.dll ;
+        result += <assembly-dependency>$(dll_location)/$(PLATFORM)/SQLite.Interop.dll ;
         result += <assembly>$(PWIZ_LIBRARIES_PATH)/SQLite/$(PLATFORM)/System.Data.SQLite.DLL ;
+
+        result += <assembly-dependency>$(dll_location)/Clearcore2.Compression.dll ;
+        result += <assembly-dependency>$(dll_location)/Clearcore2.Data.Wiff2.dll ;
+        result += <assembly-dependency>$(dll_location)/Clearcore2.Data.WiffReader.dll ;
+        result += <assembly-dependency>$(dll_location)/Clearcore2.Devices.Types.dll ;
+        result += <assembly-dependency>$(dll_location)/Clearcore2.Domain.Acquisition.dll ;
+        result += <assembly-dependency>$(dll_location)/Clearcore2.Infrastructure.dll ;
+        result += <assembly-dependency>$(dll_location)/Clearcore2.InternalRawXYProcessing.dll ;
+        result += <assembly-dependency>$(dll_location)/Clearcore2.Muni.dll ;
+        result += <assembly-dependency>$(dll_location)/Clearcore2.StructuredStorage.dll ;
+        result += <assembly-dependency>$(dll_location)/Clearcore2.Utility.dll ;
+        result += <assembly-dependency>$(dll_location)/Clearcore2.XmlHelpers.dll ;
+        result += <assembly-dependency>$(dll_location)/OFX.Core.Contracts.dll ;
+        result += <assembly-dependency>$(dll_location)/protobuf-net.dll ;
+        result += <assembly-dependency>$(dll_location)/Sciex.Clearcore.FMan.dll ;
+        result += <assembly-dependency>$(dll_location)/Sciex.FMan.dll ;
+        result += <assembly-dependency>$(dll_location)/Sciex.Wiff.dll ;
+        result += <assembly-dependency>$(dll_location)/Sciex.Data.Processing.DLL ;
+        result += <assembly-dependency>$(dll_location)/Sciex.Data.SimpleTypes.dll ;
 
         result += <include>$(dll_location) ;
         result += <define>PWIZ_READER_ABI ;
@@ -139,49 +123,36 @@ rule install-requirements ( properties * )
     if $(dll_location)
     {
         result += <source>$(dll_location)/Clearcore2.Compression.dll ;
-        result += <source>$(dll_location)/Clearcore2.Data.Acquisition.Client.dll ;
-        result += <source>$(dll_location)/Clearcore2.Data.Acquisition.Contracts.dll ;
         result += <source>$(dll_location)/Clearcore2.Data.AnalystDataProvider.dll ;
-        result += <source>$(dll_location)/Clearcore2.Data.Client.dll ;
-        result += <source>$(dll_location)/Clearcore2.Data.Common.dll ;
-        result += <source>$(dll_location)/Clearcore2.Data.CommonInterfaces.dll ;
-        result += <source>$(dll_location)/Clearcore2.Data.Contracts.dll ;
-        result += <source>$(dll_location)/Clearcore2.Data.Core.dll ;
         result += <source>$(dll_location)/Clearcore2.Data.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.Client.dll ;
         result += <source>$(dll_location)/Clearcore2.Data.Wiff2.dll ;
         result += <source>$(dll_location)/Clearcore2.Data.WiffReader.dll ;
-        result += <source>$(dll_location)/Clearcore2.DataService.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.CommonInterfaces.dll ;
         result += <source>$(dll_location)/Clearcore2.Devices.Types.dll ;
         result += <source>$(dll_location)/Clearcore2.Domain.Acquisition.dll ;
-        result += <source>$(dll_location)/Clearcore2.Domain.Acquisition.Methods.MassSpec.dll ;
         result += <source>$(dll_location)/Clearcore2.Infrastructure.dll ;
         result += <source>$(dll_location)/Clearcore2.InternalRawXYProcessing.dll ;
         result += <source>$(dll_location)/Clearcore2.Muni.dll ;
         result += <source>$(dll_location)/Clearcore2.RawXYProcessing.dll ;
         result += <source>$(dll_location)/Clearcore2.StructuredStorage.dll ;
-        result += <source>$(dll_location)/Clearcore2.UserLog.Types.dll ;
         result += <source>$(dll_location)/Clearcore2.Utility.dll ;
         result += <source>$(dll_location)/Clearcore2.XmlHelpers.dll ;
-        result += <source>$(dll_location)/Microsoft.Practices.ServiceLocation.dll ;
-        result += <source>$(dll_location)/Microsoft.Practices.Unity.Configuration.dll ;
-        result += <source>$(dll_location)/Microsoft.Practices.Unity.dll ;
         result += <source>$(dll_location)/OFX.Core.Contracts.dll ;
-        result += <source>$(dll_location)/OFX.Core.dll ;
-        result += <source>$(dll_location)/OFX.EventServices.dll ;
-        result += <source>$(dll_location)/OFX.Logging.dll ;
-        result += <source>$(dll_location)/OFX.Security.Core.dll ;
-        #result += <source>$(dll_location)/OFX.Security.Library.dll ;
-        #result += <source>$(dll_location)/OFX.Security.SQLiteProviders.dll ;
-        result += <source>$(dll_location)/SciexToolKit.dll ;
         result += <source>$(dll_location)/protobuf-net.dll ;
         result += <source>$(dll_location)/Sciex.Clearcore.FMan.dll ;
-        result += <assembly-dependency-ex>$(dll_location)/$(PLATFORM)/SQLite_v1.0.98/System.Data.SQLite.dll|<location-prefix>SQLite_v1.0.98 ;
-        result += <source>$(PWIZ_LIBRARIES_PATH)/SQLite/$(PLATFORM)/System.Data.SQLite.dll ;
+        result += <source>$(dll_location)/Sciex.FMan.dll ;
+        result += <source>$(dll_location)/Sciex.Wiff.dll ;
         result += <source>$(dll_location)/Sciex.Data.Processing.DLL ;
         result += <source>$(dll_location)/Sciex.Data.SimpleTypes.dll ;
         result += <source>$(dll_location)/Sciex.Data.XYData.dll ;
-        result += <source>$(dll_location)/Sciex.FMan.dll ;
-        result += <source>$(dll_location)/Sciex.Wiff.dll ;
+        
+        result += <source>$(dll_location)/SCIEX.Apis.Data.v1.dll ;
+        result += <assembly-dependency>$(dll_location)/$(PLATFORM)/SQLite.Interop.dll ;
+        result += <source>$(PWIZ_LIBRARIES_PATH)/SQLite/$(PLATFORM)/System.Data.SQLite.dll ;
+
+        #result += <assembly-dependency-ex>$(dll_location)/$(PLATFORM)/SQLite_v1.0.98/System.Data.SQLite.dll|<location-prefix>SQLite_v1.0.98 ;
+
     }
     return $(result) ;
 }
@@ -194,13 +165,15 @@ rule install-sqlite ( properties * )
     {
         if <address-model>64 in $(properties)
         {
-            result += <install-source-root>$(dll_location)/x64 ;
-            result += <source>$(dll_location)/x64/SQLite_v1.0.98/System.Data.SQLite.DLL ;
+            #result += <install-source-root>$(dll_location)/x64 ;
+            #result += <source>$(dll_location)/x64/SQLite_v1.0.98/System.Data.SQLite.DLL ;
+            result += <source>$(dll_location)/x64/SQLite.Interop.dll ;
         }
         else
         {
-            result += <install-source-root>$(dll_location)/x86 ;
-            result += <source>$(dll_location)/x86/SQLite_v1.0.98/System.Data.SQLite.DLL ;
+            #result += <install-source-root>$(dll_location)/x86 ;
+            #result += <source>$(dll_location)/x86/SQLite_v1.0.98/System.Data.SQLite.DLL ;
+            result += <source>$(dll_location)/x86/SQLite.Interop.dll ;
         }
     }
     return $(result) ;

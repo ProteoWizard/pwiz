@@ -129,7 +129,6 @@
     <Compile Include="Collections\LinqExtensions.cs" />
     <Compile Include="Collections\PrimitiveArrays.cs" />
     <Compile Include="Collections\CollectionUtil.cs" />
-    <Compile Include="Collections\ConvertedList.cs" />
     <Compile Include="Collections\ImmutableCollection.cs" />
     <Compile Include="Collections\ImmutableDictionary.cs" />
     <Compile Include="Collections\ImmutableList.cs" />

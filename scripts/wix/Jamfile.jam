@@ -87,6 +87,83 @@ make pwiz-setup.exe
     : # requirements
         <variant>debug:<build>no # don't make debug installs
         <dependency>../..//executables
+        <dependency>../..//INSTALLER_VENDOR_FILES.txt
         <conditional>@build-location
         <conditional>@msvc-requirement
     ;
+
+
+rule test_msi ( targets + : sources * : properties * )
+{
+    local address-model = [ feature.get-values <address-model> : $(properties) ] ;
+    
+    if $(address-model) = 64
+    {
+        ARTIFACT_NAME on $(targets) = pwiz-setup-$(PWIZ_VERSION_TAG)-x86_64 ;
+        INSTALL_PATH on $(targets) = "%LocalAppData%\\Apps\\ProteoWizard $(PWIZ_VERSION_TAG) 64-bit" ;
+    }
+    else
+    {
+        ARTIFACT_NAME on $(targets) = pwiz-setup-$(PWIZ_VERSION_TAG)-x86 ;
+        INSTALL_PATH on $(targets) = "%LocalAppData%\\Apps\\ProteoWizard $(PWIZ_VERSION_TAG) 32-bit" ;
+    }
+
+    LOCATION on $(targets) = [ path.native [ feature.get-values <location> : $(properties) ]  ] ;
+}
+
+actions test_msi
+{
+    set name=DeployTest
+    $(TEST_PRECOMMAND)
+
+    $(MSVC_CURRENT_SETUP_SCRIPT)
+    echo Installing $(ARTIFACT_NAME)...
+    set TEMP=%LOCALAPPDATA%\Temp
+    copy "$(PWIZ_BUILD_PATH)\$(ARTIFACT_NAME).msi" "%TEMP%"
+    start /wait msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME).log" /norestart /i "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress ALLUSERS=2 MSIINSTALLPERUSER=1
+    set EXIT=%ERRORLEVEL%
+    IF %EXIT% NEQ 0 echo Install failed with code %EXIT%.
+    set status=%EXIT%
+    IF %EXIT% NEQ 0 (
+      move "%TEMP%\$(ARTIFACT_NAME).log" "$(PWIZ_BUILD_PATH)"
+      del "%TEMP%\$(ARTIFACT_NAME).msi"
+      $(TEST_POSTCOMMAND)
+      exit %EXIT%
+    )
+
+    set PATH_TMP=%PATH%
+    set PATH=
+    "$(INSTALL_PATH)\SeeMS.exe" --test "$(PWIZ_ROOT_PATH)\example_data\small.RAW"
+    set TEST_EXIT=%ERRORLEVEL%
+    IF %TEST_EXIT% NEQ 0 echo Deployment test failed with code %TEST_EXIT%.
+    set PATH=%PATH_TMP%
+
+    echo Uninstalling $(ARTIFACT_NAME)...
+    start /wait msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME).log" /norestart /x "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress
+    set EXIT=%ERRORLEVEL%
+    IF %TEST_EXIT% NEQ 0 IF %EXIT% NEQ 0 set status=%EXIT%
+    IF %EXIT% NEQ 0 echo Uninstall failed with code %EXIT%.
+    
+    set status=%TEST_EXIT%
+    $(TEST_POSTCOMMAND)
+    IF %TEST_EXIT% EQU 0 echo Deployment test passed.
+    IF %TEST_EXIT% EQU 0 echo Deployment test passed. > "$(LOCATION)\Test.passed"
+
+    move "%TEMP%\$(ARTIFACT_NAME).log" "$(PWIZ_BUILD_PATH)"
+    del "%TEMP%\$(ARTIFACT_NAME).msi"
+
+    IF %TEST_EXIT% NEQ 0 exit 1
+}
+
+make Test.passed
+    : # sources
+    : # actions
+        @test_msi
+    : # requirements
+        <variant>debug:<build>no # don't test debug installs
+        <dependency>pwiz-setup.exe
+        <conditional>@build-location
+        <conditional>@msvc-requirement
+    ;
+explicit Test.passed ;
+alias Test : Test.passed ;
