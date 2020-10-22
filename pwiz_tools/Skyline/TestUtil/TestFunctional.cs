@@ -1922,28 +1922,67 @@ namespace pwiz.SkylineTestUtil
             WaitForCondition(() => BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document, true)); 
         }
 
-        public static void ImportAssayLibrarySkipColumnSelect(string csvPath)
+        public static void ImportAssayLibrarySkipColumnSelect(string csvPath, List<string> errorList = null)
         {
-            var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportAssayLibrary(csvPath));
-            OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+            ImportAssayLibraryOrTransitionList(csvPath, true, errorList);
         }
 
-        public static void ImportTransitionListSkipColumnSelect(string csvPath)
+        private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true)
         {
-            var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(csvPath));
-            OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
-        }
-        
-        public static void PasteTransitionListSkipColumnSelect()
-        {
-            var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
-            OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+            var transitionSelectdgl = isAssayLibrary ?
+                ShowDialog<ImportTransitionListColumnSelectDlg>(() =>  SkylineWindow.ImportAssayLibrary(csvPath)) :
+                ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(csvPath));
+            if (errorList != null)
+            {
+                // We're expecting errors, collect them then move on
+                RunUI(() => transitionSelectdgl.AcceptButton.PerformClick());
+                var errDlg = WaitForOpenForm<ImportTransitionListErrorDlg>();
+                errorList.Clear();
+                foreach (var err in errDlg.ErrorList)
+                {
+                    errorList.Add(err.ErrorMessage);
+                }
+                OkDialog(errDlg, () => errDlg.DialogResult = proceedWithErrors ? DialogResult.OK : DialogResult.Cancel); // Closes the error dialog, and the import dialog too if we're accepting errors
+                if (!proceedWithErrors)
+                {
+                    OkDialog(transitionSelectdgl, () => transitionSelectdgl.CancelButton.PerformClick()); // Canceling the error dialog drops us back into the import dialog
+                }
+            }
+            else
+            {
+                OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+            }
         }
 
-        public static void PasteTransitionListSkipColumnSelect(string text)
+        public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true)
         {
-            var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(text));
-            OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+            ImportAssayLibraryOrTransitionList(csvPath, false, errorList, proceedWithErrors);
+        }
+
+        public static void PasteTransitionListSkipColumnSelect(bool expectColumnSelectDialog = true)
+        {
+            if (expectColumnSelectDialog)
+            {
+                var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+                OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+            }
+            else
+            {
+                RunUI(SkylineWindow.Paste);
+            }
+        }
+
+        public static void PasteTransitionListSkipColumnSelect(string text, bool expectColumnSelectDialog = true)
+        {
+            if (expectColumnSelectDialog)
+            {
+                var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(text));
+                OkDialog(transitionSelectdgl, () => transitionSelectdgl.AcceptButton.PerformClick());
+            }
+            else
+            {
+                RunUI(() => SkylineWindow.Paste(text));
+            }
         }
 
         public static void ImportTransitionListSkipColumnSelectOnUI(string csvPath)

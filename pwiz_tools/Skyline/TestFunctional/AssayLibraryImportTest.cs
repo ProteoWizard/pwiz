@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
@@ -52,10 +53,10 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-//            TestAssayImportGeneral();
-//            TestModificationMatcher();
-//            TestBlankDocScenario();
-//            TestEmbeddedIrts();
+            TestAssayImportGeneral();
+            TestModificationMatcher();
+            TestBlankDocScenario();
+            TestEmbeddedIrts();
 
             TestAssayImport2();
         }
@@ -170,52 +171,30 @@ namespace pwiz.SkylineTestFunctional
             LoadDocument(documentExisting);
             var docOldIrt = SkylineWindow.Document;
             string textIrtConflict = TestFilesDir.GetTestPath("OpenSWATH_SM4_InconsistentIrt.csv");
-            ImportTransitionListSkipColumnSelectWithMessage<ImportTransitionListErrorDlg>(textIrtConflict, messageDlg =>
-            {
-                var expectedMessage = string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
-                                                    "YVPIHTIDDGYSVIK", 864.458, 49.8, 50.2);
-                Assert.AreEqual(1, messageDlg.ErrorList.Count);
-                var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
-                messageDlg.CancelDialog();
-            });
+            ImportTransitionListSkipColumnSelectWithMessage(textIrtConflict, 
+                string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
+                                                    "YVPIHTIDDGYSVIK", 864.458, 49.8, 50.2), 1, false);
             WaitForDocumentLoaded();
             Assert.AreSame(docOldIrt, SkylineWindow.Document);
 
             // 8.1 Mass list contains different iRT values on two non-contiguous lines of the same transition group
             string textIrtGroupConflict = TestFilesDir.GetTestPath("InterleavedInconsistentIrt.csv");
-            ImportTransitionListSkipColumnSelectWithMessage<ImportTransitionListErrorDlg>(textIrtGroupConflict, messageDlg =>
-            {
-                Assert.AreEqual(59, messageDlg.ErrorList.Count);
-                messageDlg.CancelDialog();
-            });
+            ImportTransitionListSkipColumnSelectWithMessage(textIrtGroupConflict, null, 59, false);
             WaitForDocumentLoaded();
             Assert.AreSame(docOldIrt, SkylineWindow.Document);
             // Now remove the modified column which is bogus and causing errors
             RemoveColumn(textIrtGroupConflict, 22);
-            ImportTransitionListSkipColumnSelectWithMessage<ImportTransitionListErrorDlg>(textIrtGroupConflict, messageDlg =>
-            {
-                var expectedMessage = string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
-                                                            "AAAAAAAAAAAAAAAGAAGK", 492.9385,  53, 54);
-                Assert.AreEqual(2, messageDlg.ErrorList.Count);
-                var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
-                messageDlg.CancelDialog();
-            });
+            ImportTransitionListSkipColumnSelectWithMessage(textIrtGroupConflict,
+                string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
+                    "AAAAAAAAAAAAAAAGAAGK", 492.9385, 53, 54), 2, false);
             WaitForDocumentLoaded();
             Assert.AreSame(docOldIrt, SkylineWindow.Document);
 
             // 8.2 Try again, this time click OK on the error dialog, accepting all transitions except the 3 with errors
             string textIrtGroupConflictAccept = TestFilesDir.GetTestPath("InterleavedInconsistentIrt.csv");
-            ImportTransitionListSkipColumnSelectWithMessage<ImportTransitionListErrorDlg>(textIrtGroupConflictAccept, messageDlg =>
-            {
-                var expectedMessage = string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
-                                                            "AAAAAAAAAAAAAAAGAAGK", 492.9385, 53, 54);
-                Assert.AreEqual(2, messageDlg.ErrorList.Count);
-                var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
-                messageDlg.AcceptButton.PerformClick();
-            });
+            ImportTransitionListSkipColumnSelectWithMessage(textIrtGroupConflictAccept,
+                string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
+                    "AAAAAAAAAAAAAAAGAAGK", 492.9385, 53, 54), 2, true);
             var confirmIrtDlg = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(confirmIrtDlg, confirmIrtDlg.Btn0Click);
             var libraryAcceptDlg = WaitForOpenForm<MultiButtonMsgDlg>();
@@ -244,68 +223,42 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             const string textIrtNan = "PrecursorMz\tProductMz\tTr_recalibrated\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\tBAD_IRT\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
             RunUI(() => ClipboardEx.SetText(textIrtNan));
-            PasteTransitionListSkipColumnSelectWithMessage<ImportTransitionListErrorDlg>(messageDlg =>
-            {
-                var expectedMessage = string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_, 
-                                                                        728.88, 
-                                                                        "ADSTGTLVITDPTR");
-                Assert.AreEqual(1, messageDlg.ErrorList.Count);
-                var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
-                messageDlg.AcceptButton.PerformClick();
-            });
+            PasteTransitionListSkipColumnSelectWithMessage(string.Format(
+                Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_,
+                728.88,
+                "ADSTGTLVITDPTR"), 1, true);
             WaitForDocumentLoaded();
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 10. iRT blank leads to error
             const string textIrtBlank = "PrecursorMz\tProductMz\tiRT\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
             RunUI(() => ClipboardEx.SetText(textIrtBlank));
-            PasteTransitionListSkipColumnSelectWithMessage<ImportTransitionListErrorDlg>(messageDlg =>
-            {
-                var expectedMessage = string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_,
+            PasteTransitionListSkipColumnSelectWithMessage(string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_,
                                                         728.88,
-                                                        "ADSTGTLVITDPTR");
-                Assert.AreEqual(1, messageDlg.ErrorList.Count);
-                var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
-                messageDlg.AcceptButton.PerformClick();
-            });
+                                                        "ADSTGTLVITDPTR"), 1, true);
             WaitForDocumentLoaded();
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 11. Library not a number leads to error
             const string textLibraryNan = "PrecursorMz\tProductMz\tiRT\tLibraryIntensity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\tBAD_LIBRARY\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
             RunUI(() => ClipboardEx.SetText(textLibraryNan));
-            PasteTransitionListSkipColumnSelectWithMessage<ImportTransitionListErrorDlg>(messageDlg =>
-            {
-                var expectedMessage = string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_,
+            PasteTransitionListSkipColumnSelectWithMessage(string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_,
                                                         728.88,
-                                                        "ADSTGTLVITDPTR");
-                Assert.AreEqual(1, messageDlg.ErrorList.Count);
-                var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
-                messageDlg.AcceptButton.PerformClick();
-            });
+                                                        "ADSTGTLVITDPTR"), 1, true);
             WaitForDocumentLoaded();
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 12. Library blank leads to error
             const string textLibraryBlank = "PrecursorMz\tProductMz\tTr_recalibrated\tRelaTive_IntEnsity\tdecoy\tPeptideSequence\tProteinName\n728.88\t924.539\t30.5\t\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
             RunUI(() => ClipboardEx.SetText(textLibraryBlank));
-            PasteTransitionListSkipColumnSelectWithMessage<ImportTransitionListErrorDlg>(messageDlg =>
-            {
-                var expectedMessage = string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_,
+            PasteTransitionListSkipColumnSelectWithMessage(string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_,
                                                         728.88,
-                                                        "ADSTGTLVITDPTR");
-                Assert.AreEqual(1, messageDlg.ErrorList.Count);
-                var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(expectedMessage, firstError.ErrorMessage);
-                messageDlg.AcceptButton.PerformClick();
-            });
+                                                        "ADSTGTLVITDPTR"), 1, true);
             WaitForDocumentLoaded();
             Assert.AreSame(docNanIrt, SkylineWindow.Document);
 
             // 13. Title column missing causes iRT's and library to be skipped
+            ForgetPreviousImportColumnsSelection(); // For purposes of this test we don't want to use the preciously confirmed input columns
             const string textTitleMissing = "728.88\t924.539\t\t3305.3\t0\tADSTGTLVITDPTR\tAQUA4SWATH_HMLangeA\n";
             RunUI(() => ClipboardEx.SetText(textTitleMissing));
 
@@ -863,6 +816,11 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        private static void ForgetPreviousImportColumnsSelection()
+        {
+            RunUI(() => Settings.Default.CustomImportTransitionListColumnsList = null);
+        }
+
         private static SrmDocument AllowAllIonTypes()
         {
             RunUI(() => SkylineWindow.ModifyDocument("Allow all fragment ions - because test file contains a2", doc =>
@@ -908,16 +866,10 @@ namespace pwiz.SkylineTestFunctional
             // If the modifications are readable but don't match the precursor mass, throw an error
             string textModWrongMatch = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n" + 1005.9 + "\t" + 868.39 + "\tPVIC[+57]ATQM[+16]LESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModWrongMatch));
-            PasteTransitionListSkipColumnSelectWithMessage<ImportTransitionListErrorDlg>(messageDlg =>
-            {
-                var expectedMessage = TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_,
-                                                             1005.9, 1013.9734, 8.0734, "PVICATQMLESMTYNPR"),
-                                                             Resources.MzMatchException_suggestion);
-                Assert.AreEqual(messageDlg.ErrorList.Count, 1);
-                var firstError = messageDlg.ErrorList.First();
-                Assert.AreEqual(firstError.ErrorMessage, expectedMessage);
-                messageDlg.AcceptButton.PerformClick();
-            });
+            PasteTransitionListSkipColumnSelectWithMessage(TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_,
+                        1005.9, 1013.9734, 8.0734, "PVICATQMLESMTYNPR"),
+                    Resources.MzMatchException_suggestion),
+                1, false);
             WaitForDocumentLoaded();
             Assert.AreSame(docModMatcher, SkylineWindow.Document);
 
@@ -928,25 +880,26 @@ namespace pwiz.SkylineTestFunctional
             string textModPrefix = string.Format(textModPrefixFormat, precursorMz, productMz);
             string textModUnreadMod = textModPrefix + "PVIC[CAM]ATQM[bad_mod_&^$]LESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModUnreadMod));
-            RunUI(() => PasteOnePeptide(textModifiedSeqExpected));
+            ForgetPreviousImportColumnsSelection();
+            PasteOnePeptide(textModifiedSeqExpected);
 
             // When there are no mods, default to the approach of deducing modified state from precursor mz
             LoadDocument(documentModMatcher);
             string textModNone = textModPrefix + "PVICATQMLESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModNone));
-            RunUI(() => PasteOnePeptide(textModifiedSeqExpected));
+            PasteOnePeptide(textModifiedSeqExpected);
 
             // By specifying mods explicitly, we can distinguish between oxidations at two different sites
             LoadDocument(documentModMatcher);
             string textModFirst = textModPrefix + "PVIC[+57]ATQM[+16]LESMTYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModFirst));
-            RunUI(() => PasteOnePeptide(textModifiedSeqExpected));
+            PasteOnePeptide(textModifiedSeqExpected);
 
             LoadDocument(documentModMatcher);
             textModPrefix = string.Format(textModPrefixFormat, precursorMz, productMz + 16); // Add +16 to product which now contains the mod
             string textModSecond = textModPrefix + "PVIC[+" + string.Format("{0:F01}", 57) + "]ATQMLESM[+" + string.Format("{0:F01}", 16) + "]TYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModSecond));
-            RunUI(() => PasteOnePeptide("PVIC[+57.021464]ATQMLESM[+15.994915]TYNPR"));
+            PasteOnePeptide("PVIC[+57.021464]ATQMLESM[+15.994915]TYNPR");
 
 
             // Test a difficult case containing modifications of the same peptide at two different sites, make sure Skyline handles it correctly
@@ -1012,22 +965,18 @@ namespace pwiz.SkylineTestFunctional
         private static void PasteOnePeptide(string textModifiedSeqExpected)
         {
             PasteTransitionListSkipColumnSelect();
-            TryWaitForConditionUI(3000, () => SkylineWindow.DocumentUI.PeptideCount == 1);
-            Assert.AreEqual(1, SkylineWindow.DocumentUI.PeptideCount);
-            var peptideNode = SkylineWindow.DocumentUI.Peptides.First();
+            TryWaitForCondition(3000, () => SkylineWindow.Document.PeptideCount == 1);
+            Assert.AreEqual(1, SkylineWindow.Document.PeptideCount);
+            var peptideNode = SkylineWindow.Document.Peptides.First();
             Assert.AreEqual(textModifiedSeqExpected, peptideNode.ModifiedSequence);
         }
 
         protected void TestBlankDocScenario()
         {
-            RunUI(() => SkylineWindow.NewDocument());
+            RunUI(() => SkylineWindow.NewDocument(true));
             var docOld = SkylineWindow.Document;
             string textNoError = TestFilesDir.GetTestPath("Interleaved.csv");
-            ImportTransitionListSkipColumnSelectWithMessage<ImportTransitionListErrorDlg>(textNoError, errorDlg =>
-            {
-                Assert.AreEqual(errorDlg.ErrorList.Count, 30);
-                errorDlg.AcceptButton.PerformClick();
-            });
+            ImportTransitionListSkipColumnSelectWithMessage(textNoError, null, 30, true);
             var irtDlg = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(irtDlg, irtDlg.Btn1Click);
             var libraryAcceptDlg = WaitForOpenForm<MultiButtonMsgDlg>();
@@ -1137,9 +1086,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("assay_import_cirt.sky")));
             });
             doc = SkylineWindow.Document;
-            ImportAssayLibrarySkipColumnSelect(TestFilesDir.GetTestPath("cirts.tsv"));
-            var transitionErrs = WaitForOpenForm<ImportTransitionListErrorDlg>();
-            var chooseIrt3 = ShowDialog<ChooseIrtStandardPeptidesDlg>(transitionErrs.AcceptButton.PerformClick);
+            var errorList = new List<string>();
+            ImportAssayLibrarySkipColumnSelect(TestFilesDir.GetTestPath("cirts.tsv"), errorList);
+            var chooseIrt3 = WaitForOpenForm<ChooseIrtStandardPeptidesDlg>();
             var useCirtsDlg = ShowDialog<AddIrtStandardsDlg>(() => chooseIrt3.OkDialogStandard(IrtStandard.CIRT_SHORT));
             RunUI(() => useCirtsDlg.StandardCount = 12);
             OkDialog(useCirtsDlg, useCirtsDlg.OkDialog);
@@ -1169,6 +1118,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument());
         }
 
+        // Expects a message dialog after import window closes
         public static void ImportTransitionListSkipColumnSelectWithMessage<TDlg>(string csvPath, Action<TDlg> messageAction)
             where TDlg : FormEx
         {
@@ -1177,12 +1127,29 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(messageDlg, () => messageAction(messageDlg));
         }
 
-        public static void PasteTransitionListSkipColumnSelectWithMessage<TDlg>(Action<TDlg> messageAction)
-            where TDlg : FormEx
+        // Expects a message dialog when user tries to close import window
+        public static void ImportTransitionListSkipColumnSelectWithMessage(string csvPath, string expectedFirstMessage, int expectedMessageCount, bool proceedWithError)
         {
-            PasteTransitionListSkipColumnSelect();
-            var messageDlg = WaitForOpenForm<TDlg>();
-            OkDialog(messageDlg, () => messageAction(messageDlg));
+            var errors = new List<string>();
+            ImportTransitionListSkipColumnSelect(csvPath, errors, proceedWithError);
+            AssertEx.AreEqual(expectedMessageCount, errors.Count);
+            if (expectedFirstMessage != null)
+            {
+                AssertEx.AreEqual(expectedFirstMessage, errors.First());
+            }
+        }
+
+        // Expect paste to result in an error dialog when user tries to close it
+        public static void PasteTransitionListSkipColumnSelectWithMessage(string expectedFirstMessage, int expectedMessageCount, bool proceedWithErrors)
+        {
+
+            var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+            // We're expecting errors, collect them then move on
+            RunUI(() => transitionSelectdgl.AcceptButton.PerformClick());
+            var errDlg = WaitForOpenForm<ImportTransitionListErrorDlg>();
+            AssertEx.AreEqual(expectedMessageCount, errDlg.ErrorList.Count);
+            AssertEx.AreEqual(expectedFirstMessage, errDlg.ErrorList.First().ErrorMessage);
+            OkDialog(errDlg, () => errDlg.DialogResult = DialogResult.OK);
         }
 
         public static RCalcIrt ValidateDocAndIrt(int peptides, int irtTotal, int irtStandards)

@@ -134,7 +134,7 @@ namespace pwiz.Skyline.FileUI
                     // Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge
                 });
                 comboBox.SelectedIndex = 0;
-                comboBox.SelectedIndexChanged += comboChanged;       
+                comboBox.SelectedIndexChanged += ComboChanged;       
                 ComboHelper.AutoSizeDropDown(comboBox);
             }
 
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.FileUI
 
         private bool comboBoxChanged;
         // Callback for when a combo box is changed. We use it to update the index of the PeptideColumnIndices and preventing combo boxes from overlapping.
-        private void comboChanged(object sender, EventArgs e)  // CONSIDER(bspratt) no charge state columns?
+        private void ComboChanged(object sender, EventArgs e)  // CONSIDER(bspratt) no charge state columns? (Seems to be because Skyline infers these and is confused when given explicit values)
         {
             var comboBox = (ComboBox) sender;
             var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
@@ -307,7 +307,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
         // Saves column positions between transition lists
-        private void updateColumnsList()
+        private void UpdateColumnsList()
         {
             var ColumnList = new List<Tuple<int, string>>();
             var columns = Importer.RowReader.Indices;
@@ -330,7 +330,7 @@ namespace pwiz.Skyline.FileUI
                 Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
         }
         // Saves a list of the current document's headers, if any exist, so that they can be compared to those of the next document
-        private void updateHeadersList()
+        private void UpdateHeadersList()
         {
             var headers = Importer.RowReader.Indices.Headers;
             if (headers != null && headers.Length > 0)
@@ -338,26 +338,26 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.CustomImportTransitionListHeaders = headers.ToList();
             }
         }
-        private void dataGrid_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
+        private void DataGrid_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
             ResizeComboBoxes();
         }
-        private void dataGrid_ColumnHeadersHeightChanged(object sender, EventArgs e)
+        private void DataGrid_ColumnHeadersHeightChanged(object sender, EventArgs e)
         {
             ResizeComboBoxes();
         }
 
-        private void dataGrid_Scroll(object sender, ScrollEventArgs e)
+        private void DataGrid_Scroll(object sender, ScrollEventArgs e)
         {
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
         }
         // If a combo box was changed, save the column indices and column count when the OK button is clicked
-        private void buttonOk_Click(object sender, EventArgs e)
+        private void ButtonOk_Click(object sender, EventArgs e)
         {
             if (comboBoxChanged)
             {
-                updateColumnsList();
-                updateHeadersList();
+                UpdateColumnsList();
+                UpdateHeadersList();
             }
         }
 
@@ -372,7 +372,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void buttonCheckForErrors_Click(object sender, EventArgs e)
+        private void ButtonCheckForErrors_Click(object sender, EventArgs e)
         {
             CheckForErrors(false);
         }
@@ -384,7 +384,7 @@ namespace pwiz.Skyline.FileUI
         /// Return false if no errors found.
         /// </summary>
         /// <param name="silentSuccess">If true, don't show the confirmation dialog when there are no errors</param>
-        /// <returns>True iff list contains any errors</returns>
+        /// <returns>True if list contains any errors and user does not elect to ignore them</returns>
         private bool CheckForErrors(bool silentSuccess)
         {
             IdentityPath testSelectPath = null;
@@ -393,18 +393,20 @@ namespace pwiz.Skyline.FileUI
             List<TransitionImportErrorInfo> testErrorList = null;
             List<PeptideGroupDocNode> testPeptideGroups = null;
 
-            _docCurrent.ImportMassList(_inputs, Importer, null,
+            var docNew = _docCurrent.ImportMassList(_inputs, Importer, null,
                 _insertPath, out testSelectPath, out testIrtPeptides, out testLibrarySpectra,
                 out testErrorList, out testPeptideGroups);
             if (testErrorList.Any())
             {
                 // There are errors, show them to user
-                using (var dlg = new ImportTransitionListErrorDlg(testErrorList, true))
+                var isErrorAll = ReferenceEquals(docNew, _docCurrent);
+                DialogResult response;
+                using (var dlg = new ImportTransitionListErrorDlg(testErrorList, isErrorAll, silentSuccess))
                 {
-                    dlg.ShowDialog(this);
+                    response = dlg.ShowDialog(this);
                 }
 
-                return true; // There are errors
+                return response == DialogResult.Cancel; // There are errors, and user does not want to ignore them
             }
             else if (!silentSuccess) 
             {

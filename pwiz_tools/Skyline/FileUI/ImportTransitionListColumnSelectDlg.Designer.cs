@@ -47,7 +47,7 @@
             this.buttonOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.buttonOk.Name = "buttonOk";
             this.buttonOk.UseVisualStyleBackColor = true;
-            this.buttonOk.Click += new System.EventHandler(this.buttonOk_Click);
+            this.buttonOk.Click += new System.EventHandler(this.ButtonOk_Click);
             // 
             // buttonCancel
             // 
@@ -62,7 +62,7 @@
             resources.ApplyResources(this.buttonCheckForErrors, "buttonCheckForErrors");
             this.buttonCheckForErrors.Name = "buttonCheckForErrors";
             this.buttonCheckForErrors.UseVisualStyleBackColor = true;
-            this.buttonCheckForErrors.Click += new System.EventHandler(this.buttonCheckForErrors_Click);
+            this.buttonCheckForErrors.Click += new System.EventHandler(this.ButtonCheckForErrors_Click);
             // 
             // comboPanelOuter
             // 
@@ -90,10 +90,10 @@
             this.dataGrid.Name = "dataGrid";
             this.dataGrid.ReadOnly = true;
             this.dataGrid.RowHeadersVisible = false;
-            this.dataGrid.ColumnHeadersHeightChanged += new System.EventHandler(this.dataGrid_ColumnHeadersHeightChanged);
+            this.dataGrid.ColumnHeadersHeightChanged += new System.EventHandler(this.DataGrid_ColumnHeadersHeightChanged);
             this.dataGrid.ColumnAdded += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGrid_ColumnAdded);
-            this.dataGrid.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGrid_ColumnWidthChanged);
-            this.dataGrid.Scroll += new System.Windows.Forms.ScrollEventHandler(this.dataGrid_Scroll);
+            this.dataGrid.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.DataGrid_ColumnWidthChanged);
+            this.dataGrid.Scroll += new System.Windows.Forms.ScrollEventHandler(this.DataGrid_Scroll);
             // 
             // ImportTransitionListColumnSelectDlg
             // 

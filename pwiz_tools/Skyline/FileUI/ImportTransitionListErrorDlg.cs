@@ -29,7 +29,7 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class ImportTransitionListErrorDlg : FormEx
     {
-        public ImportTransitionListErrorDlg(List<TransitionImportErrorInfo> errorList, bool isErrorAll)
+        public ImportTransitionListErrorDlg(List<TransitionImportErrorInfo> errorList, bool isErrorAll, bool offerCancelButton)
         {
             InitializeComponent();
 
@@ -51,10 +51,16 @@ namespace pwiz.Skyline.FileUI
                                                           string.Format(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_All__0__transitions_contained_errors___Please_check_the_transition_list_for_errors_and_try_importing_again_, errorList.Count);
                 buttonCancel.Visible = false;
             }
-            else
+            else if (offerCancelButton)
             {
                 errorListMessage = errorList.Count == 1 ? Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_ :
                                                           string.Format(Resources.SkylineWindow_ImportMassList__0__transitions_contained_errors__Skip_these__0__transitions_and_import_the_rest_, errorList.Count);
+            }
+            else
+            {
+                errorListMessage = errorList.Count == 1 ? Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error_ :
+                    string.Format(Resources.SkylineWindow_ImportMassList__0__transitions_contained_errors_, errorList.Count);
+                buttonCancel.Visible = false;
             }
 
             labelErrors.Text = errorListMessage;

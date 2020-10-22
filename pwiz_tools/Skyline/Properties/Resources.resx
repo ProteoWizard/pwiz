@@ -2525,6 +2525,9 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_ImportMassList__0__transitions_contained_errors__Skip_these__0__transitions_and_import_the_rest_" xml:space="preserve">
     <value>{0} transitions contained errors. Skip these {0} transitions and import the rest?</value>
   </data>
+  <data name="SkylineWindow_ImportMassList__0__transitions_contained_errors_" xml:space="preserve">
+    <value>{0} transitions contained errors.</value>
+  </data>
   <data name="EditStaticModDlg_OkDialog_The_modification__0__already_exists" xml:space="preserve">
     <value>The modification '{0}' already exists.</value>
   </data>
@@ -3370,6 +3373,9 @@ Are you sure you want to continue?</value>
   </data>
   <data name="PopupBtn" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\popupbtn.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error_" xml:space="preserve">
+    <value>A transition contained an error.</value>
   </data>
   <data name="ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_" xml:space="preserve">
     <value>A transition contained an error. Skip this transition and import the rest?</value>

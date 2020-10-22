@@ -1960,18 +1960,10 @@ namespace pwiz.Skyline
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
             if (isDocumentSame && !errorList.Any())
                 return;
-            // Show the errors, giving the option to accept the transitions without errors,
-            // if there are any
-            if (errorList.Any())
-            {
-                using (var errorDlg = new ImportTransitionListErrorDlg(errorList, isDocumentSame))
-                {
-                    if (errorDlg.ShowDialog(this) == DialogResult.Cancel || isDocumentSame)
-                    {
-                        return;
-                    }
-                }
-            }
+
+            // Formerly this is where we would show any errors and give the user the option to proceed with just the non-error transitions.
+            // Now we do that during the import window's close event. This affords the user the additional option of going back and fixing
+            // any issues like bad column selection rather than having to go through the whole process again.
 
             RetentionTimeRegression retentionTimeRegressionStore;
             MassListInputs irtInputs;
