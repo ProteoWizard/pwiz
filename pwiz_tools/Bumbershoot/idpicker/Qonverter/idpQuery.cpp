@@ -478,7 +478,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
         else if (bal::contains(pivotMode, "TMT"))
         {
             countColumn = "DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities)";
-            whereConstraint = "WHERE QuantitationMethod BETWEEN 4 AND 6 ";
+            whereConstraint = "WHERE QuantitationMethod BETWEEN 4 AND 8 ";
         }
         else if (bal::contains(pivotMode, "PrecursorIntensity"))
             countColumn = "IFNULL(SUM(DISTINCT xic.PeakIntensity), 0)";
