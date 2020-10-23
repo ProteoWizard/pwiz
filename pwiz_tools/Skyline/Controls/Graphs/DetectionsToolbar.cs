@@ -27,7 +27,7 @@ using IntLabeledValue = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.I
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class DetectionsToolbar : GraphSummaryToolbar //UserControl // for designer
+    public partial class DetectionsToolbar : GraphSummaryToolbar
     {
         private Timer _timer;
 
