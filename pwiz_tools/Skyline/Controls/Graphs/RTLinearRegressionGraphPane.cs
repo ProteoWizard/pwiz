@@ -295,8 +295,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void Draw(Graphics g)
         {
-            //GraphObjList.Clear();
-
             var data = Data;
             if (data != null && RTGraphController.PlotType == PlotTypeRT.correlation)
             {
