@@ -75,18 +75,17 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void UpdateUI()
         {
             IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);
-            DetectionsPlotPane pane;
-            if (!_graphSummary.TryGetGraphPane(out pane)) return;
+            if (!_graphSummary.TryGetGraphPane(out DetectionsPlotPane pane)) return;
             if (pane.CurrentData.IsValid &&
                 DetectionPlotData.GetDataCache().Status != DetectionPlotData.DetectionDataCache.CacheStatus.error)
             {
                 EnableControls(true);
                 IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);
-                this.toolStripAtLeastN.NumericUpDownControl.Minimum = 0;
-                this.toolStripAtLeastN.NumericUpDownControl.Maximum =
+                toolStripAtLeastN.NumericUpDownControl.Minimum = 0;
+                toolStripAtLeastN.NumericUpDownControl.Maximum =
                     _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
                 toolStripAtLeastN.NumericUpDownControl.Value = Settings.RepCount;
-                this.toolStripAtLeastN.NumericUpDownControl.ValueChanged += toolStripAtLeastN_ValueChanged;
+                toolStripAtLeastN.NumericUpDownControl.ValueChanged += toolStripAtLeastN_ValueChanged;
             }
             else
             {
@@ -109,7 +108,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _timer.Stop();
                 if (dlgProperties.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
                 {
-                    this.UpdateUI();
+                    UpdateUI();
                     _timer.Start();
                 }
             }
