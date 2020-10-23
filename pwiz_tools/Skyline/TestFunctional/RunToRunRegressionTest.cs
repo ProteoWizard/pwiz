@@ -159,6 +159,7 @@ namespace pwiz.SkylineTestFunctional
                     // Go back to correlation graph and make sure everything is still right
                     RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.correlation));
                     WaitForGraphs();
+                    WaitForConditionUI(() => regressionPane._progressBar == null);
                     TestRegressionStatistics(regressionPane, i, j);
                 }
             }
@@ -178,6 +179,7 @@ namespace pwiz.SkylineTestFunctional
                     RunToRunOriginalReplicate(summary).SelectedIndex = selfIndex;
                 });
                 WaitForGraphs();
+                WaitForConditionUI(() => regressionPane._progressBar == null);
                 RunUI(() =>
                 {
                     var regression = regressionPane.RegressionRefined;
@@ -213,6 +215,7 @@ namespace pwiz.SkylineTestFunctional
             if (!graphSummary.TryGetGraphPane(out regressionPaneScore))
                 Assert.Fail("First graph pane was not RTLinearRegressionGraphPane");
             WaitForCondition(() => regressionPaneScore.IsRefined);
+            WaitForConditionUI(() => regressionPaneScore._progressBar == null);
 
             Assert.IsFalse(regressionPaneScore.HasToolbar);
             var regressionScoreToRun = regressionPaneScore.RegressionRefined;
