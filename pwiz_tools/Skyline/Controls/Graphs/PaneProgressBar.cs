@@ -103,7 +103,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var graph = _parent.GraphSummary.GraphControl;
             if (graph != null && !graph.IsDisposed && graph.IsHandleCreated)
-                _parent.GraphSummary.GraphControl.Invoke((Action)(() => { this.DrawBar(progress); }));
+                try
+                {   //It is possible that the main thread disposes the graph object
+                    //during the Invoke method. No additional action is required in such a case
+                    graph.Invoke((Action) (() => { this.DrawBar(progress); }));
+                }
+                catch (ObjectDisposedException)
+                {}
         }
 
     }

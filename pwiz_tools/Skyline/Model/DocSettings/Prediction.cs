@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -1105,7 +1104,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 result.Add(CalcScore(calculator, pep, cacheCalc));
                 ThreadingHelper.CheckCanceled(token);
             }
-            Debug.Print( Thread.CurrentThread.Name + ": Number of scores calculated:" + result.Count);
             return result;
         }
 
