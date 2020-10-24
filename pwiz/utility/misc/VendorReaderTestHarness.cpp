@@ -474,10 +474,11 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
 
     // test non-ASCII characters in the source name, which in case of failure is conditionally an error or warning;
     // create a copy of the rawpath (file or directory) with non-ASCII characters in it
-    bfs::path::string_type unicodeTestString(boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".试验"));
+    bfs::path::string_type unicodeTestString(boost::locale::conv::utf_to_utf<bfs::path::value_type>(L"-试验"));
     bfs::path rawpathPath(rawpath);
     bfs::path newRawPath = bfs::current_path() / rawpathPath.filename();
-    newRawPath.replace_extension(unicodeTestString + newRawPath.extension().native());
+    auto oldExtension = newRawPath.extension().native();
+    newRawPath = newRawPath.replace_extension().native() + unicodeTestString + newRawPath.extension().native();
     if (bfs::exists(newRawPath))
         bfs::remove_all(newRawPath);
     if (bfs::is_directory(rawpathPath))
@@ -492,7 +493,29 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             if (bfs::exists(wiffscanPath))
             {
                 bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
-                newWiffscanPath.replace_extension(unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".wiff.scan"));
+                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".wiff.scan");
+                if (bfs::exists(newWiffscanPath))
+                    bfs::remove(newWiffscanPath);
+                bfs::copy_file(wiffscanPath, newWiffscanPath);
+            }
+
+            wiffscanPath = rawpathPath;
+            wiffscanPath.replace_extension(".dad.scan");
+            if (bfs::exists(wiffscanPath))
+            {
+                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
+                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".dad.scan");
+                if (bfs::exists(newWiffscanPath))
+                    bfs::remove(newWiffscanPath);
+                bfs::copy_file(wiffscanPath, newWiffscanPath);
+            }
+
+            wiffscanPath = rawpathPath;
+            wiffscanPath.replace_extension(".dad.sidx");
+            if (bfs::exists(wiffscanPath))
+            {
+                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
+                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".dad.sidx");
                 if (bfs::exists(newWiffscanPath))
                     bfs::remove(newWiffscanPath);
                 bfs::copy_file(wiffscanPath, newWiffscanPath);
@@ -615,7 +638,6 @@ void generate(const Reader& reader, const string& rawpath, const bfs::path& pare
     writeConfig.indexed = false;
     writeConfig.binaryDataEncoderConfig.precision = config.doublePrecision ? BinaryDataEncoder::Precision_64 : BinaryDataEncoder::Precision_32;
     writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
-    if (os_) *os_ << "Writing mzML(s) for " << rawpath << endl;
 
     for (auto runItr = config.runIndex ? make_pair(config.runIndex.get(), config.runIndex.get()+1) : make_pair(0, (int) msds.size()); runItr.first < runItr.second; ++runItr.first)
     {
@@ -625,6 +647,7 @@ void generate(const Reader& reader, const string& rawpath, const bfs::path& pare
 
         config.wrap(*msd);
 
+        if (os_) *os_ << "Converting " << rawpath << " to " << outputFilename << endl;
         MSDataFile::write(*msd, outputFilename.string(), writeConfig);
     }
 }

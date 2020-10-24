@@ -308,14 +308,18 @@ namespace pwiz.Skyline.Model.Results
             if (exactMatch != null)
                 return exactMatch;
             // Then look for a basename match
+            string sampleName = filePathFind.GetSampleName();
             int fileOrder = 0;
             foreach (ChromatogramSet chromSet in Chromatograms)
             {
                 string fileBasename = filePathFind.GetFileNameWithoutExtension();
                 foreach (var filePath in chromSet.MSDataFilePaths)
                 {
-                    if (IsBaseNameMatch(filePath.GetFileNameWithoutExtension(), fileBasename))
-                        return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                    if (sampleName == null || sampleName == filePath.GetSampleName())
+                    {
+                        if (IsBaseNameMatch(filePath.GetFileNameWithoutExtension(), fileBasename))
+                            return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                    }
                     fileOrder++;
                 }
             }
@@ -349,13 +353,19 @@ namespace pwiz.Skyline.Model.Results
         private ChromSetFileMatch FindExactNameMatchingMSDataFile(MsDataFileUri fileUri)
         {
             var filePathFind = fileUri.GetFilePath();
+            string sampleName = fileUri.GetSampleName();
             int fileOrder = 0;
             foreach (ChromatogramSet chromSet in Chromatograms)
             {
                 foreach (var filePath in chromSet.MSDataFilePaths)
                 {
                     if (Equals(filePath.GetFilePath(), filePathFind))
-                        return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                    {
+                        if (sampleName == null || sampleName.Equals(filePath.GetSampleName()))
+                        {
+                            return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                        }
+                    }
                     fileOrder++;
                 }
             }

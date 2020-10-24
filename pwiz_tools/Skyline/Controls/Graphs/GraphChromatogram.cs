@@ -2374,7 +2374,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                             ChromFileInfoId fileId,
                                                                             int indexChrom)
         {
-            if (!nodeGroup.HasResults)
+            if (!nodeGroup.HasResults || indexChrom >= nodeGroup.Results.Count)
                 return null;
             var tranGroupChromInfoList = nodeGroup.Results[indexChrom];
             if (tranGroupChromInfoList.IsEmpty)

@@ -196,6 +196,7 @@ namespace pwiz.Skyline.SettingsUI
             tbxMaxLoqBias.Text = _peptideSettings.Quantification.MaxLoqBias.ToString();
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
+            cbxSimpleRatios.Checked = _peptideSettings.Quantification.SimpleRatios;
         }
 
         /// <summary>
@@ -561,6 +562,8 @@ namespace pwiz.Skyline.SettingsUI
 
                 quantification = quantification.ChangeQualitativeIonRatioThreshold(ionRatioThreshold);
             }
+
+            quantification = quantification.ChangeSimpleRatios(cbxSimpleRatios.Checked);
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
                     .ChangeAbsoluteQuantification(quantification);
@@ -1450,6 +1453,18 @@ namespace pwiz.Skyline.SettingsUI
             set
             {
                 tbxIonRatioThreshold.Text = value.ToString();
+            }
+        }
+
+        public bool SimpleRatios
+        {
+            get
+            {
+                return cbxSimpleRatios.Checked;
+            }
+            set
+            {
+                cbxSimpleRatios.Checked = value;
             }
         }
 
