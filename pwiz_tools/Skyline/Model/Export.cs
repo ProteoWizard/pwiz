@@ -1880,6 +1880,7 @@ namespace pwiz.Skyline.Model
             : base(document)
         {
             IsolationList = true;
+            IsPrecursorLimited = true;
         }
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
