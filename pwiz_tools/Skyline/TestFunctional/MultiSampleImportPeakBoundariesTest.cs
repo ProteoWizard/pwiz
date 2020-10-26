@@ -67,6 +67,7 @@ namespace pwiz.SkylineTestFunctional
             var importResultsSamplesDlg = WaitForOpenForm<ImportResultsSamplesDlg>();
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
             WaitForDocumentLoaded();
+            Assert.AreEqual(1, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
 
             // Import the first two samples from "secondfile.wiff" into a replicate named "ReplicateTwo"
             importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -88,6 +89,7 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
             WaitForDocumentLoaded();
+            Assert.AreEqual(2, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
 
             // Import the second and third samples from "secondfile.wiff" into a replicate named "ReplicateThree"
             importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -109,6 +111,7 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
             WaitForDocumentLoaded();
+            Assert.AreEqual(3, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
 
             var peakBoundariesFile = TestFilesDir.GetTestPath("PeakBoundaries.tsv");
             using (var fileWriter = new StreamWriter(peakBoundariesFile))
