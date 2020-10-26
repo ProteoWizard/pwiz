@@ -401,7 +401,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         if (res.IsValid)
                         {
-                            if (currentSize + res.ReplicateCount >= CACHE_CAPACITY) _datas.TryDequeue(out var dump);
+                            if (currentSize + res.ReplicateCount >= CACHE_CAPACITY) _datas.TryDequeue(out _);
                             _datas.Enqueue(res);
                             _callback.Invoke(res);
                         }

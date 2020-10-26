@@ -50,6 +50,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
             DocumentContainer = documentContainer;
+            metadataRuleSet = metadataRuleSet ?? new MetadataRuleSet(typeof(ResultFile));
             _originalName = metadataRuleSet.Name;
             _dataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(ExtractedMetadataResultRow));

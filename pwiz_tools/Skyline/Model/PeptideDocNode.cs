@@ -1785,6 +1785,10 @@ namespace pwiz.Skyline.Model
 
             public float? CalcTransitionRatio(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, IsotopeLabelType labelTypeNum, IsotopeLabelType labelTypeDenom)
             {
+                if (Settings.PeptideSettings.Quantification.SimpleRatios)
+                {
+                    return null;
+                }
                 // Avoid 1.0 ratios for self-to-self
                 if (ReferenceEquals(labelTypeNum, labelTypeDenom) || !TranTypes.Contains(labelTypeDenom) || !TranTypes.Contains(labelTypeNum))
                     return null;
@@ -1849,6 +1853,18 @@ namespace pwiz.Skyline.Model
                 // Delay allocation, which can be costly in DIA data with no ratios
                 List<double> numerators = null;
                 List<double> denominators = null;
+
+                if (Settings.PeptideSettings.Quantification.SimpleRatios)
+                {
+                    numerators = GetAreaPairs(labelTypeNum).Select(pair => (double) pair.Value).ToList();
+                    denominators = GetAreaPairs(labelTypeDenom).Select(pair => (double)pair.Value).ToList();
+                    if (numerators.Count == 0 || denominators.Count == 0)
+                    {
+                        return null;
+                    }
+
+                    return RatioValue.ValueOf(numerators.Sum() / denominators.Sum());
+                }
 
                 foreach (var pair in GetAreaPairs(labelTypeNum))
                 {

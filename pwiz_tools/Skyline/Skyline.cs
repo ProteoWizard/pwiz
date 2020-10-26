@@ -1742,6 +1742,7 @@ namespace pwiz.Skyline
             var removedNodes = new List<DocNode>();
             ModifyDocument(string.Format(Resources.SkylineWindow_EditDelete_Delete__0__, undoText), doc =>
             {
+                bool canSynchSiblings = !doc.Settings.PeptideSettings.Quantification.SimpleRatios;
                 var listRemoveParams = new List<RemoveParams>();    // Keep removals in order
                 var dictRemove = new Dictionary<int, RemoveParams>();   // Minimize removal operations
                 var setRemove = new HashSet<int>(); // Keep track of what is being removed
@@ -1778,7 +1779,7 @@ namespace pwiz.Skyline
                 foreach (var removeParams in listRemoveParams)
                 {
                     var nodeParent = doc.FindNode(removeParams.ParentPath);
-                    if (nodeParent is TransitionGroupDocNode)
+                    if (canSynchSiblings && nodeParent is TransitionGroupDocNode)
                         doc = (SrmDocument) doc.RemoveAllSynched(removeParams.ParentPath.Parent, removeParams.ParentPath.Child, removeParams.RemoveIds);
                     else if (nodeParent != null)
                         doc = (SrmDocument) doc.RemoveAll(removeParams.ParentPath, removeParams.RemoveIds);

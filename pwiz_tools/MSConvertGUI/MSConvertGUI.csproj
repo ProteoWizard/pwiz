@@ -166,9 +166,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Content Include="msconvert.exe.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <EmbeddedResource Include="TextInputPrompt.resx">
       <DependentUpon>TextInputPrompt.cs</DependentUpon>
     </EmbeddedResource>

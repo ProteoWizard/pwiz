@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<views>
+  <view name="Protein Turnover Report" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*" uimode="proteomic">
+    <column name="Precursor.Peptide.Protein" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.Name" />
+    <column name="Precursor.Peptide.Protein.Description" />
+    <column name="Precursor.Peptide.Protein.Accession" />
+    <column name="Precursor.Peptide.Protein.Gene" />
+    <column name="Precursor.Peptide" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.FileName" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Timepoint&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Condition&quot;" />
+    <column name="Precursor.Charge" />
+    <column name="Precursor.Mz" />
+    <column name="Precursor.Peptide.MoleculeFormula" />
+    <column name="Precursor.NeutralMass" />
+    <column name="Precursor.ModifiedSequence" />
+    <column name="Precursor.IsDecoy" />
+    <column name="Results!*.Value.PrecursorResult.DetectionQValue" />
+    <column name="Results!*.Value.PrecursorResult.TotalAreaMs1" />
+    <column name="Results!*.Value.PrecursorResult.IsotopeDotProduct" />
+    <column name="ProductMz" />
+    <column name="ProductCharge" />
+    <column name="FragmentIon" />
+    <column name="IsotopeDistIndex" />
+    <column name="IsotopeDistRank" />
+    <column name="IsotopeDistProportion" />
+    <column name="FragmentIonType" />
+    <column name="Results!*.Value.Area" />
+  </view>
+</views>

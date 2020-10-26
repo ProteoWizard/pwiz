@@ -113,7 +113,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
         // otherwise add the sample name as a suffix
         if(sampleName.find(msd.id) != string::npos)
             msd.id = sampleName;
-        else
+        else if (msd.id.find(sampleName) == string::npos)
             msd.id += "-" + sampleName;
     }
 
