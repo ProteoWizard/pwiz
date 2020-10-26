@@ -1648,9 +1648,12 @@ namespace pwiz.Skyline.Model.Results
             int lenTimes = collector.TimeCount;
             if (IsGroupedTime)
             {
-                // Shared scan ids and times do not belong to a group.
-                collector.AddScanId(scanId);
-                collector.AddGroupedTime(time);
+                // The chromatogram index is used to determine which spillfile to use.
+                // All chromatograms in this group use the same spillfile, so any chromatogram index will work
+                int firstChromatogramIndex = chromatograms.ProductFilterIdToId(spectrum.ProductFilters.First().FilterId);
+
+                collector.ScansCollector.Add(firstChromatogramIndex, scanId, _blockWriter);
+                collector.GroupedTimesCollector.Add(firstChromatogramIndex, time, _blockWriter);
                 lenTimes = collector.GroupedTimesCollector.Count;
             }
 
@@ -1731,16 +1734,6 @@ namespace pwiz.Skyline.Model.Results
         public Dictionary<SpectrumProductFilter, ChromCollector> ProductIntensityMap { get; private set; }
         public readonly SortedBlockedList<float> GroupedTimesCollector;
         public readonly BlockedList<int> ScansCollector;
-
-        public void AddGroupedTime(float time)
-        {
-            GroupedTimesCollector.AddShared(time);
-        }
-
-        public void AddScanId(int scanId)
-        {
-            ScansCollector.AddShared(scanId);
-        }
 
         public int TimeCount
         {
