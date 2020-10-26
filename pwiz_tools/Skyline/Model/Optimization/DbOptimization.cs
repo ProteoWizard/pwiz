@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.Optimization
             }
             set
             {
-                Key.PrecursorAdduct = int.TryParse(value, out var z) ? Adduct.FromStringAssumeProtonated(value) : Adduct.FromStringAssumeProtonatedNonProteomic(value);
+                Key.PrecursorAdduct = int.TryParse(value, out _) ? Adduct.FromStringAssumeProtonated(value) : Adduct.FromStringAssumeProtonatedNonProteomic(value);
             }
         }
         public virtual string FragmentIon { get { return Key.FragmentIon; } set { Key.FragmentIon = value; } }
@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Model.Optimization
             }
             set
             {
-                Key.ProductAdduct = int.TryParse(value, out var z) ? Adduct.FromStringAssumeProtonated(value) : Adduct.FromStringAssumeProtonatedNonProteomic(value);
+                Key.ProductAdduct = int.TryParse(value, out _) ? Adduct.FromStringAssumeProtonated(value) : Adduct.FromStringAssumeProtonatedNonProteomic(value);
             }
         }
         public virtual int Type
