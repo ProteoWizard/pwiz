@@ -98,6 +98,8 @@ namespace pwiz.Skyline.Util
             charge_only // parsing "2" results in an adduct w/ no formula, z=2, displays as "[M+2]" or "++"
         }
 
+        private Adduct() {}
+
         private Adduct(int charge, bool protonated)
         {
             InitializeAsCharge(charge, protonated ? ADDUCT_TYPE.proteomic : ADDUCT_TYPE.charge_only);
@@ -110,8 +112,19 @@ namespace pwiz.Skyline.Util
         /// <param name="description">String to be parsed. Should have form similar to M+H, 2M+2NA-H etc, or it may be a text representation of a protonated charge a la "2", "-3" etc</param>
         /// <param name="integerMode">How to treat integer only descriptions: (de)protonation, or just a charge?</param>
         /// <param name="explicitCharge">Optional known charge</param>
+        private Adduct(string description, ADDUCT_TYPE integerMode, int? explicitCharge = null)
+        {
+            Initialize(description, integerMode, explicitCharge, true);
+        }
+
+        /// <summary>
+        /// Initializer for Adduct based on a string description (e.g. "[M+H]")
+        /// </summary>
+        /// <param name="description">String to be parsed. Should have form similar to M+H, 2M+2NA-H etc, or it may be a text representation of a protonated charge a la "2", "-3" etc</param>
+        /// <param name="integerMode">How to treat integer only descriptions: (de)protonation, or just a charge?</param>
+        /// <param name="explicitCharge">Optional known charge</param>
         /// <param name="throwOnError">When true, throw an exception if parsing fails. Otherwise on error just set charge to 0, which marks the Adduct as invalid.</param>
-        private Adduct(string description, ADDUCT_TYPE integerMode, int? explicitCharge = null, bool throwOnError = true) 
+        private void Initialize(string description, ADDUCT_TYPE integerMode, int? explicitCharge, bool throwOnError)
         {
             var input = (description ?? string.Empty).Trim();
             int chargeFromText;
@@ -636,12 +649,14 @@ namespace pwiz.Skyline.Util
 
             // Reuse the more common non-proteomic adducts
             var testValue = value.StartsWith(@"M") ? @"[" + value + @"]" : value;
-            var testAdduct = new Adduct(testValue, parserMode, explicitCharge, throwOnError);
+            var testAdduct = new Adduct();
+            testAdduct.Initialize(testValue, parserMode, explicitCharge, throwOnError);
             if (!testValue.EndsWith(@"]"))
             {
                 // Can we trim any trailing charge info to arrive at a standard form (ie use [M+H] instead of [M+H]+)?
                 var stripped = testValue.Substring(0, testValue.IndexOf(']')+1);
-                var testB = new Adduct(stripped, parserMode, explicitCharge, false);
+                var testB = new Adduct();
+                testB.Initialize(stripped, parserMode, explicitCharge, false);
                 if (testAdduct.SameEffect(testB))
                 {
                     testAdduct = testB; // Go with the simpler canonical form
