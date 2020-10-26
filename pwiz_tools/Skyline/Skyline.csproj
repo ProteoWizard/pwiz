@@ -47,11 +47,15 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>229</ApplicationRevision>
-    <ApplicationVersion>20.1.9.229</ApplicationVersion>
+    <ApplicationRevision>286</ApplicationRevision>
+    <ApplicationVersion>20.2.1.286</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    
+    <!-- Make the assembly name configurable -->
+    <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
+    <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -494,7 +498,6 @@
     <Compile Include="Model\ElementLocators\ElementRef.cs" />
     <Compile Include="Model\ElementLocators\ExportAnnotations\ElementHandler.cs" />
     <Compile Include="Model\ElementLocators\ExportAnnotations\ExportAnnotationSettings.cs" />
-    <Compile Include="Model\ElementLocators\ExportAnnotations\IValueHandler.cs" />
     <Compile Include="Model\ElementLocators\NodeRef.cs" />
     <Compile Include="Model\ElementLocators\ElementRefs.cs" />
     <Compile Include="Model\ElementLocators\ReplicateRef.cs" />
@@ -1220,7 +1223,6 @@
     <Compile Include="Model\Databinding\Entities\PrecursorResult.cs" />
     <Compile Include="Model\Databinding\Entities\Protein.cs" />
     <Compile Include="Model\Databinding\Entities\ProteinResult.cs" />
-    <Compile Include="Model\Databinding\Entities\RegressionResult.cs" />
     <Compile Include="Model\Databinding\Entities\Replicate.cs" />
     <Compile Include="Model\Databinding\Entities\Result.cs" />
     <Compile Include="Model\Databinding\Entities\ResultFile.cs" />
@@ -1474,7 +1476,6 @@
     <Compile Include="Model\DocSettings\Extensions\SettingsExtensions.cs" />
     <Compile Include="Model\DocSettings\GridColumns.cs" />
     <Compile Include="Model\DocSettings\ReportSpec.cs" />
-    <Compile Include="Model\Hibernate\AnnotationPropertyAccessor.cs" />
     <Compile Include="Model\Hibernate\DbEntity.cs" />
     <Compile Include="Model\Hibernate\DbPeptide.cs" />
     <Compile Include="Model\Hibernate\DbPrecursor.cs" />
