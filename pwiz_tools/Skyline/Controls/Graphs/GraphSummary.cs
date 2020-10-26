@@ -25,6 +25,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -136,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private int _ratioIndex;
+        private RatioIndex _ratioIndex;
 
         public GraphTypeSummary Type { get; set; }
 
@@ -209,7 +210,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// peak area summary graph uses this class directly, this is the
         /// only way to get it the ratio index value.
         /// </summary>
-        public int RatioIndex
+        public RatioIndex RatioIndex
         {
             get { return _ratioIndex; }
             set

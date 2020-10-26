@@ -244,7 +244,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                     BarSettings.Type = BarType.Cluster;
             }
-            int ratioIndex = AreaGraphData.RATIO_INDEX_NONE;
+            RatioIndex ratioIndex = AreaGraphData.RATIO_INDEX_NONE;
             var standardType = IsotopeLabelType.light;
 
             var areaView = AreaGraphController.AreaView;
@@ -874,10 +874,10 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private class AreaGraphData : GraphData
         {
-            public const int RATIO_INDEX_NONE = -1;
+            public static readonly RatioIndex RATIO_INDEX_NONE = RatioIndex.NONE;
 
             private readonly DocNode _docNode;
-            private readonly int _ratioIndex;
+            private readonly RatioIndex _ratioIndex;
             private readonly AreaNormalizeToData _normalize;
             private readonly AreaExpectedValue _expectedVisible;
             private readonly bool _zeroMissingValues;
@@ -886,7 +886,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  IdentityPath identityPath,
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
-                                 int ratioIndex,
+                                 RatioIndex ratioIndex,
                                  AreaNormalizeToData normalize,
                                  AreaExpectedValue expectedVisible,
                                  PaneKey paneKey,

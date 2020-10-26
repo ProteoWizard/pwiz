@@ -27,6 +27,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1337,12 +1338,10 @@ namespace pwiz.Skyline.Controls.SeqNode
 
     public class DisplaySettings
     {
-        public const int RATIO_INDEX_GLOBAL_STANDARDS = -2;
-
         internal readonly bool _showBestReplicate;
         internal readonly int _resultsIndex;
 
-        public DisplaySettings(PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, int ratioIndex)
+        public DisplaySettings(PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, RatioIndex ratioIndex)
         {
             _showBestReplicate = showBestReplicate;
             _resultsIndex = resultsIndex;
@@ -1368,6 +1367,6 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
-        public int RatioIndex { get; private set; }
+        public RatioIndex RatioIndex { get; private set; }
     }
 }

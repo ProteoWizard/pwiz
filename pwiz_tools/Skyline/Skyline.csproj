@@ -550,6 +550,7 @@
     </Compile>
     <Compile Include="Model\Prosit\PrositRetentionScoreCalculator.cs" />
     <Compile Include="Model\Results\PeakIntegrator.cs" />
+    <Compile Include="Model\Results\RatioIndex.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountList.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountType.cs" />
