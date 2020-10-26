@@ -291,6 +291,7 @@
           <xs:attribute name="max_loq_bias" type="xs:double" />
           <xs:attribute name="max_loq_cv" type="xs:double" />
           <xs:attribute name="qualitative_ion_ratio_threshold" type="xs:double" />
+          <xs:attribute name="simple_ratios" type="xs:boolean" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>
