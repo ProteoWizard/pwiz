@@ -806,13 +806,16 @@ int run( int argc, char* argv[] )
                 if (idpDbFilepath.has_parent_path())
                     sourceSearchPath += ";" + idpDbFilepath.parent_path().string();
 
+                IterationListenerRegistry ilr;
+                ilr.addListener(IterationListenerPtr(new UserFeedbackProgressMonitor(idpDbFilepaths[i])), 1);
+
                 if (g_rtConfig->QuantitationMethod == QuantitationMethod::LabelFree)
-                    Embedder::EmbedMS1Metrics(idpDbFilepaths[i], sourceSearchPath, g_rtConfig->SourceExtensionPriorityList, allSourcesQuantitationMethodMap, allSourcesXICConfigurationMap, 0);
+                    Embedder::EmbedMS1Metrics(idpDbFilepaths[i], sourceSearchPath, g_rtConfig->SourceExtensionPriorityList, allSourcesQuantitationMethodMap, allSourcesXICConfigurationMap, &ilr);
 
                 if (g_rtConfig->EmbedSpectrumSources)
-                    Embedder::embed(idpDbFilepaths[i], sourceSearchPath, g_rtConfig->SourceExtensionPriorityList, allSourcesQuantitationMethodMap);
+                    Embedder::embed(idpDbFilepaths[i], sourceSearchPath, g_rtConfig->SourceExtensionPriorityList, allSourcesQuantitationMethodMap, &ilr);
                 else
-                    Embedder::embedScanTime(idpDbFilepaths[i], sourceSearchPath, g_rtConfig->SourceExtensionPriorityList, allSourcesQuantitationMethodMap);
+                    Embedder::embedScanTime(idpDbFilepaths[i], sourceSearchPath, g_rtConfig->SourceExtensionPriorityList, allSourcesQuantitationMethodMap, &ilr);
             }
         }
 

@@ -2815,6 +2815,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Simple ratios.
+        /// </summary>
+        public static string QuantificationSettings_SimpleRatios {
+            get {
+                return ResourceManager.GetString("QuantificationSettings_SimpleRatios", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Units.
         /// </summary>
         public static string QuantificationSettings_Units {

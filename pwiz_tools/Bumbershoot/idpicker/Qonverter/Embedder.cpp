@@ -566,7 +566,8 @@ struct SpectrumList_Quantifier
     map<int, double> totalIonCurrentByMSLevel;
     vector<SpectrumRow> spectrumQuantitationRows;
 
-    SpectrumList_Quantifier(const SpectrumListPtr& sl, const IntegerSet& filteredIndexes,
+    SpectrumList_Quantifier(const MSData& msd, const SpectrumListPtr& sl,
+                            const IntegerSet& filteredIndexes,
                             const map<string, int>& rowIdByNativeID,
                             QuantitationConfiguration quantitationConfig)
         : rowIdByNativeID(rowIdByNativeID),
@@ -606,98 +607,162 @@ struct SpectrumList_Quantifier
             // use default detail level
         }
 
-        for (size_t i=0, end=sl->size(); i < end; ++i)
+        // check first 50 MS2s: if no MS3 is found, assume run has no MS3s
+        bool extractFromMS3 = quantitationConfig.extractFromMS3;
+        if (extractFromMS3)
         {
-            SpectrumPtr s = sl->spectrum(i, true);
-
-            int msLevel = s->cvParam(MS_ms_level).valueAs<int>();
-            BinaryDataArrayPtr mz = s->getMZArray();
-            BinaryDataArrayPtr intensities = s->getIntensityArray();
-            if (msLevel == 0 || !mz.get() || !intensities.get())
-                continue;
-
-            double tic = s->cvParam(MS_TIC).valueAs<double>();
-            if (tic == 0.0)
-                tic = accumulate(intensities->data.begin(), intensities->data.end(), 0.0);
-
-            ++totalSpectraByMSLevel[msLevel];
-            totalIonCurrentByMSLevel[msLevel] += tic;
-
-            if (msLevel < 2 || !filteredIndexes.contains(i))
-                continue;
-            if (quantitationMethod == QuantitationMethod::None || quantitationMethod == QuantitationMethod::LabelFree)
-                continue;
-
-            if (quantitationConfig.extractFromMS3)
+            int ms2Found = 0;
+            bool hasMs3 = false;
+            for (size_t i = 0, end = sl->size(); i < end && ms2Found < 50; ++i)
             {
-                bool hasMS3 = false;
-                size_t extractFromIndex = i;
+                SpectrumPtr s = sl->spectrum(i, precursorRefDetailLevel);
 
-                // iterate forward until an MS3 that has this MS2 as its precursor
-                for (size_t j = i + 1, jEnd = min(end, i + 50); j < jEnd; ++j)
+                int msLevel = s->cvParamValueOrDefault(MS_ms_level, 0);
+                if (msLevel == 2)
+                    ++ms2Found;
+                else if (msLevel == 3)
                 {
-                    SpectrumPtr ms3 = sl->spectrum(j, precursorRefDetailLevel);
-                    if (ms3->cvParamValueOrDefault(MS_ms_level, 0) != 3)
-                        continue;
-                    hasMS3 = true;
-                    if (ms3->precursors.empty() || (ms3->precursors[0].spectrumID.empty() && ms3->precursors[0].externalSpectrumID.empty()))
-                        sl->warn_once("MS3 has no precursors or precursor has no spectrumRef/externalSpectrumRef");
-
-                    string precursorSpectrumId = ms3->precursors[0].spectrumID;
-                    if (precursorSpectrumId.empty())
-                        precursorSpectrumId = ms3->precursors[0].externalSpectrumID;
-
-                    if (s->id != precursorSpectrumId)
-                        continue;
-
-                    extractFromIndex = j;
+                    hasMs3 = true;
                     break;
-                }
-
-                if (hasMS3)
-                {
-                    if (extractFromIndex == i)
-                        sl->warn_once(("no MS3 found for MS2 " + s->id).c_str());
-                    else
-                    {
-                        SpectrumPtr ms3 = sl->spectrum(extractFromIndex, true);
-                        mz = ms3->getMZArray();
-                        intensities = ms3->getIntensityArray();
-                    }
                 }
             }
+            extractFromMS3 = hasMs3;
+        }
 
-            switch (quantitationMethod.value())
+        if (extractFromMS3)
+        {
+            map<string, size_t> ms3ByPrecursorSpectrumId;
+
+            for (int i = (int) sl->size() - 1; i >= 0; --i)
             {
-                case QuantitationMethod::ITRAQ4plex:
-                    findReporterIons(s->id, mz->data, intensities->data, itraq4plexIons, itraqReporterIonIntensities, itraqTotalReporterIonIntensities);
-                    break;
+                SpectrumPtr s = sl->spectrum(i, precursorRefDetailLevel);
 
-                case QuantitationMethod::ITRAQ8plex:
-                    findReporterIons(s->id, mz->data, intensities->data, itraq8plexIons, itraqReporterIonIntensities, itraqTotalReporterIonIntensities);
-                    break;
+                int msLevel = s->cvParam(MS_ms_level).valueAs<int>();
 
-                case QuantitationMethod::TMT2plex:
-                    findReporterIons(s->id, mz->data, intensities->data, tmt2plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
-                    break;
+                if (msLevel == 0)
+                    continue;
 
-                case QuantitationMethod::TMT6plex:
-                    findReporterIons(s->id, mz->data, intensities->data, tmt6plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
-                    break;
+                ++totalSpectraByMSLevel[msLevel];
 
-                case QuantitationMethod::TMT10plex:
-                    findReporterIons(s->id, mz->data, intensities->data, tmt10plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
-                    break;
+                if (msLevel == 3)
+                {
+                    if (quantitationMethod == QuantitationMethod::None || quantitationMethod == QuantitationMethod::LabelFree)
+                        continue;
 
-                case QuantitationMethod::TMT11plex:
-                    findReporterIons(s->id, mz->data, intensities->data, tmt11plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
-                    break;
+                    if (s->precursors.empty() || (s->precursors[0].spectrumID.empty() && s->precursors[0].externalSpectrumID.empty()))
+                    {
+                        sl->warn_once(("MS3 " + abbreviateSpectrumId(msd, s->id) + " has no precursors or precursor has no spectrumRef/externalSpectrumRef").c_str());
+                        continue;
+                    }
 
-                case QuantitationMethod::TMTpro16plex:
-                    findReporterIons(s->id, mz->data, intensities->data, tmt16plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
-                    break;
+                    string precursorSpectrumId = s->precursors[0].spectrumID;
+                    if (precursorSpectrumId.empty())
+                        precursorSpectrumId = s->precursors[0].externalSpectrumID;
 
-                default: break;
+                    size_t precursorSpectrumIndex = sl->find(precursorSpectrumId);
+                    if (precursorSpectrumIndex == sl->size())
+                    {
+                        sl->warn_once(("precursor spectrum " + abbreviateSpectrumId(msd, precursorSpectrumId) + " is not in the spectrum list").c_str());
+                        continue;
+                    }
+
+                    // skip MS2 that isn't in the filtered list
+                    if (!filteredIndexes.contains(precursorSpectrumIndex))
+                        continue;
+
+                    s = sl->spectrum(s, true);
+
+                    BinaryDataArrayPtr mz = s->getMZArray();
+                    BinaryDataArrayPtr intensities = s->getIntensityArray();
+
+                    if (!mz.get() || !intensities.get())
+                    {
+                        sl->warn_once(("spectrum " + abbreviateSpectrumId(msd, s->id) + " does not have m/z and/or intensity array").c_str());
+                        continue;
+                    }
+
+                    // record that this precursor spectrum has already been quantified
+                    ms3ByPrecursorSpectrumId[precursorSpectrumId] = (size_t) i;
+
+                    findReporterIons(quantitationMethod, precursorSpectrumId, mz->data, intensities->data);
+                    continue;
+                }
+
+                BinaryDataArrayPtr mz = s->getMZArray();
+                BinaryDataArrayPtr intensities = s->getIntensityArray();
+
+                // either ms2 or ms1, so we only need TIC unless ms3 was missing
+                double tic = s->cvParam(MS_TIC).valueAs<double>();
+                if (tic == 0.0)
+                {
+                    if (!mz.get() || !intensities.get())
+                    {
+                        s = sl->spectrum(s, true);
+                        mz = s->getMZArray();
+                        intensities = s->getIntensityArray();
+                    }
+
+                    if (!mz.get() || !intensities.get())
+                    {
+                        sl->warn_once(("spectrum " + abbreviateSpectrumId(msd, s->id) + " does not have m/z and/or intensity array").c_str());
+                        continue;
+                    }
+
+                    tic = accumulate(intensities->data.begin(), intensities->data.end(), 0.0);
+                }
+                totalIonCurrentByMSLevel[msLevel] += tic;
+
+                if (msLevel < 2 || !filteredIndexes.contains(i))
+                    continue;
+
+                if (quantitationMethod == QuantitationMethod::None || quantitationMethod == QuantitationMethod::LabelFree)
+                    continue;
+
+                if (ms3ByPrecursorSpectrumId.count(s->id) > 0)
+                    continue; // ms2 already quantified from its ms3
+
+                if (!mz.get() || !intensities.get())
+                {
+                    s = sl->spectrum(s, true);
+                    mz = s->getMZArray();
+                    intensities = s->getIntensityArray();
+                }
+
+                if (!mz.get() || !intensities.get())
+                {
+                    sl->warn_once(("spectrum " + abbreviateSpectrumId(msd, s->id) + " does not have m/z and/or intensity array").c_str());
+                    continue;
+                }
+
+                sl->warn_once(("MS2 spectrum " + abbreviateSpectrumId(msd, s->id) + " did not have a corresponding MS3: attempting to quantify from MS2").c_str());
+                findReporterIons(quantitationMethod, s->id, mz->data, intensities->data);
+            }
+        }
+        else
+        {
+            for (size_t i = 0, end = sl->size(); i < end; ++i)
+            {
+                SpectrumPtr s = sl->spectrum(i, true);
+
+                int msLevel = s->cvParam(MS_ms_level).valueAs<int>();
+                BinaryDataArrayPtr mz = s->getMZArray();
+                BinaryDataArrayPtr intensities = s->getIntensityArray();
+                if (msLevel == 0 || !mz.get() || !intensities.get())
+                    continue;
+
+                double tic = s->cvParam(MS_TIC).valueAs<double>();
+                if (tic == 0.0)
+                    tic = accumulate(intensities->data.begin(), intensities->data.end(), 0.0);
+
+                ++totalSpectraByMSLevel[msLevel];
+                totalIonCurrentByMSLevel[msLevel] += tic;
+
+                if (msLevel < 2 || !filteredIndexes.contains(i))
+                    continue;
+                if (quantitationMethod == QuantitationMethod::None || quantitationMethod == QuantitationMethod::LabelFree)
+                    continue;
+
+                findReporterIons(quantitationMethod, s->id, mz->data, intensities->data);
             }
         }
 
@@ -741,6 +806,48 @@ struct SpectrumList_Quantifier
     }
 
     private:
+
+    string abbreviateSpectrumId(const MSData& msd, const string& id) const
+    {
+        return msd.id + "." + id::abbreviate(id);
+    }
+
+    void findReporterIons(QuantitationMethod quantitationMethod,
+                          const string& nativeID, const vector<double>& mzArray, const vector<double>& intensityArray)
+    {
+        switch (quantitationMethod.value())
+        {
+            case QuantitationMethod::ITRAQ4plex:
+                findReporterIons(nativeID, mzArray, intensityArray, itraq4plexIons, itraqReporterIonIntensities, itraqTotalReporterIonIntensities);
+                break;
+
+            case QuantitationMethod::ITRAQ8plex:
+                findReporterIons(nativeID, mzArray, intensityArray, itraq8plexIons, itraqReporterIonIntensities, itraqTotalReporterIonIntensities);
+                break;
+
+            case QuantitationMethod::TMT2plex:
+                findReporterIons(nativeID, mzArray, intensityArray, tmt2plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
+                break;
+
+            case QuantitationMethod::TMT6plex:
+                findReporterIons(nativeID, mzArray, intensityArray, tmt6plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
+                break;
+
+            case QuantitationMethod::TMT10plex:
+                findReporterIons(nativeID, mzArray, intensityArray, tmt10plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
+                break;
+
+            case QuantitationMethod::TMT11plex:
+                findReporterIons(nativeID, mzArray, intensityArray, tmt11plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
+                break;
+
+            case QuantitationMethod::TMTpro16plex:
+                findReporterIons(nativeID, mzArray, intensityArray, tmt16plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
+                break;
+
+            default: break;
+        }
+    }
 
     void findReporterIons(const string& nativeID, const vector<double>& mzArray, const vector<double>& intensityArray,
                           const vector<ReporterIon>& reporterIonMZs, vector<double>& reporterIonIntensities,
@@ -945,7 +1052,7 @@ void embed(const string& idpDbFilepath,
         //if (newQuantitationConfig.quantitationMethod != source.quantitationMethod)
         {
             ITERATION_UPDATE(ilr, i, sources.size(), "gathering quantitation data from \"" + sourceFilename + "\"");
-            slq.reset(new SpectrumList_Quantifier(msd.run.spectrumListPtr, filteredIndexes, rowIdByNativeID, newQuantitationConfig));
+            slq.reset(new SpectrumList_Quantifier(msd, msd.run.spectrumListPtr, filteredIndexes, rowIdByNativeID, newQuantitationConfig));
         }
 
         ITERATION_UPDATE(ilr, i, sources.size(), "embedding scan times for \"" + sourceFilename + "\"");
@@ -1112,7 +1219,7 @@ void embedScanTime(const string& idpDbFilepath,
         //if (newQuantitationConfig.quantitationMethod != source.quantitationMethod)
         {
             ITERATION_UPDATE(ilr, i, sources.size(), "gathering quantitation data from \"" + sourceFilename + "\"");
-            slq.reset(new SpectrumList_Quantifier(msd.run.spectrumListPtr, filteredIndexes, rowIdByNativeID, newQuantitationConfig));
+            slq.reset(new SpectrumList_Quantifier(msd, msd.run.spectrumListPtr, filteredIndexes, rowIdByNativeID, newQuantitationConfig));
         }
 
         ITERATION_UPDATE(ilr, i, sources.size(), "embedding scan times for \"" + sourceFilename + "\"");
