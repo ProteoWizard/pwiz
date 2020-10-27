@@ -2665,6 +2665,12 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 DiffResults = true;
             }
+
+            if (settingsNew.PeptideSettings.Quantification.SimpleRatios !=
+                settingsOld.PeptideSettings.Quantification.SimpleRatios)
+            {
+                DiffResults = true;
+            }
             // Results handler is temporary. Any time the document has one, it means the results
             // must be updated and reintegration applied.
             if (newPep.Integration.ResultsHandler != null)
