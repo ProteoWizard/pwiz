@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
@@ -151,7 +152,7 @@ namespace TestPerf
             {
                 showHistogram();
                 SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets);
-                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, 0);
+                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, RatioIndex.DEFAULT);
             });
 
             WaitForGraphs();
@@ -170,11 +171,11 @@ namespace TestPerf
             CollectionAssert.AreEqual(new[] { "Light", "Heavy", "All 15N", Resources.AreaCVToolbar_UpdateUI_Medians, Resources.AreaCVToolbar_UpdateUI_None}, toolbar.NormalizationMethods.ToArray());
             AssertDataCorrect(pane, statsStartIndex++); // Light
 
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, 1));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, RatioIndex.FromInternalStandardIndex(1)));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++); // Heavy
 
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, 2));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, RatioIndex.FromInternalStandardIndex(2)));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++, allowInvalid: true); // All 15N
         }

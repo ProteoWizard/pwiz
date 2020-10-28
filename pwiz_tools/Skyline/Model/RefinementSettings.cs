@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Model
             return refined;
         }
 
-        private int GetLabelIndex(IsotopeLabelType type, SrmDocument doc)
+        private RatioIndex GetLabelIndex(IsotopeLabelType type, SrmDocument doc)
         {
             if (type != null)
             {
@@ -405,10 +405,10 @@ namespace pwiz.Skyline.Model
                     // error
                     throw new Exception(Resources.RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_);
                 }
-                return idx;
+                return RatioIndex.FromInternalStandardIndex(idx);
             }
 
-            return -1;
+            return RatioIndex.NONE;
         }
 
         private string GetAcceptProteinKey(PeptideGroupDocNode nodePepGroup)

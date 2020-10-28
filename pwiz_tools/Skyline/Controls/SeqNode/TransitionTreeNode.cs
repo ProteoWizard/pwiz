@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Drawing;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -153,7 +154,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             return GetLabel(nodeTran, GetResultsText(nodeTran, settings.Index, settings.RatioIndex));
         }
 
-        private static string GetResultsText(TransitionDocNode nodeTran, int index, int indexRatio)
+        private static string GetResultsText(TransitionDocNode nodeTran, int index, RatioIndex indexRatio)
         {
             int? rank = nodeTran.GetPeakRankByLevel(index);
             string label = string.Empty;
@@ -163,7 +164,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                 string rankText = (nodeTran.IsMs1 ? @"i " : string.Empty) + rank;
                 label = string.Format(Resources.TransitionTreeNode_GetResultsText__0__, rankText);
             }
-            float? ratio = nodeTran.GetPeakAreaRatio(index, indexRatio);
+
+            float? ratio = null;
+            if (indexRatio.InternalStandardIndex.HasValue)
+            {
+                // TODO: RatioIndex
+                ratio = nodeTran.GetPeakAreaRatio(index, indexRatio.InternalStandardIndex.Value);
+            }
             if (!ratio.HasValue)
                 return label;
 

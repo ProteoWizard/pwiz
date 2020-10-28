@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         private const string CS_SEPARATOR = ", ";
 
         public static string GetResultsText(TransitionGroupDocNode nodeGroup,
-            PeptideDocNode nodePep, int indexResult, int indexRatio)
+            PeptideDocNode nodePep, int indexResult, RatioIndex indexRatio)
         {
             float? libraryProduct = nodeGroup.GetLibraryDotProduct(indexResult);
             float? isotopeProduct = nodeGroup.GetIsotopeDotProduct(indexResult);

@@ -51,6 +51,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Util.Extensions;
 
@@ -1212,6 +1213,30 @@ namespace pwiz.Skyline.Properties
             }
         }
 
+        [UserScopedSetting]
+        public string AreaCVRatioIndexValue
+        {
+            get
+            {
+                return (string) this[nameof(AreaCVRatioIndexValue)];
+            }
+            set
+            {
+                this[nameof(AreaCVRatioIndexValue)] = value;
+            }
+        }
+
+        public RatioIndex AreaCVRatioIndex
+        {
+            get
+            {
+                return RatioIndex.FromPersistedName(AreaCVRatioIndexValue);
+            }
+            set
+            {
+                AreaCVRatioIndexValue = value.PersistedName;
+            }
+        }
     }
 
     /// <summary>

@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 
@@ -11,6 +14,16 @@ namespace pwiz.Skyline.Model.Results
         public static readonly RatioIndex GLOBAL_STANDARD = new RatioIndex {_value = -1};
         public static readonly RatioIndex NORMALIZED = new RatioIndex {_value = -2};
         public static readonly RatioIndex CALIBRATED = new RatioIndex {_value = -3};
+        public static readonly RatioIndex DEFAULT = FromInternalStandardIndex(0);
+        private static readonly Dictionary<RatioIndex, string> _ratioIndexToName = new Dictionary<RatioIndex, string>
+        {
+            {GLOBAL_STANDARD, @"global_standard"},
+            {NORMALIZED, @"normalized"},
+            {CALIBRATED, @"calibrated"}
+        };
+
+        private static readonly Dictionary<string, RatioIndex> _nameToRatioIndex =
+            _ratioIndexToName.ToDictionary(entry => entry.Value, entry => entry.Key);
 
         private int _value;
 
@@ -27,6 +40,41 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public string PersistedName
+        {
+            get
+            {
+                if (InternalStandardIndex.HasValue)
+                {
+                    return InternalStandardIndex.Value.ToString(CultureInfo.InvariantCulture);
+                }
+
+                string name;
+                if (_ratioIndexToName.TryGetValue(this, out name))
+                {
+                    return name;
+                }
+
+                return string.Empty;
+            }
+        }
+
+        public static RatioIndex FromPersistedName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return NONE;
+            }
+
+            RatioIndex ratioIndex;
+            if (_nameToRatioIndex.TryGetValue(name, out ratioIndex))
+            {
+                return ratioIndex;
+            }
+
+            return FromInternalStandardIndex(int.Parse(name, CultureInfo.InvariantCulture));
+        }
+
         public static RatioIndex FromInternalStandardIndex(int internalStandardIndex)
         {
             if (internalStandardIndex < 0)
@@ -37,24 +85,24 @@ namespace pwiz.Skyline.Model.Results
             return new RatioIndex {_value = internalStandardIndex + 1};
         }
 
-        public static IEnumerable<RatioIndex> AvailableRatioIndexes(SrmDocument document)
+        public static IEnumerable<RatioIndex> AvailableRatioIndexes(SrmSettings settings)
         {
             yield return NONE;
-            if (document.Settings.HasGlobalStandardArea)
+            if (settings.HasGlobalStandardArea)
             {
                 yield return GLOBAL_STANDARD;
             }
 
-            if (!Equals(document.Settings.PeptideSettings.Quantification.NormalizationMethod, NormalizationMethod.NONE))
+            if (!Equals(settings.PeptideSettings.Quantification.NormalizationMethod, NormalizationMethod.NONE))
             {
                 yield return NORMALIZED;
             }
-            if (document.Settings.PeptideSettings.Quantification.RegressionFit != RegressionFit.NONE)
+            if (settings.PeptideSettings.Quantification.RegressionFit != RegressionFit.NONE)
             {
                 yield return CALIBRATED;
             }
 
-            int internalStandardCount = document.Settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
+            int internalStandardCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
             for (int i = 0; i < internalStandardCount; i++)
             {
                 yield return FromInternalStandardIndex(i);
@@ -84,6 +132,32 @@ namespace pwiz.Skyline.Model.Results
         public static bool operator !=(RatioIndex left, RatioIndex right)
         {
             return !left.Equals(right);
+        }
+
+        public RatioIndex Constrain(SrmSettings settings)
+        {
+            var ratioIndex = this;
+            if (ratioIndex == GLOBAL_STANDARD && !settings.HasGlobalStandardArea)
+            {
+                ratioIndex = DEFAULT;
+            }
+            if (!ratioIndex.InternalStandardIndex.HasValue)
+            {
+                return this;
+            }
+
+            var mods = settings.PeptideSettings.Modifications.InternalStandardTypes;
+            if (mods.Count == 0)
+            {
+                return NONE;
+            }
+
+            if (mods.Count <= InternalStandardIndex.Value)
+            {
+                return FromInternalStandardIndex(mods.Count - 1);
+            }
+
+            return this;
         }
     }
 }

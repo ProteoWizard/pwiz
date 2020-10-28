@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Controls
         private TreeNode _triggerLabelEdit;
         private string _editedLabel;
         private int _resultsIndex;
-        private int _ratioIndex;
+        private RatioIndex _ratioIndex;
         private StatementCompletionTextBox _editTextBox;
         private bool _inhibitAfterSelect;
 
@@ -336,7 +336,7 @@ namespace pwiz.Skyline.Controls
                     changeAll = true; // Help UpdateNodes remove nodes quickly during a full docment change
 
                     _resultsIndex = 0;
-                    _ratioIndex = 0;
+                    _ratioIndex = RatioIndex.DEFAULT;
 
                     cover = new CoverControl(this);
                 }
@@ -346,10 +346,7 @@ namespace pwiz.Skyline.Controls
                     _resultsIndex = settings.HasResults
                         ? Math.Min(_resultsIndex, settings.MeasuredResults.Chromatograms.Count - 1)
                         : 0;
-                    var mods = settings.PeptideSettings.Modifications;
-                    _ratioIndex = Math.Min(_ratioIndex, mods.RatioInternalStandardTypes.Count-1);
-                    if (!settings.HasGlobalStandardArea && _ratioIndex == ChromInfo.RATIO_INDEX_GLOBAL_STANDARDS)
-                        _ratioIndex = 0;
+                    _ratioIndex = _ratioIndex.Constrain(settings);
                 }
 
                 BeginUpdateMS();
@@ -455,7 +452,7 @@ namespace pwiz.Skyline.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public int RatioIndex
+        public RatioIndex RatioIndex
         {
             get { return _ratioIndex; }
             set

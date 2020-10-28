@@ -31,6 +31,8 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
@@ -353,6 +355,7 @@ namespace pwiz.SkylineTestUtil
         {
             Serializable(doc, DocumentCloned, DocumentFormat.CURRENT);
             VerifyModifiedSequences(doc);
+            VerifyRatioCalculations(doc);
             // Skyline uses a format involving protocol buffers if the document is very large.
             // Make sure to serialize the document the other way, and make sure it's still the same.
             bool wasCompactFormat = CompactFormatOption.FromSettings().UseCompactFormat(doc);
@@ -443,6 +446,32 @@ namespace pwiz.SkylineTestUtil
                     if (expectedModifiedSequence != modifiedSequence.ToString())
                     {
                         AreEqual(expectedModifiedSequence, modifiedSequence.ToString());
+                    }
+                }
+            }
+        }
+
+        public static void VerifyRatioCalculations(SrmDocument doc)
+        {
+            var ratioCalculator = new RatioCalculator(doc);
+            foreach (var molecule in doc.Molecules)
+            {
+                foreach (var transitionGroupDocNode in molecule.TransitionGroups)
+                {
+                    if (transitionGroupDocNode.Results != null)
+                    {
+                        foreach (var transitionGroupChromInfo in transitionGroupDocNode.Results.SelectMany(r => r))
+                        {
+                            AssertEx.AreEqual(transitionGroupChromInfo.Area, ratioCalculator.GetTransitionGroupValue(NormalizationMethod.NONE, molecule, transitionGroupDocNode, transitionGroupChromInfo));
+                            for (int iRatio = 0; iRatio < ratioCalculator.InternalStandardTypes.Count; iRatio++)
+                            {
+                                AssertEx.AreEqual(transitionGroupChromInfo.Ratios[iRatio]?.Ratio,
+                                    ratioCalculator.GetTransitionGroupValue(
+                                        new NormalizationMethod.RatioToLabel(
+                                            ratioCalculator.InternalStandardTypes[iRatio]), molecule,
+                                        transitionGroupDocNode, transitionGroupChromInfo));
+                            }
+                        }
                     }
                 }
             }

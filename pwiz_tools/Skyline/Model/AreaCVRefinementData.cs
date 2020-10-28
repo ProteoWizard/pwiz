@@ -5,6 +5,7 @@ using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -137,7 +138,7 @@ namespace pwiz.Skyline.Model
 
                                     normalizedArea /= denominator.Value;
                                 }
-                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.ratio && hasHeavyMods && _settings.RatioIndex >= 0)
+                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.ratio && hasHeavyMods && _settings.RatioIndex.InternalStandardIndex.HasValue)
                                 {
                                     var ci = transitionGroupDocNode.GetSafeChromInfo(replicateIndex).FirstOrDefault(c => c.OptimizationStep == 0);
                                     if (ci != null)
@@ -313,7 +314,7 @@ namespace pwiz.Skyline.Model
 
     public class AreaCVRefinementSettings
     {
-        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, int ratioIndex,
+        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, RatioIndex ratioIndex,
             AreaCVTransitions transitions, int countTransitions, AreaCVMsLevel msLevel)
         {
             CVCutoff = cvCutoff;
@@ -358,7 +359,7 @@ namespace pwiz.Skyline.Model
         public AreaCVMsLevel MsLevel { get; protected set; }
         public AreaCVTransitions Transitions { get; protected set; }
         public int CountTransitions { get; protected set; }
-        public int RatioIndex { get; protected set; }
+        public RatioIndex RatioIndex { get; protected set; }
         public ReplicateValue Group { get; protected set; }
         public object Annotation { get; protected set; }
         public PointsTypePeakArea PointsType { get; protected set; }
@@ -392,7 +393,7 @@ namespace pwiz.Skyline.Model
                 hashCode = (hashCode * 397) ^ (int) MsLevel;
                 hashCode = (hashCode * 397) ^ (int) Transitions;
                 hashCode = (hashCode * 397) ^ CountTransitions;
-                hashCode = (hashCode * 397) ^ RatioIndex;
+                hashCode = (hashCode * 397) ^ RatioIndex.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Group != null ? Group.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Annotation != null ? Annotation.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (int) PointsType;

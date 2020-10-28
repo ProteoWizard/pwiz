@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -154,7 +155,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             public AreaCVGraphData Get(ReplicateValue group, object annotation, int minimumDetections,
-                AreaCVNormalizationMethod normalizationMethod, int ratioIndex)
+                AreaCVNormalizationMethod normalizationMethod, RatioIndex ratioIndex)
             {
                 lock (_cacheInfo)
                 {
@@ -220,11 +221,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (isRatio && !document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
                         continue;
 
-                    var ratioIndices = isRatio
-                        ? Enumerable.Range(0, document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count).ToList()
-                        : new List<int> { -1 };
+                    var ratioIndices = RatioIndex.AvailableRatioIndexes(document.Settings).ToList();
 
-                    if (graphSettings.RatioIndex != -1)
+                    if (graphSettings.RatioIndex.InternalStandardIndex.HasValue)
                     {
                         if (ratioIndices.Remove(graphSettings.RatioIndex))
                             ratioIndices.Insert(0, graphSettings.RatioIndex);
@@ -305,7 +304,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var hashCode = (Group != null ? Group.GetHashCode() : 0);
                         hashCode = (hashCode * 397) ^ (int)NormalizationMethod;
-                        hashCode = (hashCode * 397) ^ RatioIndex;
+                        hashCode = (hashCode * 397) ^ RatioIndex.GetHashCode();
                         hashCode = (hashCode * 397) ^ (Annotation != null ? Annotation.GetHashCode() : 0);
                         hashCode = (hashCode * 397) ^ MinimumDetections;
                         return hashCode;
@@ -321,7 +320,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     MinimumDetections = settings.MinimumDetections;
                 }
 
-                public GraphDataProperties(ReplicateValue group, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, object annotation, int minimumDetections)
+                public GraphDataProperties(ReplicateValue group, AreaCVNormalizationMethod normalizationMethod, RatioIndex ratioIndex, object annotation, int minimumDetections)
                 {
                     Group = group;
                     NormalizationMethod = normalizationMethod;
@@ -332,7 +331,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 public ReplicateValue Group { get; private set; }
                 public AreaCVNormalizationMethod NormalizationMethod { get; private set; }
-                public int RatioIndex { get; private set; }
+                public RatioIndex RatioIndex { get; private set; }
                 public object Annotation { get; private set; }
                 public int MinimumDetections { get; private set; }
             }

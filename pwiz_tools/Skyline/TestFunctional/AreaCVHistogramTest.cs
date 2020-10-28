@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -365,7 +366,7 @@ namespace pwiz.SkylineTestFunctional
             int startIndex = HISTOGRAM_HEAVY_START;
             AssertDataCorrect(pane, startIndex++);
 
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, 0));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, RatioIndex.DEFAULT));
             AssertDataCorrect(pane, startIndex);
         }
 

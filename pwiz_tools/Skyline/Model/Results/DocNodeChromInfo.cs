@@ -271,11 +271,18 @@ namespace pwiz.Skyline.Model.Results
         public float? ZScore { get; private set; }
         public Annotations Annotations { get; private set; }
 
-        public RatioValue GetRatio(int index)
+        public RatioValue GetRatio(RatioIndex ratioIndex)
         {
-            return index != RATIO_INDEX_GLOBAL_STANDARDS
-                       ? _ratios[index]
-                       : _ratios[_ratios.Count - 1];
+            // TODO: RatioIndex
+            if (ratioIndex.InternalStandardIndex.HasValue)
+            {
+                return _ratios[ratioIndex.InternalStandardIndex.Value];
+            }
+
+            return null;
+            // return index != RATIO_INDEX_GLOBAL_STANDARDS
+            //            ? _ratios[index]
+            //            : _ratios[_ratios.Count - 1];
         }
 
         /// <summary>
@@ -525,9 +532,11 @@ namespace pwiz.Skyline.Model.Results
 
         public float? GetRatio(int index)
         {
-            return index != RATIO_INDEX_GLOBAL_STANDARDS
-                ? _ratios[index]
-                : _ratios[_ratios.Count - 1];
+            // TODO: RatioIndex
+            return _ratios[index];
+            // return index != RATIO_INDEX_GLOBAL_STANDARDS
+            //     ? _ratios[index]
+            //     : _ratios[_ratios.Count - 1];
         }
 
         public Annotations Annotations { get; private set; }
@@ -1286,7 +1295,7 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public abstract class ChromInfo : Immutable
     {
-        public const int RATIO_INDEX_GLOBAL_STANDARDS = -2;
+        public RatioIndex RATIO_INDEX_GLOBAL_STANDARDS = RatioIndex.GLOBAL_STANDARD;
 
         protected ChromInfo(ChromFileInfoId fileId)
         {

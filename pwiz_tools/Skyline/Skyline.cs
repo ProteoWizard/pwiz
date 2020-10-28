@@ -4633,21 +4633,21 @@ namespace pwiz.Skyline
             var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
             for (int i = 0; i < standardTypes.Count; i++)
             {
-                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, i);
+                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, RatioIndex.FromInternalStandardIndex(i));
             }
             if (DocumentUI.Settings.HasGlobalStandardArea)
             {
                 SelectRatioHandler.Create(this, menu, ratiosToGlobalStandardsMenuItem.Text,
-                    ChromInfo.RATIO_INDEX_GLOBAL_STANDARDS);
+                    RatioIndex.GLOBAL_STANDARD);
             }
         }
 
         private class SelectRatioHandler
         {
             protected readonly SkylineWindow _skyline;
-            private readonly int _ratioIndex;
+            private readonly RatioIndex _ratioIndex;
 
-            public SelectRatioHandler(SkylineWindow skyline, int ratioIndex)
+            public SelectRatioHandler(SkylineWindow skyline, RatioIndex ratioIndex)
             {
                 _skyline = skyline;
                 _ratioIndex = ratioIndex;
@@ -4669,7 +4669,7 @@ namespace pwiz.Skyline
                 _skyline._listGraphPeakArea.ForEach(g => g.RatioIndex = _ratioIndex);
             }
 
-            public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, int i)
+            public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, RatioIndex i)
             {
                 var handler = new SelectRatioHandler(skylineWindow, i);
                 var item = new ToolStripMenuItem(text, null, handler.ToolStripMenuItemClick)
@@ -4678,9 +4678,9 @@ namespace pwiz.Skyline
             }
         }
 
-        public void SetRatioIndex(int index)
+        public void SetRatioIndex(RatioIndex ratioIndex)
         {
-            new SelectRatioHandler(this, index).Select();
+            new SelectRatioHandler(this, ratioIndex).Select();
         }
 
         private void sequenceTree_PickedChildrenEvent(object sender, PickedChildrenEventArgs e)

@@ -248,15 +248,16 @@ namespace pwiz.Skyline.Controls.Graphs
             var standardType = IsotopeLabelType.light;
 
             var areaView = AreaGraphController.AreaView;
-            if (areaView == AreaNormalizeToView.area_ratio_view)
+            // TODO: RatioIndex
+            if (areaView == AreaNormalizeToView.area_ratio_view && ratioIndex.InternalStandardIndex.HasValue)
             {
                 ratioIndex = GraphSummary.RatioIndex;
-                standardType = document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[ratioIndex];                
+                standardType = document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[ratioIndex.InternalStandardIndex.Value];                
             }
             else if (areaView == AreaNormalizeToView.area_global_standard_view)
             {
                 if (document.Settings.HasGlobalStandardArea)
-                    ratioIndex = ChromInfo.RATIO_INDEX_GLOBAL_STANDARDS;
+                    ratioIndex = RatioIndex.GLOBAL_STANDARD;
                 else
                     areaView = AreaNormalizeToView.none;
             }
@@ -432,7 +433,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // If showing ratios, do not add the standard type to the graph,
                     // since it will always be empty, but make sure the colors still
                     // correspond with the other graphs.
-                    if (nodeGroup != null && ratioIndex >= 0)
+                    if (nodeGroup != null && ratioIndex.InternalStandardIndex.HasValue)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
                         if (ReferenceEquals(labelType, standardType))
@@ -904,7 +905,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  IEnumerable<IdentityPath> selectedDocNodePaths,
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
-                                 int ratioIndex,
+                                 RatioIndex ratioIndex,
                                  AreaNormalizeToData normalize,
                                  AreaExpectedValue expectedVisible,
                                  PaneKey paneKey,
@@ -1274,7 +1275,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     return null;
                 if (_ratioIndex == RATIO_INDEX_NONE)
                     return chromInfo.Area;
-                return chromInfo.GetRatio(_ratioIndex);
+                // TODO: RatioIndex
+                if (!_ratioIndex.InternalStandardIndex.HasValue)
+                {
+                    return null;
+                }
+                return chromInfo.GetRatio(_ratioIndex.InternalStandardIndex.Value);
             }
         }
     }

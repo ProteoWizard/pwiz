@@ -5008,9 +5008,10 @@ namespace pwiz.Skyline
             {
                 for (var i = 0; i < standardTypes.Count; i++)
                 {
+                    var ratioIndex = RatioIndex.FromInternalStandardIndex(i);
                     var item = new ToolStripMenuItem(standardTypes[i].Title, null, areaCVHeavyModificationToolStripMenuItem_Click)
                     {
-                        Checked = AreaGraphController.AreaCVRatioIndex == i && AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.ratio
+                        Checked = AreaGraphController.AreaCVRatioIndex == ratioIndex && AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.ratio
                     };
                 
                     areaCVNormalizedToToolStripMenuItem.DropDownItems.Insert(i, item);
@@ -5033,7 +5034,7 @@ namespace pwiz.Skyline
         {
             var item = (ToolStripMenuItem) sender;
             int index = ((ToolStripMenuItem)item.OwnerItem).DropDownItems.IndexOf(item);
-            SetNormalizationMethod(AreaCVNormalizationMethod.ratio, index);
+            SetNormalizationMethod(AreaCVNormalizationMethod.ratio, RatioIndex.FromInternalStandardIndex(index));
         }
 
         private void areaCVGlobalStandardsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -5056,7 +5057,7 @@ namespace pwiz.Skyline
             SetNormalizationMethod(AreaCVNormalizationMethod.none);
         }
 
-        public void SetNormalizationMethod(AreaCVNormalizationMethod method, int ratioIndex = -1, bool update = true)
+        public void SetNormalizationMethod(AreaCVNormalizationMethod method, RatioIndex ratioIndex = default(RatioIndex), bool update = true)
         {
             AreaGraphController.NormalizationMethod = method;
             AreaGraphController.AreaCVRatioIndex = ratioIndex;
@@ -5288,10 +5289,11 @@ namespace pwiz.Skyline
             {
                 for (int i = 0; i < standardTypes.Count; i++)
                 {
-                    var handler = new SelectNormalizeHandler(this, i);
+                    var ratioIndex = RatioIndex.FromInternalStandardIndex(i);
+                    var handler = new SelectNormalizeHandler(this, ratioIndex);
                     var item = new ToolStripMenuItem(standardTypes[i].Title, null, handler.ToolStripMenuItemClick)
                                    {
-                                       Checked = (SequenceTree.RatioIndex == i &&
+                                       Checked = (SequenceTree.RatioIndex == ratioIndex &&
                                                   areaView == AreaNormalizeToView.area_ratio_view)
                                    };
                     menu.DropDownItems.Insert(i, item);
@@ -5310,7 +5312,7 @@ namespace pwiz.Skyline
 
         private class SelectNormalizeHandler : SelectRatioHandler
         {
-            public SelectNormalizeHandler(SkylineWindow skyline, int ratioIndex) : base(skyline, ratioIndex)
+            public SelectNormalizeHandler(SkylineWindow skyline, RatioIndex ratioIndex) : base(skyline, ratioIndex)
             {
             }
 
@@ -5324,7 +5326,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public void SetNormalizeIndex(int index)
+        public void SetNormalizeIndex(RatioIndex index)
         {
             new SelectNormalizeHandler(this, index).Select();
         }

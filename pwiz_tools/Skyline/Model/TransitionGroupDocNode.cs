@@ -481,13 +481,13 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public RatioValue GetPeakAreaRatio(int i)
+        public RatioValue GetPeakAreaRatio(int i, RatioIndex ratioIndex)
         {
-            return GetPeakAreaRatio(i, 0);
-        }
-
-        public RatioValue GetPeakAreaRatio(int i, int indexIS)
-        {
+            if (!ratioIndex.InternalStandardIndex.HasValue)
+            {
+                // TODO: handle other values
+                return null;
+            }
             // CONSIDER: Also specify the file index?
             var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
@@ -495,7 +495,7 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
-            return chromInfo.GetRatio(indexIS);
+            return chromInfo.GetRatio(ratioIndex);
         }
 
         public class ScheduleTimes        

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -29,8 +30,8 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed partial class AreaCVToolbar : GraphSummaryToolbar //UserControl // for designer
     {
         private readonly Timer _timer;
-        private List<Tuple<AreaCVNormalizationMethod, int>> _normalizationMethods 
-            = new List<Tuple<AreaCVNormalizationMethod, int>>();
+        private List<Tuple<AreaCVNormalizationMethod, RatioIndex>> _normalizationMethods 
+            = new List<Tuple<AreaCVNormalizationMethod, RatioIndex>>();
 
         public AreaCVToolbar(GraphSummary graphSummary) :
             base(graphSummary)
@@ -224,34 +225,34 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 toolStripComboNormalizedTo.Items.AddRange(standardTypes.Select(s => s.Title).ToArray());
                 _normalizationMethods.AddRange(Enumerable.Range(0, standardTypes.Count)
-                    .Select(i=>Tuple.Create(AreaCVNormalizationMethod.ratio, i)));
+                    .Select(i=>Tuple.Create(AreaCVNormalizationMethod.ratio, RatioIndex.FromInternalStandardIndex(i))));
             }
 
             var hasGlobalStandard = _graphSummary.DocumentUIContainer.DocumentUI.Settings.HasGlobalStandardArea;
             if (hasGlobalStandard)
             {
                 toolStripComboNormalizedTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Global_standards);
-                _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.global_standards, -1));
+                _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.global_standards, RatioIndex.GLOBAL_STANDARD));
             }
 
             toolStripComboNormalizedTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Medians);
-            _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.medians, -1));
+            _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.medians, RatioIndex.NONE));
 
             if (_graphSummary.DocumentUIContainer.DocumentUI.Settings.HasTicArea)
             {
                 toolStripComboNormalizedTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_Total_ion_current);
-                _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.tic, -1));
+                _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.tic, RatioIndex.NONE));
             }
 
             toolStripComboNormalizedTo.Items.Add(Resources.AreaCVToolbar_UpdateUI_None);
-            _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.none, -1));
+            _normalizationMethods.Add(Tuple.Create(AreaCVNormalizationMethod.none, RatioIndex.NONE));
 
-            Tuple<AreaCVNormalizationMethod, int> selectedItem;
+            Tuple<AreaCVNormalizationMethod, RatioIndex> selectedItem;
             if (AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.ratio)
                 selectedItem = Tuple.Create(AreaCVNormalizationMethod.ratio, AreaGraphController.AreaCVRatioIndex);
             else
             {
-                selectedItem = Tuple.Create(AreaGraphController.NormalizationMethod, -1);
+                selectedItem = Tuple.Create(AreaGraphController.NormalizationMethod, RatioIndex.NONE);
             }
             toolStripComboNormalizedTo.SelectedIndex = _normalizationMethods.IndexOf(selectedItem);
         }

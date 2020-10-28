@@ -24,6 +24,7 @@ using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -61,7 +62,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null,
-            new AreaCVGraphSettings((GraphTypeSummary) ~0, (AreaCVNormalizationMethod) ~0, -1, null,
+            new AreaCVGraphSettings((GraphTypeSummary) ~0, (AreaCVNormalizationMethod) ~0, RatioIndex.NONE, null,
                 string.Empty, (PointsTypePeakArea) ~0, double.NaN, double.NaN, -1, double.NaN, (AreaCVMsLevel) ~0,
                 (AreaCVTransitions) ~0, -1));
 
@@ -136,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 BinWidth = Settings.Default.AreaCVHistogramBinWidth * factor;
             }
 
-            public AreaCVGraphSettings(GraphTypeSummary graphType, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, ReplicateValue group, object annotation, PointsTypePeakArea pointsType, double qValueCutoff,
+            public AreaCVGraphSettings(GraphTypeSummary graphType, AreaCVNormalizationMethod normalizationMethod, RatioIndex ratioIndex, ReplicateValue group, object annotation, PointsTypePeakArea pointsType, double qValueCutoff,
                 double cvCutoff, int minimumDetections, double binwidth, AreaCVMsLevel msLevel, AreaCVTransitions transitions, int countTransitions)
             {
                 GraphType = graphType;
