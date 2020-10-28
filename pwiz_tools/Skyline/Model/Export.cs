@@ -20,6 +20,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -27,7 +28,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.Win32;
@@ -42,6 +42,8 @@ using pwiz.Skyline.Util.Extensions;
 using Shimadzu.LabSolutions.MethodConverter;
 using Shimadzu.LabSolutions.MethodWriter;
 using ZedGraph;
+using Process = System.Diagnostics.Process;
+using Thread = System.Threading.Thread;
 
 namespace pwiz.Skyline.Model
 {
@@ -608,7 +610,7 @@ namespace pwiz.Skyline.Model
             var exporter = InitExporter(new BrukerTimsTofMethodExporter(document));
             exporter.RunLength = RunLength;
             exporter.Ms1RepetitionTime = Ms1RepetitionTime;
-            PerformLongExport(m => exporter.ExportMethod(filename, templateName, m, out _, out _));
+            PerformLongExport(m => exporter.ExportMethod(filename, templateName, m, out _, out _, false));
             return exporter;
         }
 
@@ -3135,10 +3137,11 @@ namespace pwiz.Skyline.Model
 
     public class BrukerTimsTofMethodExporter : AbstractMassListExporter
     {
-        private readonly List<InputTarget> _targets;
+        private readonly List<Tuple<InputTarget, string>> _targets;
         private readonly HashSet<LibKey> _missingIonMobility;
 
         private double _oneOverK0UpperLimit = 1.2;
+        private Metrics _schedulingMetrics;
 
         public double RunLength { get; set; }
         public double Ms1RepetitionTime { get; set; }
@@ -3150,8 +3153,9 @@ namespace pwiz.Skyline.Model
         {
             IsPrecursorLimited = true;
             IsolationList = true;
-            _targets = new List<InputTarget>();
+            _targets = new List<Tuple<InputTarget, string>>();
             _missingIonMobility = new HashSet<LibKey>();
+            _schedulingMetrics = null;
         }
 
         public int Id { get; set; }
@@ -3215,10 +3219,11 @@ namespace pwiz.Skyline.Model
             target.charge = nodeTranGroup.PrecursorCharge;
             target.collision_energy = (int) Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
 
-            _targets.Add(target);
+            _targets.Add(Tuple.Create(target, nodePep.ModifiedSequenceDisplay));
         }
 
-        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor, out TimeSegmentList timeSegments, out SchedulingEntryList schedulingEntries)
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor, out TimeSegmentList timeSegments, out SchedulingEntryList schedulingEntries,
+            bool getMetrics)
         {
             if (templateName == null)
                 throw new IOException(Resources.BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_);
@@ -3243,13 +3248,13 @@ namespace pwiz.Skyline.Model
                 s.SetAdditionalMeasurementParameters(new AdditionalMeasurementParameters
                 {
                     ms1_repetition_time = Ms1RepetitionTime,
-                    default_pasef_collision_energies = _targets.All(t => t.collision_energy == 0)
+                    default_pasef_collision_energies = _targets.All(t => t.Item1.collision_energy == 0)
                 });
                 for (var i = 0; i < _targets.Count; i++)
                 {
                     var id = (i + 1).ToString();
                     var description = id;
-                    s.AddInputTarget(_targets[i], id, description);
+                    s.AddInputTarget(_targets[i].Item1, id, description);
                 }
 
                 var progress = new ProgressStatus(Resources.BrukerTimsTofMethodExporter_ExportMethod_Getting_scheduling___);
@@ -3276,11 +3281,13 @@ namespace pwiz.Skyline.Model
 
                 if (!string.IsNullOrEmpty(fileName) && (progressMonitor == null || !progressMonitor.IsCanceled))
                     s.WriteScheduling();
+
+                if (getMetrics)
+                    _schedulingMetrics = new Metrics(s, _targets);
             }
         }
 
-        public static LibKey[] GetMissingIonMobility(SrmDocument document, ExportProperties exportProperties,
-            string templateName)
+        public static LibKey[] GetMissingIonMobility(SrmDocument document, ExportProperties exportProperties)
         {
             var exporter = exportProperties.InitExporter(new BrukerTimsTofMethodExporter(document));
             exporter.RunLength = exportProperties.RunLength;
@@ -3289,51 +3296,78 @@ namespace pwiz.Skyline.Model
             return exporter.MissingIonMobility;
         }
 
-        public static void GetScheduling(SrmDocument document, ExportProperties exportProperties, string templateName,
-            IProgressMonitor progressMonitor, out IPointList pointList)
+        public static Metrics GetSchedulingMetrics(SrmDocument document,
+            ExportProperties exportProperties, string templateName, IProgressMonitor progressMonitor)
         {
             var exporter = exportProperties.InitExporter(new BrukerTimsTofMethodExporter(document));
             exporter.RunLength = exportProperties.RunLength;
             exporter.Ms1RepetitionTime = exportProperties.Ms1RepetitionTime;
-            exporter.ExportMethod(null, templateName, progressMonitor, out var timeSegments, out var schedulingEntries);
+            exporter.ExportMethod(null, templateName, progressMonitor, out _, out _, true);
+            return exporter._schedulingMetrics;
+        }
 
-            var timeSegmentCounts = new Dictionary<uint, HashSet<uint>>();
-            foreach (var entry in schedulingEntries)
+        public class Metrics
+        {
+            private readonly Dictionary<SchedulingMetrics, PointPairList> _metrics;
+            public DataTable Table { get; }
+
+            public static string ColTarget => Resources.Metrics_ColTarget_Target;
+            public static string ColMeanSamplingTime = Resources.Metrics_ColMeanSamplingTime_Mean_sampling_time__seconds_;
+            public static string ColMaxSamplingTime = Resources.Metrics_ColMaxSamplingTime_Max_sampling_time__seconds_;
+            public static string ColMz = Resources.Metrics_ColMz_m_z;
+            public static string Col1K0LowerLimit = Resources.Metrics_Col1K0LowerLimit__1_K0_lower_limit;
+            public static string Col1K0UpperLimit = Resources.Metrics_Col1K0UpperLimit__1_K0_upper_limit;
+            public static string ColRtBegin = Resources.Metrics_ColRtBegin_RT_begin__seconds_;
+            public static string ColRtEnd = Resources.Metrics_ColRtEnd_RT_end__seconds_;
+
+            public Metrics(Scheduler s, IList<Tuple<InputTarget, string>> targets)
             {
-                if (!timeSegmentCounts.ContainsKey(entry.time_segment_id))
-                    timeSegmentCounts[entry.time_segment_id] = new HashSet<uint>();
-                timeSegmentCounts[entry.time_segment_id].Add(entry.frame_id);
-            }
+                var concurrentFrames = s.GetSchedulingMetrics(SchedulingMetrics.CONCURRENT_FRAMES);
+                var maxSamplingTimes = s.GetSchedulingMetrics(SchedulingMetrics.MAX_SAMPLING_TIMES);
+                var meanSamplingTimes = s.GetSchedulingMetrics(SchedulingMetrics.MEAN_SAMPLING_TIMES);
+                var redundancyOfTargets = s.GetSchedulingMetrics(SchedulingMetrics.REDUNDANCY_OF_TARGETS);
+                var targetsPerFrame = s.GetSchedulingMetrics(SchedulingMetrics.TARGETS_PER_FRAME);
 
-            var points = new List<PointPair>();
-            for (uint i = 0; i < timeSegments.Count; i++)
-            {
-                var count = 0;
-                if (timeSegmentCounts.TryGetValue(i, out var countSet))
-                    count = countSet.Count;
-                points.Add(new PointPair(timeSegments[(int) i].time_in_seconds_begin / 60, count));
-                points.Add(new PointPair(timeSegments[(int) i].time_in_seconds_end / 60, count));
-            }
-
-            if (timeSegments.Count > 0)
-            {
-                points.Insert(0, new PointPair(points.First().X, 0));
-                points.Insert(0, new PointPair(points.First().X - 1, 0));
-
-                const double pointLimit = 1e9;
-                if (points.Last().X > pointLimit)
+                _metrics = new Dictionary<SchedulingMetrics, PointPairList>
                 {
-                    var penultimate = points[points.Count - 2].X;
-                    if (penultimate < pointLimit)
-                    {
-                        points[points.Count - 1].X = penultimate + 1;
-                    }
-                }
+                    {SchedulingMetrics.CONCURRENT_FRAMES, new PointPairList(concurrentFrames.Select(pt => new PointPair(pt.x / 60, pt.y)).ToList())},
+                    {SchedulingMetrics.MAX_SAMPLING_TIMES, new PointPairList(
+                        maxSamplingTimes.OrderBy(pt => pt.y).Select((pt, i) => new PointPair(i + 1, pt.y)).ToList())},
+                    {SchedulingMetrics.MEAN_SAMPLING_TIMES, new PointPairList(
+                        meanSamplingTimes.OrderBy(pt => pt.y)
+                            .Select((pt, i) => new PointPair(i + 1, pt.y)).ToList())},
+                    {SchedulingMetrics.REDUNDANCY_OF_TARGETS, new PointPairList(redundancyOfTargets.Select(pt => new PointPair(pt.x / 60, pt.y)).ToList())},
+                    {SchedulingMetrics.TARGETS_PER_FRAME, new PointPairList(targetsPerFrame.Select(pt => new PointPair(pt.x / 60, pt.y)).ToList())}
+                };
 
-                points.Add(new PointPair(points.Last().X, 0));
+                Table = new DataTable();
+                Table.Columns.Add(ColTarget, typeof(string));
+                Table.Columns.Add(ColMz, typeof(double));
+                Table.Columns.Add(ColMeanSamplingTime, typeof(double));
+                Table.Columns.Add(ColMaxSamplingTime, typeof(double));
+                Table.Columns.Add(Col1K0LowerLimit, typeof(double));
+                Table.Columns.Add(Col1K0UpperLimit, typeof(double));
+                Table.Columns.Add(ColRtBegin, typeof(double));
+                Table.Columns.Add(ColRtEnd, typeof(double));
+                for (var i = 0; i < targets.Count; i++)
+                {
+                    var target = targets[i].Item1;
+                    var targetName = targets[i].Item2;
+
+                    var row = Table.NewRow();
+                    row[ColTarget] = targetName + Transition.GetChargeIndicator(target.charge);
+                    row[ColMz] = target.monoisotopic_mz;
+                    row[ColMeanSamplingTime] = meanSamplingTimes[i].y;
+                    row[ColMaxSamplingTime] = maxSamplingTimes[i].y;
+                    row[Col1K0LowerLimit] = target.one_over_k0_lower_limit;
+                    row[Col1K0UpperLimit] = target.one_over_k0_upper_limit;
+                    row[ColRtBegin] = target.time_in_seconds_begin;
+                    row[ColRtEnd] = target.time_in_seconds_end;
+                    Table.Rows.Add(row);
+                }
             }
 
-            pointList = new PointPairList(points);
+            public PointPairList Get(SchedulingMetrics metricType) { return _metrics.ContainsKey(metricType) ? _metrics[metricType] : new PointPairList(); }
         }
     }
 
