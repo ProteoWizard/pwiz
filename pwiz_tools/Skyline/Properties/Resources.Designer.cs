@@ -25016,6 +25016,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Concurrent Accumulations.
+        /// </summary>
+        public static string RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations {
+            get {
+                return ResourceManager.GetString("RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Concurrent frames.
         /// </summary>
         public static string RTScheduleGraphPane_UpdateGraph_Concurrent_frames {

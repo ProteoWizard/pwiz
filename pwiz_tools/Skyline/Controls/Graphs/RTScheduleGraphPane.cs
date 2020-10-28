@@ -21,8 +21,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using pwiz.CLI.Bruker.PrmScheduling;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
@@ -113,6 +115,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     ? Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Precursors
                     : Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Transitions;
             }
+            else if (BrukerMetrics == null)
+            {
+                XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
+                YAxis.Title.Text = Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations;
+            }
             else
             {
                 switch (brukerMetricType)
@@ -188,7 +195,18 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!string.IsNullOrEmpty(BrukerTemplateFile))
             {
-                AddCurve(document, BrukerMetrics.Get(BrukerMetricType), color);
+                IPointList brukerPoints = null;
+                if (BrukerMetrics != null)
+                {
+                    brukerPoints = BrukerMetrics.Get(BrukerMetricType);
+                }
+                else
+                {
+                    BrukerTimsTofMethodExporter.GetScheduling(document,
+                        new ExportDlgProperties(new ExportMethodDlg(document, ExportFileType.Method), new CancellationToken()) {MethodType = ExportMethodType.Scheduled},
+                        BrukerTemplateFile, progressMonitor, out brukerPoints);
+                }
+                AddCurve(document, brukerPoints, color);
                 return;
             }
 

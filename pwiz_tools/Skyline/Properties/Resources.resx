@@ -11157,4 +11157,7 @@ Invalid peptide sequence at position 18
   <data name="Metrics_ColRtEnd_RT_end__seconds_" xml:space="preserve">
     <value>RT end (seconds)</value>
   </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
+    <value>Concurrent Accumulations</value>
+  </data>
 </root>

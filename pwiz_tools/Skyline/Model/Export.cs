@@ -3296,6 +3296,53 @@ namespace pwiz.Skyline.Model
             return exporter.MissingIonMobility;
         }
 
+        public static void GetScheduling(SrmDocument document, ExportProperties exportProperties, string templateName,
+            IProgressMonitor progressMonitor, out IPointList pointList)
+        {
+            var exporter = exportProperties.InitExporter(new BrukerTimsTofMethodExporter(document));
+            exporter.RunLength = exportProperties.RunLength;
+            exporter.Ms1RepetitionTime = exportProperties.Ms1RepetitionTime;
+            exporter.ExportMethod(null, templateName, progressMonitor, out var timeSegments, out var schedulingEntries, false);
+
+            var timeSegmentCounts = new Dictionary<uint, HashSet<uint>>();
+            foreach (var entry in schedulingEntries)
+            {
+                if (!timeSegmentCounts.ContainsKey(entry.time_segment_id))
+                    timeSegmentCounts[entry.time_segment_id] = new HashSet<uint>();
+                timeSegmentCounts[entry.time_segment_id].Add(entry.frame_id);
+            }
+
+            var points = new List<PointPair>();
+            for (uint i = 0; i < timeSegments.Count; i++)
+            {
+                var count = 0;
+                if (timeSegmentCounts.TryGetValue(i, out var countSet))
+                    count = countSet.Count;
+                points.Add(new PointPair(timeSegments[(int)i].time_in_seconds_begin / 60, count));
+                points.Add(new PointPair(timeSegments[(int)i].time_in_seconds_end / 60, count));
+            }
+
+            if (timeSegments.Count > 0)
+            {
+                points.Insert(0, new PointPair(points.First().X, 0));
+                points.Insert(0, new PointPair(points.First().X - 1, 0));
+
+                const double pointLimit = 1e9;
+                if (points.Last().X > pointLimit)
+                {
+                    var penultimate = points[points.Count - 2].X;
+                    if (penultimate < pointLimit)
+                    {
+                        points[points.Count - 1].X = penultimate + 1;
+                    }
+                }
+
+                points.Add(new PointPair(points.Last().X, 0));
+            }
+
+            pointList = new PointPairList(points);
+        }
+
         public static Metrics GetSchedulingMetrics(SrmDocument document,
             ExportProperties exportProperties, string templateName, IProgressMonitor progressMonitor)
         {

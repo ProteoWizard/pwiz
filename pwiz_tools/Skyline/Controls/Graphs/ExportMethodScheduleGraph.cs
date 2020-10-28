@@ -41,27 +41,30 @@ namespace pwiz.Skyline.Controls.Graphs
 
             Icon = Resources.Skyline;
 
-            dataGridView.Size = graphControl.Size;
-            dataGridView.Location = graphControl.Location;
-            dataGridView.Anchor = graphControl.Anchor;
-            dataGridView.DataSource = brukerMetrics.Table;
-            foreach (DataGridViewColumn col in dataGridView.Columns)
+            if (brukerMetrics != null)
             {
-                if (col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColMz))
+                dataGridView.Size = graphControl.Size;
+                dataGridView.Location = graphControl.Location;
+                dataGridView.Anchor = graphControl.Anchor;
+                dataGridView.DataSource = brukerMetrics.Table;
+                foreach (DataGridViewColumn col in dataGridView.Columns)
                 {
-                    col.DefaultCellStyle.Format = Formats.Mz;
-                }
-                else if (col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColMeanSamplingTime) ||
-                         col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColMaxSamplingTime) ||
-                         col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColRtBegin) ||
-                         col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColRtEnd))
-                {
-                    col.DefaultCellStyle.Format = Formats.RETENTION_TIME;
-                }
-                else if (col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.Col1K0LowerLimit) ||
-                         col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.Col1K0UpperLimit))
-                {
-                    col.DefaultCellStyle.Format = Formats.OneOverK0;
+                    if (col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColMz))
+                    {
+                        col.DefaultCellStyle.Format = Formats.Mz;
+                    }
+                    else if (col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColMeanSamplingTime) ||
+                             col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColMaxSamplingTime) ||
+                             col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColRtBegin) ||
+                             col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColRtEnd))
+                    {
+                        col.DefaultCellStyle.Format = Formats.RETENTION_TIME;
+                    }
+                    else if (col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.Col1K0LowerLimit) ||
+                             col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.Col1K0UpperLimit))
+                    {
+                        col.DefaultCellStyle.Format = Formats.OneOverK0;
+                    }
                 }
             }
 

@@ -84,6 +84,7 @@
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.btnOk;
             this.Controls.Add(this.dataGridView);
             this.Controls.Add(this.cbGraphType);
             this.Controls.Add(this.btnOk);
