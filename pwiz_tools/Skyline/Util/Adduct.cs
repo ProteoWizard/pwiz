@@ -103,7 +103,6 @@ namespace pwiz.Skyline.Util
         private Adduct(int charge, bool protonated)
         {
             InitializeAsCharge(charge, protonated ? ADDUCT_TYPE.proteomic : ADDUCT_TYPE.charge_only);
-            SetHashCode(); // For fast GetHashCode()
         }
 
         /// <summary>
@@ -171,7 +170,8 @@ namespace pwiz.Skyline.Util
                 // Check for implied positive ion mode - we see "MH", "MH+", "MNH4+" etc in the wild
                 // Also watch for for label-only like  "[M2Cl37]"
                 var posNext = input.IndexOf('M') + 1;
-                if (posNext > 0 && posNext < input.Length)
+                var posCloseBracket = input.IndexOf(']'); // Watch out for strings that are actually modified peptides e.g."[1Ac]IDGFGPMK" 
+                if (posNext > 0 && posNext < input.Length && posCloseBracket>0 && posNext < posCloseBracket)
                 {
                     if (input[posNext] != '+' && input[posNext] != '-') 
                     {
@@ -197,8 +197,6 @@ namespace pwiz.Skyline.Util
                 {
                     if (!throwOnError)
                     {
-                        AdductCharge = 0; // Mark as invalid
-                        SetHashCode(); // For fast GetHashCode()
                         return;
                     }
                 }
@@ -207,13 +205,21 @@ namespace pwiz.Skyline.Util
 
             if (explicitCharge.HasValue)
             {
-                if (AdductCharge != 0) // Does claimed charge agree with obviously calcuable charge?
+                if (AdductCharge != 0) // Does claimed charge agree with obviously calculable charge?
                 {
                     Assume.IsTrue(AdductCharge == explicitCharge, @"Conflicting charge values in adduct description "+input );
                 }
                 AdductCharge = explicitCharge.Value;
             }
             SetHashCode(); // For fast GetHashCode()
+        }
+
+        /// <summary>
+        /// Initializer that creates an invalid adduct (used by Adduct.TryParse)
+        /// </summary>
+        private void InitializeAsInvalid()
+        {
+            InitializeAsCharge(0, ADDUCT_TYPE.charge_only);
         }
 
         private static int? FindLabelDescriptionEnd(string input)
@@ -360,7 +366,7 @@ namespace pwiz.Skyline.Util
                                     match.Groups[@"label"].Value.Split(']')[0], input, string.Join(@" ", DICT_ADDUCT_ISOTOPE_NICKNAMES.Keys));
                             if (!throwOnError)
                             {
-                                AdductCharge = 0; // Mark as invalid
+                                InitializeAsInvalid(); // Mark as invalid
                                 return false;
                             }
                             throw new InvalidOperationException(errmsg);
@@ -496,7 +502,7 @@ namespace pwiz.Skyline.Util
             {
                 if (!throwOnError)
                 {
-                    AdductCharge = 0; // Mark as invalid
+                    InitializeAsInvalid(); // Mark as invalid
                     return false;
                 }
                 throw new InvalidOperationException(
@@ -522,7 +528,7 @@ namespace pwiz.Skyline.Util
                 {
                     if (!throwOnError)
                     {
-                        AdductCharge = 0; // Mark as invalid
+                        InitializeAsInvalid(); // Mark as invalid
                         return false;
                     }
                     throw new InvalidOperationException(
@@ -533,7 +539,7 @@ namespace pwiz.Skyline.Util
             {
                 if (!throwOnError)
                 {
-                    AdductCharge = 0; // Mark as invalid
+                    InitializeAsInvalid(); // Mark as invalid
                     return false;
                 }
                 throw new InvalidOperationException(
@@ -662,7 +668,12 @@ namespace pwiz.Skyline.Util
                     testAdduct = testB; // Go with the simpler canonical form
                 }
             }
+
             // Re-use the standard pre-allocated adducts when possible
+            if (testAdduct.Equals(EMPTY))
+            {
+                return EMPTY;
+            }
             foreach (var adduct in (parserMode == ADDUCT_TYPE.proteomic) ? COMMON_PROTONATED_ADDUCTS : COMMON_SMALL_MOL_ADDUCTS) 
             {
                 if (testAdduct.SameEffect(adduct))
@@ -1538,6 +1549,7 @@ namespace pwiz.Skyline.Util
             }
             Composition = new ImmutableDictionary<string, int>(composition);
             InitializeMasses();
+            SetHashCode(); // For fast GetHashCode()
         }
 
         private void InitializeMasses()
