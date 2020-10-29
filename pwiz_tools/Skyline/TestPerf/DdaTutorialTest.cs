@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -213,19 +214,41 @@ namespace TestPerf
                 emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (!IsPauseForScreenShots)
                 {
-                    Assert.AreEqual(12343, proteinCount);
-                    Assert.AreEqual(27859, peptideCount);
-                    Assert.AreEqual(55327, precursorCount);
-                    Assert.AreEqual(165981, transitionCount);
+                    if (RecordAuditLogs)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine($"Assert.AreEqual({proteinCount}, proteinCount);");
+                        Console.WriteLine($"Assert.AreEqual({peptideCount}, peptideCount);");
+                        Console.WriteLine($"Assert.AreEqual({precursorCount}, precursorCount);");
+                        Console.WriteLine($"Assert.AreEqual({transitionCount}, transitionCount);");
+                    }
+                    else
+                    {
+                        Assert.AreEqual(12590, proteinCount);
+                        Assert.AreEqual(28251, peptideCount);
+                        Assert.AreEqual(56111, precursorCount);
+                        Assert.AreEqual(168333, transitionCount);
+                    }
                 }
 
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (!IsPauseForScreenShots)
                 {
-                    Assert.AreEqual(3685, proteinCount);
-                    Assert.AreEqual(7053, peptideCount);
-                    Assert.AreEqual(13963, precursorCount);
-                    Assert.AreEqual(41889, transitionCount);
+                    if (RecordAuditLogs)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine($"Assert.AreEqual({proteinCount}, proteinCount);");
+                        Console.WriteLine($"Assert.AreEqual({peptideCount}, peptideCount);");
+                        Console.WriteLine($"Assert.AreEqual({precursorCount}, precursorCount);");
+                        Console.WriteLine($"Assert.AreEqual({transitionCount}, transitionCount);");
+                    }
+                    else
+                    {
+                        Assert.AreEqual(3772, proteinCount);
+                        Assert.AreEqual(7173, peptideCount);
+                        Assert.AreEqual(14203, precursorCount);
+                        Assert.AreEqual(42609, transitionCount);
+                    }
                 }
             });
             PauseForScreenShot("Import Peptide Search - Empty Proteins dialog", tutorialPage++);

@@ -152,18 +152,6 @@ PWIZ_API_DECL void resolve(vector<ContactPtr>& vcp, IdentData& mzid)
     }
 }
 
-
-PWIZ_API_DECL void resolve(SequenceCollection& sc, IdentData& mzid)
-{
-    BOOST_FOREACH(DBSequencePtr& dbs, sc.dbSequences)
-        resolve(dbs->searchDatabasePtr, mzid.dataCollection.inputs.searchDatabase);
-
-    // Create a single Enzyme referent list
-    vector<EnzymePtr> enzymePtrs;
-    BOOST_FOREACH(const SpectrumIdentificationProtocolPtr& sip, mzid.analysisProtocolCollection.spectrumIdentificationProtocol)
-        enzymePtrs.insert(enzymePtrs.end(), sip->enzymes.enzymes.begin(), sip->enzymes.enzymes.end());    
-}
-
 PWIZ_API_DECL void resolve(MassTablePtr& mt, const vector<SpectrumIdentificationProtocolPtr>& spectrumIdProts)
 {
     if (!mt.get() || mt->id.empty())
@@ -197,10 +185,10 @@ PWIZ_API_DECL void resolve(PeptideEvidencePtr& pe, const IdentData& mzid)
     if (!pe.get())
         throw runtime_error("NULL value passed into resolve(PeptideEvidencePtr, IdentData&)");
 
-    if (pe->peptidePtr.get())
+    if (!pe->peptidePtr || pe->peptidePtr->peptideSequence.empty())
         resolve(pe->peptidePtr, mzid.sequenceCollection.peptides);
 
-    if (pe->dbSequencePtr.get())
+    if (!pe->dbSequencePtr || pe->dbSequencePtr->length == 0)
         resolve(pe->dbSequencePtr, mzid.sequenceCollection.dbSequences);
 
     // TODO construct a collection of TranslationTable's from all the
@@ -220,8 +208,6 @@ struct ResolvePE
     
     void operator()(PeptideEvidencePtr& pe)
     {
-        if (pe->peptidePtr)
-            return;
         return resolve(pe, (*mzid_));
     }
 };
@@ -255,6 +241,22 @@ PWIZ_API_DECL void resolve(SpectrumIdentificationListPtr& sil, IdentData& mzid)
                      rpe);
         }
     }
+}
+
+PWIZ_API_DECL void resolve(SequenceCollection& sc, IdentData& mzid)
+{
+    BOOST_FOREACH(DBSequencePtr& dbs, sc.dbSequences)
+        resolve(dbs->searchDatabasePtr, mzid.dataCollection.inputs.searchDatabase);
+    
+    ResolvePE rpe(&mzid);
+    for_each(sc.peptideEvidence.begin(),
+             sc.peptideEvidence.end(),
+             rpe);
+
+    // Create a single Enzyme referent list
+    vector<EnzymePtr> enzymePtrs;
+    BOOST_FOREACH(const SpectrumIdentificationProtocolPtr& sip, mzid.analysisProtocolCollection.spectrumIdentificationProtocol)
+        enzymePtrs.insert(enzymePtrs.end(), sip->enzymes.enzymes.begin(), sip->enzymes.enzymes.end());
 }
 
 PWIZ_API_DECL void resolve(SpectrumIdentification& si, IdentData& mzid)
