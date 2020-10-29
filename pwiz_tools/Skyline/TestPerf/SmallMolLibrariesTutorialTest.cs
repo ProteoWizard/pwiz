@@ -111,7 +111,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 transitionSettingsUI.SmallMoleculeFragmentTypes = "f, p";
             });
             //   •	The Transition Settings form should now look like this:
-            PauseForScreenShot("Transition Settings: Filter", 4);
+            PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings: Filter", 4);
 
             RunUI(() =>
             {
@@ -134,7 +134,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             });
 
             //   The Transition Settings form should look like this:
-            PauseForScreenShot("Transition Settings - Full-Scan", 5);
+            PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Transition Settings - Full-Scan", 5);
             //   •	Click the OK button.
             OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             doc = WaitForDocumentChange(doc);
@@ -172,7 +172,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             //   •	If you have any other libraries in this list checked, uncheck them now.
             RunUI(() => { peptideSettingsUI.PickedLibraries = new[] {drosophilaLipids}; });
             //   The Molecule Settings form should now look like:
-            PauseForScreenShot("Molecule Settings - Library", 7);
+            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Molecule Settings - Library", 7);
             //   •	Click the OK button in the Molecule Settings form.
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);
@@ -296,7 +296,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             WaitForGraphs();
             RunUI(() => SkylineWindow.AutoZoomBestPeak());
             WaitForGraphs();
-            PauseForScreenShot("Chromaotgram", 16);
+            PauseForScreenShot("Chromatogram", 16);
 
             //   •	Hover the mouse cursor over the precursor chromatogram peak apex until a blue circle appears that tracks the mouse movement, and click on it.
             ClickChromatogram(F_A_018, 14.81, 162.0E3, PaneKey.PRECURSORS);
@@ -357,7 +357,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                     IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
             });
             //   •	The Transition Settings form should now look like this:
-            PauseForScreenShot("Transition Settings: IonMobility", 20);            //The Transition Settings should now look like:
+            PauseForScreenShot<TransitionSettingsUI.IonMobilityTab>("Transition Settings: IonMobility", 20);            //The Transition Settings should now look like:
 
 
             //   •	Click the OK button.
@@ -402,25 +402,20 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
 
             // Note that if you were interested in lipids that are not present in the current spectral library, you can add to it manually or using LipidCreator. To access the LipidCreator plugin, do the following:
             //   •	From the Tools menu, click Tool Store.
-            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            //   •	Select LipidCreator.
-            var pick = ShowDialog<ToolStoreDlg>(configureToolsDlg.AddFromWeb);
-            var hasLipidCreator = false;
-            RunUI(() =>
+            if (IsPauseForScreenShots)
             {
-                const string toolName = "LipidCreator";
-                hasLipidCreator = pick.HasTool(toolName);
-                if (hasLipidCreator)
+                var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+                //   •	Select LipidCreator.
+                var pick = ShowDialog<ToolStoreDlg>(configureToolsDlg.AddFromWeb);
+                RunUI(() =>
                 {
-                    pick.SelectTool(toolName);
-                }
-            });
-            PauseForScreenShot(hasLipidCreator ? "LipidCreator in tool store" : "LipidCreator is not installed, do that first then take screen shot", 22);
-            RunUI(() => pick.CancelDialog());
-            OkDialog(configureToolsDlg, configureToolsDlg.Cancel);
-
-            //   •	Click the Install button.
-
+                    pick.SelectTool("LipidCreator");
+                });
+                PauseForScreenShot("LipidCreator in tool store", 22);
+                RunUI(() => pick.CancelDialog());
+                OkDialog(configureToolsDlg, configureToolsDlg.Cancel);
+                //   •	Click the Install button.
+            }
 
             //   The following steps can be taken to easily export an updated spectral library:
             //   •	From the File menu, choose Export and click Spectral Library.

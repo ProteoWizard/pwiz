@@ -199,11 +199,6 @@ namespace pwiz.Skyline.ToolsUI
             return _tools.Select(tool => new ToolStoreItem(tool));
         }
 
-        public bool HasTool(string toolName)
-        {
-            return _tools.Any(tool => Equals(tool.Name, toolName));
-        }
-
         public void SelectTool(string toolName)
         {
             int toolIndex = _tools.IndexOf(tool => Equals(tool.Name, toolName));

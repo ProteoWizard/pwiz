@@ -1818,7 +1818,7 @@ namespace pwiz.SkylineTestUtil
             RunUI(() =>
             {
                 var screenRect = Screen.FromControl(SkylineWindow).Bounds;
-                var skylineSize = new Size(Math.Min(screenRect.Width, width + marginW), Math.Min(screenRect.Height,  height + marginH));
+                var skylineSize = new Size(Math.Min(screenRect.Width, width + marginW), Math.Min(screenRect.Height,  height + marginH)); // So we don't roll into negative territory when SetSkylineWindowSize adds margins
                 var skylineLocation = new Point(screenRect.Left + screenRect.Width / 2 - skylineSize.Width / 2,
                     screenRect.Top + screenRect.Height / 2 - skylineSize.Height / 2);
                 SkylineWindow.Bounds = new Rectangle(skylineLocation, skylineSize);

@@ -33,31 +33,6 @@ namespace pwiz.Skyline.Controls.Startup
 {
     public class ActionTutorial
     {
-        public enum TutorialType
-        {
-            targeted_method_editing,
-            targeted_method_refinement,
-            existing_and_quantitative_experiments,
-            absolute_quantifiaction,
-            ms1_fullscan_filtering,
-            targeted_ms_ms,
-            custom_reports_results_grid,
-            advanced_peak_picking_models,
-            irt_retention_time_prediction,
-            collision_energy_optimization,
-            spectral_library_explorer,
-            grouped_study_data_processing,
-            data_independent_acquisition,
-            small_molecule_targets,
-            small_molecule_method_dev_and_ce_opt,
-            small_molecule_quant,
-            hi_res_metabolomics,
-            ion_mobility,
-            audit_logging,
-            dia_swath,
-        }
-
-        public TutorialType ImportType { get; set; }
         public string TutorialZipFileLocation { get; set; }
         public string PdfFileLocation { get; set; }
         public string SkyFileLocationInZip { get; set; }
@@ -66,10 +41,9 @@ namespace pwiz.Skyline.Controls.Startup
         private long ExtractedSize { get; set; }
         private readonly string TempPath = Path.GetTempPath();
 
-        public ActionTutorial(TutorialType action, string extractPath, string skyFileLocation, string pdfFileLocation, string skyFileLocationInZip)
+        public ActionTutorial(string extractPath, string skyFileLocation, string pdfFileLocation, string skyFileLocationInZip)
         {
             ExtractPath = extractPath;
-            ImportType = action;
             TutorialZipFileLocation = skyFileLocation;
             PdfFileLocation = pdfFileLocation;
             SkyFileLocationInZip = skyFileLocationInZip;
@@ -187,13 +161,7 @@ namespace pwiz.Skyline.Controls.Startup
                 var skyFileToOpen = Path.Combine(extractDir ?? string.Empty, SkyFileLocationInZip);
                 foreach (var entry in zip.Entries.ToList())
                 {
-                    // Remove top level of directory structure if any - unless it's a data directory
-                    var fname = entry.FileName;
-                    var slashIndex = fname.IndexOf('/');
-                    if (slashIndex > -1 && !DataSourceUtil.IsDataSourceFilename(fname.Substring(0, slashIndex))) // e.g. Don't touch "foo.d/"
-                    {
-                        entry.FileName = fname.Substring(slashIndex); // Gets rid of everything up to and including first '/'.
-                    }
+                    entry.FileName = entry.FileName.Substring(entry.FileName.IndexOf('/')); // Gets rid of everything up to and including first '/'.
                     if (string.IsNullOrEmpty(entry.FileName))
                     {
                         continue;
