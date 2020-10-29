@@ -98,32 +98,13 @@ namespace pwiz.Skyline.Util
             charge_only // parsing "2" results in an adduct w/ no formula, z=2, displays as "[M+2]" or "++"
         }
 
-        private Adduct() {}
-
         private Adduct(int charge, bool protonated)
         {
             InitializeAsCharge(charge, protonated ? ADDUCT_TYPE.proteomic : ADDUCT_TYPE.charge_only);
+            SetHashCode(); // For fast GetHashCode()
         }
 
-        /// <summary>
-        /// ctor for Adduct based on a string description (e.g. "[M+H]")
-        /// </summary>
-        /// <param name="description">String to be parsed. Should have form similar to M+H, 2M+2NA-H etc, or it may be a text representation of a protonated charge a la "2", "-3" etc</param>
-        /// <param name="integerMode">How to treat integer only descriptions: (de)protonation, or just a charge?</param>
-        /// <param name="explicitCharge">Optional known charge</param>
-        private Adduct(string description, ADDUCT_TYPE integerMode, int? explicitCharge = null)
-        {
-            Initialize(description, integerMode, explicitCharge, true);
-        }
-
-        /// <summary>
-        /// Initializer for Adduct based on a string description (e.g. "[M+H]")
-        /// </summary>
-        /// <param name="description">String to be parsed. Should have form similar to M+H, 2M+2NA-H etc, or it may be a text representation of a protonated charge a la "2", "-3" etc</param>
-        /// <param name="integerMode">How to treat integer only descriptions: (de)protonation, or just a charge?</param>
-        /// <param name="explicitCharge">Optional known charge</param>
-        /// <param name="throwOnError">When true, throw an exception if parsing fails. Otherwise on error just set charge to 0, which marks the Adduct as invalid.</param>
-        private void Initialize(string description, ADDUCT_TYPE integerMode, int? explicitCharge, bool throwOnError)
+        private Adduct(string description, ADDUCT_TYPE integerMode, int? explicitCharge = null) // Description should have form similar to M+H, 2M+2NA-H etc, or it may be a text representation of a protonated charge a la "2", "-3" etc
         {
             var input = (description ?? string.Empty).Trim();
             int chargeFromText;
@@ -170,8 +151,7 @@ namespace pwiz.Skyline.Util
                 // Check for implied positive ion mode - we see "MH", "MH+", "MNH4+" etc in the wild
                 // Also watch for for label-only like  "[M2Cl37]"
                 var posNext = input.IndexOf('M') + 1;
-                var posCloseBracket = input.IndexOf(']'); // Watch out for strings that are actually modified peptides e.g."[1Ac]IDGFGPMK" 
-                if (posNext > 0 && posNext < input.Length && posCloseBracket>0 && posNext < posCloseBracket)
+                if (posNext > 0 && posNext < input.Length)
                 {
                     if (input[posNext] != '+' && input[posNext] != '-') 
                     {
@@ -192,34 +172,19 @@ namespace pwiz.Skyline.Util
                         }
                     }
                 }
-
-                if (!ParseDescription(Description = input, throwOnError))
-                {
-                    if (!throwOnError)
-                    {
-                        return;
-                    }
-                }
+                ParseDescription(Description = input);
                 InitializeMasses();
             }
 
             if (explicitCharge.HasValue)
             {
-                if (AdductCharge != 0) // Does claimed charge agree with obviously calculable charge?
+                if (AdductCharge != 0) // Does claimed charge agree with obviously calcuable charge?
                 {
                     Assume.IsTrue(AdductCharge == explicitCharge, @"Conflicting charge values in adduct description "+input );
                 }
                 AdductCharge = explicitCharge.Value;
             }
             SetHashCode(); // For fast GetHashCode()
-        }
-
-        /// <summary>
-        /// Initializer that creates an invalid adduct (used by Adduct.TryParse)
-        /// </summary>
-        private void InitializeAsInvalid()
-        {
-            InitializeAsCharge(0, ADDUCT_TYPE.charge_only);
         }
 
         private static int? FindLabelDescriptionEnd(string input)
@@ -239,7 +204,7 @@ namespace pwiz.Skyline.Util
                 {
                     // No leading + or - : is it because description starts with a label, or because + mode is implied?
                     var limit = input.IndexOfAny(new[] { '+', '-', ']' });
-                    if (limit < posNext)
+                    if (limit < 0)
                     {
                         return null;
                     }
@@ -301,13 +266,7 @@ namespace pwiz.Skyline.Util
             return result;
         }
 
-        /// <summary>
-        /// Try to populate object members based on contents of a string
-        /// </summary>
-        /// <param name="input">String to be parsed</param>
-        /// <param name="throwOnError">When true, throw InvalidOperationException if string is not parsable, else just return false on parse error</param>
-        /// <returns>true if description parses, false if not (or throws exception instead of returning, depending on value of throwOnError argument)</returns>
-        private bool ParseDescription(string input, bool throwOnError)
+        private void ParseDescription(string input)
         {
             int? declaredCharge = null;
             int? calculatedCharge = null;
@@ -364,11 +323,6 @@ namespace pwiz.Skyline.Util
                         {
                             var errmsg = string.Format(Resources.Adduct_ParseDescription_isotope_error,
                                     match.Groups[@"label"].Value.Split(']')[0], input, string.Join(@" ", DICT_ADDUCT_ISOTOPE_NICKNAMES.Keys));
-                            if (!throwOnError)
-                            {
-                                InitializeAsInvalid(); // Mark as invalid
-                                return false;
-                            }
                             throw new InvalidOperationException(errmsg);
                         }
 
@@ -500,11 +454,6 @@ namespace pwiz.Skyline.Util
             var resultMol = Molecule.FromDict(new ImmutableSortedList<string, int>(composition));
             if (!resultMol.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
-                if (!throwOnError)
-                {
-                    InitializeAsInvalid(); // Mark as invalid
-                    return false;
-                }
                 throw new InvalidOperationException(
                     string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__,
                         resultMol.Keys.First(k => !BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)), input));
@@ -526,30 +475,18 @@ namespace pwiz.Skyline.Util
                 }
                 if (!success)
                 {
-                    if (!throwOnError)
-                    {
-                        InitializeAsInvalid(); // Mark as invalid
-                        return false;
-                    }
                     throw new InvalidOperationException(
                         string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                 }
             }
             if (declaredCharge.HasValue && calculatedCharge.HasValue && declaredCharge != calculatedCharge)
             {
-                if (!throwOnError)
-                {
-                    InitializeAsInvalid(); // Mark as invalid
-                    return false;
-                }
                 throw new InvalidOperationException(
                     string.Format(
                         Resources
                             .BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0____declared_charge__1__does_not_agree_with_calculated_charge__2_,
                         input, declaredCharge.Value, calculatedCharge));
             }
-
-            return true;
         }
         public Adduct Unlabeled { get; private set; } // Version of this adduct without any isotope labels
 
@@ -635,15 +572,11 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Return an Adduct object based on a string (probably serialized XML) of form "2" or "-3" or "[M+Na]" etc.
+        /// Construct an adduct based on a string (probably serialized XML) of form "2" or "-3" or "[M+Na]" etc.
         /// Minimizes memory thrash by reusing the more common adducts. 
+        ///
         /// </summary>
-        /// <param name="value">The string to be parsed</param>
-        /// <param name="parserMode">Determines whether an integer representation implies (de)protonation or inherent charge</param>
-        /// <param name="explicitCharge">Optional known charge value</param>
-        /// <param name="throwOnError">When false, just return an adduct with charge 0 (marks it as invalid) rather than throwing an exception on parse error</param>
-        /// <returns>An Adduct object, possibly from the list of well know adducts rather than a new construction</returns>
-        public static Adduct FromString(string value, ADDUCT_TYPE parserMode, int? explicitCharge, bool throwOnError = true)
+        public static Adduct FromString(string value, ADDUCT_TYPE parserMode, int? explicitCharge)
         {
             if (value == null)
                 return EMPTY;
@@ -655,25 +588,23 @@ namespace pwiz.Skyline.Util
 
             // Reuse the more common non-proteomic adducts
             var testValue = value.StartsWith(@"M") ? @"[" + value + @"]" : value;
-            var testAdduct = new Adduct();
-            testAdduct.Initialize(testValue, parserMode, explicitCharge, throwOnError);
+            var testAdduct = new Adduct(testValue, parserMode, explicitCharge);
             if (!testValue.EndsWith(@"]"))
             {
                 // Can we trim any trailing charge info to arrive at a standard form (ie use [M+H] instead of [M+H]+)?
-                var stripped = testValue.Substring(0, testValue.IndexOf(']')+1);
-                var testB = new Adduct();
-                testB.Initialize(stripped, parserMode, explicitCharge, false);
-                if (testAdduct.SameEffect(testB))
+                try
                 {
-                    testAdduct = testB; // Go with the simpler canonical form
+                    var stripped = testValue.Substring(0, testValue.IndexOf(']')+1);
+                    var testB = new Adduct(stripped, parserMode, explicitCharge);
+                    if (testAdduct.SameEffect(testB))
+                        testAdduct = testB; // Go with the simpler canonical form
+                }
+                catch
+                {
+                    // ignored
                 }
             }
-
             // Re-use the standard pre-allocated adducts when possible
-            if (testAdduct.Equals(EMPTY))
-            {
-                return EMPTY;
-            }
             foreach (var adduct in (parserMode == ADDUCT_TYPE.proteomic) ? COMMON_PROTONATED_ADDUCTS : COMMON_SMALL_MOL_ADDUCTS) 
             {
                 if (testAdduct.SameEffect(adduct))
@@ -1059,17 +990,18 @@ namespace pwiz.Skyline.Util
             return list.Select(FromChargeProtonated).ToArray();
         }
 
-        /// <summary>
-        /// Examine a string to see if it is an Adduct description
-        /// </summary>
-        /// <param name="description">The string to be parsed</param>
-        /// <param name="result">The resulting Adduct object. Will have charge 0 if string was not parseable.</param>
-        /// <param name="assumeAdductType">How to interpret integer-only representations (protonated vs charge-only)</param>
-        /// <returns>True if string can be understood as an Adduct description</returns>
-        public static bool TryParse(string description, out Adduct result, ADDUCT_TYPE assumeAdductType = ADDUCT_TYPE.non_proteomic)
+        public static bool TryParse(string s, out Adduct result, ADDUCT_TYPE assumeAdductType = ADDUCT_TYPE.non_proteomic)
         {
-            result = FromString(description, assumeAdductType, null, false); // Do not throw on parse error
-            return result.AdductCharge != 0;
+            result = EMPTY;
+            try
+            {
+                result = FromString(s, assumeAdductType, null);
+                return result.AdductCharge != 0;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -1549,7 +1481,6 @@ namespace pwiz.Skyline.Util
             }
             Composition = new ImmutableDictionary<string, int>(composition);
             InitializeMasses();
-            SetHashCode(); // For fast GetHashCode()
         }
 
         private void InitializeMasses()
