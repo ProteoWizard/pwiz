@@ -248,10 +248,13 @@ namespace pwiz.Skyline.Controls.Graphs
             var standardType = IsotopeLabelType.light;
 
             var areaView = AreaGraphController.AreaView;
-            if (areaView == AreaNormalizeToView.area_ratio_view && ratioIndex.InternalStandardIndex.HasValue)
+            if (areaView == AreaNormalizeToView.area_ratio_view)
             {
                 ratioIndex = GraphSummary.RatioIndex;
-                standardType = document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[ratioIndex.InternalStandardIndex.Value];                
+                if (ratioIndex.InternalStandardIndex.HasValue)
+                {
+                    standardType = document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[ratioIndex.InternalStandardIndex.Value];
+                }
             }
             else if (areaView == AreaNormalizeToView.area_global_standard_view)
             {

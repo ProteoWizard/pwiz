@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 var otherChrominfo = FindMatchingTransitionChromInfo(transitionChromInfo, otherTransition);
-                if (otherChrominfo == null)
+                if (otherChrominfo == null || otherChrominfo.IsEmpty)
                 {
                     return null;
                 }
@@ -361,9 +361,9 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
-        public IList<IsotopeLabelType> InternalStandardTypes
+        public IList<IsotopeLabelType> RatioInternalStandardTypes
         {
-            get { return Document.Settings.PeptideSettings.Modifications.InternalStandardTypes; }
+            get { return Document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes; }
         }
 
         public bool TryGetDenominator(NormalizationMethod normalizationMethod, IsotopeLabelType labelType, ChromFileInfoId fileId, out double? denominator)
@@ -426,13 +426,13 @@ namespace pwiz.Skyline.Model.Results
             if (ratioIndex.InternalStandardIndex.HasValue)
             {
                 if (ratioIndex.InternalStandardIndex >=
-                    Document.Settings.PeptideSettings.Modifications.InternalStandardTypes.Count)
+                    RatioInternalStandardTypes.Count)
                 {
                     return NormalizationMethod.NONE;
                 }
 
                 return new NormalizationMethod.RatioToLabel(
-                    InternalStandardTypes[ratioIndex.InternalStandardIndex.Value]);
+                    RatioInternalStandardTypes[ratioIndex.InternalStandardIndex.Value]);
             }
 
             if (ratioIndex == RatioIndex.GLOBAL_STANDARD)

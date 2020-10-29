@@ -221,7 +221,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (isRatio && !document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
                         continue;
 
-                    var ratioIndices = RatioIndex.AvailableRatioIndexes(document.Settings).ToList();
+                    var ratioIndices = Enumerable
+                        .Range(0, document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count)
+                        .Select(RatioIndex.FromInternalStandardIndex).ToList();
 
                     if (graphSettings.RatioIndex.InternalStandardIndex.HasValue)
                     {

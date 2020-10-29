@@ -32,12 +32,12 @@ namespace pwiz.SkylineTestUtil
                             AssertEx.AreEqual(transitionGroupChromInfo.Area, ratioCalculator.GetTransitionGroupValue(NormalizationMethod.NONE, molecule, transitionGroupDocNode, transitionGroupChromInfo));
                             if (!duplicatePrecursor)
                             {
-                                for (int iRatio = 0; iRatio < ratioCalculator.InternalStandardTypes.Count; iRatio++)
+                                for (int iRatio = 0; iRatio < ratioCalculator.RatioInternalStandardTypes.Count; iRatio++)
                                 {
                                     float? expected = transitionGroupChromInfo.Ratios[iRatio]?.Ratio;
                                     double? actual = (float?)ratioCalculator.GetTransitionGroupValue(
                                         new NormalizationMethod.RatioToLabel(
-                                            ratioCalculator.InternalStandardTypes[iRatio]), molecule,
+                                            ratioCalculator.RatioInternalStandardTypes[iRatio]), molecule,
                                         transitionGroupDocNode, transitionGroupChromInfo);
 
                                     AssertNumbersSame(expected, actual);
@@ -46,14 +46,14 @@ namespace pwiz.SkylineTestUtil
 
                             if (hasGlobalStandardArea)
                             {
-                                Assert.AreEqual(ratioCalculator.InternalStandardTypes.Count + 1, transitionGroupChromInfo.Ratios.Count);
+                                AssertEx.AreEqual(ratioCalculator.RatioInternalStandardTypes.Count + 1, transitionGroupChromInfo.Ratios.Count);
                                 AssertNumbersSame(transitionGroupChromInfo.Ratios.Last()?.Ratio,
                                     ratioCalculator.GetTransitionGroupValue(NormalizationMethod.GLOBAL_STANDARDS,
                                         molecule, transitionGroupDocNode, transitionGroupChromInfo));
                             }
                             else
                             {
-                                Assert.AreEqual(ratioCalculator.InternalStandardTypes.Count, transitionGroupChromInfo.Ratios.Count);
+                                AssertEx.AreEqual(ratioCalculator.RatioInternalStandardTypes.Count, transitionGroupChromInfo.Ratios.Count);
                             }
                         }
                     }
@@ -67,12 +67,12 @@ namespace pwiz.SkylineTestUtil
                             {
                                 if (!duplicatePrecursor)
                                 {
-                                    for (int iRatio = 0; iRatio < ratioCalculator.InternalStandardTypes.Count; iRatio++)
+                                    for (int iRatio = 0; iRatio < ratioCalculator.RatioInternalStandardTypes.Count; iRatio++)
                                     {
                                         float? expected = transitionChromInfo.Ratios[iRatio];
                                         float? actual = (float?)ratioCalculator.GetTransitionValue(
                                             new NormalizationMethod.RatioToLabel(
-                                                ratioCalculator.InternalStandardTypes[iRatio]), molecule,
+                                                ratioCalculator.RatioInternalStandardTypes[iRatio]), molecule,
                                             transitionGroupDocNode, transitionDocNode, transitionChromInfo);
 
                                         AssertNumbersSame(expected, actual);
@@ -80,14 +80,14 @@ namespace pwiz.SkylineTestUtil
                                 }
                                 if (hasGlobalStandardArea)
                                 {
-                                    Assert.AreEqual(ratioCalculator.InternalStandardTypes.Count + 1, transitionChromInfo.Ratios.Count);
+                                    Assert.AreEqual(ratioCalculator.RatioInternalStandardTypes.Count + 1, transitionChromInfo.Ratios.Count);
                                     AssertNumbersSame(transitionChromInfo.Ratios.Last(),
                                         ratioCalculator.GetTransitionValue(NormalizationMethod.GLOBAL_STANDARDS,
                                             molecule, transitionGroupDocNode, transitionDocNode, transitionChromInfo));
                                 }
                                 else
                                 {
-                                    Assert.AreEqual(ratioCalculator.InternalStandardTypes.Count, transitionChromInfo.Ratios.Count);
+                                    Assert.AreEqual(ratioCalculator.RatioInternalStandardTypes.Count, transitionChromInfo.Ratios.Count);
                                 }
 
                             }

@@ -5200,6 +5200,16 @@ namespace pwiz.Skyline
         public void NormalizeAreaGraphTo(AreaNormalizeToView areaView)
         {
             AreaGraphController.AreaView = areaView;
+            if (areaView == AreaNormalizeToView.area_ratio_view)
+            {
+                foreach (var areaGraph in _listGraphPeakArea)
+                {
+                    if (!areaGraph.RatioIndex.InternalStandardIndex.HasValue)
+                    {
+                        areaGraph.RatioIndex = RatioIndex.FromInternalStandardIndex(0);
+                    }
+                }
+            }
             if (AreaGraphController.AreaView == AreaNormalizeToView.area_percent_view ||
                 AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view)
                 Settings.Default.AreaLogScale = false;

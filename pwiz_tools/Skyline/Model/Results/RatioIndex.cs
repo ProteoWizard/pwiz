@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.Results
                 yield return CALIBRATED;
             }
 
-            int internalStandardCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
+            int internalStandardCount = settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
             for (int i = 0; i < internalStandardCount; i++)
             {
                 yield return FromInternalStandardIndex(i);
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Model.Results
                 return this;
             }
 
-            var mods = settings.PeptideSettings.Modifications.InternalStandardTypes;
+            var mods = settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
             if (mods.Count == 0)
             {
                 return NONE;
