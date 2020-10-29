@@ -39,7 +39,11 @@ namespace pwiz.Skyline.Model.Results
 
         public double? GetTransitionValue(NormalizationMethod normalizationMethod, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, TransitionDocNode transitionDocNode, TransitionChromInfo transitionChromInfo)
         {
-            if (transitionChromInfo == null)
+            if (!transitionDocNode.IsQuantitative(Document.Settings))
+            {
+                return null;
+            }
+            if (transitionChromInfo == null || transitionChromInfo.IsEmpty)
             {
                 return null;
             }
@@ -73,6 +77,11 @@ namespace pwiz.Skyline.Model.Results
                     return null;
                 }
 
+                if (!otherTransition.IsQuantitative(Document.Settings))
+                {
+                    return null;
+                }
+
                 var otherChrominfo = FindMatchingTransitionChromInfo(transitionChromInfo, otherTransition);
                 if (otherChrominfo == null)
                 {
@@ -83,6 +92,26 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return null;
+        }
+
+        public double? GetTransitionDataValue(RatioIndex ratioIndex, TransitionChromInfoData transitionChromInfoData)
+        {
+            var normalizationMethod = RatioIndexToNormalizationMethod(transitionChromInfoData.PeptideDocNode,
+                transitionChromInfoData.TransitionGroupDocNode, ratioIndex);
+            return GetTransitionValue(normalizationMethod, transitionChromInfoData.PeptideDocNode,
+                transitionChromInfoData.TransitionGroupDocNode, transitionChromInfoData.TransitionDocNode,
+                transitionChromInfoData.ChromInfo);
+        }
+
+        public double? GetTransitionGroupDataValue(RatioIndex ratioIndex,
+            TransitionGroupChromInfoData transitionGroupChromInfoData)
+        {
+            var normalizationMethod = RatioIndexToNormalizationMethod(transitionGroupChromInfoData.PeptideDocNode,
+                transitionGroupChromInfoData.TransitionGroupDocNode, ratioIndex);
+            return GetTransitionGroupValue(normalizationMethod, transitionGroupChromInfoData.PeptideDocNode,
+                transitionGroupChromInfoData.TransitionGroupDocNode,
+                transitionGroupChromInfoData.ChromInfo);
+
         }
 
         public double? GetTransitionGroupValue(NormalizationMethod normalizationMethod, PeptideDocNode peptideDocNode,
@@ -112,20 +141,47 @@ namespace pwiz.Skyline.Model.Results
                     return null;
                 }
 
+                var numerators = new List<double>();
+                var denominators = new List<double>();
                 if (SimpleRatios)
                 {
-                    var otherTransitionGroupChromInfo =
-                        FindMatchingTransitionGroupChromInfo(transitionGroupChromInfo, otherTransitionGroup);
-                    if (otherTransitionGroupChromInfo == null)
+                    // var otherTransitionGroupChromInfo =
+                    //     FindMatchingTransitionGroupChromInfo(transitionGroupChromInfo, otherTransitionGroup);
+                    // if (otherTransitionGroupChromInfo == null)
+                    // {
+                    //     return null;
+                    // }
+                    //
+                    // return transitionGroupChromInfo.Area / otherTransitionGroupChromInfo.Area;
+                    foreach (var tran in transitionGroupDocNode.Transitions.Where(tran =>
+                        tran.IsQuantitative(Document.Settings)))
+                    {
+                        var chromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
+                            transitionGroupChromInfo.OptimizationStep, tran);
+                        if (chromInfo != null)
+                        {
+                            numerators.Add(chromInfo.Area);
+                        }
+                    }
+                    foreach (var tran in otherTransitionGroup.Transitions.Where(tran =>
+                        tran.IsQuantitative(Document.Settings)))
+                    {
+                        var chromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
+                            transitionGroupChromInfo.OptimizationStep, tran);
+                        if (chromInfo != null)
+                        {
+                            denominators.Add(chromInfo.Area);
+                        }
+                    }
+
+                    if (numerators.Count == 0 || denominators.Count == 0)
                     {
                         return null;
                     }
 
-                    return transitionGroupChromInfo.Area / otherTransitionGroupChromInfo.Area;
+                    return numerators.Sum() / denominators.Sum();
                 }
 
-                var numerators = new List<double>();
-                var denominators = new List<double>();
                 var transitionMap = GetTransitionMap(otherTransitionGroup);
                 foreach (var transition in transitionGroupDocNode.Transitions)
                 {
@@ -150,7 +206,7 @@ namespace pwiz.Skyline.Model.Results
                         transitionGroupChromInfo.OptimizationStep, transition);
                     var otherTransitionChromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
                         transitionGroupChromInfo.OptimizationStep, otherTransition);
-                    if (transitionChromInfo == null || otherTransitionChromInfo == null)
+                    if (transitionChromInfo == null || transitionChromInfo.IsEmpty || otherTransitionChromInfo == null || otherTransitionChromInfo.IsEmpty)
                     {
                         continue;
                     }

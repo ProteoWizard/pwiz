@@ -248,7 +248,6 @@ namespace pwiz.Skyline.Controls.Graphs
             var standardType = IsotopeLabelType.light;
 
             var areaView = AreaGraphController.AreaView;
-            // TODO: RatioIndex
             if (areaView == AreaNormalizeToView.area_ratio_view && ratioIndex.InternalStandardIndex.HasValue)
             {
                 ratioIndex = GraphSummary.RatioIndex;
@@ -1165,24 +1164,24 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override bool IsMissingValue(TransitionChromInfoData chromInfo)
             {
-                return !_zeroMissingValues && !GetValue(chromInfo.ChromInfo).HasValue;
+                return !_zeroMissingValues && !GetValue(chromInfo).HasValue;
             }
 
             protected override PointPair CreatePointPair(int iResult, ICollection<TransitionChromInfoData> chromInfoDatas)
             {
                 return ReplicateGroupOp.AggregateOp.MakeBarValue(iResult, 
-                    chromInfoDatas.Where(c => !IsMissingValue(c)).Select(c => (double) (GetValue(c.ChromInfo) ?? 0)));
+                    chromInfoDatas.Where(c => !IsMissingValue(c)).Select(c => (double) (GetValue(c) ?? 0)));
             }
 
             protected override bool IsMissingValue(TransitionGroupChromInfoData chromInfoData)
             {
-                return !GetValue(chromInfoData.ChromInfo).HasValue;
+                return !GetValue(chromInfoData).HasValue;
             }
 
             protected override PointPair CreatePointPair(int iResult, ICollection<TransitionGroupChromInfoData> chromInfoDatas)
             {
                 return ReplicateGroupOp.AggregateOp.MakeBarValue(iResult, 
-                    chromInfoDatas.Select(chromInfoData => (double) (GetValue(chromInfoData.ChromInfo) ?? 0)));
+                    chromInfoDatas.Select(chromInfoData => (double) (GetValue(chromInfoData) ?? 0)));
             }
 
             protected override List<LineInfo> GetPeptidePointPairLists(PeptideDocNode nodePep, bool multiplePeptides)
@@ -1259,28 +1258,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 return new ErrorTag(Math.Sqrt(variance.Value));
             }
 
-            private float? GetValue(TransitionGroupChromInfo chromInfo)
+            private float? GetValue(TransitionGroupChromInfoData chromInfo)
             {
-                if (chromInfo == null)
-                    return null;
-                if (_ratioIndex == RATIO_INDEX_NONE)
-                    return chromInfo.Area;
-                var ratioValue = chromInfo.GetRatio(_ratioIndex);
-                return ratioValue == null ? (float?)null : ratioValue.Ratio;
+                return (float?) RatioCalculator.GetTransitionGroupDataValue(_ratioIndex, chromInfo);
             }
 
-            private float? GetValue(TransitionChromInfo chromInfo)
+            private float? GetValue(TransitionChromInfoData chromInfo)
             {
-                if (chromInfo == null || chromInfo.IsEmpty)
-                    return null;
-                if (_ratioIndex == RATIO_INDEX_NONE)
-                    return chromInfo.Area;
-                // TODO: RatioIndex
-                if (!_ratioIndex.InternalStandardIndex.HasValue)
-                {
-                    return null;
-                }
-                return chromInfo.GetRatio(_ratioIndex.InternalStandardIndex.Value);
+                return (float?) RatioCalculator.GetTransitionDataValue(_ratioIndex, chromInfo);
             }
         }
     }

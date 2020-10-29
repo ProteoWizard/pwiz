@@ -258,6 +258,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
             {
                 _document = document;
+                RatioCalculator = new RatioCalculator(document);
                 _selectedDocNodePaths = ImmutableList.ValueOf(selectedDocNodePaths);
                 _displayType = displayType;
                 ReplicateGroupOp = replicateGroupOp;
@@ -300,7 +301,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 ReplicateGroups = new ReplicateGroup[0];
                 foreach (var docNodePath in _selectedDocNodePaths)
                 {
-                    var docNode = _document.FindNode(docNodePath);
+                    var nodeArray = _document.ToNodeArray(docNodePath);
+                    var docNode = nodeArray.Last();
                     var replicateIndices = Enumerable.Range(0, _document.Settings.MeasuredResults.Chromatograms.Count);
                     // ReSharper disable CanBeReplacedWithTryCastAndCheckForNull
                     if (docNode is TransitionDocNode)
@@ -309,18 +311,19 @@ namespace pwiz.Skyline.Controls.Graphs
                         ReplicateGroups = GetReplicateGroups(replicateIndices).ToArray();
                         docNodes.Add(nodeTran);
                         docNodePaths.Add(docNodePath);
-                        pointPairLists.Add(GetPointPairLists(null, nodeTran, _displayType));
+                        pointPairLists.Add(GetPointPairLists((PeptideDocNode) nodeArray[1], (TransitionGroupDocNode) nodeArray[2], nodeTran, _displayType));
                         docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
                     }
                     else if (docNode is TransitionGroupDocNode)
                     {
                         var nodeGroup = (TransitionGroupDocNode) docNode;
+                        var peptideDocNode = (PeptideDocNode) nodeArray[1];
                         ReplicateGroups = GetReplicateGroups(replicateIndices).ToArray();
                         if (_displayType == DisplayTypeChrom.single || _displayType == DisplayTypeChrom.total)
                         {
                             docNodes.Add(nodeGroup);
                             docNodePaths.Add(docNodePath);
-                            pointPairLists.Add(GetPointPairLists(nodeGroup, _displayType));
+                            pointPairLists.Add(GetPointPairLists(peptideDocNode, nodeGroup, _displayType));
                             docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));
                         }
                         else
@@ -330,7 +333,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             {
                                 docNodes.Add(nodeTran);
                                 docNodePaths.Add(new IdentityPath(docNodePath, nodeTran.Id));
-                                pointPairLists.Add(GetPointPairLists(nodeGroup, nodeTran, _displayType));
+                                pointPairLists.Add(GetPointPairLists(peptideDocNode, nodeGroup, nodeTran, _displayType));
                                 docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
                             }
                         }
@@ -372,6 +375,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Remove groups that don't have any peptides in them
                 RemoveEmptyGroups(docNodes.Count);
             }
+
+            protected RatioCalculator RatioCalculator { get; private set; }
 
             protected virtual bool IncludeTransition(TransitionDocNode transitionDocNode)
             {
@@ -514,7 +519,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         continue;
                     }
-                    pointPairLists.Add(new LineInfo(nodeGroup, ChromGraphItem.GetTitle(nodeGroup), GetPointPairLists(nodeGroup, DisplayTypeChrom.all)));
+                    pointPairLists.Add(new LineInfo(nodeGroup, ChromGraphItem.GetTitle(nodeGroup), GetPointPairLists(nodePep, nodeGroup, DisplayTypeChrom.all)));
                 }
                 return pointPairLists;
             }
@@ -709,16 +714,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
             }
 
-            private List<PointPairList> GetPointPairLists(TransitionGroupDocNode nodeGroup,
-                                                          TransitionDocNode nodeTran,
-                                                          DisplayTypeChrom displayType)
+            private List<PointPairList> GetPointPairLists(PeptideDocNode peptideDocNode,
+                TransitionGroupDocNode nodeGroup,
+                TransitionDocNode nodeTran,
+                DisplayTypeChrom displayType)
             {
                 if (!IncludeTransition(nodeTran))
                 {
                     return new List<PointPairList>();
                 }
+
                 var transitionChromInfoDatas = TransitionChromInfoData.GetTransitionChromInfoDatas(
-                    _document.Settings.MeasuredResults, nodeTran.Results);
+                    _document.Settings.MeasuredResults, peptideDocNode, nodeGroup, nodeTran);
 
                 return MakePointPairLists(displayType, transitionChromInfoDatas, IsMissingValue, CreatePointPair);
             }
@@ -753,11 +760,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 return maxStep*2 + 1;
             }
 
-            private List<PointPairList> GetPointPairLists(TransitionGroupDocNode nodeGroup,
-                                                         DisplayTypeChrom displayType)
+            private List<PointPairList> GetPointPairLists(
+                PeptideDocNode peptideDocNode,
+                TransitionGroupDocNode nodeGroup,
+                DisplayTypeChrom displayType)
             {
                 var transitionGroupChromInfoDatas = TransitionGroupChromInfoData.GetTransitionGroupChromInfoDatas(
-                    _document.Settings.MeasuredResults, nodeGroup.Results);
+                    _document.Settings.MeasuredResults, peptideDocNode, nodeGroup);
                 return MakePointPairLists(displayType, transitionGroupChromInfoDatas, IsMissingValue, CreatePointPair);
             }
 

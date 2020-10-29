@@ -1639,7 +1639,7 @@ namespace pwiz.SkylineTestUtil
             if (null != SkylineWindow)
             {
                 AssertEx.ValidatesAgainstSchema(SkylineWindow.Document);
-                AssertEx.VerifyRatioCalculations(SkylineWindow.Document);
+                RatioCalculatorVerifier.VerifyRatioCalculations(SkylineWindow.Document);
             }
 
             if (doClipboardCheck)
