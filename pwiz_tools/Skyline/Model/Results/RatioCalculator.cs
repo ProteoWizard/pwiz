@@ -52,6 +52,10 @@ namespace pwiz.Skyline.Model.Results
 
             if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
             {
+                if (ratioToLabel.IsotopeLabelTypeName == transitionGroupDocNode.LabelType.Name)
+                {
+                    return null;
+                }
                 if (SimpleRatios)
                 {
                     return null;
@@ -63,7 +67,7 @@ namespace pwiz.Skyline.Model.Results
                     return null;
                 }
 
-                var otherTransition = FindMatchingTransition(transitionDocNode, otherTransitionGroup);
+                var otherTransition = FindMatchingTransition(transitionGroupDocNode, transitionDocNode, otherTransitionGroup);
                 if (otherTransition == null)
                 {
                     return null;
@@ -97,6 +101,10 @@ namespace pwiz.Skyline.Model.Results
 
             if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
             {
+                if (transitionGroupDocNode.LabelType.Name == ratioToLabel.IsotopeLabelTypeName)
+                {
+                    return null;
+                }
                 var otherTransitionGroup =
                     FindMatchingTransitionGroup(ratioToLabel, peptideDocNode, transitionGroupDocNode);
                 if (otherTransitionGroup == null)
@@ -125,9 +133,9 @@ namespace pwiz.Skyline.Model.Results
                     {
                         continue;
                     }
-
+                    var targetKey = new PeptideDocNode.TransitionKey(transitionGroupDocNode, new TransitionLossKey(transitionGroupDocNode, transition, transition.Losses), otherTransitionGroup.LabelType);
                     if (!transitionMap.TryGetValue(
-                        new TransitionLossKey(transitionGroupDocNode, transition, transition.Losses),
+                        targetKey,
                         out TransitionDocNode otherTransition))
                     {
                         continue;
@@ -158,14 +166,14 @@ namespace pwiz.Skyline.Model.Results
 
 
 
-        public TransitionDocNode FindMatchingTransition(TransitionDocNode transitionDocNode,
-            TransitionGroupDocNode transitionGroupDocNode)
+        public TransitionDocNode FindMatchingTransition(TransitionGroupDocNode transitionGroup, TransitionDocNode transitionDocNode,
+            TransitionGroupDocNode otherTransitionGroup)
         {
-            var transitionKey = new TransitionLossKey(transitionGroupDocNode, transitionDocNode, transitionDocNode.Losses);
-            foreach (var otherTransition in transitionGroupDocNode.Transitions)
+            var transitionKey = new PeptideDocNode.TransitionKey(transitionGroup, new TransitionLossKey(transitionGroup, transitionDocNode, transitionDocNode.Losses), otherTransitionGroup.LabelType);
+            foreach (var otherTransition in otherTransitionGroup.Transitions)
             {
-                var otherTransitionKey = new TransitionLossKey(transitionGroupDocNode, otherTransition, otherTransition.Losses);
-                if (Equals(transitionKey, otherTransitionKey))
+                var otherTransitionKey = new PeptideDocNode.TransitionKey(otherTransitionGroup, new TransitionLossKey(otherTransitionGroup, otherTransition, otherTransition.Losses), otherTransitionGroup.LabelType);
+                if (transitionKey.Equals(otherTransitionKey))
                 {
                     return otherTransition;
                 }
@@ -174,11 +182,15 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
-        public IDictionary<TransitionLossKey, TransitionDocNode> GetTransitionMap(
+        public IDictionary<PeptideDocNode.TransitionKey, TransitionDocNode> GetTransitionMap(
             TransitionGroupDocNode transitionGroupDocNode)
         {
             return transitionGroupDocNode.Transitions.ToDictionary(transition =>
-                new TransitionLossKey(transitionGroupDocNode, transition, transition.Losses));
+                new PeptideDocNode.TransitionKey(transitionGroupDocNode,
+                    new TransitionLossKey(transitionGroupDocNode, transition, transition.Losses),
+                    transitionGroupDocNode.LabelType)
+
+            );
         }
 
 
@@ -277,12 +289,12 @@ namespace pwiz.Skyline.Model.Results
         {
             foreach (var otherTransitionGroup in peptideDocNode.TransitionGroups)
             {
-                if (ratioToLabel.Label != otherTransitionGroup.LabelType.Name)
+                if (ratioToLabel.IsotopeLabelTypeName != otherTransitionGroup.LabelType.Name)
                 {
                     continue;
                 }
 
-                if (!Equals(otherTransitionGroup.PrecursorAdduct, transitionGroupDocNode.PrecursorAdduct))
+                if (!Equals(otherTransitionGroup.PrecursorAdduct.Unlabeled, transitionGroupDocNode.PrecursorAdduct.Unlabeled))
                 {
                     continue;
                 }
