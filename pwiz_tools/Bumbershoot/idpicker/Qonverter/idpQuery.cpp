@@ -478,7 +478,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
         else if (bal::contains(pivotMode, "TMT"))
         {
             countColumn = "DISTINCT_DOUBLE_ARRAY_SUM(sq.TMT_ReporterIonIntensities)";
-            whereConstraint = "WHERE QuantitationMethod BETWEEN 4 AND 6 ";
+            whereConstraint = "WHERE QuantitationMethod BETWEEN 4 AND 8 ";
         }
         else if (bal::contains(pivotMode, "PrecursorIntensity"))
             countColumn = "IFNULL(SUM(DISTINCT xic.PeakIntensity), 0)";
@@ -755,7 +755,7 @@ int doQuery(GroupBy groupBy,
                                 outputStream << groupOrSourceName << " (" << header << ")\t";
                         else
                             for(const string& sample : sampleNames)
-                                if (sample != "Reference" && sample != "Empty")
+                                if (!bal::iequals(sample, "Reference") && !bal::iequals(sample, "Empty"))
                                     outputStream << sample << "\t";
 
                         pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
@@ -778,7 +778,7 @@ int doQuery(GroupBy groupBy,
                                 outputStream << groupOrSourceName << " (" << header << ")\t";
                         else
                             for(const string& sample : sampleNames)
-                                if (sample != "Reference" && sample != "Empty")
+                                if (!bal::iequals(sample, "Reference") && !bal::iequals(sample, "Empty"))
                                     outputStream << sample << "\t";
 
                         pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
@@ -964,9 +964,9 @@ int doQuery(GroupBy groupBy,
                                         if (reporterIons.size() != sampleNames.size())
                                             throw runtime_error("sample name count does not match number of reporter ions");
                                         for (size_t k=0; k < sampleNames.size(); ++k)
-                                            if (sampleNames[k] == "Empty")
+                                            if (bal::iequals(sampleNames[k], "Empty"))
                                                 reporterIons[k].empty = true, reporterIons[k].reference = false;
-                                            else if (sampleNames[k] == "Reference")
+                                            else if (bal::iequals(sampleNames[k], "Reference"))
                                                 reporterIons[k].reference = true, reporterIons[k].empty = false;
                                             else
                                                 reporterIons[k].reference = reporterIons[k].empty = false;
@@ -988,9 +988,9 @@ int doQuery(GroupBy groupBy,
                                         if (reporterIons.size() != sampleNames.size())
                                             throw runtime_error("sample name count does not match number of reporter ions");
                                         for (size_t k = 0; k < sampleNames.size(); ++k)
-                                            if (sampleNames[k] == "Empty")
+                                            if (bal::iequals(sampleNames[k], "Empty"))
                                                 reporterIons[k].empty = true, reporterIons[k].reference = false;
-                                            else if (sampleNames[k] == "Reference")
+                                            else if (bal::iequals(sampleNames[k], "Reference"))
                                                 reporterIons[k].reference = true, reporterIons[k].empty = false;
                                             else
                                                 reporterIons[k].reference = reporterIons[k].empty = false;

@@ -79,6 +79,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>obj\$(Platform)\MassSpecDataReader.dll</HintPath>
     </Reference>
+    <Reference Include="SCIEX.Apis.Data.v1">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>obj\$(Platform)\SCIEX.Apis.Data.v1.dll</HintPath>
+    </Reference>
     <Reference Include="pwiz_data_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>obj\$(Platform)\pwiz_data_cli.dll</HintPath>
