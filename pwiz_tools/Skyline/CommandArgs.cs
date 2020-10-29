@@ -1086,10 +1086,18 @@ namespace pwiz.Skyline
             {
                 c.SearchResultsFiles.Add(p.ValueFullPath);
                 c.CutoffScore = c.CutoffScore ?? Settings.Default.LibraryResultCutOff;
-
+                c.IrtStandardName = null;
+                c.NumCirts = null;
+                c.RecalibrateIrts = false;
             });
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF = new Argument(@"import-search-cutoff-score", NUM_VALUE,
             (c, p) => c.CutoffScore = p.GetValueDouble(0, 1));
+        public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_IRTS = new Argument(@"import-search-irts", NAME_VALUE,
+            (c, p) => c.IrtStandardName = p.Value);
+        public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS = new Argument(@"import-search-num-cirts", INT_VALUE,
+            (c, p) => c.NumCirts = p.ValueInt);
+        public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_RECALIBRATE_IRTS = new Argument(@"import-search-recalibrate-irts",
+            (c, p) => c.RecalibrateIrts = true);
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_MODS = new Argument(@"import-search-add-mods",
             (c, p) => c.AcceptAllModifications = true);
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS = new Argument(@"import-search-include-ambiguous",
@@ -1098,12 +1106,15 @@ namespace pwiz.Skyline
             (c, p) => c.PreferEmbeddedSpectra = true);
 
         private static readonly ArgumentGroup GROUP_IMPORT_SEARCH = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches, false, 
-            ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, ARG_IMPORT_PEPTIDE_SEARCH_MODS,
-            ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED)
+            ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, ARG_IMPORT_PEPTIDE_SEARCH_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS,
+            ARG_IMPORT_PEPTIDE_SEARCH_RECALIBRATE_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_MODS, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED)
         {
             Dependencies =
             {
                 { ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
+                { ARG_IMPORT_PEPTIDE_SEARCH_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
+                { ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS, ARG_IMPORT_PEPTIDE_SEARCH_IRTS },
+                { ARG_IMPORT_PEPTIDE_SEARCH_RECALIBRATE_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_IRTS },
                 { ARG_IMPORT_PEPTIDE_SEARCH_MODS, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
                 { ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
                 { ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED, ARG_IMPORT_PEPTIDE_SEARCH_FILE },
@@ -1112,6 +1123,9 @@ namespace pwiz.Skyline
 
         public List<string> SearchResultsFiles { get; private set; }
         public double? CutoffScore { get; private set; }
+        public string IrtStandardName { get; private set; }
+        public int? NumCirts { get; private set; }
+        public bool RecalibrateIrts { get; private set; }
         public bool AcceptAllModifications { get; private set; }
         public bool IncludeAmbiguousMatches { get; private set; }
         public bool? PreferEmbeddedSpectra { get; private set; }

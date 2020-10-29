@@ -336,6 +336,7 @@
             this.MinimizeBox = false;
             this.Name = "BuildLibraryDlg";
             this.ShowInTaskbar = false;
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.BuildLibraryDlg_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelProperties.ResumeLayout(false);
             this.panelProperties.PerformLayout();

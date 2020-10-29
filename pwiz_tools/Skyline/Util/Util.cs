@@ -1478,16 +1478,13 @@ namespace pwiz.Skyline.Util
         /// <param name="value">The string to parse</param>
         /// <param name="defaultValue">The value to return, if parsing fails</param>
         /// <returns>An enum value of type <see cref="TEnum"/></returns>
-        public static TEnum ParseEnum<TEnum>(string value, TEnum defaultValue)
+        public static TEnum ParseEnum<TEnum>(string value, TEnum defaultValue) where TEnum : struct
         {
-            try
+            if (Enum.TryParse(value, true, out TEnum result))
             {
-                return (TEnum)Enum.Parse(typeof(TEnum), value, true);
+                return result;
             }
-            catch (Exception)
-            {
-                return defaultValue;
-            }                            
+            return defaultValue;
         }
 
         /// <summary>

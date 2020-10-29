@@ -322,7 +322,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>サンプルを選択</value>
+    <value>試料を選択</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportResultsSamplesDlg</value>

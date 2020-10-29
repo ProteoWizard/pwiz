@@ -220,7 +220,7 @@
     <value>2</value>
   </data>
   <data name="lblCharge.Text" xml:space="preserve">
-    <value>电荷：</value>
+    <value>电荷(&amp;H)：</value>
   </data>
   <data name="&gt;&gt;lblCharge.Name" xml:space="preserve">
     <value>lblCharge</value>
@@ -293,9 +293,6 @@
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>354, 182</value>
-  </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
