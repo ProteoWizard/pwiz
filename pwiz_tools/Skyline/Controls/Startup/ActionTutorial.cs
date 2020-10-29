@@ -187,7 +187,13 @@ namespace pwiz.Skyline.Controls.Startup
                 var skyFileToOpen = Path.Combine(extractDir ?? string.Empty, SkyFileLocationInZip);
                 foreach (var entry in zip.Entries.ToList())
                 {
-                    entry.FileName = entry.FileName.Substring(entry.FileName.IndexOf('/')); // Gets rid of everything up to and including first '/'.
+                    // Remove top level of directory structure if any - unless it's a data directory
+                    var fname = entry.FileName;
+                    var slashIndex = fname.IndexOf('/');
+                    if (slashIndex > -1 && !DataSourceUtil.IsDataSourceFilename(fname.Substring(0, slashIndex))) // e.g. Don't touch "foo.d/"
+                    {
+                        entry.FileName = fname.Substring(slashIndex); // Gets rid of everything up to and including first '/'.
+                    }
                     if (string.IsNullOrEmpty(entry.FileName))
                     {
                         continue;
@@ -206,9 +212,10 @@ namespace pwiz.Skyline.Controls.Startup
                             throw;
                     }
                 }
+                var hasSkylineFile = !string.IsNullOrEmpty(SkyFileLocationInZip) && !string.IsNullOrEmpty(ExtractPath);
                 Program.MainWindow.BeginInvoke(new Action(() =>
                 {
-                    if (!string.IsNullOrEmpty(SkyFileLocationInZip) && !string.IsNullOrEmpty(ExtractPath))
+                    if (hasSkylineFile)
                     {
                         Program.MainWindow.OpenFile(skyFileToOpen);
                     }
@@ -234,7 +241,20 @@ namespace pwiz.Skyline.Controls.Startup
                         MessageDlg.ShowWithException(Program.MainWindow, message, e);
                     }
                 }));
-               
+
+                // Make it convenient for user to locate tutorial files if we haven't already opened anything
+                if (!hasSkylineFile && !string.IsNullOrEmpty(ExtractPath))
+                {
+                    Directory.SetCurrentDirectory(ExtractPath);
+                    Settings.Default.LibraryDirectory =
+                        Settings.Default.ActiveDirectory =
+                            Settings.Default.ExportDirectory =
+                                Settings.Default.FastaDirectory =
+                                    Settings.Default.LibraryResultsDirectory =
+                                        Settings.Default.SrmResultsDirectory =
+                                            Settings.Default.ProteomeDbDirectory =
+                                                ExtractPath;
+                }
             }
         }
 

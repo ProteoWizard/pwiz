@@ -1021,7 +1021,7 @@ namespace pwiz.SkylineTestUtil
 
         public bool IsSavingCoverShots
         {
-            get { return /* CoverShotName != null*/ false; }
+            get { return IsPauseForCoverShot && CoverShotName != null; }
         }
         public string CoverShotName { get; set; }
 
@@ -1154,14 +1154,25 @@ namespace pwiz.SkylineTestUtil
             Thread.Sleep(1000); // Give windows time to repaint
             var coverSavePath = GetCoverShotPath();
             ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath, ProcessCoverShot);
+            string coverSavePath2 = null;
             if (coverSavePath != null)
             {
                 // Screenshot for the StartPage
-                coverSavePath = GetCoverShotPath(TestContext.GetProjectDirectory(@"Resources\StartPage"), "_start");
-                ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath, ProcessCoverShot, 0.20);
+                coverSavePath2 = GetCoverShotPath(TestContext.GetProjectDirectory(@"Resources\StartPage"), "_start");
+                ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath2, ProcessCoverShot, 0.20);
             }
             if (coverSavePath == null)
+            {
                 PauseTest("Cover shot at 1200 x 800");
+            }
+            else if (coverSavePath2 != null)
+            {
+                PauseTest("Cover shot at 1200 x 800 has been saved as " + coverSavePath + " and as " + coverSavePath2);
+            }
+            else
+            {
+                PauseTest("Cover shot at 1200 x 800 has been saved as " + coverSavePath);
+            }
         }
 
         public void PauseForAuditLog()
@@ -1785,11 +1796,25 @@ namespace pwiz.SkylineTestUtil
             if (hasSavedView)
                 RestoreViewNameOnScreen("cover");
             // Make sure Skyline is the standard size for a cover shot - Window size and screen shot size differ
-            // And center it in the screen to have the best chance of not needing to move it before Alt-PtrSc
+            SetSkylineWindowSize(1200, 800);
+        }
+
+        // Make the Skyline window as large as possible, without actually putting it into
+        // Maximized state which prevents further resizing
+        const int marginW = 14;
+        const int marginH = 7;
+        public void MaximizeSkylineWindow()
+        {
+            SetSkylineWindowSize(int.MaxValue - marginW, int.MaxValue - marginH);
+        }
+
+        // Set the Skyline window size, and center it in the screen to have the best chance of not needing to move it before Alt-PtrSc
+        public void SetSkylineWindowSize(int width, int height)
+        {
             RunUI(() =>
             {
-                var skylineSize = new Size(1200 + 14, 800 + 7);
                 var screenRect = Screen.FromControl(SkylineWindow).Bounds;
+                var skylineSize = new Size(Math.Min(screenRect.Width, width + marginW), Math.Min(screenRect.Height,  height + marginH));
                 var skylineLocation = new Point(screenRect.Left + screenRect.Width / 2 - skylineSize.Width / 2,
                     screenRect.Top + screenRect.Height / 2 - skylineSize.Height / 2);
                 SkylineWindow.Bounds = new Rectangle(skylineLocation, skylineSize);

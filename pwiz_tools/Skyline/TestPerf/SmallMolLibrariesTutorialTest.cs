@@ -20,7 +20,6 @@
 
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
@@ -61,11 +60,10 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
         public void TestSmallMoleculeLibrariesTutorial()
         {
 //            IsPauseForScreenShots = true;
-            RunPerfTests = true;
-            IsPauseForCoverShot = true;
+//            IsPauseForCoverShot = true;
             CoverShotName = "SmallMolLibraries";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeLibraries.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries.pdf";
 
             TestFilesZipPaths = new[]
             {
@@ -94,7 +92,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             //   •	On the Settings menu, click Default.
             //   •	Click No on the form asking if you want to save the current settings.
             RunUI(() => SkylineWindow.ResetDefaultSettings());
-            RunUI(() => SkylineWindow.WindowState = FormWindowState.Maximized);
+            MaximizeSkylineWindow(); // Set the Skyline window large enough to accomodate all windows for screenshots
 
             var doc = SkylineWindow.Document;
 
@@ -395,16 +393,29 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             //   The Full-Scan graph should now look something like this:
             PauseForScreenShot("Full scan graph with IM filtering", 21);
 
-            //Note that if you were interested in lipids that are not present in the current spectral library, you can add to it manually or using LipidCreator. To access the LipidCreator plugin, do the following:
+            if (IsPauseForCoverShot)
+            {
+                RestoreCoverViewOnScreen(false);
+                PauseForCoverShot();
+                return;
+            }
+
+            // Note that if you were interested in lipids that are not present in the current spectral library, you can add to it manually or using LipidCreator. To access the LipidCreator plugin, do the following:
             //   •	From the Tools menu, click Tool Store.
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             //   •	Select LipidCreator.
             var pick = ShowDialog<ToolStoreDlg>(configureToolsDlg.AddFromWeb);
+            var hasLipidCreator = false;
             RunUI(() =>
             {
-                pick.SelectTool("LipidCreator");
+                const string toolName = "LipidCreator";
+                hasLipidCreator = pick.HasTool(toolName);
+                if (hasLipidCreator)
+                {
+                    pick.SelectTool(toolName);
+                }
             });
-            PauseForScreenShot("LipidCreator", 22);
+            PauseForScreenShot(hasLipidCreator ? "LipidCreator in tool store" : "LipidCreator is not installed, do that first then take screen shot", 22);
             RunUI(() => pick.CancelDialog());
             OkDialog(configureToolsDlg, configureToolsDlg.Cancel);
 

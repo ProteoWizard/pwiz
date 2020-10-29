@@ -130,6 +130,37 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        /// <summary>
+        /// Examine a filename to see if it appears to be a data source, or part of a data source directory structure (e.g. Agilent .d)
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns>true if the filename .ext is a recognized data source type, or if filename represents a path containing a directory which is a recognized data source type</returns>
+        public static bool IsDataSourceFilename(string filename)
+        {
+            var extension = filename;
+            var index = filename.LastIndexOf('.'); // Guard against things like foo.bar.raw
+            if (index > -1)
+            {
+                extension = filename.Substring(index);
+            }
+
+            switch (extension.ToLowerInvariant())
+            {
+                case EXT_THERMO_RAW: return true;
+                case EXT_WIFF: return true;
+                case EXT_WIFF2: return true;
+                case EXT_SHIMADZU_RAW: return true;
+                case EXT_MZXML: return true;
+                case EXT_MZDATA: return true;
+                case EXT_MZML: return true;
+                case EXT_MZ5: return true;
+                case EXT_UIMF: return true;
+                case EXT_AGILENT_BRUKER_RAW: return true;
+                default: return false;
+            }
+        }
+
+
         public static bool IsWiffFile(MsDataFileUri fileName)
         {
             MsDataFilePath msDataFilePath = fileName as MsDataFilePath;
