@@ -765,7 +765,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly string NAME = "Name:";
         private static readonly RegexOptions NOCASE = RegexOptions.IgnoreCase;
         private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name): ([A-Z()\[\]0-9]+)/(\d)"); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
-        private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^Num ?Peaks: (\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks"
+        private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^(?:Num ?Peaks|number of peaks): (\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks" and mzVault does its own thing
         private static readonly string COMMENT = "Comment: ";
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ", NOCASE);
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ", NOCASE);
@@ -783,12 +783,13 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_INCHIKEY = new Regex(@"^(?:Synon:.* )?InChIKey: (.*)", NOCASE);
         private static readonly Regex REGEX_INCHI = new Regex(@"^(?:Synon:.* )?InChI: (?:InChI\=)?(.*)", NOCASE);
         private static readonly Regex REGEX_FORMULA = new Regex(@"^Formula: (.*)", NOCASE);
-        private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS#?: (\d+-\d+-\d)", NOCASE); // CONSIDER(bspratt): capture NIST# as well?
+        private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS(?:#?|No): (\d+-\d+-\d)", NOCASE); // CONSIDER(bspratt): capture NIST# as well?
         private static readonly Regex REGEX_KEGG = new Regex(@"^(?:Synon:.* )?KEGG: (.*)", NOCASE);
+        private static readonly Regex REGEX_SMILES = new Regex(@"^(?:Synon:.* )?SMILES: (.*)", NOCASE);
         private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type: (.*)", NOCASE);
         // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
-        private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^PrecursorMz: ([^ ,]+)", NOCASE); 
+        private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z): ([^ ,]+)", NOCASE); 
         private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode: (.*)", NOCASE);
 
         // ReSharper restore LocalizableElement
@@ -830,12 +831,15 @@ namespace pwiz.Skyline.Model.Lib
                         loader.UpdateProgress(status = status.ChangePercentComplete(percentComplete));
                     }
 
+                    // Handle quirky line construction by mzVault msp export
+                    line = HandleMzVaultLineVariant(line, out _);
 
                     // Read until name line
                     if (!line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Accept Name:, NAME:, nAmE: etc
                         continue;
                     Match match = REGEX_NAME.Match(line);
                     var isPeptide = true;
+                    var mzMatchTolerance = 0.01;
                     var isGC = false;
                     if (!match.Success)
                     {
@@ -865,6 +869,7 @@ namespace pwiz.Skyline.Model.Lib
                         lineCount++;
 
                         readChars += line.Length;
+                        line = HandleMzVaultLineVariant(line, out var isMzVault);
 
                         match = REGEX_NUM_PEAKS.Match(line);
                         if (match.Success)
@@ -881,7 +886,7 @@ namespace pwiz.Skyline.Model.Lib
                         match = REGEX_RT_LINE.Match(line); // RT may also be found in comments (originally only in comments)
                         if (match.Success)
                         {
-                            rt = GetRetentionTime(match.Groups[2].Value, !string.IsNullOrEmpty(match.Groups[1].Value)); // RetentionTime: vs RetentionTimeMins:
+                            rt = GetRetentionTime(match.Groups[2].Value, isMzVault || !string.IsNullOrEmpty(match.Groups[1].Value)); // RetentionTime: vs RetentionTimeMins:
                             continue;
                         }
 
@@ -903,6 +908,10 @@ namespace pwiz.Skyline.Model.Lib
                             if (match.Success)
                             {
                                 formula = match.Groups[1].Value;
+                                if (string.Equals(@"unknown", formula, StringComparison.OrdinalIgnoreCase)) // As in mzVault output
+                                {
+                                    formula = null;
+                                }
                                 continue;
                             }
                             match = REGEX_INCHIKEY.Match(line);
@@ -927,6 +936,12 @@ namespace pwiz.Skyline.Model.Lib
                             if (match.Success)
                             {
                                 otherKeys.Add(MoleculeAccessionNumbers.TagKEGG, match.Groups[1].Value);
+                                continue;
+                            }
+                            match = REGEX_SMILES.Match(line);
+                            if (match.Success)
+                            {
+                                otherKeys.Add(MoleculeAccessionNumbers.TagSMILES, match.Groups[1].Value);
                                 continue;
                             }
                             match = REGEX_ADDUCT.Match(line);
@@ -989,6 +1004,18 @@ namespace pwiz.Skyline.Model.Lib
                             ThrowIOException(lineCount, Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
                         else if (line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
                             break;
+
+                        // mzVault quirks
+                        if (line.StartsWith(@"Positive scan"))
+                        {
+                            isPositive = true;
+                            mzMatchTolerance = 0.1;
+                        }
+                        else if (line.StartsWith(@"Negative scan"))
+                        {
+                            isPositive = false;
+                            mzMatchTolerance = 0.1;
+                        }
                     }
 
                     if (formula != null)
@@ -1010,11 +1037,11 @@ namespace pwiz.Skyline.Model.Lib
                     if (charge == 0 && adduct.IsEmpty && precursorMz.HasValue && ! string.IsNullOrEmpty(formula))
                     {
                         var formulaIn = formula;
-                        charge = SmallMoleculeTransitionListReader.ValidateFormulaWithMzAndAdduct(0.01, true,
+                        charge = SmallMoleculeTransitionListReader.ValidateFormulaWithMzAndAdduct(mzMatchTolerance, true,
                             ref formulaIn, ref adduct, new TypedMass(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
                         if (!Equals(formula, formulaIn))
                         {
-                            // We would not expect to adjust the formula in a library ipmort
+                            // We would not expect to adjust the formula in a library import
                             charge = 0;
                             adduct = Adduct.EMPTY;
                         }
@@ -1224,6 +1251,27 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return true;
+        }
+
+        // Deal with mzVault MSP export which tends to emit things like ""MS:1009003|Name = Epirizole"
+        private static string HandleMzVaultLineVariant(string line, out bool isMzVault)
+        {
+            isMzVault = line.StartsWith(@"MS:");
+            if (isMzVault)
+            {
+                var psiEnd = line.IndexOf('|');
+                if (psiEnd > 0)
+                {
+                    line = line.Substring(psiEnd + 1);
+                    var assignment = line.IndexOf(@" = ", StringComparison.Ordinal);
+                    if (assignment > 0)
+                    {
+                        line = line.Substring(0, assignment) + @":" + line.Substring(assignment + 2);
+                    }
+                }
+            }
+
+            return line;
         }
 
         private void ThrowIoExceptionInvalidPeakFormat(long lineCount, int i, string sequence)
