@@ -27,6 +27,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -1341,8 +1342,9 @@ namespace pwiz.Skyline.Controls.SeqNode
         internal readonly bool _showBestReplicate;
         internal readonly int _resultsIndex;
 
-        public DisplaySettings(PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, RatioIndex ratioIndex)
+        public DisplaySettings(RatioCalculator ratioCalculator, PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, RatioIndex ratioIndex)
         {
+            RatioCalculator = ratioCalculator;
             _showBestReplicate = showBestReplicate;
             _resultsIndex = resultsIndex;
             RatioIndex = ratioIndex;
@@ -1359,7 +1361,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public PeptideDocNode NodePep { get; private set; }
 
-        public int Index
+        public int ResultsIndex
         {
             get
             {
@@ -1368,5 +1370,12 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         public RatioIndex RatioIndex { get; private set; }
+
+        public NormalizationMethod NormalizationMethod
+        {
+            get { return RatioCalculator.RatioIndexToNormalizationMethod(NodePep, RatioIndex);  }
+        }
+
+        public RatioCalculator RatioCalculator { get; private set; }
     }
 }

@@ -39,6 +39,18 @@ namespace pwiz.Skyline.Model.Results
             get { return Document.Settings.PeptideSettings.Quantification.SimpleRatios; }
         }
 
+        public double? GetTransitionValue(NormalizationMethod normalizationMethod, PeptideDocNode peptideDocNode,
+            TransitionDocNode transitionDocNode, TransitionChromInfo transitionChromInfo)
+        {
+            if (peptideDocNode == null)
+            {
+                return null;
+            }
+            var transitionGroupDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(transitionDocNode.Transition.Group);
+            return GetTransitionValue(normalizationMethod, peptideDocNode, transitionGroupDocNode, transitionDocNode,
+                transitionChromInfo);
+        }
+
         public double? GetTransitionValue(NormalizationMethod normalizationMethod, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, TransitionDocNode transitionDocNode, TransitionChromInfo transitionChromInfo)
         {
             if (!transitionDocNode.IsQuantitative(Document.Settings))
@@ -132,97 +144,106 @@ namespace pwiz.Skyline.Model.Results
 
             if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
             {
-                if (transitionGroupDocNode.LabelType.Name == ratioToLabel.IsotopeLabelTypeName)
-                {
-                    return null;
-                }
-                var otherTransitionGroup =
-                    FindMatchingTransitionGroup(ratioToLabel, peptideDocNode, transitionGroupDocNode);
-                if (otherTransitionGroup == null)
-                {
-                    return null;
-                }
-
-                var numerators = new List<double>();
-                var denominators = new List<double>();
-                if (SimpleRatios)
-                {
-                    // var otherTransitionGroupChromInfo =
-                    //     FindMatchingTransitionGroupChromInfo(transitionGroupChromInfo, otherTransitionGroup);
-                    // if (otherTransitionGroupChromInfo == null)
-                    // {
-                    //     return null;
-                    // }
-                    //
-                    // return transitionGroupChromInfo.Area / otherTransitionGroupChromInfo.Area;
-                    foreach (var tran in transitionGroupDocNode.Transitions.Where(tran =>
-                        tran.IsQuantitative(Document.Settings)))
-                    {
-                        var chromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
-                            transitionGroupChromInfo.OptimizationStep, tran);
-                        if (chromInfo != null)
-                        {
-                            numerators.Add(chromInfo.Area);
-                        }
-                    }
-                    foreach (var tran in otherTransitionGroup.Transitions.Where(tran =>
-                        tran.IsQuantitative(Document.Settings)))
-                    {
-                        var chromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
-                            transitionGroupChromInfo.OptimizationStep, tran);
-                        if (chromInfo != null)
-                        {
-                            denominators.Add(chromInfo.Area);
-                        }
-                    }
-
-                    if (numerators.Count == 0 || denominators.Count == 0)
-                    {
-                        return null;
-                    }
-
-                    return numerators.Sum() / denominators.Sum();
-                }
-
-                var transitionMap = GetTransitionMap(otherTransitionGroup);
-                foreach (var transition in transitionGroupDocNode.Transitions)
-                {
-                    if (!transition.IsQuantitative(Document.Settings))
-                    {
-                        continue;
-                    }
-                    var targetKey = new PeptideDocNode.TransitionKey(transitionGroupDocNode, new TransitionLossKey(transitionGroupDocNode, transition, transition.Losses), otherTransitionGroup.LabelType);
-                    if (!transitionMap.TryGetValue(
-                        targetKey,
-                        out TransitionDocNode otherTransition))
-                    {
-                        continue;
-                    }
-
-                    if (!otherTransition.IsQuantitative(Document.Settings))
-                    {
-                        continue;
-                    }
-
-                    var transitionChromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
-                        transitionGroupChromInfo.OptimizationStep, transition);
-                    var otherTransitionChromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
-                        transitionGroupChromInfo.OptimizationStep, otherTransition);
-                    if (transitionChromInfo == null || transitionChromInfo.IsEmpty || otherTransitionChromInfo == null || otherTransitionChromInfo.IsEmpty)
-                    {
-                        continue;
-                    }
-                    numerators.Add(transitionChromInfo.Area);
-                    denominators.Add(otherTransitionChromInfo.Area);
-                }
-
-                return RatioValue.Calculate(numerators, denominators)?.Ratio;
+                return GetTransitionGroupRatioValue(ratioToLabel, peptideDocNode, transitionGroupDocNode, transitionGroupChromInfo)?.Ratio;
             }
 
             return null;
         }
 
+        public RatioValue GetTransitionGroupRatioValue(NormalizationMethod.RatioToLabel ratioToLabel,
+            PeptideDocNode peptideDocNode,
+            TransitionGroupDocNode transitionGroupDocNode, TransitionGroupChromInfo transitionGroupChromInfo)
+        {
+            if (peptideDocNode == null)
+            {
+                return null;
+            }
+            if (transitionGroupDocNode.LabelType.Name == ratioToLabel.IsotopeLabelTypeName)
+            {
+                return null;
+            }
+            var otherTransitionGroup =
+                FindMatchingTransitionGroup(ratioToLabel, peptideDocNode, transitionGroupDocNode);
+            if (otherTransitionGroup == null)
+            {
+                return null;
+            }
 
+            var numerators = new List<double>();
+            var denominators = new List<double>();
+            if (SimpleRatios)
+            {
+                // var otherTransitionGroupChromInfo =
+                //     FindMatchingTransitionGroupChromInfo(transitionGroupChromInfo, otherTransitionGroup);
+                // if (otherTransitionGroupChromInfo == null)
+                // {
+                //     return null;
+                // }
+                //
+                // return transitionGroupChromInfo.Area / otherTransitionGroupChromInfo.Area;
+                foreach (var tran in transitionGroupDocNode.Transitions.Where(tran =>
+                    tran.IsQuantitative(Document.Settings)))
+                {
+                    var chromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
+                        transitionGroupChromInfo.OptimizationStep, tran);
+                    if (chromInfo != null)
+                    {
+                        numerators.Add(chromInfo.Area);
+                    }
+                }
+                foreach (var tran in otherTransitionGroup.Transitions.Where(tran =>
+                    tran.IsQuantitative(Document.Settings)))
+                {
+                    var chromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
+                        transitionGroupChromInfo.OptimizationStep, tran);
+                    if (chromInfo != null)
+                    {
+                        denominators.Add(chromInfo.Area);
+                    }
+                }
+
+                if (numerators.Count == 0 || denominators.Count == 0)
+                {
+                    return null;
+                }
+
+                return RatioValue.ValueOf(numerators.Sum() / denominators.Sum());
+            }
+
+            var transitionMap = GetTransitionMap(otherTransitionGroup);
+            foreach (var transition in transitionGroupDocNode.Transitions)
+            {
+                if (!transition.IsQuantitative(Document.Settings))
+                {
+                    continue;
+                }
+                var targetKey = new PeptideDocNode.TransitionKey(transitionGroupDocNode, new TransitionLossKey(transitionGroupDocNode, transition, transition.Losses), otherTransitionGroup.LabelType);
+                if (!transitionMap.TryGetValue(
+                    targetKey,
+                    out TransitionDocNode otherTransition))
+                {
+                    continue;
+                }
+
+                if (!otherTransition.IsQuantitative(Document.Settings))
+                {
+                    continue;
+                }
+
+                var transitionChromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
+                    transitionGroupChromInfo.OptimizationStep, transition);
+                var otherTransitionChromInfo = FindMatchingTransitionChromInfo(transitionGroupChromInfo.FileId,
+                    transitionGroupChromInfo.OptimizationStep, otherTransition);
+                if (transitionChromInfo == null || transitionChromInfo.IsEmpty || otherTransitionChromInfo == null || otherTransitionChromInfo.IsEmpty)
+                {
+                    continue;
+                }
+                numerators.Add(transitionChromInfo.Area);
+                denominators.Add(otherTransitionChromInfo.Area);
+            }
+
+            return RatioValue.Calculate(numerators, denominators);
+        }
 
         public TransitionDocNode FindMatchingTransition(TransitionGroupDocNode transitionGroup, TransitionDocNode transitionDocNode,
             TransitionGroupDocNode otherTransitionGroup)

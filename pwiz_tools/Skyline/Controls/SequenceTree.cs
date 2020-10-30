@@ -1311,7 +1311,7 @@ namespace pwiz.Skyline.Controls
 
         public DisplaySettings GetDisplaySettings(PeptideDocNode nodePep)
         {
-            return new DisplaySettings(nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, RatioIndex); //, PeptidesDisplayMode); 
+            return new DisplaySettings(new RatioCalculator(Document), nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, RatioIndex); //, PeptidesDisplayMode); 
         }
 
         public Rectangle RectToScreen(Rectangle r)

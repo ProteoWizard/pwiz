@@ -21,7 +21,6 @@ using System.Diagnostics;
 using System.Drawing;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -85,7 +84,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
 // ReSharper restore RedundantCheckBeforeAssignment
-            string label = DisplayText(DocNode, SequenceTree.GetDisplaySettings(PepNode));
+            string label = DisplayText(SequenceTree.GetDisplaySettings(PepNode), DocNode);
             if (!Equals(label, Text))
                 Text = label;
             ForeColor = DocNode.ExplicitQuantitative ? SystemColors.WindowText : SystemColors.GrayText;
@@ -149,14 +148,14 @@ namespace pwiz.Skyline.Controls.SeqNode
             return (int)SequenceTree.StateImageId.peak;
         }
 
-        public static string DisplayText(TransitionDocNode nodeTran, DisplaySettings settings)
+        public static string DisplayText(DisplaySettings settings, TransitionDocNode nodeTran)
         {
-            return GetLabel(nodeTran, GetResultsText(nodeTran, settings.Index, settings.RatioIndex));
+            return GetLabel(nodeTran, GetResultsText(settings, nodeTran));
         }
 
-        private static string GetResultsText(TransitionDocNode nodeTran, int index, RatioIndex indexRatio)
+        private static string GetResultsText(DisplaySettings displaySettings, TransitionDocNode nodeTran)
         {
-            int? rank = nodeTran.GetPeakRankByLevel(index);
+            int? rank = nodeTran.GetPeakRankByLevel(displaySettings.ResultsIndex);
             string label = string.Empty;
             if (rank.HasValue && rank > 0)
             {
@@ -165,12 +164,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                 label = string.Format(Resources.TransitionTreeNode_GetResultsText__0__, rankText);
             }
 
-            float? ratio = null;
-            if (indexRatio.InternalStandardIndex.HasValue)
-            {
-                // TODO: RatioIndex
-                ratio = nodeTran.GetPeakAreaRatio(index, indexRatio.InternalStandardIndex.Value);
-            }
+            float? ratio = (float?) displaySettings.RatioCalculator.GetTransitionValue(displaySettings.NormalizationMethod,
+                displaySettings.NodePep, nodeTran,
+                nodeTran.GetChromInfoEntry(displaySettings.ResultsIndex));
             if (!ratio.HasValue)
                 return label;
 

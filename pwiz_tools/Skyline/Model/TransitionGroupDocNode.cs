@@ -342,7 +342,7 @@ namespace pwiz.Skyline.Model
         }
 
 
-        private TransitionGroupChromInfo GetChromInfoEntry(int i)
+        public TransitionGroupChromInfo GetChromInfoEntry(int i)
         {
             var result = GetSafeChromInfo(i);
             // CONSIDER: Also specify the file index and/or optimization step?
@@ -479,23 +479,6 @@ namespace pwiz.Skyline.Model
                                                               ? chromInfo.LibraryDotProduct
                                                               : (float?) null);
             }
-        }
-
-        public RatioValue GetPeakAreaRatio(int i, RatioIndex ratioIndex)
-        {
-            if (!ratioIndex.InternalStandardIndex.HasValue)
-            {
-                // TODO: handle other values
-                return null;
-            }
-            // CONSIDER: Also specify the file index?
-            var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo == null)
-            {
-                return null;
-            }
-
-            return chromInfo.GetRatio(ratioIndex);
         }
 
         public class ScheduleTimes        
