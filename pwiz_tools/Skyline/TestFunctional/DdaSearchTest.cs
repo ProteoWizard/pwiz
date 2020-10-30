@@ -220,10 +220,10 @@ namespace pwiz.SkylineTestFunctional
                     if (RecordAuditLogs)
                     {
                         Console.WriteLine();
-                        Console.WriteLine($"Assert.AreEqual({proteinCount}, proteinCount);");
-                        Console.WriteLine($"Assert.AreEqual({peptideCount}, peptideCount);");
-                        Console.WriteLine($"Assert.AreEqual({precursorCount}, precursorCount);");
-                        Console.WriteLine($"Assert.AreEqual({transitionCount}, transitionCount);");
+                        Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");
+                        Console.WriteLine($@"Assert.AreEqual({peptideCount}, peptideCount);");
+                        Console.WriteLine($@"Assert.AreEqual({precursorCount}, precursorCount);");
+                        Console.WriteLine($@"Assert.AreEqual({transitionCount}, transitionCount);");
                     }
                     else
                     {
@@ -238,10 +238,10 @@ namespace pwiz.SkylineTestFunctional
                 {
                     if (RecordAuditLogs)
                     {
-                        Console.WriteLine($"Assert.AreEqual({proteinCount}, proteinCount);");
-                        Console.WriteLine($"Assert.AreEqual({peptideCount}, peptideCount);");
-                        Console.WriteLine($"Assert.AreEqual({precursorCount}, precursorCount);");
-                        Console.WriteLine($"Assert.AreEqual({transitionCount}, transitionCount);");
+                        Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");
+                        Console.WriteLine($@"Assert.AreEqual({peptideCount}, peptideCount);");
+                        Console.WriteLine($@"Assert.AreEqual({precursorCount}, precursorCount);");
+                        Console.WriteLine($@"Assert.AreEqual({transitionCount}, transitionCount);");
                     }
                     else
                     {
