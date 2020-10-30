@@ -116,6 +116,14 @@ namespace pwiz.SkylineTestFunctional
                 editModDlg.Modification = new StaticMod("NotUniModMod (U)", "U", null, "C3P1O1", LabelAtoms.None, null, null);
                 editModDlg.OkDialog();
             });
+
+            // Test a terminal mod with no AA
+            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+            {
+                editModDlg.Modification = new StaticMod("NotUniModMod (N-term)", null, ModTerminus.N, "H1", LabelAtoms.None, null, null);
+                editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
+                editModDlg.OkDialog();
+            });
             OkDialog(editListUI, editListUI.OkDialog);
 
             // Test back/next buttons
@@ -150,7 +158,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
-                importPeptideSearchDlg.SearchSettingsControl.SetPrecursorTolerance(new MzTolerance(10, MzTolerance.Units.ppm));
+                importPeptideSearchDlg.SearchSettingsControl.SetPrecursorTolerance(new MzTolerance(15, MzTolerance.Units.ppm));
                 importPeptideSearchDlg.SearchSettingsControl.SetFragmentTolerance(new MzTolerance(25, MzTolerance.Units.ppm));
                 importPeptideSearchDlg.SearchSettingsControl.SetFragmentIons("b, y");
 
@@ -192,7 +200,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, false); // uncheck C+57
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(1, true); // check M+16
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(2, true); // check U+C3P0
-
+                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(3, true); // check H+1
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -209,18 +217,39 @@ namespace pwiz.SkylineTestFunctional
                 if (Environment.Is64BitProcess)
                 {
                     // TODO: reenable these checks for 32 bit once intermittent failures are debugged
-                    Assert.AreEqual(1131, proteinCount);
-                    Assert.AreEqual(61, peptideCount);
-                    Assert.AreEqual(61, precursorCount);
-                    Assert.AreEqual(183, transitionCount);
+                    if (RecordAuditLogs)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");
+                        Console.WriteLine($@"Assert.AreEqual({peptideCount}, peptideCount);");
+                        Console.WriteLine($@"Assert.AreEqual({precursorCount}, precursorCount);");
+                        Console.WriteLine($@"Assert.AreEqual({transitionCount}, transitionCount);");
+                    }
+                    else
+                    {
+                        Assert.AreEqual(1131, proteinCount);
+                        Assert.AreEqual(111, peptideCount);
+                        Assert.AreEqual(111, precursorCount);
+                        Assert.AreEqual(333, transitionCount);
+                    }
                 }
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (Environment.Is64BitProcess)
                 {
-                    Assert.AreEqual(57, proteinCount);
-                    Assert.AreEqual(61, peptideCount);
-                    Assert.AreEqual(61, precursorCount);
-                    Assert.AreEqual(183, transitionCount);
+                    if (RecordAuditLogs)
+                    {
+                        Console.WriteLine($@"Assert.AreEqual({proteinCount}, proteinCount);");
+                        Console.WriteLine($@"Assert.AreEqual({peptideCount}, peptideCount);");
+                        Console.WriteLine($@"Assert.AreEqual({precursorCount}, precursorCount);");
+                        Console.WriteLine($@"Assert.AreEqual({transitionCount}, transitionCount);");
+                    }
+                    else
+                    {
+                        Assert.AreEqual(97, proteinCount);
+                        Assert.AreEqual(111, peptideCount);
+                        Assert.AreEqual(111, precursorCount);
+                        Assert.AreEqual(333, transitionCount);
+                    }
                 }
                 emptyProteinsDlg.OkDialog();
             });
