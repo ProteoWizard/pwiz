@@ -204,7 +204,7 @@ namespace pwiz.Skyline.Util
                 {
                     // No leading + or - : is it because description starts with a label, or because + mode is implied?
                     var limit = input.IndexOfAny(new[] { '+', '-', ']' });
-                    if (limit <= posNext)
+                    if (limit < 0)
                     {
                         return null;
                     }
