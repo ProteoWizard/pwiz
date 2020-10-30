@@ -15,7 +15,7 @@ namespace pwiz.SkylineTestUtil
     {
         public static void VerifyRatioCalculations(SrmDocument doc)
         {
-            var ratioCalculator = new RatioCalculator(doc);
+            var ratioCalculator = new RatioCalculator(doc) {BugCompatibility = true};
             bool hasGlobalStandardArea = doc.Settings.HasGlobalStandardArea;
             foreach (var molecule in doc.Molecules)
             {
@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestUtil
                             foreach (var transitionChromInfo in transitionDocNode.Results.SelectMany(results => results)
                             )
                             {
-                                if (!duplicatePrecursor)
+                                if (!duplicatePrecursor && transitionChromInfo.OptimizationStep == 0)
                                 {
                                     for (int iRatio = 0; iRatio < ratioCalculator.RatioInternalStandardTypes.Count; iRatio++)
                                     {

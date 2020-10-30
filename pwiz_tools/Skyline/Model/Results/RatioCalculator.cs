@@ -30,6 +30,8 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public bool BugCompatibility { get; set; }
+
         public SrmDocument Document { get; private set; }
 
         public bool SimpleRatios
@@ -286,7 +288,7 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                if (otherChromInfo.OptimizationStep != optimizationStep)
+                if (otherChromInfo.OptimizationStep != 0)
                 {
                     continue;
                 }
