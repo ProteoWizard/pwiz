@@ -49,7 +49,11 @@
             this.label2 = new System.Windows.Forms.Label();
             this.btnAnalysisPath = new System.Windows.Forms.Button();
             this.tabReports = new System.Windows.Forms.TabPage();
-            this.btnAddReport = new System.Windows.Forms.Button();
+            this.toolBar = new System.Windows.Forms.ToolStrip();
+            this.btnAddReport = new System.Windows.Forms.ToolStripButton();
+            this.btnDeleteReport = new System.Windows.Forms.ToolStripButton();
+            this.btnEditReport = new System.Windows.Forms.ToolStripButton();
+            this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
             this.gridReportSettings = new System.Windows.Forms.DataGridView();
             this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -67,6 +71,7 @@
             this.tabSettings.SuspendLayout();
             this.groupBoxMain.SuspendLayout();
             this.tabReports.SuspendLayout();
+            this.toolBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -106,7 +111,7 @@
             // linkLabel1
             // 
             this.linkLabel1.AutoSize = true;
-            this.linkLabel1.LinkArea = new System.Windows.Forms.LinkArea(26, 18);
+            this.linkLabel1.LinkArea = new System.Windows.Forms.LinkArea(27, 18);
             this.linkLabel1.Location = new System.Drawing.Point(21, 214);
             this.linkLabel1.Name = "linkLabel1";
             this.linkLabel1.Size = new System.Drawing.Size(237, 17);
@@ -261,7 +266,7 @@
             // 
             // tabReports
             // 
-            this.tabReports.Controls.Add(this.btnAddReport);
+            this.tabReports.Controls.Add(this.toolBar);
             this.tabReports.Controls.Add(this.gridReportSettings);
             this.tabReports.Location = new System.Drawing.Point(4, 28);
             this.tabReports.Name = "tabReports";
@@ -271,16 +276,62 @@
             this.tabReports.Text = "Reports";
             this.tabReports.UseVisualStyleBackColor = true;
             // 
+            // toolBar
+            // 
+            this.toolBar.AllowMerge = false;
+            this.toolBar.Dock = System.Windows.Forms.DockStyle.Right;
+            this.toolBar.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnAddReport,
+            this.btnDeleteReport,
+            this.btnEditReport});
+            this.toolBar.Location = new System.Drawing.Point(501, 3);
+            this.toolBar.Name = "toolBar";
+            this.toolBar.Size = new System.Drawing.Size(32, 427);
+            this.toolBar.TabIndex = 4;
+            this.toolBar.Text = "toolStrip1";
+            // 
             // btnAddReport
             // 
-            this.btnAddReport.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAddReport.Location = new System.Drawing.Point(223, 401);
+            this.btnAddReport.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnAddReport.Image = ((System.Drawing.Image)(resources.GetObject("btnAddReport.Image")));
+            this.btnAddReport.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnAddReport.Name = "btnAddReport";
-            this.btnAddReport.Size = new System.Drawing.Size(93, 26);
-            this.btnAddReport.TabIndex = 1;
-            this.btnAddReport.Text = "&Add Report";
-            this.btnAddReport.UseVisualStyleBackColor = true;
+            this.btnAddReport.Size = new System.Drawing.Size(29, 20);
+            this.btnAddReport.Text = "toolStripButton1";
+            this.btnAddReport.ToolTipText = "Add";
             this.btnAddReport.Click += new System.EventHandler(this.btnAddReport_Click);
+            // 
+            // btnDeleteReport
+            // 
+            this.btnDeleteReport.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnDeleteReport.Enabled = false;
+            this.btnDeleteReport.Image = ((System.Drawing.Image)(resources.GetObject("btnDeleteReport.Image")));
+            this.btnDeleteReport.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnDeleteReport.Name = "btnDeleteReport";
+            this.btnDeleteReport.Size = new System.Drawing.Size(29, 20);
+            this.btnDeleteReport.Text = "toolStripButton2";
+            this.btnDeleteReport.ToolTipText = "Remove";
+            this.btnDeleteReport.Click += new System.EventHandler(this.btnDeleteReport_Click);
+            // 
+            // btnEditReport
+            // 
+            this.btnEditReport.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnEditReport.Enabled = false;
+            this.btnEditReport.Image = ((System.Drawing.Image)(resources.GetObject("btnEditReport.Image")));
+            this.btnEditReport.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnEditReport.Name = "btnEditReport";
+            this.btnEditReport.Size = new System.Drawing.Size(29, 20);
+            this.btnEditReport.Text = "toolStripButton3";
+            this.btnEditReport.ToolTipText = "Edit";
+            this.btnEditReport.Click += new System.EventHandler(this.btnEditReport_Click);
+            // 
+            // imageListToolbarIcons
+            // 
+            this.imageListToolbarIcons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageListToolbarIcons.ImageStream")));
+            this.imageListToolbarIcons.TransparentColor = System.Drawing.Color.Transparent;
+            this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
+            this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
             // 
             // gridReportSettings
             // 
@@ -294,9 +345,11 @@
             this.gridReportSettings.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridReportSettings.Location = new System.Drawing.Point(3, 6);
             this.gridReportSettings.Name = "gridReportSettings";
-            this.gridReportSettings.Size = new System.Drawing.Size(530, 375);
+            this.gridReportSettings.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.gridReportSettings.Size = new System.Drawing.Size(497, 421);
             this.gridReportSettings.TabIndex = 0;
             this.gridReportSettings.TabStop = false;
+            this.gridReportSettings.SelectionChanged += new System.EventHandler(this.gridReportSettings_SelectionChanged);
             // 
             // columnName
             // 
@@ -390,6 +443,9 @@
             this.groupBoxMain.ResumeLayout(false);
             this.groupBoxMain.PerformLayout();
             this.tabReports.ResumeLayout(false);
+            this.tabReports.PerformLayout();
+            this.toolBar.ResumeLayout(false);
+            this.toolBar.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridReportSettings)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -424,9 +480,13 @@
         private System.Windows.Forms.LinkLabel linkLabel1;
         private System.Windows.Forms.TabPage tabReports;
         private System.Windows.Forms.DataGridView gridReportSettings;
-        private System.Windows.Forms.Button btnAddReport;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnName;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPath;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnScripts;
+        private System.Windows.Forms.ImageList imageListToolbarIcons;
+        private System.Windows.Forms.ToolStrip toolBar;
+        private System.Windows.Forms.ToolStripButton btnAddReport;
+        private System.Windows.Forms.ToolStripButton btnDeleteReport;
+        private System.Windows.Forms.ToolStripButton btnEditReport;
     }
 }

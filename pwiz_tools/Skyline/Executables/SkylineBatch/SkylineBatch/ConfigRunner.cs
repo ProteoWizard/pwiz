@@ -37,7 +37,7 @@ namespace SkylineBatch
         private readonly IMainUiControl _uiControl;
         private ISkylineBatchLogger _logger;
 
-        private AsyncOperation asyncRunnerStatusChanged;
+        //private AsyncOperation asyncRunnerStatusChanged;
         
 
         public SkylineBatchConfig Config { get; private set; }
@@ -56,7 +56,7 @@ namespace SkylineBatch
             Error
         }
 
-        public ConfigRunner(SkylineBatchConfig config, IMainUiControl uiControl, ISkylineBatchLogger logger)
+        public ConfigRunner(SkylineBatchConfig config, ISkylineBatchLogger logger, IMainUiControl uiControl = null)
         {
             _runnerStatus = RunnerStatus.Stopped;
 
@@ -66,16 +66,7 @@ namespace SkylineBatch
 
             _logger = logger;
 
-            asyncRunnerStatusChanged = AsyncOperationManager.CreateOperation(null);
-        }
-
-        public ConfigRunner(SkylineBatchConfig config, ISkylineBatchLogger logger)
-        {
-            _runnerStatus = RunnerStatus.Stopped;
-
-            Config = config;
-
-            _logger = logger;
+            //asyncRunnerStatusChanged = AsyncOperationManager.CreateOperation(null);
         }
 
         public RunnerStatus GetStatus()

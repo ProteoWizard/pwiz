@@ -35,6 +35,7 @@
             this.btnExportConfigs = new System.Windows.Forms.Button();
             this.btnImportConfigs = new System.Windows.Forms.Button();
             this.btnRunBatch = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
             this.systray_icon = new System.Windows.Forms.NotifyIcon(this.components);
             this.cb_minimizeToSysTray = new System.Windows.Forms.CheckBox();
             this.textBoxSkylinePath = new System.Windows.Forms.TextBox();
@@ -48,7 +49,6 @@
             this.tabLog = new System.Windows.Forms.TabPage();
             this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.tabFront = new System.Windows.Forms.TabPage();
-            this.btnDownArrow = new System.Windows.Forms.Button();
             this.listViewConfigs = new System.Windows.Forms.ListView();
             this.listViewConfigName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.listViewCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -58,7 +58,6 @@
             this.btnRunOptions = new System.Windows.Forms.Button();
             this.lblNoConfigs = new System.Windows.Forms.Label();
             this.btnNewConfig = new System.Windows.Forms.Button();
-            this.btnUpArrow = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnViewLog1 = new System.Windows.Forms.Button();
             this.btnEdit = new System.Windows.Forms.Button();
@@ -70,13 +69,16 @@
             this.startFromStepTwo = new System.Windows.Forms.ToolStripMenuItem();
             this.startFromStepThree = new System.Windows.Forms.ToolStripMenuItem();
             this.startFromStepFour = new System.Windows.Forms.ToolStripMenuItem();
-            this.btnCancel = new System.Windows.Forms.Button();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.btnUpArrow = new System.Windows.Forms.ToolStripButton();
+            this.btnDownArrow = new System.Windows.Forms.ToolStripButton();
             this.tabLog.SuspendLayout();
             this.tabFront.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.batchRunDropDown.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // cb_keepRunning
@@ -123,10 +125,21 @@
             this.btnRunBatch.UseVisualStyleBackColor = true;
             this.btnRunBatch.Click += new System.EventHandler(this.btnRunBatch_Click);
             // 
+            // btnCancel
+            // 
+            this.btnCancel.Location = new System.Drawing.Point(46, 442);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.TabIndex = 12;
+            this.btnCancel.Text = "S&top";
+            this.toolTip_MainForm.SetToolTip(this.btnCancel, "Import saved configurations...");
+            this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            // 
             // systray_icon
             // 
             this.systray_icon.Icon = ((System.Drawing.Icon)(resources.GetObject("systray_icon.Icon")));
-            this.systray_icon.Text = "AutoQC Loader";
+            this.systray_icon.Text = "SkylineBatch";
             this.systray_icon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.systray_icon_MouseDoubleClick);
             // 
             // cb_minimizeToSysTray
@@ -251,11 +264,9 @@
             // tabFront
             // 
             this.tabFront.BackColor = System.Drawing.Color.Transparent;
-            this.tabFront.Controls.Add(this.btnDownArrow);
             this.tabFront.Controls.Add(this.listViewConfigs);
             this.tabFront.Controls.Add(this.labelSavedConfigurations);
             this.tabFront.Controls.Add(this.panel2);
-            this.tabFront.Controls.Add(this.btnUpArrow);
             this.tabFront.Controls.Add(this.panel1);
             this.tabFront.Location = new System.Drawing.Point(4, 22);
             this.tabFront.Name = "tabFront";
@@ -263,16 +274,6 @@
             this.tabFront.Size = new System.Drawing.Size(731, 525);
             this.tabFront.TabIndex = 0;
             this.tabFront.Text = "Configurations";
-            // 
-            // btnDownArrow
-            // 
-            this.btnDownArrow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDownArrow.Location = new System.Drawing.Point(593, 83);
-            this.btnDownArrow.Name = "btnDownArrow";
-            this.btnDownArrow.Size = new System.Drawing.Size(21, 23);
-            this.btnDownArrow.TabIndex = 15;
-            this.btnDownArrow.UseVisualStyleBackColor = true;
-            this.btnDownArrow.Click += new System.EventHandler(this.btnDownArrow_Click);
             // 
             // listViewConfigs
             // 
@@ -288,7 +289,7 @@
             this.listViewConfigs.Location = new System.Drawing.Point(48, 54);
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
-            this.listViewConfigs.Size = new System.Drawing.Size(539, 347);
+            this.listViewConfigs.Size = new System.Drawing.Size(538, 347);
             this.listViewConfigs.TabIndex = 7;
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
@@ -302,7 +303,7 @@
             // listViewCreated
             // 
             this.listViewCreated.Text = "Created";
-            this.listViewCreated.Width = 80;
+            this.listViewCreated.Width = 78;
             // 
             // listViewStatus
             // 
@@ -362,19 +363,10 @@
             this.btnNewConfig.UseVisualStyleBackColor = true;
             this.btnNewConfig.Click += new System.EventHandler(this.btnNewConfig_Click);
             // 
-            // btnUpArrow
-            // 
-            this.btnUpArrow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnUpArrow.Location = new System.Drawing.Point(593, 54);
-            this.btnUpArrow.Name = "btnUpArrow";
-            this.btnUpArrow.Size = new System.Drawing.Size(21, 23);
-            this.btnUpArrow.TabIndex = 14;
-            this.btnUpArrow.UseVisualStyleBackColor = true;
-            this.btnUpArrow.Click += new System.EventHandler(this.btnUpArrow_Click);
-            // 
             // panel1
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.Controls.Add(this.toolStrip1);
             this.panel1.Controls.Add(this.btnCancel);
             this.panel1.Controls.Add(this.btnImportConfigs);
             this.panel1.Controls.Add(this.btnExportConfigs);
@@ -477,16 +469,44 @@
             this.startFromStepFour.Size = new System.Drawing.Size(252, 22);
             this.startFromStepFour.Text = "Run from step 4: run R scripts";
             // 
-            // btnCancel
+            // toolStrip1
             // 
-            this.btnCancel.Location = new System.Drawing.Point(46, 442);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 12;
-            this.btnCancel.Text = "S&top";
-            this.toolTip_MainForm.SetToolTip(this.btnCancel, "Import saved configurations...");
-            this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            this.toolStrip1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnUpArrow,
+            this.btnDownArrow});
+            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
+            this.toolStrip1.Location = new System.Drawing.Point(4, 19);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.Size = new System.Drawing.Size(32, 67);
+            this.toolStrip1.TabIndex = 14;
+            this.toolStrip1.Text = "toolStrip1";
+            // 
+            // btnUpArrow
+            // 
+            this.btnUpArrow.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnUpArrow.Enabled = false;
+            this.btnUpArrow.Image = global::SkylineBatch.Properties.Resources.up_pro32;
+            this.btnUpArrow.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnUpArrow.Name = "btnUpArrow";
+            this.btnUpArrow.Size = new System.Drawing.Size(30, 20);
+            this.btnUpArrow.Text = "toolStripButton1";
+            this.btnUpArrow.ToolTipText = "Up";
+            this.btnUpArrow.Click += new System.EventHandler(this.btnUpArrow_Click);
+            // 
+            // btnDownArrow
+            // 
+            this.btnDownArrow.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnDownArrow.Enabled = false;
+            this.btnDownArrow.Image = ((System.Drawing.Image)(resources.GetObject("btnDownArrow.Image")));
+            this.btnDownArrow.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnDownArrow.Name = "btnDownArrow";
+            this.btnDownArrow.Size = new System.Drawing.Size(30, 20);
+            this.btnDownArrow.Text = "toolStripButton2";
+            this.btnDownArrow.ToolTipText = "Down";
+            this.btnDownArrow.Click += new System.EventHandler(this.btnDownArrow_Click);
             // 
             // MainForm
             // 
@@ -506,8 +526,11 @@
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
             this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.tabMain.ResumeLayout(false);
             this.batchRunDropDown.ResumeLayout(false);
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -544,8 +567,6 @@
         private System.Windows.Forms.ListView listViewConfigs;
         private System.Windows.Forms.ColumnHeader listViewConfigName;
         private System.Windows.Forms.ColumnHeader listViewCreated;
-        private System.Windows.Forms.Button btnDownArrow;
-        private System.Windows.Forms.Button btnUpArrow;
         private System.Windows.Forms.ColumnHeader listViewStatus;
         private System.Windows.Forms.ContextMenuStrip batchRunDropDown;
         private System.Windows.Forms.ToolStripMenuItem startFromStepOne;
@@ -554,5 +575,8 @@
         private System.Windows.Forms.Button btnRunOptions;
         private System.Windows.Forms.ToolStripMenuItem startFromStepFour;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton btnUpArrow;
+        private System.Windows.Forms.ToolStripButton btnDownArrow;
     }
 }

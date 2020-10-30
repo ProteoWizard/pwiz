@@ -156,14 +156,11 @@ namespace SkylineBatch
             }
         }
 
-        public void SetIfEmpty(string name, string path, List<string> scripts)
+        public void Set(string name, string path, List<string> scripts)
         {
-            if (Empty())
-            {
-                Name = name;
-                ReportPath = path;
-                rScripts = scripts;
-            }
+            Name = name;
+            ReportPath = path;
+            rScripts = scripts;
         }
 
         public bool Empty()

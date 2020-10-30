@@ -61,6 +61,7 @@ namespace SkylineBatch
         public SkylineBatchLogger(string filePath)
         {
             _filePath = filePath;
+            Init();
         }
 
         public void Init()

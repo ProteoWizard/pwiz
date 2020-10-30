@@ -230,5 +230,15 @@ namespace SkylineBatch.Properties {
                 return ResourceManager.GetString("Terminated_running_config_log_message", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap up_pro32 {
+            get {
+                object obj = ResourceManager.GetObject("up-pro32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

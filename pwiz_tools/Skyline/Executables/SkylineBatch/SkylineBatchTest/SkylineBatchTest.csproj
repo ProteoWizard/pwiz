@@ -59,6 +59,7 @@
     <Compile Include="TestUtils.cs" />
     <Compile Include="SkylineBatchConfigTest.cs" />
     <Compile Include="ConfigManagerTest.cs" />
+    <Compile Include="SkylineBatchLoggerTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SkylineBatch\SkylineBatch.csproj">

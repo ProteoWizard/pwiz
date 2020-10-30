@@ -117,8 +117,23 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Analysis_folder_does_not_exist" xml:space="preserve">
-    <value>Analysis folder directory {0} does not exist.</value>
+  <data name="Start_running_config_log_message" xml:space="preserve">
+    <value>------------------------------ Starting Configuration: {0} -------------------------------</value>
+  </data>
+  <data name="Operation_fail_config_exists" xml:space="preserve">
+    <value>Failed operation "{0}": Configuration "{1}" already exists.</value>
+  </data>
+  <data name="Run_error_title" xml:space="preserve">
+    <value>Run Error</value>
+  </data>
+  <data name="Template_file_does_not_exist" xml:space="preserve">
+    <value>Skyline file {0} does not exist.</value>
+  </data>
+  <data name="Could_not_save_configuration_error_message" xml:space="preserve">
+    <value>Could not save \"{0}\":\r\n{1}</value>
+  </data>
+  <data name="Import_configs_error_title" xml:space="preserve">
+    <value>Import Configurations Error</value>
   </data>
   <data name="Cannot_run_busy_configurations" xml:space="preserve">
     <value>Cannot run configurations while they are still running.</value>
@@ -126,52 +141,41 @@
   <data name="Configuration_error_message" xml:space="preserve">
     <value>\"{0}\" Error: {1}</value>
   </data>
-  <data name="Could_not_save_configuration_error_message" xml:space="preserve">
-    <value>Could not save \"{0}\":\r\n{1}</value>
-  </data>
   <data name="Data_folder_does_not_exist" xml:space="preserve">
     <value>Data folder {0} does not exist.</value>
-  </data>
-  <data name="Import_configs_error_title" xml:space="preserve">
-    <value>Import Configurations Error</value>
-  </data>
-  <data name="No_configs_imported" xml:space="preserve">
-    <value>Could not import configurations from file {0}</value>
-  </data>
-  <data name="Number_configs_duplicates" xml:space="preserve">
-    <value>The following configurations already exist and were not imported:</value>
-  </data>
-  <data name="Number_configs_imported" xml:space="preserve">
-    <value>Number of configurations imported: </value>
-  </data>
-  <data name="Number_configs_not_valid" xml:space="preserve">
-    <value>The following configurations could not be validated and were not imported:</value>
-  </data>
-  <data name="Operation_fail_config_exists" xml:space="preserve">
-    <value>Failed operation "{0}": Configuration "{1}" already exists.</value>
-  </data>
-  <data name="Operation_fail_config_nonexistant" xml:space="preserve">
-    <value>Failed operation "{0}": Configuration "{1}" does not exist.</value>
-  </data>
-  <data name="Process_terminated" xml:space="preserve">
-    <value>Process terminated: exiting.</value>
-  </data>
-  <data name="Run_error_title" xml:space="preserve">
-    <value>Run Error</value>
-  </data>
-  <data name="Save_configuration_error" xml:space="preserve">
-    <value>Save Configuration Error</value>
   </data>
   <data name="Specify_path_to" xml:space="preserve">
     <value>Please specify path to: {0}.</value>
   </data>
-  <data name="Start_running_config_log_message" xml:space="preserve">
-    <value>------------------------------ Starting Configuration: {0} -------------------------------</value>
+  <data name="No_configs_imported" xml:space="preserve">
+    <value>Could not import configurations from file {0}</value>
   </data>
-  <data name="Template_file_does_not_exist" xml:space="preserve">
-    <value>Skyline file {0} does not exist.</value>
+  <data name="Process_terminated" xml:space="preserve">
+    <value>Process terminated: exiting.</value>
+  </data>
+  <data name="Operation_fail_config_nonexistant" xml:space="preserve">
+    <value>Failed operation "{0}": Configuration "{1}" does not exist.</value>
+  </data>
+  <data name="Analysis_folder_does_not_exist" xml:space="preserve">
+    <value>Analysis folder directory {0} does not exist.</value>
   </data>
   <data name="Terminated_running_config_log_message" xml:space="preserve">
     <value>------------------------------ {0}: {1} -------------------------------</value>
+  </data>
+  <data name="Number_configs_imported" xml:space="preserve">
+    <value>Number of configurations imported: </value>
+  </data>
+  <data name="Save_configuration_error" xml:space="preserve">
+    <value>Save Configuration Error</value>
+  </data>
+  <data name="Number_configs_duplicates" xml:space="preserve">
+    <value>The following configurations already exist and were not imported:</value>
+  </data>
+  <data name="Number_configs_not_valid" xml:space="preserve">
+    <value>The following configurations could not be validated and were not imported:</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="up-pro32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\up-pro32.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

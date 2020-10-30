@@ -18,6 +18,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 
@@ -42,15 +43,15 @@ namespace SkylineBatch
         {
             _mainControl = mainControl;
             _config = config;
-            newReportSettings = string.IsNullOrEmpty(_config.Name) ? 
-                new ReportSettings() : 
-                _config.ReportSettings.Copy();
+            newReportSettings = _config.ReportSettings.Copy();
             InitializeComponent();
 
             foreach (var report in newReportSettings.Reports)
                 gridReportSettings.Rows.Add(report.AsArray());
 
             // Initialize file filter combobox
+
+            //btnAddReport.Image = Image.FromFile("C:\\proj\\ProteoWizard\\pwiz\\pwiz_tools\\Skyline\\Executables\\SkylineBatch\\SkylineBatch\\add.png").Size = Size.Truncate(10);
 
             textConfigName.Text = config.Name;
             textConfigName.TextChanged += textConfigName_TextChanged;
@@ -302,6 +303,37 @@ namespace SkylineBatch
                 gridReportSettings.Rows.Add(addingReport.AsArray());
             }
         }
-        
+
+        private void btnEditReport_Click(object sender, EventArgs e)
+        {
+            Program.LogInfo("Editing report");
+            var indexSelected = gridReportSettings.SelectedRows[0].Index;
+            //gridReportSettings.SelectedRows.Clear();
+            var editingReport = newReportSettings.Reports[indexSelected].Copy();
+            var addReportsForm = new ReportsAddForm(editingReport);
+            addReportsForm.StartPosition = FormStartPosition.CenterParent;
+            addReportsForm.ShowDialog();
+
+            if (!editingReport.Empty())
+            {
+                newReportSettings.Reports[indexSelected] = editingReport;
+                gridReportSettings.Rows.RemoveAt(indexSelected);
+                gridReportSettings.Rows.Insert(indexSelected, editingReport.AsArray());
+            }
+        }
+
+        private void btnDeleteReport_Click(object sender, EventArgs e)
+        {
+            var indexToDelete = gridReportSettings.SelectedRows[0].Index;
+            newReportSettings.Reports.RemoveAt(indexToDelete);
+            gridReportSettings.Rows.RemoveAt(indexToDelete);
+
+        }
+
+        private void gridReportSettings_SelectionChanged(object sender, EventArgs e)
+        {
+            btnDeleteReport.Enabled = gridReportSettings.SelectedRows.Count > 0;
+            btnEditReport.Enabled = gridReportSettings.SelectedRows.Count > 0;
+        }
     }
 }

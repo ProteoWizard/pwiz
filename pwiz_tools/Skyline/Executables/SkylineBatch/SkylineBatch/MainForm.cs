@@ -43,7 +43,7 @@ namespace SkylineBatch
             var skylineFileDir = Path.GetDirectoryName(Directory.GetCurrentDirectory()); //Config.MainSettings.SkylineFileDir;
             var logFile = Path.Combine(skylineFileDir, "SkylineBatch.log");
             _skylineBatchLogger = new SkylineBatchLogger(logFile);
-            ((SkylineBatchLogger) _skylineBatchLogger).Init();
+            //((SkylineBatchLogger) _skylineBatchLogger).Init();
             InitializeComponent();
             
 

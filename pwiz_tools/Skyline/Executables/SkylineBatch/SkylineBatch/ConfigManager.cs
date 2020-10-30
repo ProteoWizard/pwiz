@@ -33,7 +33,7 @@ namespace SkylineBatch
     public class ConfigManager
     {
         private readonly Dictionary<string, ConfigRunner> _configRunners;
-        private readonly bool _testMode;
+        private readonly bool _runningUi;
         private readonly ISkylineBatchLogger _logger;
         private readonly IMainUiControl _uiControl;
 
@@ -43,7 +43,7 @@ namespace SkylineBatch
         {
             _logger = logger;
             _uiControl = uiControl;
-            _testMode = uiControl == null;
+            _runningUi = uiControl != null;
             _configRunners = new Dictionary<string, ConfigRunner>();
 
             LoadConfigList();
@@ -57,8 +57,7 @@ namespace SkylineBatch
             Add,
             Insert,
             Remove,
-            Replace,
-            Move
+            Replace
         }
 
         private void LoadConfigList()
@@ -67,7 +66,7 @@ namespace SkylineBatch
             foreach (var config in Settings.Default.ConfigList)
             {
                 ConfigList.Add(config);
-                var runner = _testMode ? new ConfigRunner(config, _logger) : new ConfigRunner(config, _uiControl, _logger);
+                var runner =new ConfigRunner(config, _logger, _uiControl);
                 _configRunners.Add(config.Name, runner);
             }
         }
@@ -84,7 +83,7 @@ namespace SkylineBatch
                 }
                 catch (ArgumentException e)
                 {
-                    if (!_testMode)
+                    if (_runningUi)
                     {
                         _uiControl.DisplayError(Resources.Save_configuration_error,
                             string.Format(Resources.Could_not_save_configuration_error_message, config.Name, e.Message));
@@ -108,7 +107,7 @@ namespace SkylineBatch
 
         private void UpdateIsRunning(bool isRunning)
         {
-            if (!_testMode)
+            if (_runningUi)
                 _uiControl.UpdateRunningButtons(isRunning);
         }
 
@@ -119,7 +118,7 @@ namespace SkylineBatch
         {
             if (ConfigsRunning())
             {
-                if(!_testMode)
+                if(_runningUi)
                     _uiControl.DisplayError(Resources.Run_error_title, Resources.Cannot_run_busy_configurations);
                 return;
             }
@@ -200,11 +199,8 @@ namespace SkylineBatch
             config.Validate();
             Program.LogInfo(string.Format("Adding configuration \"{0}\"", config.Name));
             ConfigList.Insert(index, config);
-            //Settings.Default.Save();
 
-            var newRunner = _testMode
-                ? new ConfigRunner(config, _logger)
-                : new ConfigRunner(config, _uiControl, _logger);
+            var newRunner = new ConfigRunner(config, _logger, _uiControl);
             _configRunners.Add(config.Name, newRunner);
         }
 
@@ -383,15 +379,12 @@ namespace SkylineBatch
 
         private int IndexOf(SkylineBatchConfig config)
         {
-            int i = ConfigList.Count;
-            while (i > 0)
+            for (int i = 0; i < ConfigList.Count; i++)
             {
-                i--;
-                //TODO check equals
-                if ( i > 0 && ConfigList[i].Equals(config))
+                if (ConfigList[i].Equals(config))
                     return i;
             }
-            return i;
+            return -1;
         }
 
     }

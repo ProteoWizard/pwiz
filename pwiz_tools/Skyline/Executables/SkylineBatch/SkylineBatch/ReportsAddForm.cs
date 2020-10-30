@@ -29,6 +29,13 @@ namespace SkylineBatch
         {
             _report = report;
             InitializeComponent();
+
+            textReportName.Text = report.Name;
+            textReportPath.Text = report.ReportPath;
+            foreach (var script in report.rScripts)
+            {
+                boxRScripts.Items.Add(script);
+            }
         }
 
         private void btnAddRScript_Click(object sender, EventArgs e)
@@ -77,9 +84,10 @@ namespace SkylineBatch
             catch (ArgumentException ex)
             {
                 MessageBox.Show(ex.Message);
+                return;
             }
             
-            _report.SetIfEmpty(newReport.Name, newReport.ReportPath, newReport.rScripts);
+            _report.Set(newReport.Name, newReport.ReportPath, newReport.rScripts);
             
             Close();
         }
