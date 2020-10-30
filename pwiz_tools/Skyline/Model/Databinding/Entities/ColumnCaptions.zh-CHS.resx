@@ -397,10 +397,10 @@
     <value>文件</value>
   </data>
   <data name="FoldChange">
-    <value>文件夹更改</value>
+    <value>倍数变化</value>
   </data>
   <data name="FoldChangeResult">
-    <value>文件夹更改结果</value>
+    <value>倍数变化结果</value>
   </data>
   <data name="FragmentIon">
     <value>片段离子</value>

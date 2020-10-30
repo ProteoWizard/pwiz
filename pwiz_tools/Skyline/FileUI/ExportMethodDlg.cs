@@ -1910,9 +1910,11 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public void SetTemplateFile(string templateFile)
+        public void SetTemplateFile(string templateFile, bool setEndCaret = false)
         {
             textTemplateFile.Text = templateFile;
+            if (setEndCaret)
+                textTemplateFile.Select(templateFile.Length, 0);
         }
 
         public void SetInstrument(string instrument)
