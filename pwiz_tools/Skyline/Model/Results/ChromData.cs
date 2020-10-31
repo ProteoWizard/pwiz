@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Results
             TimeIntensities = RawTimeIntensities = timeIntensities;
             if (result && RawTimes.Any())
             {
-                Key = Key.ChangeOptionalTimes(RawTimes.First(), RawTimes.Last(), RawCenterOfGravityTime);
+                Key = Key.ChangeOptionalTimes(RawTimes.First(), RawTimes.Last());
             }
             return result;
         }
