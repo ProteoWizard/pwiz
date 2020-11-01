@@ -152,7 +152,7 @@ namespace TestPerf
             {
                 showHistogram();
                 SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets);
-                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, RatioIndex.DEFAULT);
+                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, NormalizeOption.RatioToFirstStandard(SkylineWindow.Document.Settings));
             });
 
             WaitForGraphs();
@@ -171,11 +171,11 @@ namespace TestPerf
             CollectionAssert.AreEqual(new[] { "Light", "Heavy", "All 15N", Resources.AreaCVToolbar_UpdateUI_Medians, Resources.AreaCVToolbar_UpdateUI_None}, toolbar.NormalizationMethods.ToArray());
             AssertDataCorrect(pane, statsStartIndex++); // Light
 
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, RatioIndex.FromInternalStandardIndex(1)));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, NormalizeOption.FromIsotopeLabelType(SkylineWindow.Document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[1])));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++); // Heavy
 
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, RatioIndex.FromInternalStandardIndex(2)));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, NormalizeOption.FromIsotopeLabelType(SkylineWindow.Document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[2])));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++, allowInvalid: true); // All 15N
         }

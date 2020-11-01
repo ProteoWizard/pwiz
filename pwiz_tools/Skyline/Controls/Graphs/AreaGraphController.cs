@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -118,10 +119,14 @@ namespace pwiz.Skyline.Controls.Graphs
             set { Settings.Default.AreaCVMsLevel = value.ToString(); }
         }
 
-        public static RatioIndex AreaCVRatioIndex
+        public static NormalizeOption GetNormalizeOption(SrmSettings srmSettings)
         {
-            get { return Settings.Default.AreaCVRatioIndex; }
-            set { Settings.Default.AreaCVRatioIndex = value; }
+            return NormalizeOption.FromPersistedName(Settings.Default.NormalizeOptionValue, srmSettings);
+        }
+
+        public static void RememberNormalizeOption(NormalizeOption normalizeOption)
+        {
+            Settings.Default.NormalizeOptionValue = normalizeOption?.PersistedName;
         }
 
         public static string GroupByGroup { get; set; }
@@ -218,7 +223,7 @@ namespace pwiz.Skyline.Controls.Graphs
             //           from crashing with IndexOutOfBoundsException.
             var settings = GraphSummary.DocumentUIContainer.DocumentUI.Settings;
             var mods = settings.PeptideSettings.Modifications;
-            GraphSummary.RatioIndex = GraphSummary.RatioIndex.Constrain(settings);
+            GraphSummary.RatioIndex = NormalizeOption.Constrain(settings, GraphSummary.RatioIndex);
 
             // Only show ratios if document changes to have valid ratios
             if (AreaView == AreaNormalizeToView.area_ratio_view && !mods.HasHeavyModifications)
@@ -230,8 +235,6 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 NormalizationMethod = AreaCVNormalizationMethod.none;
             }
-
-            AreaCVRatioIndex = AreaCVRatioIndex.Constrain(settings);
 
             var globalStandards = NormalizationMethod == AreaCVNormalizationMethod.global_standards;
             if (globalStandards && !GraphSummary.DocumentUIContainer.DocumentUI.Settings.HasGlobalStandardArea)

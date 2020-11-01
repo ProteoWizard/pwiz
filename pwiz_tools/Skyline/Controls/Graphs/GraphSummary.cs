@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private RatioIndex _ratioIndex;
+        private NormalizeOption _ratioIndex;
 
         public GraphTypeSummary Type { get; set; }
 
@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// peak area summary graph uses this class directly, this is the
         /// only way to get it the ratio index value.
         /// </summary>
-        public RatioIndex RatioIndex
+        public NormalizeOption RatioIndex
         {
             get { return _ratioIndex; }
             set

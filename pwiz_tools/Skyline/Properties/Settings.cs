@@ -1214,27 +1214,27 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
-        public string AreaCVRatioIndexValue
+        public string NormalizeOptionValue
         {
             get
             {
-                return (string) this[nameof(AreaCVRatioIndexValue)];
+                return (string) this[nameof(NormalizeOptionValue)];
             }
             set
             {
-                this[nameof(AreaCVRatioIndexValue)] = value;
+                this[nameof(NormalizeOptionValue)] = value;
             }
         }
 
-        public RatioIndex AreaCVRatioIndex
+        public NormalizeOption AreaCVRatioIndex
         {
             get
             {
-                return RatioIndex.FromPersistedName(AreaCVRatioIndexValue);
+                return NormalizeOption.FromPersistedName(NormalizeOptionValue);
             }
             set
             {
-                AreaCVRatioIndexValue = value.PersistedName;
+                NormalizeOptionValue = value.PersistedName;
             }
         }
     }

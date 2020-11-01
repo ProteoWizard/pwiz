@@ -797,6 +797,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 // parenting, before the text and icons can be set correctly.
                 // So, force a model change to update those values.
                 if (tree.ShowReplicate == ReplicateDisplay.best 
+                    || docNode is TransitionGroupDocNode // TODO: ratioIndex
                     || !ReferenceEquals(docNode, nodeTree.Model))
                 {
                     nodeTree.Model = docNode;
@@ -1342,7 +1343,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         internal readonly bool _showBestReplicate;
         internal readonly int _resultsIndex;
 
-        public DisplaySettings(RatioCalculator ratioCalculator, PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, RatioIndex ratioIndex)
+        public DisplaySettings(RatioCalculator ratioCalculator, PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, NormalizeOption ratioIndex)
         {
             RatioCalculator = ratioCalculator;
             _showBestReplicate = showBestReplicate;
@@ -1369,7 +1370,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
-        public RatioIndex RatioIndex { get; private set; }
+        public NormalizeOption RatioIndex { get; private set; }
 
         public NormalizationMethod NormalizationMethod
         {

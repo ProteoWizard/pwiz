@@ -292,7 +292,7 @@
     <value>Magenta</value>
   </data>
   <data name="navBarButtonExport.Size" type="System.Drawing.Size, System.Drawing">
-    <value>53, 22</value>
+    <value>54, 22</value>
   </data>
   <data name="navBarButtonExport.Text" xml:space="preserve">
     <value>Export...</value>

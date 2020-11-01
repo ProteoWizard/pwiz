@@ -4633,21 +4633,21 @@ namespace pwiz.Skyline
             var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
             for (int i = 0; i < standardTypes.Count; i++)
             {
-                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, RatioIndex.FromInternalStandardIndex(i));
+                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, NormalizeOption.FromIsotopeLabelType(standardTypes[i]));
             }
             if (DocumentUI.Settings.HasGlobalStandardArea)
             {
                 SelectRatioHandler.Create(this, menu, ratiosToGlobalStandardsMenuItem.Text,
-                    RatioIndex.GLOBAL_STANDARD);
+                    NormalizeOption.FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS));
             }
         }
 
         private class SelectRatioHandler
         {
             protected readonly SkylineWindow _skyline;
-            private readonly RatioIndex _ratioIndex;
+            private readonly NormalizeOption _ratioIndex;
 
-            public SelectRatioHandler(SkylineWindow skyline, RatioIndex ratioIndex)
+            public SelectRatioHandler(SkylineWindow skyline, NormalizeOption ratioIndex)
             {
                 _skyline = skyline;
                 _ratioIndex = ratioIndex;
@@ -4669,7 +4669,7 @@ namespace pwiz.Skyline
                 _skyline._listGraphPeakArea.ForEach(g => g.RatioIndex = _ratioIndex);
             }
 
-            public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, RatioIndex i)
+            public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, NormalizeOption i)
             {
                 var handler = new SelectRatioHandler(skylineWindow, i);
                 var item = new ToolStripMenuItem(text, null, handler.ToolStripMenuItemClick)
@@ -4678,7 +4678,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public void SetRatioIndex(RatioIndex ratioIndex)
+        public void SetRatioIndex(NormalizeOption ratioIndex)
         {
             new SelectRatioHandler(this, ratioIndex).Select();
         }

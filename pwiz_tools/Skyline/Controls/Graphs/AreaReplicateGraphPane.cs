@@ -23,6 +23,7 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -244,22 +245,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                     BarSettings.Type = BarType.Cluster;
             }
-            RatioIndex ratioIndex = AreaGraphData.RATIO_INDEX_NONE;
+            NormalizeOption ratioIndex = AreaGraphData.RATIO_INDEX_NONE;
             var standardType = IsotopeLabelType.light;
 
             var areaView = AreaGraphController.AreaView;
             if (areaView == AreaNormalizeToView.area_ratio_view)
             {
                 ratioIndex = GraphSummary.RatioIndex;
-                if (ratioIndex.InternalStandardIndex.HasValue)
+                if (ratioIndex.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
                 {
-                    standardType = document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[ratioIndex.InternalStandardIndex.Value];
+                    standardType = ratioToLabel.FindIsotopeLabelType(document.Settings);
                 }
             }
             else if (areaView == AreaNormalizeToView.area_global_standard_view)
             {
                 if (document.Settings.HasGlobalStandardArea)
-                    ratioIndex = RatioIndex.GLOBAL_STANDARD;
+                    ratioIndex = NormalizeOption.FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS);
                 else
                     areaView = AreaNormalizeToView.none;
             }
@@ -435,7 +436,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // If showing ratios, do not add the standard type to the graph,
                     // since it will always be empty, but make sure the colors still
                     // correspond with the other graphs.
-                    if (nodeGroup != null && ratioIndex.InternalStandardIndex.HasValue)
+                    if (nodeGroup != null && ratioIndex.NormalizationMethod is NormalizationMethod.RatioToLabel)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
                         if (ReferenceEquals(labelType, standardType))
@@ -877,10 +878,10 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private class AreaGraphData : GraphData
         {
-            public static readonly RatioIndex RATIO_INDEX_NONE = RatioIndex.NONE;
+            public static readonly NormalizeOption RATIO_INDEX_NONE = NormalizeOption.NONE;
 
             private readonly DocNode _docNode;
-            private readonly RatioIndex _ratioIndex;
+            private readonly NormalizeOption _ratioIndex;
             private readonly AreaNormalizeToData _normalize;
             private readonly AreaExpectedValue _expectedVisible;
             private readonly bool _zeroMissingValues;
@@ -889,7 +890,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  IdentityPath identityPath,
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
-                                 RatioIndex ratioIndex,
+                                 NormalizeOption ratioIndex,
                                  AreaNormalizeToData normalize,
                                  AreaExpectedValue expectedVisible,
                                  PaneKey paneKey,
@@ -907,7 +908,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  IEnumerable<IdentityPath> selectedDocNodePaths,
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
-                                 RatioIndex ratioIndex,
+                                 NormalizeOption ratioIndex,
                                  AreaNormalizeToData normalize,
                                  AreaExpectedValue expectedVisible,
                                  PaneKey paneKey,

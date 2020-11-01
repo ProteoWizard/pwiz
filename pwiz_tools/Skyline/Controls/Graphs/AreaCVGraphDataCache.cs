@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
@@ -155,7 +156,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             public AreaCVGraphData Get(ReplicateValue group, object annotation, int minimumDetections,
-                AreaCVNormalizationMethod normalizationMethod, RatioIndex ratioIndex)
+                AreaCVNormalizationMethod normalizationMethod, NormalizeOption ratioIndex)
             {
                 lock (_cacheInfo)
                 {
@@ -222,12 +223,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         continue;
 
                     var ratioIndices = isRatio
-                        ? Enumerable
-                            .Range(0, document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count)
-                            .Select(RatioIndex.FromInternalStandardIndex).ToList()
-                        : new List<RatioIndex> {RatioIndex.NONE};
+                        ? document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes
+                            .Select(NormalizeOption.FromIsotopeLabelType).ToList()
+                        : new List<NormalizeOption> {NormalizeOption.NONE};
 
-                    if (graphSettings.RatioIndex.InternalStandardIndex.HasValue)
+                    if (graphSettings.RatioIndex.NormalizationMethod is NormalizationMethod.RatioToLabel)
                     {
                         if (ratioIndices.Remove(graphSettings.RatioIndex))
                             ratioIndices.Insert(0, graphSettings.RatioIndex);
@@ -324,7 +324,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     MinimumDetections = settings.MinimumDetections;
                 }
 
-                public GraphDataProperties(ReplicateValue group, AreaCVNormalizationMethod normalizationMethod, RatioIndex ratioIndex, object annotation, int minimumDetections)
+                public GraphDataProperties(ReplicateValue group, AreaCVNormalizationMethod normalizationMethod, NormalizeOption ratioIndex, object annotation, int minimumDetections)
                 {
                     Group = group;
                     NormalizationMethod = normalizationMethod;
@@ -335,7 +335,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 public ReplicateValue Group { get; private set; }
                 public AreaCVNormalizationMethod NormalizationMethod { get; private set; }
-                public RatioIndex RatioIndex { get; private set; }
+                public NormalizeOption RatioIndex { get; private set; }
                 public object Annotation { get; private set; }
                 public int MinimumDetections { get; private set; }
             }

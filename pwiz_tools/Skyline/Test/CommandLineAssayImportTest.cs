@@ -271,7 +271,7 @@ namespace pwiz.SkylineTest
                         if (!nodeTran.HasLibInfo)
                             Assert.Fail("Missing library info from {0} - {1}", nodePep, nodeTran.GetDisplayText(new DisplaySettings(
                                 new RatioCalculator(docAfter), 
-                                nodePep, false, 0, RatioIndex.DEFAULT)));
+                                nodePep, false, 0, NormalizeOption.RatioToFirstStandard(docAfter.Settings))));
                     }
                 }
             }

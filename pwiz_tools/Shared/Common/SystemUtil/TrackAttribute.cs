@@ -251,6 +251,7 @@ namespace pwiz.Common.SystemUtil
             get { return _getLabel(); }
         }
 
+
         public virtual string AuditLogText
         {
             get

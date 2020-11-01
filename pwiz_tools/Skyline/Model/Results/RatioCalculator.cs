@@ -47,6 +47,10 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
             var transitionGroupDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(transitionDocNode.Transition.Group);
+            if (transitionGroupDocNode == null)
+            {
+                return null;
+            }
             return GetTransitionValue(normalizationMethod, peptideDocNode, transitionGroupDocNode, transitionDocNode,
                 transitionChromInfo);
         }
@@ -108,7 +112,7 @@ namespace pwiz.Skyline.Model.Results
             return null;
         }
 
-        public double? GetTransitionDataValue(RatioIndex ratioIndex, TransitionChromInfoData transitionChromInfoData)
+        public double? GetTransitionDataValue(NormalizeOption ratioIndex, TransitionChromInfoData transitionChromInfoData)
         {
             var normalizationMethod = RatioIndexToNormalizationMethod(transitionChromInfoData.PeptideDocNode,
                 transitionChromInfoData.TransitionGroupDocNode, ratioIndex);
@@ -117,7 +121,7 @@ namespace pwiz.Skyline.Model.Results
                 transitionChromInfoData.ChromInfo);
         }
 
-        public double? GetTransitionGroupDataValue(RatioIndex ratioIndex,
+        public double? GetTransitionGroupDataValue(NormalizeOption ratioIndex,
             TransitionGroupChromInfoData transitionGroupChromInfoData)
         {
             var normalizationMethod = RatioIndexToNormalizationMethod(transitionGroupChromInfoData.PeptideDocNode,
@@ -154,7 +158,7 @@ namespace pwiz.Skyline.Model.Results
             PeptideDocNode peptideDocNode,
             TransitionGroupDocNode transitionGroupDocNode, TransitionGroupChromInfo transitionGroupChromInfo)
         {
-            if (peptideDocNode == null)
+            if (peptideDocNode == null || transitionGroupChromInfo == null)
             {
                 return null;
             }
@@ -433,41 +437,28 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
-        public NormalizationMethod RatioIndexToNormalizationMethod(PeptideDocNode peptideDocNode, RatioIndex ratioIndex)
+        public NormalizationMethod RatioIndexToNormalizationMethod(PeptideDocNode peptideDocNode, NormalizeOption ratioIndex)
         {
-            if (ratioIndex == RatioIndex.CALIBRATED)
+            if (ratioIndex.NormalizationMethod != null)
             {
-                ratioIndex = RatioIndex.NORMALIZED;
+                return ratioIndex.NormalizationMethod;
+            }
+            if (ratioIndex == NormalizeOption.CALIBRATED)
+            {
+                ratioIndex = NormalizeOption.NORMALIZED;
             }
 
-            if (ratioIndex == RatioIndex.NORMALIZED)
+            if (ratioIndex == NormalizeOption.NORMALIZED)
             {
                 return peptideDocNode.NormalizationMethod ??
                        Document.Settings.PeptideSettings.Quantification.NormalizationMethod;
-            }
-
-            if (ratioIndex.InternalStandardIndex.HasValue)
-            {
-                if (ratioIndex.InternalStandardIndex >=
-                    RatioInternalStandardTypes.Count)
-                {
-                    return NormalizationMethod.NONE;
-                }
-
-                return new NormalizationMethod.RatioToLabel(
-                    RatioInternalStandardTypes[ratioIndex.InternalStandardIndex.Value]);
-            }
-
-            if (ratioIndex == RatioIndex.GLOBAL_STANDARD)
-            {
-                return NormalizationMethod.GLOBAL_STANDARDS;
             }
 
             return NormalizationMethod.NONE;
         }
 
         public NormalizationMethod RatioIndexToNormalizationMethod(PeptideDocNode peptideDocNode,
-            TransitionGroupDocNode transitionGroup, RatioIndex ratioIndex)
+            TransitionGroupDocNode transitionGroup, NormalizeOption ratioIndex)
         {
             var normalizationMethod = RatioIndexToNormalizationMethod(peptideDocNode, ratioIndex);
             if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)

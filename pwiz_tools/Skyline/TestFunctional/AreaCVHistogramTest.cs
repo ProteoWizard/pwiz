@@ -366,7 +366,7 @@ namespace pwiz.SkylineTestFunctional
             int startIndex = HISTOGRAM_HEAVY_START;
             AssertDataCorrect(pane, startIndex++);
 
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, RatioIndex.DEFAULT));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, NormalizeOption.RatioToFirstStandard(SkylineWindow.Document.Settings)));
             AssertDataCorrect(pane, startIndex);
         }
 

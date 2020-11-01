@@ -5,6 +5,7 @@ using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -52,6 +53,15 @@ namespace pwiz.Skyline.Model
                 minDetections = _settings.MinimumDetections;
 
             MedianInfo medianInfo = null;
+            int? ratioIndex = null;
+            if (settings.RatioIndex.IsRatioToLabel)
+            {
+                var isotopeLabelTypeName = (settings.RatioIndex.NormalizationMethod as NormalizationMethod.RatioToLabel)
+                    ?.IsotopeLabelTypeName;
+                ratioIndex =
+                    document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.IndexOf(type =>
+                        type.Name == isotopeLabelTypeName);
+            }
             if (_settings.NormalizationMethod == AreaCVNormalizationMethod.medians)
                 medianInfo = CalculateMedianAreas(document);
 
@@ -138,16 +148,22 @@ namespace pwiz.Skyline.Model
 
                                     normalizedArea /= denominator.Value;
                                 }
-                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.ratio && hasHeavyMods && _settings.RatioIndex.InternalStandardIndex.HasValue)
+                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.ratio && hasHeavyMods && _settings.RatioIndex.NormalizationMethod is NormalizationMethod.RatioToLabel)
                                 {
                                     var ci = transitionGroupDocNode.GetSafeChromInfo(replicateIndex).FirstOrDefault(c => c.OptimizationStep == 0);
-                                    if (ci != null)
+                                    RatioValue ratioValue = null;
+                                    if (ratioIndex.HasValue && ratioIndex.Value >= 0 &&
+                                        ratioIndex.Value < ci.Ratios.Count)
                                     {
-                                        var ratioValue = ci.GetRatio(_settings.RatioIndex);
-                                        if (ratioValue == null)
-                                            continue;   // Skip the standards
-                                        normalizedArea = ratioValue.Ratio;
+                                        ratioValue = ci.Ratios[ratioIndex.Value];
                                     }
+
+                                    if (ratioValue == null)
+                                    {
+                                        continue;
+                                    }
+
+                                    normalizedArea = ratioValue.Ratio;
                                 }
                                 areas.Add(new AreaInfo(sumArea, normalizedArea));
                             }
@@ -314,7 +330,7 @@ namespace pwiz.Skyline.Model
 
     public class AreaCVRefinementSettings
     {
-        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, RatioIndex ratioIndex,
+        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, NormalizeOption ratioIndex,
             AreaCVTransitions transitions, int countTransitions, AreaCVMsLevel msLevel)
         {
             CVCutoff = cvCutoff;
@@ -359,7 +375,7 @@ namespace pwiz.Skyline.Model
         public AreaCVMsLevel MsLevel { get; protected set; }
         public AreaCVTransitions Transitions { get; protected set; }
         public int CountTransitions { get; protected set; }
-        public RatioIndex RatioIndex { get; protected set; }
+        public NormalizeOption RatioIndex { get; protected set; }
         public ReplicateValue Group { get; protected set; }
         public object Annotation { get; protected set; }
         public PointsTypePeakArea PointsType { get; protected set; }

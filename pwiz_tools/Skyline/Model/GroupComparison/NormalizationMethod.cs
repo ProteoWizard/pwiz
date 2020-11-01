@@ -39,7 +39,26 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
         }
 
-        public abstract override string ToString();
+        public override string ToString()
+        {
+            return Label;
+        }
+
+        public string NormalizationMethodCaption
+        {
+            get
+            {
+                return Label;
+            }
+        }
+
+        public virtual string NormalizeToCaption
+        {
+            get
+            {
+                return Label;
+            }
+        }
 
         public static NormalizationMethod FromName(string name)
         {
@@ -58,7 +77,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return ratioToSurrogate;
             }
-            foreach (var normalizationMethod in new[] {EQUALIZE_MEDIANS, QUANTILE, GLOBAL_STANDARDS, TIC})
+            foreach (var normalizationMethod in new[] {EQUALIZE_MEDIANS, GLOBAL_STANDARDS, TIC})
             {
                 if (Equals(normalizationMethod.Name, name))
                 {
@@ -68,29 +87,26 @@ namespace pwiz.Skyline.Model.GroupComparison
             return NONE;
         }
 
-        public virtual bool AllowTruncatedTransitions { get { return false; } }
-
         // ReSharper disable LocalizableElement
         public static readonly NormalizationMethod NONE
             = new SingletonNormalizationMethod("none", () => GroupComparisonStrings.NormalizationMethod_NONE_None);
         public static readonly NormalizationMethod EQUALIZE_MEDIANS 
             = new SingletonNormalizationMethod("equalize_medians", 
                 () => GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians);
-        public static readonly NormalizationMethod QUANTILE 
-            = new SingletonNormalizationMethod("quantile", 
-                () => GroupComparisonStrings.NormalizationMethod_QUANTILE_Quantile);
-        public static readonly NormalizationMethod GLOBAL_STANDARDS 
-            = new SingletonNormalizationMethod("global_standards", 
-                () => GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards);
+
+        public static readonly NormalizationMethod GLOBAL_STANDARDS
+            = new SingletonNormalizationMethod("global_standards",
+                () => GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards,
+                () => Resources.AreaCVToolbar_UpdateUI_Global_standards);
         public static readonly NormalizationMethod TIC
             = new SingletonNormalizationMethod("tic",
                 () => GroupComparisonStrings.NormalizationMethod_TIC_Total_Ion_Current);
 
         // ReSharper restore LocalizableElement
 
-        public static NormalizationMethod GetNormalizationMethod(IsotopeLabelType isotopeLabelType)
+        public static RatioToLabel GetNormalizationMethod(IsotopeLabelType isotopeLabelType)
         {
-            return FromName(ratio_prefix + isotopeLabelType.Name);
+            return (RatioToLabel) FromName(ratio_prefix + isotopeLabelType.Name);
         }
 
         private bool Equals(NormalizationMethod other)
@@ -171,11 +187,6 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public string IsotopeLabelTypeName { get { return _isotopeLabelType.Name; } }
 
-            public override bool AllowTruncatedTransitions
-            {
-                get { return true; }
-            }
-
             public static bool Matches(NormalizationMethod normalizationMethod, IsotopeLabelType isotopeLabelType)
             {
                 if (isotopeLabelType == null)
@@ -184,6 +195,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 RatioToLabel ratioToLabel = normalizationMethod as RatioToLabel;
                 return ratioToLabel != null && Equals(ratioToLabel.Name, isotopeLabelType.Name);
+            }
+
+            public IsotopeLabelType FindIsotopeLabelType(SrmSettings settings)
+            {
+                return settings.PeptideSettings.Modifications.HeavyModifications
+                           .FirstOrDefault(mods => mods.LabelType.Name == IsotopeLabelTypeName)?.LabelType ??
+                       _isotopeLabelType;
             }
         }
 
@@ -214,6 +232,19 @@ namespace pwiz.Skyline.Model.GroupComparison
                         return string.Format(Resources.RatioToSurrogate_ToString_Ratio_to_surrogate__0_, _surrogateName);
                     }
                     return string.Format(Resources.RatioToSurrogate_ToString_Ratio_to_surrogate__0____1__, _surrogateName, _isotopeLabelType.Title);
+                }
+            }
+
+            public override string NormalizeToCaption
+            {
+                get
+                {
+                    if (_isotopeLabelType == null)
+                    {
+                        return string.Format("Surrogate {0}", _surrogateName);
+                    }
+
+                    return string.Format("Surrogate {0} ({1})", _surrogateName, _isotopeLabelType.Title);
                 }
             }
 
@@ -313,13 +344,22 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private class SingletonNormalizationMethod : NormalizationMethod
         {
-            public SingletonNormalizationMethod(string name, Func<string> getLabelFunc) : base(name, getLabelFunc)
+            private Func<string> _getNormalizeToCaptionFunc;
+            public SingletonNormalizationMethod(string name, Func<string> getNormalizationMethodCaptionFunc) : this(
+                name, getNormalizationMethodCaptionFunc, getNormalizationMethodCaptionFunc)
             {
+
             }
 
-            public override string ToString()
+            public SingletonNormalizationMethod(string name, Func<string> getNormalizationMethodCaptionFunc, Func<string> getNormalizeToCaptionFunc) 
+                : base(name, getNormalizationMethodCaptionFunc)
             {
-                return Label;
+                _getNormalizeToCaptionFunc = getNormalizeToCaptionFunc;
+            }
+
+            public override string NormalizeToCaption
+            {
+                get { return _getNormalizeToCaptionFunc(); }
             }
         }
 
