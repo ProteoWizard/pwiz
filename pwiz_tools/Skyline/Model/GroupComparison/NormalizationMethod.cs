@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             var modificationTypes = document.Settings.PeptideSettings.Modifications.GetModificationTypes().ToList();
             if (modificationTypes.Count > 1)
             {
-                foreach (var isotopeLabelType in document.Settings.PeptideSettings.Modifications.InternalStandardTypes)
+                foreach (var isotopeLabelType in document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes)
                 {
                     result.Add(GetNormalizationMethod(isotopeLabelType));
                 }
