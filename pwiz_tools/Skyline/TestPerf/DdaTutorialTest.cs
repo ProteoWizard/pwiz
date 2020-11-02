@@ -40,7 +40,7 @@ namespace TestPerf
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
-            //IsPauseForCoverShot = true;
+            //IsCoverShotMode = true;
             //RunPerfTests = true;
 
             TestFilesZipPaths = new[]
@@ -235,7 +235,7 @@ namespace TestPerf
 
             PauseForScreenShot("Main window with peptide search results", tutorialPage++);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RunUI(() =>
                 {
@@ -251,7 +251,7 @@ namespace TestPerf
                 WaitForGraphs();
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
                 RunUI(SkylineWindow.FocusDocument);
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 

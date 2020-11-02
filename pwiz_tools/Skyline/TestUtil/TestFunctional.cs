@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestUtil
         protected bool ForceMzml
         {
             get { return _forceMzml; }
-            set { _forceMzml = value && !IsPauseForScreenShots && !IsPauseForCoverShot;  }    // Don't force mzML during screenshots
+            set { _forceMzml = value && !IsPauseForScreenShots && !IsCoverShotMode;  }    // Don't force mzML during screenshots
         }
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
@@ -1008,31 +1008,29 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private static bool _isPauseForCoverShot;
+        private static bool _isCoverShotMode;
 
-        public bool IsPauseForCoverShot
+        public bool IsCoverShotMode
         {
-            get { return _isPauseForCoverShot || Program.PauseSeconds == -2; }
+            get { return _isCoverShotMode || Program.PauseSeconds == -2; } // -2 is the magic number SkylineTester uses to indicate cover shot mode
             set
             {
-                _isPauseForCoverShot = value;
-                if (_isPauseForCoverShot)
+                _isCoverShotMode = value;
+                if (_isCoverShotMode)
                 {
-                    Program.PauseSeconds = -2;
+                    Program.PauseSeconds = -2; // -2 is the magic number SkylineTester uses to indicate cover shot mode
                 }
             }
         }
 
-        public bool IsSavingCoverShots
-        {
-            get { return IsPauseForCoverShot && CoverShotName != null; }
-        }
         public string CoverShotName { get; set; }
 
         private string GetCoverShotPath(string folderPath = null, string suffix = null)
         {
-            if (!IsSavingCoverShots)
+            if (CoverShotName == null)
+            {
                 return null;
+            }
 
             if (folderPath == null)
                 folderPath = Path.Combine(PathEx.GetDownloadsPath(), "covershots");
@@ -1076,7 +1074,7 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsPass0 { get { return Program.IsPassZero; } }
 
-        public bool IsFullData { get { return IsPauseForScreenShots || IsPauseForCoverShot || IsDemoMode || IsPass0; } }
+        public bool IsFullData { get { return IsPauseForScreenShots || IsCoverShotMode || IsDemoMode || IsPass0; } }
 
         public static bool IsCheckLiveReportsCompatibility { get; set; }
 
@@ -1153,7 +1151,7 @@ namespace pwiz.SkylineTestUtil
             // Override to modify the cover shot before it is saved or put on the clipboard
         }
 
-        public void PauseForCoverShot()
+        public void TakeCoverShot()
         {
             Thread.Sleep(1000); // Give windows time to repaint
             var coverSavePath = GetCoverShotPath();
@@ -1171,11 +1169,11 @@ namespace pwiz.SkylineTestUtil
             }
             else if (coverSavePath2 != null)
             {
-                PauseTest("Cover shot at 1200 x 800 has been saved as " + coverSavePath + " and as " + coverSavePath2);
+                Console.WriteLine(@"Cover shot at 1200 x 800 has been saved as " + coverSavePath + @" and as " + coverSavePath2);
             }
             else
             {
-                PauseTest("Cover shot at 1200 x 800 has been saved as " + coverSavePath);
+                Console.WriteLine(@"Cover shot at 1200 x 800 has been saved as " + coverSavePath);
             }
         }
 
@@ -1614,7 +1612,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     SkylineWindow.UseKeysOverride = true;
                     SkylineWindow.AssumeNonNullModificationAuditLogging = true;
-                    if (IsPauseForScreenShots || IsPauseForCoverShot)
+                    if (IsPauseForScreenShots || IsCoverShotMode)
                     {
                         // Screenshots should be taken with release icon and "Skyline" in the window title
                         SkylineWindow.Icon = Resources.Skyline_Release1;

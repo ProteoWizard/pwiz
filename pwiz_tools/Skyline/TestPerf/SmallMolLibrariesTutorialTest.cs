@@ -60,7 +60,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
         public void TestSmallMoleculeLibrariesTutorial()
         {
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "SmallMolLibraries";
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries.pdf";
@@ -393,10 +393,10 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             //   The Full-Scan graph should now look something like this:
             PauseForScreenShot("Full scan graph with IM filtering", 21);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen(false);
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 
