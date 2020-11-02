@@ -10901,7 +10901,7 @@ Invalid peptide sequence at position 18
     <value>繰り返し測定</value>
   </data>
   <data name="DetectionPlotPane_YAxis_Name" xml:space="preserve">
-    <value>検出</value>
+    <value>検出 ({0})</value>
   </data>
   <data name="DetectionPlotPane_CumulativeLine_Name" xml:space="preserve">
     <value>累積</value>

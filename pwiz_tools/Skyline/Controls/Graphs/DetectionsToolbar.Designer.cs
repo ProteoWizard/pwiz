@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.Controls.Graphs
+﻿using System;
+
+namespace pwiz.Skyline.Controls.Graphs
 {
     partial class DetectionsToolbar
     {
@@ -22,6 +24,9 @@
             this.pbProperties = new System.Windows.Forms.ToolStripButton();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.cbLevel = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripAtLeastN = new pwiz.Skyline.Controls.ToolStripNumericUpDown();
+            this.toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -32,7 +37,10 @@
             this.toolStripSeparator2,
             this.pbProperties,
             this.toolStripLabel1,
-            this.cbLevel});
+            this.cbLevel,
+            this.toolStripLabel2,
+            this.toolStripAtLeastN,
+            this.toolStripLabel3});
             resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.Name = "toolStrip1";
             // 
@@ -61,6 +69,21 @@
             resources.ApplyResources(this.cbLevel, "cbLevel");
             this.cbLevel.SelectedIndexChanged += new System.EventHandler(this.cbLevel_SelectedIndexChanged);
             // 
+            // toolStripLabel2
+            // 
+            this.toolStripLabel2.Name = "toolStripLabel2";
+            resources.ApplyResources(this.toolStripLabel2, "toolStripLabel2");
+            // 
+            // toolStripAtLeastN
+            // 
+            resources.ApplyResources(this.toolStripAtLeastN, "toolStripAtLeastN");
+            this.toolStripAtLeastN.Name = "toolStripAtLeastN";
+            // 
+            // toolStripLabel3
+            // 
+            this.toolStripLabel3.Name = "toolStripLabel3";
+            resources.ApplyResources(this.toolStripLabel3, "toolStripLabel3");
+            // 
             // DetectionsToolbar
             // 
             resources.ApplyResources(this, "$this");
@@ -81,5 +104,8 @@
         private System.Windows.Forms.ToolStripButton pbProperties;
         private System.Windows.Forms.ToolStripComboBox cbLevel;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+        private ToolStripNumericUpDown toolStripAtLeastN;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel2;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel3;
     }
 }
