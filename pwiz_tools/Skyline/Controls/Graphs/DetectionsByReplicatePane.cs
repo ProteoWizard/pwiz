@@ -179,7 +179,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_detectionData.IsValid)
             {
-                YAxis.Title.Text = Resources.DetectionPlotPane_YAxis_Name;
                 XAxis.Scale.TextLabels = _detectionData.ReplicateNames.ToArray();
             }
             base.AddLabels();

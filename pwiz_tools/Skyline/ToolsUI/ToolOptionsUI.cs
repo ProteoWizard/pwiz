@@ -47,7 +47,7 @@ using Server = pwiz.Skyline.Util.Server;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    public partial class ToolOptionsUI : FormEx
+    public partial class ToolOptionsUI : FormEx, IMultipleViewProvider
     {
         private readonly SettingsListBoxDriver<Server> _driverServers;
         private readonly SettingsListBoxDriver<RemoteAccount> _driverRemoteAccounts;
@@ -344,9 +344,9 @@ namespace pwiz.Skyline.ToolsUI
         public class DisplayTab : IFormView { }
         public class PrositTab : IFormView { }
 
-        private static readonly IFormView[] TAB_PAGES =
+        private static readonly IFormView[] TAB_PAGES = // N.B. order must agree with TABS enum above
         {
-            new PanoramaTab(), new RemoteTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(), new PrositTab()
+            new PanoramaTab(), new RemoteTab(), new PrositTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab()
         };
 
         public void NavigateToTab(TABS tab)
