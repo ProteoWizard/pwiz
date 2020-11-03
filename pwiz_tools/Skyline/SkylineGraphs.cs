@@ -4599,28 +4599,64 @@ namespace pwiz.Skyline
             }
         }
 
-        private ToolStripItem MakeNormalizeMenuItem(NormalizeOption normalizeOption, NormalizeOption currentOption)
+        private ToolStripItem MakeNormalizeToMenuItem(NormalizeOption normalizeOption, bool isChecked)
         {
-            var item = new ToolStripMenuItem(normalizeOption.Caption, null, NormalizeMenuItemOnClick)
+            if (normalizeOption == null)
+            {
+                return new ToolStripSeparator();
+            }
+
+            string caption = normalizeOption.Caption;
+            if (normalizeOption == NormalizeOption.DEFAULT)
+            {
+                var selectedNormalizationMethods = GetSelectedNormalizationMethods();
+                if (selectedNormalizationMethods.Count == 1)
+                {
+                    caption = string.Format("Default ({0})", selectedNormalizationMethods.First().NormalizeToCaption);
+                }
+            }
+
+            return new ToolStripMenuItem(caption, null, NormalizeMenuItemOnClick)
             {
                 Tag = normalizeOption,
+                Checked = isChecked,
             };
-            return item;
         }
 
         private IEnumerable<ToolStripItem> MakeNormalizeToMenuItems(IEnumerable<NormalizeOption> normalizeOptions,
             NormalizeOption selectedOption)
         {
-            return normalizeOptions.Select(option =>
+            return normalizeOptions.Select(option=>MakeNormalizeToMenuItem(option, option == selectedOption));
+        }
 
-                option == null
-                    ? (ToolStripItem) new ToolStripSeparator()
-                    : new ToolStripMenuItem(option.Caption, null, NormalizeMenuItemOnClick)
-                    {
-                        Tag = option,
-                        Checked = selectedOption == option
-                    }
-            );
+        public HashSet<NormalizationMethod> GetSelectedNormalizationMethods()
+        {
+            var defaultNormalizationMethod = Document.Settings.PeptideSettings.Quantification.NormalizationMethod;
+            var normalizationMethods = new HashSet<NormalizationMethod>();
+            foreach (var path in SelectedNodes.OfType<SrmTreeNode>()
+                .Select(node => node.Path.GetPathTo(Math.Min(node.Path.Depth, 1)))
+                .Distinct())
+            {
+                var docNode = DocumentUI.FindNode(path);
+                IEnumerable<PeptideDocNode> molecules;
+                if (docNode is PeptideDocNode molecule)
+                {
+                    molecules = new[] {molecule};
+                }
+                else if (docNode is PeptideGroupDocNode peptideGroupDocNode)
+                {
+                    molecules = peptideGroupDocNode.Molecules;
+                }
+                else
+                {
+                    continue;
+                }
+
+                normalizationMethods.UnionWith(molecules.Select(mol =>
+                    mol.NormalizationMethod ?? defaultNormalizationMethod));
+            }
+
+            return normalizationMethods;
         }
 
         public void NormalizeMenuItemOnClick(object sender, EventArgs eventArgs)

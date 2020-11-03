@@ -74,8 +74,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     return BarType.Cluster;
                 }
 
-                if (//AreaGraphController.AreaView == NormalizeOption.MAXIMUM ||
-                    AreaGraphController.AreaView == NormalizeOption.TOTAL)
+                if (AreaGraphController.AreaView == NormalizeOption.TOTAL)
                 {
                     return BarType.PercentStack;
                 }

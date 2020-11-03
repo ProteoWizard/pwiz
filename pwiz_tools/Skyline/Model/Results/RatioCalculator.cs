@@ -445,10 +445,10 @@ namespace pwiz.Skyline.Model.Results
             }
             if (ratioIndex == NormalizeOption.CALIBRATED)
             {
-                ratioIndex = NormalizeOption.NORMALIZED;
+                ratioIndex = NormalizeOption.DEFAULT;
             }
 
-            if (ratioIndex == NormalizeOption.NORMALIZED)
+            if (ratioIndex == NormalizeOption.DEFAULT)
             {
                 return peptideDocNode.NormalizationMethod ??
                        Document.Settings.PeptideSettings.Quantification.NormalizationMethod;

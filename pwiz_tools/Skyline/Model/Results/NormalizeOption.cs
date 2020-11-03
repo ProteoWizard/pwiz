@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MathNet.Numerics.Providers.LinearAlgebra;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
@@ -15,8 +14,8 @@ namespace pwiz.Skyline.Model.Results
             = new Dictionary<string, Special>();
         public static readonly NormalizeOption MAXIMUM = new Special(@"maximum", ()=>"Maximum");
         public static readonly NormalizeOption TOTAL = new Special(@"total", ()=>"Total");
-        public static readonly NormalizeOption NORMALIZED = new Special(@"normalized", ()=>"Default Normalization Method");
-        public static readonly NormalizeOption CALIBRATED = new Special(@"calibrated", ()=>"Calculated Concentration");
+        public static readonly NormalizeOption DEFAULT = new Special(@"default", ()=>"Default Normalization Method");
+        public static readonly NormalizeOption CALIBRATED = new Special(@"calibrated", ()=>"Calibration Curve");
 
         public static readonly NormalizeOption GLOBAL_STANDARDS =
             FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS);
@@ -123,6 +122,7 @@ namespace pwiz.Skyline.Model.Results
         /// <returns></returns>
         public static IEnumerable<NormalizeOption> AvailableNormalizeOptions(SrmDocument document)
         {
+            yield return DEFAULT;
             foreach (var normalizationMethod in NormalizationMethod.ListNormalizationMethods(document)
                 .OrderBy(method=>method is NormalizationMethod.RatioToLabel ? 0 : 1))
             {
@@ -133,10 +133,6 @@ namespace pwiz.Skyline.Model.Results
                 yield return FromNormalizationMethod(normalizationMethod);
             }
 
-            if (!Equals(NormalizationMethod.NONE, document.Settings.PeptideSettings.Quantification.NormalizationMethod))
-            {
-                yield return NORMALIZED;
-            }
             if (document.Settings.PeptideSettings.Quantification.RegressionFit != RegressionFit.NONE)
             {
                 yield return CALIBRATED;
