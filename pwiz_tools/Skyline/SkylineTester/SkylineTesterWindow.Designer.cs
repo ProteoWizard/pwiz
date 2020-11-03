@@ -102,6 +102,7 @@ namespace SkylineTester
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.tutorialsTree = new SkylineTester.MyTreeView();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.modeTutorialsCoverShots = new System.Windows.Forms.RadioButton();
             this.pauseTutorialsSeconds = new System.Windows.Forms.NumericUpDown();
             this.tutorialsDemoMode = new System.Windows.Forms.RadioButton();
             this.label5 = new System.Windows.Forms.Label();
@@ -297,7 +298,6 @@ namespace SkylineTester
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.myTreeView1 = new SkylineTester.MyTreeView();
-            this.pauseTutorialsCoverShots = new System.Windows.Forms.RadioButton();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -426,7 +426,7 @@ namespace SkylineTester
             this.tabs.Padding = new System.Drawing.Point(20, 6);
             this.tabs.SelectedIndex = 0;
             this.tabs.Size = new System.Drawing.Size(717, 721);
-            this.tabs.TabIndex = 4;
+            this.tabs.TabIndex = 0;
             this.tabs.SelectedIndexChanged += new System.EventHandler(this.TabChanged);
             // 
             // tabForms
@@ -753,7 +753,7 @@ namespace SkylineTester
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.pauseTutorialsCoverShots);
+            this.groupBox4.Controls.Add(this.modeTutorialsCoverShots);
             this.groupBox4.Controls.Add(this.pauseTutorialsSeconds);
             this.groupBox4.Controls.Add(this.tutorialsDemoMode);
             this.groupBox4.Controls.Add(this.label5);
@@ -764,21 +764,33 @@ namespace SkylineTester
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Padding = new System.Windows.Forms.Padding(4);
             this.groupBox4.Size = new System.Drawing.Size(280, 132);
-            this.groupBox4.TabIndex = 2;
+            this.groupBox4.TabIndex = 1;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Pause";
             // 
+            // modeTutorialsCoverShots
+            // 
+            this.modeTutorialsCoverShots.AutoSize = true;
+            this.modeTutorialsCoverShots.Location = new System.Drawing.Point(7, 97);
+            this.modeTutorialsCoverShots.Margin = new System.Windows.Forms.Padding(4);
+            this.modeTutorialsCoverShots.Name = "modeTutorialsCoverShots";
+            this.modeTutorialsCoverShots.Size = new System.Drawing.Size(110, 17);
+            this.modeTutorialsCoverShots.TabIndex = 5;
+            this.modeTutorialsCoverShots.Text = "Cover shots mode";
+            this.toolTip1.SetToolTip(this.modeTutorialsCoverShots, "Runs the tutorial until cover shot is reached, saves the image, then exits");
+            this.modeTutorialsCoverShots.UseVisualStyleBackColor = true;
+            // 
             // pauseTutorialsSeconds
             // 
-            this.pauseTutorialsSeconds.Location = new System.Drawing.Point(99, 71);
+            this.pauseTutorialsSeconds.Location = new System.Drawing.Point(99, 48);
             this.pauseTutorialsSeconds.Name = "pauseTutorialsSeconds";
             this.pauseTutorialsSeconds.Size = new System.Drawing.Size(41, 20);
-            this.pauseTutorialsSeconds.TabIndex = 1;
+            this.pauseTutorialsSeconds.TabIndex = 2;
             // 
             // tutorialsDemoMode
             // 
             this.tutorialsDemoMode.AutoSize = true;
-            this.tutorialsDemoMode.Location = new System.Drawing.Point(7, 95);
+            this.tutorialsDemoMode.Location = new System.Drawing.Point(7, 72);
             this.tutorialsDemoMode.Margin = new System.Windows.Forms.Padding(4);
             this.tutorialsDemoMode.Name = "tutorialsDemoMode";
             this.tutorialsDemoMode.Size = new System.Drawing.Size(82, 17);
@@ -789,21 +801,21 @@ namespace SkylineTester
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(147, 73);
+            this.label5.Location = new System.Drawing.Point(147, 50);
             this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(47, 13);
-            this.label5.TabIndex = 2;
+            this.label5.TabIndex = 3;
             this.label5.Text = "seconds";
             // 
             // pauseTutorialsDelay
             // 
             this.pauseTutorialsDelay.AutoSize = true;
-            this.pauseTutorialsDelay.Location = new System.Drawing.Point(7, 71);
+            this.pauseTutorialsDelay.Location = new System.Drawing.Point(7, 48);
             this.pauseTutorialsDelay.Margin = new System.Windows.Forms.Padding(4);
             this.pauseTutorialsDelay.Name = "pauseTutorialsDelay";
             this.pauseTutorialsDelay.Size = new System.Drawing.Size(70, 17);
-            this.pauseTutorialsDelay.TabIndex = 0;
+            this.pauseTutorialsDelay.TabIndex = 1;
             this.pauseTutorialsDelay.Text = "Pause for";
             this.pauseTutorialsDelay.UseVisualStyleBackColor = true;
             // 
@@ -815,8 +827,10 @@ namespace SkylineTester
             this.pauseTutorialsScreenShots.Margin = new System.Windows.Forms.Padding(4);
             this.pauseTutorialsScreenShots.Name = "pauseTutorialsScreenShots";
             this.pauseTutorialsScreenShots.Size = new System.Drawing.Size(133, 17);
-            this.pauseTutorialsScreenShots.TabIndex = 3;
+            this.pauseTutorialsScreenShots.TabIndex = 0;
+            this.pauseTutorialsScreenShots.TabStop = true;
             this.pauseTutorialsScreenShots.Text = "Pause for screen shots";
+            this.toolTip1.SetToolTip(this.pauseTutorialsScreenShots, "Interactively pauses the tutorial test at calls to PauseForScreenShot()");
             this.pauseTutorialsScreenShots.UseVisualStyleBackColor = true;
             this.pauseTutorialsScreenShots.CheckedChanged += new System.EventHandler(this.pauseTutorialsScreenShots_CheckedChanged);
             // 
@@ -3079,17 +3093,6 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
-            // pauseTutorialsCoverShots
-            // 
-            this.pauseTutorialsCoverShots.AutoSize = true;
-            this.pauseTutorialsCoverShots.Location = new System.Drawing.Point(7, 47);
-            this.pauseTutorialsCoverShots.Margin = new System.Windows.Forms.Padding(4);
-            this.pauseTutorialsCoverShots.Name = "pauseTutorialsCoverShots";
-            this.pauseTutorialsCoverShots.Size = new System.Drawing.Size(128, 17);
-            this.pauseTutorialsCoverShots.TabIndex = 5;
-            this.pauseTutorialsCoverShots.Text = "Pause for cover shots";
-            this.pauseTutorialsCoverShots.UseVisualStyleBackColor = true;
-            // 
             // SkylineTesterWindow
             // 
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
@@ -3418,6 +3421,6 @@ namespace SkylineTester
         private Panel panel4;
         private CheckBox nightlyRunIndefinitely;
         private CheckBox recordAuditLogs;
-        private RadioButton pauseTutorialsCoverShots;
+        private RadioButton modeTutorialsCoverShots;
     }
 }

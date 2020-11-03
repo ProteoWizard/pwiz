@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "SmallMolecule";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_6.pdf";
@@ -218,7 +218,7 @@ namespace pwiz.SkylineTestTutorial
                 RestoreViewOnScreen(9);
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 9);
 
-                if (IsPauseForCoverShot)
+                if (IsCoverShotMode)
                 {
                     RunUI(() =>
                     {
@@ -242,7 +242,7 @@ namespace pwiz.SkylineTestTutorial
                         columnsOrdered.Remove(SmallMoleculeTransitionListColumnHeaders.labelType);
                         pasteCoverDlg.SetSmallMoleculeColumns(columnsOrdered);
                     });
-                    PauseForCoverShot();
+                    TakeCoverShot();
 
                     OkDialog(pasteCoverDlg, pasteCoverDlg.CancelDialog);
                 }
