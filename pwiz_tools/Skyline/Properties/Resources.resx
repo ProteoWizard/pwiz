@@ -10343,15 +10343,6 @@ Click 'Retry' to try building again with original spectrum files placed next to 
   <data name="RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_" xml:space="preserve">
     <value>The document does not contain the given reference type.</value>
   </data>
-  <data name="RefineDlg_NormalizationMethod_None" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="RefineDlg_NormalizationMethod_Medians" xml:space="preserve">
-    <value>Medians</value>
-  </data>
-  <data name="RefineDlg_NormalizationMethod_Global_standards" xml:space="preserve">
-    <value>Global standards</value>
-  </data>
   <data name="ExportMethodDlg_comboOptimizing_SelectedIndexChanged_Optimizing_for__0__will_produce_an_additional__1__transitions_per_transition_" xml:space="preserve">
     <value>Optimizing for {0} will produce an additional {1} transitions per transition.</value>
   </data>
@@ -11080,9 +11071,6 @@ Invalid peptide sequence at position 18
     <value>Permute isotope modifications</value>
   </data>
   <data name="RefineDlg_NormalizationMethod_Total_ion_current" xml:space="preserve">
-    <value>Total ion current</value>
-  </data>
-  <data name="AreaCVToolbar_UpdateUI_Total_ion_current" xml:space="preserve">
     <value>Total ion current</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">

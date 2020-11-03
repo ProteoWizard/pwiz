@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.Providers.LinearAlgebra;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
@@ -16,6 +17,10 @@ namespace pwiz.Skyline.Model.Results
         public static readonly NormalizeOption TOTAL = new Special(@"total", ()=>"Total");
         public static readonly NormalizeOption NORMALIZED = new Special(@"normalized", ()=>"Default Normalization Method");
         public static readonly NormalizeOption CALIBRATED = new Special(@"calibrated", ()=>"Calculated Concentration");
+
+        public static readonly NormalizeOption GLOBAL_STANDARDS =
+            FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS);
+
 
         public class Simple : NormalizeOption
         {
@@ -55,6 +60,11 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract NormalizationMethod NormalizationMethod { get; }
 
+        public bool Is(NormalizationMethod normalizationMethod)
+        {
+            return Equals(NormalizationMethod, normalizationMethod);
+        }
+
         public bool IsRatioToLabel
         {
             get { return NormalizationMethod is NormalizationMethod.RatioToLabel; }
@@ -72,9 +82,9 @@ namespace pwiz.Skyline.Model.Results
                 return FromNormalizationMethod(NormalizationMethod.NONE);
             }
 
-            if (_specialOptions.TryGetValue(name, out Special specialNormalizationOption))
+            if (_specialOptions.TryGetValue(name, out Special specialNormalizeOption))
             {
-                return specialNormalizationOption;
+                return specialNormalizeOption;
             }
 
             return FromNormalizationMethod(NormalizationMethod.FromName(name));
@@ -105,10 +115,21 @@ namespace pwiz.Skyline.Model.Results
             return new Simple(new NormalizationMethod.RatioToLabel(isotopeLabelType));
         }
 
-        public static IEnumerable<NormalizeOption> AvailableNormalizationOptions(SrmDocument document)
+        /// <summary>
+        /// Returns the normalization options that are appropriate for the document.
+        /// Note: never includes "None", "Total", or "Maximum".
+        /// </summary>
+        /// <param name="document"></param>
+        /// <returns></returns>
+        public static IEnumerable<NormalizeOption> AvailableNormalizeOptions(SrmDocument document)
         {
-            foreach (var normalizationMethod in NormalizationMethod.ListNormalizationMethods(document))
+            foreach (var normalizationMethod in NormalizationMethod.ListNormalizationMethods(document)
+                .OrderBy(method=>method is NormalizationMethod.RatioToLabel ? 0 : 1))
             {
+                if (Equals(normalizationMethod, NormalizationMethod.NONE))
+                {
+                    continue;
+                }
                 yield return FromNormalizationMethod(normalizationMethod);
             }
 
@@ -158,9 +179,9 @@ namespace pwiz.Skyline.Model.Results
             return NONE;
         }
 
-        public static NormalizeOption Constrain(SrmSettings settings, NormalizeOption normalizationOption)
+        public static NormalizeOption Constrain(SrmSettings settings, NormalizeOption NormalizeOption)
         {
-            return (normalizationOption ?? RatioToFirstStandard(settings)).Constrain(settings);
+            return (NormalizeOption ?? RatioToFirstStandard(settings)).Constrain(settings);
         }
 
         public NormalizeOption Constrain(SrmSettings settings)

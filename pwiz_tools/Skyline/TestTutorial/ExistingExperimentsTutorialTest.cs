@@ -489,7 +489,7 @@ namespace pwiz.SkylineTestTutorial
             FindNode(hgflprLight);
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph normalized metafile", 32);
 
             RunUI(() =>
@@ -611,7 +611,7 @@ namespace pwiz.SkylineTestTutorial
                 return;
             }
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas no normalization graph metafile", 40);
 
@@ -632,7 +632,7 @@ namespace pwiz.SkylineTestTutorial
 
         private static void NormalizeGraphToHeavy()
         {
-            AreaGraphController.AreaView = AreaNormalizeToView.area_ratio_view;
+            AreaGraphController.AreaView = NormalizeOption.TOTAL;
             Settings.Default.AreaLogScale = false;
             SkylineWindow.UpdatePeakAreaGraph();
         }

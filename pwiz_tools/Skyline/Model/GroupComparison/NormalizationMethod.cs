@@ -87,6 +87,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             return NONE;
         }
 
+        public static RatioToLabel FromIsotopeLabelTypeName(string name)
+        {
+            return (RatioToLabel) FromName(ratio_prefix + name);
+        }
+
         // ReSharper disable LocalizableElement
         public static readonly NormalizationMethod NONE
             = new SingletonNormalizationMethod("none", () => GroupComparisonStrings.NormalizationMethod_NONE_None);
@@ -177,6 +182,14 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     return string.Format(GroupComparisonStrings.NormalizationMethod_FromName_Ratio_to__0_,
                         _isotopeLabelType.Title);
+                }
+            }
+
+            public override string NormalizeToCaption
+            {
+                get
+                {
+                    return _isotopeLabelType.Title;
                 }
             }
 

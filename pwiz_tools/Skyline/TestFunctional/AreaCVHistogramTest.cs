@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -306,19 +307,19 @@ namespace pwiz.SkylineTestFunctional
 
 
             // Verify that global standards normalization works
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.global_standards));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++);
 
             // Verify that median normalization works
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.medians));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++);
 
             // Verify that transition count works
             RunUI(() =>
             {
-                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.none);
+                SkylineWindow.SetNormalizationMethod(NormalizationMethod.NONE);
                 SkylineWindow.SetAreaCVTransitions(AreaCVTransitions.count, 3);
             });
             WaitForGraphs();
@@ -335,7 +336,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.medians);
+                SkylineWindow.SetNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS);
                 SkylineWindow.SetAreaCVTransitions(AreaCVTransitions.all, -1);
             });
         }
@@ -347,7 +348,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SetAreaCVBinWidth(1.0);
                 SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets);
                 SkylineWindow.SetAreaCVGroup(null);
-                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.none);
+                SkylineWindow.SetNormalizationMethod(NormalizationMethod.NONE);
             });
 
             WaitForGraphs();
@@ -366,7 +367,7 @@ namespace pwiz.SkylineTestFunctional
             int startIndex = HISTOGRAM_HEAVY_START;
             AssertDataCorrect(pane, startIndex++);
 
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, NormalizeOption.RatioToFirstStandard(SkylineWindow.Document.Settings)));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(NormalizeOption.RatioToFirstStandard(SkylineWindow.Document.Settings)));
             AssertDataCorrect(pane, startIndex);
         }
 
@@ -392,7 +393,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 refineDlg.CVCutoff = 20;
-                refineDlg.NormalizationMethod = AreaCVNormalizationMethod.global_standards;
+                refineDlg.NormalizationMethod = NormalizeOption.FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS);
             });
             OkDialog(refineDlg, refineDlg.OkDialog);
             WaitForCondition(() =>
@@ -409,7 +410,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 refineDlg.CVCutoff = 20;
-                refineDlg.NormalizationMethod = AreaCVNormalizationMethod.medians;
+                refineDlg.NormalizationMethod = NormalizeOption.FromNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS);
             });
             OkDialog(refineDlg, refineDlg.OkDialog);
             WaitForCondition(() =>

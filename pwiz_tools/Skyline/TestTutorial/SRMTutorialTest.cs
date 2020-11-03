@@ -384,7 +384,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowAllTransitions();
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_maximum_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.MAXIMUM);
             });
             RestoreViewOnScreen(44);
             PauseForScreenShot("Skyline Window", 4);

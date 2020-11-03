@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -89,7 +90,7 @@ namespace TestPerf
             {
                 showHistogram();
                 SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets);
-                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.none);
+                SkylineWindow.SetNormalizationMethod(NormalizationMethod.NONE);
             });
 
             WaitForGraphs();
@@ -152,7 +153,7 @@ namespace TestPerf
             {
                 showHistogram();
                 SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets);
-                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, NormalizeOption.RatioToFirstStandard(SkylineWindow.Document.Settings));
+                SkylineWindow.SetNormalizationMethod(NormalizeOption.RatioToFirstStandard(SkylineWindow.Document.Settings));
             });
 
             WaitForGraphs();
@@ -171,11 +172,11 @@ namespace TestPerf
             CollectionAssert.AreEqual(new[] { "Light", "Heavy", "All 15N", Resources.AreaCVToolbar_UpdateUI_Medians, Resources.AreaCVToolbar_UpdateUI_None}, toolbar.NormalizationMethods.ToArray());
             AssertDataCorrect(pane, statsStartIndex++); // Light
 
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, NormalizeOption.FromIsotopeLabelType(SkylineWindow.Document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[1])));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(NormalizeOption.FromIsotopeLabelType(SkylineWindow.Document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[1])));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++); // Heavy
 
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, NormalizeOption.FromIsotopeLabelType(SkylineWindow.Document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[2])));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(NormalizeOption.FromIsotopeLabelType(SkylineWindow.Document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[2])));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++, allowInvalid: true); // All 15N
         }
@@ -280,7 +281,6 @@ namespace TestPerf
             RunUI(() =>
             {
                 refineDlg.CVCutoff = 250;
-                refineDlg.NormalizationMethod = AreaCVNormalizationMethod.ratio;
                 refineDlg.CVRefineLabelType = IsotopeLabelType.light;
             });
             OkDialog(refineDlg, refineDlg.OkDialog);
@@ -299,7 +299,6 @@ namespace TestPerf
             RunUI(() =>
             {
                 refineDlg.CVCutoff = 20;
-                refineDlg.NormalizationMethod = AreaCVNormalizationMethod.ratio;
                 refineDlg.CVRefineLabelType = IsotopeLabelType.heavy;
             });
             OkDialog(refineDlg, refineDlg.OkDialog);
@@ -318,7 +317,6 @@ namespace TestPerf
             RunUI(() =>
             {
                 refineDlg.CVCutoff = 20;
-                refineDlg.NormalizationMethod = AreaCVNormalizationMethod.ratio;
                 refineDlg.CVRefineLabelType = new IsotopeLabelType("all 15N", 0);
             });
             OkDialog(refineDlg, refineDlg.OkDialog);

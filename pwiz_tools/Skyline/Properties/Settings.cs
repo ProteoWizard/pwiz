@@ -1226,7 +1226,7 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public NormalizeOption AreaCVRatioIndex
+        public NormalizeOption AreaNormalizeOption
         {
             get
             {

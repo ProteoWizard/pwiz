@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null,
-            new AreaCVGraphSettings((GraphTypeSummary) ~0, (AreaCVNormalizationMethod) ~0, NormalizeOption.NONE, null,
+            new AreaCVGraphSettings((GraphTypeSummary) ~0, NormalizeOption.NONE, null,
                 string.Empty, (PointsTypePeakArea) ~0, double.NaN, double.NaN, -1, double.NaN, (AreaCVMsLevel) ~0,
                 (AreaCVTransitions) ~0, -1));
 
@@ -126,8 +126,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 MsLevel = AreaGraphController.AreaCVMsLevel;
                 Transitions = AreaGraphController.AreaCVTransitions;
                 CountTransitions = AreaGraphController.AreaCVTransitionsCount;
-                NormalizationMethod = AreaGraphController.NormalizationMethod;
-                RatioIndex = AreaGraphController.GetNormalizeOption(srmSettings);
+                RatioIndex = AreaGraphController.AreaCVView;
                 Group = ReplicateValue.FromPersistedString(srmSettings, AreaGraphController.GroupByGroup);
                 Annotation = AreaGraphController.GroupByAnnotation;
                 PointsType = AreaGraphController.PointsType;
@@ -137,11 +136,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 BinWidth = Settings.Default.AreaCVHistogramBinWidth * factor;
             }
 
-            public AreaCVGraphSettings(GraphTypeSummary graphType, AreaCVNormalizationMethod normalizationMethod, NormalizeOption ratioIndex, ReplicateValue group, object annotation, PointsTypePeakArea pointsType, double qValueCutoff,
+            public AreaCVGraphSettings(GraphTypeSummary graphType, NormalizeOption ratioIndex, ReplicateValue group, object annotation, PointsTypePeakArea pointsType, double qValueCutoff,
                 double cvCutoff, int minimumDetections, double binwidth, AreaCVMsLevel msLevel, AreaCVTransitions transitions, int countTransitions)
             {
                 GraphType = graphType;
-                NormalizationMethod = normalizationMethod;
                 RatioIndex = ratioIndex;
                 Group = group;
                 Annotation = annotation;

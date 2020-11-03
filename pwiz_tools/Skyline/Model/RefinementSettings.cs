@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model
 
         public RefinementSettings()
         {
-            NormalizationMethod = AreaCVNormalizationMethod.none;
+            NormalizationMethod = NormalizeOption.NONE;
             MSLevel = AreaCVMsLevel.products;
             GroupComparisonNames = new List<string>();
             GroupComparisonDefs = new List<GroupComparisonDef>();
@@ -207,9 +207,7 @@ namespace pwiz.Skyline.Model
         [Track]
         public int? MinimumDetections { get; set; }
         [Track]
-        public AreaCVNormalizationMethod NormalizationMethod { get; set; }
-        [Track]
-        public IsotopeLabelType NormalizationLabelType { get; set; }
+        public NormalizeOption NormalizationMethod { get; set; }
         [Track]
         public AreaCVTransitions Transitions { get; set; }
         [Track]
@@ -359,7 +357,7 @@ namespace pwiz.Skyline.Model
                         Resources.RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_);
                 }
 
-                if (NormalizationMethod == AreaCVNormalizationMethod.global_standards &&
+                if (NormalizationMethod.Is(GroupComparison.NormalizationMethod.GLOBAL_STANDARDS) &&
                     !document.Settings.HasGlobalStandardArea)
                 {
                     // error
@@ -369,9 +367,8 @@ namespace pwiz.Skyline.Model
                 var cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
                 var qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
                 var minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
-                var ratioIndex = GetLabelIndex(NormalizationLabelType, document);
                 var countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
-                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod, ratioIndex,
+                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod,
                     Transitions, countTransitions, MSLevel), null, progressMonitor);
                 refined = data.RemoveAboveCVCutoff(refined);
             }

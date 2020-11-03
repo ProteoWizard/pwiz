@@ -480,6 +480,7 @@ namespace pwiz.Skyline.Model.Results
                 ChromFileInfo = fileInfo;
                 ResultsIndex = resultsIndex;
                 GlobalStandardArea = settings.CalcGlobalStandardArea(resultsIndex, fileInfo);
+                SrmSettings = settings;
                 _surrogateStandardAreas = new Dictionary<NormalizationMethod.RatioToSurrogate, double>();
             }
 

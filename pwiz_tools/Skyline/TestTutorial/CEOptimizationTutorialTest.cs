@@ -251,7 +251,7 @@ namespace pwiz.SkylineTestTutorial
 
             FindNode(decorator + "IDALNENK");
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
 
             PauseForScreenShot("Main Skyline window", 9);
 

@@ -45,6 +45,7 @@ using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
@@ -4412,20 +4413,15 @@ namespace pwiz.Skyline
             if (graphType == GraphTypeSummary.replicate)
             {
                 iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
-                areaNormalizeTotalContextMenuItem.Checked = 
-                    (AreaGraphController.AreaView == AreaNormalizeToView.area_percent_view);
+                var normalizeOptions = new List<NormalizeOption>();
+                normalizeOptions.AddRange(NormalizeOption.AvailableNormalizeOptions(DocumentUI));
+                normalizeOptions.Add(NormalizeOption.MAXIMUM);
+                normalizeOptions.Add(NormalizeOption.TOTAL);
+                normalizeOptions.Add(null); // separator
+                normalizeOptions.Add(NormalizeOption.NONE);
+                areaNormalizeContextMenuItem.DropDownItems.Clear();
+                areaNormalizeContextMenuItem.DropDownItems.AddRange(MakeNormalizeToMenuItems(normalizeOptions, AreaGraphController.AreaView).ToArray());
                 menuStrip.Items.Insert(iInsert++, areaNormalizeContextMenuItem);
-                if (areaNormalizeContextMenuItem.DropDownItems.Count == 0)
-                {
-                    areaNormalizeContextMenuItem.DropDownItems.AddRange(new[]
-                        {
-                            areaNormalizeGlobalContextMenuItem,
-                            areaNormalizeMaximumContextMenuItem,
-                            areaNormalizeTotalContextMenuItem,
-                            (ToolStripItem)toolStripSeparator40,
-                            areaNormalizeNoneContextMenuItem
-                        });                 
-                }
                 var areaReplicateGraphPane = graphSummary.GraphPanes.FirstOrDefault() as AreaReplicateGraphPane;
                 if (areaReplicateGraphPane != null)
                 {
@@ -4533,7 +4529,6 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, areaCVbinWidthToolStripMenuItem);
 
                 areaCVNormalizedToToolStripMenuItem.DropDownItems.Clear();
-                UpdateAreaNormalizationMenuItems();
                 areaCVNormalizedToToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                 {
                     areaCVGlobalStandardsToolStripMenuItem,
@@ -4592,6 +4587,36 @@ namespace pwiz.Skyline
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
+        }
+
+        private ToolStripItem MakeNormalizeMenuItem(NormalizeOption normalizeOption, NormalizeOption currentOption)
+        {
+            var item = new ToolStripMenuItem(normalizeOption.Caption, null, NormalizeMenuItemOnClick)
+            {
+                Tag = normalizeOption,
+            };
+            return item;
+        }
+
+        private IEnumerable<ToolStripItem> MakeNormalizeToMenuItems(IEnumerable<NormalizeOption> normalizeOptions,
+            NormalizeOption selectedOption)
+        {
+            return normalizeOptions.Select(option =>
+
+                option == null
+                    ? (ToolStripItem) new ToolStripSeparator()
+                    : new ToolStripMenuItem(option.Caption, null, NormalizeMenuItemOnClick)
+                    {
+                        Tag = option,
+                        Checked = selectedOption == option
+                    }
+            );
+        }
+
+        public void NormalizeMenuItemOnClick(object sender, EventArgs eventArgs)
+        {
+            var normalizeOption = (NormalizeOption) ((ToolStripMenuItem) sender).Tag;
+            NormalizeAreaGraphTo(normalizeOption);
         }
 
         private void UpdateAreaCVTransitionsMenuItems()
@@ -4999,73 +5024,17 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        private void UpdateAreaNormalizationMenuItems()
+        public void SetNormalizationMethod(NormalizeOption ratioIndex, bool update = true)
         {
-            var mods = DocumentUI.Settings.PeptideSettings.Modifications;
-            var standardTypes = mods.RatioInternalStandardTypes;
-
-            if (mods.HasHeavyModifications)
-            {
-                for (var i = 0; i < standardTypes.Count; i++)
-                {
-                    var ratioIndex = NormalizeOption.FromIsotopeLabelType(standardTypes[i]);
-                    var item = new ToolStripMenuItem(standardTypes[i].Title, null, areaCVHeavyModificationToolStripMenuItem_Click)
-                    {
-                        Checked = AreaGraphController.GetNormalizeOption(DocumentUI.Settings) == ratioIndex && AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.ratio,
-                        Tag = standardTypes[i]
-                    };
-                
-                    areaCVNormalizedToToolStripMenuItem.DropDownItems.Insert(i, item);
-                }
-            }
-
-            areaCVMediansToolStripMenuItem.Checked = AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.medians;
-
-            areaCVTotalIonCurrentToolStripMenuItem.Visible = DocumentUI.Settings.HasTicArea;
-            areaCVTotalIonCurrentToolStripMenuItem.Checked =
-                AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.tic;
-
-            areaCVGlobalStandardsToolStripMenuItem.Visible = DocumentUI.Settings.HasGlobalStandardArea;
-            areaCVGlobalStandardsToolStripMenuItem.Checked = AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.global_standards;
-
-            areaCVNoneToolStripMenuItem.Checked = AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.none;
-        }
-
-        private void areaCVHeavyModificationToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var item = (ToolStripMenuItem) sender;
-            int index = ((ToolStripMenuItem)item.OwnerItem).DropDownItems.IndexOf(item);
-            var isotopeLabelType = (IsotopeLabelType) item.Tag;
-            SetNormalizationMethod(AreaCVNormalizationMethod.ratio, NormalizeOption.FromIsotopeLabelType(isotopeLabelType));
-        }
-
-        private void areaCVGlobalStandardsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetNormalizationMethod(AreaCVNormalizationMethod.global_standards);
-        }
-
-        private void areaCVMediansToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetNormalizationMethod(AreaCVNormalizationMethod.medians);
-        }
-
-        private void areaCVTotalIonCurrentToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetNormalizationMethod(AreaCVNormalizationMethod.tic);
-        }
-
-        private void areaCVNoneToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SetNormalizationMethod(AreaCVNormalizationMethod.none);
-        }
-
-        public void SetNormalizationMethod(AreaCVNormalizationMethod method, NormalizeOption ratioIndex = default(NormalizeOption), bool update = true)
-        {
-            AreaGraphController.NormalizationMethod = method;
-            AreaGraphController.RememberNormalizeOption(ratioIndex);
+            AreaGraphController.AreaView = ratioIndex;
 
             if(update)
                 UpdatePeakAreaGraph();
+        }
+
+        public void SetNormalizationMethod(NormalizationMethod normalizationMethod, bool update = true)
+        {
+            SetNormalizationMethod(NormalizeOption.FromNormalizationMethod(normalizationMethod));
         }
 
         public void ShowPeakAreaPeptideGraph()
@@ -5199,21 +5168,12 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        public void NormalizeAreaGraphTo(AreaNormalizeToView areaView)
+        public void NormalizeAreaGraphTo(NormalizeOption areaView)
         {
             AreaGraphController.AreaView = areaView;
-            if (areaView == AreaNormalizeToView.area_ratio_view)
-            {
-                foreach (var areaGraph in _listGraphPeakArea)
-                {
-                    if (!areaGraph.RatioIndex.IsRatioToLabel)
-                    {
-                        areaGraph.RatioIndex = NormalizeOption.RatioToFirstStandard(DocumentUI.Settings);
-                    }
-                }
-            }
-            if (AreaGraphController.AreaView == AreaNormalizeToView.area_percent_view ||
-                AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view)
+
+            if (AreaGraphController.AreaView == NormalizeOption.TOTAL ||
+                AreaGraphController.AreaView == NormalizeOption.MAXIMUM)
                 Settings.Default.AreaLogScale = false;
             UpdatePeakAreaGraph();
         }
@@ -5227,7 +5187,7 @@ namespace pwiz.Skyline
         {
             Settings.Default.AreaLogScale = isChecked ;
             if (isChecked)
-                AreaGraphController.AreaView = AreaNormalizeToView.none;
+                AreaGraphController.AreaView = NormalizeOption.NONE;
             UpdateSummaryGraphs();
         }
 
@@ -5284,44 +5244,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private void areaNormalizeContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            ToolStripMenuItem menu = areaNormalizeContextMenuItem;
-            // Remove menu items up to the "Global Standards" menu item.
-            while (!ReferenceEquals(areaNormalizeGlobalContextMenuItem, menu.DropDownItems[0]))
-                menu.DropDownItems.RemoveAt(0);
-            
-            var areaView = AreaGraphController.AreaView;
-            var settings = DocumentUI.Settings;
-            var mods = settings.PeptideSettings.Modifications;
-            var standardTypes = mods.RatioInternalStandardTypes;
-
-            // Add the Heavy option to the areaNormalizeContextMenuItem if there are heavy modifications
-            if (mods.HasHeavyModifications)
-            {
-                for (int i = 0; i < standardTypes.Count; i++)
-                {
-                    var ratioIndex = NormalizeOption.FromIsotopeLabelType(standardTypes[i]);
-                    var handler = new SelectNormalizeHandler(this, ratioIndex);
-                    var item = new ToolStripMenuItem(standardTypes[i].Title, null, handler.ToolStripMenuItemClick)
-                                   {
-                                       Checked = (SequenceTree.RatioIndex == ratioIndex &&
-                                                  areaView == AreaNormalizeToView.area_ratio_view)
-                                   };
-                    menu.DropDownItems.Insert(i, item);
-                }
-            }
-
-            bool globalStandard = settings.HasGlobalStandardArea;
-            areaNormalizeGlobalContextMenuItem.Visible = globalStandard;
-            areaNormalizeGlobalContextMenuItem.Checked = (areaView == AreaNormalizeToView.area_global_standard_view);
-            if (!globalStandard && areaView == AreaNormalizeToView.area_global_standard_view)
-                areaView = AreaNormalizeToView.none;
-            areaNormalizeTotalContextMenuItem.Checked = (areaView == AreaNormalizeToView.area_percent_view);
-            areaNormalizeMaximumContextMenuItem.Checked = (areaView == AreaNormalizeToView.area_maximum_view);
-            areaNormalizeNoneContextMenuItem.Checked = (areaView == AreaNormalizeToView.none);
-        }
-
         private class SelectNormalizeHandler : SelectRatioHandler
         {
             public SelectNormalizeHandler(SkylineWindow skyline, NormalizeOption ratioIndex) : base(skyline, ratioIndex)
@@ -5330,8 +5252,6 @@ namespace pwiz.Skyline
 
             protected override void OnMenuItemClick()
             {
-                AreaGraphController.AreaView = AreaNormalizeToView.area_ratio_view;
-
                 base.OnMenuItemClick();
 
                 _skyline.UpdatePeakAreaGraph();
@@ -5341,26 +5261,6 @@ namespace pwiz.Skyline
         public void SetNormalizeIndex(NormalizeOption index)
         {
             new SelectNormalizeHandler(this, index).Select();
-        }
-
-        private void areaNormalizeGlobalContextMenuItem_Click(object sender, EventArgs e)
-        {
-            NormalizeAreaGraphTo(AreaNormalizeToView.area_global_standard_view);
-        }
-
-        private void areaNormalizeTotalContextMenuItem_Click(object sender, EventArgs e)
-        {
-            NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
-        }
-
-        private void areaNormalizeNoneContextMenuItem_Click(object sender, EventArgs e)
-        {
-            NormalizeAreaGraphTo(AreaNormalizeToView.none);
-        }
-
-        private void areaNormalizeMaximumContextMenuItem_Click(object sender, EventArgs e)
-        {
-            NormalizeAreaGraphTo(AreaNormalizeToView.area_maximum_view);
         }
 
         private void showLibraryPeakAreaContextMenuItem_Click(object sender, EventArgs e)
