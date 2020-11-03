@@ -1154,6 +1154,12 @@ namespace pwiz.SkylineTestUtil
         public void TakeCoverShot()
         {
             Thread.Sleep(1000); // Give windows time to repaint
+            RunUI(() =>
+            {
+                var screenRect = Screen.FromControl(SkylineWindow).Bounds;
+                AssertEx.IsTrue(screenRect.Width == 1920 && screenRect.Height == 1080,
+                    "Cover shots must be taken at screen resolution 1920x1080 at scale factor 100% (96DPI)");
+            });
             var coverSavePath = GetCoverShotPath();
             ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath, ProcessCoverShot);
             string coverSavePath2 = null;
