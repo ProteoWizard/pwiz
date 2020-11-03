@@ -1169,7 +1169,7 @@ namespace pwiz.SkylineTestUtil
             }
             else if (coverSavePath2 != null)
             {
-                Console.WriteLine(@"Cover shot at 1200 x 800 has been saved as " + coverSavePath + @" and as " + coverSavePath2);
+                Console.WriteLine(@"Cover shot at 1200 x 800 has been saved as " + coverSavePath + @" and as Start Page thumbnail " + coverSavePath2);
             }
             else
             {
@@ -1818,7 +1818,7 @@ namespace pwiz.SkylineTestUtil
                 var screenRect = Screen.FromControl(SkylineWindow).Bounds;
                 AssertEx.IsTrue(screenRect.Width >=  width + marginW && screenRect.Height >= height + marginH,  // SetSkylineWindowSize adds margins, make sure that's going to fit
                     @"Screen is too small for requested Skyline window size");
-                var skylineSize = new Size(width,  height);
+                var skylineSize = new Size(width + marginW,  height + marginH);
                 var skylineLocation = new Point(screenRect.Left + screenRect.Width / 2 - skylineSize.Width / 2,
                     screenRect.Top + screenRect.Height / 2 - skylineSize.Height / 2);
                 SkylineWindow.Bounds = new Rectangle(skylineLocation, skylineSize);
