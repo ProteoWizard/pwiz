@@ -791,6 +791,10 @@ namespace pwiz.Skyline.Model.Lib
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
         private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z): ([^ ,]+)", NOCASE); 
         private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode: (.*)", NOCASE);
+        private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
+        private const string MZVAULT_POSITIVE_SCAN_INIDCATOR = @"Positive scan";
+        private const string MZVAULT_NEGATIVE_SCAN_INIDCATOR = @"Negative scan";
+        private const string MZVAULT_FORMULA_UNKNOWN = @"unknown";
 
         // ReSharper restore LocalizableElement
         private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent, out string warning)
@@ -839,7 +843,7 @@ namespace pwiz.Skyline.Model.Lib
                         continue;
                     Match match = REGEX_NAME.Match(line);
                     var isPeptide = true;
-                    var mzMatchTolerance = 0.01;
+                    var mzMatchTolerance = DEFAULT_MZ_MATCH_TOLERANCE;  
                     var isGC = false;
                     if (!match.Success)
                     {
@@ -908,7 +912,7 @@ namespace pwiz.Skyline.Model.Lib
                             if (match.Success)
                             {
                                 formula = match.Groups[1].Value;
-                                if (string.Equals(@"unknown", formula, StringComparison.OrdinalIgnoreCase)) // As in mzVault output
+                                if (string.Equals(MZVAULT_FORMULA_UNKNOWN, formula, StringComparison.OrdinalIgnoreCase)) // As in mzVault output
                                 {
                                     formula = null;
                                 }
@@ -1005,16 +1009,20 @@ namespace pwiz.Skyline.Model.Lib
                         else if (line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
                             break;
 
-                        // mzVault quirks
-                        if (line.StartsWith(@"Positive scan"))
+                        if (line.StartsWith(MZVAULT_POSITIVE_SCAN_INIDCATOR))
                         {
                             isPositive = true;
-                            mzMatchTolerance = 0.1;
+                            isMzVault = true;
                         }
-                        else if (line.StartsWith(@"Negative scan"))
+                        else if (line.StartsWith(MZVAULT_NEGATIVE_SCAN_INIDCATOR))
                         {
                             isPositive = false;
-                            mzMatchTolerance = 0.1;
+                            isMzVault = true;
+                        }
+                        if (isMzVault)
+                        {
+                            // mzVault uses a wider tolerance than most in m/z matching for precursor identification
+                            mzMatchTolerance = 10.0 * DEFAULT_MZ_MATCH_TOLERANCE;
                         }
                     }
 
