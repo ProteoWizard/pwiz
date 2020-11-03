@@ -168,6 +168,7 @@
     <Compile Include="TestDocumentContainer.cs" />
     <Compile Include="TestFilesDir.cs" />
     <Compile Include="TestFunctional.cs" />
+    <Compile Include="TypeInspector.cs" />
     <Compile Include="UnifiTestUtil.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -219,6 +219,22 @@ namespace pwiz.Skyline.Model.DdaSearch
                         tokenSource.Token.ThrowIfCancellationRequested();
                         try
                         {
+                            string outputFilepath = GetSearchResultFilepath(rawFileName);
+                            if (File.Exists(outputFilepath))
+                            {
+                                // CONSIDER: read the file description to see what settings were used to generate the file;
+                                // if the same settings were used, we can re-use the file, else regenerate
+                                /*string lastLine = File.ReadLines(outputFilepath).Last();
+                                if (lastLine == @"</MzIdentML>")
+                                {
+                                    helper.WriteMessage($"Re-using existing mzIdentML file for {rawFileName.GetSampleOrFileName()}", true);
+                                    CurrentFile++;
+                                    continue;
+                                }
+                                else*/
+                                    FileEx.SafeDelete(outputFilepath);
+                            }
+
                             InitializeEngine(tokenSource, rawFileName.GetSampleLocator());
                             amandaInputParser = new MSAmandaSpectrumParser(rawFileName.GetSampleLocator(), Settings.ConsideredCharges, true);
                             SearchEngine.SetInputParser(amandaInputParser);
@@ -227,7 +243,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         }
                         finally
                         {
-                            SearchEngine.Dispose();
+                            SearchEngine?.Dispose();
                             amandaInputParser?.Dispose();
                             amandaInputParser = null;
                         }
@@ -289,10 +305,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         private List<Modification> GenerateNewModificationsForEveryAA(StaticMod mod)
         {
             List<Modification> mods = new List<Modification>();
-            foreach (var a in mod.AAs) {
-                mods.Add(GenerateNewModification(mod, a));
-       
-            }
+            if (mod.AAs != null)
+                foreach (var a in mod.AAs)
+                    mods.Add(GenerateNewModification(mod, a));
+            else
+                mods.Add(GenerateNewModification(mod, ' '));
             return mods;
         }
 
