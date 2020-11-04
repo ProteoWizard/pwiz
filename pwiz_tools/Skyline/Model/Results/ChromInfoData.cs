@@ -159,8 +159,6 @@ namespace pwiz.Skyline.Model.Results
         {
         }
 
-        public new PeptideChromInfo ChromInfo { get { return (PeptideChromInfo)base.ChromInfo; } }
-
         public override int OptimizationStep
         {
             get { return 0; }
@@ -168,7 +166,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override RetentionTimeValues? GetRetentionTimes()
         {
-            return RetentionTimeValues.GetValues(ChromInfo);
+            return null;
         }
 
         public static IList<ICollection<PeptideChromInfoData>> GetPeptideChromInfoDatas(MeasuredResults measuredResults, PeptideDocNode peptideDocNode)

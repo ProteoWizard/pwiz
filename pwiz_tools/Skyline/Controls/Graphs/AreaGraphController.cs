@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphSummary.UpdateUI();
         }
 
-        public void OnRatioIndexChanged()
+        public void OnNormalizeOptionChanged()
         {
             if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */)
                 GraphSummary.UpdateUI();
@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Controls.Graphs
             //           one in the sequence tree, but at least this will keep the UI
             //           from crashing with IndexOutOfBoundsException.
             var settings = GraphSummary.DocumentUIContainer.DocumentUI.Settings;
-            GraphSummary.RatioIndex = NormalizeOption.Constrain(settings, GraphSummary.RatioIndex);
+            GraphSummary.NormalizeOption = NormalizeOption.Constrain(settings, GraphSummary.NormalizeOption);
 
             var pane = GraphSummary.GraphPanes.FirstOrDefault();
 

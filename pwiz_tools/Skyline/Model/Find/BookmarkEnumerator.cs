@@ -383,7 +383,6 @@ namespace pwiz.Skyline.Model.Find
             {
                 int resultsIndex = ResultsIndex;
                 var peptideDocNode = NodePath.OfType<PeptideDocNode>().FirstOrDefault();
-                var transitionGroupDocNode = NodePath.OfType<TransitionGroupDocNode>().FirstOrDefault();
                 if (resultsIndex < 0)
                 {
                     return Resources.BookmarkEnumerator_GetLocationName_UnknownFile;
@@ -394,8 +393,8 @@ namespace pwiz.Skyline.Model.Find
                 }
                 var chromatogramSets = Document.Settings.MeasuredResults.Chromatograms;
                 var chromatogramSet = chromatogramSets[resultsIndex];
-                var resultDisplaySettings = new DisplaySettings(new NormalizedValueCalculator(Document), 
-                    peptideDocNode, false, resultsIndex, displaySettings.RatioIndex); //, displaySettings.DisplayProteinsMode);
+                var resultDisplaySettings = new DisplaySettings(displaySettings.NormalizedValueCalculator, 
+                    peptideDocNode, false, resultsIndex, displaySettings.RatioIndex);
                 return CurrentDocNode.GetDisplayText(resultDisplaySettings) + @" (" + chromatogramSet.Name + @")";
             }
             return CurrentDocNode.GetDisplayText(displaySettings);

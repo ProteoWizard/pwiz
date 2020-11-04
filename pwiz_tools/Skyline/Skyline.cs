@@ -4665,15 +4665,15 @@ namespace pwiz.Skyline
 
             protected virtual void OnMenuItemClick()
             {
-                _skyline.SequenceTree.RatioIndex = _ratioIndex;
-                _skyline._listGraphPeakArea.ForEach(g => g.RatioIndex = _ratioIndex);
+                _skyline.SequenceTree.NormalizeOption = _ratioIndex;
+                _skyline._listGraphPeakArea.ForEach(g => g.NormalizeOption = _ratioIndex);
             }
 
             public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, NormalizeOption i)
             {
                 var handler = new SelectRatioHandler(skylineWindow, i);
                 var item = new ToolStripMenuItem(text, null, handler.ToolStripMenuItemClick)
-                { Checked = (skylineWindow.SequenceTree.RatioIndex == i) };
+                { Checked = (skylineWindow.SequenceTree.NormalizeOption == i) };
                 menu.DropDownItems.Add(item);
             }
         }

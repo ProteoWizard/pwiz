@@ -206,9 +206,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 var selNode = SkylineWindow.SequenceTree.SelectedNode;
-                AssertEx.IsTrue(selNode.Text.Contains("ETFPILVEEK")); // Not L10N
-                AssertEx.IsTrue(((PeptideDocNode)((PeptideTreeNode)selNode).Model).HasResults);
-                AssertEx.IsTrue(Equals(selNode.StateImageIndex, (int)SequenceTree.StateImageId.keep));
+                Assert.IsTrue(selNode.Text.Contains("ETFPILVEEK")); // Not L10N
+                Assert.IsTrue(((PeptideDocNode)((PeptideTreeNode)selNode).Model).HasResults);
+                Assert.IsTrue(Equals(selNode.StateImageIndex, (int)SequenceTree.StateImageId.keep));
                 SkylineWindow.ShowAllTransitions();
                 SkylineWindow.SelectedPath =
                   SkylineWindow.SequenceTree.GetNodePath(selNode.Nodes[0].Nodes[2] as TreeNodeMS);

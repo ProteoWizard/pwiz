@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Controls.Graphs
             void OnDocumentChanged(SrmDocument oldDocument, SrmDocument newDocument);
             void OnActiveLibraryChanged();
             void OnResultsIndexChanged();
-            void OnRatioIndexChanged();
+            void OnNormalizeOptionChanged();
 
             void OnUpdateGraph();
 
@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private NormalizeOption _ratioIndex;
+        private NormalizeOption _normalizeOption;
 
         public GraphTypeSummary Type { get; set; }
 
@@ -210,16 +210,16 @@ namespace pwiz.Skyline.Controls.Graphs
         /// peak area summary graph uses this class directly, this is the
         /// only way to get it the ratio index value.
         /// </summary>
-        public NormalizeOption RatioIndex
+        public NormalizeOption NormalizeOption
         {
-            get { return _ratioIndex; }
+            get { return _normalizeOption; }
             set
             {
-                if (_ratioIndex != value)
+                if (_normalizeOption != value)
                 {
-                    _ratioIndex = value;
+                    _normalizeOption = value;
 
-                    _controller.OnRatioIndexChanged();
+                    _controller.OnNormalizeOptionChanged();
                 }
             }
         }

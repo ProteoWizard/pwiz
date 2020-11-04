@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Controls
         private TreeNode _triggerLabelEdit;
         private string _editedLabel;
         private int _resultsIndex;
-        private NormalizeOption _ratioIndex;
+        private NormalizeOption _normalizeOption;
         private StatementCompletionTextBox _editTextBox;
         private bool _inhibitAfterSelect;
 
@@ -336,7 +336,7 @@ namespace pwiz.Skyline.Controls
                     changeAll = true; // Help UpdateNodes remove nodes quickly during a full docment change
 
                     _resultsIndex = 0;
-                    _ratioIndex = NormalizeOption.RatioToFirstStandard(document.Settings);
+                    _normalizeOption = NormalizeOption.RatioToFirstStandard(document.Settings);
 
                     cover = new CoverControl(this);
                 }
@@ -346,7 +346,7 @@ namespace pwiz.Skyline.Controls
                     _resultsIndex = settings.HasResults
                         ? Math.Min(_resultsIndex, settings.MeasuredResults.Chromatograms.Count - 1)
                         : 0;
-                    _ratioIndex = NormalizeOption.Constrain(settings, _ratioIndex);
+                    _normalizeOption = NormalizeOption.Constrain(settings, _normalizeOption);
                 }
 
                 BeginUpdateMS();
@@ -452,14 +452,14 @@ namespace pwiz.Skyline.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public NormalizeOption RatioIndex
+        public NormalizeOption NormalizeOption
         {
-            get { return _ratioIndex; }
+            get { return _normalizeOption; }
             set
             {
-                if (_ratioIndex != value)
+                if (_normalizeOption != value)
                 {
-                    _ratioIndex = value;
+                    _normalizeOption = value;
                     UpdateNodeStates();
                 }
             }
@@ -1311,7 +1311,7 @@ namespace pwiz.Skyline.Controls
 
         public DisplaySettings GetDisplaySettings(PeptideDocNode nodePep)
         {
-            return new DisplaySettings(new NormalizedValueCalculator(Document), nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, RatioIndex); //, PeptidesDisplayMode); 
+            return new DisplaySettings(new NormalizedValueCalculator(Document), nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, NormalizeOption); //, PeptidesDisplayMode); 
         }
 
         public Rectangle RectToScreen(Rectangle r)

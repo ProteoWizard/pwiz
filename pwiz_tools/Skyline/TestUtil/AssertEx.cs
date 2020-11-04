@@ -450,7 +450,6 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-
         /// <summary>
         /// Checks validity of a document or document fragment against the current schema
         /// </summary>

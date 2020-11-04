@@ -271,15 +271,6 @@ namespace pwiz.Skyline.Model.Results
         public float? ZScore { get; private set; }
         public Annotations Annotations { get; private set; }
 
-        public RatioValue GetRatio(NormalizeOption ratioIndex)
-        {
-            // TODO: RatioIndex
-            return null;
-            // return index != RATIO_INDEX_GLOBAL_STANDARDS
-            //            ? _ratios[index]
-            //            : _ratios[_ratios.Count - 1];
-        }
-
         /// <summary>
         /// Set if user action has explicitly set these values
         /// </summary>
