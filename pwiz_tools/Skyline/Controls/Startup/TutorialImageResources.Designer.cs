@@ -253,6 +253,16 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap SmallMolLibraries_start {
+            get {
+                object obj = ResourceManager.GetObject("SmallMolLibraries_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap TargetedMSMS_start {
             get {
                 object obj = ResourceManager.GetObject("TargetedMSMS_start", resourceCulture);

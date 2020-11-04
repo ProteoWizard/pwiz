@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "OptimizeCE";
 
             ForceMzml = true;   // Mzml is ~2x faster for this test.
@@ -227,7 +227,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Main Skyline window", 8);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RunUI(() =>
                 {
@@ -241,7 +241,7 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(SkylineWindow.FocusDocument);
 
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 

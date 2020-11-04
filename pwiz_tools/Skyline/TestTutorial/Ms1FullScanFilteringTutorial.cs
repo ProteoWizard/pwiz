@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
 //            PauseStartPage = 30;
             CoverShotName = "MS1Filtering";
 
@@ -456,7 +456,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Status bar clipped from main window - 4/51 pep 4/52 prec 10/156 tran", 23);
 
             const string TIP_NAME = "5b_MCF7_TiTip3";
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen();
                 ClickChromatogram(TIP_NAME, 34.5, 366);
@@ -465,7 +465,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0]);
                 WaitForGraphs();
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 

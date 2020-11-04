@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "GroupedStudies";
 
             ForceMzml = true;   // Mzml is faster for this test.
@@ -1374,13 +1374,13 @@ namespace pwiz.SkylineTestTutorial
                 foldChangeGrid.ShowGraph();
             });
             PauseForScreenShot<FoldChangeBarGraph>("Healthy v Diseased:Graph", 66);
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen();
                 foldChangeGrid = WaitForOpenForm<FoldChangeGrid>();
             }
             var foldChangeGraph = WaitForOpenForm<FoldChangeBarGraph>();
-            if (!IsPauseForCoverShot)
+            if (!IsCoverShotMode)
                 RunUI(() => foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating));
             RunUI(() =>
             {
@@ -1411,7 +1411,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => Assert.AreEqual(11, foldChangeGrid.DataboundGridControl.RowCount));
             PauseForScreenShot<FoldChangeBarGraph>("Right click on the graph and choose Copy", 67);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RunUI(() =>
                 {
@@ -1437,7 +1437,7 @@ namespace pwiz.SkylineTestTutorial
                     gcFloatingWindow.Height = SkylineWindow.Height - 10;
                     gcFloatingWindow.Left = SkylineWindow.Right - gcFloatingWindow.Width - 5;
                 });
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 

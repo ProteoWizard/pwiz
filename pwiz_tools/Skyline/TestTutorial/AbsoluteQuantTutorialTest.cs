@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "AbsoluteQuant";
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
@@ -320,7 +320,7 @@ namespace pwiz.SkylineTestTutorial
             // View the calibration curve p. 18
             RunUI(() => SkylineWindow.ShowDocumentGrid(false));
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RunUI(() =>
                 {
@@ -339,7 +339,7 @@ namespace pwiz.SkylineTestTutorial
                     calibrationFloatingWindow.Left = SkylineWindow.Left + 15;
 
                 });
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 
