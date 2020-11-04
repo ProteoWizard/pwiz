@@ -18,9 +18,11 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Threading;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -41,20 +43,26 @@ namespace pwiz.Skyline.Controls.Graphs
             Location = new Location(0, 0, CoordType.PaneFraction),
             ZOrder = ZOrder.A_InFront
         };
-        private SizeF _titleSize;
         private PointF _barLocation;
+        private float _barWidth;
         private readonly SummaryGraphPane _parent;
+        
+        public SummaryGraphPane Parent => _parent;
+        public bool IsDisposed { get; private set; }
 
         public PaneProgressBar(SummaryGraphPane parent)
         {
+            SizeF _titleSize;
             _parent = parent;
             var scaleFactor = parent.CalcScaleFactor();
             using (var g = parent.GraphSummary.CreateGraphics())
             {
-                _titleSize = parent.Title.FontSpec.BoundingBox(g, parent.Title.Text, scaleFactor);
+                _titleSize = parent.Title.FontSpec.BoundingBox(g, @" ", scaleFactor);
             }
+
+            _barWidth = parent.Rect.Width / 3;
             _barLocation = new PointF(
-                (parent.Rect.Left + parent.Rect.Right - _titleSize.Width) / (2 * parent.Rect.Width),
+                (parent.Rect.Left + parent.Rect.Right - _barWidth) / (2 * parent.Rect.Width),
                 (parent.Rect.Top + parent.Margin.Top * (1 + scaleFactor) + _titleSize.Height) / parent.Rect.Height);
 
             _left.Location.X = _barLocation.X;
@@ -63,16 +71,18 @@ namespace pwiz.Skyline.Controls.Graphs
             _left.Location.Height = 0;
             _right.Location.X = _barLocation.X;
             _right.Location.Y = _barLocation.Y;
-            _right.Location.Width = _titleSize.Width / parent.Rect.Width;
+            _right.Location.Width = _barWidth / parent.Rect.Width;
             _right.Location.Height = 0;
             parent.GraphObjList.Add(_left);
             parent.GraphObjList.Add(_right);
+            IsDisposed = false;
         }
 
         public void Dispose()
         {
             _parent.GraphObjList.Remove(_left);
             _parent.GraphObjList.Remove(_right);
+            IsDisposed = true;
         }
 
         private void DrawBar(int progress)
@@ -82,7 +92,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_parent.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _right)) == null)
                 _parent.GraphObjList.Add(_right);
 
-            var len1 = _titleSize.Width * progress / 100 / _parent.Rect.Width;
+            var len1 = _barWidth * progress / 100 / _parent.Rect.Width;
 
             _left.Location.X = _barLocation.X;
             _left.Location.Y = _barLocation.Y;
@@ -90,10 +100,11 @@ namespace pwiz.Skyline.Controls.Graphs
             _left.Location.Height = 0;
             _right.Location.X = _barLocation.X + len1;
             _right.Location.Y = _barLocation.Y;
-            _right.Location.Width = _titleSize.Width / _parent.Rect.Width - len1;
+            _right.Location.Width = _barWidth / _parent.Rect.Width - len1;
             _right.Location.Height = 0;
 
-
+            //CONSIDER: Update the progress bar rectangle only
+            //  instead of the whole control
             _parent.GraphSummary.GraphControl.Invalidate();
             _parent.GraphSummary.GraphControl.Update();
         }
@@ -102,15 +113,118 @@ namespace pwiz.Skyline.Controls.Graphs
         public void UpdateProgress(int progress)
         {
             var graph = _parent.GraphSummary.GraphControl;
+            graph.Invoke((Action) (() => { this.UpdateProgressUI(progress); }));
+        }
+        //must be called on the UI thread
+        public void UpdateProgressUI(int progress)
+        {
+            var graph = _parent.GraphSummary.GraphControl;
             if (graph != null && !graph.IsDisposed && graph.IsHandleCreated)
-                try
-                {   //It is possible that the main thread disposes the graph object
-                    //during the Invoke method. No additional action is required in such a case
-                    graph.Invoke((Action) (() => { this.DrawBar(progress); }));
+                graph.Invoke((Action)(() => { this.DrawBar(progress); }));
+        }
+    }
+
+    public class ProgressMonitor
+    {
+        public int ProgressRaw => _progressRaw;
+        public int MaxProgressRaw { get; private set; }
+        public int ReportingStep { get; private set; }
+        public PaneProgressBar ProgressBar { get; private set; }
+        public int Step => _step;
+
+        private int _progressSteps;
+        private int _step;
+        private int _progressRaw;
+
+        private static ConcurrentDictionary<CancellationToken, ProgressMonitor> _monitors =
+            new ConcurrentDictionary<CancellationToken, ProgressMonitor>();
+
+        //this method must be called on the UI thread
+        public static PaneProgressBar RegisterProgressBar(CancellationToken token, int maxProgress, int reportingStep, 
+            SummaryGraphPane parent)
+        {
+            if (token.IsCancellationRequested)
+            {
+                TerminateProgressBar(token);
+                return null;
+            }
+            else
+            {
+                if (_monitors.TryGetValue(token, out ProgressMonitor monitor))
+                {
+                    if (monitor.ProgressBar.IsDisposed)
+                        TerminateProgressBar(token);
+                    else
+                        return monitor.ProgressBar;
                 }
-                catch (ObjectDisposedException)
-                {}
+
+                if (maxProgress >= 100)
+                {
+                    var bar = new PaneProgressBar(parent);
+                    _monitors.TryAdd(token, new ProgressMonitor(maxProgress, reportingStep, bar));
+                    return bar;
+                }
+                else return null;
+            }
         }
 
+        public static void TerminateProgressBar(CancellationToken token)
+        {
+            if (_monitors.TryRemove(token, out var monitor))
+            {
+                monitor.ProgressBar.Parent.GraphSummary.GraphControl.Invoke(new Action(monitor.ProgressBar.Dispose));
+            }
+        }
+
+        public static void CheckCanceled(CancellationToken token)
+        {
+            if (token.IsCancellationRequested)
+            {
+                TerminateProgressBar(token);
+                throw new OperationCanceledException();
+            }
+            else
+            {
+                //update the progress bar
+                if (_monitors.TryGetValue(token, out ProgressMonitor monitor))
+                {
+                    if(monitor.Step > 0 && monitor.UpdateAndCheck())
+                        monitor.UpdateProgressBar();
+                }
+            }
+        }
+
+        private ProgressMonitor(int maxProgress, int reportingStep, PaneProgressBar bar)
+        {
+            MaxProgressRaw = maxProgress;
+            ReportingStep = reportingStep;
+            ProgressBar = bar;
+
+            _step = MaxProgressRaw / 100 * ReportingStep;
+        }
+
+        public bool UpdateAndCheck()
+        {
+            var res = (_progressRaw == _progressSteps && ProgressRaw <= MaxProgressRaw);
+            Interlocked.Increment(ref _progressRaw);
+            return res;
+        }
+
+        public void UpdateProgressBar()
+        {
+            var graph = ProgressBar.Parent.GraphSummary.GraphControl;
+            try { 
+                graph.Invoke(new Action(() =>
+                    {
+                        ProgressBar.UpdateProgress(_progressSteps / _step);
+                        _progressSteps += _step;
+                    }
+                ));
+            }
+            //It is possible that the graph is disposed by another thread during
+            //  the Invoke() call. This is normal and this exception does not require
+            //  any processing.
+            catch (ObjectDisposedException) { }
+        }
     }
 }
