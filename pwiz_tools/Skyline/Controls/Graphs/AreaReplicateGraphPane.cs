@@ -911,7 +911,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public static readonly NormalizeOption RATIO_INDEX_NONE = NormalizeOption.NONE;
 
             private readonly DocNode _docNode;
-            private readonly NormalizeOption _ratioIndex;
+            private readonly NormalizeOption _normalizeOption;
             private readonly DataScalingOption _dataScalingOption;
             private readonly AreaExpectedValue _expectedVisible;
             private readonly bool _zeroMissingValues;
@@ -920,35 +920,32 @@ namespace pwiz.Skyline.Controls.Graphs
                                  IdentityPath identityPath,
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
-                                 NormalizeOption ratioIndex,
+                                 NormalizeOption normalizeOption,
                                  DataScalingOption dataScalingOption,
                                  AreaExpectedValue expectedVisible,
                                  PaneKey paneKey,
                                  bool zeroMissingValues)
-                : base(document, identityPath, displayType, replicateGroupOp, paneKey)
+                : this(document, new []{identityPath}, displayType, replicateGroupOp, normalizeOption, dataScalingOption, expectedVisible, paneKey, zeroMissingValues)
             {
                 _docNode = document.FindNode(identityPath);
-                _ratioIndex = ratioIndex;
-                _dataScalingOption = dataScalingOption;
-                _expectedVisible = expectedVisible;
-                _zeroMissingValues = zeroMissingValues;
             }
 
             public AreaGraphData(SrmDocument document,
                                  IEnumerable<IdentityPath> selectedDocNodePaths,
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
-                                 NormalizeOption ratioIndex,
+                                 NormalizeOption normalizeOption,
                                  DataScalingOption dataScalingOption,
                                  AreaExpectedValue expectedVisible,
                                  PaneKey paneKey,
                                  bool zeroMissingValues = false)
                 : base(document, selectedDocNodePaths, displayType, replicateGroupOp, paneKey)
             {
-                _ratioIndex = ratioIndex;
+                _normalizeOption = normalizeOption;
                 _dataScalingOption = dataScalingOption;
                 _expectedVisible = expectedVisible;
                 _zeroMissingValues = zeroMissingValues;
+                NormalizedValueCalculator = new NormalizedValueCalculator(document);
             }
 
             protected override void InitData()
@@ -996,6 +993,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         break;
                 }
             }
+
+            protected NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
 
             public override PointPair PointPairMissing(int xValue)
             {
@@ -1220,7 +1219,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override List<LineInfo> GetPeptidePointPairLists(PeptideGroupDocNode peptideGroup, PeptideDocNode nodePep, bool multiplePeptides)
             {
-                if (_ratioIndex == NormalizeOption.CALIBRATED || _ratioIndex == NormalizeOption.DEFAULT)
+                if (_normalizeOption == NormalizeOption.CALIBRATED || _normalizeOption == NormalizeOption.DEFAULT)
                 {
                     return new List<LineInfo>
                     {
@@ -1255,7 +1254,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var x = points[0].X;
                     ErrorTag tag = null;
                     double y;
-                    if (_ratioIndex == RATIO_INDEX_NONE)
+                    if (_normalizeOption == RATIO_INDEX_NONE)
                     {
                         y = points.Sum(point => point.Y);
                         tag = CalcErrorTag(points, false);
@@ -1284,11 +1283,11 @@ namespace pwiz.Skyline.Controls.Graphs
             public PointPairList GetCalibratedPeptidePointList(PeptideGroupDocNode peptideGroup,
                 PeptideDocNode peptideDocNode)
             {
-                var document = RatioCalculator.Document;
+                var document = NormalizedValueCalculator.Document;
                 var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, peptideGroup, peptideDocNode);
                 CalibrationCurve calibrationCurve = null;
                 var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
-                if (_ratioIndex == NormalizeOption.CALIBRATED)
+                if (_normalizeOption == NormalizeOption.CALIBRATED)
                 {
                     calibrationCurve = calibrationCurveFitter.GetCalibrationCurve();
                 }
@@ -1337,12 +1336,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private float? GetValue(TransitionGroupChromInfoData chromInfo)
             {
-                return (float?) RatioCalculator.GetTransitionGroupDataValue(_ratioIndex, chromInfo);
+                return (float?) NormalizedValueCalculator.GetTransitionGroupDataValue(_normalizeOption, chromInfo);
             }
 
             private float? GetValue(TransitionChromInfoData chromInfo)
             {
-                return (float?) RatioCalculator.GetTransitionDataValue(_ratioIndex, chromInfo);
+                return (float?) NormalizedValueCalculator.GetTransitionDataValue(_normalizeOption, chromInfo);
             }
         }
     }

@@ -258,7 +258,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 ReplicateGroupOp replicateGroupOp, PaneKey paneKey)
             {
                 _document = document;
-                RatioCalculator = new RatioCalculator(document);
                 _selectedDocNodePaths = ImmutableList.ValueOf(selectedDocNodePaths);
                 _displayType = displayType;
                 ReplicateGroupOp = replicateGroupOp;
@@ -375,8 +374,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Remove groups that don't have any peptides in them
                 RemoveEmptyGroups(docNodes.Count);
             }
-
-            protected RatioCalculator RatioCalculator { get; private set; }
 
             protected virtual bool IncludeTransition(TransitionDocNode transitionDocNode)
             {

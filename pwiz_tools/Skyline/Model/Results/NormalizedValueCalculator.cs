@@ -8,11 +8,11 @@ using pwiz.Skyline.Model.GroupComparison;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public class RatioCalculator
+    public class NormalizedValueCalculator
     {
         private readonly Lazy<NormalizationData> _normalizationData;
         private readonly Dictionary<ChromFileInfoId, FileInfo> _fileInfos;
-        public RatioCalculator(SrmDocument document)
+        public NormalizedValueCalculator(SrmDocument document)
         {
             Document = document;
             _normalizationData = new Lazy<NormalizationData>(()=>NormalizationData.GetNormalizationData(document, false, null));
@@ -177,14 +177,6 @@ namespace pwiz.Skyline.Model.Results
             var denominators = new List<double>();
             if (SimpleRatios)
             {
-                // var otherTransitionGroupChromInfo =
-                //     FindMatchingTransitionGroupChromInfo(transitionGroupChromInfo, otherTransitionGroup);
-                // if (otherTransitionGroupChromInfo == null)
-                // {
-                //     return null;
-                // }
-                //
-                // return transitionGroupChromInfo.Area / otherTransitionGroupChromInfo.Area;
                 foreach (var tran in transitionGroupDocNode.Transitions.Where(tran =>
                     tran.IsQuantitative(Document.Settings)))
                 {
@@ -322,49 +314,6 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return null;
-        }
-
-        public TransitionGroupChromInfo FindMatchingTransitionGroupChromInfo(
-            TransitionGroupChromInfo transitionGroupChromInfo, TransitionGroupDocNode otherTransitionGroup)
-        {
-            if (otherTransitionGroup.Results == null)
-            {
-                return null;
-            }
-
-            FileInfo fileInfo;
-            if (!_fileInfos.TryGetValue(transitionGroupChromInfo.FileId, out fileInfo))
-            {
-                return null;
-            }
-
-            if (otherTransitionGroup.Results.Count <= fileInfo.ResultsIndex)
-            {
-                return null;
-            }
-
-            foreach (var otherChromInfo in otherTransitionGroup.Results[fileInfo.ResultsIndex])
-            {
-                if (otherChromInfo == null)
-                {
-                    continue;
-                }
-
-                if (!ReferenceEquals(otherChromInfo.FileId, transitionGroupChromInfo.FileId))
-                {
-                    continue;
-                }
-
-                if (otherChromInfo.OptimizationStep != transitionGroupChromInfo.OptimizationStep)
-                {
-                    continue;
-                }
-
-                return otherChromInfo;
-            }
-
-            return null;
-
         }
 
         public TransitionGroupDocNode FindMatchingTransitionGroup(NormalizationMethod.RatioToLabel ratioToLabel,

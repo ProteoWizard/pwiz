@@ -9,11 +9,11 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
-    public static class RatioCalculatorVerifier
+    public static class NormalizedValueCalculatorVerifier
     {
         public static void VerifyRatioCalculations(SrmDocument doc)
         {
-            var ratioCalculator = new RatioCalculator(doc) {BugCompatibility = true};
+            var calculator = new NormalizedValueCalculator(doc) {BugCompatibility = true};
             bool hasGlobalStandardArea = doc.Settings.HasGlobalStandardArea;
             foreach (var molecule in doc.Molecules)
             {
@@ -27,15 +27,15 @@ namespace pwiz.SkylineTestUtil
                     {
                         foreach (var transitionGroupChromInfo in transitionGroupDocNode.Results.SelectMany(r => r))
                         {
-                            AssertEx.AreEqual(transitionGroupChromInfo.Area, ratioCalculator.GetTransitionGroupValue(NormalizationMethod.NONE, molecule, transitionGroupDocNode, transitionGroupChromInfo));
+                            AssertEx.AreEqual(transitionGroupChromInfo.Area, calculator.GetTransitionGroupValue(NormalizationMethod.NONE, molecule, transitionGroupDocNode, transitionGroupChromInfo));
                             if (!duplicatePrecursor)
                             {
-                                for (int iRatio = 0; iRatio < ratioCalculator.RatioInternalStandardTypes.Count; iRatio++)
+                                for (int iRatio = 0; iRatio < calculator.RatioInternalStandardTypes.Count; iRatio++)
                                 {
                                     float? expected = transitionGroupChromInfo.Ratios[iRatio]?.Ratio;
-                                    double? actual = (float?)ratioCalculator.GetTransitionGroupValue(
+                                    double? actual = (float?)calculator.GetTransitionGroupValue(
                                         new NormalizationMethod.RatioToLabel(
-                                            ratioCalculator.RatioInternalStandardTypes[iRatio]), molecule,
+                                            calculator.RatioInternalStandardTypes[iRatio]), molecule,
                                         transitionGroupDocNode, transitionGroupChromInfo);
 
                                     AssertNumbersSame(expected, actual);
@@ -44,14 +44,14 @@ namespace pwiz.SkylineTestUtil
 
                             if (hasGlobalStandardArea)
                             {
-                                AssertEx.AreEqual(ratioCalculator.RatioInternalStandardTypes.Count + 1, transitionGroupChromInfo.Ratios.Count);
+                                AssertEx.AreEqual(calculator.RatioInternalStandardTypes.Count + 1, transitionGroupChromInfo.Ratios.Count);
                                 AssertNumbersSame(transitionGroupChromInfo.Ratios.Last()?.Ratio,
-                                    ratioCalculator.GetTransitionGroupValue(NormalizationMethod.GLOBAL_STANDARDS,
+                                    calculator.GetTransitionGroupValue(NormalizationMethod.GLOBAL_STANDARDS,
                                         molecule, transitionGroupDocNode, transitionGroupChromInfo));
                             }
                             else
                             {
-                                AssertEx.AreEqual(ratioCalculator.RatioInternalStandardTypes.Count, transitionGroupChromInfo.Ratios.Count);
+                                AssertEx.AreEqual(calculator.RatioInternalStandardTypes.Count, transitionGroupChromInfo.Ratios.Count);
                             }
                         }
                     }
@@ -65,12 +65,12 @@ namespace pwiz.SkylineTestUtil
                             {
                                 if (!duplicatePrecursor && transitionChromInfo.OptimizationStep == 0)
                                 {
-                                    for (int iRatio = 0; iRatio < ratioCalculator.RatioInternalStandardTypes.Count; iRatio++)
+                                    for (int iRatio = 0; iRatio < calculator.RatioInternalStandardTypes.Count; iRatio++)
                                     {
                                         float? expected = transitionChromInfo.Ratios[iRatio];
-                                        float? actual = (float?)ratioCalculator.GetTransitionValue(
+                                        float? actual = (float?)calculator.GetTransitionValue(
                                             new NormalizationMethod.RatioToLabel(
-                                                ratioCalculator.RatioInternalStandardTypes[iRatio]), molecule,
+                                                calculator.RatioInternalStandardTypes[iRatio]), molecule,
                                             transitionGroupDocNode, transitionDocNode, transitionChromInfo);
 
                                         AssertNumbersSame(expected, actual);
@@ -78,14 +78,14 @@ namespace pwiz.SkylineTestUtil
                                 }
                                 if (hasGlobalStandardArea)
                                 {
-                                    Assert.AreEqual(ratioCalculator.RatioInternalStandardTypes.Count + 1, transitionChromInfo.Ratios.Count);
+                                    Assert.AreEqual(calculator.RatioInternalStandardTypes.Count + 1, transitionChromInfo.Ratios.Count);
                                     AssertNumbersSame(transitionChromInfo.Ratios.Last(),
-                                        ratioCalculator.GetTransitionValue(NormalizationMethod.GLOBAL_STANDARDS,
+                                        calculator.GetTransitionValue(NormalizationMethod.GLOBAL_STANDARDS,
                                             molecule, transitionGroupDocNode, transitionDocNode, transitionChromInfo));
                                 }
                                 else
                                 {
-                                    Assert.AreEqual(ratioCalculator.RatioInternalStandardTypes.Count, transitionChromInfo.Ratios.Count);
+                                    Assert.AreEqual(calculator.RatioInternalStandardTypes.Count, transitionChromInfo.Ratios.Count);
                                 }
 
                             }

@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 label = string.Format(Resources.TransitionTreeNode_GetResultsText__0__, rankText);
             }
 
-            float? ratio = (float?) displaySettings.RatioCalculator.GetTransitionValue(displaySettings.NormalizationMethod,
+            float? ratio = (float?) displaySettings.NormalizedValueCalculator.GetTransitionValue(displaySettings.NormalizationMethod,
                 displaySettings.NodePep, nodeTran,
                 nodeTran.GetChromInfoEntry(displaySettings.ResultsIndex));
             if (!ratio.HasValue)

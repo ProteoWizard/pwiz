@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Model.Find
                 }
                 var chromatogramSets = Document.Settings.MeasuredResults.Chromatograms;
                 var chromatogramSet = chromatogramSets[resultsIndex];
-                var resultDisplaySettings = new DisplaySettings(new RatioCalculator(Document), 
+                var resultDisplaySettings = new DisplaySettings(new NormalizedValueCalculator(Document), 
                     peptideDocNode, false, resultsIndex, displaySettings.RatioIndex); //, displaySettings.DisplayProteinsMode);
                 return CurrentDocNode.GetDisplayText(resultDisplaySettings) + @" (" + chromatogramSet.Name + @")";
             }

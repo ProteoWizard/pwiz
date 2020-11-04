@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             RatioValue ratio = null;
             if (displaySettings.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
             {
-                ratio = displaySettings.RatioCalculator.GetTransitionGroupRatioValue(ratioToLabel,
+                ratio = displaySettings.NormalizedValueCalculator.GetTransitionGroupRatioValue(ratioToLabel,
                     displaySettings.NodePep, nodeGroup, nodeGroup.GetChromInfoEntry(displaySettings.ResultsIndex));
             }
             if (null == ratio && !isotopeProduct.HasValue && !libraryProduct.HasValue)
