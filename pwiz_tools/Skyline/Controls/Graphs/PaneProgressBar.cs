@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Collections;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -143,6 +144,14 @@ namespace pwiz.Skyline.Controls.Graphs
         public static PaneProgressBar RegisterProgressBar(CancellationToken token, int maxProgress, int reportingStep, 
             SummaryGraphPane parent)
         {
+            //collection cleanup
+            _monitors.ForEach((pair) =>
+            {
+                if (pair.Value.ProgressBar.Parent.GraphSummary.IsDisposed)
+                    if (_monitors.TryRemove(pair.Key, out var monitor))
+                        monitor.ProgressBar.Dispose();
+            });
+
             if (token.IsCancellationRequested)
             {
                 TerminateProgressBar(token);

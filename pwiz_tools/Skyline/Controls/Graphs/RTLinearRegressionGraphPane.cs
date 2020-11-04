@@ -78,6 +78,7 @@ namespace pwiz.Skyline.Controls.Graphs
             Cancel(false);
             AllowDisplayTip = false;
             Settings.Default.RTScoreCalculatorList.ListChanged -= RTScoreCalculatorList_ListChanged;
+            ProgressMonitor.TerminateProgressBar(_cancellationTokenSource.Token);
         }
 
         public override bool HasToolbar { get { return RunToRun; } }
