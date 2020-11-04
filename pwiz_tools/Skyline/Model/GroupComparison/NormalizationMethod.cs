@@ -411,7 +411,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
-        public static HashSet<NormalizationMethod> GetDefaultNormalizationMethods(SrmDocument document,
+        /// <summary>
+        /// Given a list of IdentityPaths, returns the unique set of NormalizationMethods that the molecules
+        /// or peptides use.
+        /// </summary>
+        public static HashSet<NormalizationMethod> GetMoleculeNormalizationMethods(SrmDocument document,
             IEnumerable<IdentityPath> identityPaths)
         {
             var defaultNormalizationMethod = document.Settings.PeptideSettings.Quantification.NormalizationMethod;

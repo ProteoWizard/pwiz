@@ -268,7 +268,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (normalizeOption.IsRatioToLabel)
             {
-                normalizeOption = GraphSummary.RatioIndex;
+                normalizeOption = GraphSummary.NormalizeOption;
                 if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
                 {
                     standardType = ratioToLabel.FindIsotopeLabelType(document.Settings);
@@ -644,7 +644,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         NormalizationMethod normalizationMethod = null;
                         if (normalizeOption == NormalizeOption.DEFAULT)
                         {
-                            var normalizationMethods = NormalizationMethod.GetDefaultNormalizationMethods(
+                            var normalizationMethods = NormalizationMethod.GetMoleculeNormalizationMethods(
                                 GraphSummary.StateProvider.SelectionDocument,
                                 GraphSummary.StateProvider.SelectedNodes.OfType<SrmTreeNode>()
                                     .Select(node => node.Path));

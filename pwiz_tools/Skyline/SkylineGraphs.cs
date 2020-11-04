@@ -4612,7 +4612,7 @@ namespace pwiz.Skyline
             if (normalizeOption == NormalizeOption.DEFAULT)
             {
                 var selectedNormalizationMethods =
-                    NormalizationMethod.GetDefaultNormalizationMethods(DocumentUI, SequenceTree.SelectedPaths);
+                    NormalizationMethod.GetMoleculeNormalizationMethods(DocumentUI, SequenceTree.SelectedPaths);
                 if (selectedNormalizationMethods.Count == 1)
                 {
                     caption = string.Format(QuantificationStrings.SkylineWindow_MakeNormalizeToMenuItem_Default___0__, selectedNormalizationMethods.First().NormalizeToCaption);

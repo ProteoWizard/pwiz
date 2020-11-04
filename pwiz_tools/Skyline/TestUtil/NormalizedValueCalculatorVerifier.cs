@@ -36,14 +36,14 @@ namespace pwiz.SkylineTestUtil
         /// <param name="doc"></param>
         public static void VerifyRatioCalculations(SrmDocument doc)
         {
-            var calculator = new NormalizedValueCalculator(doc) {BugCompatibility = true};
+            var calculator = new NormalizedValueCalculator(doc);
             bool hasGlobalStandardArea = doc.Settings.HasGlobalStandardArea;
             foreach (var molecule in doc.Molecules)
             {
                 var adductsAndLabels = new HashSet<Tuple<Adduct, IsotopeLabelType>>();
                 foreach (var transitionGroupDocNode in molecule.TransitionGroups)
                 {
-                    // TODO: PeptideChromInfoCalculator.CalcTransitionGroupRatio gets the wrong answer if there is more than one precursor with the same adduct and label
+                    // PeptideChromInfoCalculator.CalcTransitionGroupRatio gets the wrong answer if there is more than one precursor with the same adduct and label
                     bool duplicatePrecursor = !adductsAndLabels.Add(Tuple.Create(
                         transitionGroupDocNode.PrecursorAdduct.Unlabeled, transitionGroupDocNode.LabelType));
                     if (transitionGroupDocNode.Results != null)
