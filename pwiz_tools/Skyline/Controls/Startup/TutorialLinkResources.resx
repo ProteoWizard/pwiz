@@ -277,6 +277,14 @@
     <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Hi-Res%20Metabolomics.pdf</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
+  <data name="SmallMolLibraries_zip" xml:space="preserve">
+    <value>https://skyline.ms/tutorials/SmallMoleculeLibraries.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="SmallMolLibraries_pdf" xml:space="preserve">
+    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries.pdf</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
   <data name="GroupedStudy_sky" xml:space="preserve">
     <value>Heart Failure/raw/Rat_plasma.sky</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>

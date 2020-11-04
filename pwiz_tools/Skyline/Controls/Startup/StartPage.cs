@@ -422,6 +422,17 @@ namespace pwiz.Skyline.Controls.Startup
                         string.Empty
                     ),
                     Description = TutorialTextResources.HiResMetabolomics_Description
+                },
+                new TutorialActionBoxControl
+                {
+                Caption = TutorialTextResources.SmallMolLibraries_Caption,
+                Icon = TutorialImageResources.SmallMolLibraries_start,
+                EventAction = () => Tutorial(
+                    TutorialLinkResources.SmallMolLibraries_zip,
+                    TutorialLinkResources.SmallMolLibraries_pdf,
+                    string.Empty
+                ),
+                Description = TutorialTextResources.SmallMolLibraries_Description
                 }
             };
             var tutorialAdvancedBoxPanels = new Control[]
