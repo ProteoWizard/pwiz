@@ -279,7 +279,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.MethodEdit_Caption,
                     Icon = TutorialImageResources.MethodEdit_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.targeted_method_editing,
                         TutorialLinkResources.MethodEdit_zip,
                         TutorialLinkResources.MethodEdit_pdf,
                         string.Empty
@@ -291,7 +290,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.MethodRefine_Caption,
                     Icon = TutorialImageResources.MethodRefine_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.targeted_method_refinement,
                         TutorialLinkResources.MethodRefine_zip,
                         TutorialLinkResources.MethodRefine_pdf,
                         TutorialLinkResources.MethodRefine_sky
@@ -303,7 +301,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.GroupedStudy_Caption,
                     Icon = TutorialImageResources.GroupedStudies_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.grouped_study_data_processing,
                         TutorialLinkResources.GroupedStudy_zip,
                         TutorialLinkResources.GroupedStudy_pdf,
                         TutorialLinkResources.GroupedStudy_sky
@@ -315,7 +312,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.ExistingQuant_Caption,
                     Icon = TutorialImageResources.ExistingQuant_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.existing_and_quantitative_experiments,
                         TutorialLinkResources.ExistingQuant_zip,
                         TutorialLinkResources.ExistingQuant_pdf,
                         string.Empty
@@ -334,7 +330,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.MS1Filtering_Caption,
                     Icon = TutorialImageResources.MS1Filtering_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.ms1_fullscan_filtering,
                         TutorialLinkResources.MS1Filtering_zip,
                         TutorialLinkResources.MS1Filtering_pdf,
                         string.Empty
@@ -346,7 +341,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.TargetedMSMS_Caption,
                     Icon = TutorialImageResources.TargetedMSMS_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.targeted_ms_ms,
                         TutorialLinkResources.TargetedMSMS_zip,
                         TutorialLinkResources.TargetedMSMS_pdf,
                         TutorialLinkResources.TargetedMSMS_sky
@@ -358,7 +352,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.DIA_Caption,
                     Icon = TutorialImageResources.DIA_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.data_independent_acquisition,
                         TutorialLinkResources.DIA_zip,
                         TutorialLinkResources.DIA_pdf,
                         TutorialLinkResources.DIA_sky
@@ -370,7 +363,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.DIA_SWATH_Caption,
                     Icon = TutorialImageResources.DIA_SWATH_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.dia_swath,
                         TutorialLinkResources.DIA_TTOF_zip,
                         TutorialLinkResources.DIA_TTOF_pdf,
                         string.Empty
@@ -392,7 +384,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.SmallMolecule_Caption,
                     Icon = TutorialImageResources.SmallMolecule_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_targets,
                         TutorialLinkResources.SmallMolecule_zip,
                         TutorialLinkResources.SmallMolecule_pdf,
                         string.Empty
@@ -404,7 +395,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.SmallMoleculeMethodDevCEOpt_Caption,
                     Icon = TutorialImageResources.SmallMoleculeMethodDevCEOpt_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_method_dev_and_ce_opt,
                         TutorialLinkResources.SmallMoleculeMethodDevCEOpt_zip,
                         TutorialLinkResources.SmallMoleculeMethodDevCEOpt_pdf,
                         string.Empty
@@ -416,7 +406,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.SmallMoleculeQuantification_Caption,
                     Icon = TutorialImageResources.SmallMoleculeQuantification_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.small_molecule_quant,
                         TutorialLinkResources.SmallMoleculeQuantification_zip,
                         TutorialLinkResources.SmallMoleculeQuantification_pdf,
                         string.Empty
@@ -428,7 +417,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.HiResMetabolomics_Caption,
                     Icon = TutorialImageResources.HiResMetabolomics_start,
                     EventAction = () => Tutorial(
-                        ActionTutorial.TutorialType.hi_res_metabolomics,
                         TutorialLinkResources.HiResMetabolomics_zip,
                         TutorialLinkResources.HiResMetabolomics_pdf,
                         string.Empty
@@ -450,7 +438,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.AbsoluteQuant_Caption, 
                     Icon = TutorialImageResources.AbsoluteQuant_start, 
                     EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.absolute_quantifiaction, 
                         TutorialLinkResources.AbsoluteQuant_zip,
                         TutorialLinkResources.AbsoluteQuant_pdf,
                         string.Empty
@@ -462,7 +449,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.CustomReports_Caption, 
                     Icon = TutorialImageResources.CustomReports_start, 
                     EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.custom_reports_results_grid, 
                         TutorialLinkResources.CustomReports_zip,
                         TutorialLinkResources.CustomReports_pdf,
                         TutorialLinkResources.CustomReports_sky
@@ -474,7 +460,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.PeakPicking_Caption, 
                     Icon = TutorialImageResources.PeakPicking_start, 
                     EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.advanced_peak_picking_models, 
                         TutorialLinkResources.PeakPicking_zip,
                         TutorialLinkResources.PeakPicking_pdf,
                         TutorialLinkResources.PeakPicking_sky
@@ -486,7 +471,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.iRT_Caption, 
                     Icon = TutorialImageResources.iRT_start, 
                     EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.irt_retention_time_prediction, 
                         TutorialLinkResources.iRT_zip,
                         TutorialLinkResources.iRT_pdf,
                         TutorialLinkResources.iRT_sky
@@ -497,7 +481,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = TutorialTextResources.OptimizeCE_Caption, 
                     Icon = TutorialImageResources.OptimizeCE_start, 
-                    EventAction = ()=>Tutorial(ActionTutorial.TutorialType.collision_energy_optimization, 
+                    EventAction = ()=>Tutorial(
                         TutorialLinkResources.OptimizeCE_zip,
                         TutorialLinkResources.OptimizeCE_pdf,
                         TutorialLinkResources.OptimizeCE_sky
@@ -508,7 +492,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = TutorialTextResources.IMSFiltering_Caption,
                     Icon = TutorialImageResources.IMSFiltering_start,
-                    EventAction = ()=>Tutorial(ActionTutorial.TutorialType.ion_mobility,
+                    EventAction = ()=>Tutorial(
                         TutorialLinkResources.IMSFiltering_zip,
                         TutorialLinkResources.IMSFiltering_pdf,
                         TutorialLinkResources.IMSFiltering_sky
@@ -520,7 +504,6 @@ namespace pwiz.Skyline.Controls.Startup
                     Caption = TutorialTextResources.LibraryExplorer_Caption, 
                     Icon = TutorialImageResources.LibraryExplorer_start, 
                     EventAction = ()=>Tutorial(
-                        ActionTutorial.TutorialType.spectral_library_explorer, 
                         TutorialLinkResources.LibraryExplorer_zip,
                         TutorialLinkResources.LibraryExplorer_pdf,
                         string.Empty
@@ -531,7 +514,7 @@ namespace pwiz.Skyline.Controls.Startup
                 {
                     Caption = TutorialTextResources.AuditLog_Caption,
                     Icon = TutorialImageResources.AuditLog_start,
-                    EventAction = ()=>Tutorial(ActionTutorial.TutorialType.audit_logging,
+                    EventAction = ()=>Tutorial(
                         TutorialLinkResources.AuditLog_zip,
                         TutorialLinkResources.AuditLog_pdf,
                         string.Empty
@@ -616,7 +599,7 @@ namespace pwiz.Skyline.Controls.Startup
             DoAction(new ActionImport(type).DoStartupAction);
         }
         
-        private void Tutorial(ActionTutorial.TutorialType type, string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
+        private void Tutorial(string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
         {
             Assume.IsNotNull(skyFileLocation);
 
@@ -627,7 +610,7 @@ namespace pwiz.Skyline.Controls.Startup
             DialogResult = DialogResult.OK;
 
             string paths = pathChooserDlg.ExtractionPath;
-            DoAction(new ActionTutorial(type, paths, skyFileLocation, pdfFileLocation, zipSkyFileLocation)
+            DoAction(new ActionTutorial( paths, skyFileLocation, pdfFileLocation, zipSkyFileLocation)
                 .DoStartupAction);
         }
 
@@ -780,10 +763,9 @@ namespace pwiz.Skyline.Controls.Startup
             DoAction(action.DoStartupAction);
         }
 
-        public void TestTutorialAction(ActionTutorial.TutorialType type)
+        public void TestTutorialAction()
         {
             Tutorial(
-                ActionTutorial.TutorialType.spectral_library_explorer,
                 TutorialLinkResources.LibraryExplorer_zip,
                 TutorialLinkResources.LibraryExplorer_pdf,
                 string.Empty
