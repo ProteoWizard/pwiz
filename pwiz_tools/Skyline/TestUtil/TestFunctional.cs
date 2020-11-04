@@ -1154,6 +1154,12 @@ namespace pwiz.SkylineTestUtil
         public void TakeCoverShot()
         {
             Thread.Sleep(1000); // Give windows time to repaint
+            RunUI(() =>
+            {
+                var screenRect = Screen.FromControl(SkylineWindow).Bounds;
+                AssertEx.IsTrue(screenRect.Width == 1920 && screenRect.Height == 1080,
+                    "Cover shots must be taken at screen resolution 1920x1080 at scale factor 100% (96DPI)");
+            });
             var coverSavePath = GetCoverShotPath();
             ScreenshotManager.TakeNextShot(SkylineWindow, coverSavePath, ProcessCoverShot);
             string coverSavePath2 = null;
@@ -1169,7 +1175,7 @@ namespace pwiz.SkylineTestUtil
             }
             else if (coverSavePath2 != null)
             {
-                Console.WriteLine(@"Cover shot at 1200 x 800 has been saved as " + coverSavePath + @" and as " + coverSavePath2);
+                Console.WriteLine(@"Cover shot at 1200 x 800 has been saved as " + coverSavePath + @" and as Start Page thumbnail " + coverSavePath2);
             }
             else
             {
@@ -1816,7 +1822,9 @@ namespace pwiz.SkylineTestUtil
             RunUI(() =>
             {
                 var screenRect = Screen.FromControl(SkylineWindow).Bounds;
-                var skylineSize = new Size(Math.Min(screenRect.Width, width + marginW), Math.Min(screenRect.Height,  height + marginH)); // So we don't roll into negative territory when SetSkylineWindowSize adds margins
+                AssertEx.IsTrue(screenRect.Width >=  width + marginW && screenRect.Height >= height + marginH,  // SetSkylineWindowSize adds margins, make sure that's going to fit
+                    @"Screen is too small for requested Skyline window size");
+                var skylineSize = new Size(width + marginW,  height + marginH);
                 var skylineLocation = new Point(screenRect.Left + screenRect.Width / 2 - skylineSize.Width / 2,
                     screenRect.Top + screenRect.Height / 2 - skylineSize.Height / 2);
                 SkylineWindow.Bounds = new Rectangle(skylineLocation, skylineSize);
