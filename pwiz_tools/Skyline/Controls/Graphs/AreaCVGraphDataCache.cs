@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     result = new AreaCVGraphData(document,
                         new AreaCVGraphSettings(settings.GraphType,
-                            properties.RatioIndex,
+                            properties.NormalizeOption,
                             settings.Group,
                             properties.Annotation,
                             settings.PointsType,
@@ -149,10 +149,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public AreaCVGraphData Get(GraphDataProperties properties)
             {
-                return Get(properties.Group, properties.Annotation, properties.MinimumDetections, properties.RatioIndex);
+                return Get(properties.Group, properties.Annotation, properties.MinimumDetections, properties.NormalizeOption);
             }
 
-            public AreaCVGraphData Get(ReplicateValue group, object annotation, int minimumDetections, NormalizeOption ratioIndex)
+            public AreaCVGraphData Get(ReplicateValue group, object annotation, int minimumDetections, NormalizeOption normalizeOption)
             {
                 lock (_cacheInfo)
                 {
@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                Equals(d._graphSettings.Annotation, annotation) &&
                                                                d._graphSettings.MinimumDetections ==
                                                                minimumDetections &&
-                                                               d._graphSettings.RatioIndex == ratioIndex);
+                                                               d._graphSettings.NormalizeOption == normalizeOption);
                 }
             }
 
@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 public bool Equals(GraphDataProperties other)
                 {
-                    return Equals(Group, other.Group) && RatioIndex == other.RatioIndex && Equals(Annotation, other.Annotation) && MinimumDetections == other.MinimumDetections;
+                    return Equals(Group, other.Group) && NormalizeOption == other.NormalizeOption && Equals(Annotation, other.Annotation) && MinimumDetections == other.MinimumDetections;
                 }
 
                 public override bool Equals(object obj)
@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     unchecked
                     {
                         var hashCode = (Group != null ? Group.GetHashCode() : 0);
-                        hashCode = (hashCode * 397) ^ RatioIndex.GetHashCode();
+                        hashCode = (hashCode * 397) ^ NormalizeOption.GetHashCode();
                         hashCode = (hashCode * 397) ^ (Annotation != null ? Annotation.GetHashCode() : 0);
                         hashCode = (hashCode * 397) ^ MinimumDetections;
                         return hashCode;
@@ -287,21 +287,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 public GraphDataProperties(AreaCVGraphSettings settings)
                 {
                     Group = settings.Group;
-                    RatioIndex = settings.RatioIndex;
+                    NormalizeOption = settings.NormalizeOption;
                     Annotation = settings.Annotation;
                     MinimumDetections = settings.MinimumDetections;
                 }
 
-                public GraphDataProperties(ReplicateValue group, NormalizeOption ratioIndex, object annotation, int minimumDetections)
+                public GraphDataProperties(ReplicateValue group, NormalizeOption normalizeOption, object annotation, int minimumDetections)
                 {
                     Group = group;
-                    RatioIndex = ratioIndex;
+                    NormalizeOption = normalizeOption;
                     Annotation = annotation;
                     MinimumDetections = minimumDetections;
                 }
 
                 public ReplicateValue Group { get; private set; }
-                public NormalizeOption RatioIndex { get; private set; }
+                public NormalizeOption NormalizeOption { get; private set; }
                 public object Annotation { get; private set; }
                 public int MinimumDetections { get; private set; }
             }

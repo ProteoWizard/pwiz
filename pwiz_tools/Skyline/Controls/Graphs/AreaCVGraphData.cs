@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 MsLevel = AreaGraphController.AreaCVMsLevel;
                 Transitions = AreaGraphController.AreaCVTransitions;
                 CountTransitions = AreaGraphController.AreaCVTransitionsCount;
-                RatioIndex = AreaGraphController.AreaCVNormalizeOption;
+                NormalizeOption = AreaGraphController.AreaCVNormalizeOption;
                 Group = ReplicateValue.FromPersistedString(srmSettings, AreaGraphController.GroupByGroup);
                 Annotation = AreaGraphController.GroupByAnnotation;
                 PointsType = AreaGraphController.PointsType;
@@ -136,11 +136,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 BinWidth = Settings.Default.AreaCVHistogramBinWidth * factor;
             }
 
-            public AreaCVGraphSettings(GraphTypeSummary graphType, NormalizeOption ratioIndex, ReplicateValue group, object annotation, PointsTypePeakArea pointsType, double qValueCutoff,
+            public AreaCVGraphSettings(GraphTypeSummary graphType, NormalizeOption normalizeOption, ReplicateValue group, object annotation, PointsTypePeakArea pointsType, double qValueCutoff,
                 double cvCutoff, int minimumDetections, double binwidth, AreaCVMsLevel msLevel, AreaCVTransitions transitions, int countTransitions)
             {
                 GraphType = graphType;
-                RatioIndex = ratioIndex;
+                NormalizeOption = normalizeOption;
                 Group = group;
                 Annotation = annotation;
                 PointsType = pointsType;

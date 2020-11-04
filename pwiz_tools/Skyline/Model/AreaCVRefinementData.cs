@@ -54,15 +54,15 @@ namespace pwiz.Skyline.Model
 
             MedianInfo medianInfo = null;
             int? ratioIndex = null;
-            if (settings.RatioIndex.IsRatioToLabel)
+            if (settings.NormalizeOption.IsRatioToLabel)
             {
-                var isotopeLabelTypeName = (settings.RatioIndex.NormalizationMethod as NormalizationMethod.RatioToLabel)
+                var isotopeLabelTypeName = (settings.NormalizeOption.NormalizationMethod as NormalizationMethod.RatioToLabel)
                     ?.IsotopeLabelTypeName;
                 ratioIndex =
                     document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.IndexOf(type =>
                         type.Name == isotopeLabelTypeName);
             }
-            if (_settings.RatioIndex.Is(NormalizationMethod.EQUALIZE_MEDIANS))
+            if (_settings.NormalizeOption.Is(NormalizationMethod.EQUALIZE_MEDIANS))
                 medianInfo = CalculateMedianAreas(document);
 
             foreach (var peptideGroup in document.MoleculeGroups)
@@ -127,16 +127,16 @@ namespace pwiz.Skyline.Model
                                 }).Sum(t => (double) t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0).Area);
 
                                 var normalizedArea = sumArea;
-                                if (_settings.RatioIndex.Is(NormalizationMethod.EQUALIZE_MEDIANS))
+                                if (_settings.NormalizeOption.Is(NormalizationMethod.EQUALIZE_MEDIANS))
                                 {
                                     normalizedArea /= medianInfo.Medians[replicateIndex] / medianInfo.MedianMedian;
                                 }
-                                else if (_settings.RatioIndex.Is(NormalizationMethod.GLOBAL_STANDARDS) && hasGlobalStandards)
+                                else if (_settings.NormalizeOption.Is(NormalizationMethod.GLOBAL_STANDARDS) && hasGlobalStandards)
                                 {
                                     normalizedArea =
                                         NormalizeToGlobalStandard(document, transitionGroupDocNode, replicateIndex, sumArea);
                                 }
-                                else if (_settings.RatioIndex.Is(NormalizationMethod.TIC))
+                                else if (_settings.NormalizeOption.Is(NormalizationMethod.TIC))
                                 {
                                     var denominator = document.Settings.GetTicNormalizationDenominator(
                                         replicateIndex, groupChromInfo.FileId);
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model
 
                                     normalizedArea /= denominator.Value;
                                 }
-                                else if (hasHeavyMods && _settings.RatioIndex.NormalizationMethod is NormalizationMethod.RatioToLabel)
+                                else if (hasHeavyMods && _settings.NormalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel)
                                 {
                                     var ci = transitionGroupDocNode.GetSafeChromInfo(replicateIndex).FirstOrDefault(c => c.OptimizationStep == 0);
                                     RatioValue ratioValue = null;
@@ -329,13 +329,13 @@ namespace pwiz.Skyline.Model
 
     public class AreaCVRefinementSettings
     {
-        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, NormalizeOption ratioIndex,
+        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, NormalizeOption normalizeOption,
             AreaCVTransitions transitions, int countTransitions, AreaCVMsLevel msLevel)
         {
             CVCutoff = cvCutoff;
             QValueCutoff = qValueCutoff;
             MinimumDetections = minimumDetections;
-            RatioIndex = ratioIndex;
+            NormalizeOption = normalizeOption;
             MsLevel = msLevel;
             Transitions = transitions;
             CountTransitions = countTransitions;
@@ -372,7 +372,7 @@ namespace pwiz.Skyline.Model
         public AreaCVMsLevel MsLevel { get; protected set; }
         public AreaCVTransitions Transitions { get; protected set; }
         public int CountTransitions { get; protected set; }
-        public NormalizeOption RatioIndex { get; protected set; }
+        public NormalizeOption NormalizeOption { get; protected set; }
         public ReplicateValue Group { get; protected set; }
         public object Annotation { get; protected set; }
         public PointsTypePeakArea PointsType { get; protected set; }
@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Model
         {
             return MsLevel == other.MsLevel &&
                    Transitions == other.Transitions && CountTransitions == other.CountTransitions &&
-                   RatioIndex == other.RatioIndex && Equals(Group, other.Group) &&
+                   NormalizeOption == other.NormalizeOption && Equals(Group, other.Group) &&
                    Equals(Annotation, other.Annotation) && PointsType == other.PointsType &&
                    QValueCutoff.Equals(other.QValueCutoff) && CVCutoff.Equals(other.CVCutoff) &&
                    MinimumDetections == other.MinimumDetections;
@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Model
                 var hashCode = MsLevel.GetHashCode();
                 hashCode = (hashCode * 397) ^ (int) Transitions;
                 hashCode = (hashCode * 397) ^ CountTransitions;
-                hashCode = (hashCode * 397) ^ RatioIndex.GetHashCode();
+                hashCode = (hashCode * 397) ^ NormalizeOption.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Group != null ? Group.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Annotation != null ? Annotation.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (int) PointsType;
