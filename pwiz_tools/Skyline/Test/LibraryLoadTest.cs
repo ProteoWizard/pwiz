@@ -58,7 +58,7 @@ namespace pwiz.SkylineTest
         public void NistLoadLibrary()
         {
             var streamManager = new MemoryStreamManager();
-            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE + LIB_TEXT_MONA);
+            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE + LIB_TEXT_MONA + LIB_TEXT_MZVAULT);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
             var expectedFragmentAnnotations = new Dictionary<int, List<SpectrumPeakAnnotation>>
             {
@@ -112,6 +112,11 @@ namespace pwiz.SkylineTest
             SpectrumPeaksInfo peaksInfo;
             Assert.IsTrue(lib2.TryLoadSpectrum(key, out peaksInfo));
             Assert.IsTrue(peaksInfo.Peaks.Length == 4); // Declared length is 6 but two are zero intensity
+
+            // Verify that we handled the mzVault variant
+            key = lib2Keys.First(k => Equals("RHAXSHUQNIEUEY-UHFFFAOYAC", k.SmallMoleculeLibraryAttributes.InChiKey));
+            Assert.IsTrue(lib2.TryLoadSpectrum(key, out peaksInfo));
+            AssertEx.AreEqual(67, peaksInfo.Peaks.Length); 
         }
 
         [TestMethod]
@@ -1162,5 +1167,90 @@ namespace pwiz.SkylineTest
             "262.150665 300.000000\n" +
             "262.177665 400.000000\n" +
             "\n";
+
+        public const string LIB_TEXT_MZVAULT =
+            "\n" +
+            "#PSI Spectral Library Format\n" +
+            "MS:1009003|Name = Epirizole\n" +
+            "MS:1009001|Spectrum index = 1107\n" +
+            "MS:1000894|RetentionTime = 1.74066\n" +
+            "MS:1000864|Formula = C11H14N4O2\n" +
+            "MS:1002894|InChiKey = RHAXSHUQNIEUEY-UHFFFAOYAC\n" +
+            "MS:1009100|CASNo = \n" +
+            "MS:1000868|Smiles = Cc1cc(nc(n1)n2c(cc(n2)C)OC)OC\n" +
+            "MS:1009101|CompoundClass = \n" +
+            "MS:1000744|Selected Ion m/z = 235.04883\n" +
+            "MS:1000045|Collision_energy = 33.3\n" +
+            "Precursor_type = \n" +
+            "MS:1000073|Electrosprary ionization\n" +
+            "MS:1000130|Positive scan\n" +
+            "MS:1009006|number of peaks = 67\n" +
+            "54.8789 4301.70\n" +
+            "56.0499 606354.10\n" +
+            "56.9651 186512.50\n" +
+            "57.0702 26894.91\n" +
+            "58.0655 18950.98\n" +
+            "59.0495 4674.89\n" +
+            "60.0447 30842.68\n" +
+            "70.0652 38320.37\n" +
+            "74.0601 64468.65\n" +
+            "74.9753 10056.45\n" +
+            "84.9596 57395.49\n" +
+            "86.0601 96432.38\n" +
+            "88.0393 73237.30\n" +
+            "95.0854 9277.52\n" +
+            "98.9754 85266.63\n" +
+            "100.9910 94618.79\n" +
+            "102.0550 1557200.00\n" +
+            "102.9696 7409.72\n" +
+            "104.0706 9240.21\n" +
+            "107.0853 9679.18\n" +
+            "109.1012 9594.82\n" +
+            "110.0713 89577.13\n" +
+            "112.9910 32771.41\n" +
+            "114.0550 105109.00\n" +
+            "116.9858 54641.13\n" +
+            "118.0862 20236.58\n" +
+            "119.0016 30095.12\n" +
+            "119.0856 7297.21\n" +
+            "120.9991 23992.73\n" +
+            "130.0046 6795.89\n" +
+            "130.0738 7348.58\n" +
+            "131.0016 273602.10\n" +
+            "132.0656 546111.90\n" +
+            "134.0451 18632.84\n" +
+            "134.9964 20397.06\n" +
+            "143.0017 8175.11\n" +
+            "143.0122 6078.07\n" +
+            "143.0816 43623.21\n" +
+            "145.0975 8857.70\n" +
+            "147.1171 6639.98\n" +
+            "149.0123 594835.40\n" +
+            "155.0123 8942.16\n" +
+            "160.0606 526461.80\n" +
+            "161.0123 19541.33\n" +
+            "162.1030 7385.49\n" +
+            "164.0173 19866.08\n" +
+            "166.0616 6882.53\n" +
+            "167.0228 141595.00\n" +
+            "171.0769 9519.30\n" +
+            "175.0282 15731.51\n" +
+            "177.1638 7834.97\n" +
+            "179.0225 51275.80\n" +
+            "179.1071 17609.73\n" +
+            "189.0070 6404.95\n" +
+            "189.0872 238332.50\n" +
+            "191.0227 319221.00\n" +
+            "197.0338 8952.61\n" +
+            "207.0173 8484.99\n" +
+            "207.0353 6133.31\n" +
+            "209.0331 72709.38\n" +
+            "217.0391 14763.00\n" +
+            "217.0820 163496.00\n" +
+            "217.1950 24278.64\n" +
+            "235.0925 551996.30\n" +
+            "235.1189 207471.40\n" +
+            "235.1690 76988.90\n" +
+            "235.2054 61542.45\n";
     }
 }

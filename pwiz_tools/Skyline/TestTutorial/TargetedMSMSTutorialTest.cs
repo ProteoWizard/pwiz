@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "TargetedMSMS";
 
             if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
@@ -118,7 +118,7 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             LowResTest();
-            if (!IsPauseForCoverShot)
+            if (!IsCoverShotMode)
                 TofTest();
         }
 
@@ -534,7 +534,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                 {
                     SkylineWindow.ShowAllTransitions();
-                    if (!IsPauseForCoverShot)
+                    if (!IsCoverShotMode)
                         SkylineWindow.ShowSplitChromatogramGraph(true);                    
                 });
 
@@ -555,7 +555,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Replicate Comparison graph metafile with split graphs", 25);
             }
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RunUI(() =>
                 {
@@ -572,7 +572,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForGraphs();
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
                 RunUI(() => selectedNode.Nodes[0].Expand());
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 
