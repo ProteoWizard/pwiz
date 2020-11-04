@@ -1814,15 +1814,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Peak Area Ratio To Global Standards.
-        /// </summary>
-        public static string AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards {
-            get {
-                return ResourceManager.GetString("AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Percent of Regression Peak Area.
         /// </summary>
         public static string AreaReplicateGraphPane_UpdateGraph_Percent_of_Regression_Peak_Area {
@@ -15349,7 +15340,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct components  [rest of string was truncated]&quot;;.
+        ///Recognized adduct com [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -19997,7 +19988,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {

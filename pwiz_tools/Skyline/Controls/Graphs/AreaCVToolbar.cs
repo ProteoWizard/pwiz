@@ -218,6 +218,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var mods = _graphSummary.DocumentUIContainer.DocumentUI.Settings.PeptideSettings.Modifications;
             toolStripComboNormalizedTo.Items.Clear();
             _normalizationMethods.Clear();
+            _normalizationMethods.Add(NormalizeOption.DEFAULT);
             _normalizationMethods.AddRange(NormalizeOption.AvailableNormalizeOptions(_graphSummary.DocumentUIContainer.DocumentUI));
             _normalizationMethods.Add(NormalizeOption.NONE);
             toolStripComboNormalizedTo.Items.AddRange(_normalizationMethods.Select(item=>item.Caption).ToArray());

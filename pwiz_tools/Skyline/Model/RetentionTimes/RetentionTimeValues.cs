@@ -97,5 +97,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 transitionGroupChromInfo.StartRetentionTime.Value, transitionGroupChromInfo.EndRetentionTime.Value,
                 transitionGroupChromInfo.Fwhm);
         }
+
+        public static RetentionTimeValues? GetValues(PeptideChromInfo peptideChromInfo)
+        {
+            if (null == peptideChromInfo || !peptideChromInfo.RetentionTime.HasValue)
+            {
+                return null;
+            }
+            return new RetentionTimeValues(peptideChromInfo.RetentionTime.Value, peptideChromInfo.RetentionTime.Value, peptideChromInfo.RetentionTime.Value, null);
+        }
     }
 }

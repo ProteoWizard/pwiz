@@ -5652,9 +5652,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="StatementCompletionForm_AddDescription_List_view_item_already_has_a_description" xml:space="preserve">
     <value>List view item already has a description</value>
   </data>
-  <data name="AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards" xml:space="preserve">
-    <value>Peak Area Ratio To Global Standards</value>
-  </data>
   <data name="EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Start_margin" xml:space="preserve">
     <value>Start margin</value>
   </data>

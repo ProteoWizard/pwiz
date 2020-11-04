@@ -116,13 +116,12 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Returns the normalization options that are appropriate for the document.
-        /// Note: never includes "None", "Total", or "Maximum".
+        /// Note: never includes Default", "None", "Total", or "Maximum".
         /// </summary>
         /// <param name="document"></param>
         /// <returns></returns>
         public static IEnumerable<NormalizeOption> AvailableNormalizeOptions(SrmDocument document)
         {
-            yield return DEFAULT;
             foreach (var normalizationMethod in NormalizationMethod.ListNormalizationMethods(document)
                 .OrderBy(method=>method is NormalizationMethod.RatioToLabel ? 0 : 1))
             {

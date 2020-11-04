@@ -107,6 +107,7 @@ namespace pwiz.Skyline.EditUI
                 }
 
                 _normalizationMethods.Clear();
+                _normalizationMethods.Add(NormalizeOption.DEFAULT);
                 _normalizationMethods.AddRange(NormalizeOption.AvailableNormalizeOptions(_document));
                 _normalizationMethods.Add(NormalizeOption.NONE);
                 comboNormalizeTo.Items.Clear();

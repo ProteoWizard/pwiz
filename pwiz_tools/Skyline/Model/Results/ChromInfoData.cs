@@ -150,5 +150,56 @@ namespace pwiz.Skyline.Model.Results
         {
             return RetentionTimeValues.GetValues(ChromInfo);
         }
-    } 
+    }
+
+    public class PeptideChromInfoData : ChromInfoData
+    {
+        private PeptideChromInfoData(MeasuredResults measuredResults, int replicateIndex, ChromFileInfo chromFileInfo, PeptideChromInfo peptideChromInfo, PeptideDocNode peptideDocNode)
+            : base(measuredResults, replicateIndex, chromFileInfo, peptideChromInfo, peptideDocNode, null)
+        {
+        }
+
+        public new PeptideChromInfo ChromInfo { get { return (PeptideChromInfo)base.ChromInfo; } }
+
+        public override int OptimizationStep
+        {
+            get { return 0; }
+        }
+
+        public override RetentionTimeValues? GetRetentionTimes()
+        {
+            return RetentionTimeValues.GetValues(ChromInfo);
+        }
+
+        public static IList<ICollection<PeptideChromInfoData>> GetPeptideChromInfoDatas(MeasuredResults measuredResults, PeptideDocNode peptideDocNode)
+        {
+            var list = new List<ICollection<PeptideChromInfoData>>();
+            var peptideResults = peptideDocNode.Results;
+            if (null == peptideResults)
+            {
+                return list;
+            }
+            Assume.IsTrue(peptideResults.Count == measuredResults.Chromatograms.Count,
+                string.Format(@"Unexpected mismatch between precursor results {0} and chromatogram sets {1}", peptideResults.Count, measuredResults.Chromatograms.Count)); // CONSIDER: localize? Will users see this?
+            for (int replicateIndex = 0; replicateIndex < peptideResults.Count; replicateIndex++)
+            {
+                var datas = new List<PeptideChromInfoData>();
+                var chromatograms = measuredResults.Chromatograms[replicateIndex];
+                var peptideChromInfos = peptideResults[replicateIndex];
+                if (peptideChromInfos.IsEmpty)
+                    datas.Add(new PeptideChromInfoData(measuredResults, replicateIndex, null, null, peptideDocNode));
+                else
+                {
+                    foreach (var peptideChromInfo in peptideChromInfos)
+                    {
+                        var chromFileInfo = chromatograms.GetFileInfo(peptideChromInfo.FileId);
+                        datas.Add(new PeptideChromInfoData(measuredResults, replicateIndex, chromFileInfo, peptideChromInfo, peptideDocNode));
+                    }
+                }
+                list.Add(datas);
+            }
+            return list;
+        }
+
+    }
 }

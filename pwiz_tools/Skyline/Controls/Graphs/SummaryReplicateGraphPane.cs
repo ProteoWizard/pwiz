@@ -345,7 +345,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         var isMultiSelect = _selectedDocNodePaths.Count > 1 ||
                                             (_selectedDocNodePaths.Count == 1 && Program.MainWindow != null &&
                                              Program.MainWindow.SelectedNode is PeptideGroupTreeNode);
-                        foreach (var tuple in GetPeptidePointPairLists(nodePep, isMultiSelect))
+                        foreach (var tuple in GetPeptidePointPairLists((PeptideGroupDocNode) nodeArray[0], nodePep, isMultiSelect))
                         {
                             docNodes.Add(tuple.Node);
                             docNodePaths.Add(docNodePath);
@@ -510,7 +510,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 ReplicateGroups = groups;
             }
 
-            protected virtual List<LineInfo> GetPeptidePointPairLists(PeptideDocNode nodePep, bool multiplePeptides)
+            protected virtual List<LineInfo> GetPeptidePointPairLists(PeptideGroupDocNode peptideGroup, PeptideDocNode nodePep, bool multiplePeptides)
             {
                 var pointPairLists = new List<LineInfo>();
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
@@ -773,6 +773,14 @@ namespace pwiz.Skyline.Controls.Graphs
             protected abstract bool IsMissingValue(TransitionGroupChromInfoData chromInfoData);
 
             protected abstract PointPair CreatePointPair(int iResult, ICollection<TransitionGroupChromInfoData> chromInfo);
+
+            protected PointPairList GetPeptidePointPairList(PeptideGroupDocNode peptideGroup,
+                PeptideDocNode peptideDocNode, Func<PeptideChromInfoData, bool> isMissing, Func<int, ICollection<PeptideChromInfoData>, PointPair> createPeptidePointPairFunc)
+            {
+                var peptideChromInfoDatas =
+                    PeptideChromInfoData.GetPeptideChromInfoDatas(_document.Settings.MeasuredResults, peptideDocNode);
+                return MakePointPairLists(DisplayTypeChrom.all, peptideChromInfoDatas, isMissing, createPeptidePointPairFunc).First();
+            }
 
             protected virtual IEnumerable<ReplicateGroup> GetReplicateGroups(IEnumerable<int> replicateIndexes)
             {

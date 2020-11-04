@@ -23,6 +23,7 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -156,9 +157,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths().ToList();
             var pepCount = peptidePaths.Count;
-            IsMultiSelect = pepCount > 1 ||
-                                (pepCount == 1 &&
-                                 GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode);
+            NormalizeOption ratioIndex = AreaGraphController.AreaCVView.Constrain(document.Settings);
+            IsMultiSelect = pepCount > 1
+                            || pepCount == 1 &&
+                            GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode;
+
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (GraphSummary.StateProvider.SelectedNode is EmptyNode) // if EmptyNode selected
             {
@@ -169,6 +172,19 @@ namespace pwiz.Skyline.Controls.Graphs
                 Title.Text = Helpers.PeptideToMoleculeTextMapper.Translate(Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph, document.DocumentType);
                 EmptyGraph(document);
                 return;
+            }
+
+            if (ratioIndex == NormalizeOption.CALIBRATED)
+            {
+                if (selectedTreeNode is TransitionTreeNode)
+                {
+                    selectedTreeNode = selectedTreeNode.SrmParent;
+                }
+
+                if (selectedTreeNode is TransitionGroupTreeNode)
+                {
+                    selectedTreeNode = selectedTreeNode.SrmParent;
+                }
             }
             BarSettings.Type = BarType;
             if (IsMultiSelect)
@@ -247,7 +263,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                     BarSettings.Type = BarType.Cluster;
             }
-            NormalizeOption ratioIndex = AreaGraphController.AreaCVView.Constrain(document.Settings);
             var standardType = IsotopeLabelType.light;
 
             var areaView = AreaGraphController.AreaView;
@@ -396,7 +411,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var pointPairList = pointPairLists[iStep];
                     Color color;
                     var nodeGroup = docNode as TransitionGroupDocNode;
-                    if (IsMultiSelect)
+                    if (IsMultiSelect || parentNode is PeptideDocNode && nodeGroup == null)
                     {
                         var peptideDocNode = docNode as PeptideDocNode;
                         if (peptideDocNode == null)
@@ -504,7 +519,7 @@ namespace pwiz.Skyline.Controls.Graphs
             bool resetAxes = (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id));
             _parentNode = parentNode;
 
-            UpdateAxes(resetAxes, aggregateOp, normalizeData, areaView, standardType);
+            UpdateAxes(resetAxes, aggregateOp, normalizeData, areaView);
         }
 
         private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
@@ -546,7 +561,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void UpdateAxes(bool resetAxes, GraphValues.AggregateOp aggregateOp, AreaNormalizeToData normalizeData,
-            NormalizeOption areaView, IsotopeLabelType standardType)
+            NormalizeOption areaView)
         {
             if (resetAxes)
             {
@@ -619,14 +634,35 @@ namespace pwiz.Skyline.Controls.Graphs
                         YAxis.Scale.MaxAuto = true;
                     }
                     string yTitle = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area;
-                    if (areaView.IsRatioToLabel)
+                    if (areaView == NormalizeOption.CALIBRATED)
                     {
-                        yTitle = string.Format(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To__0_,
-                            standardType.Title);
+                        yTitle = "Calculated Concentration";
                     }
-                    else if (NormalizationMethod.GLOBAL_STANDARDS.Equals(areaView.NormalizationMethod))
+                    else
                     {
-                        yTitle = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards;
+                        NormalizationMethod normalizationMethod = null;
+                        if (areaView == NormalizeOption.DEFAULT)
+                        {
+                            var normalizationMethods = NormalizationMethod.GetDefaultNormalizationMethods(
+                                GraphSummary.StateProvider.SelectionDocument,
+                                GraphSummary.StateProvider.SelectedNodes.OfType<SrmTreeNode>()
+                                    .Select(node => node.Path));
+                            if (normalizationMethods.Count == 1)
+                            {
+                                normalizationMethod = normalizationMethods.First();
+                            }
+                        }
+
+                        normalizationMethod = normalizationMethod ?? areaView.NormalizationMethod;
+                        if (normalizationMethod != null)
+                        {
+                            yTitle = normalizationMethod.GetAxisTitle(Resources
+                                .AreaReplicateGraphPane_UpdateGraph_Peak_Area);
+                        }
+                        else
+                        {
+                            yTitle = "Normalized Peak Area";
+                        }
                     }
                     YAxis.Title.Text = aggregateOp.AnnotateTitle(yTitle);
                     YAxis.Type = AxisType.Linear;
@@ -1181,9 +1217,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     chromInfoDatas.Select(chromInfoData => (double) (GetValue(chromInfoData) ?? 0)));
             }
 
-            protected override List<LineInfo> GetPeptidePointPairLists(PeptideDocNode nodePep, bool multiplePeptides)
+            protected override List<LineInfo> GetPeptidePointPairLists(PeptideGroupDocNode peptideGroup, PeptideDocNode nodePep, bool multiplePeptides)
             {
-                var tuples = base.GetPeptidePointPairLists(nodePep, multiplePeptides);
+                if (_ratioIndex == NormalizeOption.CALIBRATED || _ratioIndex == NormalizeOption.DEFAULT)
+                {
+                    return new List<LineInfo>
+                    {
+                        new LineInfo(nodePep, nodePep.ModifiedSequenceDisplay,
+                            new List<PointPairList> {GetCalibratedPeptidePointList(peptideGroup, nodePep)})
+                    };
+
+                }
+                var tuples = base.GetPeptidePointPairLists(peptideGroup, nodePep, multiplePeptides);
                 if (!multiplePeptides)
                 {
                     return tuples;
@@ -1233,6 +1278,40 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     new LineInfo(nodePep, nodePep.ModifiedSequenceDisplay, new List<PointPairList> {result})
                 };
+            }
+
+            public PointPairList GetCalibratedPeptidePointList(PeptideGroupDocNode peptideGroup,
+                PeptideDocNode peptideDocNode)
+            {
+                var document = RatioCalculator.Document;
+                var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, peptideGroup, peptideDocNode);
+                CalibrationCurve calibrationCurve = null;
+                var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
+                if (_ratioIndex == NormalizeOption.CALIBRATED)
+                {
+                    calibrationCurve = calibrationCurveFitter.GetCalibrationCurve();
+                }
+
+                Func<int, double?> getValue = replicateIndex =>
+                {
+                    if (calibrationCurve == null)
+                    {
+                        return calibrationCurveFitter.GetNormalizedPeakArea(
+                            new CalibrationPoint(replicateIndex, null));
+                    }
+
+                    return calibrationCurveFitter.GetCalculatedConcentration(calibrationCurve, replicateIndex);
+                };
+
+                Func<int, ICollection<PeptideChromInfoData>, PointPair> makePointPair = (replicateIndex, datas) =>
+                {
+                    var values = datas.Select(data => getValue(data.ReplicateIndex)).OfType<double>();
+                    return ReplicateGroupOp.AggregateOp.MakeBarValue(replicateIndex, values);
+                };
+
+                Func<PeptideChromInfoData, bool> isMissing = chromInfoData => !getValue(chromInfoData.ReplicateIndex).HasValue;
+                return GetPeptidePointPairList(peptideGroup, peptideDocNode, isMissing, makePointPair);
+
             }
 
             private ErrorTag CalcErrorTag(IList<PointPair> points, bool average)
