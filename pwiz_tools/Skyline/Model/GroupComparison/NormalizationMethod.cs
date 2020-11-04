@@ -25,6 +25,7 @@ using System.Web;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
@@ -191,7 +192,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public override string GetAxisTitle(string plottedValue)
             {
-                return string.Format("{0} Ratio To {1}", plottedValue, _isotopeLabelType.Title);
+                return string.Format(QuantificationStrings.RatioToLabel_GetAxisTitle__0__Ratio_To__1_, plottedValue, _isotopeLabelType.Title);
             }
 
             public override string NormalizeToCaption
@@ -263,10 +264,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     if (_isotopeLabelType == null)
                     {
-                        return string.Format("Surrogate {0}", _surrogateName);
+                        return string.Format(QuantificationStrings.RatioToSurrogate_NormalizeToCaption_Surrogate__0_, _surrogateName);
                     }
 
-                    return string.Format("Surrogate {0} ({1})", _surrogateName, _isotopeLabelType.Title);
+                    return string.Format(QuantificationStrings.RatioToSurrogate_NormalizeToCaption_Surrogate__0____1__, _surrogateName, _isotopeLabelType.Title);
                 }
             }
 
@@ -286,7 +287,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public override string GetAxisTitle(string plottedValue)
             {
-                return string.Format("{0} Ratio To {1}", plottedValue, NormalizeToCaption);
+                return string.Format(QuantificationStrings.RatioToLabel_GetAxisTitle__0__Ratio_To__1_, plottedValue, NormalizeToCaption);
             }
 
             public static RatioToSurrogate ParseRatioToSurrogate(string name)

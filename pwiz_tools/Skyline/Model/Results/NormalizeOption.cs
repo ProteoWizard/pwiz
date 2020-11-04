@@ -12,10 +12,10 @@ namespace pwiz.Skyline.Model.Results
         public static readonly NormalizeOption NONE = new Simple(NormalizationMethod.NONE);
         private static Dictionary<string, Special> _specialOptions 
             = new Dictionary<string, Special>();
-        public static readonly NormalizeOption MAXIMUM = new Special(@"maximum", ()=>"Maximum");
-        public static readonly NormalizeOption TOTAL = new Special(@"total", ()=>"Total");
-        public static readonly NormalizeOption DEFAULT = new Special(@"default", ()=>"Default Normalization Method");
-        public static readonly NormalizeOption CALIBRATED = new Special(@"calibrated", ()=>"Calibration Curve");
+        public static readonly NormalizeOption MAXIMUM = new Special(@"maximum", ()=>QuantificationStrings.NormalizeOption_MAXIMUM_Maximum);
+        public static readonly NormalizeOption TOTAL = new Special(@"total", ()=>QuantificationStrings.NormalizeOption_TOTAL_Total);
+        public static readonly NormalizeOption DEFAULT = new Special(@"default", ()=>QuantificationStrings.NormalizeOption_DEFAULT_Default_Normalization_Method);
+        public static readonly NormalizeOption CALIBRATED = new Special(@"calibrated", ()=>QuantificationStrings.NormalizeOption_CALIBRATED_Calibration_Curve);
 
         public static readonly NormalizeOption GLOBAL_STANDARDS =
             FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS);

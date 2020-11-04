@@ -23,7 +23,6 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 

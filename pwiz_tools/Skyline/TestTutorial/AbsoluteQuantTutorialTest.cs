@@ -25,7 +25,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;

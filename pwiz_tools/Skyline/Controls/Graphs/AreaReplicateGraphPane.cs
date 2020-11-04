@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public class AreaReplicateGraphPane : SummaryReplicateGraphPane
     {
-        private int _lableHeight;
+        private int _labelHeight;
         public AreaReplicateGraphPane(GraphSummary graphSummary, PaneKey paneKey)
             : base(graphSummary)
         {
@@ -70,12 +70,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                if (AreaGraphController.AreaView.IsRatioToLabel)
+                if (AreaGraphController.AreaNormalizeOption.IsRatioToLabel)
                 {
                     return BarType.Cluster;
                 }
 
-                if (AreaGraphController.AreaView == NormalizeOption.TOTAL)
+                if (AreaGraphController.AreaNormalizeOption == NormalizeOption.TOTAL)
                 {
                     return BarType.PercentStack;
                 }
@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths().ToList();
             var pepCount = peptidePaths.Count;
-            NormalizeOption ratioIndex = AreaGraphController.AreaCVView.Constrain(document.Settings);
+            NormalizeOption normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(document.Settings);
             IsMultiSelect = pepCount > 1
                             || pepCount == 1 &&
                             GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode;
@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            if (ratioIndex == NormalizeOption.CALIBRATED)
+            if (normalizeOption == NormalizeOption.CALIBRATED)
             {
                 if (selectedTreeNode is TransitionTreeNode)
                 {
@@ -263,37 +263,37 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                     BarSettings.Type = BarType.Cluster;
             }
-            var standardType = IsotopeLabelType.light;
 
-            var areaView = AreaGraphController.AreaView;
-            if (areaView.IsRatioToLabel)
+            IsotopeLabelType standardType = null;
+
+            if (normalizeOption.IsRatioToLabel)
             {
-                ratioIndex = GraphSummary.RatioIndex;
-                if (ratioIndex.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
+                normalizeOption = GraphSummary.RatioIndex;
+                if (normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
                 {
                     standardType = ratioToLabel.FindIsotopeLabelType(document.Settings);
                 }
             }
             // Sets normalizeData to optimization, maximum_stack, maximum, total, or none
-            AreaNormalizeToData normalizeData;
+            DataScalingOption normalizeData;
             if (optimizationPresent && displayType == DisplayTypeChrom.single &&
-                areaView == NormalizeOption.TOTAL)
+                normalizeOption == NormalizeOption.TOTAL)
             {
-                normalizeData = AreaNormalizeToData.optimization;
+                normalizeData = DataScalingOption.optimization;
             }
-            else if (areaView == NormalizeOption.MAXIMUM)
+            else if (normalizeOption == NormalizeOption.MAXIMUM)
             {
                 normalizeData = BarSettings.Type == BarType.Stack
-                                    ? AreaNormalizeToData.maximum_stack
-                                    : AreaNormalizeToData.maximum;
+                                    ? DataScalingOption.maximum_stack
+                                    : DataScalingOption.maximum;
             }
             else if (BarSettings.Type == BarType.PercentStack)
             {
-                normalizeData = AreaNormalizeToData.total;
+                normalizeData = DataScalingOption.total;
             }
             else
             {
-                normalizeData = AreaNormalizeToData.none;
+                normalizeData = DataScalingOption.none;
             }
 
             // Calculate graph data points
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ExpectedVisible = AreaExpectedValue.none;
             if (parentGroupNode != null &&
                     displayType != DisplayTypeChrom.total &&
-                    !areaView.IsRatioToLabel &&
+                    !normalizeOption.IsRatioToLabel &&
                     !(optimizationPresent && displayType == DisplayTypeChrom.single))
             {
                 var displayTrans = GraphChromatogram.GetDisplayTransitions(parentGroupNode, displayType).ToArray();
@@ -330,7 +330,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     peptidePaths,
                     displayType,
                     replicateGroupOp,
-                    ratioIndex,
+                    normalizeOption,
                     normalizeData,
                     expectedValue,
                     PaneKey) : 
@@ -338,7 +338,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     identityPath,
                     displayType,
                     replicateGroupOp,
-                    ratioIndex,
+                    normalizeOption,
                     normalizeData,
                     expectedValue,
                     PaneKey,
@@ -353,7 +353,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (countNodes == 0)
                 ExpectedVisible = AreaExpectedValue.none;
             CanShowDotProduct = ExpectedVisible != AreaExpectedValue.none &&
-                                areaView != NormalizeOption.TOTAL;
+                                normalizeOption != NormalizeOption.TOTAL;
             CanShowPeakAreaLegend = countNodes != 0;
 
             InitFromData(graphData);
@@ -445,7 +445,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // If showing ratios, do not add the standard type to the graph,
                     // since it will always be empty, but make sure the colors still
                     // correspond with the other graphs.
-                    if (nodeGroup != null && ratioIndex.NormalizationMethod is NormalizationMethod.RatioToLabel)
+                    if (nodeGroup != null)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
                         if (ReferenceEquals(labelType, standardType))
@@ -463,7 +463,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         curveItem = CreateLineItem(label, pointPairList, color);
                     }
-                    else if (!IsMultiSelect && BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && normalizeData == AreaNormalizeToData.none)
+                    else if (!IsMultiSelect && BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && normalizeData == DataScalingOption.none)
                     {
                         curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
                     }
@@ -513,13 +513,13 @@ namespace pwiz.Skyline.Controls.Graphs
             // Draw a box around the currently selected replicate
             if (ShowSelection && maxArea >  -double.MaxValue)
             {
-                AddSelection(areaView, selectedReplicateIndex, sumArea, maxArea);
+                AddSelection(normalizeOption, selectedReplicateIndex, sumArea, maxArea);
             }
             // Reset the scale when the parent node changes
             bool resetAxes = (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id));
             _parentNode = parentNode;
 
-            UpdateAxes(resetAxes, aggregateOp, normalizeData, areaView);
+            UpdateAxes(resetAxes, aggregateOp, normalizeData, normalizeOption);
         }
 
         private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
@@ -560,7 +560,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void UpdateAxes(bool resetAxes, GraphValues.AggregateOp aggregateOp, AreaNormalizeToData normalizeData,
+        private void UpdateAxes(bool resetAxes, GraphValues.AggregateOp aggregateOp, DataScalingOption normalizeData,
             NormalizeOption areaView)
         {
             if (resetAxes)
@@ -579,7 +579,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                if (normalizeData == AreaNormalizeToData.optimization)
+                if (normalizeData == DataScalingOption.optimization)
                 {
                     // If currently log scale or normalized to max, reset the y-axis max
                     if (YAxis.Type == AxisType.Log || YAxis.Scale.Max == 1)
@@ -636,7 +636,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     string yTitle = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area;
                     if (areaView == NormalizeOption.CALIBRATED)
                     {
-                        yTitle = "Calculated Concentration";
+                        yTitle = CalibrationCurveFitter.AppendUnits(QuantificationStrings.Calculated_Concentration,
+                            GraphSummary.StateProvider.SelectionDocument.Settings.PeptideSettings.Quantification.Units);
                     }
                     else
                     {
@@ -661,7 +662,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         else
                         {
-                            yTitle = "Normalized Peak Area";
+                            yTitle = QuantificationStrings.CalibrationCurveFitter_GetYAxisTitle_Normalized_Peak_Area;
                         }
                     }
                     YAxis.Title.Text = aggregateOp.AnnotateTitle(yTitle);
@@ -680,7 +681,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var maxY = GraphHelper.GetMaxY(CurveList,this);
             if (IsDotProductVisible)
             {
-                var extraSpace = _lableHeight*(maxY/(Chart.Rect.Height - _lableHeight*2))*2;
+                var extraSpace = _labelHeight*(maxY/(Chart.Rect.Height - _labelHeight*2))*2;
                 maxY += extraSpace;
             }
        
@@ -773,7 +774,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     textObj.FontSpec.Border.IsVisible = false;
                     textObj.FontSpec.Size = pointSize.Value;
-                    _lableHeight =(int) textObj.FontSpec.GetHeight(CalcScaleFactor());
+                    _labelHeight =(int) textObj.FontSpec.GetHeight(CalcScaleFactor());
                     GraphObjList.Add(textObj);
                     _dotpLabels.Add(textObj);
                 }
@@ -898,7 +899,7 @@ namespace pwiz.Skyline.Controls.Graphs
             base.ChangeSelection(selectedIndex, identityPath);
         }
 
-        private enum AreaNormalizeToData { none, optimization, maximum_stack, maximum, total }
+        private enum DataScalingOption { none, optimization, maximum_stack, maximum, total }
 
         /// <summary>
         /// Holds the data that is currently displayed in the graph.
@@ -911,7 +912,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private readonly DocNode _docNode;
             private readonly NormalizeOption _ratioIndex;
-            private readonly AreaNormalizeToData _normalize;
+            private readonly DataScalingOption _normalize;
             private readonly AreaExpectedValue _expectedVisible;
             private readonly bool _zeroMissingValues;
 
@@ -920,7 +921,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
                                  NormalizeOption ratioIndex,
-                                 AreaNormalizeToData normalize,
+                                 DataScalingOption normalize,
                                  AreaExpectedValue expectedVisible,
                                  PaneKey paneKey,
                                  bool zeroMissingValues)
@@ -938,7 +939,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  DisplayTypeChrom displayType,
                                  ReplicateGroupOp replicateGroupOp,
                                  NormalizeOption ratioIndex,
-                                 AreaNormalizeToData normalize,
+                                 DataScalingOption normalize,
                                  AreaExpectedValue expectedVisible,
                                  PaneKey paneKey,
                                  bool zeroMissingValues = false)
@@ -976,21 +977,21 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 switch (_normalize)
                 {
-                    case AreaNormalizeToData.none:
+                    case DataScalingOption.none:
                         // If library column is showing, make library column as tall as the tallest stack
                         if (_expectedVisible != AreaExpectedValue.none)
                             NormalizeMaxStack();
                         break;
-                    case AreaNormalizeToData.optimization:
+                    case DataScalingOption.optimization:
                         NormalizeOpt();
                         break;
-                    case AreaNormalizeToData.maximum:
+                    case DataScalingOption.maximum:
                         NormalizeMax();
                         break;
-                    case AreaNormalizeToData.maximum_stack:
+                    case DataScalingOption.maximum_stack:
                         NormalizeMaxStack();
                         break;
-                    case AreaNormalizeToData.total:
+                    case DataScalingOption.total:
                         FixupForTotals();
                         break;
                 }
@@ -1094,7 +1095,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 // calculate the proportion of the denominator for each point
                                 if (_expectedVisible != AreaExpectedValue.none && i == 0 && denominator.HasValue)
                                     pointPairList[i].Y *= (pointDenom/libraryHeight);
-                                if (_normalize != AreaNormalizeToData.none)
+                                if (_normalize != DataScalingOption.none)
                                 {
                                     pointPairList[i].Y /= pointDenom;
                                     var errorTag = pointPairList[i].Tag as ErrorTag;

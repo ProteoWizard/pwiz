@@ -78,17 +78,17 @@ namespace pwiz.Skyline.Controls.Graphs
             set { Settings.Default.AreaGraphDisplayType = value.ToString(); }
         }
 
-        public static NormalizeOption AreaView
+        public static NormalizeOption AreaNormalizeOption
         {
             get { return Settings.Default.AreaNormalizeOption; }
             set { Settings.Default.AreaNormalizeOption = value; }
         }
 
-        public static NormalizeOption AreaCVView
+        public static NormalizeOption AreaCVNormalizeOption
         {
             get
             {
-                var option = AreaView;
+                var option = AreaNormalizeOption;
                 if (option == NormalizeOption.MAXIMUM || option == NormalizeOption.TOTAL)
                 {
                     option = NormalizeOption.NONE;
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             set
             {
-                AreaView = value;
+                AreaNormalizeOption = value;
             }
         }
 

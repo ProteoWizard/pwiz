@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 MsLevel = AreaGraphController.AreaCVMsLevel;
                 Transitions = AreaGraphController.AreaCVTransitions;
                 CountTransitions = AreaGraphController.AreaCVTransitionsCount;
-                RatioIndex = AreaGraphController.AreaCVView;
+                RatioIndex = AreaGraphController.AreaCVNormalizeOption;
                 Group = ReplicateValue.FromPersistedString(srmSettings, AreaGraphController.GroupByGroup);
                 Annotation = AreaGraphController.GroupByAnnotation;
                 PointsType = AreaGraphController.PointsType;

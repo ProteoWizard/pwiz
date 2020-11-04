@@ -145,7 +145,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return false;
 
             var document = _graphSummary.DocumentUIContainer.DocumentUI;
-            var normalizeOption = AreaGraphController.AreaCVView;
+            var normalizeOption = AreaGraphController.AreaCVNormalizeOption;
             return info.Cache.IsValidFor(document, new AreaCVGraphData.AreaCVGraphSettings(document.Settings, _graphSummary.Type)) &&
                 info.Cache.Get(ReplicateValue.FromPersistedString(document.Settings, AreaGraphController.GroupByGroup),
                     AreaGraphController.GroupByAnnotation,
@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _normalizationMethods.AddRange(NormalizeOption.AvailableNormalizeOptions(_graphSummary.DocumentUIContainer.DocumentUI));
             _normalizationMethods.Add(NormalizeOption.NONE);
             toolStripComboNormalizedTo.Items.AddRange(_normalizationMethods.Select(item=>item.Caption).ToArray());
-            toolStripComboNormalizedTo.SelectedIndex = _normalizationMethods.IndexOf(AreaGraphController.AreaCVView);
+            toolStripComboNormalizedTo.SelectedIndex = _normalizationMethods.IndexOf(AreaGraphController.AreaCVNormalizeOption);
         }
 
         #region Functional Test Support

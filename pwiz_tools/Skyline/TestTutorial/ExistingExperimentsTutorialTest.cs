@@ -632,7 +632,7 @@ namespace pwiz.SkylineTestTutorial
 
         private static void NormalizeGraphToHeavy()
         {
-            AreaGraphController.AreaView = NormalizeOption.TOTAL;
+            AreaGraphController.AreaNormalizeOption = NormalizeOption.TOTAL;
             Settings.Default.AreaLogScale = false;
             SkylineWindow.UpdatePeakAreaGraph();
         }
