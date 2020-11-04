@@ -361,6 +361,11 @@ namespace pwiz.Skyline.Controls.Graphs
                                        results.IsChromatogramSetLoaded(targetIndex);
             }
 
+            if (RunToRun && originalIndex < 0)
+            {
+                resultsAvailable = false;
+            }
+
             if (!resultsAvailable)
             {
                 Clear();
