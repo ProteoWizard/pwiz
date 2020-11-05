@@ -209,6 +209,7 @@ namespace pwiz.Skyline.SettingsUI
                             }
                             dictNewNodePeps.Add(nodePepMatched.SequenceKey,
                                 new PeptideMatch(nodePepMatched, matchedProteins,
+                                    pepInfo.LibInfo,
                                     MatchesFilter(target, charge)));
                         }
                         else
@@ -223,7 +224,9 @@ namespace pwiz.Skyline.SettingsUI
                                 dictNewNodePeps.Remove(key);
                                 dictNewNodePeps.Add(key,
                                     new PeptideMatch((PeptideDocNode) nodePepInDictionary.ChangeChildren(newChildren),
-                                        peptideMatchInDict.Proteins, peptideMatchInDict.MatchesFilterSettings));
+                                        peptideMatchInDict.Proteins, 
+                                        pepInfo.LibInfo,
+                                        peptideMatchInDict.MatchesFilterSettings));
                             }
                         }
                     }
@@ -285,6 +288,7 @@ namespace pwiz.Skyline.SettingsUI
             }            
             PeptideMatches = new Dictionary<PeptideSequenceModKey, PeptideMatch>
                                  {{nodePep.SequenceKey, new PeptideMatch(nodePep, matchedProteins, 
+                                     pepInfo.LibInfo,
                                      MatchesFilter(target, pepInfo.Key.Adduct))}};
             return nodePep;
         }
@@ -387,6 +391,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!dictCopy.ContainsKey(nodePepDocSet.SequenceKey))
                     dictCopy.Add(nodePepDocSet.SequenceKey, 
                         new PeptideMatch(nodePepDocSet, match.Proteins, 
+                        match.LibInfo,
                         match.MatchesFilterSettings));
             }
 
@@ -462,7 +467,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         nodePeps.Add(nodePep);
                         if (keysAddedWithoutMatch.ContainsKey(key))
-                            keysAddedWithoutMatch.Add(key, new PeptideMatch(null, null, false));
+                            keysAddedWithoutMatch.Add(key, new PeptideMatch(null, null, null, false));
                     }
                     else
                     {
@@ -732,63 +737,76 @@ namespace pwiz.Skyline.SettingsUI
             int processedPercent = 0;
             int processedCount = 0;
             int totalMatches = listMatches.Count;
+            selectedPath = null;
 
-            var listPeptides = new List<PeptideDocNode>();
-            var hasSmallMolecules = false;
-            foreach (var match in listMatches)
+            // Some .blib files provide protein accessions (understood as Molecule List Names fro small molecules).
+            // If those are provided we will use them as node names.
+            // TODO(bspratt) for now we will do this only for small molecules since it might be a surprise to proteomics users. We should revisit that decision.
+            foreach (var proteinName in listMatches.Select(m => m.LibInfo.Protein).Distinct())
             {
-                // Show progress, if in a long wait
-                if (broker != null)
+                var listPeptides = new List<PeptideDocNode>();
+                var hasSmallMolecules = false;
+                foreach (var match in listMatches.Where(m => Equals(proteinName, m.LibInfo.Protein)))
                 {
-                    if (broker.IsCanceled)
+                    // Show progress, if in a long wait
+                    if (broker != null)
                     {
-                        selectedPath = null;
-                        return document;
+                        if (broker.IsCanceled)
+                        {
+                            selectedPath = null;
+                            return document;
+                        }
+                        processedCount++;
+                        int processPercentNow = processedCount * (100 - startPercent) / totalMatches;
+                        if (processedPercent != processPercentNow)
+                        {
+                            processedPercent = processPercentNow;
+                            broker.ProgressValue = startPercent + processedPercent;
+                        }
                     }
-                    processedCount++;
-                    int processPercentNow = processedCount * (100 - startPercent) / totalMatches;
-                    if (processedPercent != processPercentNow)
-                    {
-                        processedPercent = processPercentNow;
-                        broker.ProgressValue = startPercent + processedPercent;
-                    }
+
+                    listPeptides.Add(match.NodePep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL));
+                    hasSmallMolecules |= !match.NodePep.IsProteomic;
                 }
 
-                listPeptides.Add(match.NodePep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL));
-                hasSmallMolecules |= !match.NodePep.IsProteomic;
-            }
+                bool hasVariable =
+                    listPeptides.Contains(nodePep => nodePep.HasExplicitMods && nodePep.ExplicitMods.IsVariableStaticMods);
 
-            bool hasVariable =
-                listPeptides.Contains(nodePep => nodePep.HasExplicitMods && nodePep.ExplicitMods.IsVariableStaticMods);
-
-            // Use existing group by this name, if present.
-            var nodeName = hasSmallMolecules
-                ? Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules
-                : Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides;
-            var nodePepGroupNew = FindPeptideGroupDocNode(document, nodeName, null);
-            if(nodePepGroupNew != null)
-            {
-                var newChildren = nodePepGroupNew.Children.ToList();
-                newChildren.AddRange(listPeptides.ConvertAll(nodePep => (DocNode) nodePep));
-                selectedPath = (listPeptides.Count == 1 ? new IdentityPath(nodePepGroupNew.Id, listPeptides[0].Id) : toPath);
-                nodePepGroupNew = (PeptideGroupDocNode) nodePepGroupNew.ChangeChildren(newChildren);
-                if (hasVariable)
-                    nodePepGroupNew = (PeptideGroupDocNode) nodePepGroupNew.ChangeAutoManageChildren(false);
-                return (SrmDocument) document.ReplaceChild(nodePepGroupNew);   
-            }  
-            else
-            {
-                nodePepGroupNew = new PeptideGroupDocNode(new PeptideGroup(), 
-                                                          nodeName,
-                                                          string.Empty, listPeptides.ToArray());
-                if (hasVariable)
-                    nodePepGroupNew = (PeptideGroupDocNode) nodePepGroupNew.ChangeAutoManageChildren(false);
-                IdentityPath nextAdd;
-                document = document.AddPeptideGroups(new[] { nodePepGroupNew }, true,
-                    toPath, out selectedPath, out nextAdd);
-                selectedPath = new IdentityPath(selectedPath, nodePepGroupNew.Children[0].Id);
-                return document;
+                // Use existing group by this name, if present.
+                // If library provides a RefSpectraProteins table, use that to name the group
+                // TODO(bspratt) for now we will use RefSpectraProteins names only for small molecules
+                var genericLibraryPeptidesGroupName = hasSmallMolecules
+                    ? Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules
+                    : Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides;
+                var nodeName = string.IsNullOrEmpty(proteinName) || 
+                               listPeptides.Any(p => p.IsProteomic) // TODO(bspratt) revisit this caution-driven decision
+                    ? genericLibraryPeptidesGroupName
+                    : proteinName;
+                var nodePepGroupNew = FindPeptideGroupDocNode(document, nodeName, null);
+                if(nodePepGroupNew != null)
+                {
+                    var newChildren = nodePepGroupNew.Children.ToList();
+                    newChildren.AddRange(listPeptides.ConvertAll(nodePep => (DocNode) nodePep));
+                    selectedPath = (listPeptides.Count == 1 ? new IdentityPath(nodePepGroupNew.Id, listPeptides[0].Id) : toPath);
+                    nodePepGroupNew = (PeptideGroupDocNode) nodePepGroupNew.ChangeChildren(newChildren);
+                    if (hasVariable)
+                        nodePepGroupNew = (PeptideGroupDocNode) nodePepGroupNew.ChangeAutoManageChildren(false);
+                    document = (SrmDocument) document.ReplaceChild(nodePepGroupNew);   
+                }  
+                else
+                {
+                    nodePepGroupNew = new PeptideGroupDocNode(new PeptideGroup(), 
+                        nodeName,
+                        string.Empty, listPeptides.ToArray());
+                    if (hasVariable)
+                        nodePepGroupNew = (PeptideGroupDocNode) nodePepGroupNew.ChangeAutoManageChildren(false);
+                    IdentityPath nextAdd;
+                    document = document.AddPeptideGroups(new[] { nodePepGroupNew }, true,
+                        toPath, out selectedPath, out nextAdd);
+                    selectedPath = new IdentityPath(selectedPath, nodePepGroupNew.Children[0].Id);
+                }
             }
+            return document;
         }
 
         /// <summary>
@@ -820,17 +838,20 @@ namespace pwiz.Skyline.SettingsUI
 
         public struct PeptideMatch
         {
-            public PeptideMatch(PeptideDocNode nodePep, IEnumerable<ProteinInfo> proteins, bool matchesFilterSettings) : this()
+            public PeptideMatch(PeptideDocNode nodePep, IEnumerable<ProteinInfo> proteins, SpectrumHeaderInfo libInfo, bool matchesFilterSettings) : this()
             {
                 NodePep = nodePep;
                 Proteins = proteins == null ? null : proteins.ToList();
                 MatchesFilterSettings = matchesFilterSettings;
+                LibInfo = libInfo;
             }
 
             public PeptideDocNode NodePep { get; set; }
 
             public List<ProteinInfo> Proteins { get; set; }
             public bool MatchesFilterSettings { get; private set; }
+
+            public SpectrumHeaderInfo LibInfo { get; private set; } // The library info used in establishing the match
 
         }
         public class ProteinInfo
