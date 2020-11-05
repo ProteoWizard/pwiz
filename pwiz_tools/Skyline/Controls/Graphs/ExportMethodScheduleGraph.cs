@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Controls.Graphs
                              col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColRtBegin) ||
                              col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.ColRtEnd))
                     {
-                        col.DefaultCellStyle.Format = Formats.RETENTION_TIME;
+                        col.DefaultCellStyle.Format = Formats.SamplingTime;
                     }
                     else if (col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.Col1K0LowerLimit) ||
                              col.HeaderText.Equals(BrukerTimsTofMethodExporter.Metrics.Col1K0UpperLimit))

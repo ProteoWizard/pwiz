@@ -18110,20 +18110,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to RT begin (seconds).
+        ///   Looks up a localized string similar to RT begin.
         /// </summary>
-        public static string Metrics_ColRtBegin_RT_begin__seconds_ {
+        public static string Metrics_ColRtBegin_RT_begin {
             get {
-                return ResourceManager.GetString("Metrics_ColRtBegin_RT_begin__seconds_", resourceCulture);
+                return ResourceManager.GetString("Metrics_ColRtBegin_RT_begin", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to RT end (seconds).
+        ///   Looks up a localized string similar to RT end.
         /// </summary>
-        public static string Metrics_ColRtEnd_RT_end__seconds_ {
+        public static string Metrics_ColRtEnd_RT_end {
             get {
-                return ResourceManager.GetString("Metrics_ColRtEnd_RT_end__seconds_", resourceCulture);
+                return ResourceManager.GetString("Metrics_ColRtEnd_RT_end", resourceCulture);
             }
         }
         

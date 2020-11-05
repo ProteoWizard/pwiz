@@ -3364,8 +3364,8 @@ namespace pwiz.Skyline.Model
             public static string ColMz = Resources.Metrics_ColMz_m_z;
             public static string Col1K0LowerLimit = Resources.Metrics_Col1K0LowerLimit__1_K0_lower_limit;
             public static string Col1K0UpperLimit = Resources.Metrics_Col1K0UpperLimit__1_K0_upper_limit;
-            public static string ColRtBegin = Resources.Metrics_ColRtBegin_RT_begin__seconds_;
-            public static string ColRtEnd = Resources.Metrics_ColRtEnd_RT_end__seconds_;
+            public static string ColRtBegin = Resources.Metrics_ColRtBegin_RT_begin;
+            public static string ColRtEnd = Resources.Metrics_ColRtEnd_RT_end;
 
             public Metrics(Scheduler s, IList<Tuple<InputTarget, string>> targets)
             {
@@ -3408,8 +3408,8 @@ namespace pwiz.Skyline.Model
                     row[ColMaxSamplingTime] = maxSamplingTimes[i].y;
                     row[Col1K0LowerLimit] = target.one_over_k0_lower_limit;
                     row[Col1K0UpperLimit] = target.one_over_k0_upper_limit;
-                    row[ColRtBegin] = target.time_in_seconds_begin;
-                    row[ColRtEnd] = target.time_in_seconds_end;
+                    row[ColRtBegin] = target.time_in_seconds_begin / 60;
+                    row[ColRtEnd] = target.time_in_seconds_end / 60;
                     Table.Rows.Add(row);
                 }
             }

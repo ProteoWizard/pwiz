@@ -11151,11 +11151,11 @@ Invalid peptide sequence at position 18
   <data name="Metrics_Col1K0UpperLimit__1_K0_upper_limit" xml:space="preserve">
     <value>1/K0 upper limit</value>
   </data>
-  <data name="Metrics_ColRtBegin_RT_begin__seconds_" xml:space="preserve">
-    <value>RT begin (seconds)</value>
+  <data name="Metrics_ColRtBegin_RT_begin" xml:space="preserve">
+    <value>RT begin</value>
   </data>
-  <data name="Metrics_ColRtEnd_RT_end__seconds_" xml:space="preserve">
-    <value>RT end (seconds)</value>
+  <data name="Metrics_ColRtEnd_RT_end" xml:space="preserve">
+    <value>RT end</value>
   </data>
   <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
     <value>Concurrent Accumulations</value>
