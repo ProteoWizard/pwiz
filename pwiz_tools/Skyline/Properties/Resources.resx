@@ -10912,7 +10912,7 @@ Invalid peptide sequence at position 18
     <value>Replicate</value>
   </data>
   <data name="DetectionPlotPane_YAxis_Name" xml:space="preserve">
-    <value>Detections</value>
+    <value>Detections ({0})</value>
   </data>
   <data name="DetectionPlotPane_CumulativeLine_Name" xml:space="preserve">
     <value>cumulative</value>
@@ -10941,6 +10941,29 @@ Invalid peptide sequence at position 18
   <data name="DetectionPlotPane_EmptyPlotCanceled_Label" xml:space="preserve">
     <value>Operation canceled.</value>
   </data>
+  
+  <data name="DetectionPlotData_NoDataLoaded_Label" xml:space="preserve">
+    <value>No data loaded.</value>
+  </data>
+  <data name="DetectionPlotData_InvalidQValue_Label" xml:space="preserve">
+    <value>Invalid Q-Value. Cannot be 0 or 1.</value>
+  </data>
+  <data name="DetectionPlotData_NoResults_Label" xml:space="preserve">
+    <value>Document has no peptides or chromatograms.</value>
+  </data>
+  <data name="DetectionPlotData_NoQValuesInDocument_Label" xml:space="preserve">
+    <value>Document has no Q-Values. Train your mProphet model.</value>
+  </data>
+  <data name="DetectionPlotData_UsePropertiesDialog_Label" xml:space="preserve">
+    <value>Use properties dialog or modify the document to update the plot.</value>
+  </data>
+  <data name="DetectionPlotData_WaitingForDocumentLoad_Label" xml:space="preserve">
+    <value>"Waiting for the document to load."</value>
+  </data>
+  <data name="DetectionPlotData_DataRetrieved_Label" xml:space="preserve">
+    <value>"Data retrieved successfully."</value>
+  </data>
+
   <data name="DetectionHistogramPane_XAxis_Name" xml:space="preserve">
     <value>Replicate Count</value>
   </data>

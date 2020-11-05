@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Linq;
 
 namespace pwiz.Common.DataBinding
@@ -91,7 +90,6 @@ namespace pwiz.Common.DataBinding
                 return DisplayColumn.GetColumnCaption(PivotKey, ColumnCaptionType.localized);
             }
         }
-        public delegate void HookPropertyChange(object component, PropertyDescriptor propertyDescriptor);
 
         public override string Description
         {

@@ -136,8 +136,20 @@ namespace IDPicker.Forms
                             };
                             dgv.Columns.Add(column);
                         }
-                    else if (method.Key == QuantitationMethod.TMT10plex)
-                        foreach (string ion in new string[] { "126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131" })
+                    else if (method.Key != QuantitationMethod.None && method.Key != QuantitationMethod.LabelFree)
+                    {
+                        var tmtIonsTo16 = new [] { "126", "127N", "127C", "128N", "128C", "129N", "129C", "130N", "130C", "131N", "131C", "132N", "132C", "133N", "133C", "134" };
+                        var tmtIons = new Func<IEnumerable<string>>(() =>
+                        {
+                            switch (method.Key)
+                            {
+                                case QuantitationMethod.TMT10plex: return tmtIonsTo16.Take(10);
+                                case QuantitationMethod.TMT11plex: return tmtIonsTo16.Take(11);
+                                case QuantitationMethod.TMTpro16plex: return tmtIonsTo16;
+                                default: throw new ArgumentException("QuantitationMethod must be TMT 10-16");
+                            }
+                        })();
+                        foreach (string ion in tmtIons)
                         {
                             var column = new DataGridViewTextBoxColumn
                             {
@@ -147,7 +159,7 @@ namespace IDPicker.Forms
                                 FillWeight = 0.1f
                             };
                             dgv.Columns.Add(column);
-                        }
+                        }}
 
                     // add source groups to the table
                     foreach (var group in method)

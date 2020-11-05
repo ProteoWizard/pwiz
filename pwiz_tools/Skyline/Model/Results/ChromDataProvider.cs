@@ -117,9 +117,9 @@ namespace pwiz.Skyline.Model.Results
             _dataFile = dataFile;
             IndexOffset = 0;
 
-            if (dataFile.ChromatogramCount > 0 && dataFile.GetChromatogramId(0, out int indexId) == TIC_CHROMATOGRAM_ID)
+            if (dataFile.ChromatogramCount > 0 && dataFile.GetChromatogramId(0, out _) == TIC_CHROMATOGRAM_ID)
                 TicChromatogramIndex = 0;
-            if (dataFile.ChromatogramCount > 1 && dataFile.GetChromatogramId(1, out int indexId2) == BPC_CHROMATOGRAM_ID)
+            if (dataFile.ChromatogramCount > 1 && dataFile.GetChromatogramId(1, out _) == BPC_CHROMATOGRAM_ID)
                 BpcChromatogramIndex = 1;
 
             QcTraceByIndex = new SortedDictionary<int, MsDataFileImpl.QcTrace>();
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.Results
             }
             else if (index == TicChromatogramIndex || index == BpcChromatogramIndex)
             {
-                _dataFile.GetChromatogram(index, out string id, out times, out intensities, true);
+                _dataFile.GetChromatogram(index, out _, out times, out intensities, true);
             }
             else
             {
@@ -401,7 +401,7 @@ namespace pwiz.Skyline.Model.Results
             float[] times, intensities;
             if (!_globalChromatogramExtractor.GetChromatogram(id, out times, out intensities))
             {
-                _dataFile.GetChromatogram(id, out string chromId, out times, out intensities);
+                _dataFile.GetChromatogram(id, out _, out times, out intensities);
             }
 
             timeIntensities = new TimeIntensities(times, intensities, null, null);

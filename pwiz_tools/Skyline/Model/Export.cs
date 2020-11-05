@@ -1880,6 +1880,7 @@ namespace pwiz.Skyline.Model
             : base(document)
         {
             IsolationList = true;
+            IsPrecursorLimited = true;
         }
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
@@ -3533,6 +3534,7 @@ namespace pwiz.Skyline.Model
             : base(document)
         {
             IsolationList = true;
+            IsPrecursorLimited = true;
         }
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
@@ -3732,6 +3734,7 @@ namespace pwiz.Skyline.Model
         {
             _instrumentType = instrumentType;
             IsolationList = true;
+            IsPrecursorLimited = true;
 
             /* From Waters:
              * 

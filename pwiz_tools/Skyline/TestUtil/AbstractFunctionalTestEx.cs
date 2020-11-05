@@ -510,7 +510,7 @@ namespace pwiz.SkylineTestUtil
                     break;
                 Thread.Sleep(sleepInterval);
             }
-            RunUI(() => Assert.IsTrue(graphChromatogram.IsOverHighlightPoint(x, y, paneKey),
+            RunUI(() => AssertEx.IsTrue(graphChromatogram.IsOverHighlightPoint(x, y, paneKey),
                 string.Format("Full-scan dot not present after {0} tries in {1} seconds", sleepCycles, sleepInterval*sleepCycles/1000.0)));
             RunUI(() => graphChromatogram.TestMouseDown(x, y, paneKey));
             WaitForGraphs();

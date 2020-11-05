@@ -116,6 +116,7 @@
             // navBarDeleteItem
             // 
             this.navBarDeleteItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.navBarDeleteItem.Image = global::pwiz.Common.Properties.Resources.Delete;
             resources.ApplyResources(this.navBarDeleteItem, "navBarDeleteItem");
             this.navBarDeleteItem.Name = "navBarDeleteItem";
             this.navBarDeleteItem.Click += new System.EventHandler(this.NavBarDeleteItemOnClick);

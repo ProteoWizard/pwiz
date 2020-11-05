@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "iRT";
 
             ForceMzml = true;   // 2-3x faster than raw files for this test.
@@ -570,7 +570,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 25);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RunUI(() =>
                 {
@@ -599,7 +599,7 @@ namespace pwiz.SkylineTestTutorial
                     irtEditor.Top = SkylineWindow.Bottom - irtEditor.Height - SkylineWindow.StatusBarHeight - 5;
                     irtEditor.Left = SkylineWindow.Right - irtEditor.Width - 5;
                 });
-                PauseForCoverShot();
+                TakeCoverShot();
                 OkDialog(irtEditor, irtEditor.CancelDialog);
                 OkDialog(peptideSettingsUI, peptideSettingsUI.CancelDialog);
                 return;
