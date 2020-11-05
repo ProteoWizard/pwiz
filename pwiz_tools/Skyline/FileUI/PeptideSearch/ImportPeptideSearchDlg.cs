@@ -790,7 +790,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var precursorMassType = TransitionSettings.Prediction.PrecursorMassType;
             if (precursorIsotopes == FullScanPrecursorIsotopes.None)
             {
-                if (WorkflowType != Workflow.dia)
+                if (WorkflowType == Workflow.dda)
                 {
                     MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_);
                     return false;
