@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return -1;
             }
-            var keyToFind = new ViewLibraryPepInfo(new LibKey(libraryKey), null);
+            var keyToFind = new ViewLibraryPepInfo(new LibKey(libraryKey));
             var range = CollectionUtil.BinarySearch(_allEntries, entry => ComparePepInfos(entry, keyToFind));
             return range.Length > 0 ? range.Start : -1;
         }

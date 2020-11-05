@@ -110,7 +110,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(z, key.Charge);
                 Assert.AreEqual(adduct, key.Adduct);
                 Assert.AreEqual(caffeineInChiKey, key.Target.ToString());
-                var viewLibPepInfo = new ViewLibraryPepInfo(key, null);
+                var viewLibPepInfo = new ViewLibraryPepInfo(key);
                 Assert.AreEqual(key, viewLibPepInfo.Key);
                 var smallMolInfo = viewLibPepInfo.GetSmallMoleculeLibraryAttributes();
                 Assert.AreEqual(moleculeName, smallMolInfo.MoleculeName);

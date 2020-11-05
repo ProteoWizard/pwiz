@@ -96,8 +96,9 @@ namespace pwiz.Skyline.Model.Lib
         public int SpectrumCount { get; private set; }
         public double? Score { get; private set; }
         public string ScoreType { get; private set; }
-        private string _protein;
         public override string Protein => _protein; // Some .blib files provide a protein accession (or Molecule List Name for small molecules)
+
+        private string _protein; // Using a backing variable so that we can set Protein (which abstract parent class declares readonly) in XML deserialization.
 
         public override float GetRankValue(PeptideRankId rankId)
         {

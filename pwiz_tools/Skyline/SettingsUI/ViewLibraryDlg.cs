@@ -381,11 +381,11 @@ namespace pwiz.Skyline.SettingsUI
                 pepInfos = _selectedLibrary.Keys.Select(
                     key =>
                     {
-                        if (!_selectedLibrary.TryGetLibInfo(key, out var libinfo))
+                        if (!_selectedLibrary.TryGetLibInfo(key, out var libInfo))
                         {
-                            libinfo = null;
+                            libInfo = null;
                         }
-                        return new ViewLibraryPepInfo(key, libinfo);
+                        return new ViewLibraryPepInfo(key, libInfo);
                     });
             }
             _peptides = new ViewLibraryPepInfoList(pepInfos);

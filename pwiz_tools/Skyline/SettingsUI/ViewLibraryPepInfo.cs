@@ -34,7 +34,7 @@ namespace pwiz.Skyline.SettingsUI
     /// </summary>
     public class ViewLibraryPepInfo : Immutable
     {
-        public ViewLibraryPepInfo(LibKey key, SpectrumHeaderInfo libInfo)
+        public ViewLibraryPepInfo(LibKey key, SpectrumHeaderInfo libInfo = null)
         {
             Key = key;
             LibInfo = libInfo;
@@ -42,7 +42,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         public LibKey Key { get; private set; }
-        public SpectrumHeaderInfo LibInfo { get; private set; } //
+        public SpectrumHeaderInfo LibInfo { get; private set; } // Provides peptide/protein association when available
         public PeptideDocNode PeptideNode { get; private set; }
 
         public ViewLibraryPepInfo ChangePeptideNode(PeptideDocNode peptideDocNode)

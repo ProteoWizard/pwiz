@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
         }
 
-        public override string Protein => null; // Only .blib provides protein accessions / molecule list names
+        public override string Protein => null; // CONSIDER(bspratt) .clib files may (or may not) contain protein/peptide associations. Skyline currently takes no notice of this.
 
         #region Implementation of IXmlSerializable
 
