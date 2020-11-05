@@ -175,7 +175,7 @@ namespace pwiz.SkylineTestFunctional
         {
             DetectionPlotData data = null;
             WaitForConditionUI(() => (data = pane.CurrentData) != null 
-                                           && pane.CurrentData.QValueCutoff == qValue
+                                           && data.QValueCutoff == qValue
                                            && DetectionPlotData.GetDataCache().Status == DetectionPlotData.DetectionDataCache.CacheStatus.idle,
                 () => $"Retrieving data for qValue {qValue}, refIndex {refIndex} took too long.");
             WaitForGraphs();
@@ -184,19 +184,19 @@ namespace pwiz.SkylineTestFunctional
             if (record)
             {
                 Console.WriteLine(@"Peptides");
-                pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PEPTIDE).TargetsCount
+                data.GetTargetData(DetectionsGraphController.TargetType.PEPTIDE).TargetsCount
                     .ForEach((cnt) => { Console.Write($@"{cnt}, "); });
                 Console.WriteLine(@"\nPrecursors");
-                pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PRECURSOR).TargetsCount
+                data.GetTargetData(DetectionsGraphController.TargetType.PRECURSOR).TargetsCount
                     .ForEach((cnt) => { Console.Write($@"{cnt}, "); });
             }
 
             Assert.IsTrue(
                 REF_DATA[refIndex].SequenceEqual(
-                    pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PEPTIDE).TargetsCount));
+                    data.GetTargetData(DetectionsGraphController.TargetType.PEPTIDE).TargetsCount));
             Assert.IsTrue(
                 REF_DATA[refIndex + 1].SequenceEqual(
-                    pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PRECURSOR).TargetsCount));
+                    data.GetTargetData(DetectionsGraphController.TargetType.PRECURSOR).TargetsCount));
         }
     }
 }
