@@ -108,17 +108,27 @@ namespace pwiz.Skyline.Model.Lib
                 imGroup = chromInfo.IonMobilityInfo;
             }
             var maxApex = float.MinValue;
+            var maxApexMs1 = float.MinValue;
             string chromFileName = null;
+            double? mobilityMs1 = null; // Track MS1 ion mobility in order to derive high energy ion mobility offset value
             foreach (var nodeTran in nodeTranGroup.Transitions)
             {
-                if (nodeTran.IsMs1)
-                    continue;
                 var chromInfos = nodeTran.GetSafeChromInfo(replicateIndex);
                 if (chromInfos.IsEmpty)
                     continue;
                 var chromInfo = chromInfos.First(info => info.OptimizationStep == 0);
                 if (chromInfo.Area == 0)
                     continue;
+                if (nodeTran.IsMs1)
+                {
+                    // Track MS1 ion mobility in order to derive high energy ion mobility offset value
+                    if (chromInfo.Height > maxApexMs1)
+                    {
+                        maxApexMs1 = chromInfo.Height;
+                        mobilityMs1 = chromInfo.IonMobility.IonMobility.Mobility;
+                    }
+                    continue;
+                }
                 if (chromFileName == null)
                 {
                     var chromFileInfo = Document.Settings.MeasuredResults.Chromatograms[replicateIndex].MSDataFileInfos.FirstOrDefault(file => ReferenceEquals(file.Id, chromInfo.FileId));
@@ -137,7 +147,15 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     maxApex = chromInfo.Height;
                     rt = chromInfo.RetentionTime;
-                    im = IonMobilityAndCCS.GetIonMobilityAndCCS(chromInfo.IonMobility.IonMobility, chromInfo.IonMobility.CollisionalCrossSectionSqA ?? imGroup.CollisionalCrossSection, 0);
+                    var mobility = chromInfo.IonMobility.IonMobility;
+                    var mobilityHighEnergyOffset = 0.0;
+                    if (mobilityMs1.HasValue && mobility.HasValue && mobility.Mobility != mobilityMs1)
+                    {
+                        // Note any difference in MS1 and MS2 ion mobilities - the "high energy ion mobility offset"
+                        mobilityHighEnergyOffset = mobility.Mobility.Value - mobilityMs1.Value;
+                        mobility = mobility.ChangeIonMobility(mobilityMs1);
+                    }
+                    im = IonMobilityAndCCS.GetIonMobilityAndCCS(mobility, chromInfo.IonMobility.CollisionalCrossSectionSqA ?? imGroup.CollisionalCrossSection, mobilityHighEnergyOffset);
                 }
             }
             if (chromFileName == null)

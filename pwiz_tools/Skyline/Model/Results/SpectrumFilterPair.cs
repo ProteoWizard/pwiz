@@ -380,9 +380,11 @@ namespace pwiz.Skyline.Model.Results
                         source,
                         Extractor,
                         true,
-                        true,
-                        MinTime,
-                        MaxTime);
+                        true);
+                    if (_filterByTime)
+                    {
+                        key = key.ChangeOptionalTimes(_minTime, _maxTime);
+                    }
                     listChromKeys.Add(key);
                 }
             }

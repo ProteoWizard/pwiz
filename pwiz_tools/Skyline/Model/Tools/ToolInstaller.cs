@@ -665,6 +665,63 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
+
+        private static List<ReportOrViewSpec> GetReportsFromFiles(DirectoryInfo toolInfDir, string tempToolPath)
+        {
+            var srmSerialzer = new XmlSerializer(typeof(SrmDocument));
+            var loadedItems = new List<ReportOrViewSpec>();
+            var skyrFiles = toolInfDir.GetFiles(@"*" + ReportSpecList.EXT_REPORTS);
+            if (skyrFiles.Length > 0)
+            {
+                foreach (FileInfo file in skyrFiles)
+                {
+                    try
+                    {
+                        using (var stream = File.OpenRead(file.FullName))
+                        {
+                            loadedItems.AddRange(ReportSharing.DeserializeReportList(stream));
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        DirectoryEx.SafeDelete(tempToolPath);
+                        throw new IOException(
+                            string.Format(Resources.SerializableSettingsList_ImportFile_Failure_loading__0__,
+                                file.FullName), exception);
+                    }
+                }
+            }
+            else
+            {
+                foreach (FileInfo file in toolInfDir.GetFiles().Where(file => file.Extension.Equals(SrmDocument.EXT)))
+                {
+                    SrmDocument document;
+                    try
+                    {
+                        using (var stream = File.OpenRead(file.FullName))
+                        {
+                            document = (SrmDocument) srmSerialzer.Deserialize(stream);
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new IOException(string.Format(
+                            Resources.SerializableSettingsList_ImportFile_Failure_loading__0__,
+                            file.FullName), exception);
+                    }
+
+                    var reports = document.Settings.DataSettings.ViewSpecList.ViewSpecLayouts;
+                    foreach (ViewSpecLayout report in reports)
+                    {
+                        loadedItems.Add(new ReportOrViewSpec(report));
+                    }
+                }
+            }
+
+            return loadedItems;
+        }
+
+
         /// <summary>
         /// Generate the list of Existing Reports that would be modified and the list of new reports
         /// </summary>
@@ -672,54 +729,41 @@ namespace pwiz.Skyline.Model.Tools
         {
             var existingReports = new List<ReportOrViewSpec>();
             newReports = new List<ReportOrViewSpec>();
-            foreach (FileInfo file in toolInfDir.GetFiles(@"*" + ReportSpecList.EXT_REPORTS))
+
+            var externalToolReports =
+                Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id);
+            Dictionary<string, ViewSpecLayout> allExistingReports = new Dictionary<string, ViewSpecLayout>();
+            if (externalToolReports != null)
             {
-                List<ReportOrViewSpec> loadedItems;
-                try
+                foreach (var viewSpec in externalToolReports.ViewSpecLayouts)
                 {
-                    using (var stream = File.OpenRead(file.FullName))
-                    {
-                        loadedItems = ReportSharing.DeserializeReportList(stream);
-                    }
+                    allExistingReports[viewSpec.Name] = viewSpec;
                 }
-                catch (Exception exception)
+            }
+
+            var loadedItems = GetReportsFromFiles(toolInfDir, tempToolPath);
+                
+                
+            foreach (var reportOrViewSpec in loadedItems)
+            {
+                ViewSpecLayout existingView;
+                if (allExistingReports.TryGetValue(reportOrViewSpec.GetKey(), out existingView))
                 {
-                    DirectoryEx.SafeDelete(tempToolPath);
-                    throw new IOException(
-                        string.Format(Resources.SerializableSettingsList_ImportFile_Failure_loading__0__,
-                                      file.FullName), exception);
-                }
-                var externalToolReports =
-                    Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id);
-                Dictionary<string, ViewSpecLayout> allExistingReports = new Dictionary<string, ViewSpecLayout>();
-                if (externalToolReports != null)
-                {
-                    foreach (var viewSpec in externalToolReports.ViewSpecLayouts)
+                    if (!ReportSharing.AreEquivalent(reportOrViewSpec, new ReportOrViewSpec(existingView)))
                     {
-                        allExistingReports[viewSpec.Name] = viewSpec;
-                    }
-                }
-                foreach (var reportOrViewSpec in loadedItems)
-                {
-                    ViewSpecLayout existingView;
-                    if (allExistingReports.TryGetValue(reportOrViewSpec.GetKey(), out existingView))
-                    {
-                        if (!ReportSharing.AreEquivalent(reportOrViewSpec, new ReportOrViewSpec(existingView)))
-                        {
-                            existingReports.Add(reportOrViewSpec);
-                        }
-                        else
-                        {
-                            newReports.Add(reportOrViewSpec);
-                        }
+                        existingReports.Add(reportOrViewSpec);
                     }
                     else
                     {
                         newReports.Add(reportOrViewSpec);
                     }
                 }
-                // We now have the list of Reports that would have a naming conflict. 
+                else
+                {
+                    newReports.Add(reportOrViewSpec);
+                }
             }
+                // We now have the list of Reports that would have a naming conflict. 
             return existingReports;
         }
 
