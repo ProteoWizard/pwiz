@@ -1813,7 +1813,12 @@ namespace pwiz.SkylineTestUtil
         const int marginH = 7;
         public void MaximizeSkylineWindow()
         {
-            SetSkylineWindowSize(int.MaxValue - marginW, int.MaxValue - marginH);
+            var screenRect = Rectangle.Empty;
+            RunUI(() =>
+            {
+                screenRect = Screen.FromControl(SkylineWindow).Bounds;
+            });
+            SetSkylineWindowSize(screenRect.Width - marginW, screenRect.Height - marginH); // SetSkylineWindowSize adds a set margin
         }
 
         // Set the Skyline window size, and center it in the screen to have the best chance of not needing to move it before Alt-PtrSc
