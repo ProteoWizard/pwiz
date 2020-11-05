@@ -57,7 +57,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
         {
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "IMSFiltering";
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DriftTraining-3_1_1.pdf";
@@ -214,7 +214,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 RunUI(() => fullScanGraph.SetZoom(false));
                 PauseForScreenShot("Full scan unzoomed 3D MS/MS graph", 14);
 
-                if (IsPauseForCoverShot)
+                if (IsCoverShotMode)
                 {
                     RunUI(() =>
                     {
@@ -234,7 +234,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
                     RunUI(SkylineWindow.FocusDocument);
 
-                    PauseForCoverShot();
+                    TakeCoverShot();
                     return;
                 }
 

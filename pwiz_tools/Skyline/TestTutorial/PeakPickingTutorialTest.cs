@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "PeakPicking";
 
             ForceMzml = false;  // Mzml isn't faster for this test.
@@ -253,7 +253,7 @@ namespace pwiz.SkylineTestTutorial
                     RemovePeptide(missingPeptides[i], isDecoys[i]);
             }
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen();
                 var reintegrateDlgCover = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -265,7 +265,7 @@ namespace pwiz.SkylineTestTutorial
                     editModelCover.PeakScoringModelName = "SRMCourse";
                     editModelCover.TrainModelClick();
                 });
-                PauseForCoverShot();
+                TakeCoverShot();
 
                 OkDialog(editModelCover, editModelCover.CancelDialog);
                 OkDialog(reintegrateDlgCover, reintegrateDlgCover.CancelDialog);

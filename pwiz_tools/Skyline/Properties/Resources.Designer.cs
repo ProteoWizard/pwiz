@@ -8446,6 +8446,69 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &quot;Data retrieved successfully.&quot;.
+        /// </summary>
+        public static string DetectionPlotData_DataRetrieved_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_DataRetrieved_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid Q-Value. Cannot be 0 or 1..
+        /// </summary>
+        public static string DetectionPlotData_InvalidQValue_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_InvalidQValue_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No data loaded..
+        /// </summary>
+        public static string DetectionPlotData_NoDataLoaded_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_NoDataLoaded_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document has no Q-Values. Train your mProphet model..
+        /// </summary>
+        public static string DetectionPlotData_NoQValuesInDocument_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_NoQValuesInDocument_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document has no peptides or chromatograms..
+        /// </summary>
+        public static string DetectionPlotData_NoResults_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_NoResults_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use properties dialog or modify the document to update the plot..
+        /// </summary>
+        public static string DetectionPlotData_UsePropertiesDialog_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_UsePropertiesDialog_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;Waiting for the document to load.&quot;.
+        /// </summary>
+        public static string DetectionPlotData_WaitingForDocumentLoad_Label {
+            get {
+                return ResourceManager.GetString("DetectionPlotData_WaitingForDocumentLoad_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to all runs.
         /// </summary>
         public static string DetectionPlotPane_AllRunsLine_Name {
@@ -8581,7 +8644,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Detections.
+        ///   Looks up a localized string similar to Detections ({0}).
         /// </summary>
         public static string DetectionPlotPane_YAxis_Name {
             get {
@@ -15358,7 +15421,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct com [rest of string was truncated]&quot;;.
+        ///Recognized adduct components  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -20078,7 +20141,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {

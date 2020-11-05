@@ -165,7 +165,7 @@ namespace TestPerf
                 PolishedProteins = 2465,
             };
 
-            if (!IsPauseForCoverShot)
+            if (!IsCoverShotMode)
                 TestTtofData();
         }
 
@@ -221,7 +221,7 @@ namespace TestPerf
                 UnpolishedProteins = 7,
             };
 
-            if (!IsPauseForCoverShot)
+            if (!IsCoverShotMode)
                 TestQeData();
         }
 
@@ -255,7 +255,7 @@ namespace TestPerf
                 PolishedProteins = 2034,
             };
 
-            if (!IsPauseForCoverShot)
+            if (!IsCoverShotMode)
                 TestQeData();
         }
        
@@ -306,7 +306,7 @@ namespace TestPerf
         {
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "DIA-SWATH";
 
             RunFunctionalTest();
@@ -918,7 +918,7 @@ namespace TestPerf
                         }
                     }
                 }
-                if (IsPauseForCoverShot)
+                if (IsCoverShotMode)
                 {
                     RunUI(() =>
                     {
@@ -941,7 +941,7 @@ namespace TestPerf
                         fcFloatingWindow.Left = SkylineWindow.Left + 8;
                         fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
                     });
-                    PauseForCoverShot();
+                    TakeCoverShot();
                 }
             }
         }
