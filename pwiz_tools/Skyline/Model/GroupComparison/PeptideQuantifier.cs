@@ -252,14 +252,26 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             if (null != peptideStandards)
             {
-                TransitionChromInfo chromInfoStandard;
-                if (!peptideStandards.TryGetValue(GetRatioTransitionKey(transitionGroup, transition), out chromInfoStandard))
+                if (QuantificationSettings.SimpleRatios)
                 {
-                    return null;
+                    if (peptideStandards.Count == 0)
+                    {
+                        return null;
+                    }
+
+                    denominator = peptideStandards.Values.Sum(value => value.Area);
                 }
                 else
                 {
-                    denominator = chromInfoStandard.Area;
+                    TransitionChromInfo chromInfoStandard;
+                    if (!peptideStandards.TryGetValue(GetRatioTransitionKey(transitionGroup, transition), out chromInfoStandard))
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        denominator = chromInfoStandard.Area;
+                    }
                 }
             }
             else
@@ -297,6 +309,15 @@ namespace pwiz.Skyline.Model.GroupComparison
                         return null;
                     }
                     normalizedArea /= Math.Pow(2.0, medianAdjustment.Value);
+                }
+                else if (Equals(normalizationMethod, NormalizationMethod.TIC))
+                {
+                    var factor = srmSettings.GetTicNormalizationDenominator(replicateIndex, chromInfo.FileId);
+                    if (!factor.HasValue)
+                    {
+                        return null;
+                    }
+                    denominator = factor.Value;
                 }
             }
             return new Quantity(normalizedArea.Value, denominator);
@@ -370,7 +391,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return new PeptideDocNode.TransitionKey(transitionGroup, transitionDocNode.Key(transitionGroup), RatioLabelType);
         }
 
-        public static double? SumQuantities(IEnumerable<Quantity> quantities, NormalizationMethod normalizationMethod)
+        public static double? SumQuantities(IEnumerable<Quantity> quantities, NormalizationMethod normalizationMethod, bool simpleRatios)
         {
             double numerator = 0;
             double denominator = 0;
@@ -385,7 +406,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return null;
             }
-            if (normalizationMethod is NormalizationMethod.RatioToLabel)
+            if (!simpleRatios && normalizationMethod is NormalizationMethod.RatioToLabel)
             {
                 return numerator/denominator;
             }

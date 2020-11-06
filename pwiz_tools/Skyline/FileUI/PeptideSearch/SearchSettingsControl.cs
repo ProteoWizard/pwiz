@@ -141,7 +141,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     Resources.DdaSearch_SearchSettingsControl_MS2_Tolerance_incorrect);
                 return false;
             }
-            ImportPeptideSearch.SearchEngine.SetFragmentIonMassTolerance(new MzTolerance(ms2Tol, (MzTolerance.Units) cbMS1TolUnit.SelectedIndex));
+            ImportPeptideSearch.SearchEngine.SetFragmentIonMassTolerance(new MzTolerance(ms2Tol, (MzTolerance.Units) cbMS2TolUnit.SelectedIndex));
 
             string fragmentIons;
             if (!ValidateCombobox(cbFragmentIons, out fragmentIons))

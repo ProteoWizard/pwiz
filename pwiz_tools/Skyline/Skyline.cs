@@ -896,9 +896,8 @@ namespace pwiz.Skyline
         public bool InUndoRedo { get { return _undoManager.InUndoRedo; } }
 
         /// <summary>
-        /// Kills all background processing, and then restores a specific document
-        /// as the current document.  After which background processing is restarted
-        /// based on the contents of the restored document.
+        /// Restores a specific document as the current document regardless of the
+        /// state of background processing;
         /// 
         /// This heavy hammer is for use with undo/redo only.
         /// </summary>
@@ -910,11 +909,17 @@ namespace pwiz.Skyline
             // User will want to restore whatever was displayed in the UI at the time.
             SrmDocument docReplaced = DocumentUI;
 
-            bool replaced = SetDocument(docUndo, Document);
+            bool replaced;
+            lock (GetDocumentChangeLock())
+            {
+                replaced = SetDocument(docUndo, Document);
+            }
 
-            // If no background processing exists, this should succeed.
             if (!replaced)
+            {
+                // It should have succeeded because we had a lock on GetDocumentChangeLock()
                 throw new InvalidOperationException(Resources.SkylineWindow_RestoreDocument_Failed_to_restore_document);
+            }
 
             return docReplaced;
         }
@@ -1737,6 +1742,7 @@ namespace pwiz.Skyline
             var removedNodes = new List<DocNode>();
             ModifyDocument(string.Format(Resources.SkylineWindow_EditDelete_Delete__0__, undoText), doc =>
             {
+                bool canSynchSiblings = !doc.Settings.PeptideSettings.Quantification.SimpleRatios;
                 var listRemoveParams = new List<RemoveParams>();    // Keep removals in order
                 var dictRemove = new Dictionary<int, RemoveParams>();   // Minimize removal operations
                 var setRemove = new HashSet<int>(); // Keep track of what is being removed
@@ -1773,7 +1779,7 @@ namespace pwiz.Skyline
                 foreach (var removeParams in listRemoveParams)
                 {
                     var nodeParent = doc.FindNode(removeParams.ParentPath);
-                    if (nodeParent is TransitionGroupDocNode)
+                    if (canSynchSiblings && nodeParent is TransitionGroupDocNode)
                         doc = (SrmDocument) doc.RemoveAllSynched(removeParams.ParentPath.Parent, removeParams.ParentPath.Child, removeParams.RemoveIds);
                     else if (nodeParent != null)
                         doc = (SrmDocument) doc.RemoveAll(removeParams.ParentPath, removeParams.RemoveIds);
@@ -5776,7 +5782,8 @@ namespace pwiz.Skyline
                 var changedTargets = count == 1 ? SelectedNode.Text : string.Format(AuditLogStrings.SkylineWindow_ChangeQuantitative_0_transitions, count);
                 ModifyDocument(message, doc =>
                 {
-                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));  // CONSIDER: Might not be true if background processing is happening
+                    // Will always be true because we have acquired the lock on GetDocumentChangeLock()
+                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));
                     return newDocument;
                 }, docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, changedTargets));
             }
@@ -5871,7 +5878,18 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
+        private void permuteIsotopeModificationsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPermuteIsotopeModificationsDlg();
+        }
 
+        public void ShowPermuteIsotopeModificationsDlg()
+        {
+            using (var dlg = new PermuteIsotopeModificationsDlg(this))
+            {
+                dlg.ShowDialog(this);
+            }
+        }
     }
 }
 

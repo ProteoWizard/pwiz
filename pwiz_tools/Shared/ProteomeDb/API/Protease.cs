@@ -17,17 +17,9 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 
 namespace pwiz.ProteomeDatabase.API
 {
-    public interface IProtease
-    {
-        IEnumerable<DigestedPeptide> Digest(Protein protein, int maxMissedCleavages);
-        IEnumerable<DigestedPeptide> DigestSequence(string proteinSequence, int maxMissedCleavages, int? maxSequenceLength);
-        String Name { get; }
-    }
-
     public class DigestedPeptide
     {
         public int Index { get; set; }

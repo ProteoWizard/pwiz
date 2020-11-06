@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "LibraryExplorer";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/LibraryExplorer-1_4.pdf";
@@ -167,14 +167,14 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Document.Settings.PeptideSettings.Modifications.AllHeavyModifications.Any()));
             PauseForScreenShot("Peptide list clipped from Library Explorer", 11);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen(false);
                 RunUI(() =>
                 {
                     viewLibraryDlg.SetBounds(SkylineWindow.Left, SkylineWindow.Top, SkylineWindow.Width, SkylineWindow.Height);
                 });
-                PauseForCoverShot();
+                TakeCoverShot();
 
                 OkDialog(viewLibraryDlg, viewLibraryDlg.CancelDialog);
                 return;

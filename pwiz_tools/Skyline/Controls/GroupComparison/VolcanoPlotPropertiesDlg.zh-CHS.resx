@@ -223,7 +223,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>倍数变化阈值(&amp;C)：</value>
+    <value>倍数变化截止值(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -274,7 +274,7 @@
     <value>3</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>P 值阈值(&amp;P)：</value>
+    <value>已调整的 P 值截止值(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -413,6 +413,12 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>火山图属性</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>VolcanoPlotPropertiesDlg</value>

@@ -27,7 +27,7 @@ using IntLabeledValue = pwiz.Skyline.Controls.Graphs.DetectionsGraphController.I
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class DetectionsToolbar : GraphSummaryToolbar //UserControl GraphSummaryToolbar        
+    public partial class DetectionsToolbar : GraphSummaryToolbar
     {
         private Timer _timer;
 
@@ -42,7 +42,6 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
             _timer = new Timer { Interval = 100 };
             _timer.Tick += Timer_OnTick;
-            IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);
         }
 
         private void Timer_OnTick(object sender, EventArgs e)
@@ -76,8 +75,31 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void UpdateUI()
         {
             IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);
+            if (!_graphSummary.TryGetGraphPane(out DetectionsPlotPane pane)) return;
+            if (pane.CurrentData.IsValid &&
+                DetectionPlotData.GetDataCache().Status != DetectionPlotData.DetectionDataCache.CacheStatus.error)
+            {
+                EnableControls(true);
+                IntLabeledValue.PopulateCombo(cbLevel, Settings.TargetType);
+                toolStripAtLeastN.NumericUpDownControl.Minimum = 0;
+                toolStripAtLeastN.NumericUpDownControl.Maximum =
+                    _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults.Chromatograms.Count;
+                toolStripAtLeastN.NumericUpDownControl.Value = Settings.RepCount;
+                toolStripAtLeastN.NumericUpDownControl.ValueChanged += toolStripAtLeastN_ValueChanged;
+            }
+            else
+            {
+                toolStripAtLeastN.NumericUpDownControl.Value = 0;
+                EnableControls(false);
+            }
         }
 
+        public void EnableControls(bool enable)
+        {
+            toolStripAtLeastN.Enabled = enable;
+            cbLevel.Enabled = enable;
+            pbProperties.Enabled = enable;
+        }
         //marked public for testing purposes
         public void pbProperties_Click(object sender, EventArgs e)
         {
@@ -86,7 +108,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _timer.Stop();
                 if (dlgProperties.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
                 {
-                    this.UpdateUI();
+                    UpdateUI();
                     _timer.Start();
                 }
             }
@@ -100,6 +122,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 _timer.Stop();
                 _timer.Start();
             }
+        }
+
+        public void toolStripAtLeastN_ValueChanged(object sender, EventArgs e)
+        {
+            Settings.RepCount = (int)toolStripAtLeastN.NumericUpDownControl.Value;
+            _timer.Stop();
+            _timer.Start();
         }
     }
 }

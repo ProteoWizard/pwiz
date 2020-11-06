@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DetectionToolbarProperties));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
@@ -57,130 +58,83 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnCancel.Location = new System.Drawing.Point(270, 54);
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 10;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
-            this.btnOk.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnOk.Location = new System.Drawing.Point(270, 25);
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 9;
-            this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(9, 11);
-            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(64, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "&Target type:";
             // 
             // cmbTargetType
             // 
             this.cmbTargetType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbTargetType.FormattingEnabled = true;
             this.cmbTargetType.Items.AddRange(new object[] {
-            "Precursors",
-            "Peptides"});
-            this.cmbTargetType.Location = new System.Drawing.Point(12, 28);
-            this.cmbTargetType.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.GetString("cmbTargetType.Items"),
+            resources.GetString("cmbTargetType.Items1")});
+            resources.ApplyResources(this.cmbTargetType, "cmbTargetType");
             this.cmbTargetType.Name = "cmbTargetType";
-            this.cmbTargetType.Size = new System.Drawing.Size(104, 21);
-            this.cmbTargetType.TabIndex = 1;
             this.cmbTargetType.SelectedIndexChanged += new System.EventHandler(this.cmbTargetType_SelectedIndexChanged);
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(123, 11);
-            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(52, 13);
-            this.label2.TabIndex = 5;
-            this.label2.Text = "&Font size:";
             // 
             // cmbFontSize
             // 
             this.cmbFontSize.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbFontSize.FormattingEnabled = true;
             this.cmbFontSize.Items.AddRange(new object[] {
-            "x-small",
-            "small",
-            "normal",
-            "large",
-            "x-large"});
-            this.cmbFontSize.Location = new System.Drawing.Point(125, 28);
-            this.cmbFontSize.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.GetString("cmbFontSize.Items"),
+            resources.GetString("cmbFontSize.Items1"),
+            resources.GetString("cmbFontSize.Items2"),
+            resources.GetString("cmbFontSize.Items3"),
+            resources.GetString("cmbFontSize.Items4")});
+            resources.ApplyResources(this.cmbFontSize, "cmbFontSize");
             this.cmbFontSize.Name = "cmbFontSize";
-            this.cmbFontSize.Size = new System.Drawing.Size(132, 21);
-            this.cmbFontSize.TabIndex = 6;
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(10, 171);
-            this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(63, 13);
-            this.label3.TabIndex = 3;
-            this.label3.Text = "&Y axis units:";
             // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.rbQValueCustom);
             this.groupBox1.Controls.Add(this.txtQValueCustom);
             this.groupBox1.Controls.Add(this.rbQValue01);
-            this.groupBox1.Location = new System.Drawing.Point(12, 61);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.ApplyResources(this.groupBox1, "groupBox1");
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.groupBox1.Size = new System.Drawing.Size(104, 108);
-            this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Q value cutoff";
             // 
             // rbQValueCustom
             // 
-            this.rbQValueCustom.AutoSize = true;
-            this.rbQValueCustom.Location = new System.Drawing.Point(4, 38);
-            this.rbQValueCustom.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.ApplyResources(this.rbQValueCustom, "rbQValueCustom");
             this.rbQValueCustom.Name = "rbQValueCustom";
-            this.rbQValueCustom.Size = new System.Drawing.Size(63, 17);
-            this.rbQValueCustom.TabIndex = 2;
             this.rbQValueCustom.TabStop = true;
-            this.rbQValueCustom.Text = "&Custom:";
             this.rbQValueCustom.UseVisualStyleBackColor = true;
             // 
             // txtQValueCustom
             // 
-            this.txtQValueCustom.Location = new System.Drawing.Point(22, 60);
-            this.txtQValueCustom.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.ApplyResources(this.txtQValueCustom, "txtQValueCustom");
             this.txtQValueCustom.Name = "txtQValueCustom";
-            this.txtQValueCustom.Size = new System.Drawing.Size(71, 20);
-            this.txtQValueCustom.TabIndex = 3;
             this.txtQValueCustom.Enter += new System.EventHandler(this.txtQValueCustom_Enter);
             // 
             // rbQValue01
             // 
-            this.rbQValue01.AutoSize = true;
-            this.rbQValue01.Location = new System.Drawing.Point(4, 17);
-            this.rbQValue01.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.ApplyResources(this.rbQValue01, "rbQValue01");
             this.rbQValue01.Name = "rbQValue01";
-            this.rbQValue01.Size = new System.Drawing.Size(46, 17);
-            this.rbQValue01.TabIndex = 0;
             this.rbQValue01.TabStop = true;
-            this.rbQValue01.Text = "0.0&1";
             this.rbQValue01.UseVisualStyleBackColor = true;
             // 
             // cmbCountMultiple
@@ -188,14 +142,11 @@
             this.cmbCountMultiple.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbCountMultiple.FormattingEnabled = true;
             this.cmbCountMultiple.Items.AddRange(new object[] {
-            "Ones",
-            "Hundreds",
-            "Thousands"});
-            this.cmbCountMultiple.Location = new System.Drawing.Point(12, 188);
-            this.cmbCountMultiple.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.GetString("cmbCountMultiple.Items"),
+            resources.GetString("cmbCountMultiple.Items1"),
+            resources.GetString("cmbCountMultiple.Items2")});
+            resources.ApplyResources(this.cmbCountMultiple, "cmbCountMultiple");
             this.cmbCountMultiple.Name = "cmbCountMultiple";
-            this.cmbCountMultiple.Size = new System.Drawing.Size(104, 21);
-            this.cmbCountMultiple.TabIndex = 4;
             // 
             // groupBox2
             // 
@@ -203,67 +154,39 @@
             this.groupBox2.Controls.Add(this.cbShowSelection);
             this.groupBox2.Controls.Add(this.cbShowMeanStd);
             this.groupBox2.Controls.Add(this.cbShowAtLeastN);
-            this.groupBox2.Location = new System.Drawing.Point(125, 61);
-            this.groupBox2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.ApplyResources(this.groupBox2, "groupBox2");
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.groupBox2.Size = new System.Drawing.Size(131, 108);
-            this.groupBox2.TabIndex = 7;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Labels and lines";
             // 
             // cbShowLegend
             // 
-            this.cbShowLegend.AutoSize = true;
-            this.cbShowLegend.Location = new System.Drawing.Point(5, 80);
-            this.cbShowLegend.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.ApplyResources(this.cbShowLegend, "cbShowLegend");
             this.cbShowLegend.Name = "cbShowLegend";
-            this.cbShowLegend.Size = new System.Drawing.Size(62, 17);
-            this.cbShowLegend.TabIndex = 3;
-            this.cbShowLegend.Text = "Le&gend";
             this.cbShowLegend.UseVisualStyleBackColor = true;
             // 
             // cbShowSelection
             // 
-            this.cbShowSelection.AutoSize = true;
-            this.cbShowSelection.Location = new System.Drawing.Point(5, 39);
-            this.cbShowSelection.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.ApplyResources(this.cbShowSelection, "cbShowSelection");
             this.cbShowSelection.Name = "cbShowSelection";
-            this.cbShowSelection.Size = new System.Drawing.Size(70, 17);
-            this.cbShowSelection.TabIndex = 1;
-            this.cbShowSelection.Text = "&Selection";
             this.cbShowSelection.UseVisualStyleBackColor = true;
             // 
             // cbShowMeanStd
             // 
-            this.cbShowMeanStd.AutoSize = true;
-            this.cbShowMeanStd.Location = new System.Drawing.Point(5, 58);
-            this.cbShowMeanStd.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.ApplyResources(this.cbShowMeanStd, "cbShowMeanStd");
             this.cbShowMeanStd.Name = "cbShowMeanStd";
-            this.cbShowMeanStd.Size = new System.Drawing.Size(93, 17);
-            this.cbShowMeanStd.TabIndex = 2;
-            this.cbShowMeanStd.Text = "M&ean && Stdev";
             this.cbShowMeanStd.UseVisualStyleBackColor = true;
             // 
             // cbShowAtLeastN
             // 
-            this.cbShowAtLeastN.AutoSize = true;
-            this.cbShowAtLeastN.Location = new System.Drawing.Point(5, 18);
-            this.cbShowAtLeastN.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.ApplyResources(this.cbShowAtLeastN, "cbShowAtLeastN");
             this.cbShowAtLeastN.Name = "cbShowAtLeastN";
-            this.cbShowAtLeastN.Size = new System.Drawing.Size(120, 17);
-            this.cbShowAtLeastN.TabIndex = 0;
-            this.cbShowAtLeastN.Text = "At least &N replicates";
             this.cbShowAtLeastN.UseVisualStyleBackColor = true;
             // 
             // tbAtLeastN
             // 
-            this.tbAtLeastN.Location = new System.Drawing.Point(8, 17);
-            this.tbAtLeastN.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.ApplyResources(this.tbAtLeastN, "tbAtLeastN");
             this.tbAtLeastN.Minimum = 1;
             this.tbAtLeastN.Name = "tbAtLeastN";
-            this.tbAtLeastN.Size = new System.Drawing.Size(114, 45);
-            this.tbAtLeastN.TabIndex = 0;
             this.tbAtLeastN.TickStyle = System.Windows.Forms.TickStyle.Both;
             this.tbAtLeastN.Value = 1;
             this.tbAtLeastN.ValueChanged += new System.EventHandler(this.tbAtLeastN_ValueChanged);
@@ -271,22 +194,16 @@
             // gbAtLeastN
             // 
             this.gbAtLeastN.Controls.Add(this.tbAtLeastN);
-            this.gbAtLeastN.Location = new System.Drawing.Point(125, 174);
-            this.gbAtLeastN.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            resources.ApplyResources(this.gbAtLeastN, "gbAtLeastN");
             this.gbAtLeastN.Name = "gbAtLeastN";
-            this.gbAtLeastN.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.gbAtLeastN.Size = new System.Drawing.Size(131, 64);
-            this.gbAtLeastN.TabIndex = 8;
             this.gbAtLeastN.TabStop = false;
-            this.gbAtLeastN.Text = "At least N &replicates";
             // 
             // DetectionToolbarProperties
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(356, 249);
             this.ControlBox = false;
             this.Controls.Add(this.gbAtLeastN);
             this.Controls.Add(this.groupBox2);
@@ -299,13 +216,12 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.KeyPreview = true;
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DetectionToolbarProperties";
             this.ShowInTaskbar = false;
-            this.Text = "Detection Plot Properties";
             this.Load += new System.EventHandler(this.DetectionToolbarProperties_Load);
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.groupBox1.ResumeLayout(false);

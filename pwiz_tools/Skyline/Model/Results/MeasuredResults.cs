@@ -80,7 +80,17 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < count; i++)
                 {
                     var set = _chromatograms[i];
-                    dictNameToIndex.Add(set.Name, i);
+                    try
+                    {
+                        dictNameToIndex.Add(set.Name, i);
+                    }
+                    catch (ArgumentException argumentException)
+                    {
+                        throw new ArgumentException(
+                            set.Name + @" appears multiple times in the list ('" +
+                            string.Join(@"','", value.Select(c => c.Name)) + @"')", argumentException);
+                    }
+
                     dictIdToIndex.Add(set.Id.GlobalIndex, i);
                     foreach (var path in set.MSDataFilePaths)
                         _setFiles.Add(path.GetLocation());
@@ -298,14 +308,18 @@ namespace pwiz.Skyline.Model.Results
             if (exactMatch != null)
                 return exactMatch;
             // Then look for a basename match
+            string sampleName = filePathFind.GetSampleName();
             int fileOrder = 0;
             foreach (ChromatogramSet chromSet in Chromatograms)
             {
                 string fileBasename = filePathFind.GetFileNameWithoutExtension();
                 foreach (var filePath in chromSet.MSDataFilePaths)
                 {
-                    if (IsBaseNameMatch(filePath.GetFileNameWithoutExtension(), fileBasename))
-                        return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                    if (sampleName == null || sampleName == filePath.GetSampleName())
+                    {
+                        if (IsBaseNameMatch(filePath.GetFileNameWithoutExtension(), fileBasename))
+                            return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                    }
                     fileOrder++;
                 }
             }
@@ -339,13 +353,19 @@ namespace pwiz.Skyline.Model.Results
         private ChromSetFileMatch FindExactNameMatchingMSDataFile(MsDataFileUri fileUri)
         {
             var filePathFind = fileUri.GetFilePath();
+            string sampleName = fileUri.GetSampleName();
             int fileOrder = 0;
             foreach (ChromatogramSet chromSet in Chromatograms)
             {
                 foreach (var filePath in chromSet.MSDataFilePaths)
                 {
                     if (Equals(filePath.GetFilePath(), filePathFind))
-                        return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                    {
+                        if (sampleName == null || sampleName.Equals(filePath.GetSampleName()))
+                        {
+                            return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                        }
+                    }
                     fileOrder++;
                 }
             }
@@ -1742,6 +1762,18 @@ namespace pwiz.Skyline.Model.Results
                 catch (IOException) { }
             }
             return false;
+        }
+
+        public double? GetMedianTicArea()
+        {
+            var ticAreas = new Statistics(Chromatograms.SelectMany(c => c.MSDataFileInfos)
+                .Where(fileInfo => fileInfo.TicArea.HasValue).Select(fileInfo => fileInfo.TicArea.Value));
+            if (ticAreas.Length == 0)
+            {
+                return null;
+            }
+
+            return ticAreas.Median();
         }
     }
 

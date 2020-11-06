@@ -691,11 +691,19 @@ namespace pwiz.Skyline
 
             var split = persistentString.Split('|');
             var splitLength = split.Length;
+            var graphSummaryTypeName = split[0];
+            var controllerTypeName = string.Empty;
+            var graphTypeName = string.Empty;
+
+            if (splitLength > 1)
+                controllerTypeName = split[1];
+            if (splitLength > 2)
+                graphTypeName = split[2];
 
             // Backward compatibility
             if (persistentString.EndsWith(@"Skyline.Controls.GraphRetentionTime") ||
-                splitLength == 2 && split[0] == typeof(GraphSummary).ToString() &&
-                split[1] == typeof(RTGraphController).Name)
+                splitLength == 2 && graphSummaryTypeName == typeof(GraphSummary).ToString() &&
+                controllerTypeName == typeof(RTGraphController).Name)
             {
                 var type = RTGraphController.GraphType;
                 return _listGraphRetentionTime.FirstOrDefault(g => g.Type == type) ?? CreateGraphRetentionTime(type);
@@ -703,31 +711,33 @@ namespace pwiz.Skyline
 
             // Backward compatibility
             if (persistentString.EndsWith(@"Skyline.Controls.GraphPeakArea") ||
-            splitLength == 2 && split[0] == typeof(GraphSummary).ToString() &&
-                split[1] == typeof(AreaGraphController).Name)
+            splitLength == 2 && graphSummaryTypeName == typeof(GraphSummary).ToString() &&
+            controllerTypeName == typeof(AreaGraphController).Name)
             {
                 var type = AreaGraphController.GraphType;
                 return _listGraphPeakArea.FirstOrDefault(g => g.Type == type) ?? CreateGraphPeakArea(type);
             }
 
             // Backward compatibility
-            if (splitLength == 2 && split[0] == typeof(GraphSummary).ToString() &&
-                split[1] == typeof(MassErrorGraphController).Name)
+            if (splitLength == 2 && graphSummaryTypeName == typeof(GraphSummary).ToString() &&
+                controllerTypeName == typeof(MassErrorGraphController).Name)
             {
                 var type = MassErrorGraphController.GraphType;
                 return _listGraphMassError.FirstOrDefault(g => g.Type == type) ?? CreateGraphMassError(type);
             }
 
-            if (splitLength == 3 && split[0] == typeof(GraphSummary).ToString())
+            if (splitLength == 3 && graphSummaryTypeName == typeof(GraphSummary).ToString())
             {
-                var type = Helpers.ParseEnum(split[2], GraphTypeSummary.invalid);
+                var type = Helpers.ParseEnum(graphTypeName, GraphTypeSummary.invalid);
 
-                if (split[1] == typeof(RTGraphController).Name)
+                if (controllerTypeName == typeof(RTGraphController).Name)
                     return _listGraphRetentionTime.FirstOrDefault(g => g.Type == type) ?? CreateGraphRetentionTime(type);
-                else if (split[1] == typeof(AreaGraphController).Name)
+                else if (controllerTypeName == typeof(AreaGraphController).Name)
                     return _listGraphPeakArea.FirstOrDefault(g => g.Type == type) ?? CreateGraphPeakArea(type);
-                else if (split[1] == typeof(MassErrorGraphController).Name)
+                else if (controllerTypeName == typeof(MassErrorGraphController).Name)
                     return _listGraphMassError.FirstOrDefault(g => g.Type == type) ?? CreateGraphMassError(type);
+                else if (controllerTypeName == typeof(DetectionsGraphController).Name)
+                    return _listGraphDetections.FirstOrDefault(g => g.Type == type) ?? CreateGraphDetections(type);
                 else
                     return null;
             }
@@ -4538,6 +4548,7 @@ namespace pwiz.Skyline
                 {
                     areaCVGlobalStandardsToolStripMenuItem,
                     areaCVMediansToolStripMenuItem,
+                    areaCVTotalIonCurrentToolStripMenuItem,
                     toolStripSeparator54,
                     areaCVNoneToolStripMenuItem
                 });
@@ -5017,8 +5028,14 @@ namespace pwiz.Skyline
             }
 
             areaCVMediansToolStripMenuItem.Checked = AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.medians;
+
+            areaCVTotalIonCurrentToolStripMenuItem.Visible = DocumentUI.Settings.HasTicArea;
+            areaCVTotalIonCurrentToolStripMenuItem.Checked =
+                AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.tic;
+
             areaCVGlobalStandardsToolStripMenuItem.Visible = DocumentUI.Settings.HasGlobalStandardArea;
             areaCVGlobalStandardsToolStripMenuItem.Checked = AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.global_standards;
+
             areaCVNoneToolStripMenuItem.Checked = AreaGraphController.NormalizationMethod == AreaCVNormalizationMethod.none;
         }
 
@@ -5037,6 +5054,11 @@ namespace pwiz.Skyline
         private void areaCVMediansToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SetNormalizationMethod(AreaCVNormalizationMethod.medians);
+        }
+
+        private void areaCVTotalIonCurrentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetNormalizationMethod(AreaCVNormalizationMethod.tic);
         }
 
         private void areaCVNoneToolStripMenuItem_Click(object sender, EventArgs e)
