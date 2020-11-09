@@ -178,7 +178,6 @@ namespace pwiz.SkylineTestFunctional
 
         private void AssertDataCorrect(DetectionsPlotPane pane, int refIndex, float qValue, bool record = false)
         {
-            DetectionPlotData data = null;
             WaitForConditionUI(() => pane.CurrentData != null 
                                            && pane.CurrentData.QValueCutoff == qValue
                                            && DetectionPlotData.GetDataCache().Status == DetectionPlotData.DetectionDataCache.CacheStatus.idle,
