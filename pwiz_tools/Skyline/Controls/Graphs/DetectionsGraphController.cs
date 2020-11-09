@@ -19,8 +19,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
@@ -153,7 +155,12 @@ namespace pwiz.Skyline.Controls.Graphs
             public static float QValueCutoff
             {
                 get => Properties.Settings.Default.DetectionsQValueCutoff;
-                set => Properties.Settings.Default.DetectionsQValueCutoff = value;
+                set
+                {
+                    Properties.Settings.Default.DetectionsQValueCutoff = value; 
+                    Trace.WriteLine(Thread.CurrentThread.Name + ": QValue property set to " + value);
+                }
+
             }
 
             public static TargetType TargetType
