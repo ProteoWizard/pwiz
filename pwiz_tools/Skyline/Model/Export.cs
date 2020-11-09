@@ -2784,7 +2784,7 @@ namespace pwiz.Skyline.Model
 
             writer.Write(FieldSeparator);
             var istdTypes = Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
-            writer.Write((istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType) ? 1 : 0).ToString(CultureInfo)); // ISTD?
+            writer.Write(BoolToString(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType))); // ISTD?
             writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
@@ -2802,17 +2802,17 @@ namespace pwiz.Skyline.Model
             else
             {
                 int? rank = GetRank(nodeTranGroup, nodeTranGroupPrimary, nodeTran);
-                writer.Write((rank.HasValue && rank.Value <= PrimaryTransitionCount ? 1 : 0).ToString(CultureInfo)); // Primary
+                writer.Write(BoolToString(rank.HasValue && rank.Value <= PrimaryTransitionCount)); // Primary
                 writer.Write(FieldSeparator);
                 // Trigger must be rank 1 transition, of analyte type and minimum precursor charge
-                var trigger = 0;
+                var trigger = false;
                 if (MethodType == ExportMethodType.Triggered && IsTriggerType(nodePep, nodeTranGroup, istdTypes) && rank.HasValue && rank.Value == 1)
                 {
                     int minCharge = nodePep.TransitionGroups.Select(g => Math.Abs(g.PrecursorCharge)).Min();
                     if (Math.Abs(nodeTranGroup.PrecursorCharge) == minCharge)
-                        trigger = 1;
+                        trigger = true;
                 }
-                writer.Write(trigger.ToString(CultureInfo));
+                writer.Write(BoolToString(trigger));
                 writer.Write(FieldSeparator);
                 writer.Write(0.ToString(CultureInfo)); // Threshold
                 writer.Write(FieldSeparator);
@@ -2853,7 +2853,7 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write(0.ToString(CultureInfo)); // Trigger Window
                 writer.Write(FieldSeparator);
-                writer.Write(0.ToString(CultureInfo)); // IsLogicEnabled
+                writer.Write(BoolToString(false)); // IsLogicEnabled
                 writer.Write(FieldSeparator);
                 writer.Write(@"AND"); // Trigger Logic Flag
                 writer.Write(FieldSeparator);
@@ -2861,7 +2861,7 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write(1.ToString(CultureInfo)); // Trigger Ratio Window
                 writer.Write(FieldSeparator);
-                writer.Write(0.ToString(CultureInfo)); // Ignore MRM
+                writer.Write(BoolToString(false)); // Ignore MRM
             }
 
             writer.WriteLine();
@@ -2890,6 +2890,11 @@ namespace pwiz.Skyline.Model
             }
             // Otherwise, the first precursor in the list is the trigger.
             return ReferenceEquals(firstGroup, nodeTranGroup);
+        }
+
+        private static string BoolToString(bool b)
+        {
+            return b ? @"TRUE" : @"FALSE";
         }
     }
 
