@@ -1,7 +1,7 @@
 ﻿/*
- * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
+ * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * Copyright 2015 University of Washington - Seattle, WA
+ * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,12 @@ namespace SkylineBatch
         void LogProgramError(string message, params object[] args);
         void LogException(Exception exception, string message, params object[] args);
         string GetFile();
+
+        string GetFileName();
+
+        SkylineBatchLogger Archive();
         void DisableUiLogging();
-        void LogToUi(IMainUiControl mainUi);
+        //void LogToUi(IMainUiControl mainUi);
         void DisplayLog();
         
     }
@@ -58,9 +62,10 @@ namespace SkylineBatch
         private StringBuilder _logBuffer; // To be used when the log file is unavailable for writing
         private const int LOG_BUFFER_SIZE = 10240;
 
-        public SkylineBatchLogger(string filePath)
+        public SkylineBatchLogger(string filePath, IMainUiControl mainUi = null)
         {
             _filePath = filePath;
+            _mainUi = mainUi;
             Init();
         }
 
@@ -69,10 +74,11 @@ namespace SkylineBatch
             _logBuffer = new StringBuilder();
             _memLogMessages = new Queue<string>(MEM_LOG_SIZE);
 
-            // Initialize - create blank log file
+            // Initialize - create blank log file if doesn't exist
+            if (File.Exists(_filePath)) return;
             using (File.Create(_filePath))
             {
-            } 
+            }
         }
 
         private void WriteToFile(string message)
@@ -277,9 +283,43 @@ namespace SkylineBatch
             }
         }
 
+        public SkylineBatchLogger Archive()
+        {
+            if (new FileInfo(_filePath).Length > 0)
+            {
+                var lastModified = File.GetLastWriteTime(_filePath);
+                var timestampFileName = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath);
+                timestampFileName += lastModified.ToString("_yyyyMMdd_HHmmss") + ".log";
+                //var logHistory = File.Create(Path.GetDirectoryName(_filePath) + "\\" + timestampFileName);
+                //logHistory.Close();
+                File.Copy(GetFile(), timestampFileName);
+                //File.WriteAllLines(Path.GetDirectoryName(_filePath) + "\\" + timestampFileName, File.ReadAllLines(_filePath));
+                /*using (
+                    var reader =
+                        new StreamReader(new FileStream(Path.GetDirectoryName(_filePath) + "\\" + timestampFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                )
+                {
+                    var nonzero = reader.BaseStream.Length;
+                }*/
+
+                //logHistory.Close();
+                        //File.Copy(_filePath, Path.GetDirectoryName(_filePath) + "\\" + timestampFileName);
+                File.Create(_filePath).Close();
+                return new SkylineBatchLogger(timestampFileName, _mainUi);
+            }
+
+            return null;
+        }
+
+
         public string GetFile()
         {
             return _filePath;
+        }
+
+        public string GetFileName()
+        {
+            return Path.GetFileName(_filePath);
         }
 
         public void DisableUiLogging()
@@ -287,10 +327,10 @@ namespace SkylineBatch
             _mainUi = null;
         }
 
-        public void LogToUi(IMainUiControl mainUi)
+        /*public void LogToUi(IMainUiControl mainUi)
         {
             _mainUi = mainUi;
-        }
+        }*/
 
         public void DisplayLog()
         {

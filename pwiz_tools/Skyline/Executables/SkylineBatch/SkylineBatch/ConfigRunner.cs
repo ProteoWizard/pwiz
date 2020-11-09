@@ -1,7 +1,7 @@
 ﻿/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * Copyright 2015 University of Washington - Seattle, WA
+ * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
+using System.Management;
 using System.Threading.Tasks;
 using SkylineBatch.Properties;
 
@@ -28,16 +28,9 @@ namespace SkylineBatch
 {
     public class ConfigRunner
     {
-        private BackgroundWorker _worker;
-
-        private int _totalImportCount;
-
-        //private SkylineBatchFileSystemWatcher _fileWatcher;
 
         private readonly IMainUiControl _uiControl;
         private ISkylineBatchLogger _logger;
-
-        //private AsyncOperation asyncRunnerStatusChanged;
         
 
         public SkylineBatchConfig Config { get; private set; }
@@ -50,6 +43,7 @@ namespace SkylineBatch
         {
             Waiting,
             Running,
+            Cancelling,
             Cancelled,
             Stopped,
             Completed,
@@ -190,7 +184,7 @@ namespace SkylineBatch
             {
                 if (e.Data != null)
                 {
-                    if (e.Data.StartsWith("Fatal error: ") || e.Data.StartsWith("Error: "))
+                    if (e.Data.Contains("Fatal error: ") || e.Data.Contains("Error: "))
                         ChangeStatus(RunnerStatus.Error);
                     if (_logger != null)
                         _logger.Log(e.Data);
@@ -214,14 +208,42 @@ namespace SkylineBatch
             if (!cmd.HasExited)
             {
                 LogToUi(Resources.Process_terminated);
-                var skylineRunnerName = Path.GetFileNameWithoutExtension(SkylineSettings.GetSkylineCmdLineExePath);
-                Process[] processes = Process.GetProcessesByName(skylineRunnerName);
-                foreach (var process in processes)
-                {
-                    process.Kill();
-                }
-
+                await KillProcessChildren((UInt32)cmd.Id);
                 cmd.Kill();
+                ChangeStatus(RunnerStatus.Cancelled);
+            }
+        }
+
+        private async Task KillProcessChildren(UInt32 parentProcessId)
+        {
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher(
+                "SELECT * " +
+                "FROM Win32_Process " +
+                "WHERE ParentProcessId=" + parentProcessId);
+
+            ManagementObjectCollection collection = searcher.Get();
+            if (collection.Count > 0)
+            {
+                Program.LogInfo("Killing [" + collection.Count + "] processes spawned by process with Id [" + parentProcessId + "]");
+                foreach (var item in collection)
+                {
+                    UInt32 childProcessId = (UInt32)item["ProcessId"];
+                    if ((UInt32)childProcessId != Process.GetCurrentProcess().Id)
+                    {
+                        await KillProcessChildren(childProcessId);
+
+                        Process childProcess = Process.GetProcessById((int)childProcessId);
+                        Program.LogInfo("Killing child process [" + childProcess.ProcessName + "] with Id [" + childProcessId + "]");
+                        try
+                        {
+                            childProcess.Kill();
+                        }
+                        catch (Win32Exception)
+                        {
+                            Program.LogInfo("Cannot kill windows child process.");
+                        }
+                    }
+                }
             }
         }
 
@@ -242,16 +264,21 @@ namespace SkylineBatch
         public void Cancel()
         {
             if (IsRunning()) 
-                ChangeStatus(RunnerStatus.Cancelled);
+                ChangeStatus(RunnerStatus.Cancelling);
             else if (IsWaiting())
                 ChangeStatus(RunnerStatus.Stopped);                                                                                            
         }
-        
 
-       
+        public bool IsCancelling()
+        {
+            return _runnerStatus == RunnerStatus.Cancelling;
+        }
+
+
+
         public bool IsBusy()
         {
-            return IsRunning() || IsWaiting();
+            return IsRunning() || IsWaiting() || IsCancelling();
         }
         
         public bool IsStopped()

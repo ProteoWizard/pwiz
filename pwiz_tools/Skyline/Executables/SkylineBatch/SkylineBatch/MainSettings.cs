@@ -1,7 +1,7 @@
 ﻿/*
- * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
+ * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * Copyright 2015 University of Washington - Seattle, WA
+ * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ namespace SkylineBatch
     [XmlRoot("main_settings")]
     public class MainSettings 
     {
-        //public string SkylineFilePath { get; set; }
 
         public string TemplateFilePath { get; set; }
 
@@ -178,6 +177,14 @@ namespace SkylineBatch
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
             return Equals((MainSettings)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return TemplateFilePath.GetHashCode() +
+                   AnalysisFolderPath.GetHashCode() +
+                   DataFolderPath.GetHashCode() +
+                   ReplicateNamingPattern.GetHashCode();
         }
     }
 }

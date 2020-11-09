@@ -1,7 +1,7 @@
 ﻿/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * Copyright 2015 University of Washington - Seattle, WA
+ * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ namespace SkylineBatch
         private readonly bool _runningUi;
         private readonly ISkylineBatchLogger _logger;
         private readonly IMainUiControl _uiControl;
+        public readonly List<ISkylineBatchLogger> Logs;
 
 
 
@@ -45,7 +46,8 @@ namespace SkylineBatch
             _uiControl = uiControl;
             _runningUi = uiControl != null;
             _configRunners = new Dictionary<string, ConfigRunner>();
-
+            Logs = new List<ISkylineBatchLogger>();
+            LoadLogs();
             LoadConfigList();
         }
 
@@ -90,7 +92,7 @@ namespace SkylineBatch
                     }
                     else
                     {
-                        throw e;
+                        throw;
                     }
                     return;
                 }
@@ -114,7 +116,7 @@ namespace SkylineBatch
 
         #region Run
 
-        public async Task RunAll(int startStep = 0)
+        public async void RunAll(int startStep)
         {
             if (ConfigsRunning())
             {
@@ -123,6 +125,15 @@ namespace SkylineBatch
                 return;
             }
             UpdateIsRunning(true);
+
+            var oldLogger = _logger.Archive();
+            if (oldLogger != null)
+                Logs.Insert(0, oldLogger);
+            if (_runningUi)
+            {
+                _uiControl.UpdateUiLogFiles();
+            }
+
             foreach (var runner in _configRunners.Values)
             {
                 runner.ChangeStatus(ConfigRunner.RunnerStatus.Waiting);
@@ -133,6 +144,9 @@ namespace SkylineBatch
                 await _configRunners[nextConfig].Run(startStep);
                 nextConfig = GetNextWaitingConfig();
             }
+
+            while (ConfigsRunning())
+                await Task.Delay(2000);
             UpdateIsRunning(false);
         }
 
@@ -153,7 +167,7 @@ namespace SkylineBatch
         {
             foreach (var runner in _configRunners.Values)
             {
-                if (runner.IsRunning())
+                if (runner.IsBusy())
                     return true;
             }
             return false;
@@ -165,7 +179,52 @@ namespace SkylineBatch
             {
                 configRunner.Cancel();
             }
-            UpdateIsRunning(false);
+        }
+
+        #endregion
+
+        #region Logging
+
+        public void LoadLogs()
+        {
+            var logDirectory = Path.GetDirectoryName(_logger.GetFile());
+            var files = logDirectory != null ? new DirectoryInfo(logDirectory).GetFiles() : new FileInfo[0];
+            foreach (var file in files)
+            {
+                if (file.Name.EndsWith(".log") && !file.Name.Equals("SkylineBatch.log"))
+                {
+                    Logs.Insert(0, new SkylineBatchLogger(file.FullName, _uiControl));
+                }
+            }
+        }
+
+        public object[] GetOldLogFiles()
+        {
+            var oldLogFiles = new object[Logs.Count];
+            for (int i = 0; i < oldLogFiles.Length; i++)
+            {
+                oldLogFiles[i] = Logs[i].GetFileName();
+            }
+
+            return oldLogFiles;
+        }
+
+        public void DeleteLogs(object[] deletingLogs)
+        {
+            int i = 0;
+            while (i < Logs.Count)
+            {
+                if (deletingLogs.Contains(Logs[i].GetFileName()))
+                {
+                    File.Delete(Logs[i].GetFile());
+                    Logs.RemoveAt(i);
+                    continue;
+                }
+                i++;
+                    
+            }
+            if (_runningUi)
+                _uiControl.UpdateUiLogFiles();
         }
 
         #endregion
@@ -356,10 +415,11 @@ namespace SkylineBatch
 
        
 
-        public void CloseConfigs()
+        public void Close()
         {
             SaveConfigList();
             CancelRunners();
+            _logger.Archive();
         }
 
         public SkylineBatchConfig GetConfig(string name)

@@ -1,7 +1,7 @@
 ﻿/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * Copyright 2015 University of Washington - Seattle, WA
+ * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ namespace SkylineBatch
 
         private readonly IMainUiControl _mainControl;
         private readonly SkylineBatchConfig _config;
+        private readonly bool _isBusy;
 
         private ReportSettings newReportSettings;
 
@@ -43,6 +44,7 @@ namespace SkylineBatch
         {
             _mainControl = mainControl;
             _config = config;
+            _isBusy = isBusy;
             newReportSettings = _config.ReportSettings.Copy();
             InitializeComponent();
 
@@ -51,28 +53,23 @@ namespace SkylineBatch
 
             // Initialize file filter combobox
 
-            //btnAddReport.Image = Image.FromFile("C:\\proj\\ProteoWizard\\pwiz\\pwiz_tools\\Skyline\\Executables\\SkylineBatch\\SkylineBatch\\add.png").Size = Size.Truncate(10);
-
+            
             textConfigName.Text = config.Name;
             textConfigName.TextChanged += textConfigName_TextChanged;
 
             SetUIMainSettings(_config.MainSettings);
-            
+            btnSaveConfig.Show();
 
             if (isBusy)
             {
                 lblConfigRunning.Show();
                 btnSaveConfig.Hide();
-                btnCancelConfig.Hide();
-                btnOkConfig.Show();
+                btnCancelConfig.Text = "OK";
                 DisableEverything();
             }
             else
             {
                 lblConfigRunning.Hide();
-                btnSaveConfig.Show();
-                btnCancelConfig.Show();
-                btnOkConfig.Hide();
             }
 
             ActiveControl = textConfigName;
@@ -291,12 +288,16 @@ namespace SkylineBatch
         private void btnAddReport_Click(object sender, EventArgs e)
         {
             Program.LogInfo("Creating new report");
+            AddReport();
+        }
 
+        private void AddReport()
+        {
             var addingReport = new ReportInfo();
             var addReportsForm = new ReportsAddForm(addingReport);
             addReportsForm.StartPosition = FormStartPosition.CenterParent;
             addReportsForm.ShowDialog();
-            
+
             if (!addingReport.Empty())
             {
                 newReportSettings.Add(addingReport);
@@ -308,6 +309,11 @@ namespace SkylineBatch
         {
             Program.LogInfo("Editing report");
             var indexSelected = gridReportSettings.SelectedRows[0].Index;
+            if (indexSelected == newReportSettings.Reports.Count)
+            {
+                AddReport();
+                return;
+            }
             //gridReportSettings.SelectedRows.Clear();
             var editingReport = newReportSettings.Reports[indexSelected].Copy();
             var addReportsForm = new ReportsAddForm(editingReport);
@@ -332,8 +338,12 @@ namespace SkylineBatch
 
         private void gridReportSettings_SelectionChanged(object sender, EventArgs e)
         {
-            btnDeleteReport.Enabled = gridReportSettings.SelectedRows.Count > 0;
-            btnEditReport.Enabled = gridReportSettings.SelectedRows.Count > 0;
+            if (_isBusy)
+                gridReportSettings.ClearSelection();
+            var selectedRows = gridReportSettings.SelectedRows;
+            btnEditReport.Enabled = selectedRows.Count > 0;
+            btnDeleteReport.Enabled = selectedRows.Count > 0 && selectedRows[0].Index < newReportSettings.Reports.Count;
+            
         }
     }
 }

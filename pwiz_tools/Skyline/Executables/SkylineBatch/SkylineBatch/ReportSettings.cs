@@ -1,7 +1,7 @@
 ﻿/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * Copyright 2015 University of Washington - Seattle, WA
+ * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,6 +104,11 @@ namespace SkylineBatch
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
             return Equals((ReportSettings)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Reports.GetHashCode();
         }
     }
 
@@ -224,6 +229,13 @@ namespace SkylineBatch
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
             return Equals((ReportInfo)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode() +
+                   ReportPath.GetHashCode() +
+                   rScripts.GetHashCode();
         }
     }
 

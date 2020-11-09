@@ -1,7 +1,7 @@
 ﻿/*
- * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
+ * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * Copyright 2015 University of Washington - Seattle, WA
+ * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,17 @@ namespace SkylineBatchTest
             throw new NotImplementedException();
         }
 
+        public string GetFileName()
+        {
+            throw new NotImplementedException();
+        }
+
         public void DisableUiLogging()
+        {
+            throw new NotImplementedException();
+        }
+
+        public SkylineBatchLogger Archive()
         {
             throw new NotImplementedException();
         }
@@ -119,6 +129,14 @@ namespace SkylineBatchTest
         }
 
         public void UpdateUiConfigurations()
+        {
+        }
+
+        public void UpdateUiLogFiles()
+        {
+        }
+
+        public void ClearLog()
         {
         }
 
@@ -264,7 +282,7 @@ namespace SkylineBatchTest
             {
                 testConfigManager.Remove(testConfigManager.ConfigList[0]);
             }
-            testConfigManager.CloseConfigs();
+            testConfigManager.Close();
         }
     }
 }
