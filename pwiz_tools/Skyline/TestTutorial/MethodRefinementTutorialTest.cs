@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "MethodRefine";
 
             // Multi-file import has problems with mzML on this test
@@ -171,7 +171,7 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(8);
             PauseForScreenShot("Chromatogram graph metafile", 8);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen();
                 RunUI(SkylineWindow.AutoZoomBestPeak);
@@ -179,7 +179,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevNode);
                 WaitForGraphs();
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 

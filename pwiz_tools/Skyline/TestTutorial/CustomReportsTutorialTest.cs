@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "CustomReports";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/CustomReports-2_5.pdf";
@@ -396,7 +396,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 20);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen();
                 var documentGridFormCover = WaitForOpenForm<DocumentGridForm>();
@@ -419,7 +419,7 @@ namespace pwiz.SkylineTestTutorial
                         Assert.IsTrue(viewEditorCover.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
                     }
                 });
-                PauseForCoverShot();
+                TakeCoverShot();
 
                 OkDialog(viewEditorCover, viewEditorCover.CancelButton.PerformClick);
                 return false;
