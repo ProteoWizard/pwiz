@@ -18,9 +18,7 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
@@ -49,149 +47,133 @@ namespace pwiz.SkylineTestFunctional
         public void TestDetectionsPlot()
         {
             TestFilesZip = @"TestFunctional/DetectionsPlotTest.zip";
-            Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(TestContext.TestDir, "Trace.log")));
-
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
-            try
+            OpenDocument(TestFilesDir.GetTestPath(@"DIA-TTOF-tutorial.sky"));
+            WaitForDocumentLoaded();
+
+            RunUI(() => { SkylineWindow.ShowDetectionsReplicateComparisonGraph(); });
+            WaitForGraphs();
+
+            GraphSummary graph = SkylineWindow.DetectionsPlot;
+            var toolbar = graph.Toolbar as DetectionsToolbar;
+            Assert.IsNotNull(toolbar);
+            RunUI(() => { toolbar.CbLevel.SelectedItem = DetectionsGraphController.TargetType.PRECURSOR; });
+            WaitForGraphs();
+
+            DetectionsPlotPane pane;
+            Assert.IsTrue(graph.TryGetGraphPane(out pane));
+            Assert.IsTrue(pane.HasToolbar);
+
+            //use properties dialog to update the q-value
+            var propDialog = ShowDialog<DetectionToolbarProperties>(() =>
             {
-                OpenDocument(TestFilesDir.GetTestPath(@"DIA-TTOF-tutorial.sky"));
-                WaitForDocumentLoaded();
+                toolbar.pbProperties_Click(graph.GraphControl, new EventArgs());
+            });
 
-                RunUI(() => { SkylineWindow.ShowDetectionsReplicateComparisonGraph(); });
-                WaitForGraphs();
+            //verify data correct for 2 q-values
+            RunUI(() =>
+            {
+                propDialog.SetQValueTo(0.003f);
+                propDialog.OkDialog();
+            });
+            WaitForClosedForm(propDialog);
+            WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.003f));
+            AssertDataCorrect(pane, 0, 0.003f);
 
-                GraphSummary graph = SkylineWindow.DetectionsPlot;
-                var toolbar = graph.Toolbar as DetectionsToolbar;
-                Assert.IsNotNull(toolbar);
-                RunUI(() => { toolbar.CbLevel.SelectedItem = DetectionsGraphController.TargetType.PRECURSOR; });
-                WaitForGraphs();
+            //use properties dialog to update the q-value
+            propDialog = ShowDialog<DetectionToolbarProperties>(() =>
+            {
+                toolbar.pbProperties_Click(graph.GraphControl, new EventArgs());
+            });
+            RunUI(() =>
+            {
+                propDialog.SetQValueTo(0.001f);
+                propDialog.OkDialog();
+            });
+            WaitForClosedForm(propDialog);
+            WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.001f));
+            AssertDataCorrect(pane, 2, 0.001f);
 
-                DetectionsPlotPane pane;
-                Assert.IsTrue(graph.TryGetGraphPane(out pane));
-                Assert.IsTrue(pane.HasToolbar);
+            //verify the number of the bars on the plot
+            RunUI(() =>
+            {
+                Assert.IsTrue(
+                    pane.CurveList[0].IsBar && pane.CurveList[0].Points.Count == REF_DATA[0].Length);
+            });
 
-                //use properties dialog to update the q-value
-                var propDialog = ShowDialog<DetectionToolbarProperties>(() =>
-                {
-                    toolbar.pbProperties_Click(graph.GraphControl, new EventArgs());
-                });
+            string[] tipText =
+            {
+                Resources.DetectionPlotPane_Tooltip_Replicate + TextUtil.SEPARATOR_TSV_STR + @"2_SW-B",
+                string.Format(Resources.DetectionPlotPane_Tooltip_Count,
+                    DetectionsGraphController.TargetType.PRECURSOR) +
+                TextUtil.SEPARATOR_TSV_STR + 118.ToString(CultureInfo.CurrentCulture),
+                Resources.DetectionPlotPane_Tooltip_CumulativeCount + TextUtil.SEPARATOR_TSV_STR +
+                123.ToString(CultureInfo.CurrentCulture),
+                Resources.DetectionPlotPane_Tooltip_AllCount + TextUtil.SEPARATOR_TSV_STR +
+                115.ToString(CultureInfo.CurrentCulture),
+                Resources.DetectionPlotPane_Tooltip_QMedian + TextUtil.SEPARATOR_TSV_STR +
+                (6.0d).ToString(@"F1", CultureInfo.CurrentCulture)
+            };
+            RunUI(() =>
+            {
+                Assert.IsNotNull(pane.ToolTip);
+                pane.PopulateTooltip(1);
+                //verify the tooltip text
+                CollectionAssert.AreEqual(tipText, pane.ToolTip.TipLines);
+            });
 
-                //verify data correct for 2 q-values
-                RunUI(() =>
-                {
-                    propDialog.SetQValueTo(0.003f);
-                    Trace.WriteLine("QValue set to 0.003");
-                    propDialog.OkDialog();
-                    Trace.WriteLine("Dialog processed 1. QValue is " +
-                                    DetectionsGraphController.Settings.QValueCutoff);
-                });
-                Trace.WriteLine("UI execution complete. 1. QValue is " +
-                                DetectionsGraphController.Settings.QValueCutoff);
-                WaitForClosedForm(propDialog);
-                Trace.WriteLine("Prop dialog closed 1. QValue is " +
-                                DetectionsGraphController.Settings.QValueCutoff.ToString());
-                WaitForCondition(10000, () => (DetectionsGraphController.Settings.QValueCutoff == 0.003f));
-                AssertDataCorrect(pane, 0, 0.003f);
+            //test the data correct after a doc change (delete peptide)
+            RunUI(() =>
+            {
+                SkylineWindow.SelectedPath =
+                    SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, 12);
+                SkylineWindow.EditDelete();
+            });
+            WaitForGraphs();
+            WaitForConditionUI(() => DetectionPlotData.GetDataCache().Datas.Any((dat) =>
+                    ReferenceEquals(SkylineWindow.DocumentUI, dat.Document) &&
+                    DetectionsGraphController.Settings.QValueCutoff == dat.QValueCutoff),
+                "Cache is not updated on document change.");
 
-                //use properties dialog to update the q-value
-                propDialog = ShowDialog<DetectionToolbarProperties>(() =>
-                {
-                    toolbar.pbProperties_Click(graph.GraphControl, new EventArgs());
-                });
-                RunUI(() =>
-                {
-                    propDialog.SetQValueTo(0.001f);
-                    propDialog.OkDialog();
-                    Trace.WriteLine("QValue set to 0.001");
-                });
-                WaitForClosedForm(propDialog);
-                Trace.WriteLine("Prop dialog closed 2. QValue is " +
-                                DetectionsGraphController.Settings.QValueCutoff.ToString());
-                WaitForCondition(10000, () => (DetectionsGraphController.Settings.QValueCutoff == 0.001f));
-                AssertDataCorrect(pane, 2, 0.001f);
+            //verify that the cache is purged after the document update
+            RunUI(() =>
+            {
+                Assert.IsTrue(DetectionPlotData.GetDataCache().Datas.All((dat) =>
+                    ReferenceEquals(SkylineWindow.DocumentUI, dat.Document)));
+            });
+            AssertDataCorrect(pane, 4, 0.001f);
 
-                //verify the number of the bars on the plot
-                RunUI(() =>
-                {
-                    Assert.IsTrue(
-                        pane.CurveList[0].IsBar && pane.CurveList[0].Points.Count == REF_DATA[0].Length);
-                });
-
-                string[] tipText =
-                {
-                    Resources.DetectionPlotPane_Tooltip_Replicate + TextUtil.SEPARATOR_TSV_STR + @"2_SW-B",
-                    string.Format(Resources.DetectionPlotPane_Tooltip_Count,
-                        DetectionsGraphController.TargetType.PRECURSOR) +
-                    TextUtil.SEPARATOR_TSV_STR + 118.ToString(CultureInfo.CurrentCulture),
-                    Resources.DetectionPlotPane_Tooltip_CumulativeCount + TextUtil.SEPARATOR_TSV_STR +
-                    123.ToString(CultureInfo.CurrentCulture),
-                    Resources.DetectionPlotPane_Tooltip_AllCount + TextUtil.SEPARATOR_TSV_STR +
-                    115.ToString(CultureInfo.CurrentCulture),
-                    Resources.DetectionPlotPane_Tooltip_QMedian + TextUtil.SEPARATOR_TSV_STR +
-                    (6.0d).ToString(@"F1", CultureInfo.CurrentCulture)
-                };
-                RunUI(() =>
-                {
-                    Assert.IsNotNull(pane.ToolTip);
-                    pane.PopulateTooltip(1);
-                    //verify the tooltip text
-                    CollectionAssert.AreEqual(tipText, pane.ToolTip.TipLines);
-                });
-
-                //test the data correct after a doc change (delete peptide)
-                RunUI(() =>
-                {
-                    SkylineWindow.SelectedPath =
-                        SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, 12);
-                    SkylineWindow.EditDelete();
-                });
-                WaitForGraphs();
-                WaitForConditionUI(() => DetectionPlotData.GetDataCache().Datas.Any((dat) =>
-                        ReferenceEquals(SkylineWindow.DocumentUI, dat.Document) &&
-                        DetectionsGraphController.Settings.QValueCutoff == dat.QValueCutoff),
-                    "Cache is not updated on document change.");
-
-                //verify that the cache is purged after the document update
-                RunUI(() =>
-                {
-                    Assert.IsTrue(DetectionPlotData.GetDataCache().Datas.All((dat) =>
-                        ReferenceEquals(SkylineWindow.DocumentUI, dat.Document)));
-                });
-                AssertDataCorrect(pane, 4, 0.001f);
-
-                RunUI(() => { SkylineWindow.ShowDetectionsHistogramGraph(); });
-                WaitForGraphs();
-                DetectionsHistogramPane paneHistogram;
-                var graphHistogram = SkylineWindow.DetectionsPlot;
-                Assert.IsTrue(graphHistogram.TryGetGraphPane(out paneHistogram), "Cannot get histogram pane.");
-                //display and hide tooltip
-                string[] histogramTipText =
-                {
-                    Resources.DetectionHistogramPane_Tooltip_ReplicateCount + TextUtil.SEPARATOR_TSV_STR +
-                    5.ToString(CultureInfo.CurrentCulture),
-                    String.Format(Resources.DetectionHistogramPane_Tooltip_Count,
-                        DetectionsGraphController.TargetType.PRECURSOR) +
-                    TextUtil.SEPARATOR_TSV_STR + 102.ToString(CultureInfo.CurrentCulture),
-                };
-                RunUI(() =>
-                {
-                    Assert.IsNotNull(paneHistogram.ToolTip, "No tooltip found.");
-                    paneHistogram.PopulateTooltip(5);
-                    //verify the tooltip text
-                    CollectionAssert.AreEqual(histogramTipText, paneHistogram.ToolTip.TipLines);
-                });
-                RunUI(() =>
-                {
-                    graph.Close();
-                    graphHistogram.Close();
-                });
-                WaitForGraphs();
-            }
-            finally { Trace.Flush();}
+            RunUI(() => { SkylineWindow.ShowDetectionsHistogramGraph(); });
+            WaitForGraphs();
+            DetectionsHistogramPane paneHistogram;
+            var graphHistogram = SkylineWindow.DetectionsPlot;
+            Assert.IsTrue(graphHistogram.TryGetGraphPane(out paneHistogram), "Cannot get histogram pane.");
+            //display and hide tooltip
+            string[] histogramTipText =
+            {
+                Resources.DetectionHistogramPane_Tooltip_ReplicateCount + TextUtil.SEPARATOR_TSV_STR +
+                5.ToString(CultureInfo.CurrentCulture),
+                String.Format(Resources.DetectionHistogramPane_Tooltip_Count,
+                    DetectionsGraphController.TargetType.PRECURSOR) +
+                TextUtil.SEPARATOR_TSV_STR + 102.ToString(CultureInfo.CurrentCulture),
+            };
+            RunUI(() =>
+            {
+                Assert.IsNotNull(paneHistogram.ToolTip, "No tooltip found.");
+                paneHistogram.PopulateTooltip(5);
+                //verify the tooltip text
+                CollectionAssert.AreEqual(histogramTipText, paneHistogram.ToolTip.TipLines);
+            });
+            RunUI(() =>
+            {
+                graph.Close();
+                graphHistogram.Close();
+            });
+            WaitForGraphs();
         }
 
         private void AssertDataCorrect(DetectionsPlotPane pane, int refIndex, float qValue, bool record = false)
@@ -202,8 +184,6 @@ namespace pwiz.SkylineTestFunctional
                                            && DetectionPlotData.GetDataCache().Status == DetectionPlotData.DetectionDataCache.CacheStatus.idle,
                 () => $"Retrieving data for qValue {qValue}, refIndex {refIndex} took too long.");
             WaitForGraphs();
-            if(!pane.CurrentData.IsValid)
-                Trace.WriteLine("Data is invalid. Cache status is " + DetectionPlotData.GetDataCache().Status);
             WaitForCondition(() => pane.CurrentData.IsValid);
 
             if (record)

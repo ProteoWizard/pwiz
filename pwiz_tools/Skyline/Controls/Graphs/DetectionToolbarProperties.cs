@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -89,20 +88,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 var qValueCutoff = double.NaN;
                 if (!string.IsNullOrEmpty(txtQValueCustom.Text)
                     && !helper.ValidateDecimalTextBox(txtQValueCustom, 0, 1, out qValueCutoff))
-                {
-                    Trace.WriteLine(txtQValueCustom.Text + " is not valid QValue");
                     return;
-                }
                 else
-                {
-                    Settings.QValueCutoff = (float) qValueCutoff;
-                    Trace.WriteLine(qValueCutoff + " is written to Settings.QValue");
-                }
-            }
-            else
-            {
-                Trace.WriteLine("Custom QValue is not checked.");
-
+                    Settings.QValueCutoff = (float)qValueCutoff;
             }
 
             Settings.YScaleFactor = IntLabeledValue.GetValue(cmbCountMultiple, Settings.YScaleFactor);
