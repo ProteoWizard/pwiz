@@ -108,15 +108,14 @@ namespace pwiz.SkylineTestFunctional
             string[] tipText =
             {
                 Resources.DetectionPlotPane_Tooltip_Replicate + TextUtil.SEPARATOR_TSV_STR + @"2_SW-B",
-                string.Format(Resources.DetectionPlotPane_Tooltip_Count,
-                    DetectionsGraphController.TargetType.PRECURSOR) +
-                TextUtil.SEPARATOR_TSV_STR + 118.ToString(CultureInfo.CurrentCulture),
+                string.Format(Resources.DetectionPlotPane_Tooltip_Count, DetectionsGraphController.TargetType.PRECURSOR) +
+                TextUtil.SEPARATOR_TSV_STR + 118.ToString( CultureInfo.CurrentCulture),
                 Resources.DetectionPlotPane_Tooltip_CumulativeCount + TextUtil.SEPARATOR_TSV_STR +
-                123.ToString(CultureInfo.CurrentCulture),
+                123.ToString( CultureInfo.CurrentCulture),
                 Resources.DetectionPlotPane_Tooltip_AllCount + TextUtil.SEPARATOR_TSV_STR +
-                115.ToString(CultureInfo.CurrentCulture),
+                115.ToString( CultureInfo.CurrentCulture),
                 Resources.DetectionPlotPane_Tooltip_QMedian + TextUtil.SEPARATOR_TSV_STR +
-                (6.0d).ToString(@"F1", CultureInfo.CurrentCulture)
+                (6.0d).ToString(@"F1",CultureInfo.CurrentCulture)
             };
             RunUI(() =>
             {
@@ -129,8 +128,7 @@ namespace pwiz.SkylineTestFunctional
             //test the data correct after a doc change (delete peptide)
             RunUI(() =>
             {
-                SkylineWindow.SelectedPath =
-                    SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, 12);
+                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 12);
                 SkylineWindow.EditDelete();
             });
             WaitForGraphs();
@@ -156,10 +154,9 @@ namespace pwiz.SkylineTestFunctional
             string[] histogramTipText =
             {
                 Resources.DetectionHistogramPane_Tooltip_ReplicateCount + TextUtil.SEPARATOR_TSV_STR +
-                5.ToString(CultureInfo.CurrentCulture),
-                String.Format(Resources.DetectionHistogramPane_Tooltip_Count,
-                    DetectionsGraphController.TargetType.PRECURSOR) +
-                TextUtil.SEPARATOR_TSV_STR + 102.ToString(CultureInfo.CurrentCulture),
+                5.ToString( CultureInfo.CurrentCulture),
+                String.Format(Resources.DetectionHistogramPane_Tooltip_Count, DetectionsGraphController.TargetType.PRECURSOR) +
+                TextUtil.SEPARATOR_TSV_STR + 102.ToString( CultureInfo.CurrentCulture),
             };
             RunUI(() =>
             {

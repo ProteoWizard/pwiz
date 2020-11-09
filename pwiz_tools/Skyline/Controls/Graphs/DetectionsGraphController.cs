@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public static float QValueCutoff
             {
                 get => Properties.Settings.Default.DetectionsQValueCutoff;
-                set => Properties.Settings.Default.DetectionsQValueCutoff = value; 
+                set => Properties.Settings.Default.DetectionsQValueCutoff = value;
             }
 
             public static TargetType TargetType
