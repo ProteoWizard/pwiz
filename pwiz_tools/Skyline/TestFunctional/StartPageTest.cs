@@ -288,7 +288,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var startPage = WaitForOpenForm<StartPage>();
             var pathChooser = ShowDialog<PathChooserDlg>(()=>startPage
-                .TestTutorialAction(ActionTutorial.TutorialType.absolute_quantifiaction));
+                .TestTutorialAction());
             OkDialog(pathChooser, pathChooser.Dispose);
             RunUI(() => startPage.DoAction(skylineWindow => true));
             WaitForOpenForm<SkylineWindow>();

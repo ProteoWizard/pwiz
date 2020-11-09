@@ -27,7 +27,9 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+
 // ReSharper disable InconsistentlySynchronizedField
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -39,7 +41,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public SrmDocument Document { get; private set; }
         public float QValueCutoff { get; private set; }
-        public bool IsValid { get; }
+        public bool IsValid { get; private set; }
         public int ReplicateCount { get; private set; }
 
         public DataSet GetTargetData(DetectionsGraphController.TargetType target)
@@ -66,40 +68,47 @@ namespace pwiz.Skyline.Controls.Graphs
         public static DetectionPlotData INVALID = new DetectionPlotData(null, 0.001f);
         public const int REPORTING_STEP = 3;
 
-        public DetectionPlotData(SrmDocument document, float qValueCutoff, 
-            CancellationToken cancellationToken = default(CancellationToken), [CanBeNull] Action<int> progressReport = null)
+
+        public DetectionPlotData(SrmDocument document, float qValueCutoff)
         {
-            if (document == null || qValueCutoff == 0 || qValueCutoff == 1 ||
-                !document.Settings.HasResults) return;
-
-            if (document.MoleculeTransitionGroupCount == 0 || document.PeptideCount == 0 ||
-                document.MeasuredResults.Chromatograms.Count == 0)
-                return;
-
-            QValueCutoff = qValueCutoff;
             Document = document;
+            QValueCutoff = qValueCutoff;
+        }
+        public string Init(CancellationToken cancellationToken = default(CancellationToken), 
+                [CanBeNull] Action<int> progressReport = null)
+        {
+            if (Document == null || !Document.Settings.HasResults)
+                return Resources.DetectionPlotData_NoDataLoaded_Label;
 
-            var precursorData = new List<QData>(document.MoleculeTransitionGroupCount);
-            var peptideData = new List<QData>(document.PeptideCount);
-            ReplicateCount = document.MeasuredResults.Chromatograms.Count;
+            if (QValueCutoff == 0 || QValueCutoff == 1)
+                return Resources.DetectionPlotData_InvalidQValue_Label;
 
 
-            ReplicateNames = (from chromatogram in document.MeasuredResults.Chromatograms
+            if (Document.MoleculeTransitionGroupCount == 0 || Document.PeptideCount == 0 ||
+                Document.MeasuredResults.Chromatograms.Count == 0)
+                return Resources.DetectionPlotData_NoResults_Label;
+
+            var precursorData = new List<QData>(Document.MoleculeTransitionGroupCount);
+            var peptideData = new List<QData>(Document.PeptideCount);
+            ReplicateCount = Document.MeasuredResults.Chromatograms.Count;
+
+
+            ReplicateNames = (from chromatogram in Document.MeasuredResults.Chromatograms
                 select chromatogram.Name).ToList();
 
             var thisPeptideData = new List<List<float>>();
             var peptideCount = 0;
             var currentProgress = 0;
-            var reportingStep = document.PeptideCount / (90/REPORTING_STEP);
+            var reportingStep = Document.PeptideCount / (90/REPORTING_STEP);
 
-            foreach (var peptide in document.Peptides)
+            foreach (var peptide in Document.Peptides)
             {
                 thisPeptideData.Clear();
                 //iterate over peptide's precursors
                 foreach (var precursor in peptide.TransitionGroups)
                 {
                     if (cancellationToken.IsCancellationRequested)
-                        return;
+                        return Resources.DetectionPlotPane_EmptyPlotCanceled_Label;
 
                     if (precursor.IsDecoy) continue;
                     var qs = new List<float>(ReplicateCount);
@@ -133,10 +142,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     progressReport?.Invoke(REPORTING_STEP * currentProgress++);
             }
 
+            if(precursorData.All(p => p.IsEmpty))
+                return Resources.DetectionPlotData_NoQValuesInDocument_Label;
+
             _data[DetectionsGraphController.TargetType.PRECURSOR] = new DataSet(precursorData, ReplicateCount, QValueCutoff);
             _data[DetectionsGraphController.TargetType.PEPTIDE] = new DataSet(peptideData, ReplicateCount, QValueCutoff);
 
             IsValid = true;
+            return string.Empty;
         }
 
         private bool IsValidFor(SrmDocument document, float qValue)
@@ -226,7 +239,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Calculate running mins and maxes while taking NaNs into account
                 var mins = Enumerable.Repeat(float.NaN, qValues.Count).ToList();
                 var maxes = Enumerable.Repeat(float.NaN, qValues.Count).ToList();
-                if (!qValues.All(float.IsNaN))
+                IsEmpty = qValues.All(float.IsNaN);
+                if (!IsEmpty)
                 {
                     var runningNaN = true;
                     for (var i = 0; i < qValues.Count; i++)
@@ -263,6 +277,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public ImmutableList<float> QValues { get; private set; }
             public ImmutableList<float> MinQValues { get; private set; }
             public ImmutableList<float> MaxQValues { get; private set; }
+            public bool IsEmpty { get; private set; }
 
         }
 
@@ -285,7 +300,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // by a dataset.
             private const int CACHE_CAPACITY = 200;
 
-            public event Action<CacheStatus> StatusChange;
+            public event Action<CacheStatus, string> StatusChange;
             public event Action<int> ReportProgress;
 
             public enum CacheStatus { idle, processing, error, canceled }
@@ -294,11 +309,12 @@ namespace pwiz.Skyline.Controls.Graphs
             public CacheStatus Status
             {
                 get => _status;
-                set
-                {
-                    _status = value;
-                    StatusChange?.Invoke(_status);
-                }
+            }
+
+            public void SetCacheStatus(CacheStatus newStatus, string message)
+            {
+                _status = newStatus;
+                StatusChange?.Invoke(_status, message);
             }
 
             //exposing for testing purposes
@@ -307,12 +323,12 @@ namespace pwiz.Skyline.Controls.Graphs
             public DetectionDataCache()
             {
                 _stackWorker = new StackWorker<DataRequest>(null, CacheData);
-                //single worker thread because we do not need to paralellize the calculations, 
+                //single worker thread because we do not need to paralelize the calculations, 
                 //only to offload them from the UI thread
                 _stackWorker.RunAsync(1, @"DetectionsDataCache");
                 _tokenSource = new CancellationTokenSource();
                 _datas = new ConcurrentQueue<DetectionPlotData>();
-                Status = CacheStatus.idle;
+                SetCacheStatus(CacheStatus.idle, string.Empty);
             }
 
             public bool TryGet(SrmDocument doc, float qValue, Action<DetectionPlotData> callback,  out DetectionPlotData data)
@@ -320,12 +336,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 data = INVALID;
                 if (IsDisposed) return false;
                 var request = new DataRequest() { qValue = qValue};
+                _callback = callback;
                 if (ReferenceEquals(doc, _document))
                 {
                     data = Get(request) ?? INVALID;
                     if (data.IsValid)
                         return true;
-                    _callback = callback;
                     _stackWorker.Add(request);
                 }
                 else
@@ -360,9 +376,15 @@ namespace pwiz.Skyline.Controls.Graphs
                                 _datas.Enqueue(dump);
                     }
                     if(userCancel)
-                        Status = CacheStatus.canceled;
+                        SetCacheStatus(CacheStatus.canceled,
+                            Resources.DetectionPlotData_UsePropertiesDialog_Label);
                     else
-                        Status = CacheStatus.idle;
+                    {
+                        if (!_document.IsLoaded)
+                            SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_WaitingForDocumentLoad_Label);
+                        else
+                            SetCacheStatus(CacheStatus.idle, string.Empty);
+                    }
                 }
                 //if provided, add the new request to the queue after cancellation is complete
                 if (request != null)
@@ -381,6 +403,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 try
                 {
+                    if (!_document.IsLoaded)
+                    {
+                        SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_WaitingForDocumentLoad_Label);
+                        return;
+                    }
+
                     lock (_statusLock)
                     {
                         //first make sure it hasn't been retrieved already
@@ -393,24 +421,27 @@ namespace pwiz.Skyline.Controls.Graphs
                             if (dat.IsValidFor(_document, request.qValue)) res = dat;
                         }
 
-                        if (res != null)
-                            return;
-                        Status = CacheStatus.processing;
-                        res = new DetectionPlotData(_document, request.qValue, _tokenSource.Token, ReportProgress);
-                        Status = CacheStatus.idle;
+                        if (res != null) return;
+
+                        SetCacheStatus(CacheStatus.processing, string.Empty);
+                        res = new DetectionPlotData(_document, request.qValue);
+                        var statusMessage = res.Init(_tokenSource.Token, ReportProgress);
+                        SetCacheStatus(CacheStatus.idle, string.Empty);
 
                         if (res.IsValid)
                         {
-                            if (currentSize + res.ReplicateCount >= CACHE_CAPACITY) _datas.TryDequeue(out var dump);
+                            SetCacheStatus(CacheStatus.idle, Resources.DetectionPlotData_DataRetrieved_Label);
+                            if (currentSize + res.ReplicateCount >= CACHE_CAPACITY) _datas.TryDequeue(out _);
                             _datas.Enqueue(res);
                             _callback.Invoke(res);
                         }
-
+                        else
+                            SetCacheStatus(CacheStatus.error, statusMessage);
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    Status = CacheStatus.error;
+                    SetCacheStatus(CacheStatus.idle, e.Message);
                     throw;
                 }
             }

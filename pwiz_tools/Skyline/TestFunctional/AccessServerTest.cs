@@ -65,7 +65,15 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
 
-            ToolOptionsDlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI());
+            // Cycle through all tabs for the benefit of SkylineTester's "Forms" view, which is used in L10N development
+            foreach (var tab in (ToolOptionsUI.TABS[]) Enum.GetValues(typeof(ToolOptionsUI.TABS)))
+            {
+                var dlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(tab));
+                OkDialog(dlg, dlg.CancelDialog);
+            }
+
+            // Now show the tab we really need for this test
+            ToolOptionsDlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Panorama));
 
             // Incorrect password.
             Server = VALID_PANORAMA_SERVER;

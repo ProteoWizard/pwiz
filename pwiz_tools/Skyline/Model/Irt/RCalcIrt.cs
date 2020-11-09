@@ -847,20 +847,4 @@ namespace pwiz.Skyline.Model.Irt
             Calculator = calc;
         }
     }
-
-    public class DatabaseNotConnectedException : CalculatorException
-    {
-        private static readonly string DBERROR =
-            Resources.DatabaseNotConnectedException_DBERROR_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_;
-
-        private readonly RetentionScoreCalculatorSpec _calculator;
-        public RetentionScoreCalculatorSpec Calculator { get { return _calculator; } }
-
-        public DatabaseNotConnectedException(RCalcIrt calc)
-            : base(string.Format(DBERROR, calc.Name, calc.DatabasePath))
-        {
-            _calculator = calc;
-        }
-    }
-
 }

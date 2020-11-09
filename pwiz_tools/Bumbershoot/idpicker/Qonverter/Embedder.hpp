@@ -85,11 +85,13 @@ struct QuantitationConfiguration
 {
     QuantitationConfiguration(QuantitationMethod quantitationMethod = QuantitationMethod::None,
                               MZTolerance reporterIonMzTolerance = MZTolerance(0.015, MZTolerance::MZ),
-                              bool normalizeIntensities = true);
+                              bool normalizeIntensities = true,
+                              bool extractFromMS3 = true);
 
     QuantitationMethod quantitationMethod;
     MZTolerance reporterIonMzTolerance;
     bool normalizeIntensities;
+    bool extractFromMS3;
 
     operator std::string() const;
 };

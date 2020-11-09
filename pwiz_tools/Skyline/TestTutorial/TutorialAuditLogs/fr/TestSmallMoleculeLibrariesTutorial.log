@@ -1,0 +1,62 @@
+Undo Redo : Transition Settings changed
+Summary   : Settings > Transition Settings changed
+All Info  :
+Transition Settings changed
+Settings > Transition Settings -- Filter > Molecule Precursor adducts changed from "[M+H]" to "[M+CH3COO], [M+HCOO], [M-H]"
+Settings > Transition Settings -- Filter > Molecule Fragment adducts changed from "[M+]" to "[M-]"
+Settings > Transition Settings -- Filter > Ion types changed from "y" to "y, p"
+Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
+Settings > Transition Settings -- Full-Scan > Use high-selectivity extraction changed from False to True
+Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "DIA"
+Settings > Transition Settings -- Full-Scan > Isolation scheme changed from Missing to "All Ions"
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Isolation width is "Results"
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Deconvolution is "All Ions"
+Settings > Transition Settings -- Full-Scan > Isolation scheme > Prespecified isolation windows is Empty
+Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "TOF"
+Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "20000"
+Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
+Settings > Transition Settings -- Full-Scan > Peaks changed from Missing to "3"
+Settings > Transition Settings -- Full-Scan > Precursor mass analyzer changed from "None" to "TOF"
+Settings > Transition Settings -- Full-Scan > Resolving power changed from Missing to "20000"
+Settings > Transition Settings -- Full-Scan > Isotope labeling enrichment changed from Missing to "Default"
+
+Undo Redo : Molecule Settings -- Library > Libraries : "Drosophila Lipids" was added
+Summary   : Settings > Molecule Settings -- Library > Libraries : "Drosophila Lipids" was added
+All Info  :
+Molecule Settings -- Library > Libraries : "Drosophila Lipids" was added
+Settings > Molecule Settings -- Library > Libraries : "Drosophila Lipids" was added
+Settings > Molecule Settings -- Library > Libraries > "Drosophila Lipids" > Path is "Drosophila_Lipids_Neg.blib"
+
+Undo Redo : Added all (38) molecules from the library "Drosophila Lipids"
+Summary   : Added all (38) molecules from the library "Drosophila Lipids"
+All Info  :
+Added all (38) molecules from the library "Drosophila Lipids"
+
+Undo Redo : Imported results from 2 files
+Summary   : Imported results from 2 files
+All Info  :
+Imported results from 2 files
+Import results settings > File names : contains "Flies_Ctrl_F_A_018_Neg.d"
+Import results settings > File names : contains "Flies_Ctrl_M_A_001_Neg.d"
+Import results settings > Add single-injection replicates in files is True
+Import results settings > Files to import simultaneously is "Many"
+Import results settings > Removed prefix is "Flies_Ctrl_"
+Import results settings > Removed suffix is "_Neg"
+Extra Info: File names = 
+[
+    "Flies_Ctrl_F_A_018_Neg.d",
+    "Flies_Ctrl_M_A_001_Neg.d"
+],
+Add single-injection replicates in files = True,
+Files to import simultaneously = "Many",
+Removed prefix = "Flies_Ctrl_",
+Removed suffix = "_Neg"
+
+Undo Redo : Transition Settings -- Ion mobility changed
+Summary   : Settings > Transition Settings -- Ion mobility changed
+All Info  :
+Transition Settings -- Ion mobility changed
+Settings > Transition Settings -- Ion mobility > Use spectral library ion mobility values changed from False to True
+Settings > Transition Settings -- Ion mobility > Ion mobility filter window width calculation type changed from "None" to "Resolving power"
+Settings > Transition Settings -- Ion mobility > Resolving power changed from "0" to "50"
+

@@ -18,6 +18,7 @@
 
 using System;
 using System.Windows.Forms;
+using AutoQC.Properties;
 
 namespace AutoQC
 {
@@ -113,7 +114,7 @@ namespace AutoQC
                 // Make sure that the configuration name is unique.
                 if (!IsUniqueConfigName(newConfig))
                 {
-                    ShowErrorDialog("A configuration with this name already exists.");
+                    ShowErrorDialog(Resources.AutoQcConfigForm_ValidateConfigName_A_configuration_with_this_name_already_exists_);
                     return false;    
                 }
             }
@@ -148,7 +149,7 @@ namespace AutoQC
 
         private void ShowErrorDialog(string message)
         {
-            _mainControl.DisplayError("Configuration Validation Error", message);
+            _mainControl.DisplayError(Resources.AutoQcConfigForm_ShowErrorDialog_Configuration_Validation_Error, message);
         }
 
         private AutoQcConfig GetConfigFromUi()
@@ -171,6 +172,7 @@ namespace AutoQC
                 textQCFilePattern.Text = mainSettings.QcFileFilter.Pattern;
                 comboBoxFileFilter.SelectedItem = mainSettings.QcFileFilter.Name();
                 textResultsTimeWindow.Text = mainSettings.ResultsWindow.ToString();
+                checkBoxRemoveResults.Checked = mainSettings.RemoveResults;
                 textAquisitionTime.Text = mainSettings.AcquisitionTime.ToString();
                 comboBoxInstrumentType.SelectedItem = mainSettings.InstrumentType;
                 comboBoxInstrumentType.SelectedIndex = comboBoxInstrumentType.FindStringExact(mainSettings.InstrumentType);
@@ -179,16 +181,18 @@ namespace AutoQC
 
         private MainSettings GetMainSettingsFromUI()
         {
-            var mainSettings = new MainSettings();
-            mainSettings.SkylineFilePath = textSkylinePath.Text;
-            mainSettings.FolderToWatch = textFolderToWatchPath.Text;
-            mainSettings.IncludeSubfolders = includeSubfoldersCb.Checked;
-            mainSettings.QcFileFilter = FileFilter.GetFileFilter(comboBoxFileFilter.SelectedItem.ToString(),
+            var skylineFilePath = textSkylinePath.Text;
+            var folderToWatch = textFolderToWatchPath.Text;
+            var includeSubfolders = includeSubfoldersCb.Checked;
+            var qcFileFilter = FileFilter.GetFileFilter(comboBoxFileFilter.SelectedItem.ToString(),
                 textQCFilePattern.Text);
-            mainSettings.ResultsWindow = ValidateIntTextField(textResultsTimeWindow.Text, "Results Window");
-            mainSettings.InstrumentType = comboBoxInstrumentType.SelectedItem.ToString();
-            mainSettings.AcquisitionTime = ValidateIntTextField(textAquisitionTime.Text, "Acquisition Time");
-            return mainSettings;
+            var removeResults = checkBoxRemoveResults.Checked;
+            var resultsWindow = ValidateIntTextField(textResultsTimeWindow.Text,
+                Resources.AutoQcConfigForm_GetMainSettingsFromUI_Results_Window);
+            var instrumentType = comboBoxInstrumentType.SelectedItem.ToString();
+            var acquisitionTime = ValidateIntTextField(textAquisitionTime.Text,
+                Resources.AutoQcConfigForm_GetMainSettingsFromUI_Acquisition_Time);
+            return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, qcFileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
         }
 
         private int ValidateIntTextField(string textToParse, string fieldName)
@@ -196,7 +200,9 @@ namespace AutoQC
             int parsedInt;
             if (!Int32.TryParse(textToParse, out parsedInt))
             {
-                throw new ArgumentException(string.Format("Invalid value for \"{0}\": {1}.", fieldName, textToParse));
+                throw new ArgumentException(string.Format(
+                    Resources.AutoQcConfigForm_ValidateIntTextField_Invalid_value_for___0_____1__, fieldName,
+                    textToParse));
             }
             return parsedInt;
         }
@@ -216,17 +222,12 @@ namespace AutoQC
 
         private PanoramaSettings GetPanoramaSettingsFromUI()
         {
-            var panoramaSettings = new PanoramaSettings();
-            panoramaSettings.PublishToPanorama = cbPublishToPanorama.Checked;
-            if (panoramaSettings.PublishToPanorama)
+            if (cbPublishToPanorama.Checked)
             {
-                panoramaSettings.PanoramaServerUrl = textPanoramaUrl.Text;
-                panoramaSettings.PanoramaUserEmail = textPanoramaEmail.Text;
-                panoramaSettings.PanoramaPassword = textPanoramaPasswd.Text;
-                panoramaSettings.PanoramaFolder = textPanoramaFolder.Text;
+                return new PanoramaSettings(cbPublishToPanorama.Checked, textPanoramaUrl.Text, textPanoramaFolder.Text, textPanoramaEmail.Text, textPanoramaPasswd.Text);
             }
 
-            return panoramaSettings;
+            return new PanoramaSettings();
         }
 
         public void RunUI(Action action)
@@ -260,14 +261,14 @@ namespace AutoQC
        
         private void btnSkylineFilePath_Click(object sender, EventArgs e)
         {
-            OpenFile("Skyline Files(*.sky)|*.sky|All Files (*.*)|*.*", textSkylinePath);
+            OpenFile(Resources.AutoQcConfigForm_btnSkylineFilePath_Click_Skyline_Files___sky____sky_All_Files__________, textSkylinePath);
         }
 
         private void btnFolderToWatch_Click(object sender, EventArgs e)
         {
             using (var dialog = new FolderBrowserDialog())
             {
-                dialog.Description = "Directory where the instrument will write QC files.";
+                dialog.Description = Resources.AutoQcConfigForm_btnFolderToWatch_Click_Directory_where_the_instrument_will_write_QC_files_;
                 if (dialog.ShowDialog(this) == DialogResult.OK)
                 {
                     textFolderToWatchPath.Text = dialog.SelectedPath;
@@ -305,6 +306,13 @@ namespace AutoQC
             }
         }
 
-        #endregion       
+        #endregion
+
+        private void checkBoxRemoveResults_CheckedChanged(object sender, EventArgs e)
+        {
+            textResultsTimeWindow.Enabled = checkBoxRemoveResults.Checked;
+            labelAccumulationTimeWindow.Enabled = checkBoxRemoveResults.Checked;
+            labelDays.Enabled = checkBoxRemoveResults.Checked;
+        }
     }
 }

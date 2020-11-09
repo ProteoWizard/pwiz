@@ -218,6 +218,9 @@
   <data name="HiResMetabolomics_Caption" xml:space="preserve">
     <value>Hi-Res Metabolomics</value>
   </data>
+  <data name="SmallMolLibraries_Caption" xml:space="preserve">
+    <value>Small Molecule IMS Libraries</value>
+  </data>
   <data name="Section_Advanced_Topics" xml:space="preserve">
     <value>Advanced Topics</value>
   </data>
@@ -229,5 +232,8 @@
   </data>
   <data name="HiResMetabolomics_Description" xml:space="preserve">
     <value>Learn how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to non-proteomic molecule data. </value>
+  </data>
+  <data name="SmallMolLibraries_Description" xml:space="preserve">
+    <value>Learn how to use spectral libraries and ion mobility filtering for analysis of complex ion mobility spectrometry-mass spectrometry (IMS-MS) small molecule data. Explore a spectral library containing m/z, retention time, fragmentation, and ion mobility information, and learn how the CCS values for each molecule are used to increase the selectivity of precursor and fragment extracted ion chromatograms.</value>
   </data>
 </root>

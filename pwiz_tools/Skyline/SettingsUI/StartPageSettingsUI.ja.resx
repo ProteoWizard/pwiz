@@ -381,7 +381,7 @@
   </data>
   <data name="radioBtnQuant.ToolTip" xml:space="preserve">
     <value>すでに最適化されたトランジションを測定し、
-すべてを統合してバラつきを改善する。</value>
+すべてを積分してバラつきを改善する。</value>
   </data>
   <data name="&gt;&gt;radioBtnQuant.Name" xml:space="preserve">
     <value>radioBtnQuant</value>
@@ -408,7 +408,7 @@
     <value>2</value>
   </data>
   <data name="labelIntegrateAll.Text" xml:space="preserve">
-    <value>すべて統合：オフ</value>
+    <value>すべて積分：オフ</value>
   </data>
   <data name="&gt;&gt;labelIntegrateAll.Name" xml:space="preserve">
     <value>labelIntegrateAll</value>

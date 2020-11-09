@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "SmallMoleculeQuantification";
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuantification.pdf";
@@ -367,7 +367,7 @@ namespace pwiz.SkylineTestTutorial
                 SetDocumentGridExcludeFromCalibration();
                 PauseForScreenShot<CalibrationForm>("Calibration Curve - outliers disabled", 20);
 
-                if (IsPauseForCoverShot)
+                if (IsCoverShotMode)
                 {
                     RunUI(() =>
                     {
@@ -388,7 +388,7 @@ namespace pwiz.SkylineTestTutorial
                     });
 
                     RunUI(SkylineWindow.FocusDocument);
-                    PauseForCoverShot();
+                    TakeCoverShot();
                     return;
                 }
 

@@ -439,12 +439,13 @@ namespace pwiz.SkylineTestFunctional
         private void ZipTestSkylineReports()
         {
             ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            string testSkylineReportsPath = TestFilesDir.GetTestPath("TestSkylineReports.zip");
             RunUI(() =>
                 {
                     configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.SaveTools();                    
                 });
+
+            string testSkylineReportsPath = TestFilesDir.GetTestPath("TestSkylineReports.zip");
             RunDlg<MessageDlg>(() => configureToolsDlg.InstallZipTool(testSkylineReportsPath), messageDlgReportNotProvided =>
                 {
                     AssertEx.AreComparableStrings(
@@ -452,18 +453,9 @@ namespace pwiz.SkylineTestFunctional
                         messageDlgReportNotProvided.Message, 2);
                     messageDlgReportNotProvided.OkDialog();
                 });
-            RunUI(()=>
-                {
-                    Assert.AreEqual(1, configureToolsDlg.listTools.Items.Count);
-                    Assert.AreEqual("HelloWorld", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
-                    Assert.AreEqual(string.Empty, configureToolsDlg.textArguments.Text);
-                    Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
-                    Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
-                    Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem);
-                });
+            CheckUniqueReportImport(configureToolsDlg, "HelloWorld", 1, false);
+
             string uniqueReportPath = TestFilesDir.GetTestPath("UniqueReport.zip");
-            RunUI(() => configureToolsDlg.SaveTools());
             RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(uniqueReportPath), resolveReportConflict =>
                 {
                     string messageForm =
@@ -474,17 +466,8 @@ namespace pwiz.SkylineTestFunctional
                     AssertEx.AreComparableStrings(messageForm, resolveReportConflict.Message,1);
                     resolveReportConflict.CancelDialog();
                 });
-            WaitForConditionUI(3 * 1000, () => configureToolsDlg.listTools.Items.Count == 1);
-            RunUI(() =>
-                {
-                    Assert.AreEqual("HelloWorld", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
-                    Assert.AreEqual(string.Empty, configureToolsDlg.textArguments.Text);
-                    Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
-                    Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
-                    Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem);
-                    configureToolsDlg.SaveTools();
-                });
+            CheckUniqueReportImport(configureToolsDlg, "HelloWorld", 1, false);
+
             RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(uniqueReportPath), resolveReportConflict2 =>
                 {
                     string messageForm =
@@ -495,20 +478,8 @@ namespace pwiz.SkylineTestFunctional
                     AssertEx.AreComparableStrings(messageForm, resolveReportConflict2.Message, 1);                       
                     resolveReportConflict2.Btn0Click(); //Overwrite report
                 });
-            WaitForConditionUI(3 * 1000, () => configureToolsDlg.listTools.Items.Count == 2);
-            string toolDir = string.Empty;
-            RunUI(()=>
-                {
-                    Assert.AreEqual(1, configureToolsDlg.listTools.SelectedIndex);
-                    Assert.AreEqual("HelloWorld1", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
-                    Assert.AreEqual(string.Empty, configureToolsDlg.textArguments.Text);
-                    Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
-                    Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
-                    Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem);
-                    toolDir = configureToolsDlg.ToolDir;
-                    Assert.IsTrue(Directory.Exists(toolDir));
-                });
+            CheckUniqueReportImport(configureToolsDlg, "HelloWorld1", 2, false);
+
             RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(uniqueReportPath), resolveReportConflict3 =>
                 {
                     string messageForm =
@@ -520,34 +491,62 @@ namespace pwiz.SkylineTestFunctional
                     AssertEx.AreComparableStrings(messageForm, resolveReportConflict3.Message, 1);
                     resolveReportConflict3.BtnCancelClick(); //Cancel
                 });
-            WaitForConditionUI(3 * 1000, () => configureToolsDlg.listTools.Items.Count == 2);
-            RunUI(() =>
-                {
-                    Assert.AreEqual(1, configureToolsDlg.listTools.SelectedIndex);
-                    Assert.AreEqual("HelloWorld1", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
-                    Assert.AreEqual(string.Empty, configureToolsDlg.textArguments.Text);
-                    Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
-                    Assert.AreEqual(toolDir, configureToolsDlg.ToolDir);
-                    Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
-                    Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem);
-                });
+            CheckUniqueReportImport(configureToolsDlg, "HelloWorld1", 2, false);
+
             RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(uniqueReportPath),
                                       resolveReportConflict4 => resolveReportConflict4.Btn1Click());
-            WaitForConditionUI(3 * 1000, () => configureToolsDlg.listTools.Items.Count == 3);
-            RunUI(() =>
-                {
-                    Assert.AreEqual(2, configureToolsDlg.listTools.SelectedIndex);
-                    Assert.AreEqual("HelloWorld2", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
-                    Assert.AreEqual(string.Empty, configureToolsDlg.textArguments.Text);
-                    Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
-                    Assert.AreNotEqual(toolDir, configureToolsDlg.ToolDir);
-                    Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
-                    Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem); 
-                    configureToolsDlg.RemoveAllTools();
-                });
+            CheckUniqueReportImport(configureToolsDlg, "HelloWorld2", 3, true);
+
+            string reportFromSkyPath = TestFilesDir.GetTestPath("TestSkylineReportSky.zip");
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(reportFromSkyPath), resolveReportConflict5 =>
+            {
+                string messageForm =
+                    TextUtil.LineSeparate(
+                        Resources
+                            .ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report_titled__0_,
+                        string.Empty, Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_);
+                AssertEx.AreComparableStrings(messageForm, resolveReportConflict5.Message, 1);
+                resolveReportConflict5.Btn0Click(); //Overwrite report
+            });
+            CheckUniqueReportImport(configureToolsDlg, "HelloWorld", 1, true);
+
+            string reportFromBothPath = TestFilesDir.GetTestPath("TestSkylineReportBoth.zip");
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(reportFromBothPath), resolveReportConflict6 =>
+            {
+                string messageForm =
+                    TextUtil.LineSeparate(
+                        Resources
+                            .ConfigureToolsDlg_OverwriteOrInParallel_This_installation_would_modify_the_report_titled__0_,
+                        string.Empty, Resources.ConfigureToolsDlg_OverwriteOrInParallel_Do_you_wish_to_overwrite_or_install_in_parallel_);
+                AssertEx.AreComparableStrings(messageForm, resolveReportConflict6.Message, 1);
+                resolveReportConflict6.Btn0Click(); //Overwrite report
+            });
+            CheckUniqueReportImport(configureToolsDlg, "HelloWorld",1, true);
+
             OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+        }
+        
+
+        private void CheckUniqueReportImport(ConfigureToolsDlg configureToolsDlg, string toolName, int expectedToolCount, bool deleteToolsWhenDone)
+        {
+            WaitForConditionUI(3 * 1000, () => configureToolsDlg.listTools.Items.Count == expectedToolCount);
+            RunUI(() =>
+            {
+                Assert.AreEqual(expectedToolCount - 1, configureToolsDlg.listTools.SelectedIndex);
+                Assert.AreEqual(toolName, configureToolsDlg.textTitle.Text);
+                Assert.AreEqual("$(ToolDir)\\HelloWorld.exe", configureToolsDlg.textCommand.Text);
+                Assert.AreEqual(string.Empty, configureToolsDlg.textArguments.Text);
+                Assert.AreEqual(string.Empty, configureToolsDlg.textInitialDirectory.Text);
+                Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                Assert.AreEqual("UniqueReport", configureToolsDlg.comboReport.SelectedItem);
+                var toolDir = configureToolsDlg.ToolDir;
+                Assert.IsTrue(Directory.Exists(toolDir));
+                if (deleteToolsWhenDone)
+                {
+                    configureToolsDlg.RemoveAllTools();
+                }
+                configureToolsDlg.SaveTools();
+            });
         }
 
         private void ZipTestAnnotations()
@@ -627,18 +626,18 @@ namespace pwiz.SkylineTestFunctional
 
             // Test running the tool with an unchecked annotation
             RunDlg<MessageDlg>(() => SkylineWindow.RunTool(4), dlg =>
-                {
-                    Assert.AreEqual(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document,
-                                                                 string.Empty,
-                                                                 TextUtil.LineSeparate(new Collection<string> {sampleId.GetKey()}),
-                                                                 string.Empty,
-                                                                 Resources.ToolDescription_VerifyAnnotations_Please_enable_these_annotations_and_fill_in_the_appropriate_data_in_order_to_use_the_tool_), dlg.Message);
-                    dlg.OkDialog();
-                });
+            {
+                Assert.AreEqual(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document,
+                                                             string.Empty,
+                                                             TextUtil.LineSeparate(new Collection<string> { sampleId.GetKey() }),
+                                                             string.Empty,
+                                                             Resources.ToolDescription_VerifyAnnotations_Please_enable_these_annotations_and_fill_in_the_appropriate_data_in_order_to_use_the_tool_), dlg.Message);
+                dlg.OkDialog();
+            });
 
             // Test running the tool with a missing annotation
             Settings.Default.AnnotationDefList = new AnnotationDefList();
-            WaitForCondition(3*1000, () => Settings.Default.AnnotationDefList.Count == 0);
+            WaitForCondition(3 * 1000, () => Settings.Default.AnnotationDefList.Count == 0);
             RunDlg<MessageDlg>(() => SkylineWindow.RunTool(4), dlg =>
             {
                 Assert.AreEqual(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted,
