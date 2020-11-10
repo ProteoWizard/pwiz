@@ -169,7 +169,7 @@ namespace TestPerf
             T pane;
             Assert.IsTrue(graph.TryGetGraphPane(out pane));
             Assert.IsTrue(pane.HasToolbar);
-            CollectionAssert.AreEqual(new[] { "Light", "Heavy", "All 15N", Resources.AreaCVToolbar_UpdateUI_Medians, Resources.AreaCVToolbar_UpdateUI_None}, toolbar.NormalizationMethods.ToArray());
+            CollectionAssert.AreEqual(new[] { NormalizeOption.DEFAULT.Caption, "Light", "Heavy", "All 15N", NormalizationMethod.EQUALIZE_MEDIANS.NormalizeToCaption, NormalizationMethod.NONE.NormalizeToCaption}, toolbar.NormalizationMethods.ToArray());
             AssertDataCorrect(pane, statsStartIndex++); // Light
 
             RunUI(() => SkylineWindow.SetNormalizationMethod(NormalizeOption.FromIsotopeLabelType(SkylineWindow.Document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes[1])));

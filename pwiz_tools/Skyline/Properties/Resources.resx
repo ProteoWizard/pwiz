@@ -9355,12 +9355,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="AreaCVToolbar_UpdateUI_Global_standards" xml:space="preserve">
     <value>Global standards</value>
   </data>
-  <data name="AreaCVToolbar_UpdateUI_Medians" xml:space="preserve">
-    <value>Medians</value>
-  </data>
-  <data name="AreaCVToolbar_UpdateUI_None" xml:space="preserve">
-    <value>None</value>
-  </data>
   <data name="AreaCVHistogramGraphPane_AddLabels_Median___0_" xml:space="preserve">
     <value>Median: {0}</value>
   </data>

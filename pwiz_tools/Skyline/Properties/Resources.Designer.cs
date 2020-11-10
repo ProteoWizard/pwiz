@@ -1660,24 +1660,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Medians.
-        /// </summary>
-        public static string AreaCVToolbar_UpdateUI_Medians {
-            get {
-                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_Medians", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to None.
-        /// </summary>
-        public static string AreaCVToolbar_UpdateUI_None {
-            get {
-                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_None", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid CV cutoff entered.
         /// </summary>
         public static string AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered {
