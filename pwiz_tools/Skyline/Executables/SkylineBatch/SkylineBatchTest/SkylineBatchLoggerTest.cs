@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-
+ 
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
@@ -27,8 +27,9 @@ namespace SkylineBatchTest
     public class SkylineBatchLoggerTest
     {
         [TestMethod]
-        public void TestSimpleLog()
+        public void TestTinyLog()
         {
+            TestUtils.DeleteAllLogFiles();
             var logFile = TestUtils.GetTestFilePath("testLog.log");
             var logger = new SkylineBatchLogger(logFile);
             Assert.IsTrue(File.Exists(logFile));
@@ -36,7 +37,16 @@ namespace SkylineBatchTest
             Assert.IsTrue(fileInfo.Length == 0);
 
             logger.Log("Test line 1");
-            //Assert.IsTrue(fileInfo.OpenRead());
+            logger.Archive();
+            Assert.IsTrue(fileInfo.Length == 0);
+            var logFiles = TestUtils.GetAllLogFiles();
+            Assert.IsTrue(logFiles.Count == 2);
+            Assert.IsTrue(new FileInfo(logFiles[1]).Length > 0);
+            TestUtils.DeleteAllLogFiles();
         }
     }
 }
+
+
+
+

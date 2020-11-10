@@ -176,7 +176,7 @@
     <value>Number of configurations imported: </value>
   </data>
   <data name="Could_not_save_configuration_error_message" xml:space="preserve">
-    <value>Could not save \"{0}\":\r\n{1}</value>
+    <value>Could not save "{0}": {1}</value>
   </data>
   <data name="Save_configuration_error" xml:space="preserve">
     <value>Save Configuration Error</value>
@@ -189,5 +189,50 @@
   </data>
   <data name="add" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\add.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Cannot_Delete" xml:space="preserve">
+    <value>Cannot Delete</value>
+  </data>
+  <data name="Confirm_Delete" xml:space="preserve">
+    <value>Confirm Delete</value>
+  </data>
+  <data name="Import_configurations" xml:space="preserve">
+    <value>Import Configurations</value>
+  </data>
+  <data name="Open_Report" xml:space="preserve">
+    <value>Open Report</value>
+  </data>
+  <data name="Open_R_Script" xml:space="preserve">
+    <value>Open R Script</value>
+  </data>
+  <data name="Open_skyline_file" xml:space="preserve">
+    <value>Open Skyline File</value>
+  </data>
+  <data name="Pneumonic_on_first_letter" xml:space="preserve">
+    <value>&amp;{0}</value>
+  </data>
+  <data name="R_file_extension" xml:space="preserve">
+    <value>R|*.r</value>
+  </data>
+  <data name="Save_configurations" xml:space="preserve">
+    <value>Save configurations...</value>
+  </data>
+  <data name="Select_the_skyline_installation_directory" xml:space="preserve">
+    <value>Select the skyline installation directory.</value>
+  </data>
+  <data name="SkylineBatch_encountered_an_unexpected_error" xml:space="preserve">
+    <value>SkylineBatch encountered an unexpected error. </value>
+  </data>
+  <data name="Skyr_file_extension" xml:space="preserve">
+    <value>SKYR|*.skyr</value>
+  </data>
+  <data name="Sky_file_extension" xml:space="preserve">
+    <value>SKY|*.sky</value>
+  </data>
+  <data name="Unable_To_Find_Skyline" xml:space="preserve">
+    <value>Unable To Find Skyline</value>
+  </data>
+  <data name="XML_file_extension" xml:space="preserve">
+    <value>XML Files(*.xml)|*.xml</value>
   </data>
 </root>

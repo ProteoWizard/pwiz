@@ -60,12 +60,11 @@
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnRunOptions = new System.Windows.Forms.Button();
             this.lblNoConfigs = new System.Windows.Forms.Label();
-            this.btnNewConfig = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnUpArrow = new System.Windows.Forms.ToolStripButton();
             this.btnDownArrow = new System.Windows.Forms.ToolStripButton();
-            this.btnViewLog1 = new System.Windows.Forms.Button();
+            this.btnAddConfig = new System.Windows.Forms.Button();
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnCopy = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
@@ -204,7 +203,6 @@
             this.tabLog.Controls.Add(this.textBoxLog);
             resources.ApplyResources(this.tabLog, "tabLog");
             this.tabLog.Name = "tabLog";
-            this.tabLog.Enter += new System.EventHandler(this.tabLog_Enter);
             // 
             // label1
             // 
@@ -217,6 +215,7 @@
             this.comboLogList.FormattingEnabled = true;
             resources.ApplyResources(this.comboLogList, "comboLogList");
             this.comboLogList.Name = "comboLogList";
+            this.comboLogList.SelectedIndexChanged += new System.EventHandler(this.comboLogList_SelectedIndexChanged);
             // 
             // textBoxLog
             // 
@@ -228,7 +227,6 @@
             // 
             this.tabFront.BackColor = System.Drawing.Color.Transparent;
             this.tabFront.Controls.Add(this.listViewConfigs);
-            this.tabFront.Controls.Add(this.btnCancel);
             this.tabFront.Controls.Add(this.labelSavedConfigurations);
             this.tabFront.Controls.Add(this.panel2);
             this.tabFront.Controls.Add(this.panel1);
@@ -271,9 +269,9 @@
             // 
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Controls.Add(this.btnRunOptions);
+            this.panel2.Controls.Add(this.btnCancel);
             this.panel2.Controls.Add(this.lblNoConfigs);
             this.panel2.Controls.Add(this.btnRunBatch);
-            this.panel2.Controls.Add(this.btnNewConfig);
             this.panel2.Name = "panel2";
             // 
             // btnRunOptions
@@ -289,20 +287,13 @@
             this.lblNoConfigs.ForeColor = System.Drawing.Color.Blue;
             this.lblNoConfigs.Name = "lblNoConfigs";
             // 
-            // btnNewConfig
-            // 
-            resources.ApplyResources(this.btnNewConfig, "btnNewConfig");
-            this.btnNewConfig.Name = "btnNewConfig";
-            this.btnNewConfig.UseVisualStyleBackColor = true;
-            this.btnNewConfig.Click += new System.EventHandler(this.btnNewConfig_Click);
-            // 
             // panel1
             // 
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Controls.Add(this.toolStrip1);
             this.panel1.Controls.Add(this.btnImportConfigs);
             this.panel1.Controls.Add(this.btnExportConfigs);
-            this.panel1.Controls.Add(this.btnViewLog1);
+            this.panel1.Controls.Add(this.btnAddConfig);
             this.panel1.Controls.Add(this.btnEdit);
             this.panel1.Controls.Add(this.btnCopy);
             this.panel1.Controls.Add(this.btnDelete);
@@ -335,12 +326,12 @@
             this.btnDownArrow.Name = "btnDownArrow";
             this.btnDownArrow.Click += new System.EventHandler(this.btnDownArrow_Click);
             // 
-            // btnViewLog1
+            // btnAddConfig
             // 
-            resources.ApplyResources(this.btnViewLog1, "btnViewLog1");
-            this.btnViewLog1.Name = "btnViewLog1";
-            this.btnViewLog1.UseVisualStyleBackColor = true;
-            this.btnViewLog1.Click += new System.EventHandler(this.btnViewLog1_Click);
+            resources.ApplyResources(this.btnAddConfig, "btnAddConfig");
+            this.btnAddConfig.Name = "btnAddConfig";
+            this.btnAddConfig.UseVisualStyleBackColor = true;
+            this.btnAddConfig.Click += new System.EventHandler(this.btnNewConfig_Click);
             // 
             // btnEdit
             // 
@@ -451,13 +442,12 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Button btnImportConfigs;
         private System.Windows.Forms.Button btnExportConfigs;
-        private System.Windows.Forms.Button btnViewLog1;
         private System.Windows.Forms.Button btnEdit;
         private System.Windows.Forms.Button btnCopy;
         private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Label lblNoConfigs;
-        private System.Windows.Forms.Button btnNewConfig;
+        private System.Windows.Forms.Button btnAddConfig;
         private System.Windows.Forms.TabControl tabMain;
         private System.Windows.Forms.Button btnRunBatch;
         private System.Windows.Forms.ListView listViewConfigs;

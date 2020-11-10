@@ -80,6 +80,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot Delete.
+        /// </summary>
+        internal static string Cannot_Delete {
+            get {
+                return ResourceManager.GetString("Cannot_Delete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot run configurations while they are still running..
         /// </summary>
         internal static string Cannot_run_busy_configurations {
@@ -108,7 +117,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not save \&quot;{0}\&quot;:\r\n{1}.
+        ///   Looks up a localized string similar to Confirm Delete.
+        /// </summary>
+        internal static string Confirm_Delete {
+            get {
+                return ResourceManager.GetString("Confirm_Delete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not save &quot;{0}&quot;: {1}.
         /// </summary>
         internal static string Could_not_save_configuration_error_message {
             get {
@@ -155,6 +173,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import Configurations.
+        /// </summary>
+        internal static string Import_configurations {
+            get {
+                return ResourceManager.GetString("Import_configurations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not import configurations from file {0}.
         /// </summary>
         internal static string No_configs_imported {
@@ -191,6 +218,33 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open R Script.
+        /// </summary>
+        internal static string Open_R_Script {
+            get {
+                return ResourceManager.GetString("Open_R_Script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open Report.
+        /// </summary>
+        internal static string Open_Report {
+            get {
+                return ResourceManager.GetString("Open_Report", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open Skyline File.
+        /// </summary>
+        internal static string Open_skyline_file {
+            get {
+                return ResourceManager.GetString("Open_skyline_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed operation &quot;{0}&quot;: Configuration &quot;{1}&quot; already exists..
         /// </summary>
         internal static string Operation_fail_config_exists {
@@ -209,11 +263,29 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;{0}.
+        /// </summary>
+        internal static string Pneumonic_on_first_letter {
+            get {
+                return ResourceManager.GetString("Pneumonic_on_first_letter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Process terminated: exiting..
         /// </summary>
         internal static string Process_terminated {
             get {
                 return ResourceManager.GetString("Process_terminated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R|*.r.
+        /// </summary>
+        internal static string R_file_extension {
+            get {
+                return ResourceManager.GetString("R_file_extension", resourceCulture);
             }
         }
         
@@ -232,6 +304,51 @@ namespace SkylineBatch.Properties {
         internal static string Save_configuration_error {
             get {
                 return ResourceManager.GetString("Save_configuration_error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save configurations....
+        /// </summary>
+        internal static string Save_configurations {
+            get {
+                return ResourceManager.GetString("Save_configurations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the skyline installation directory..
+        /// </summary>
+        internal static string Select_the_skyline_installation_directory {
+            get {
+                return ResourceManager.GetString("Select_the_skyline_installation_directory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SKY|*.sky.
+        /// </summary>
+        internal static string Sky_file_extension {
+            get {
+                return ResourceManager.GetString("Sky_file_extension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SkylineBatch encountered an unexpected error. .
+        /// </summary>
+        internal static string SkylineBatch_encountered_an_unexpected_error {
+            get {
+                return ResourceManager.GetString("SkylineBatch_encountered_an_unexpected_error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SKYR|*.skyr.
+        /// </summary>
+        internal static string Skyr_file_extension {
+            get {
+                return ResourceManager.GetString("Skyr_file_extension", resourceCulture);
             }
         }
         
@@ -272,12 +389,30 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable To Find Skyline.
+        /// </summary>
+        internal static string Unable_To_Find_Skyline {
+            get {
+                return ResourceManager.GetString("Unable_To_Find_Skyline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap uparrow {
             get {
                 object obj = ResourceManager.GetObject("uparrow", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to XML Files(*.xml)|*.xml.
+        /// </summary>
+        internal static string XML_file_extension {
+            get {
+                return ResourceManager.GetString("XML_file_extension", resourceCulture);
             }
         }
     }

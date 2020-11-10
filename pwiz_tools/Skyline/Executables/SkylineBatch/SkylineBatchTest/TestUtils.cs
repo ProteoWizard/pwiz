@@ -25,7 +25,7 @@ namespace SkylineBatchTest
 {
     class TestLogger: ISkylineBatchLogger
     {
-        private readonly StringBuilder log = new StringBuilder();
+        private readonly StringBuilder _log = new StringBuilder();
         private readonly  StringBuilder _programLog = new StringBuilder();
 
 
@@ -84,7 +84,7 @@ namespace SkylineBatchTest
 
         private void AddToLog(string message, params object[] args)
         {
-            log.Append(string.Format(message, args)).AppendLine();
+            _log.Append(string.Format(message, args)).AppendLine();
             System.Diagnostics.Debug.WriteLine(message, args);
         }
 
@@ -95,119 +95,15 @@ namespace SkylineBatchTest
 
         public string GetLog()
         {
-            return log.ToString();
+            return _log.ToString();
         }
 
         public void Clear()
         {
-            log.Clear();
+            _log.Clear();
         }
     }
 
-    class TestAppControl : IMainUiControl
-    {
-        private MainSettings _mainSettings = new MainSettings();
-
-        public bool Waiting { get; set; }
-        public bool Stopped { get; set; }
-
-        private ConfigRunner.RunnerStatus _runnerStatus;
-
-        public void SetWaiting()
-        {
-            Waiting = true;
-        }
-
-        public void SetStopped()
-        {
-            Stopped = true;
-        }
-
-        public void SetUIMainSettings(MainSettings mainSettings)
-        {
-            _mainSettings = mainSettings;
-        }
-
-        public void UpdateUiConfigurations()
-        {
-        }
-
-        public void UpdateUiLogFiles()
-        {
-        }
-
-        public void ClearLog()
-        {
-        }
-
-        public void UpdateRunningButtons(bool isRunning)
-        {
-        }
-
-        public MainSettings GetUIMainSettings()
-        {
-            return _mainSettings;
-        }
-
-        public void DisablePanoramaSettings()
-        {
-            throw new NotImplementedException();
-        }
-
-        #region Implementation of IMainUiControl
-
-        public void ChangeConfigUiStatus(ConfigRunner configRunner)
-        {
-            _runnerStatus = configRunner.GetStatus();
-        }
-
-        public void AddConfiguration(SkylineBatchConfig config)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UpdateConfiguration(SkylineBatchConfig oldConfig, SkylineBatchConfig newConfig)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UpdatePanoramaServerUrl(SkylineBatchConfig config)
-        {
-            throw new NotImplementedException();
-        }
-
-        public SkylineBatchConfig GetConfig(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogToUi(string text, bool scrollToEnd = true, bool trim = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogLinesToUi(List<string> lines)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogErrorLinesToUi(List<string> lines)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisplayError(string title, string message)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
 
     public class TestUtils
     {
@@ -267,7 +163,8 @@ namespace SkylineBatchTest
             var testConfigManager = new ConfigManager(new SkylineBatchLogger(GetTestFilePath("TestLog.log")));
             while (testConfigManager.HasConfigs())
             {
-                testConfigManager.Remove(testConfigManager.ConfigList[0]);
+                testConfigManager.SelectConfig(0);
+                testConfigManager.RemoveSelected();
             }
             testConfigManager.AddConfiguration(GetTestConfig("one"));
             testConfigManager.AddConfiguration(GetTestConfig("two"));
@@ -280,9 +177,30 @@ namespace SkylineBatchTest
             var testConfigManager = new ConfigManager(new SkylineBatchLogger(TestUtils.GetTestFilePath("TestLog.log")));
             while (testConfigManager.HasConfigs())
             {
-                testConfigManager.Remove(testConfigManager.ConfigList[0]);
+                testConfigManager.SelectConfig(0);
+                testConfigManager.RemoveSelected();
             }
             testConfigManager.Close();
+        }
+
+        public static List<string> GetAllLogFiles()
+        {
+            var files = Directory.GetFiles(GetTestFilePath(""));
+            var logFiles = new List<string>();
+            foreach (var fullName in files)
+            {
+                var file = Path.GetFileName(fullName);
+                if (file.StartsWith("testLog") && file.EndsWith(".log"))
+                    logFiles.Add(fullName);
+            }
+            return logFiles;
+        }
+
+        public static void DeleteAllLogFiles()
+        {
+            var logFiles = GetAllLogFiles();
+            foreach (var file in logFiles)
+                File.Delete(file);
         }
     }
 }

@@ -35,7 +35,7 @@
             this.textSkylinePath = new System.Windows.Forms.TextBox();
             this.textDataPath = new System.Windows.Forms.TextBox();
             this.textNamingPattern = new System.Windows.Forms.TextBox();
-            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.linkLabelRegex = new System.Windows.Forms.LinkLabel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tabsConfig = new System.Windows.Forms.TabControl();
             this.tabSettings = new System.Windows.Forms.TabPage();
@@ -99,14 +99,14 @@
             this.textNamingPattern.Name = "textNamingPattern";
             this.toolTip1.SetToolTip(this.textNamingPattern, resources.GetString("textNamingPattern.ToolTip"));
             // 
-            // linkLabel1
+            // linkLabelRegex
             // 
-            resources.ApplyResources(this.linkLabel1, "linkLabel1");
-            this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.TabStop = true;
-            this.toolTip1.SetToolTip(this.linkLabel1, resources.GetString("linkLabel1.ToolTip"));
-            this.linkLabel1.UseCompatibleTextRendering = true;
-            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            resources.ApplyResources(this.linkLabelRegex, "linkLabelRegex");
+            this.linkLabelRegex.Name = "linkLabelRegex";
+            this.linkLabelRegex.TabStop = true;
+            this.toolTip1.SetToolTip(this.linkLabelRegex, resources.GetString("linkLabelRegex.ToolTip"));
+            this.linkLabelRegex.UseCompatibleTextRendering = true;
+            this.linkLabelRegex.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelRegex_LinkClicked);
             // 
             // splitContainer1
             // 
@@ -151,7 +151,7 @@
             // groupBoxMain
             // 
             resources.ApplyResources(this.groupBoxMain, "groupBoxMain");
-            this.groupBoxMain.Controls.Add(this.linkLabel1);
+            this.groupBoxMain.Controls.Add(this.linkLabelRegex);
             this.groupBoxMain.Controls.Add(this.textNamingPattern);
             this.groupBoxMain.Controls.Add(this.label3);
             this.groupBoxMain.Controls.Add(this.btnDataPath);
@@ -368,7 +368,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnDataPath;
         private System.Windows.Forms.TextBox textDataPath;
-        private System.Windows.Forms.LinkLabel linkLabel1;
+        private System.Windows.Forms.LinkLabel linkLabelRegex;
         private System.Windows.Forms.TabPage tabReports;
         private System.Windows.Forms.DataGridView gridReportSettings;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnName;

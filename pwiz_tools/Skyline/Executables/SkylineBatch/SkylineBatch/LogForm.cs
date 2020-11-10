@@ -30,31 +30,30 @@ namespace SkylineBatch
             _configManager = configManager;
             InitializeComponent();
 
-            if (_configManager.Logs.Count > 0)
+            if (_configManager.HasOldLogs())
                 checkedListLogs.Items.AddRange(_configManager.GetOldLogFiles());
         }
         
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            //checkedListLogs.CheckedItems
             var deletingLogs = new object[checkedListLogs.CheckedItems.Count];
             checkedListLogs.CheckedItems.CopyTo(deletingLogs, 0);
             _configManager.DeleteLogs(deletingLogs);
             Close();
         }
 
-        private void checkBoxSelectAll_CheckedChanged(object sender, EventArgs e)
+        private void checkedListLogs_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            checkBoxSelectAll.Checked = false;
+        }
+
+        private void checkBoxSelectAll_Click(object sender, EventArgs e)
         {
             for (int i = 0; i < checkedListLogs.Items.Count; i++)
             {
                 checkedListLogs.SetItemChecked(i, checkBoxSelectAll.Checked);
             }
-        }
-
-        private void checkedListLogs_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            checkBoxSelectAll.Checked = false;
         }
     }
 }

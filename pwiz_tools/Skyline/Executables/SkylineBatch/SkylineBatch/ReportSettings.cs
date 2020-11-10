@@ -27,12 +27,16 @@ namespace SkylineBatch
 {
     public class ReportSettings
     {
-        public List<ReportInfo> Reports { get; private set; }
+        // ReportSettings contains a list of reportInfos, each of which represents an individual report with R scripts to run on it.
+        // An empty reportSettings is a valid instance of this class, as configurations don't require reports to run the batch commands
+
 
         public ReportSettings(List<ReportInfo> reports = null)
         {
             Reports = reports == null ? new List<ReportInfo>() : reports;
         }
+
+        public readonly List<ReportInfo> Reports;
 
         public void Add(ReportInfo info) {
         
@@ -81,7 +85,7 @@ namespace SkylineBatch
             writer.WriteStartElement("report_settings");
             foreach (var report in Reports)
             {
-                report.WriteXML(writer);
+                report.WriteXml(writer);
             }
             writer.WriteEndElement();
         }
@@ -114,27 +118,27 @@ namespace SkylineBatch
 
     public class ReportInfo
     {
-        public string Name { get; private set; }
-        public string ReportPath { get; private set; }
-        
-        public List<string> rScripts { get; private set; }
 
         public ReportInfo(string name, string path, List<string> rScripts = null)
         {
             Name = name;
             ReportPath = path;
-            this.rScripts = rScripts == null ? new List<string>() : rScripts;
+            RScripts = rScripts == null ? new List<string>() : rScripts;
         }
+
+        public string Name { get; private set; }
+        public string ReportPath { get; private set; }
+        public List<string> RScripts { get; }
 
         public ReportInfo()
         {
-            this.rScripts = new List<string>();
+            RScripts = new List<string>();
         }
 
         public object[] AsArray()
         {
             var scriptsString = "";
-            foreach (var scriptPath in rScripts)
+            foreach (var scriptPath in RScripts)
             {
                 scriptsString += Path.GetFileName(scriptPath) + "\n";
             }
@@ -143,8 +147,8 @@ namespace SkylineBatch
 
         public ReportInfo Copy()
         {
-            var copyScripts = new string[rScripts.Count];
-            rScripts.CopyTo(copyScripts);
+            var copyScripts = new string[RScripts.Count];
+            RScripts.CopyTo(copyScripts);
             return new ReportInfo(Name, ReportPath, copyScripts.ToList());
         }
 
@@ -165,7 +169,8 @@ namespace SkylineBatch
         {
             Name = name;
             ReportPath = path;
-            rScripts = scripts;
+            RScripts.Clear();
+            RScripts.AddRange(scripts);
         }
 
         public bool Empty()
@@ -173,22 +178,22 @@ namespace SkylineBatch
             return string.IsNullOrEmpty(Name);
         }
 
-        private enum ATTR
+        private enum Attr
         {
-            name,
-            path,
+            Name,
+            Path,
         };
 
         public void ReadXml(XmlReader reader)
         {
-            Name = reader.GetAttribute(ATTR.name);
-            ReportPath = reader.GetAttribute(ATTR.path);
+            Name = reader.GetAttribute(Attr.Name);
+            ReportPath = reader.GetAttribute(Attr.Path);
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {
                 if (reader.Name == "script_path")
                 {
                     
-                    rScripts.Add(reader.ReadElementContentAsString());
+                    RScripts.Add(reader.ReadElementContentAsString());
                 }
                 else 
                 {
@@ -198,12 +203,12 @@ namespace SkylineBatch
         }
         
         
-        public void WriteXML(XmlWriter writer)
+        public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("report_info");
-            writer.WriteAttributeIfString(ATTR.name, Name);
-            writer.WriteAttributeIfString(ATTR.path, ReportPath);
-            foreach (var script in rScripts)
+            writer.WriteAttributeIfString(Attr.Name, Name);
+            writer.WriteAttributeIfString(Attr.Path, ReportPath);
+            foreach (var script in RScripts)
             {
                 writer.WriteElementString("script_path", script);
             }
@@ -212,11 +217,11 @@ namespace SkylineBatch
 
         protected bool Equals(ReportInfo other)
         {
-            if (other.Name != Name || other.ReportPath != ReportPath || other.rScripts.Count != rScripts.Count)
+            if (other.Name != Name || other.ReportPath != ReportPath || other.RScripts.Count != RScripts.Count)
                 return false;
-            for (int i = 0; i < rScripts.Count; i++)
+            for (int i = 0; i < RScripts.Count; i++)
             {
-                if (rScripts[i] != other.rScripts[i])
+                if (RScripts[i] != other.RScripts[i])
                     return false;
             }
 
@@ -233,9 +238,7 @@ namespace SkylineBatch
 
         public override int GetHashCode()
         {
-            return Name.GetHashCode() +
-                   ReportPath.GetHashCode() +
-                   rScripts.GetHashCode();
+            return RScripts.GetHashCode();
         }
     }
 

@@ -82,7 +82,6 @@
     <EmbeddedResource Include="LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="Resources\RedX.bmp" />
     <None Include="Resources\Comment.bmp" />
     <Content Include="Resources\add.bmp" />
     <None Include="Resources\Delete.bmp" />
@@ -122,7 +121,6 @@
       <DependentUpon>ReportsAddForm.cs</DependentUpon>
     </Compile>
     <Compile Include="SkylineBatchConfig.cs" />
-    <Compile Include="SkylineBatchLogger.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -145,6 +143,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="SkylineBatchLogger.cs" />
     <Compile Include="SkylineSettings.cs" />
     <Compile Include="LogForm.cs">
       <SubType>Form</SubType>

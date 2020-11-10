@@ -36,13 +36,15 @@ namespace SkylineBatch
         public ReportSettings ReportSettings { get; set; }
 
 
-        private enum ATTR
+        private enum Attr
         {
-            name,
-            created,
-            modified
+            Name,
+            Created,
+            Modified
         };
 
+
+        #region XML
 
         public XmlSchema GetSchema()
         {
@@ -52,11 +54,11 @@ namespace SkylineBatch
 
         public void ReadXml(XmlReader reader)
         {
-            Name = reader.GetAttribute(ATTR.name);
+            Name = reader.GetAttribute(Attr.Name);
             DateTime dateTime;
-            DateTime.TryParse(reader.GetAttribute(ATTR.created), out dateTime);
+            DateTime.TryParse(reader.GetAttribute(Attr.Created), out dateTime);
             Created = dateTime;
-            DateTime.TryParse(reader.GetAttribute(ATTR.modified), out dateTime);
+            DateTime.TryParse(reader.GetAttribute(Attr.Modified), out dateTime);
             Modified = dateTime;
 
             do
@@ -74,7 +76,7 @@ namespace SkylineBatch
             var reportSettings = new ReportSettings();
             reportSettings.ReadXml(reader);
             ReportSettings = reportSettings;
-            
+
             do
             {
                 reader.Read();
@@ -85,9 +87,9 @@ namespace SkylineBatch
         {
             Validate();
             writer.WriteStartElement("skylinebatch_config");
-            writer.WriteAttribute(ATTR.name, Name);
-            writer.WriteAttributeIfString(ATTR.created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
-            writer.WriteAttributeIfString(ATTR.modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
+            writer.WriteAttribute(Attr.Name, Name);
+            writer.WriteAttributeIfString(Attr.Created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
+            writer.WriteAttributeIfString(Attr.Modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
             MainSettings.WriteXml(writer);
             ReportSettings.WriteXml(writer);
             writer.WriteEndElement();
@@ -100,23 +102,10 @@ namespace SkylineBatch
 
 
 
+        #endregion
 
-        public void Validate()
-        {
-            if (MainSettings == null || ReportSettings == null)
-            {
-                throw new Exception("Configuration settings not initialized.");
-            }
 
-            if (string.IsNullOrEmpty(Name))
-            {
-                throw new ArgumentException("Please enter a name for the configuration.");
-            }
-
-            MainSettings.ValidateSettings();
-            ReportSettings.ValidateSettings();
-           
-        }
+        #region Producers
 
         public static SkylineBatchConfig GetDefault()
         {
@@ -134,7 +123,7 @@ namespace SkylineBatch
             childConfig.Name = "";
             childConfig.Created = DateTime.Now;
             childConfig.Modified = DateTime.Now;
-            childConfig.MainSettings = this.MainSettings.MakeChild();
+            childConfig.MainSettings = MainSettings.MakeChild();
             childConfig.ReportSettings = new ReportSettings();
             return childConfig;
         }
@@ -149,6 +138,26 @@ namespace SkylineBatch
                 MainSettings = MainSettings.Clone(),
                 ReportSettings = ReportSettings.Copy()
             };
+        }
+
+        #endregion
+
+
+        public void Validate()
+        {
+            if (MainSettings == null || ReportSettings == null)
+            {
+                throw new Exception("Configuration settings not initialized.");
+            }
+
+            if (string.IsNullOrEmpty(Name))
+            {
+                throw new ArgumentException("Please enter a name for the configuration.");
+            }
+
+            MainSettings.ValidateSettings();
+            ReportSettings.ValidateSettings();
+           
         }
 
         public override string ToString()
@@ -182,12 +191,8 @@ namespace SkylineBatch
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var hashCode = (Name != null ? Name.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (MainSettings != null ? MainSettings.GetHashCode() : 0);
-                return hashCode;
-            }
+            // TODO: make config variables readonly so they can be used for a more meaningful hash function without warnings
+            return "Configuration".GetHashCode();
         }
 
         #endregion

@@ -228,37 +228,37 @@
   <data name="&gt;&gt;textNamingPattern.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="linkLabel1.AutoSize" type="System.Boolean, mscorlib">
+  <data name="linkLabelRegex.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="linkLabel1.LinkArea" type="System.Windows.Forms.LinkArea, System.Windows.Forms">
+  <data name="linkLabelRegex.LinkArea" type="System.Windows.Forms.LinkArea, System.Windows.Forms">
     <value>27, 18</value>
   </data>
-  <data name="linkLabel1.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="linkLabelRegex.Location" type="System.Drawing.Point, System.Drawing">
     <value>21, 214</value>
   </data>
-  <data name="linkLabel1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="linkLabelRegex.Size" type="System.Drawing.Size, System.Drawing">
     <value>237, 17</value>
   </data>
-  <data name="linkLabel1.TabIndex" type="System.Int32, mscorlib">
+  <data name="linkLabelRegex.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
   </data>
-  <data name="linkLabel1.Text" xml:space="preserve">
+  <data name="linkLabelRegex.Text" xml:space="preserve">
     <value>&amp;Replicate naming pattern (regular expression):</value>
   </data>
-  <data name="linkLabel1.ToolTip" xml:space="preserve">
+  <data name="linkLabelRegex.ToolTip" xml:space="preserve">
     <value>A regular expression from which the first group will be used to name replicates in an ‑‑import‑all operation (e.g. [^_]_(.*) for everything after the first underscore).</value>
   </data>
-  <data name="&gt;&gt;linkLabel1.Name" xml:space="preserve">
-    <value>linkLabel1</value>
+  <data name="&gt;&gt;linkLabelRegex.Name" xml:space="preserve">
+    <value>linkLabelRegex</value>
   </data>
-  <data name="&gt;&gt;linkLabel1.Type" xml:space="preserve">
+  <data name="&gt;&gt;linkLabelRegex.Type" xml:space="preserve">
     <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;linkLabel1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;linkLabelRegex.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
-  <data name="&gt;&gt;linkLabel1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;linkLabelRegex.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="splitContainer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -562,7 +562,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnAddReport.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 24</value>
+    <value>23, 24</value>
   </data>
   <data name="btnAddReport.Text" xml:space="preserve">
     <value>toolStripButton1</value>
@@ -577,7 +577,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnDeleteReport.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 24</value>
+    <value>23, 24</value>
   </data>
   <data name="btnDeleteReport.Text" xml:space="preserve">
     <value>toolStripButton2</value>
@@ -592,7 +592,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnEditReport.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 24</value>
+    <value>23, 24</value>
   </data>
   <data name="btnEditReport.Text" xml:space="preserve">
     <value>toolStripButton3</value>
@@ -601,10 +601,10 @@
     <value>Edit</value>
   </data>
   <data name="toolBar.Location" type="System.Drawing.Point, System.Drawing">
-    <value>505, 3</value>
+    <value>512, 3</value>
   </data>
   <data name="toolBar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 102</value>
+    <value>25, 83</value>
   </data>
   <data name="toolBar.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -879,7 +879,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAAWABAAFgAQABHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAAWgBAAFoAQABHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz

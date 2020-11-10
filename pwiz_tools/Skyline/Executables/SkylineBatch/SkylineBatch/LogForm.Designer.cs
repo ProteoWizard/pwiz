@@ -62,7 +62,7 @@
             resources.ApplyResources(this.checkBoxSelectAll, "checkBoxSelectAll");
             this.checkBoxSelectAll.Name = "checkBoxSelectAll";
             this.checkBoxSelectAll.UseVisualStyleBackColor = true;
-            this.checkBoxSelectAll.CheckedChanged += new System.EventHandler(this.checkBoxSelectAll_CheckedChanged);
+            this.checkBoxSelectAll.Click += new System.EventHandler(this.checkBoxSelectAll_Click);
             // 
             // LogForm
             // 

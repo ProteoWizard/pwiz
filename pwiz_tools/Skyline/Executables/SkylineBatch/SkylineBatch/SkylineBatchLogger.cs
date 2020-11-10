@@ -1,4 +1,4 @@
-﻿/*
+﻿ /*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -38,13 +38,13 @@ namespace SkylineBatch
         void DisableUiLogging();
         //void LogToUi(IMainUiControl mainUi);
         void DisplayLog();
-        
+
     }
 
     public class SkylineBatchLogger : ISkylineBatchLogger
     {
         public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
-        private const int _maxBackups = 5;
+        private const int MaxBackups = 5;
         public const int MaxLogLines = 5000;
 
         private string _lastMessage = string.Empty; // To avoid logging duplicate messages.
@@ -58,9 +58,9 @@ namespace SkylineBatch
         public const string LogTruncatedMessage = "... Log truncated ... Full log is in {0}";
 
         private Queue<string> _memLogMessages;
-        private const int MEM_LOG_SIZE = 100; // Keep the last 100 log messages in memory
+        private const int MemLogSize = 100; // Keep the last 100 log messages in memory
         private StringBuilder _logBuffer; // To be used when the log file is unavailable for writing
-        private const int LOG_BUFFER_SIZE = 10240;
+        private const int LogBufferSize = 10240;
 
         public SkylineBatchLogger(string filePath, IMainUiControl mainUi = null)
         {
@@ -72,7 +72,7 @@ namespace SkylineBatch
         public void Init()
         {
             _logBuffer = new StringBuilder();
-            _memLogMessages = new Queue<string>(MEM_LOG_SIZE);
+            _memLogMessages = new Queue<string>(MemLogSize);
 
             // Initialize - create blank log file if doesn't exist
             if (File.Exists(_filePath)) return;
@@ -97,7 +97,7 @@ namespace SkylineBatch
                     err.AppendLine("Exception stack trace: ");
                     Program.LogError(err.ToString(), e);
                 }
-                
+
                 var dateAndMessage = GetDate() + message;
 
                 try
@@ -117,7 +117,7 @@ namespace SkylineBatch
                     }
 
                     // Save log message in memory
-                    if (_memLogMessages.Count == MEM_LOG_SIZE)
+                    if (_memLogMessages.Count == MemLogSize)
                     {
                         _memLogMessages.Dequeue();
                     }
@@ -127,15 +127,15 @@ namespace SkylineBatch
                 {
                     // If we cannot access the log file at this time, write to the buffer and the program log
                     WriteToBuffer(dateAndMessage);
-                    
+
                     var fileNotFound = e.GetType().IsAssignableFrom(typeof(FileNotFoundException));
                     if (!fileNotFound)
                     {
                         WriteToBuffer($"ERROR writing to the log file: {e.Message}. Check program log for details: {Program.GetProgramLogFilePath()}");
                     }
-                    
+
                     Program.LogError($"Error occurred writing to log file: {_filePath}. Attempted to write:");
-                    Program.LogError( message);
+                    Program.LogError(message);
                     if (!fileNotFound)
                     {
                         Program.LogError("Exception stack trace:", e);
@@ -150,13 +150,13 @@ namespace SkylineBatch
 
         private void WriteToBuffer(string message)
         {
-            if (_logBuffer.Length > LOG_BUFFER_SIZE)
+            if (_logBuffer.Length > LogBufferSize)
             {
                 return;
             }
             _logBuffer.AppendLine(message);
 
-            if (_logBuffer.Length > LOG_BUFFER_SIZE)
+            if (_logBuffer.Length > LogBufferSize)
             {
                 _logBuffer.AppendLine("!!! LOG BUFFER IS FULL !!!");
             }
@@ -179,12 +179,12 @@ namespace SkylineBatch
             if (size >= MaxLogSize)
             {
                 BackupLog(_filePath, 1);
-            }   
+            }
         }
 
         private void BackupLog(string filePath, int bkupIndex)
         {
-            if (bkupIndex > _maxBackups)
+            if (bkupIndex > MaxBackups)
             {
                 File.Delete(GetLogFilePath(filePath, bkupIndex - 1));
                 return;
@@ -247,7 +247,7 @@ namespace SkylineBatch
                 line = GetDate() + line;
 
                 _mainUi.LogErrorLinesToUi(
-                        new List<string> {line, exStr});
+                        new List<string> { line, exStr });
             }
 
             LogErrorToFile(string.Format("{0}\n{1}", line, exStr));
@@ -290,20 +290,7 @@ namespace SkylineBatch
                 var lastModified = File.GetLastWriteTime(_filePath);
                 var timestampFileName = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath);
                 timestampFileName += lastModified.ToString("_yyyyMMdd_HHmmss") + ".log";
-                //var logHistory = File.Create(Path.GetDirectoryName(_filePath) + "\\" + timestampFileName);
-                //logHistory.Close();
                 File.Copy(GetFile(), timestampFileName);
-                //File.WriteAllLines(Path.GetDirectoryName(_filePath) + "\\" + timestampFileName, File.ReadAllLines(_filePath));
-                /*using (
-                    var reader =
-                        new StreamReader(new FileStream(Path.GetDirectoryName(_filePath) + "\\" + timestampFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                )
-                {
-                    var nonzero = reader.BaseStream.Length;
-                }*/
-
-                //logHistory.Close();
-                        //File.Copy(_filePath, Path.GetDirectoryName(_filePath) + "\\" + timestampFileName);
                 File.Create(_filePath).Close();
                 return new SkylineBatchLogger(timestampFileName, _mainUi);
             }
@@ -327,11 +314,6 @@ namespace SkylineBatch
             _mainUi = null;
         }
 
-        /*public void LogToUi(IMainUiControl mainUi)
-        {
-            _mainUi = mainUi;
-        }*/
-
         public void DisplayLog()
         {
             lock (_lock)
@@ -349,8 +331,8 @@ namespace SkylineBatch
                             _mainUi.LogToUi(s, false, false);
                         }
                     }
-                    
-                    if (_logBuffer != null &&_logBuffer.Length > 0)
+
+                    if (_logBuffer != null && _logBuffer.Length > 0)
                     {
                         _mainUi.LogErrorToUi($"Displaying messages since log file became unavailable", false, false);
                         _mainUi.LogToUi(_logBuffer.ToString(), false, false);
@@ -366,7 +348,7 @@ namespace SkylineBatch
                         new StreamReader(new FileStream(GetFile(), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     )
                 {
-                    var maxDisplaySize = MaxLogSize/20;
+                    var maxDisplaySize = MaxLogSize / 20;
                     // If the log is too big don't display all of it.
                     if (reader.BaseStream.Length > maxDisplaySize)
                     {
@@ -388,7 +370,7 @@ namespace SkylineBatch
 
                 if (truncated)
                 {
-                    _mainUi.LogErrorToUi(string.Format(LogTruncatedMessage, GetFile()), false);  
+                    _mainUi.LogErrorToUi(string.Format(LogTruncatedMessage, GetFile()), false);
                 }
 
                 var toLog = new List<string>();
@@ -412,7 +394,7 @@ namespace SkylineBatch
                         if (lastLineErr && toLog.Count > 0)
                         {
                             _mainUi.LogErrorLinesToUi(toLog);
-                            toLog.Clear();   
+                            toLog.Clear();
                         }
                         lastLineErr = false;
                         toLog.Add(line);
@@ -422,11 +404,11 @@ namespace SkylineBatch
                 {
                     if (lastLineErr)
                     {
-                        _mainUi.LogErrorLinesToUi(toLog);  
+                        _mainUi.LogErrorLinesToUi(toLog);
                     }
                     else
                     {
-                        _mainUi.LogLinesToUi(toLog);   
+                        _mainUi.LogLinesToUi(toLog);
                     }
                 }
             }
@@ -435,3 +417,4 @@ namespace SkylineBatch
         #endregion
     }
 }
+

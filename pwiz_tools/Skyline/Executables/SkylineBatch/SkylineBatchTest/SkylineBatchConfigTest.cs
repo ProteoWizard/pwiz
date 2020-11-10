@@ -75,7 +75,6 @@ namespace SkylineBatchTest
         public void TestMainSettingsEquals()
         {
             var defaultMainSettings = new MainSettings();
-            Assert.IsTrue(Equals(defaultMainSettings, defaultMainSettings));
             Assert.IsTrue(Equals(defaultMainSettings, new MainSettings()));
             var changedMainSettings = new MainSettings();
             changedMainSettings.TemplateFilePath = "fakeSkyline.sky";
@@ -88,15 +87,12 @@ namespace SkylineBatchTest
         {
             var testReportInfoNoScript = new ReportInfo("name", "path.skyr");
             var testReportInfoWithScript = TestUtils.GetTestReportSettings().Reports[0];
-            Assert.IsTrue(Equals(testReportInfoNoScript, testReportInfoNoScript));
             Assert.IsTrue(Equals(testReportInfoNoScript, new ReportInfo("name", "path.skyr")));
             Assert.IsFalse(Equals(testReportInfoNoScript, testReportInfoWithScript));
 
             var emptyReportSettings = new ReportSettings();
             var reportSettingsWithScript = TestUtils.GetTestReportSettings();
-            Assert.IsTrue(Equals(emptyReportSettings, emptyReportSettings));
             Assert.IsTrue(Equals(emptyReportSettings, new ReportSettings()));
-            Assert.IsTrue(Equals(reportSettingsWithScript, reportSettingsWithScript));
             
             var changedReportSettings = new ReportSettings();
             changedReportSettings.Add(new ReportInfo("report", "fakeReport.skyr"));
@@ -109,7 +105,6 @@ namespace SkylineBatchTest
         public void TestConfigEquals()
         {
             var emptyConfig = new SkylineBatchConfig();
-            Assert.IsTrue(Equals(emptyConfig, emptyConfig));
             Assert.IsTrue(Equals(emptyConfig, new SkylineBatchConfig()));
 
             var testConfig = TestUtils.GetTestConfig();

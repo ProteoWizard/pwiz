@@ -59,8 +59,6 @@ namespace SkylineBatch
             _uiControl = uiControl;
 
             _logger = logger;
-
-            //asyncRunnerStatusChanged = AsyncOperationManager.CreateOperation(null);
         }
 
         public RunnerStatus GetStatus()
@@ -91,7 +89,6 @@ namespace SkylineBatch
 
         public async Task Run(int startStep)
         {
-            //EnableUiLogging();
             LogToUi(string.Format(Resources.Start_running_config_log_message, Config.Name));
             try
             {
@@ -104,8 +101,6 @@ namespace SkylineBatch
                 LogToUi(string.Format(Resources.Terminated_running_config_log_message, Config.Name, GetStatus()));
                 return;
             }
-            //_logger.UpdateConfig(Config.Name);
-           // _uiControl.UpdateUiConfigurations();
 
             var commands = new List<string>();
 
@@ -117,7 +112,6 @@ namespace SkylineBatch
 
 
             var rLocation = SkylineSettings.GetRscriptExeLocation;
-            //var batchFile = Directory.GetCurrentDirectory() + "\\SkylineBatch.bat";
 
 
 
@@ -146,7 +140,7 @@ namespace SkylineBatch
                 var newReportPath = Config.MainSettings.AnalysisFolderPath + "\\" + report.Name + ".csv";
                 thirdStep += string.Format("--report-add=\"{0}\" --report-conflict-resolution=overwrite ", report.ReportPath);
                 thirdStep += string.Format("--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant ", report.Name, newReportPath);
-                foreach (var script in report.rScripts)
+                foreach (var script in report.RScripts)
                 {
                     var workingDirectory = Config.MainSettings.AnalysisFolderPath;
                     scriptCommands.Add(string.Format("\"{0}\" \"{1}\" \"{2}\" 2>&1", rLocation, script, workingDirectory));
@@ -175,7 +169,7 @@ namespace SkylineBatch
             cmd.StartInfo.CreateNoWindow = true;
             cmd.StartInfo.UseShellExecute = false;
             cmd.EnableRaisingEvents = true;
-            cmd.Exited += (object sender, EventArgs e) =>
+            cmd.Exited += (sender, e) =>
             {
                 if (IsRunning())
                     ChangeStatus(RunnerStatus.Completed);
@@ -186,6 +180,7 @@ namespace SkylineBatch
                 {
                     if (e.Data.Contains("Fatal error: ") || e.Data.Contains("Error: "))
                         ChangeStatus(RunnerStatus.Error);
+
                     if (_logger != null)
                         _logger.Log(e.Data);
                 }
@@ -209,8 +204,9 @@ namespace SkylineBatch
             {
                 LogToUi(Resources.Process_terminated);
                 await KillProcessChildren((UInt32)cmd.Id);
-                cmd.Kill();
-                ChangeStatus(RunnerStatus.Cancelled);
+                if (!cmd.HasExited) cmd.Kill();
+                if (!IsError())
+                    ChangeStatus(RunnerStatus.Cancelled);
             }
         }
 
@@ -228,15 +224,19 @@ namespace SkylineBatch
                 foreach (var item in collection)
                 {
                     UInt32 childProcessId = (UInt32)item["ProcessId"];
-                    if ((UInt32)childProcessId != Process.GetCurrentProcess().Id)
+                    if (childProcessId != Process.GetCurrentProcess().Id)
                     {
                         await KillProcessChildren(childProcessId);
 
-                        Process childProcess = Process.GetProcessById((int)childProcessId);
-                        Program.LogInfo("Killing child process [" + childProcess.ProcessName + "] with Id [" + childProcessId + "]");
                         try
                         {
+                            var childProcess = Process.GetProcessById((int)childProcessId);
+                            Program.LogInfo("Killing child process [" + childProcess.ProcessName + "] with Id [" + childProcessId + "]");
                             childProcess.Kill();
+                        }
+                        catch (ArgumentException)
+                        {
+                            Program.LogInfo("Child process already terminated");
                         }
                         catch (Win32Exception)
                         {
@@ -294,6 +294,11 @@ namespace SkylineBatch
         public bool IsRunning()
         {
             return _runnerStatus == RunnerStatus.Running;
+        }
+
+        public bool IsError()
+        {
+            return _runnerStatus == RunnerStatus.Error;
         }
 
         public bool IsWaiting()

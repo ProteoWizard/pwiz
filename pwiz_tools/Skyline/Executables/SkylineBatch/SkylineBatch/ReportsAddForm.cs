@@ -19,20 +19,21 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
     public partial class ReportsAddForm : Form
     {
-        private ReportInfo _report { get; set; }
+        private ReportInfo Report { get; set; }
         public ReportsAddForm(ReportInfo report)
         {
-            _report = report;
+            Report = report;
             InitializeComponent();
 
             textReportName.Text = report.Name;
             textReportPath.Text = report.ReportPath;
-            foreach (var script in report.rScripts)
+            foreach (var script in report.RScripts)
             {
                 boxRScripts.Items.Add(script);
             }
@@ -41,8 +42,8 @@ namespace SkylineBatch
         private void btnAddRScript_Click(object sender, EventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = "R|*.r";
-            openDialog.Title = "Open R Script";
+            openDialog.Filter = Resources.R_file_extension;
+            openDialog.Title = Resources.Open_R_Script;
             openDialog.Multiselect = true;
             openDialog.ShowDialog();
             foreach (var fileName in openDialog.FileNames)
@@ -68,15 +69,15 @@ namespace SkylineBatch
         private void btnReportPath_Click(object sender, EventArgs e)
         {
             OpenFileDialog openDialog = new OpenFileDialog();
-            openDialog.Filter = "SKYR|*.skyr";
-            openDialog.Title = "Open Report";
+            openDialog.Filter = Resources.Skyr_file_extension;
+            openDialog.Title = Resources.Open_Report;
             openDialog.ShowDialog();
             textReportPath.Text = openDialog.FileName;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            var newReport = new ReportInfo(textReportName.Text, textReportPath.Text, GetScriptsFromUI());
+            var newReport = new ReportInfo(textReportName.Text, textReportPath.Text, GetScriptsFromUi());
             try
             {
                 newReport.ValidateSettings();
@@ -87,12 +88,12 @@ namespace SkylineBatch
                 return;
             }
             
-            _report.Set(newReport.Name, newReport.ReportPath, newReport.rScripts);
+            Report.Set(newReport.Name, newReport.ReportPath, newReport.RScripts);
             
             Close();
         }
 
-        private List<string> GetScriptsFromUI()
+        private List<string> GetScriptsFromUi()
         {
             var scripts = new List<string>();
             foreach (var item in boxRScripts.Items)

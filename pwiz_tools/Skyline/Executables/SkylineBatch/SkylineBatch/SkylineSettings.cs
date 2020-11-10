@@ -28,13 +28,13 @@ namespace SkylineBatch
 {
     public class SkylineSettings
     {
-        private const string SKYLINE_CMD_EXE = "SkylineCmd.exe";
+        private const string SkylineCmdExe = "SkylineCmd.exe";
         public const string Skyline = "Skyline";
         public const string SkylineDaily = "Skyline-daily";
-        private const string SKYLINE_RUNNER_EXE = "SkylineRunner.exe";
-        private const string SKYLINE_DAILY_RUNNER_EXE = "SkylineDailyRunner.exe";
-        private const string SKYLINE_EXE = Skyline + ".exe";
-        private const string SKYLINE_DAILY_EXE = SkylineDaily + ".exe";
+        private const string SkylineRunnerExe = "SkylineRunner.exe";
+        private const string SkylineDailyRunnerExe = "SkylineDailyRunner.exe";
+        private const string SkylineExe = Skyline + ".exe";
+        private const string SkylineDailyExe = SkylineDaily + ".exe";
 
         public static bool IsInitialized()
         {
@@ -78,7 +78,6 @@ namespace SkylineBatch
                 Settings.Default.RDir = rDir;
                 Settings.Default.Save();
                 Program.LogInfo(new StringBuilder("Skyline settings changed. ").Append(GetSkylineSettingsStr()).ToString());
-                //SaveSettings(skylineType);
                 return true;
             }
 
@@ -153,10 +152,10 @@ namespace SkylineBatch
                 {
                     continue;
                 }
-                var skyCmdExe = Path.Combine(installDir, SKYLINE_CMD_EXE);
-                var skyType = File.Exists(Path.Combine(installDir, SKYLINE_EXE))
+                var skyCmdExe = Path.Combine(installDir, SkylineCmdExe);
+                var skyType = File.Exists(Path.Combine(installDir, SkylineExe))
                     ? Skyline
-                    : (File.Exists(Path.Combine(installDir, SKYLINE_DAILY_EXE)) ? SkylineDaily : null);
+                    : (File.Exists(Path.Combine(installDir, SkylineDailyExe)) ? SkylineDaily : null);
 
                 if (File.Exists(skyCmdExe) && skyType != null)
                 {
@@ -177,7 +176,7 @@ namespace SkylineBatch
 
         public static string GetSkylineCmdLineExePath => UseClickOnceInstall
             ? GetSkylineRunnerPath()
-            : Path.Combine(SkylineInstallDir, SKYLINE_CMD_EXE);
+            : Path.Combine(SkylineInstallDir, SkylineCmdExe);
 
         public static string GetRscriptExeLocation => Settings.Default.RDir;
 
@@ -188,7 +187,7 @@ namespace SkylineBatch
 
         private static string GetSkylineRunnerPath(bool useSkyline)
         {
-            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, useSkyline ? SKYLINE_RUNNER_EXE : SKYLINE_DAILY_RUNNER_EXE);
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, useSkyline ? SkylineRunnerExe : SkylineDailyRunnerExe);
         }
 
         private static void SaveSettings(string skylineType)
@@ -253,14 +252,14 @@ namespace SkylineBatch
                     return false;
                 }
 
-                var skylineCmdExePath = Path.Combine(installDir, SKYLINE_CMD_EXE);
+                var skylineCmdExePath = Path.Combine(installDir, SkylineCmdExe);
                 if (!File.Exists(skylineCmdExePath))
                 {
-                    errors = $"{SKYLINE_CMD_EXE} was not found in '{installDir}'.";
+                    errors = $"{SkylineCmdExe} was not found in '{installDir}'.";
                     return false;
                 }
 
-                var skylineExe = useSkyline ? SKYLINE_EXE : SKYLINE_DAILY_EXE;
+                var skylineExe = useSkyline ? SkylineExe : SkylineDailyExe;
                 var skylineExePath = Path.Combine(installDir, skylineExe);
                 if (!File.Exists(skylineExePath))
                 {
