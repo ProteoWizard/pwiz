@@ -76,7 +76,10 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             RunFunctionalTest();            
         }
 
-        private string DataPath { get { return TestFilesDirs.Last().PersistentFilesDir; } }
+        private string GetFullDataPath(string fileName)
+        {
+            return TestFilesDirs[0].GetTestPath("SmallMoleculeLibraries\\" + fileName);
+        }
 
         protected override void DoTest()
         {
@@ -159,7 +162,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 //   •	Click the Browse button.
                 //   •	Navigate to the SmallMoleculeLibraries folder created earlier.
                 //   •	Select the “Drosophila_Lipids_Neg.blib” file.
-                addLibDlg.LibraryPath = TestFilesDirs[0].GetTestPath("Drosophila_Lipids_Neg.blib");
+                addLibDlg.LibraryPath = GetFullDataPath("Drosophila_Lipids_Neg.blib");
             });
             //   •	Click the Open button.
             //   •	Click the OK button in the Edit Library form.
@@ -221,7 +224,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 //   •	Select both .d files.
                 RunUI(() =>
                 {
-                    var path = Path.GetDirectoryName(TestFilesDirs[0].GetTestPath(Flies_M));
+                    var path = Path.GetDirectoryName(GetFullDataPath(Flies_M));
                     openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(path);
                     openDataSourceDialog1.SelectAllFileType(ExtAgilentRaw);
                 });
