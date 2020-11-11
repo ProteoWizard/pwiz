@@ -4432,7 +4432,7 @@ namespace pwiz.Skyline
                 normalizeOptions.Add(null); // separator
                 normalizeOptions.Add(NormalizeOption.NONE);
                 areaNormalizeContextMenuItem.DropDownItems.Clear();
-                areaNormalizeContextMenuItem.DropDownItems.AddRange(MakeNormalizeToMenuItems(normalizeOptions, AreaGraphController.AreaNormalizeOption).ToArray());
+                areaNormalizeContextMenuItem.DropDownItems.AddRange(MakeNormalizeToMenuItems(normalizeOptions, AreaGraphController.AreaNormalizeOption.Constrain(DocumentUI.Settings)).ToArray());
                 menuStrip.Items.Insert(iInsert++, areaNormalizeContextMenuItem);
                 var areaReplicateGraphPane = graphSummary.GraphPanes.FirstOrDefault() as AreaReplicateGraphPane;
                 if (areaReplicateGraphPane != null)

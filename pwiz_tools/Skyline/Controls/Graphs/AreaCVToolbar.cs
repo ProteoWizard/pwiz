@@ -213,9 +213,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     toolStripComboGroup.SelectedItem = AreaGraphController.GroupByAnnotation;
                 else
                     toolStripComboGroup.SelectedIndex = 0;
+                ComboHelper.AutoSizeDropDown(toolStripComboGroup);
             }
 
-            var mods = _graphSummary.DocumentUIContainer.DocumentUI.Settings.PeptideSettings.Modifications;
             toolStripComboNormalizedTo.Items.Clear();
             _normalizationMethods.Clear();
             _normalizationMethods.Add(NormalizeOption.DEFAULT);
@@ -223,6 +223,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _normalizationMethods.Add(NormalizeOption.NONE);
             toolStripComboNormalizedTo.Items.AddRange(_normalizationMethods.Select(item=>item.Caption).ToArray());
             toolStripComboNormalizedTo.SelectedIndex = _normalizationMethods.IndexOf(AreaGraphController.AreaCVNormalizeOption);
+            ComboHelper.AutoSizeDropDown(toolStripComboNormalizedTo);
         }
 
         #region Functional Test Support
