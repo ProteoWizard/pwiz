@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly AreaCVGraphSettings _graphSettings;
         private readonly AreaCVRefinementData _refinementData;
 
-        public AreaCVGraphData(SrmDocument document, AreaCVGraphSettings graphSettings, CancellationToken? token = null)
+        public AreaCVGraphData(SrmDocument document, AreaCVGraphSettings graphSettings, CancellationToken token = default(CancellationToken))
         {
             _graphSettings = graphSettings;
 
@@ -116,6 +116,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public double MedianCV { get; private set; } // Median CV
         public double MeanCV { get; private set; } // Mean CV
         public double BelowCVCutoff { get; private set; } // Fraction/Percentage of CV's below cutoff
+
+        public AreaCVGraphSettings GraphSettings
+        {
+            get { return _graphSettings; }
+        }
 
         public class AreaCVGraphSettings : AreaCVRefinementSettings
         {

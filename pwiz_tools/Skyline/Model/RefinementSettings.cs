@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -369,7 +370,7 @@ namespace pwiz.Skyline.Model
                 var minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
                 var countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
                 var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod,
-                    Transitions, countTransitions, MSLevel), null, progressMonitor);
+                    Transitions, countTransitions, MSLevel), CancellationToken.None, progressMonitor);
                 refined = data.RemoveAboveCVCutoff(refined);
             }
 
