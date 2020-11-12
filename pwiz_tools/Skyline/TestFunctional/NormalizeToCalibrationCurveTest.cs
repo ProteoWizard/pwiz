@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -126,6 +127,48 @@ namespace pwiz.SkylineTestFunctional
                 var cv = statistics.StdDev() / statistics.Mean();
                 var cvBucketed = Math.Floor(cv / graphData.GraphSettings.BinWidth) * graphData.GraphSettings.BinWidth;
                 AssertEx.AreEqual(cvBucketed, cvData.CV);
+            }
+
+            // Show the Peak Area Replicate Comparison graph
+            RunUI(()=>
+            {
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.CALIBRATED);
+                SkylineWindow.ShowPeakAreaReplicateComparison();
+            });
+            var peakAreaGraph = FindGraphPane<AreaReplicateGraphPane>();
+
+            // Make sure that the calculated concentrations displayed in the graph are correct for each molecule in the document
+            foreach (var moleculeGroup in SkylineWindow.Document.MoleculeGroups)
+            {
+                foreach (var molecule in moleculeGroup.Molecules)
+                {
+                    var idPath = new IdentityPath(moleculeGroup.Id, molecule.Id);
+                    RunUI(()=>SkylineWindow.SelectedPath = idPath);
+                    WaitForGraphs();
+                    RunUI(() =>
+                    {
+                        var curve = peakAreaGraph.CurveList.First();
+                        var textLabels = peakAreaGraph.XAxis.Scale.TextLabels;
+                        Assert.IsNotNull(textLabels);
+                        Assert.AreEqual(textLabels.Length, curve.Points.Count);
+                        Assert.AreEqual(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count, curve.Points.Count);
+                        for (int i = 0; i < curve.Points.Count; i++)
+                        {
+                            var replicateName = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[i].Name;
+                            var value = curve.Points[i].Y;
+                            Tuple<double?, double?> expected;
+                            Assert.IsTrue(normalizedAreas.TryGetValue(Tuple.Create(idPath, replicateName), out expected));
+                            if (expected.Item2.HasValue && !double.IsInfinity(expected.Item2.Value))
+                            {
+                                AssertEx.AreEqual(expected.Item2.Value, value);
+                            }
+                            else
+                            {
+                                AssertEx.IsTrue(double.IsNaN(value) || Equals(value, PointPairBase.Missing));
+                            }
+                        }
+                    });
+                }
             }
         }
 

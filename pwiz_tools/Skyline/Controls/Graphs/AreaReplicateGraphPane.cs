@@ -232,7 +232,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var children = ((PeptideDocNode) selectedNode).TransitionGroups
                     .Where(PaneKey.IncludesTransitionGroup)
                     .ToArray();
-                if (children.Length == 1 && displayType != DisplayTypeChrom.total)
+                if (children.Length == 1 && displayType != DisplayTypeChrom.total && normalizeOption != NormalizeOption.CALIBRATED)
                 {
                     selectedNode = parentNode = children[0];
                     identityPath = new IdentityPath(identityPath, parentNode.Id);
