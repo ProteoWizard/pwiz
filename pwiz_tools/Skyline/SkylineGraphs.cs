@@ -4539,16 +4539,14 @@ namespace pwiz.Skyline
                     });
                 }
                 menuStrip.Items.Insert(iInsert++, areaCVbinWidthToolStripMenuItem);
+                var normalizeOptions = new List<NormalizeOption>();
+                normalizeOptions.Add(NormalizeOption.DEFAULT);
+                normalizeOptions.AddRange(NormalizeOption.AvailableNormalizeOptions(DocumentUI));
+                normalizeOptions.Add(null); // separator
+                normalizeOptions.Add(NormalizeOption.NONE);
 
                 areaCVNormalizedToToolStripMenuItem.DropDownItems.Clear();
-                areaCVNormalizedToToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    areaCVGlobalStandardsToolStripMenuItem,
-                    areaCVMediansToolStripMenuItem,
-                    areaCVTotalIonCurrentToolStripMenuItem,
-                    toolStripSeparator54,
-                    areaCVNoneToolStripMenuItem
-                });
+                areaCVNormalizedToToolStripMenuItem.DropDownItems.AddRange(MakeNormalizeToMenuItems(normalizeOptions, AreaGraphController.AreaCVNormalizeOption.Constrain(DocumentUI.Settings)).ToArray());
                 menuStrip.Items.Insert(iInsert++, areaCVNormalizedToToolStripMenuItem);
 
                 if (graphType == GraphTypeSummary.histogram2d)

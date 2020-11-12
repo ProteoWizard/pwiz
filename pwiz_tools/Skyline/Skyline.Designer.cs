@@ -250,10 +250,6 @@ namespace pwiz.Skyline
             this.areaCVPrecursorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVProductsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVNormalizedToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.areaCVGlobalStandardsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.areaCVMediansToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator54 = new System.Windows.Forms.ToolStripSeparator();
-            this.areaCVNoneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVLogScaleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeAboveCVCutoffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator57 = new System.Windows.Forms.ToolStripSeparator();
@@ -583,7 +579,6 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.areaCVTotalIonCurrentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
@@ -2115,34 +2110,8 @@ namespace pwiz.Skyline
             // 
             // areaCVNormalizedToToolStripMenuItem
             // 
-            this.areaCVNormalizedToToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.areaCVGlobalStandardsToolStripMenuItem,
-            this.areaCVMediansToolStripMenuItem,
-            this.toolStripSeparator54,
-            this.areaCVNoneToolStripMenuItem,
-            this.areaCVTotalIonCurrentToolStripMenuItem});
             this.areaCVNormalizedToToolStripMenuItem.Name = "areaCVNormalizedToToolStripMenuItem";
             resources.ApplyResources(this.areaCVNormalizedToToolStripMenuItem, "areaCVNormalizedToToolStripMenuItem");
-            // 
-            // areaCVGlobalStandardsToolStripMenuItem
-            // 
-            this.areaCVGlobalStandardsToolStripMenuItem.Name = "areaCVGlobalStandardsToolStripMenuItem";
-            resources.ApplyResources(this.areaCVGlobalStandardsToolStripMenuItem, "areaCVGlobalStandardsToolStripMenuItem");
-            // 
-            // areaCVMediansToolStripMenuItem
-            // 
-            this.areaCVMediansToolStripMenuItem.Name = "areaCVMediansToolStripMenuItem";
-            resources.ApplyResources(this.areaCVMediansToolStripMenuItem, "areaCVMediansToolStripMenuItem");
-            // 
-            // toolStripSeparator54
-            // 
-            this.toolStripSeparator54.Name = "toolStripSeparator54";
-            resources.ApplyResources(this.toolStripSeparator54, "toolStripSeparator54");
-            // 
-            // areaCVNoneToolStripMenuItem
-            // 
-            this.areaCVNoneToolStripMenuItem.Name = "areaCVNoneToolStripMenuItem";
-            resources.ApplyResources(this.areaCVNoneToolStripMenuItem, "areaCVNoneToolStripMenuItem");
             // 
             // areaCVLogScaleToolStripMenuItem
             // 
@@ -4497,11 +4466,6 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
             // 
-            // areaCVTotalIonCurrentToolStripMenuItem
-            // 
-            this.areaCVTotalIonCurrentToolStripMenuItem.Name = "areaCVTotalIonCurrentToolStripMenuItem";
-            resources.ApplyResources(this.areaCVTotalIonCurrentToolStripMenuItem, "areaCVTotalIonCurrentToolStripMenuItem");
-            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -5008,10 +4972,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaCVtargetsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVdecoysToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVNormalizedToToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem areaCVGlobalStandardsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem areaCVMediansToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator54;
-        private System.Windows.Forms.ToolStripMenuItem areaCVNoneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVLogScaleToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator rawTimesMenuItemSplitter;
         private System.Windows.Forms.ToolStripMenuItem onlyQuantitativeContextMenuItem;
@@ -5086,7 +5046,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator detectionsToolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem detectionsYScalePercentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem permuteIsotopeModificationsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem areaCVTotalIonCurrentToolStripMenuItem;
     }
 }
 
