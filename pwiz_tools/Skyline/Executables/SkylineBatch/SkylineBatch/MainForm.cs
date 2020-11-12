@@ -89,7 +89,9 @@ namespace SkylineBatch
 
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
-            var configForm = new SkylineBatchConfigForm(configManager.CreateConfiguration(), this, false);
+            var initialConfigValues =
+                configManager.HasConfigs() ? configManager.GetLastCreated() : null;
+            var configForm = new SkylineBatchConfigForm(this, initialConfigValues, ConfigAction.Add, false);
             configForm.StartPosition = FormStartPosition.CenterParent;
             ShowConfigForm(configForm);
         }
@@ -107,19 +109,19 @@ namespace SkylineBatch
             Program.LogInfo(string.Format("{0} configuration \"{1}\"",
                 (!configRunner.IsRunning() ? "Editing" : "Viewing"),
                 configRunner.GetConfigName()));
-            var configForm = new SkylineBatchConfigForm(configRunner.Config, this, configRunner.IsBusy());
+            var configForm = new SkylineBatchConfigForm( this, configRunner.Config, ConfigAction.Edit, configRunner.IsBusy());
             ShowConfigForm(configForm);
         }
 
-        public void EditConfiguration(SkylineBatchConfig oldVersion, SkylineBatchConfig newVersion)
+        public void EditSelectedConfiguration(SkylineBatchConfig newVersion)
         {
-            configManager.ReplaceConfig(oldVersion, newVersion);
+            configManager.ReplaceSelectedConfig(newVersion);
             UpdateUiConfigurations();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            var configForm = new SkylineBatchConfigForm(configManager.CopySelectedConfig(), this, false);
+            var configForm = new SkylineBatchConfigForm(this, configManager.GetSelectedConfig(), ConfigAction.Copy, false);
             ShowConfigForm(configForm);
         }
 
@@ -134,14 +136,17 @@ namespace SkylineBatch
         
         private void listViewConfigs_SelectedIndexChanged(object sender, EventArgs e)
         {
-            int selected = listViewConfigs.SelectedItems.Count > 0 ? listViewConfigs.SelectedIndices[0] : -1;
-            configManager.SelectConfig(selected);
+            if (listViewConfigs.SelectedItems.Count > 0)
+                configManager.SelectConfig(listViewConfigs.SelectedIndices[0]);
+            else
+                configManager.DeselectConfig();
             // update buttons enabled
-            btnEdit.Enabled = selected >= 0;
-            btnCopy.Enabled = selected >= 0;
-            btnDelete.Enabled = selected >= 0;
-            btnUpArrow.Enabled = selected > 0;
-            btnDownArrow.Enabled = selected >= 0 && selected < listViewConfigs.Items.Count - 1;
+            var configSelected = configManager.HasSelectedConfig();
+            btnEdit.Enabled = configSelected;
+            btnCopy.Enabled = configSelected;
+            btnDelete.Enabled = configSelected;
+            btnUpArrow.Enabled = configSelected && configManager.SelectedConfig != 0;
+            btnDownArrow.Enabled = configSelected && configManager.SelectedConfig < listViewConfigs.Items.Count - 1;
         }
 
         private void btnUpArrow_Click(object sender, EventArgs e)
@@ -522,9 +527,8 @@ namespace SkylineBatch
 
     public interface IMainUiControl
     {
-        //void ChangeConfigUiStatus(ConfigRunner configRunner);
         void AddConfiguration(SkylineBatchConfig config);
-        void EditConfiguration(SkylineBatchConfig oldVersion, SkylineBatchConfig newVersion);
+        void EditSelectedConfiguration(SkylineBatchConfig newVersion);
         void UpdateUiConfigurations();
 
         void UpdateUiLogFiles();

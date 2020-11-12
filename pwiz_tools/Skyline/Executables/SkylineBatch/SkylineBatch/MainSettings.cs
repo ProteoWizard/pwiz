@@ -27,44 +27,30 @@ using SkylineBatch.Properties;
 namespace SkylineBatch
 {
     [XmlRoot("main_settings")]
-    public class MainSettings 
+    public class MainSettings
     {
 
-        public string TemplateFilePath { get; set; }
-
-        public string AnalysisFolderPath { get; set; }
-
-        public string DataFolderPath { get; set; }
-
-        public string ReplicateNamingPattern { get; set; }
+        // IMMUTABLE - all fields are readonly strings
+        // Holds file locations and naming pattern to use when running the configuration
 
 
-        public DateTime LastAcquiredFileDate { get; set; } // Not saved to Properties.Settings
-        public DateTime LastArchivalDate { get; set; }
-
-        public static MainSettings GetDefault()
+        public MainSettings(string templateFilePath, string analysisFolderPath, string dataFolderPath,
+            string replicateNamingPattern)
         {
-            return new MainSettings(); //settings;
+            TemplateFilePath = templateFilePath;
+            AnalysisFolderPath = analysisFolderPath;
+            DataFolderPath = dataFolderPath;
+            ReplicateNamingPattern = replicateNamingPattern ?? "";
+            Validate();
         }
 
-        public MainSettings Clone()
-        {
-            return new MainSettings
-            {
-                //SkylineFilePath = SkylineFilePath,
-                TemplateFilePath = TemplateFilePath,
-                AnalysisFolderPath = AnalysisFolderPath,
-                DataFolderPath = DataFolderPath,
-                ReplicateNamingPattern = ReplicateNamingPattern
-            };
-        }
+        public readonly string TemplateFilePath;
 
-        public MainSettings MakeChild()
-        {
-            var childSettings = Clone();
-            childSettings.AnalysisFolderPath = Path.GetDirectoryName(AnalysisFolderPath) + "\\";
-            return childSettings;
-        }
+        public readonly string AnalysisFolderPath;
+
+        public readonly string DataFolderPath;
+
+        public readonly string ReplicateNamingPattern;
 
         public string GetNewTemplatePath()
         {
@@ -74,7 +60,6 @@ namespace SkylineBatch
         public override string ToString()
         {
             var sb = new StringBuilder();
-            //sb.Append("Skyline file: ").AppendLine(SkylineFilePath);
             sb.Append("Template file: ").AppendLine(TemplateFilePath);
             sb.Append("Analysis folder: ").AppendLine(AnalysisFolderPath);
             sb.Append("Data folder: ").AppendLine(DataFolderPath);
@@ -82,30 +67,24 @@ namespace SkylineBatch
             return sb.ToString();
         }
 
-        public void ValidateSettings()
+        public void Validate()
         {
-            // TODO check skyline folder ?
-            // Path to the Skyline file.
-
             CheckIfEmptyPath(TemplateFilePath, "Skyline file");
             if (!File.Exists(TemplateFilePath))
             {
                 throw new ArgumentException(string.Format(Resources.Template_file_does_not_exist, TemplateFilePath));
             }
-
             CheckIfEmptyPath(AnalysisFolderPath, "analysis folder");
             var analysisFolderDirectory = Path.GetDirectoryName(AnalysisFolderPath);
             if (!Directory.Exists(analysisFolderDirectory))
             {
                 throw new ArgumentException(string.Format(Resources.Analysis_folder_does_not_exist, analysisFolderDirectory));
             }
-
             CheckIfEmptyPath(DataFolderPath, "data folder");
             if (!Directory.Exists(DataFolderPath))
             {
                 throw new ArgumentException(string.Format(Resources.Data_folder_does_not_exist, DataFolderPath));
             }
-
             // create analysis folder if doesn't exist
             if (!Directory.Exists(AnalysisFolderPath))
             {
@@ -128,12 +107,12 @@ namespace SkylineBatch
 
         #region Implementation of IXmlSerializable interface
 
-        private enum ATTR
+        private enum Attr
         {
-            template_file_path,
-            analysis_folder_path,
-            data_folder_path,
-            replicate_naming_pattern,
+            TemplateFilePath,
+            AnalysisFolderPath,
+            DataFolderPath,
+            ReplicateNamingPattern,
         };
 
         public XmlSchema GetSchema()
@@ -141,21 +120,22 @@ namespace SkylineBatch
             return null;
         }
 
-        public void ReadXml(XmlReader reader)
+        public static MainSettings ReadXml(XmlReader reader)
         {
-            TemplateFilePath = reader.GetAttribute(ATTR.template_file_path);
-            AnalysisFolderPath = reader.GetAttribute(ATTR.analysis_folder_path);
-            DataFolderPath = reader.GetAttribute(ATTR.data_folder_path);
-            ReplicateNamingPattern = reader.GetAttribute(ATTR.replicate_naming_pattern);
+            var templateFilePath = reader.GetAttribute(Attr.TemplateFilePath);
+            var analysisFolderPath = reader.GetAttribute(Attr.AnalysisFolderPath);
+            var dataFolderPath = reader.GetAttribute(Attr.DataFolderPath);
+            var replicateNamingPattern = reader.GetAttribute(Attr.ReplicateNamingPattern);
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, replicateNamingPattern);
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("main_settings");
-            writer.WriteAttributeIfString(ATTR.template_file_path, TemplateFilePath);
-            writer.WriteAttributeIfString(ATTR.analysis_folder_path, AnalysisFolderPath);
-            writer.WriteAttributeIfString(ATTR.data_folder_path, DataFolderPath);
-            writer.WriteAttributeIfString(ATTR.replicate_naming_pattern, ReplicateNamingPattern);
+            writer.WriteAttributeIfString(Attr.TemplateFilePath, TemplateFilePath);
+            writer.WriteAttributeIfString(Attr.AnalysisFolderPath, AnalysisFolderPath);
+            writer.WriteAttributeIfString(Attr.DataFolderPath, DataFolderPath);
+            writer.WriteAttributeIfString(Attr.ReplicateNamingPattern, ReplicateNamingPattern);
             writer.WriteEndElement();
         }
         #endregion
@@ -166,9 +146,7 @@ namespace SkylineBatch
             return (other.TemplateFilePath == TemplateFilePath &&
                     other.AnalysisFolderPath == AnalysisFolderPath &&
                     other.DataFolderPath == DataFolderPath &&
-                    other.ReplicateNamingPattern == ReplicateNamingPattern &&
-                    other.LastAcquiredFileDate == LastAcquiredFileDate &&
-                    other.LastArchivalDate == LastArchivalDate);
+                    other.ReplicateNamingPattern == ReplicateNamingPattern);
         }
 
         public override bool Equals(object obj)

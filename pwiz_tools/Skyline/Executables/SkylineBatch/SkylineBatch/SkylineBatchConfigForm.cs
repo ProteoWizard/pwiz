@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
@@ -24,34 +25,40 @@ using SkylineBatch.Properties;
 
 namespace SkylineBatch
 {
+    public enum ConfigAction
+    {
+        Add, Edit, Copy
+    }
+
     public partial class SkylineBatchConfigForm : Form
     {
-        // User creates new config or modifies existing config
-        // takes a new configuration, or a copy of an existing configuration, and allows user to edit it and add it to the list
-        // the passed in configuration is not modified
-
-        private readonly IMainUiControl _mainControl;
-        private readonly SkylineBatchConfig _config;
-        private readonly bool _isBusy;
-
-        private readonly ReportSettings _newReportSettings;
+        // Allows a user to create a new configuration and add it to the list of configurations,
+        // or replace an existing configuration.
+        // Currently running configurations cannot be replaced, and will be opened in a read only mode.
         
 
-        public SkylineBatchConfigForm(SkylineBatchConfig config, IMainUiControl mainControl, bool isBusy)
+        private readonly IMainUiControl _mainControl;
+        private readonly bool _isBusy;
+        private readonly ConfigAction _action;
+        private readonly DateTime _initialCreated;
+        private readonly List<ReportInfo> _newReportList;
+
+        public SkylineBatchConfigForm(IMainUiControl mainControl, SkylineBatchConfig config, ConfigAction action, bool isBusy)
         {
+            _action = action;
+            _initialCreated = config?.Created ?? DateTime.MinValue;
+            _newReportList = new List<ReportInfo>();
+
             _mainControl = mainControl;
-            _config = config;
             _isBusy = isBusy;
-            _newReportSettings = _config.ReportSettings.Copy();
             InitializeComponent();
 
-            foreach (var report in _newReportSettings.Reports)
-                gridReportSettings.Rows.Add(report.AsArray());
-            
-            textConfigName.Text = config.Name;
-            textConfigName.TextChanged += textConfigName_TextChanged;
 
-            SetUiMainSettings(_config.MainSettings);
+            if (config != null)
+            {
+                InitializeInputFields(config);
+            }
+            
             btnSaveConfig.Show();
 
             if (isBusy)
@@ -71,6 +78,37 @@ namespace SkylineBatch
             ActiveControl = textConfigName;
         }
 
+        private void InitializeInputFields(SkylineBatchConfig config)
+        {
+            var mainSettings = config.MainSettings;
+            switch (_action)
+            {
+                case ConfigAction.Add:
+                    textConfigName.Text = "";
+                    textAnalysisPath.Text = Path.GetDirectoryName(mainSettings.AnalysisFolderPath) + @"\";
+                    textNamingPattern.Text = "";
+                    break;
+                case ConfigAction.Copy:
+                    textConfigName.Text = "";
+                    textAnalysisPath.Text = config.MainSettings.AnalysisFolderPath;
+                    textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
+                    InitializeReportSettings(config);
+                    break;
+                case ConfigAction.Edit:
+                    textConfigName.Text = config.Name;
+                    textAnalysisPath.Text = config.MainSettings.AnalysisFolderPath;
+                    textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
+                    InitializeReportSettings(config);
+                    break;
+                default:
+                    return; // never get here
+            }
+            textSkylinePath.Text = mainSettings.TemplateFilePath;
+            textDataPath.Text = mainSettings.DataFolderPath;
+
+            textConfigName.TextChanged += textConfigName_TextChanged;
+        }
+
         public void DisableEverything()
         {
             textConfigName.ReadOnly = true;
@@ -88,22 +126,15 @@ namespace SkylineBatch
 
         #region Edit main settings
 
-        private void SetUiMainSettings(MainSettings mainSettings)
-        {
-            textSkylinePath.Text = mainSettings.TemplateFilePath;
-            textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
-            textDataPath.Text = mainSettings.DataFolderPath;
-            textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
-        }
+        
 
         private MainSettings GetMainSettingsFromUi()
         {
-            var mainSettings = new MainSettings();
-            mainSettings.TemplateFilePath = textSkylinePath.Text;
-            mainSettings.AnalysisFolderPath = textAnalysisPath.Text;
-            mainSettings.DataFolderPath = textDataPath.Text;
-            mainSettings.ReplicateNamingPattern = textNamingPattern.Text;
-            return mainSettings;
+            var templateFilePath = textSkylinePath.Text;
+            var analysisFolderPath = textAnalysisPath.Text;
+            var dataFolderPath = textDataPath.Text;
+            var replicateNamingPattern = textNamingPattern.Text;
+            return new MainSettings(templateFilePath, analysisFolderPath, dataFolderPath, replicateNamingPattern);
         }
 
         private void textConfigName_TextChanged(object sender, EventArgs e)
@@ -156,23 +187,38 @@ namespace SkylineBatch
 
         #region Reports
 
+        private void InitializeReportSettings(SkylineBatchConfig config)
+        {
+            foreach (var report in config.ReportSettings.Reports)
+            {
+                _newReportList.Add(report);
+                gridReportSettings.Rows.Add(report.AsArray());
+            }
+        }
+
         private void btnAddReport_Click(object sender, EventArgs e)
         {
             Program.LogInfo("Creating new report");
-            AddReport();
+            ShowAddReportDialog(_newReportList.Count);
         }
 
-        private void AddReport()
+        private void ShowAddReportDialog(int addingIndex, ReportInfo editingReport = null)
         {
-            var addingReport = new ReportInfo();
-            var addReportsForm = new ReportsAddForm(addingReport);
+            var addReportsForm = new ReportsAddForm(_mainControl, editingReport);
             addReportsForm.StartPosition = FormStartPosition.CenterParent;
-            addReportsForm.ShowDialog();
+            var addReportResult = addReportsForm.ShowDialog();
 
-            if (!addingReport.Empty())
+            if (addReportResult == DialogResult.OK)
             {
-                _newReportSettings.Add(addingReport);
-                gridReportSettings.Rows.Add(addingReport.AsArray());
+                var newReportInfo = addReportsForm.NewReportInfo;
+                if (addingIndex == _newReportList.Count)
+                    _newReportList.Add(newReportInfo);
+                else
+                {
+                    _newReportList[addingIndex] = newReportInfo;
+                    gridReportSettings.Rows.RemoveAt(addingIndex);
+                }
+                gridReportSettings.Rows.Insert(addingIndex, newReportInfo.AsArray());
             }
         }
 
@@ -180,28 +226,21 @@ namespace SkylineBatch
         {
             Program.LogInfo("Editing report");
             var indexSelected = gridReportSettings.SelectedRows[0].Index;
-            if (indexSelected == _newReportSettings.Reports.Count)
+            if (indexSelected == _newReportList.Count)
             {
-                AddReport();
-                return;
+                ShowAddReportDialog(_newReportList.Count);
             }
-            var editingReport = _newReportSettings.Reports[indexSelected].Copy();
-            var addReportsForm = new ReportsAddForm(editingReport);
-            addReportsForm.StartPosition = FormStartPosition.CenterParent;
-            addReportsForm.ShowDialog();
-
-            if (!editingReport.Empty())
+            else
             {
-                _newReportSettings.Reports[indexSelected] = editingReport;
-                gridReportSettings.Rows.RemoveAt(indexSelected);
-                gridReportSettings.Rows.Insert(indexSelected, editingReport.AsArray());
+                var editingReport = _newReportList[indexSelected];
+                ShowAddReportDialog(indexSelected, editingReport);
             }
         }
 
         private void btnDeleteReport_Click(object sender, EventArgs e)
         {
             var indexToDelete = gridReportSettings.SelectedRows[0].Index;
-            _newReportSettings.Reports.RemoveAt(indexToDelete);
+            _newReportList.RemoveAt(indexToDelete);
             gridReportSettings.Rows.RemoveAt(indexToDelete);
 
         }
@@ -212,7 +251,7 @@ namespace SkylineBatch
                 gridReportSettings.ClearSelection();
             var selectedRows = gridReportSettings.SelectedRows;
             btnEditReport.Enabled = selectedRows.Count > 0;
-            btnDeleteReport.Enabled = selectedRows.Count > 0 && selectedRows[0].Index < _newReportSettings.Reports.Count;
+            btnDeleteReport.Enabled = selectedRows.Count > 0 && selectedRows[0].Index < _newReportList.Count;
 
         }
 
@@ -228,11 +267,7 @@ namespace SkylineBatch
 
         private SkylineBatchConfig GetConfigFromUi()
         {
-            SkylineBatchConfig config = new SkylineBatchConfig();
-            config.Name = textConfigName.Text;
-            config.MainSettings = GetMainSettingsFromUi();
-            config.ReportSettings = _newReportSettings;
-            return config;
+            return new SkylineBatchConfig(textConfigName.Text, DateTime.Now, DateTime.Now, GetMainSettingsFromUi(), new ReportSettings(_newReportList));
         }
 
         private void Save()
@@ -248,16 +283,13 @@ namespace SkylineBatch
                 return;
             }
 
-            if (string.IsNullOrEmpty(_config.Name))
+            if (_action == ConfigAction.Edit)
             {
-                // If the original configuration that we started with does not have a name,
-                // it means this is a brand new configuration
-                newConfig.Created = DateTime.Now;
-                newConfig.Modified = DateTime.Now;
+                var editedConfig = new SkylineBatchConfig(newConfig.Name, _initialCreated, DateTime.Now, newConfig.MainSettings, newConfig.ReportSettings);
 
                 try
                 {
-                    _mainControl.AddConfiguration(newConfig);
+                    _mainControl.EditSelectedConfiguration(editedConfig);
                 }
                 catch (ArgumentException e)
                 {
@@ -265,17 +297,12 @@ namespace SkylineBatch
                     return;
                 }
             }
-
-            else if (!newConfig.Equals(_config))
+            else
             {
-                // If the original configuration has a name it means the user is editing an existing configuration
-                // and some changes have been made.
-                newConfig.Created = _config.Created;
-                newConfig.Modified = DateTime.Now;
-
+                // Both add and copy create an entirely new configuration
                 try
                 {
-                    _mainControl.EditConfiguration(_config, newConfig);
+                    _mainControl.AddConfiguration(newConfig);
                 }
                 catch (ArgumentException e)
                 {
@@ -293,12 +320,6 @@ namespace SkylineBatch
         }
 
         #endregion
-
-
-
-
-
-
 
     }
 }

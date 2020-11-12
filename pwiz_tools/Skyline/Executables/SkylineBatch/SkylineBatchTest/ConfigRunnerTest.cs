@@ -48,6 +48,16 @@ namespace SkylineBatchTest
            Assert.IsTrue(testRunner.IsCompleted());
         }
 
+        [TestMethod]
+        public async Task TestRunFromStepFour()
+        {
+            // TODO: look into why program isn't finding R in test mode
+            var testRunner = TestUtils.GetTestConfigRunner();
+            Assert.IsTrue(testRunner.IsStopped());
+            await testRunner.Run(4);
+            Assert.IsTrue(testRunner.IsCompleted());
+        }
+
         // TODO: tests for configRunner.run
     }
     

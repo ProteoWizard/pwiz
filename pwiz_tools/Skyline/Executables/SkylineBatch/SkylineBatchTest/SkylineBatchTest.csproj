@@ -53,12 +53,12 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="MainSettingsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConfigRunnerTest.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="SkylineBatchConfigTest.cs" />
     <Compile Include="SkylineBatchLoggerTest.cs" />
+    <Compile Include="ConfigManagerTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SkylineBatch\SkylineBatch.csproj">

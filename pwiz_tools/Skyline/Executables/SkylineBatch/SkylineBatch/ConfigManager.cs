@@ -144,25 +144,50 @@ namespace SkylineBatch
             return _configRunners.Keys.Count > 0;
         }
 
+        public bool HasSelectedConfig()
+        {
+            return SelectedConfig >= 0;
+        }
+
         public void SelectConfig(int newIndex)
         {
+            if (newIndex < 0 || newIndex >= _configList.Count)
+                throw new IndexOutOfRangeException("No configuration at index: " + newIndex);
             SelectedConfig = newIndex;
         }
 
-        public SkylineBatchConfig CreateConfiguration()
+        public void DeselectConfig()
         {
-            Program.LogInfo("Creating new configuration");
-            var configCount = _configList.Count;
-            return configCount > 0 ? _configList[configCount - 1].MakeChild() : SkylineBatchConfig.GetDefault();
+            SelectedConfig = -1;
         }
 
-        public SkylineBatchConfig CopySelectedConfig()
+        public void CheckConfigSelected()
         {
-            var config = _configList[SelectedConfig];
-            Program.LogInfo(string.Format("Copying configuration \"{0}\"", config.Name));
-            var newConfig = config.Copy();
-            newConfig.Name = null;
-            return newConfig;
+            if (SelectedConfig < 0)
+            {
+                throw new IndexOutOfRangeException("No configuration selected.");
+            }
+        }
+
+        public SkylineBatchConfig GetLastCreated() // creates config using most recently created config
+        {
+            if (!HasConfigs())
+                throw new ArgumentException("No configurations to create from.");
+            Program.LogInfo("Creating new configuration");
+            var lastCreated = _configList[0];
+            foreach (var config in _configList)
+            {
+                if (config.Created > lastCreated.Created)
+                    lastCreated = config;
+            }
+
+            return lastCreated;//.MakeChild();
+        }
+
+        public SkylineBatchConfig GetSelectedConfig()
+        {
+            CheckConfigSelected();
+            return _configList[SelectedConfig];
         }
 
         public void AddConfiguration(SkylineBatchConfig config)
@@ -182,9 +207,10 @@ namespace SkylineBatch
             _configRunners.Add(config.Name, newRunner);
         }
 
-        public void ReplaceConfig(SkylineBatchConfig oldConfig, SkylineBatchConfig newConfig)
+        public void ReplaceSelectedConfig(SkylineBatchConfig newConfig)
         {
-            CheckIfExists(oldConfig, true, Operation.Replace);
+            CheckConfigSelected();
+            var oldConfig = _configList[SelectedConfig];
             newConfig.Validate();
             if (!string.Equals(oldConfig.Name, newConfig.Name))
                 CheckIfExists(newConfig, false, Operation.Replace);
@@ -204,13 +230,9 @@ namespace SkylineBatch
         
         public void RemoveSelected()
         {
-            var config = _configList[SelectedConfig];
-            // Get the selected configuration
             var configRunner = GetSelectedConfigRunner();
-            if (configRunner == null)
-            {
-                return;
-            }
+
+            var config = configRunner.Config;
 
             if (configRunner.IsBusy())
             {
@@ -241,7 +263,7 @@ namespace SkylineBatch
             // remove config
             Program.LogInfo(string.Format("Removing configuration \"{0}\"", configRunner.Config.Name));
             RemoveConfig(config);
-            SelectConfig(-1);
+            DeselectConfig();
         }
 
         private void RemoveConfig(SkylineBatchConfig config)
@@ -287,10 +309,7 @@ namespace SkylineBatch
 
         public ConfigRunner GetSelectedConfigRunner()
         {
-            if (SelectedConfig < 0)
-            {
-                throw new IndexOutOfRangeException("No configuration selected.");
-            }
+            CheckConfigSelected();
             return GetConfigRunnerAtIndex(SelectedConfig);
         }
 
@@ -377,6 +396,8 @@ namespace SkylineBatch
 
         public void SelectLog(int selected)
         {
+            if (selected < 0 || selected > _oldLogs.Count)
+                throw new IndexOutOfRangeException("No log at index: " + selected);
             SelectedLog = selected;
         }
 
@@ -391,7 +412,7 @@ namespace SkylineBatch
             var files = logDirectory != null ? new DirectoryInfo(logDirectory).GetFiles() : new FileInfo[0];
             foreach (var file in files)
             {
-                if (file.Name.EndsWith(".log") && !file.Name.Equals("SkylineBatch.log"))
+                if (file.Name.EndsWith(".log") && !file.Name.Equals(_logger.GetFileName()))
                 {
                     _oldLogs.Insert(0, new SkylineBatchLogger(file.FullName, _uiControl));
                 }
@@ -461,7 +482,7 @@ namespace SkylineBatch
                         {
                             if (reader.Name == "skylinebatch_config")
                             {
-                                var config = SkylineBatchConfig.Deserialize(reader);
+                                var config = SkylineBatchConfig.ReadXml(reader);
                                 readConfigs.Add(config);
                             }
                             reader.Read();
@@ -472,13 +493,14 @@ namespace SkylineBatch
             }
             catch (Exception)
             {
-                MessageBox.Show(string.Format(Resources.No_configs_imported, filePath),
-                    Resources.Import_configs_error_title,
-                    MessageBoxButtons.OK);
+                if (_runningUi)
+                    MessageBox.Show(string.Format(Resources.No_configs_imported, filePath),
+                        Resources.Import_configs_error_title,
+                        MessageBoxButtons.OK);
                 return null;
             }
 
-            if (readConfigs.Count == 0)
+            if (readConfigs.Count == 0 && _runningUi)
             {
                 MessageBox.Show(string.Format(Resources.No_configs_imported, filePath),
                     Resources.Import_configs_error_title,
@@ -491,7 +513,7 @@ namespace SkylineBatch
             foreach (SkylineBatchConfig config in readConfigs)
             {
                 // Make sure that the configuration name is unique
-                if (!_configRunners.Keys.Contains(config.Name))
+                if (_configRunners.Keys.Contains(config.Name))
                 {
                     // If a configuration with the same name already exists, don't add it
                     duplicateConfigs.Add(config.Name);
@@ -543,6 +565,25 @@ namespace SkylineBatch
         }
         #endregion
 
+        #region Tests
+
+
+        public bool ConfigListEquals(List<SkylineBatchConfig> otherConfigs)
+        {
+            if (otherConfigs.Count != _configList.Count) return false;
+
+            for (int i = 0; i < _configList.Count; i++)
+            {
+                if (!Equals(otherConfigs[i], _configList[i])) return false;
+            }
+
+            return true;
+        }
+
+
+        #endregion
+
 
     }
 }
+

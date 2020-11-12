@@ -25,16 +25,33 @@ using System.Xml.Serialization;
 namespace SkylineBatch
 {
     [XmlRoot("skylinebatch_config")]
-    public class SkylineBatchConfig : IXmlSerializable
+    public class SkylineBatchConfig
     {
-        public string Name { get; set; }
-        public DateTime Created { get; set; }
-        public DateTime Modified { get; set; }
+        // IMMUTABLE - all fields are readonly, all variables are immutable
+        // A configuration is a set of information about a skyline file, data, reports and scripts.
+        // To be a valid configuration, it must contain enough of this information to run a batch 
+        // script that will copy the skyline file, import data, export reports, and run r scripts.
 
-        public MainSettings MainSettings { get; set; }
+        
+        public SkylineBatchConfig(string name, DateTime created, DateTime modified, MainSettings mainSettings, ReportSettings reportSettings)
+        {
+            Name = name;
+            Created = created;
+            Modified = modified;
+            MainSettings = mainSettings;
+            ReportSettings = reportSettings;
+            Validate();
+        }
 
-        public ReportSettings ReportSettings { get; set; }
+        public readonly string Name;
 
+        public readonly DateTime Created;
+
+        public readonly DateTime Modified;
+
+        public readonly MainSettings MainSettings;
+
+        public readonly ReportSettings ReportSettings;
 
         private enum Attr
         {
@@ -51,36 +68,33 @@ namespace SkylineBatch
             return null;
         }
 
-
-        public void ReadXml(XmlReader reader)
+        public static SkylineBatchConfig ReadXml(XmlReader reader)
         {
-            Name = reader.GetAttribute(Attr.Name);
-            DateTime dateTime;
-            DateTime.TryParse(reader.GetAttribute(Attr.Created), out dateTime);
-            Created = dateTime;
-            DateTime.TryParse(reader.GetAttribute(Attr.Modified), out dateTime);
-            Modified = dateTime;
+            var name = reader.GetAttribute(Attr.Name);
+            DateTime created;
+            DateTime modified;
+            DateTime.TryParse(reader.GetAttribute(Attr.Created), out created);
+            DateTime.TryParse(reader.GetAttribute(Attr.Modified), out modified);
 
             do
             {
                 reader.Read();
             } while (reader.NodeType != XmlNodeType.Element);
 
-            var mainSettings = new MainSettings();
-            mainSettings.ReadXml(reader);
-            MainSettings = mainSettings;
+
+            var mainSettings = MainSettings.ReadXml(reader);
             do
             {
                 reader.Read();
             } while (reader.NodeType != XmlNodeType.Element);
-            var reportSettings = new ReportSettings();
-            reportSettings.ReadXml(reader);
-            ReportSettings = reportSettings;
+            var reportSettings = ReportSettings.ReadXml(reader);
 
             do
             {
                 reader.Read();
             } while (reader.NodeType != XmlNodeType.EndElement);
+
+            return new SkylineBatchConfig(name, created, modified, mainSettings, reportSettings);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -95,52 +109,11 @@ namespace SkylineBatch
             writer.WriteEndElement();
         }
 
-        public static SkylineBatchConfig Deserialize(XmlReader reader)
-        {
-            return reader.Deserialize(new SkylineBatchConfig());
-        }
-
 
 
         #endregion
 
-
-        #region Producers
-
-        public static SkylineBatchConfig GetDefault()
-        {
-            var config = new SkylineBatchConfig
-            {
-                MainSettings = MainSettings.GetDefault(),
-                ReportSettings = new ReportSettings()
-            };
-            return config;
-        }
-
-        public SkylineBatchConfig MakeChild()
-        {
-            var childConfig = this.Copy();
-            childConfig.Name = "";
-            childConfig.Created = DateTime.Now;
-            childConfig.Modified = DateTime.Now;
-            childConfig.MainSettings = MainSettings.MakeChild();
-            childConfig.ReportSettings = new ReportSettings();
-            return childConfig;
-        }
-
-        public SkylineBatchConfig Copy()
-        {
-            return new SkylineBatchConfig
-            {
-                Name = Name,
-                Created = Created,
-                Modified = Modified,
-                MainSettings = MainSettings.Clone(),
-                ReportSettings = ReportSettings.Copy()
-            };
-        }
-
-        #endregion
+        
 
 
         public void Validate()
@@ -155,8 +128,8 @@ namespace SkylineBatch
                 throw new ArgumentException("Please enter a name for the configuration.");
             }
 
-            MainSettings.ValidateSettings();
-            ReportSettings.ValidateSettings();
+            MainSettings.Validate();
+            ReportSettings.Validate();
            
         }
 
@@ -191,8 +164,8 @@ namespace SkylineBatch
 
         public override int GetHashCode()
         {
-            // TODO: make config variables readonly so they can be used for a more meaningful hash function without warnings
-            return "Configuration".GetHashCode();
+            return Name.GetHashCode() + Created.GetHashCode() + Modified.GetHashCode() +
+                   MainSettings.GetHashCode() + ReportSettings.GetHashCode();
         }
 
         #endregion

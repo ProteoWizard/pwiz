@@ -25,23 +25,29 @@ namespace SkylineBatch
 {
     public partial class ReportsAddForm : Form
     {
-        private ReportInfo Report { get; set; }
-        public ReportsAddForm(ReportInfo report)
+        private readonly IMainUiControl _uiControl;
+        public ReportsAddForm(IMainUiControl uiControl, ReportInfo editingReport = null)
         {
-            Report = report;
+            _uiControl = uiControl;
             InitializeComponent();
 
-            textReportName.Text = report.Name;
-            textReportPath.Text = report.ReportPath;
-            foreach (var script in report.RScripts)
+            if (editingReport != null)
             {
-                boxRScripts.Items.Add(script);
+                textReportName.Text = editingReport.Name;
+                textReportPath.Text = editingReport.ReportPath;
+                //var rScripts = editingReport.GetRScripts();
+                foreach (var report in editingReport.RScripts)
+                {
+                    boxRScripts.Items.Add(report);
+                }
             }
+
         }
+        public ReportInfo NewReportInfo { get; private set; }
 
         private void btnAddRScript_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openDialog = new OpenFileDialog();
+            var openDialog = new OpenFileDialog();
             openDialog.Filter = Resources.R_file_extension;
             openDialog.Title = Resources.Open_R_Script;
             openDialog.Multiselect = true;
@@ -77,19 +83,16 @@ namespace SkylineBatch
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            var newReport = new ReportInfo(textReportName.Text, textReportPath.Text, GetScriptsFromUi());
             try
             {
-                newReport.ValidateSettings();
+                NewReportInfo = new ReportInfo(textReportName.Text, textReportPath.Text, GetScriptsFromUi());
             }
             catch (ArgumentException ex)
             {
-                MessageBox.Show(ex.Message);
+                _uiControl.DisplayError("Error", ex.Message);
                 return;
             }
-            
-            Report.Set(newReport.Name, newReport.ReportPath, newReport.RScripts);
-            
+            DialogResult = DialogResult.OK;
             Close();
         }
 

@@ -34,15 +34,21 @@ namespace SkylineBatchTest
             var logger = new SkylineBatchLogger(logFile);
             Assert.IsTrue(File.Exists(logFile));
             var fileInfo = new FileInfo(logFile);
-            Assert.IsTrue(fileInfo.Length == 0);
+
+            var createdFileLength = fileInfo.Length;
 
             logger.Log("Test line 1");
             logger.Archive();
-            Assert.IsTrue(fileInfo.Length == 0);
-            var logFiles = TestUtils.GetAllLogFiles();
-            Assert.IsTrue(logFiles.Count == 2);
-            Assert.IsTrue(new FileInfo(logFiles[1]).Length > 0);
+            var fileLengthAfterArchive = fileInfo.Length;
+            var logFilesAfterArchive = TestUtils.GetAllLogFiles();
+            var archivedFileLength = new FileInfo(logFilesAfterArchive[1]).Length;
             TestUtils.DeleteAllLogFiles();
+            
+            Assert.IsTrue(createdFileLength == 0);
+            Assert.IsTrue(fileLengthAfterArchive == 0);
+            Assert.IsTrue(logFilesAfterArchive.Count == 2);
+            
+            Assert.IsTrue(archivedFileLength > 0);
         }
     }
 }

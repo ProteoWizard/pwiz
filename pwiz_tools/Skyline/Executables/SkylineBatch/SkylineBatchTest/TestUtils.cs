@@ -116,31 +116,39 @@ namespace SkylineBatchTest
 
         public static MainSettings GetTestMainSettings()
         {
-            return new MainSettings()
+            /*return new MainSettings()
             {
                 AnalysisFolderPath = GetTestFilePath("analysis"),
                 DataFolderPath = GetTestFilePath("emptyData"),
                 TemplateFilePath = GetTestFilePath("emptyTemplate.sky"),
-            };
+            };*/
+            return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), "");
         }
 
         public static ReportSettings GetTestReportSettings()
         {
-            var testReports = new ReportSettings();
-            testReports.Add(new ReportInfo("UniqueReport", GetTestFilePath("UniqueReport.skyr"), new List<string> { GetTestFilePath("testScript.r") }));
-            return testReports;
+            //var testReports = new ReportSettings();
+            var reportList = new List<ReportInfo>{GetTestReportInfo() };
+            return new ReportSettings(reportList);
+        }
+
+        public static ReportInfo GetTestReportInfo()
+        {
+            return new ReportInfo("UniqueReport", GetTestFilePath("UniqueReport.skyr"),
+                new List<string> {GetTestFilePath("testScript.r")});
         }
 
         public static SkylineBatchConfig GetTestConfig(string name = "name")
         {
-            return new SkylineBatchConfig()
+            /*return new SkylineBatchConfig()
             {
                 Name = name,
                 Created = DateTime.MinValue,
                 Modified = DateTime.MinValue,
                 MainSettings = GetTestMainSettings(),
                 ReportSettings = GetTestReportSettings()
-            };
+            };*/
+            return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestReportSettings());
         }
 
         public static ConfigRunner GetTestConfigRunner(string configName = "name")
@@ -183,14 +191,15 @@ namespace SkylineBatchTest
             testConfigManager.Close();
         }
 
-        public static List<string> GetAllLogFiles()
+        public static List<string> GetAllLogFiles(string directory = null)
         {
-            var files = Directory.GetFiles(GetTestFilePath(""));
+            directory = directory == null ? GetTestFilePath("") : directory;
+            var files = Directory.GetFiles(directory);
             var logFiles = new List<string>();
             foreach (var fullName in files)
             {
                 var file = Path.GetFileName(fullName);
-                if (file.StartsWith("testLog") && file.EndsWith(".log"))
+                if (file.EndsWith(".log"))
                     logFiles.Add(fullName);
             }
             return logFiles;

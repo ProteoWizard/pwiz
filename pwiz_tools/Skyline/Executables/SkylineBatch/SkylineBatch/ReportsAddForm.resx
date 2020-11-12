@@ -325,7 +325,7 @@
     <value>8</value>
   </data>
   <data name="btnAddRScript.Text" xml:space="preserve">
-    <value>&amp;Add</value>
+    <value>&amp;Add...</value>
   </data>
   <data name="&gt;&gt;btnAddRScript.Name" xml:space="preserve">
     <value>btnAddRScript</value>
@@ -382,7 +382,7 @@
     <value>5</value>
   </data>
   <data name="btnReportPath.Text" xml:space="preserve">
-    <value>&amp;Browse</value>
+    <value>&amp;Browse...</value>
   </data>
   <data name="&gt;&gt;btnReportPath.Name" xml:space="preserve">
     <value>btnReportPath</value>

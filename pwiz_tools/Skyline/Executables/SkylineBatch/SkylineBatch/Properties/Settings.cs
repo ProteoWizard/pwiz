@@ -103,7 +103,8 @@ namespace SkylineBatch.Properties
             var list = new List<SkylineBatchConfig>();
             while (reader.IsStartElement())
             {
-                list.Add(reader.Deserialize(new SkylineBatchConfig()));
+                list.Add(SkylineBatchConfig.ReadXml(reader));
+                //list.Add(reader.Deserialize(new SkylineBatchConfig()));
                 reader.Read();
             }
 
