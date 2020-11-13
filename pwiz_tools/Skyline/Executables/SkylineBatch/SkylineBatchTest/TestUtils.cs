@@ -116,18 +116,11 @@ namespace SkylineBatchTest
 
         public static MainSettings GetTestMainSettings()
         {
-            /*return new MainSettings()
-            {
-                AnalysisFolderPath = GetTestFilePath("analysis"),
-                DataFolderPath = GetTestFilePath("emptyData"),
-                TemplateFilePath = GetTestFilePath("emptyTemplate.sky"),
-            };*/
             return new MainSettings(GetTestFilePath("emptyTemplate.sky"), GetTestFilePath("analysis"), GetTestFilePath("emptyData"), "");
         }
 
         public static ReportSettings GetTestReportSettings()
         {
-            //var testReports = new ReportSettings();
             var reportList = new List<ReportInfo>{GetTestReportInfo() };
             return new ReportSettings(reportList);
         }
@@ -140,14 +133,6 @@ namespace SkylineBatchTest
 
         public static SkylineBatchConfig GetTestConfig(string name = "name")
         {
-            /*return new SkylineBatchConfig()
-            {
-                Name = name,
-                Created = DateTime.MinValue,
-                Modified = DateTime.MinValue,
-                MainSettings = GetTestMainSettings(),
-                ReportSettings = GetTestReportSettings()
-            };*/
             return new SkylineBatchConfig(name, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestReportSettings());
         }
 

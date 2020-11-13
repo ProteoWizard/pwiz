@@ -31,12 +31,8 @@ namespace SkylineBatch
         void LogProgramError(string message, params object[] args);
         void LogException(Exception exception, string message, params object[] args);
         string GetFile();
-
         string GetFileName();
-
         SkylineBatchLogger Archive();
-        void DisableUiLogging();
-        //void LogToUi(IMainUiControl mainUi);
         void DisplayLog();
 
     }

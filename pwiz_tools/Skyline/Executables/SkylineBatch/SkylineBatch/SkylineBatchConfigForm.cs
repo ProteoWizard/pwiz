@@ -54,55 +54,44 @@ namespace SkylineBatch
             InitializeComponent();
 
 
-            if (config != null)
-            {
-                InitializeInputFields(config);
-            }
-            
+            InitInputFieldsFromConfig(config);
+
             btnSaveConfig.Show();
+            lblConfigRunning.Hide();
 
             if (isBusy)
             {
-                // configuration is running and cannot be edited
                 lblConfigRunning.Show();
-                DisableEverything();
-                // save and cancel buttons are replaced with OK button
-                btnSaveConfig.Hide(); 
+                btnSaveConfig.Hide(); // save and cancel buttons are replaced with OK button
                 btnCancelConfig.Text = @"OK";
-            }
-            else
-            {
-                lblConfigRunning.Hide();
+                DisableEverything();
             }
 
             ActiveControl = textConfigName;
         }
 
-        private void InitializeInputFields(SkylineBatchConfig config)
+        private void InitInputFieldsFromConfig(SkylineBatchConfig config)
         {
+            if (config == null)
+                return;
+
             var mainSettings = config.MainSettings;
-            switch (_action)
+
+            textConfigName.Text = config.Name;
+            textAnalysisPath.Text = mainSettings.AnalysisFolderPath;
+            textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
+            InitReportsFromConfig(config);
+
+            if (_action != ConfigAction.Edit)
             {
-                case ConfigAction.Add:
-                    textConfigName.Text = "";
+                textConfigName.Text = "";
+                if (_action == ConfigAction.Add)
+                {
                     textAnalysisPath.Text = Path.GetDirectoryName(mainSettings.AnalysisFolderPath) + @"\";
                     textNamingPattern.Text = "";
-                    break;
-                case ConfigAction.Copy:
-                    textConfigName.Text = "";
-                    textAnalysisPath.Text = config.MainSettings.AnalysisFolderPath;
-                    textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
-                    InitializeReportSettings(config);
-                    break;
-                case ConfigAction.Edit:
-                    textConfigName.Text = config.Name;
-                    textAnalysisPath.Text = config.MainSettings.AnalysisFolderPath;
-                    textNamingPattern.Text = mainSettings.ReplicateNamingPattern;
-                    InitializeReportSettings(config);
-                    break;
-                default:
-                    return; // never get here
+                }
             }
+            
             textSkylinePath.Text = mainSettings.TemplateFilePath;
             textDataPath.Text = mainSettings.DataFolderPath;
 
@@ -187,8 +176,11 @@ namespace SkylineBatch
 
         #region Reports
 
-        private void InitializeReportSettings(SkylineBatchConfig config)
+        private void InitReportsFromConfig(SkylineBatchConfig config)
         {
+            if (_action == ConfigAction.Add)
+                return;
+
             foreach (var report in config.ReportSettings.Reports)
             {
                 _newReportList.Add(report);
@@ -211,13 +203,14 @@ namespace SkylineBatch
             if (addReportResult == DialogResult.OK)
             {
                 var newReportInfo = addReportsForm.NewReportInfo;
-                if (addingIndex == _newReportList.Count)
-                    _newReportList.Add(newReportInfo);
-                else
+
+                if (addingIndex < _newReportList.Count) // existing report was edited
                 {
-                    _newReportList[addingIndex] = newReportInfo;
+                    _newReportList.RemoveAt(addingIndex);
                     gridReportSettings.Rows.RemoveAt(addingIndex);
                 }
+
+                _newReportList.Insert(addingIndex,newReportInfo);
                 gridReportSettings.Rows.Insert(addingIndex, newReportInfo.AsArray());
             }
         }
@@ -226,15 +219,8 @@ namespace SkylineBatch
         {
             Program.LogInfo("Editing report");
             var indexSelected = gridReportSettings.SelectedRows[0].Index;
-            if (indexSelected == _newReportList.Count)
-            {
-                ShowAddReportDialog(_newReportList.Count);
-            }
-            else
-            {
-                var editingReport = _newReportList[indexSelected];
-                ShowAddReportDialog(indexSelected, editingReport);
-            }
+            var editingReport = _newReportList.Count > indexSelected ? _newReportList[indexSelected] : null;
+            ShowAddReportDialog(indexSelected, editingReport);
         }
 
         private void btnDeleteReport_Click(object sender, EventArgs e)
@@ -285,30 +271,22 @@ namespace SkylineBatch
 
             if (_action == ConfigAction.Edit)
             {
-                var editedConfig = new SkylineBatchConfig(newConfig.Name, _initialCreated, DateTime.Now, newConfig.MainSettings, newConfig.ReportSettings);
-
-                try
-                {
-                    _mainControl.EditSelectedConfiguration(editedConfig);
-                }
-                catch (ArgumentException e)
-                {
-                    ShowErrorDialog(e.Message);
-                    return;
-                }
+                // use the created time from the editing config
+                newConfig = new SkylineBatchConfig(newConfig.Name, _initialCreated, DateTime.Now,
+                    newConfig.MainSettings, newConfig.ReportSettings);
             }
-            else
+
+            try
             {
-                // Both add and copy create an entirely new configuration
-                try
-                {
+                if (_action == ConfigAction.Edit)
+                    _mainControl.EditSelectedConfiguration(newConfig);
+                else
                     _mainControl.AddConfiguration(newConfig);
-                }
-                catch (ArgumentException e)
-                {
-                    ShowErrorDialog(e.Message);
-                    return;
-                }
+            }
+            catch (ArgumentException e)
+            {
+                ShowErrorDialog(e.Message);
+                return;
             }
 
             Close();

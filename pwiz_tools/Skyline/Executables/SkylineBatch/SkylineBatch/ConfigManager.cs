@@ -45,7 +45,8 @@ namespace SkylineBatch
         private readonly bool _runningUi; // if the UI is displayed (false when testing)
         private readonly IMainUiControl _uiControl; // null if no UI displayed
 
-        
+        private readonly object _lock = new object(); // lock required for any mutator or getter method on _configList, _configRunners, or SelectedConfig
+        private readonly object _loggerLock = new object(); // lock required for any mutator or getter method on _logger, _oldLogs or SelectedLog
 
         public ConfigManager(ISkylineBatchLogger logger, IMainUiControl uiControl = null)
         {
@@ -105,15 +106,12 @@ namespace SkylineBatch
                 }
                 catch (ArgumentException e)
                 {
-                    if (_runningUi)
-                    {
-                        _uiControl.DisplayError(Resources.Save_configuration_error,
-                            string.Format(Resources.Could_not_save_configuration_error_message, config.Name, e.Message));
-                    }
-                    else
+                    if (!_runningUi)
                     {
                         throw;
                     }
+                    _uiControl.DisplayError(Resources.Save_configuration_error,
+                        string.Format(Resources.Could_not_save_configuration_error_message, config.Name, e.Message));
                     return;
                 }
 
@@ -141,7 +139,10 @@ namespace SkylineBatch
 
         public bool HasConfigs()
         {
-            return _configRunners.Keys.Count > 0;
+            lock (_lock)
+            {
+                return _configRunners.Keys.Count > 0;
+            }
         }
 
         public bool HasSelectedConfig()
@@ -151,17 +152,23 @@ namespace SkylineBatch
 
         public void SelectConfig(int newIndex)
         {
-            if (newIndex < 0 || newIndex >= _configList.Count)
-                throw new IndexOutOfRangeException("No configuration at index: " + newIndex);
-            SelectedConfig = newIndex;
+            lock (_lock)
+            {
+                if (newIndex < 0 || newIndex >= _configList.Count)
+                    throw new IndexOutOfRangeException("No configuration at index: " + newIndex);
+                SelectedConfig = newIndex;
+            }
         }
 
         public void DeselectConfig()
         {
-            SelectedConfig = -1;
+            lock (_lock)
+            {
+                SelectedConfig = -1;
+            }
         }
 
-        public void CheckConfigSelected()
+        private void CheckConfigSelected()
         {
             if (SelectedConfig < 0)
             {
@@ -171,23 +178,29 @@ namespace SkylineBatch
 
         public SkylineBatchConfig GetLastCreated() // creates config using most recently created config
         {
-            if (!HasConfigs())
-                throw new ArgumentException("No configurations to create from.");
-            Program.LogInfo("Creating new configuration");
-            var lastCreated = _configList[0];
-            foreach (var config in _configList)
+            lock (_lock)
             {
-                if (config.Created > lastCreated.Created)
-                    lastCreated = config;
-            }
+                if (!HasConfigs())
+                    throw new ArgumentException("No configurations to create from.");
+                Program.LogInfo("Creating new configuration");
+                var lastCreated = _configList[0];
+                foreach (var config in _configList)
+                {
+                    if (config.Created > lastCreated.Created)
+                        lastCreated = config;
+                }
 
-            return lastCreated;//.MakeChild();
+                return lastCreated;
+            }
         }
 
         public SkylineBatchConfig GetSelectedConfig()
         {
-            CheckConfigSelected();
-            return _configList[SelectedConfig];
+            lock (_lock)
+            {
+                CheckConfigSelected();
+                return _configList[SelectedConfig];
+            }
         }
 
         public void AddConfiguration(SkylineBatchConfig config)
@@ -197,73 +210,85 @@ namespace SkylineBatch
 
         public void InsertConfiguration(SkylineBatchConfig config, int index, Operation operation = Operation.Insert)
         {
+            lock (_lock)
+            {
+                CheckIfExists(config, false, operation);
+                config.Validate();
+                Program.LogInfo(string.Format("Adding configuration \"{0}\"", config.Name));
+                _configList.Insert(index, config);
 
-            CheckIfExists(config, false, operation);
-            config.Validate();
-            Program.LogInfo(string.Format("Adding configuration \"{0}\"", config.Name));
-            _configList.Insert(index, config);
-
-            var newRunner = new ConfigRunner(config, _logger, _uiControl);
-            _configRunners.Add(config.Name, newRunner);
+                var newRunner = new ConfigRunner(config, _logger, _uiControl);
+                _configRunners.Add(config.Name, newRunner);
+            }
+            
         }
 
         public void ReplaceSelectedConfig(SkylineBatchConfig newConfig)
         {
-            CheckConfigSelected();
-            var oldConfig = _configList[SelectedConfig];
-            newConfig.Validate();
-            if (!string.Equals(oldConfig.Name, newConfig.Name))
-                CheckIfExists(newConfig, false, Operation.Replace);
-            var index = IndexOf(oldConfig);
-            RemoveConfig(oldConfig);
-            InsertConfiguration(newConfig, index);
+            lock (_lock)
+            {
+                CheckConfigSelected();
+                var oldConfig = _configList[SelectedConfig];
+                newConfig.Validate();
+                if (!string.Equals(oldConfig.Name, newConfig.Name))
+                    CheckIfExists(newConfig, false, Operation.Replace);
+                RemoveConfig(oldConfig);
+                InsertConfiguration(newConfig, SelectedConfig);
+            }
         }
 
         public void MoveSelectedConfig(bool moveUp)
         {
-            var movingConfig = _configList[SelectedConfig];
-            var delta = moveUp ? -1 : 1;
-            _configList.Remove(movingConfig);
-            _configList.Insert(SelectedConfig + delta, movingConfig);
-            SelectedConfig += delta;
+            lock (_lock)
+            {
+                var movingConfig = _configList[SelectedConfig];
+                var delta = moveUp ? -1 : 1;
+                _configList.Remove(movingConfig);
+                _configList.Insert(SelectedConfig + delta, movingConfig);
+                SelectedConfig += delta;
+            }
         }
         
         public void RemoveSelected()
         {
-            var configRunner = GetSelectedConfigRunner();
-
-            var config = configRunner.Config;
-
-            if (configRunner.IsBusy())
+            lock (_lock)
             {
-                string message = null;
-                if (configRunner.IsRunning())
+                CheckConfigSelected();
+                var configRunner = GetSelectedConfigRunner();
+
+                var config = configRunner.Config;
+
+                if (configRunner.IsBusy())
                 {
-                    message =
-                        string.Format(
-                            @"Configuration ""{0}"" is running. Please stop the configuration and try again. ",
-                            configRunner.GetConfigName());
+                    string message = null;
+                    if (configRunner.IsRunning())
+                    {
+                        message =
+                            string.Format(
+                                @"Configuration ""{0}"" is running. Please stop the configuration and try again. ",
+                                configRunner.GetConfigName());
+                    }
+
+                    if (_runningUi)
+                        MessageBox.Show(message, Resources.Cannot_Delete, MessageBoxButtons.OK);
+                    return;
                 }
 
+                var doDelete = DialogResult.Yes;
                 if (_runningUi)
-                    MessageBox.Show(message, Resources.Cannot_Delete, MessageBoxButtons.OK);
-                return;
+                    doDelete = MessageBox.Show(
+                        string.Format(@"Are you sure you want to delete configuration ""{0}""?",
+                            configRunner.GetConfigName()),
+                        Resources.Confirm_Delete,
+                        MessageBoxButtons.YesNo);
+
+                if (doDelete != DialogResult.Yes) return;
+
+                // remove config
+                Program.LogInfo(string.Format("Removing configuration \"{0}\"", configRunner.Config.Name));
+                RemoveConfig(config);
+                DeselectConfig();
             }
-
-            var doDelete = DialogResult.Yes;
-            if (_runningUi)
-                doDelete = MessageBox.Show(
-                    string.Format(@"Are you sure you want to delete configuration ""{0}""?",
-                        configRunner.GetConfigName()),
-                    Resources.Confirm_Delete,
-                    MessageBoxButtons.YesNo);
-
-            if (doDelete != DialogResult.Yes) return;
-
-            // remove config
-            Program.LogInfo(string.Format("Removing configuration \"{0}\"", configRunner.Config.Name));
-            RemoveConfig(config);
-            DeselectConfig();
         }
 
         private void RemoveConfig(SkylineBatchConfig config)
@@ -287,30 +312,23 @@ namespace SkylineBatch
 
         }
 
-        private int IndexOf(SkylineBatchConfig config)
-        {
-            for (int i = 0; i < _configList.Count; i++)
-            {
-                if (_configList[i].Equals(config))
-                    return i;
-            }
-            return -1;
-        }
-
         #endregion
 
 
         #region Run Configs
 
-        public ConfigRunner GetConfigRunnerAtIndex(int index)
+        private ConfigRunner GetConfigRunnerAtIndex(int index)
         {
             return _configRunners[_configList[index].Name];
         }
 
         public ConfigRunner GetSelectedConfigRunner()
         {
-            CheckConfigSelected();
-            return GetConfigRunnerAtIndex(SelectedConfig);
+            lock (_lock)
+            {
+                CheckConfigSelected();
+                return GetConfigRunnerAtIndex(SelectedConfig);
+            }
         }
 
         public async void RunAll(int startStep)
@@ -323,19 +341,28 @@ namespace SkylineBatch
             }
             UpdateIsRunning(true);
 
-            var oldLogger = _logger.Archive();
-            if (oldLogger != null)
-                _oldLogs.Insert(0, oldLogger);
-            if (_runningUi)
+            lock (_loggerLock)
             {
-                _uiControl.UpdateUiLogFiles();
+                var oldLogger = _logger.Archive();
+                if (oldLogger != null)
+                    _oldLogs.Insert(0, oldLogger);
+                if (_runningUi)
+                {
+                    _uiControl.UpdateUiLogFiles();
+                }
             }
 
-            foreach (var runner in _configRunners.Values)
+            string nextConfig;
+            lock (_lock)
             {
-                runner.ChangeStatus(ConfigRunner.RunnerStatus.Waiting);
+                foreach (var runner in _configRunners.Values)
+                {
+                    runner.ChangeStatus(ConfigRunner.RunnerStatus.Waiting);
+                }
+
+                nextConfig = GetNextWaitingConfig();
             }
-            var nextConfig = GetNextWaitingConfig();
+
             while (!string.IsNullOrEmpty(nextConfig))
             {
                 await _configRunners[nextConfig].Run(startStep);
@@ -343,39 +370,48 @@ namespace SkylineBatch
             }
 
             while (ConfigsRunning())
-                await Task.Delay(2000);
+                await Task.Delay(3000);
             UpdateIsRunning(false);
         }
 
         private string GetNextWaitingConfig()
         {
-            foreach (var config in _configList)
+            lock (_lock)
             {
-                if (_configRunners[config.Name].IsWaiting())
+                foreach (var config in _configList)
                 {
-                    return config.Name;
+                    if (_configRunners[config.Name].IsWaiting())
+                    {
+                        return config.Name;
+                    }
                 }
-            }
 
-            return null;
+                return null;
+            }
         }
 
-        public bool ConfigsRunning()
+        private bool ConfigsRunning()
         {
-            foreach (var runner in _configRunners.Values)
+            lock (_lock)
             {
-                if (runner.IsBusy())
-                    return true;
+                foreach (var runner in _configRunners.Values)
+                {
+                    if (runner.IsBusy())
+                        return true;
+                }
+
+                return false;
             }
-            return false;
         }
 
         public void CancelRunners()
-         {
-            foreach (var configRunner in _configRunners.Values)
-            {
-                configRunner.Cancel();
-            }
+        {
+             lock (_lock){
+                foreach (var configRunner in _configRunners.Values)
+                {
+                    configRunner.Cancel();
+                }
+             }
         }
 
         private void UpdateIsRunning(bool isRunning)
@@ -391,71 +427,87 @@ namespace SkylineBatch
 
         public bool HasOldLogs()
         {
-            return _oldLogs.Count > 0;
+            lock (_loggerLock)
+                return _oldLogs.Count > 0;
         }
 
         public void SelectLog(int selected)
         {
-            if (selected < 0 || selected > _oldLogs.Count)
-                throw new IndexOutOfRangeException("No log at index: " + selected);
-            SelectedLog = selected;
+            lock (_loggerLock)
+            {
+                if (selected < 0 || selected > _oldLogs.Count)
+                    throw new IndexOutOfRangeException("No log at index: " + selected);
+                SelectedLog = selected;
+            }
         }
 
         public ISkylineBatchLogger GetSelectedLogger()
         {
-            return SelectedLog == 0 ? _logger : _oldLogs[SelectedLog - 1];
+            lock (_loggerLock)
+                return SelectedLog == 0 ? _logger : _oldLogs[SelectedLog - 1];
         }
 
         private void LoadOldLogs()
         {
-            var logDirectory = Path.GetDirectoryName(_logger.GetFile());
-            var files = logDirectory != null ? new DirectoryInfo(logDirectory).GetFiles() : new FileInfo[0];
-            foreach (var file in files)
+            lock (_loggerLock)
             {
-                if (file.Name.EndsWith(".log") && !file.Name.Equals(_logger.GetFileName()))
+                var logDirectory = Path.GetDirectoryName(_logger.GetFile());
+                var files = logDirectory != null ? new DirectoryInfo(logDirectory).GetFiles() : new FileInfo[0];
+                foreach (var file in files)
                 {
-                    _oldLogs.Insert(0, new SkylineBatchLogger(file.FullName, _uiControl));
+                    if (file.Name.EndsWith(".log") && !file.Name.Equals(_logger.GetFileName()))
+                    {
+                        _oldLogs.Insert(0, new SkylineBatchLogger(file.FullName, _uiControl));
+                    }
                 }
             }
         }
 
         public object[] GetOldLogFiles()
         {
-            var oldLogFiles = new object[_oldLogs.Count];
-            for (int i = 0; i < oldLogFiles.Length; i++)
+            lock (_loggerLock)
             {
-                oldLogFiles[i] = _oldLogs[i].GetFileName();
-            }
+                var oldLogFiles = new object[_oldLogs.Count];
+                for (int i = 0; i < oldLogFiles.Length; i++)
+                {
+                    oldLogFiles[i] = _oldLogs[i].GetFileName();
+                }
 
-            return oldLogFiles;
+                return oldLogFiles;
+            }
         }
 
         public object[] GetAllLogFiles()
         {
-            var logFiles = new object [_oldLogs.Count + 1];
-            logFiles[0] = _logger.GetFileName();
-            GetOldLogFiles().CopyTo(logFiles, 1);
-            return logFiles;
+            lock (_loggerLock)
+            {
+                var logFiles = new object[_oldLogs.Count + 1];
+                logFiles[0] = _logger.GetFileName();
+                GetOldLogFiles().CopyTo(logFiles, 1);
+                return logFiles;
+            }
         }
 
         public void DeleteLogs(object[] deletingLogs)
         {
-            int i = 0;
-            while (i < _oldLogs.Count)
+            lock (_loggerLock)
             {
-                if (deletingLogs.Contains(_oldLogs[i].GetFileName()))
+                int i = 0;
+                while (i < _oldLogs.Count)
                 {
-                    File.Delete(_oldLogs[i].GetFile());
-                    _oldLogs.RemoveAt(i);
-                    if (i <= SelectedLog - 1)
-                        SelectedLog = SelectedLog - 1 == i ? 0 : SelectedLog - 1;
-                    continue;
+                    if (deletingLogs.Contains(_oldLogs[i].GetFileName()))
+                    {
+                        File.Delete(_oldLogs[i].GetFile());
+                        _oldLogs.RemoveAt(i);
+                        if (i <= SelectedLog - 1)
+                            SelectedLog = SelectedLog - 1 == i ? 0 : SelectedLog - 1;
+                        continue;
+                    }
+                    i++;
                 }
-                i++;
-                    
+                if (_runningUi)
+                    _uiControl.UpdateUiLogFiles();
             }
-            if (_runningUi)
-                _uiControl.UpdateUiLogFiles();
         }
 
         #endregion
@@ -566,19 +618,36 @@ namespace SkylineBatch
         #endregion
 
         #region Tests
-
-
+        
         public bool ConfigListEquals(List<SkylineBatchConfig> otherConfigs)
         {
-            if (otherConfigs.Count != _configList.Count) return false;
-
-            for (int i = 0; i < _configList.Count; i++)
+            lock (_lock)
             {
-                if (!Equals(otherConfigs[i], _configList[i])) return false;
-            }
+                if (otherConfigs.Count != _configList.Count) return false;
 
-            return true;
+                for (int i = 0; i < _configList.Count; i++)
+                {
+                    if (!Equals(otherConfigs[i], _configList[i])) return false;
+                }
+
+                return true;
+            }
         }
+
+        public string ListConfigNames()
+        {
+            lock (_lock)
+            {
+                var names = "";
+                foreach (var config in _configList)
+                {
+                    names += config.Name + "  ";
+                }
+
+                return names;
+            }
+        }
+        
 
 
         #endregion

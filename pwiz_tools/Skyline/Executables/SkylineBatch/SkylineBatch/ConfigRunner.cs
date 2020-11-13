@@ -263,7 +263,7 @@ namespace SkylineBatch
         {
             if (IsRunning()) 
                 ChangeStatus(RunnerStatus.Cancelling);
-            else if (IsWaiting())
+            if (IsWaiting())
                 ChangeStatus(RunnerStatus.Stopped);                                                                                            
         }
 
