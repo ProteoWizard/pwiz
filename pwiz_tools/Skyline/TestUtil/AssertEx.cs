@@ -110,7 +110,7 @@ namespace pwiz.SkylineTestUtil
         {
             if (Assume.InvokeDebuggerOnFail)
             {
-                Assume.Fail(message); // Handles the debugger launch
+                Assume.Fail(string.Format(message, parameters)); // Handles the debugger launch
             }
             Assert.Fail(message, parameters);
         }
