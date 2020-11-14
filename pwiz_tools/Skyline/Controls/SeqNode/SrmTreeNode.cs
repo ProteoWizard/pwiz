@@ -797,7 +797,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 // parenting, before the text and icons can be set correctly.
                 // So, force a model change to update those values.
                 if (tree.ShowReplicate == ReplicateDisplay.best 
-                    || docNode is TransitionGroupDocNode // TODO: ratioIndex
+                    || docNode is TransitionGroupDocNode
                     || !ReferenceEquals(docNode, nodeTree.Model))
                 {
                     nodeTree.Model = docNode;

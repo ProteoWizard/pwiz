@@ -516,13 +516,12 @@ namespace pwiz.Skyline.Model.Results
         }
         public float? Ratio { get { return _ratios[0]; } }
 
+        private const int RATIO_INDEX_GLOBAL_STANDARDS = -2;
         public float? GetRatio(int index)
         {
-            // TODO: RatioIndex
-            return _ratios[index];
-            // return index != RATIO_INDEX_GLOBAL_STANDARDS
-            //     ? _ratios[index]
-            //     : _ratios[_ratios.Count - 1];
+            return index != RATIO_INDEX_GLOBAL_STANDARDS
+                ? _ratios[index]
+                : _ratios[_ratios.Count - 1];
         }
 
         public Annotations Annotations { get; private set; }

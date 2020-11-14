@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnNormalizeOptionChanged()
         {
-            // Retention times are not impacted by the ratio index
+            // Retention times are not impacted by normalization
         }
 
         public void OnUpdateGraph()

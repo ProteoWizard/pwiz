@@ -158,10 +158,9 @@ namespace pwiz.Skyline.Controls.Graphs
             var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths().ToList();
             var pepCount = peptidePaths.Count;
             NormalizeOption normalizeOption = AreaGraphController.AreaNormalizeOption.Constrain(document.Settings);
-            IsMultiSelect = pepCount > 1
-                            || pepCount == 1 &&
-                            GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode;
-
+            IsMultiSelect = pepCount > 1 ||
+                            (pepCount == 1 &&
+                             GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode);
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (GraphSummary.StateProvider.SelectedNode is EmptyNode) // if EmptyNode selected
             {
