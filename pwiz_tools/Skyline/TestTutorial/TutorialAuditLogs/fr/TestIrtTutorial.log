@@ -6,13 +6,17 @@ Import results settings > File names : contains "A_D110907_SiRT_HELA_11_nsMRM_15
 Import results settings > File names : contains "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
 Import results settings > Add one new replicate is True
 Import results settings > Files to import simultaneously is "Many"
+Import results settings > Removed prefix is "A_D110907_SiRT_HELA_11_nsMRM_150selected_"
+Import results settings > Removed suffix is "_30min-5-35"
 Extra Info: File names = 
 [
     "A_D110907_SiRT_HELA_11_nsMRM_150selected_1_30min-5-35.mzML",
     "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35.mzML"
 ],
 Add one new replicate = True,
-Files to import simultaneously = "Many"
+Files to import simultaneously = "Many",
+Removed prefix = "A_D110907_SiRT_HELA_11_nsMRM_150selected_",
+Removed suffix = "_30min-5-35"
 
 Undo Redo : Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
 Summary   : Settings > Peptide Settings -- Prediction > Retention time predictor changed from "None" to "iRT-C18"
