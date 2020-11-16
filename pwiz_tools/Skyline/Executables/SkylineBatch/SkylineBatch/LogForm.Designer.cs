@@ -67,9 +67,9 @@
             // LogForm
             // 
             this.AcceptButton = this.btnOk;
-            resources.ApplyResources(this, "$this");
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.CancelButton = this.btnCancel;
+            resources.ApplyResources(this, "$this");
             this.Controls.Add(this.checkBoxSelectAll);
             this.Controls.Add(this.checkedListLogs);
             this.Controls.Add(this.btnCancel);

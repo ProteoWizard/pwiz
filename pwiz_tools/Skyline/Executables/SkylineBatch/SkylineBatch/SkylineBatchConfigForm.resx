@@ -558,11 +558,14 @@
   <data name="toolBar.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>None</value>
   </data>
+  <data name="btnAddReport.ImageScaling" type="System.Windows.Forms.ToolStripItemImageScaling, System.Windows.Forms">
+    <value>None</value>
+  </data>
   <data name="btnAddReport.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="btnAddReport.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 24</value>
+    <value>22, 20</value>
   </data>
   <data name="btnAddReport.Text" xml:space="preserve">
     <value>toolStripButton1</value>
@@ -573,11 +576,14 @@
   <data name="btnDeleteReport.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
+  <data name="btnDeleteReport.ImageScaling" type="System.Windows.Forms.ToolStripItemImageScaling, System.Windows.Forms">
+    <value>None</value>
+  </data>
   <data name="btnDeleteReport.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="btnDeleteReport.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 24</value>
+    <value>22, 20</value>
   </data>
   <data name="btnDeleteReport.Text" xml:space="preserve">
     <value>toolStripButton2</value>
@@ -588,11 +594,14 @@
   <data name="btnEditReport.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
+  <data name="btnEditReport.ImageScaling" type="System.Windows.Forms.ToolStripItemImageScaling, System.Windows.Forms">
+    <value>None</value>
+  </data>
   <data name="btnEditReport.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="btnEditReport.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 24</value>
+    <value>22, 20</value>
   </data>
   <data name="btnEditReport.Text" xml:space="preserve">
     <value>toolStripButton3</value>
@@ -601,10 +610,10 @@
     <value>Edit</value>
   </data>
   <data name="toolBar.Location" type="System.Drawing.Point, System.Drawing">
-    <value>512, 3</value>
+    <value>513, 3</value>
   </data>
   <data name="toolBar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 83</value>
+    <value>24, 71</value>
   </data>
   <data name="toolBar.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -879,7 +888,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAACw
-        CgAAAk1TRnQBSQFMAgEBAgEAAWgBAAFoAQABHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CgAAAk1TRnQBSQFMAgEBAgEAAXABAAFwAQABHgEAAR4BAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABeAMAAR4DAAEBAQABCAUAARABDhgAAYACAAGAAwACgAEAAYADAAGAAQABgAEAAoACAAPAAQABwAHc
         AcABAAHwAcoBpgEAATMFAAEzAQABMwEAATMBAAIzAgADFgEAAxwBAAMiAQADKQEAA1UBAANNAQADQgEA
         AzkBAAGAAXwB/wEAAlAB/wEAAZMBAAHWAQAB/wHsAcwBAAHGAdYB7wEAAdYC5wEAAZABqQGtAgAB/wEz

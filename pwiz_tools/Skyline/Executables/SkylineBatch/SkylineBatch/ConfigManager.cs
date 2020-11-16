@@ -36,7 +36,7 @@ namespace SkylineBatch
         // The UI should reflect the configs, runners, and log files from this class
 
 
-        private List<SkylineBatchConfig> _configList; // the list of configurations. Every config must have a runner in configRunners
+        private readonly List<SkylineBatchConfig> _configList; // the list of configurations. Every config must have a runner in configRunners
         private readonly Dictionary<string, ConfigRunner> _configRunners; // dictionary mapping from config name to that config's runner
 
         private readonly ISkylineBatchLogger _logger; // the current logger - always logs to SkylineBatch.log
@@ -56,6 +56,7 @@ namespace SkylineBatch
             _uiControl = uiControl;
             _runningUi = uiControl != null;
             _configRunners = new Dictionary<string, ConfigRunner>();
+            _configList = new List<SkylineBatchConfig>();
             _oldLogs = new List<ISkylineBatchLogger>();
             LoadOldLogs();
             LoadConfigList();
@@ -78,7 +79,6 @@ namespace SkylineBatch
 
         private void LoadConfigList()
         {
-            _configList = new List<SkylineBatchConfig>();
             foreach (var config in Settings.Default.ConfigList)
             {
                 _configList.Add(config);
@@ -205,15 +205,14 @@ namespace SkylineBatch
 
         public void AddConfiguration(SkylineBatchConfig config)
         {
-            InsertConfiguration(config, _configRunners.Count, Operation.Add);
+            InsertConfiguration(config, _configList.Count, Operation.Add);
         }
 
-        public void InsertConfiguration(SkylineBatchConfig config, int index, Operation operation = Operation.Insert)
+        private void InsertConfiguration(SkylineBatchConfig config, int index, Operation operation = Operation.Insert)
         {
             lock (_lock)
             {
                 CheckIfExists(config, false, operation);
-                config.Validate();
                 Program.LogInfo(string.Format("Adding configuration \"{0}\"", config.Name));
                 _configList.Insert(index, config);
 
@@ -229,7 +228,6 @@ namespace SkylineBatch
             {
                 CheckConfigSelected();
                 var oldConfig = _configList[SelectedConfig];
-                newConfig.Validate();
                 if (!string.Equals(oldConfig.Name, newConfig.Name))
                     CheckIfExists(newConfig, false, Operation.Replace);
                 RemoveConfig(oldConfig);
@@ -285,7 +283,7 @@ namespace SkylineBatch
                 if (doDelete != DialogResult.Yes) return;
 
                 // remove config
-                Program.LogInfo(string.Format("Removing configuration \"{0}\"", configRunner.Config.Name));
+                Program.LogInfo(string.Format("Removing configuration \"{0}\"", config.Name));
                 RemoveConfig(config);
                 DeselectConfig();
             }
@@ -317,17 +315,12 @@ namespace SkylineBatch
 
         #region Run Configs
 
-        private ConfigRunner GetConfigRunnerAtIndex(int index)
-        {
-            return _configRunners[_configList[index].Name];
-        }
-
         public ConfigRunner GetSelectedConfigRunner()
         {
             lock (_lock)
             {
                 CheckConfigSelected();
-                return GetConfigRunnerAtIndex(SelectedConfig);
+                return _configRunners[_configList[SelectedConfig].Name];
             }
         }
 
@@ -518,6 +511,7 @@ namespace SkylineBatch
         public string Import(string filePath)
         {
             var readConfigs = new List<SkylineBatchConfig>();
+            var validationErrors = new List<string>();
             try
             {
                 using (var stream = new FileStream(filePath, FileMode.Open))
@@ -534,8 +528,18 @@ namespace SkylineBatch
                         {
                             if (reader.Name == "skylinebatch_config")
                             {
-                                var config = SkylineBatchConfig.ReadXml(reader);
-                                readConfigs.Add(config);
+                                SkylineBatchConfig config = null;
+                                try
+                                {
+                                    config = SkylineBatchConfig.ReadXml(reader);
+                                }
+                                catch (Exception ex)
+                                {
+                                    validationErrors.Add(ex.Message);
+                                }
+                                
+                                if (config != null)
+                                    readConfigs.Add(config);
                             }
                             reader.Read();
                             reader.Read();
@@ -559,7 +563,6 @@ namespace SkylineBatch
                     MessageBoxButtons.OK);
             }
 
-            var validationErrors = new List<string>();
             var duplicateConfigs = new List<string>();
             var numAdded = 0;
             foreach (SkylineBatchConfig config in readConfigs)
@@ -569,16 +572,6 @@ namespace SkylineBatch
                 {
                     // If a configuration with the same name already exists, don't add it
                     duplicateConfigs.Add(config.Name);
-                    continue;
-                }
-
-                try
-                {
-                    config.Validate();
-                }
-                catch (Exception ex)
-                {
-                    validationErrors.Add(string.Format(Resources.Configuration_error_message, config.Name, ex.Message));
                     continue;
                 }
                 

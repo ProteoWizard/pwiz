@@ -17,6 +17,7 @@
  */
 
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
@@ -103,8 +104,12 @@ namespace SkylineBatch.Properties
             var list = new List<SkylineBatchConfig>();
             while (reader.IsStartElement())
             {
-                list.Add(SkylineBatchConfig.ReadXml(reader));
-                //list.Add(reader.Deserialize(new SkylineBatchConfig()));
+                try
+                {
+                    list.Add(SkylineBatchConfig.ReadXml(reader));
+                }
+                catch (ArgumentException) { } // Skip invalid configurations
+                
                 reader.Read();
             }
 

@@ -20,7 +20,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Xml;
-using System.Xml.Schema;
 using System.Xml.Serialization;
 using SkylineBatch.Properties;
 
@@ -105,7 +104,7 @@ namespace SkylineBatch
         
 
 
-        #region Implementation of IXmlSerializable interface
+        #region Read/Write XML
 
         private enum Attr
         {
@@ -114,11 +113,6 @@ namespace SkylineBatch
             DataFolderPath,
             ReplicateNamingPattern,
         };
-
-        public XmlSchema GetSchema()
-        {
-            return null;
-        }
 
         public static MainSettings ReadXml(XmlReader reader)
         {

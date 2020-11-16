@@ -81,18 +81,30 @@ namespace SkylineBatch
                 reader.Read();
             } while (reader.NodeType != XmlNodeType.Element);
 
-
-            var mainSettings = MainSettings.ReadXml(reader);
+            MainSettings mainSettings = null;
+            ReportSettings reportSettings = null; 
+            string exceptionMessage = null;
+            try
+            {
+                mainSettings = MainSettings.ReadXml(reader);
+                do
+                {
+                    reader.Read();
+                } while (reader.NodeType != XmlNodeType.Element);
+                reportSettings = ReportSettings.ReadXml(reader);
+            }
+            catch (ArgumentException e)
+            {
+                exceptionMessage = string.Format("\"{0}\" ({1})", name, e.Message);
+            }
+            
             do
             {
                 reader.Read();
-            } while (reader.NodeType != XmlNodeType.Element);
-            var reportSettings = ReportSettings.ReadXml(reader);
+            } while (!(reader.Name == "skylinebatch_config" && reader.NodeType == XmlNodeType.EndElement));
 
-            do
-            {
-                reader.Read();
-            } while (reader.NodeType != XmlNodeType.EndElement);
+            if (exceptionMessage != null)
+                throw new ArgumentException(exceptionMessage);
 
             return new SkylineBatchConfig(name, created, modified, mainSettings, reportSettings);
         }

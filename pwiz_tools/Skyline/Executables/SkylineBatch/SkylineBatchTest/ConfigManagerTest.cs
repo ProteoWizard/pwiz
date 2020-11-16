@@ -90,8 +90,8 @@ namespace SkylineBatchTest
             var oneConfig = TestUtils.ConfigListFromNames(new List<string> { "one" });
             Assert.IsTrue(testConfigManager.ConfigListEquals(oneConfig));
 
+            testConfigManager.AddConfiguration(TestUtils.GetTestConfig("two"));
             testConfigManager.AddConfiguration(TestUtils.GetTestConfig("three"));
-            testConfigManager.InsertConfiguration(TestUtils.GetTestConfig("two"), 1);
             var threeConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three" });
             Assert.IsTrue(testConfigManager.ConfigListEquals(threeConfigs));
 
