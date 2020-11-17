@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model.Results
 
         public double? GetTransitionDataValue(NormalizeOption ratioIndex, TransitionChromInfoData transitionChromInfoData)
         {
-            var normalizationMethod = RatioIndexToNormalizationMethod(transitionChromInfoData.PeptideDocNode,
+            var normalizationMethod = NormalizationMethodForPrecursor(transitionChromInfoData.PeptideDocNode,
                 transitionChromInfoData.TransitionGroupDocNode, ratioIndex);
             return GetTransitionValue(normalizationMethod, transitionChromInfoData.PeptideDocNode,
                 transitionChromInfoData.TransitionGroupDocNode, transitionChromInfoData.TransitionDocNode,
@@ -140,7 +140,7 @@ namespace pwiz.Skyline.Model.Results
         public double? GetTransitionGroupDataValue(NormalizeOption ratioIndex,
             TransitionGroupChromInfoData transitionGroupChromInfoData)
         {
-            var normalizationMethod = RatioIndexToNormalizationMethod(transitionGroupChromInfoData.PeptideDocNode,
+            var normalizationMethod = NormalizationMethodForPrecursor(transitionGroupChromInfoData.PeptideDocNode,
                 transitionGroupChromInfoData.TransitionGroupDocNode, ratioIndex);
             return GetTransitionGroupValue(normalizationMethod, transitionGroupChromInfoData.PeptideDocNode,
                 transitionGroupChromInfoData.TransitionGroupDocNode,
@@ -402,18 +402,18 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
-        public NormalizationMethod RatioIndexToNormalizationMethod(PeptideDocNode peptideDocNode, NormalizeOption ratioIndex)
+        public NormalizationMethod NormalizationMethodForMolecule(PeptideDocNode peptideDocNode, NormalizeOption normalizeOption)
         {
-            if (ratioIndex.NormalizationMethod != null)
+            if (normalizeOption.NormalizationMethod != null)
             {
-                return ratioIndex.NormalizationMethod;
+                return normalizeOption.NormalizationMethod;
             }
-            if (ratioIndex == NormalizeOption.CALIBRATED)
+            if (normalizeOption == NormalizeOption.CALIBRATED)
             {
-                ratioIndex = NormalizeOption.DEFAULT;
+                normalizeOption = NormalizeOption.DEFAULT;
             }
 
-            if (ratioIndex == NormalizeOption.DEFAULT)
+            if (normalizeOption == NormalizeOption.DEFAULT)
             {
                 return peptideDocNode.NormalizationMethod ??
                        Document.Settings.PeptideSettings.Quantification.NormalizationMethod;
@@ -422,10 +422,10 @@ namespace pwiz.Skyline.Model.Results
             return NormalizationMethod.NONE;
         }
 
-        public NormalizationMethod RatioIndexToNormalizationMethod(PeptideDocNode peptideDocNode,
-            TransitionGroupDocNode transitionGroup, NormalizeOption ratioIndex)
+        public NormalizationMethod NormalizationMethodForPrecursor(PeptideDocNode peptideDocNode,
+            TransitionGroupDocNode transitionGroup, NormalizeOption normalizeOption)
         {
-            var normalizationMethod = RatioIndexToNormalizationMethod(peptideDocNode, ratioIndex);
+            var normalizationMethod = NormalizationMethodForMolecule(peptideDocNode, normalizeOption);
             if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
             {
                 if (ratioToLabel.IsotopeLabelTypeName == transitionGroup.LabelType.Name)

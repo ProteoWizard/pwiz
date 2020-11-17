@@ -1218,15 +1218,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override List<LineInfo> GetPeptidePointPairLists(PeptideGroupDocNode peptideGroup, PeptideDocNode nodePep, bool multiplePeptides)
             {
-                if (_normalizeOption == NormalizeOption.CALIBRATED || _normalizeOption == NormalizeOption.DEFAULT)
+                if (_normalizeOption == NormalizeOption.CALIBRATED 
+                    || multiplePeptides && _normalizeOption == NormalizeOption.DEFAULT)
                 {
                     return new List<LineInfo>
                     {
                         new LineInfo(nodePep, nodePep.ModifiedSequenceDisplay,
                             new List<PointPairList> {GetCalibratedPeptidePointList(peptideGroup, nodePep)})
                     };
-
                 }
+
                 var tuples = base.GetPeptidePointPairLists(peptideGroup, nodePep, multiplePeptides);
                 if (!multiplePeptides)
                 {
@@ -1247,13 +1248,15 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
                 }
+                var normalizationMethod =
+                    NormalizedValueCalculator.NormalizationMethodForMolecule(nodePep, _normalizeOption);
                 var result = new PointPairList();
                 foreach (var points in pointLists)
                 {
                     var x = points[0].X;
                     ErrorTag tag = null;
                     double y;
-                    if (_normalizeOption == RATIO_INDEX_NONE)
+                    if (!(normalizationMethod is NormalizationMethod.RatioToLabel))
                     {
                         y = points.Sum(point => point.Y);
                         tag = CalcErrorTag(points, false);

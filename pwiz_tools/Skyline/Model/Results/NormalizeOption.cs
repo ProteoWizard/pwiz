@@ -117,6 +117,7 @@ namespace pwiz.Skyline.Model.Results
                 yield return CALIBRATED;
             }
         }
+
         #region Equality Members
         protected bool Equals(NormalizeOption other)
         {

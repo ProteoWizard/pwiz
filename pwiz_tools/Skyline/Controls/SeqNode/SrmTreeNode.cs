@@ -1374,7 +1374,10 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public NormalizationMethod NormalizationMethod
         {
-            get { return NormalizedValueCalculator.RatioIndexToNormalizationMethod(NodePep, NormalizeOption);  }
+            get
+            {
+                return NormalizedValueCalculator.NormalizationMethodForMolecule(NodePep, NormalizeOption);
+            }
         }
 
         public NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
