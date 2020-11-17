@@ -1264,6 +1264,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             set { textCalculatorName.Text = value; }
         }
 
+        public string CalcPath
+        {
+            get { return textDatabase.Text; }
+            set { textDatabase.Text = value; }
+        }
+
         public void DoPasteStandard()
         {
             _gridViewStandardDriver.OnPaste();
