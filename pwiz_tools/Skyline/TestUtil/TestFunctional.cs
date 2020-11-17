@@ -688,9 +688,11 @@ namespace pwiz.SkylineTestUtil
                     if (isOpen && string.IsNullOrEmpty(formDetail))
                     {
                         // Grab some details in case of eventual failure
-                        var formCloseClassName = System.ComponentModel.TypeDescriptor.GetClassName(formClose) ?? "?";
-                        var formCloseText = formClose.Text ?? "?";
-                        formDetail = string.Format("(form type={0}, form text=\"{1}\")", formCloseClassName, formCloseText);
+                        var formCloseClassName = System.ComponentModel.TypeDescriptor.GetClassName(formClose);
+                        var formCloseText = formClose.Text;
+                        formDetail = string.Format("(form class={0}, form text=\"{1}\")", 
+                            string.IsNullOrEmpty(formCloseClassName) ? @"?" : formCloseClassName,
+                            string.IsNullOrEmpty(formCloseText) ? @"?" : formCloseText);
                     }
                 });
                 if (!isOpen)
