@@ -60,13 +60,12 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 //            IsCoverShotMode = true;
             CoverShotName = "IMSFiltering";
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DriftTraining-3_1_1.pdf";
-//            LinkPdf = "file:///C:/Users/brend/Downloads/DriftTraining-3_1_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/IMSFiltering-3_7.pdf";
 
             const string dataRoot = "http://skyline.ms/tutorials/data-drift/";
             TestFilesZipPaths = new[]
             {
-                @"http://skyline.ms/tutorials/DriftTimePrediction.zip",
+                @"http://skyline.ms/tutorials/IMSFiltering.zip",
                 @"TestPerf\DriftTimePredictorExtra.zip",
                 @"TestPerf\DriftTimePredictorViews.zip",
                 dataRoot + BSA_Frag + EXT_ZIP,
@@ -96,7 +95,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             });
             VerifyCombinedIonMobility(WaitForDocumentLoaded());
             var oldDoc = SkylineWindow.Document;
-            string skyFile = TestFilesDirs[0].GetTestPath(@"DriftTimePrediction\BSA-Training.sky");
+            string skyFile = TestFilesDirs[0].GetTestPath(@"IMSFiltering\BSA-Training.sky");
             RunUI(() => SkylineWindow.OpenFile(skyFile));
 
             var document = WaitForDocumentChangeLoaded(oldDoc,240*1000); // 4 minutes
@@ -165,7 +164,8 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
             RunUI(() => SkylineWindow.AutoZoomNone());
             PauseForScreenShot("Unzoomed split graph panes only", 8);
-
+            
+            const int wideWidth = 1547;
             RunUI(() =>
             {
                 SkylineWindow.AutoZoomBestPeak();
@@ -175,7 +175,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 SkylineWindow.ShowPeakAreaLegend(false);
                 SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                 SkylineWindow.SynchronizeZooming(true);
-                SkylineWindow.Size = new Size(1547, 855);
+                SkylineWindow.Size = new Size(wideWidth, 855);
             });
             RestoreViewOnScreen(9);
             PauseForScreenShot("Full window", 9);
@@ -188,15 +188,17 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             OkDialog(noteDlg, noteDlg.OkDialog);
 
             FindNode("NECFLSHKDDSPDLPK");
+            RestoreViewOnScreen(11);
+            const int narrowWidth = 1350;
+            RunUI(() => SkylineWindow.Width = narrowWidth);
             PauseForScreenShot("Yeast chromatograms and RT only - prtsc-paste-edit", 11);
-
             PauseForScreenShot("Hover over BSA in water chromatogram - prtsc-paste-edit", 12);
-
+            RunUI(() => SkylineWindow.Width = wideWidth);
             RestoreViewOnScreen(13);
-            PauseForScreenShot("Full scan 2D MS1 graph", 13);
             {
                 const double clickTime1 = 41.06;
                 ClickChromatogram(clickTime1, 1.62E+6, PaneKey.PRECURSORS);
+                PauseForScreenShot("Full scan 2D MS1 graph", 13);
                 var fullScanGraph = FindOpenForm<GraphFullScan>();
                 RunUI(() => fullScanGraph.SetSpectrum(false));
                 PauseForScreenShot("Full scan 3D MS1 graph", 13);
@@ -212,7 +214,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 ValidateClickTime(fullScanGraph, clickTime2);
 
                 RunUI(() => fullScanGraph.SetZoom(false));
-                PauseForScreenShot("Full scan unzoomed 3D MS/MS graph", 14);
+                PauseForScreenShot("Full scan unzoomed 3D MS/MS graph", 15);
 
                 if (IsCoverShotMode)
                 {
@@ -240,7 +242,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
                 const double clickTime3 = 41.48;
                 ClickChromatogram(yeastReplicateName, clickTime3, 3.14E+4, PaneKey.PRODUCTS);
-                PauseForScreenShot("Interference full scan unzoomed 3D MS/MS graph", 15);
+                PauseForScreenShot("Interference full scan unzoomed 3D MS/MS graph", 16);
                 ValidateClickTime(fullScanGraph, clickTime3);
 
                 RunUI(SkylineWindow.HideFullScanGraph);
@@ -263,7 +265,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                         .IonMobilityWindowWidthType.resolving_power;
                     transitionSettingsUI.IonMobilityControl.IonMobilityFilterResolvingPower = 50;
                 });
-                PauseForScreenShot("Setting ion mobility filter width calculation values", 18);
+                PauseForScreenShot("Setting ion mobility filter width calculation values", 17);
 
 
                 var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary);
@@ -293,12 +295,12 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                     transitionSettingsUI.SetRetentionTimeFilter(RetentionTimeFilterType.scheduling_windows, 3);
                 });
 
-                PauseForScreenShot("Transition Settings - Full-Scan", 19);
+                PauseForScreenShot("Transition Settings - Full-Scan", 20);
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
                 var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
                 RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Prediction);
-                PauseForScreenShot("Peptide Settings - Prediction", 20);
+                PauseForScreenShot("Peptide Settings - Prediction", 21);
                 RunUI(() =>
                 {
                     Assert.IsTrue(peptideSettingsUI.IsUseMeasuredRT);
@@ -311,7 +313,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             using (new WaitDocumentChange(1, true, 1000 * 60 * 60 * 5))
             {
                 var choosePredictionReplicates = ShowDialog<ChooseSchedulingReplicatesDlg>(SkylineWindow.ImportResults);
-                PauseForScreenShot("Choose Replicates form", 21);
+                PauseForScreenShot("Choose Replicates form", 22);
 
                 RunUI(() => choosePredictionReplicates.SelectOrDeselectAll(true));
                 var importResults = ShowDialog<ImportResultsDlg>(choosePredictionReplicates.OkDialog);
@@ -328,23 +330,32 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             if (!IsPauseForScreenShots) // Don't bring up unexpected UI in a screenshot run
                 TestReports();
 
-            PauseForScreenShot("Yeast chromatogram and RTs - prtsc-paste-edit", 22);
-
+            RestoreViewOnScreen(11);
+            RunUI(() => SkylineWindow.Width = narrowWidth);
+            PauseForScreenShot("Yeast chromatogram and RTs - prtsc-paste-edit", 23);
+            RunUI(() => SkylineWindow.Width = wideWidth);
+            RestoreViewOnScreen(13);
             {
                 const double clickTime = 42.20;
                 ClickChromatogram(yeastReplicateName, clickTime, 2.904E+4, PaneKey.PRODUCTS);
                 var fullScanGraph = FindOpenForm<GraphFullScan>();
                 RunUI(() => fullScanGraph.SetZoom(true));
-                PauseForScreenShot("Full-scan graph zoomed", 23);
+                RunUI(() => fullScanGraph.Parent.Parent.Size = new Size(671, 332));
+                PauseForScreenShot("Full-scan graph zoomed", 24);
                 RunUI(() => Assert.IsTrue(fullScanGraph.TitleText.Contains(clickTime.ToString(CultureInfo.CurrentCulture))));
                 RunUI(SkylineWindow.HideFullScanGraph);
             }
 
             FindNode("FKDLGEEHFK");
 
-            PauseForScreenShot("Chromatograms (copy metafile) and legend - prtsc-paste-edit", 23);
-
-            PauseForScreenShot("Peak area percentages (copy metafile)", 24);
+            RunUI(() =>
+            {
+                SkylineWindow.Size = new Size(1547, 689);
+                SkylineWindow.ShowProductTransitions();
+                SkylineWindow.ShowPeakAreaLegend(true);
+            });
+            RestoreViewOnScreen(25);
+            PauseForScreenShot("Chromatograms and Peak Areas - prtsc-paste-edit", 25);
 
             var docFiltered = SkylineWindow.Document;
 
