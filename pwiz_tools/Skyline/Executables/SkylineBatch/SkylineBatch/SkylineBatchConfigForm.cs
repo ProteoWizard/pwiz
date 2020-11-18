@@ -45,26 +45,27 @@ namespace SkylineBatch
 
         public SkylineBatchConfigForm(IMainUiControl mainControl, SkylineBatchConfig config, ConfigAction action, bool isBusy)
         {
+            InitializeComponent();
+
             _action = action;
             _initialCreated = config?.Created ?? DateTime.MinValue;
             _newReportList = new List<ReportInfo>();
 
             _mainControl = mainControl;
             _isBusy = isBusy;
-            InitializeComponent();
-
 
             InitInputFieldsFromConfig(config);
-
-            btnSaveConfig.Show();
+            
             lblConfigRunning.Hide();
 
             if (isBusy)
             {
                 lblConfigRunning.Show();
                 btnSaveConfig.Hide(); // save and cancel buttons are replaced with OK button
-                btnCancelConfig.Text = @"OK";
-                DisableEverything();
+                btnCancelConfig.Hide();
+                btnOkConfig.Show();
+                AcceptButton = btnOkConfig;
+                DisableUserInputs();
             }
 
             ActiveControl = textConfigName;
@@ -98,24 +99,26 @@ namespace SkylineBatch
             textConfigName.TextChanged += textConfigName_TextChanged;
         }
 
-        public void DisableEverything()
+        public void DisableUserInputs(Control parentControl = null)
         {
-            textConfigName.ReadOnly = true;
-            textSkylinePath.ReadOnly = true;
-            textAnalysisPath.ReadOnly = true;
-            textDataPath.ReadOnly = true;
-            textNamingPattern.ReadOnly = true;
-            btnAddReport.Enabled = false;
-            btnAnalysisPath.Enabled = false;
-            btnDataPath.Enabled = false;
-            btnSkylineFilePath.Enabled = false;
+            if (parentControl == null) parentControl = Controls[0];
+
+            if (parentControl is TextBoxBase)
+                ((TextBoxBase)parentControl).ReadOnly = true;
+            if (parentControl is ButtonBase && parentControl.Text != @"OK")
+                ((ButtonBase)parentControl).Enabled = false;
+
+            foreach (Control control in parentControl.Controls)
+            {
+                DisableUserInputs(control);
+            }
         }
 
 
 
         #region Edit main settings
 
-        
+
 
         private MainSettings GetMainSettingsFromUi()
         {
@@ -197,7 +200,6 @@ namespace SkylineBatch
         private void ShowAddReportDialog(int addingIndex, ReportInfo editingReport = null)
         {
             var addReportsForm = new ReportsAddForm(_mainControl, editingReport);
-            addReportsForm.StartPosition = FormStartPosition.CenterParent;
             var addReportResult = addReportsForm.ShowDialog();
 
             if (addReportResult == DialogResult.OK)
@@ -253,31 +255,20 @@ namespace SkylineBatch
 
         private SkylineBatchConfig GetConfigFromUi()
         {
-            return new SkylineBatchConfig(textConfigName.Text, DateTime.Now, DateTime.Now, GetMainSettingsFromUi(), new ReportSettings(_newReportList));
+            var name = textConfigName.Text;
+            var mainSettings = GetMainSettingsFromUi();
+            var reportSettings = new ReportSettings(_newReportList);
+            var created = _action == ConfigAction.Edit ? _initialCreated : DateTime.Now;
+            return new SkylineBatchConfig(name, created, DateTime.Now, mainSettings, reportSettings);
         }
 
         private void Save()
         {
-            SkylineBatchConfig newConfig;
             try
             {
-                newConfig = GetConfigFromUi();
-            }
-            catch (ArgumentException e)
-            {
-                ShowErrorDialog(e.Message);
-                return;
-            }
-
-            if (_action == ConfigAction.Edit)
-            {
-                // use the created time from the editing config
-                newConfig = new SkylineBatchConfig(newConfig.Name, _initialCreated, DateTime.Now,
-                    newConfig.MainSettings, newConfig.ReportSettings);
-            }
-
-            try
-            {
+                //throws ArgumentException if any fields are invalid
+                var newConfig = GetConfigFromUi();
+                //throws ArgumentException if config has a duplicate name
                 if (_action == ConfigAction.Edit)
                     _mainControl.EditSelectedConfiguration(newConfig);
                 else

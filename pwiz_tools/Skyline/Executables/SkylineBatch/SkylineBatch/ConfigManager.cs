@@ -99,20 +99,21 @@ namespace SkylineBatch
             var updatedConfigs = new ConfigList();
             foreach (var config in _configList)
             {
+                var invalidConfigNames = "";
                 try
                 {
                     config.Validate();
                     updatedConfigs.Add(config);
                 }
-                catch (ArgumentException e)
+                catch (ArgumentException)
                 {
-                    if (!_runningUi)
-                    {
-                        throw;
-                    }
-                    _uiControl.DisplayError(Resources.Save_configuration_error,
-                        string.Format(Resources.Could_not_save_configuration_error_message, config.Name, e.Message));
-                    return;
+                    invalidConfigNames += "\"" + config.Name + "\"" + Environment.NewLine;
+                }
+
+                if (invalidConfigNames.Length > 0)
+                {
+                    DisplayError(Resources.Save_configuration_error,
+                        Resources.Could_not_save_configurations + Environment.NewLine + invalidConfigNames);
                 }
 
             }
@@ -258,29 +259,18 @@ namespace SkylineBatch
 
                 if (configRunner.IsBusy())
                 {
-                    string message = null;
-                    if (configRunner.IsRunning())
-                    {
-                        message =
-                            string.Format(
-                                @"Configuration ""{0}"" is running. Please stop the configuration and try again. ",
-                                configRunner.GetConfigName());
-                    }
-
-                    if (_runningUi)
-                        MessageBox.Show(message, Resources.Cannot_Delete, MessageBoxButtons.OK);
+                    DisplayWarning(Resources.Cannot_Delete, string.Format(
+                        @"Configuration ""{0}"" is running. Please stop the configuration and try again. ",
+                        configRunner.GetConfigName()));
                     return;
                 }
 
-                var doDelete = DialogResult.Yes;
-                if (_runningUi)
-                    doDelete = MessageBox.Show(
-                        string.Format(@"Are you sure you want to delete configuration ""{0}""?",
-                            configRunner.GetConfigName()),
-                        Resources.Confirm_Delete,
-                        MessageBoxButtons.YesNo);
+                var doDelete = DisplayQuestion(Resources.Confirm_Delete, 
+                    string.Format(@"Are you sure you want to delete configuration ""{0}""?",
+                        configRunner.GetConfigName()));
 
-                if (doDelete != DialogResult.Yes) return;
+                if (doDelete != DialogResult.Yes)
+                    return;
 
                 // remove config
                 Program.LogInfo(string.Format("Removing configuration \"{0}\"", config.Name));
@@ -328,8 +318,7 @@ namespace SkylineBatch
         {
             if (ConfigsRunning())
             {
-                if(_runningUi)
-                    _uiControl.DisplayError(Resources.Run_error_title, Resources.Cannot_run_busy_configurations);
+                DisplayError(Resources.Run_error_title, Resources.Cannot_run_busy_configurations);
                 return;
             }
             UpdateIsRunning(true);
@@ -339,10 +328,7 @@ namespace SkylineBatch
                 var oldLogger = _logger.Archive();
                 if (oldLogger != null)
                     _oldLogs.Insert(0, oldLogger);
-                if (_runningUi)
-                {
-                    _uiControl.UpdateUiLogFiles();
-                }
+                UpdateUiLogs();
             }
 
             string nextConfig;
@@ -405,12 +391,6 @@ namespace SkylineBatch
                     configRunner.Cancel();
                 }
              }
-        }
-
-        private void UpdateIsRunning(bool isRunning)
-        {
-            if (_runningUi)
-                _uiControl.UpdateRunningButtons(isRunning);
         }
 
         #endregion
@@ -498,13 +478,54 @@ namespace SkylineBatch
                     }
                     i++;
                 }
-                if (_runningUi)
-                    _uiControl.UpdateUiLogFiles();
+                UpdateUiLogs();
             }
         }
 
         #endregion
-        
+
+
+        #region UI Control
+
+        private void DisplayError(string title, string message)
+        {
+            if (!_runningUi)
+                return;
+            _uiControl.DisplayError(title, message);
+        }
+
+        private void DisplayWarning(string title, string message)
+        {
+            if (!_runningUi)
+                return;
+            _uiControl.DisplayWarning(title, message);
+        }
+
+        private DialogResult DisplayQuestion(string title, string message)
+        {
+            if (!_runningUi)
+                return DialogResult.Yes;
+            return _uiControl.DisplayQuestion(title, message);
+        }
+
+        private void UpdateUiLogs()
+        {
+            if (!_runningUi)
+                return;
+            _uiControl.UpdateUiLogFiles();
+        }
+
+        private void UpdateIsRunning(bool isRunning)
+        {
+            if (!_runningUi)
+                return;
+            _uiControl.UpdateRunningButtons(isRunning);
+        }
+
+
+
+        #endregion
+
 
         #region Import/Export
 
@@ -549,18 +570,15 @@ namespace SkylineBatch
             }
             catch (Exception)
             {
-                if (_runningUi)
-                    MessageBox.Show(string.Format(Resources.No_configs_imported, filePath),
-                        Resources.Import_configs_error_title,
-                        MessageBoxButtons.OK);
+                DisplayError(Resources.Import_configs_error_title, string.Format(Resources.No_configs_imported, filePath));
                 return null;
             }
 
-            if (readConfigs.Count == 0 && _runningUi)
+            if (readConfigs.Count == 0)
             {
-                MessageBox.Show(string.Format(Resources.No_configs_imported, filePath),
-                    Resources.Import_configs_error_title,
-                    MessageBoxButtons.OK);
+                DisplayWarning(Resources.Import_configs_error_title,
+                    string.Format(Resources.No_configs_imported, filePath));
+                return null;
             }
 
             var duplicateConfigs = new List<string>();

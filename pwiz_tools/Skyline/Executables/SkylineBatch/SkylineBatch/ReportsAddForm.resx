@@ -848,6 +848,9 @@
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>254, 310</value>
   </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Report</value>
   </data>

@@ -405,7 +405,6 @@
             this.Controls.Add(this.tabMain);
             this.Name = "MainForm";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
-            this.Resize += new System.EventHandler(this.MainForm_Resize);
             this.tabLog.ResumeLayout(false);
             this.tabLog.PerformLayout();
             this.tabFront.ResumeLayout(false);

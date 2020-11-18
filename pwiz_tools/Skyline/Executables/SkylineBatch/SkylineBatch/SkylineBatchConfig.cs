@@ -147,7 +147,6 @@ namespace SkylineBatch
 
         public override string ToString()
         {
-            Validate();
             var sb = new StringBuilder();
             sb.Append("Name: ").AppendLine(Name);
             sb.Append("Created: ").Append(Created.ToShortDateString()).AppendLine(Created.ToShortTimeString());

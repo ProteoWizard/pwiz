@@ -43,17 +43,25 @@ namespace SkylineBatch
             Close();
         }
 
-        private void checkedListLogs_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            checkBoxSelectAll.Checked = false;
-        }
-
         private void checkBoxSelectAll_Click(object sender, EventArgs e)
         {
+            checkedListLogs.ItemCheck -= checkedListLogs_ItemCheck;
             for (int i = 0; i < checkedListLogs.Items.Count; i++)
             {
                 checkedListLogs.SetItemChecked(i, checkBoxSelectAll.Checked);
             }
+            checkedListLogs.ItemCheck += checkedListLogs_ItemCheck;
+        }
+
+        private void checkedListLogs_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (e.NewValue == CheckState.Unchecked)
+            {
+                checkBoxSelectAll.Checked = false;
+                return;
+            }
+            var finalLogChecked = checkedListLogs.CheckedItems.Count == checkedListLogs.Items.Count - 1;
+            checkBoxSelectAll.Checked = finalLogChecked;
         }
     }
 }

@@ -55,7 +55,7 @@
             this.checkedListLogs.CheckOnClick = true;
             this.checkedListLogs.FormattingEnabled = true;
             this.checkedListLogs.Name = "checkedListLogs";
-            this.checkedListLogs.SelectedIndexChanged += new System.EventHandler(this.checkedListLogs_SelectedIndexChanged);
+            this.checkedListLogs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListLogs_ItemCheck);
             // 
             // checkBoxSelectAll
             // 

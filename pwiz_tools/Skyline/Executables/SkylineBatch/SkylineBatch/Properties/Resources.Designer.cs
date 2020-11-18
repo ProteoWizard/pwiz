@@ -71,6 +71,79 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Abort.
+        /// </summary>
+        internal static string AlertDlg_GetDefaultButtonText_Abort {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Abort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        internal static string AlertDlg_GetDefaultButtonText_Cancel {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignore.
+        /// </summary>
+        internal static string AlertDlg_GetDefaultButtonText_Ignore {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Ignore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No.
+        /// </summary>
+        internal static string AlertDlg_GetDefaultButtonText_No {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_No", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to OK.
+        /// </summary>
+        internal static string AlertDlg_GetDefaultButtonText_OK {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_OK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retry.
+        /// </summary>
+        internal static string AlertDlg_GetDefaultButtonText_Retry {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Retry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Yes.
+        /// </summary>
+        internal static string AlertDlg_GetDefaultButtonText_Yes {
+            get {
+                return ResourceManager.GetString("AlertDlg_GetDefaultButtonText_Yes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Message truncated. Press Ctrl+C to copy entire message to the clipboard..
+        /// </summary>
+        internal static string AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_ {
+            get {
+                return ResourceManager.GetString("AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_t" +
+                        "o_the_clipboard_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Analysis folder directory {0} does not exist..
         /// </summary>
         internal static string Analysis_folder_does_not_exist {
@@ -126,11 +199,11 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not save &quot;{0}&quot;: {1}.
+        ///   Looks up a localized string similar to Cound not save the following configurations:.
         /// </summary>
-        internal static string Could_not_save_configuration_error_message {
+        internal static string Could_not_save_configurations {
             get {
-                return ResourceManager.GetString("Could_not_save_configuration_error_message", resourceCulture);
+                return ResourceManager.GetString("Could_not_save_configurations", resourceCulture);
             }
         }
         

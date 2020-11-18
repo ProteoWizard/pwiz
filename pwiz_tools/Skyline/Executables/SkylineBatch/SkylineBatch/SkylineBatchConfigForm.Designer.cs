@@ -62,6 +62,7 @@
             this.btnSaveConfig = new System.Windows.Forms.Button();
             this.lblConfigRunning = new System.Windows.Forms.Label();
             this.imageListToolbarIcons = new System.Windows.Forms.ImageList(this.components);
+            this.btnOkConfig = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -284,6 +285,7 @@
             this.groupBox1.Controls.Add(this.btnCancelConfig);
             this.groupBox1.Controls.Add(this.btnSaveConfig);
             this.groupBox1.Controls.Add(this.lblConfigRunning);
+            this.groupBox1.Controls.Add(this.btnOkConfig);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.TabStop = false;
             // 
@@ -313,6 +315,13 @@
             this.imageListToolbarIcons.TransparentColor = System.Drawing.Color.Transparent;
             this.imageListToolbarIcons.Images.SetKeyName(0, "AddedIcon.ico");
             this.imageListToolbarIcons.Images.SetKeyName(1, "DeletedIcon.ico");
+            // 
+            // btnOkConfig
+            // 
+            resources.ApplyResources(this.btnOkConfig, "btnOkConfig");
+            this.btnOkConfig.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnOkConfig.Name = "btnOkConfig";
+            this.btnOkConfig.UseVisualStyleBackColor = true;
             // 
             // SkylineBatchConfigForm
             // 
@@ -379,5 +388,6 @@
         private System.Windows.Forms.ToolStripButton btnAddReport;
         private System.Windows.Forms.ToolStripButton btnDeleteReport;
         private System.Windows.Forms.ToolStripButton btnEditReport;
+        private System.Windows.Forms.Button btnOkConfig;
     }
 }

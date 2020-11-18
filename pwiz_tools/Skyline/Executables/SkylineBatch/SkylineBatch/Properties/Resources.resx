@@ -175,8 +175,8 @@
   <data name="Number_configs_imported" xml:space="preserve">
     <value>Number of configurations imported: </value>
   </data>
-  <data name="Could_not_save_configuration_error_message" xml:space="preserve">
-    <value>Could not save "{0}": {1}</value>
+  <data name="Could_not_save_configurations" xml:space="preserve">
+    <value>Cound not save the following configurations:</value>
   </data>
   <data name="Save_configuration_error" xml:space="preserve">
     <value>Save Configuration Error</value>
@@ -234,5 +234,29 @@
   </data>
   <data name="XML_file_extension" xml:space="preserve">
     <value>XML Files(*.xml)|*.xml</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_Abort" xml:space="preserve">
+    <value>Abort</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_Ignore" xml:space="preserve">
+    <value>Ignore</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="AlertDlg_GetDefaultButtonText_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_" xml:space="preserve">
+    <value>Message truncated. Press Ctrl+C to copy entire message to the clipboard.</value>
   </data>
 </root>

@@ -47,35 +47,6 @@ namespace SkylineBatch.Properties
                 this["ConfigList"] = value; // Not L10N
             }
         }
-
-        [UserScopedSetting]
-        [DefaultSettingValue("false")]
-        public bool MinimizeToSystemTray {
-            get
-            {
-                return (bool) this["MinimizeToSystemTray"];
-            }
-            set
-            {
-                this["MinimizeToSystemTray"] = value;
-            }
-        }
-
-       
-
-        [UserScopedSetting]
-        [DefaultSettingValue("")]
-        public string InstalledVersion
-        {
-            get
-            {
-                return (string)this["InstalledVersion"];
-            }
-            set
-            {
-                this["InstalledVersion"] = value;
-            }
-        }
     }
 
     public class ConfigList : Collection<SkylineBatchConfig>, IXmlSerializable
