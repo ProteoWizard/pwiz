@@ -187,9 +187,11 @@ namespace SkylineBatch
 
         private static string GetSkylineRunnerPath(bool useSkyline)
         {
-            var endIndex = AppDomain.CurrentDomain.BaseDirectory.IndexOf("SkylineBatch\\SkylineBatch\\", StringComparison.Ordinal);
-            var autoQcPath = AppDomain.CurrentDomain.BaseDirectory.Substring(0, endIndex) + "AutoQC\\AutoQC\\";
-            return Path.Combine(autoQcPath, useSkyline ? SkylineRunnerExe : SkylineDailyRunnerExe);
+            var runnerName = useSkyline ? SkylineRunnerExe : SkylineDailyRunnerExe;
+            var runnerDirectory = Path.GetDirectoryName(typeof(SkylineSettings).Assembly.Location);
+            if (runnerDirectory == null)
+                throw new ArgumentNullException(nameof(runnerDirectory), @"Could not find skyline runner directory.");
+            return Path.Combine(runnerDirectory, runnerName);
         }
 
         private static void SaveSettings(string skylineType)
