@@ -187,7 +187,9 @@ namespace SkylineBatch
 
         private static string GetSkylineRunnerPath(bool useSkyline)
         {
-            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, useSkyline ? SkylineRunnerExe : SkylineDailyRunnerExe);
+            var endIndex = AppDomain.CurrentDomain.BaseDirectory.IndexOf("SkylineBatch\\SkylineBatch\\", StringComparison.Ordinal);
+            var autoQcPath = AppDomain.CurrentDomain.BaseDirectory.Substring(0, endIndex) + "AutoQC\\AutoQC\\";
+            return Path.Combine(autoQcPath, useSkyline ? SkylineRunnerExe : SkylineDailyRunnerExe);
         }
 
         private static void SaveSettings(string skylineType)

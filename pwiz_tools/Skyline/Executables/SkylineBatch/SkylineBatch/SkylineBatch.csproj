@@ -84,16 +84,16 @@
       <DependentUpon>LogForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Resources\Comment.bmp" />
+    <Content Include="..\..\AutoQC\AutoQC\SkylineDailyRunner.exe">
+      <Link>SkylineDailyRunner.exe</Link>
+    </Content>
+    <Content Include="..\..\AutoQC\AutoQC\SkylineRunner.exe">
+      <Link>SkylineRunner.exe</Link>
+    </Content>
     <Content Include="Resources\add.bmp" />
     <None Include="Resources\Delete.bmp" />
     <Content Include="Resources\downarrow.bmp" />
     <Content Include="Resources\uparrow.bmp" />
-    <Content Include="SkylineDailyRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SkylineRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <EmbeddedResource Include="ReportsAddForm.resx">
       <DependentUpon>ReportsAddForm.cs</DependentUpon>
     </EmbeddedResource>
