@@ -696,7 +696,7 @@ namespace pwiz.SkylineTestUtil
                         }
                         catch
                         {
-                            formCloseText = "@@ERROR@@";
+                            formCloseText = "@@(could not retrieve form text)@@";
                         }
                         formDetail = string.Format("(form class={0}, form text=\"{1}\")", 
                             string.IsNullOrEmpty(formCloseClassName) ? @"?" : formCloseClassName,
