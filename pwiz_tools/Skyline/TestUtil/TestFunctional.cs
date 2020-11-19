@@ -689,7 +689,15 @@ namespace pwiz.SkylineTestUtil
                     {
                         // Grab some details in case of eventual failure
                         var formCloseClassName = System.ComponentModel.TypeDescriptor.GetClassName(formClose);
-                        var formCloseText = formClose.Text;
+                        string formCloseText;
+                        try
+                        {
+                            formCloseText = formClose.Text;
+                        }
+                        catch
+                        {
+                            formCloseText = "@@ERROR@@";
+                        }
                         formDetail = string.Format("(form class={0}, form text=\"{1}\")", 
                             string.IsNullOrEmpty(formCloseClassName) ? @"?" : formCloseClassName,
                             string.IsNullOrEmpty(formCloseText) ? @"?" : formCloseText);
