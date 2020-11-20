@@ -24,6 +24,10 @@ namespace pwiz.Skyline.Controls.Clustering
                 {
                     var point = points[i];
                     var zScore = point.Z;
+                    if (zScore.Equals(PointPairBase.Missing))
+                    {
+                        continue;
+                    }
                     Color backColor;
                     if (zScore <= -4)
                     {
