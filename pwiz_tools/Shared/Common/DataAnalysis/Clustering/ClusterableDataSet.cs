@@ -111,9 +111,15 @@ namespace pwiz.Common.DataAnalysis.Clustering
             {
                 return new DataFrame(ColumnHeaders, DataColumns.Select(col=>ImmutableList.ValueOf(Reorder(col, newOrdering))));
             }
+
+            public DataFrame ReorderColumns(IList<int> newOrdering)
+            {
+                return new DataFrame(ImmutableList.ValueOf(Reorder(ColumnHeaders, newOrdering)),
+                    Reorder(DataColumns, newOrdering));
+            }
         }
 
-        public ClusterResults PerformClustering()
+        public ClusterResults ClusterRows()
         {
             int columnCount = DataFrames.Sum(frame => frame.ColumnHeaders.Count);
             var rowDataSet = new double[RowLabels.Count, columnCount];
@@ -137,6 +143,49 @@ namespace pwiz.Common.DataAnalysis.Clustering
             alglib.clusterizersetpoints(s, rowDataSet, 2);
             alglib.clusterizerrunahc(s, out alglib.ahcreport rep);
             return new ClusterResults(ReorderRows(rep.p), new DendrogramData(rep.pz, rep.mergedist), null);
+        }
+
+        private Tuple<ImmutableList<DataFrame>, DendrogramData> ClusterDataFrameGroup(ImmutableList<DataFrame> group)
+        {
+            var points = new double[group[0].ColumnHeaders.Count,
+                RowCount * group.Count];
+            for (int iRow = 0; iRow < RowCount; iRow++)
+            {
+                for (int iFrame = 0; iFrame < group.Count; iFrame++)
+                {
+                    var frame = group[iFrame];
+                    var zScores = frame.GetZScores(iRow).ToList();
+                    int y = iRow * group.Count + iFrame;
+                    for (int x = 0; x < zScores.Count; x++)
+                    {
+                        var zScore = zScores[x];
+                        if (zScore.HasValue)
+                        {
+                            points[x, y] = zScore.Value;
+                        }
+                    }
+                }
+            }
+            alglib.clusterizercreate(out alglib.clusterizerstate s);
+            alglib.clusterizersetpoints(s, points, 2);
+            alglib.clusterizerrunahc(s, out alglib.ahcreport rep);
+            var newGroup = ImmutableList.ValueOf(group.Select(frame => frame.ReorderColumns(rep.p)));
+            var dendrogramData = new DendrogramData(rep.pz, rep.mergedist);
+            return Tuple.Create(newGroup, dendrogramData);
+        }
+
+        public ClusterResults ClusterColumns()
+        {
+            var clusteredGroups = DataFrameGroups.Select(ClusterDataFrameGroup).ToList();
+            var newDataSet = new ClusterDataSet(RowLabels, clusteredGroups.Select(tuple=>tuple.Item1));
+            return new ClusterResults(newDataSet, null, ImmutableList.ValueOf(clusteredGroups.Select(tuple=>tuple.Item2)));
+        }
+
+        public ClusterResults PerformClustering()
+        {
+            ClusterResults rowResults = ClusterRows();
+            ClusterResults columnResults = rowResults.DataSet.ClusterColumns();
+            return new ClusterResults(columnResults.DataSet, rowResults.RowDendrogram, columnResults.ColumnGroupDendrograms);
         }
 
         public static IEnumerable<T> Reorder<T>(IList<T> list, IList<int> newOrder)

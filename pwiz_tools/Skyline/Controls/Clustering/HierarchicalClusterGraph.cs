@@ -5,7 +5,6 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding.Clustering;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
@@ -54,11 +53,8 @@ namespace pwiz.Skyline.Controls.Clustering
                         for (int iFrame = 0; iFrame < frameCount; iFrame++)
                         {
                             double? zScore = zScoreLists[iFrame][iColInGroup];
-                            if (zScore.HasValue)
-                            {
-                                double x = xGroupStart + iColInGroup + iFrame / (double)frameCount;
-                                points.Add(new PointPair(x, iRow, zScore.Value));
-                            }
+                            double x = xGroupStart + iColInGroup + iFrame / (double)frameCount;
+                            points.Add(new PointPair(x, iRow, zScore.HasValue ? zScore.Value : PointPairBase.Missing));
                         }
                     }
 
@@ -83,8 +79,25 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public void UpdateColumnDendrograms()
         {
-            // TODO
-            splitContainerHorizontal.Panel1Collapsed = true;
+            if (Results.ColumnGroupDendrograms == null)
+            {
+                splitContainerHorizontal.Panel1Collapsed = true;
+                return;
+            }
+
+            var datas = new List<KeyValuePair<DendrogramData, ImmutableList<double>>>();
+            double xStart = 0;
+            for (int iGroup = 0; iGroup < Results.DataSet.DataFrameGroups.Count; iGroup++)
+            {
+                var group = Results.DataSet.DataFrameGroups[iGroup];
+                var locations = Enumerable.Range(0, group[0].ColumnHeaders.Count).Select(i =>
+                        (double) zedGraphControl1.GraphPane.GeneralTransform(xStart + i, 0.0, CoordType.AxisXYScale).X)
+                    .ToList();
+                datas.Add(new KeyValuePair<DendrogramData, ImmutableList<double>>(
+                    Results.ColumnGroupDendrograms[iGroup], ImmutableList.ValueOf(locations)));
+            }
+           
+            columnDendrogram.SetDendrogramDatas(datas);
         }
 
         public void UpdateDendrograms()
