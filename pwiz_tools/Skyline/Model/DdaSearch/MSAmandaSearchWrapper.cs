@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using MSAmanda.Core;
 using MSAmanda.Utils;
 using MSAmanda.InOutput;
@@ -62,7 +63,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string MAX_LOADED_PROTEINS_AT_ONCE = "MaxLoadedProteinsAtOnce";
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
 
-        private readonly TemporaryDirectory _baseDir = new TemporaryDirectory();
+        private readonly TemporaryDirectory _baseDir = new TemporaryDirectory(tempPrefix: @"~SK_MSAmanda/");
 
         public MSAmandaSearchWrapper()
         {
@@ -103,6 +104,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             helper.Dispose();
             mzID.Dispose();
+            amandaInputParser?.Dispose();
             _baseDir.Dispose();
             //AvailableSettings = new SettingsFile(null, Settings, mzID);
         }
@@ -232,7 +234,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                                     continue;
                                 }
                                 else*/
-                                    FileEx.SafeDelete(outputFilepath);
+                                FileEx.SafeDelete(outputFilepath);
                             }
 
                             InitializeEngine(tokenSource, rawFileName.GetSampleLocator());
@@ -249,6 +251,16 @@ namespace pwiz.Skyline.Model.DdaSearch
                         }
                     }
                 }
+            }
+            catch (AggregateException e)
+            {
+                if (e.InnerException is TaskCanceledException)
+                {
+                    helper.WriteMessage(Resources.DdaSearch_Search_is_canceled, true);
+                }
+                else
+                    Program.ReportException(e);
+                success = false;
             }
             catch (OperationCanceledException)
             {
