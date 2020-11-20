@@ -77,13 +77,17 @@ namespace pwiz.Common.DataAnalysis.Clustering
             public IEnumerable<double?> GetZScores(int iRow)
             {
                 var values = DataColumns.Select(column => column[iRow]).Where(IsValidValue).ToList();
-                if (values.Count <= 1)
+                double stdDev = 0;
+                if (values.Count > 1)
+                {
+                    stdDev = values.StandardDeviation();
+                }
+                if (stdDev == 0)
                 {
                     return DataColumns.Select(column => IsValidValue(column[iRow]) ? (double?) 0 : null);
                 }
 
                 var mean = values.Mean();
-                var stdDev = values.StandardDeviation();
                 return DataColumns.Select(col =>
                 {
                     var value = col[iRow];

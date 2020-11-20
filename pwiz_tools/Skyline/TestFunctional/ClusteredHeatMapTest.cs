@@ -30,6 +30,7 @@ namespace pwiz.SkylineTestFunctional
             var heatMap = FindOpenForm<HierarchicalClusterGraph>();
             Assert.IsNotNull(heatMap);
             PauseTest();
+            OkDialog(heatMap, heatMap.Close);
         }
     }
 }
