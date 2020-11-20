@@ -1257,14 +1257,12 @@ namespace pwiz.Skyline.Util
     {
         public const string TEMP_PREFIX = "~SK";
 
-        public TemporaryDirectory()
-            : this(Path.Combine(Path.GetTempPath(), TEMP_PREFIX + Path.GetRandomFileName()))
+        public TemporaryDirectory(string dirPath = null, string tempPrefix = TEMP_PREFIX)
         {
-        }
-
-        public TemporaryDirectory(string dirPath)
-        {
-            DirPath = dirPath;
+            if (string.IsNullOrEmpty(dirPath))
+                DirPath = Path.Combine(Path.GetTempPath(), tempPrefix + Path.GetRandomFileName());
+            else
+                DirPath = dirPath;
             Helpers.TryTwice(() => Directory.CreateDirectory(DirPath));
         }
 
