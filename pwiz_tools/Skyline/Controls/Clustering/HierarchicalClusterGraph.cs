@@ -38,27 +38,41 @@ namespace pwiz.Skyline.Controls.Clustering
             var points = new PointPairList();
             for (int iRow = 0; iRow < dataSet.RowCount; iRow++)
             {
-                int iCol = 0;
+                double xGroupStart = 0;
                 foreach (var dataFrameGroup in dataSet.DataFrameGroups)
                 {
                     var zScoreLists = dataFrameGroup.Select(frame => frame.GetZScores(iRow).ToList()).ToList();
-                    var zScores = Enumerable.Range(0, dataFrameGroup.First().ColumnHeaders.Count)
-                        .SelectMany(i => zScoreLists.Select(list => list[i]));
-                    foreach (var zScore in zScores)
-                    {
-                        if (zScore.HasValue)
-                        {
-                            points.Add(new PointPair(iCol, iRow, zScore.Value));
-                        }
+                    int frameCount = dataFrameGroup.Count;
+                    int colCountInGroup = dataFrameGroup.First().ColumnHeaders.Count;
 
-                        iCol++;
+                    // Add points for the zScores of all of the columns
+                    // If there is more than one data frame in this group, then the points will 
+                    // be plotted with fractional x values so that all of the group's points fit within
+                    // a single integer
+                    for (int iColInGroup = 0; iColInGroup < colCountInGroup; iColInGroup++)
+                    {
+                        for (int iFrame = 0; iFrame < frameCount; iFrame++)
+                        {
+                            double? zScore = zScoreLists[iFrame][iColInGroup];
+                            if (zScore.HasValue)
+                            {
+                                double x = xGroupStart + iColInGroup + iFrame / (double)frameCount;
+                                points.Add(new PointPair(x, iRow, zScore.Value));
+                            }
+                        }
                     }
+
+                    xGroupStart += colCountInGroup;
                 }
             }
             zedGraphControl1.GraphPane.CurveList.Add(new ClusteredHeatMapItem("Points", points));
 
             zedGraphControl1.GraphPane.YAxis.Type = AxisType.Text;
             zedGraphControl1.GraphPane.YAxis.Scale.TextLabels = dataSet.RowLabels.ToArray();
+
+            zedGraphControl1.GraphPane.XAxis.Type = AxisType.Text;
+            zedGraphControl1.GraphPane.XAxis.Scale.TextLabels =
+                dataSet.DataFrameGroups.SelectMany(group => group[0].ColumnHeaders).ToArray();
             AxisLabelScaler scaler = new AxisLabelScaler(zedGraphControl1.GraphPane);
             scaler.ScaleAxisLabels();
             zedGraphControl1.AxisChange();

@@ -637,7 +637,13 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+
         private void heatMapContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowHeatMap();
+        }
+
+        public bool ShowHeatMap()
         {
             var numericColumnsByPropertyPath = BindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>()
                 .Where(p => IsNumeric(p.PropertyType))
@@ -646,7 +652,6 @@ namespace pwiz.Skyline.Controls.Databinding
             var rowItems = BindingListSource.OfType<RowItem>().ToList();
             // Put the row items in reverse order so that they way they get displayed in the graph looks like the DataGridView.
             rowItems.Reverse();
-            int rowCount = rowItems.Count;
             foreach (var columnSet in numericColumnsByPropertyPath)
             {
                 if (columnSet.Count() <= 1)
@@ -678,7 +683,7 @@ namespace pwiz.Skyline.Controls.Databinding
             if (dataFrames.Count == 0)
             {
                 MessageDlg.Show(FormUtil.FindTopLevelOwner(this), "In order to show the heat map you must have pivoted on a numeric column.");
-                return;
+                return false;
             }
 
             var firstProperty = BindingListSource.ItemProperties[0];
@@ -690,6 +695,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 Results = dataSet.PerformClustering()
             };
             heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
+            return true;
         }
 
 
