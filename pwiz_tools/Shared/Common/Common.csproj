@@ -55,9 +55,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="alglibnet2">
-      <HintPath>..\Lib\alglib\alglibnet2.dll</HintPath>
-    </Reference>
     <Reference Include="Iesi.Collections">
       <HintPath>..\Lib\NHibernate\Iesi.Collections.dll</HintPath>
     </Reference>
@@ -119,6 +116,19 @@
       <DependentUpon>RecordNavBar.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\ColumnLimitExceededColumn.cs" />
+    <Compile Include="DataAnalysis\alglib\alglibinternal.cs" />
+    <Compile Include="DataAnalysis\alglib\alglibmisc.cs" />
+    <Compile Include="DataAnalysis\alglib\ap.cs" />
+    <Compile Include="DataAnalysis\alglib\dataanalysis.cs" />
+    <Compile Include="DataAnalysis\alglib\diffequations.cs" />
+    <Compile Include="DataAnalysis\alglib\fasttransforms.cs" />
+    <Compile Include="DataAnalysis\alglib\integration.cs" />
+    <Compile Include="DataAnalysis\alglib\interpolation.cs" />
+    <Compile Include="DataAnalysis\alglib\linalg.cs" />
+    <Compile Include="DataAnalysis\alglib\optimization.cs" />
+    <Compile Include="DataAnalysis\alglib\solvers.cs" />
+    <Compile Include="DataAnalysis\alglib\specialfunctions.cs" />
+    <Compile Include="DataAnalysis\alglib\statistics.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterableDataSet.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
     <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />

@@ -331,15 +331,6 @@
     <Compile Include="Alerts\UpgradeLicenseDlg.designer.cs">
       <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="AlgLib\alglibinternal.cs" />
-    <Compile Include="AlgLib\alglibmisc.cs" />
-    <Compile Include="AlgLib\ap.cs" />
-    <Compile Include="AlgLib\dataanalysis.cs" />
-    <Compile Include="AlgLib\linalg.cs" />
-    <Compile Include="AlgLib\optimization.cs" />
-    <Compile Include="AlgLib\solvers.cs" />
-    <Compile Include="AlgLib\specialfunctions.cs" />
-    <Compile Include="AlgLib\statistics.cs" />
     <Compile Include="CommandArgUsage.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
