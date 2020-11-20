@@ -55,6 +55,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="alglibnet2">
+      <HintPath>..\Lib\alglib\alglibnet2.dll</HintPath>
+    </Reference>
     <Reference Include="Iesi.Collections">
       <HintPath>..\Lib\NHibernate\Iesi.Collections.dll</HintPath>
     </Reference>
@@ -89,6 +92,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\Clustering\DendrogramControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Clustering\DendrogramControl.Designer.cs" />
     <Compile Include="Controls\CommonDataGridView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -112,6 +119,9 @@
       <DependentUpon>RecordNavBar.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\ColumnLimitExceededColumn.cs" />
+    <Compile Include="DataAnalysis\Clustering\ClusterableDataSet.cs" />
+    <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
+    <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
     <Compile Include="DataAnalysis\LinearFitResult.cs" />
     <Compile Include="DataAnalysis\FoldChange\FoldChangeDataSet.cs" />
     <Compile Include="DataAnalysis\FoldChange\DesignMatrix.cs" />
@@ -330,6 +340,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Controls\Clustering\DendrogramControl.resx" />
     <EmbeddedResource Include="Controls\FindBox.ja.resx">
       <DependentUpon>FindBox.cs</DependentUpon>
     </EmbeddedResource>
@@ -546,6 +557,7 @@
       <Name>CommonUtil</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
