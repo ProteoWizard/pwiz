@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -49,7 +50,7 @@ namespace pwiz.SkylineTest
 
             SrmDocument doc = CreateStudy7Doc();
             doc = new RefinementSettings().ConvertToSmallMolecules(doc, TestDirectoryName, asSmallMolecules);
-            var displaySettings = new DisplaySettings(null, false, 0, 0); //, ProteinDisplayMode.ByName);
+            var displaySettings = new DisplaySettings(new NormalizedValueCalculator(doc), null, false, 0, NormalizeOption.RatioToFirstStandard(doc.Settings)); //, ProteinDisplayMode.ByName);
             // Find every other transition, searching down.
             List<TransitionDocNode> listTransitions = doc.MoleculeTransitions.ToList();
             var pathFound = doc.GetPathTo(0, 0);
