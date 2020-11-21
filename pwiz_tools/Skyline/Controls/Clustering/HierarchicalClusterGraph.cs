@@ -95,6 +95,7 @@ namespace pwiz.Skyline.Controls.Clustering
                     .ToList();
                 datas.Add(new KeyValuePair<DendrogramData, ImmutableList<double>>(
                     Results.ColumnGroupDendrograms[iGroup], ImmutableList.ValueOf(locations)));
+                xStart += group[0].ColumnHeaders.Count;
             }
            
             columnDendrogram.SetDendrogramDatas(datas);

@@ -84,6 +84,11 @@ namespace pwiz.Common.Controls.Clustering
             var lines = dendrogramData.GetLines(locations, RectilinearLines).ToList();
             var pen = new Pen(Color.Black, 1);
             var maxHeight = lines.Max(line => line.Item4);
+            if (maxHeight == 0)
+            {
+                // TODO: Draw a degenerate tree where all nodes connect at the same point
+                return;
+            }
             foreach (var line in lines)
             {
                 var start = CoordinatesToPoint(line.Item1, line.Item2 / maxHeight);

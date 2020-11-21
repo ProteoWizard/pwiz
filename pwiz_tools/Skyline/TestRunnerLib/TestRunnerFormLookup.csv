@@ -99,6 +99,7 @@ GraphSpectrum,TestMs1Tutorial
 GraphSummary.AreaGraphView,*
 GraphSummary.RTGraphView,*
 GraphSummary.DetectionsGraphView,TODO (RitaCh)
+HierarchicalClusterGraph,TestClusteredHeatMap
 ImmediateWindow,ImmediateWindowTestMethod
 ImportDocResultsDlg,TestImportDoc
 ImportIonMobilityFromSpectralLibraryDlg,TestIonMobility

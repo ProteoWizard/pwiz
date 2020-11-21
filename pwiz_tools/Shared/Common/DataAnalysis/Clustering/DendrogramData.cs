@@ -31,12 +31,24 @@ namespace pwiz.Common.DataBinding.Clustering
             }
         }
 
+        /// <summary>
+        /// Returns a list of coordinates of where to draw the lines representing the dendrogram.
+        /// The points are returned as Tuple's of (startX, startY, endX, endY) which would be appropriate for
+        /// a tree whose root is at the bottom. The coordinates will need to be rotated in order to reflect
+        /// the actual orientation of the tree. Also, the Y coordinates are arbitrary, and the caller should stretch
+        /// the tree in the Y direction so that the leaves and root end up in the right places.
+        /// </summary>
+        /// <param name="leafLocations">The horizontal coordinates of the leaves of the tree</param>
+        /// <param name="rectilinear">If true, the connections between pairs of nodes will consist of three horizontal or vertical lines.
+        /// If false, the connections between the nodes will be a single diagonal line.</param>
+        /// <returns>Tuples of {x1,y1,x2,y2} which will need to be stretched in the Y direction and rotated appropriately</returns>
         public IEnumerable<Tuple<double, double, double, double>> GetLines(IList<double> leafLocations, bool rectilinear)
         {
             if (leafLocations.Count < LeafCount)
             {
                 throw new ArgumentException(nameof(leafLocations));
             }
+
             var nodes = new List<Tuple<double, double>>(LeafCount + _mergeDistances.Length);
             nodes.AddRange(leafLocations.Take(LeafCount).Select(location=>Tuple.Create(location, 0.0)));
             for (int i = 0; i < _mergeDistances.Length; i++)
