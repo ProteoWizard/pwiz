@@ -23,7 +23,6 @@ using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
