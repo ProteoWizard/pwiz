@@ -113,7 +113,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var areaCvToolbar = (AreaCVToolbar) graphHistogram.Toolbar;
                 int indexTic = areaCvToolbar.NormalizationMethods.ToList()
-                    .IndexOf(Resources.AreaCVToolbar_UpdateUI_Total_ion_current);
+                    .IndexOf(NormalizationMethod.TIC.NormalizeToCaption);
                 Assert.IsTrue(indexTic >= 0);
                 areaCvToolbar.SetNormalizationIndex(indexTic);
                 SkylineWindow.UpdateGraphPanes();

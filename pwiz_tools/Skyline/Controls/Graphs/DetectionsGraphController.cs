@@ -268,7 +268,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        void GraphSummary.IController.OnRatioIndexChanged()
+        void GraphSummary.IController.OnNormalizeOptionChanged()
         {
         }
 

@@ -173,7 +173,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 SkylineWindow.ShowGraphPeakArea(true);
                 SkylineWindow.ShowChromatogramLegends(false);
                 SkylineWindow.ShowPeakAreaLegend(false);
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                 SkylineWindow.SynchronizeZooming(true);
                 SkylineWindow.Size = new Size(wideWidth, 855);
             });
