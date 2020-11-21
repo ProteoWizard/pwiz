@@ -32,7 +32,6 @@ using pwiz.Common.DataBinding.Layout;
 using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Clustering;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -645,9 +644,9 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public bool ShowHeatMap()
         {
-            var numericColumnsByPropertyPath = BindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>()
-                .Where(p => IsNumeric(p.PropertyType))
-                .GroupBy(p => p.DisplayColumn.ColumnDescriptor.PropertyPath);
+            var numericColumnsByPropertyPath = BindingListSource.ItemProperties
+                .Where(p => IsNumeric(p.PropertyType) && null != p.PivotedColumnId)
+                .GroupBy(p => p.PivotedColumnId.SeriesId);
             var dataFrames = new List<ClusterDataSet.DataFrame>();
             var rowItems = BindingListSource.OfType<RowItem>().ToList();
             // Put the row items in reverse order so that they way they get displayed in the graph looks like the DataGridView.
@@ -663,16 +662,8 @@ namespace pwiz.Skyline.Controls.Databinding
                 var columnDatas = new List<ImmutableList<double?>>();
                 foreach (var column in columnSet)
                 {
-                    var pivotKey = column.PivotKey;
-                    string caption;
-                    if (pivotKey.Length == 1)
-                    {
-                        caption = pivotKey.KeyPairs.First().Value?.ToString() ?? string.Empty;
-                    }
-                    else
-                    {
-                        caption = pivotKey.ToString();
-                    }
+                    string caption = column.PivotedColumnId.PivotKeyCaption
+                        .GetCaption(BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer);
                     columnHeaders.Add(caption);
                     var values = rowItems.Select(rowItem => ToDouble(column.GetValue(rowItem)));
                     columnDatas.Add(ImmutableList.ValueOf(values));
@@ -682,13 +673,14 @@ namespace pwiz.Skyline.Controls.Databinding
 
             if (dataFrames.Count == 0)
             {
-                MessageDlg.Show(FormUtil.FindTopLevelOwner(this), "In order to show the heat map you must have pivoted on a numeric column.");
+                MessageDlg.Show(FormUtil.FindTopLevelOwner(this),
+                    "In order to show the heat map at least one numeric column must have been pivoted.");
                 return false;
             }
 
             var firstProperty = BindingListSource.ItemProperties[0];
             var rowLabels = rowItems.Select(rowItem =>
-                    firstProperty.GetValue(rowItem)?.ToString() ?? string.Empty);
+                firstProperty.GetValue(rowItem)?.ToString() ?? string.Empty);
             var dataSet = ClusterDataSet.FromDataFrames(rowLabels, dataFrames);
             var heatMapGraph = new HierarchicalClusterGraph()
             {

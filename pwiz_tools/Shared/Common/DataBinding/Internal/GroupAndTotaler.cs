@@ -121,18 +121,23 @@ namespace pwiz.Common.DataBinding.Internal
             PropertyDescriptor originalPropertyDescriptor, IColumnCaption caption, AggregateOperation aggregateOperation)
         {
             IColumnCaption qualifiedCaption;
+            PivotedColumnId pivotedColumnId = null;
             if (columnHeaderKey.Count == 0)
             {
                 qualifiedCaption = caption;
             }
             else
             {
-                qualifiedCaption = new CaptionComponentList(columnHeaderKey.Concat(new[] {caption})
-                    .Select(CaptionComponentList.MakeCaptionComponent));
+                var pivotCaptionComponents = columnHeaderKey.Select(CaptionComponentList.MakeCaptionComponent).ToList();
+                qualifiedCaption = new CaptionComponentList(pivotCaptionComponents.Append(caption));
+                pivotedColumnId = new PivotedColumnId(columnHeaderKey,
+                    new CaptionComponentList(pivotCaptionComponents),
+                    caption,
+                    caption);
             }
             var attributes = DataSchema.GetAggregateAttributes(originalPropertyDescriptor, aggregateOperation).ToArray();
             return new IndexedPropertyDescriptor(DataSchema, index, aggregateOperation.GetPropertyType(originalPropertyDescriptor.PropertyType), 
-                qualifiedCaption, attributes);
+                qualifiedCaption, pivotedColumnId, attributes);
         }
 
         public static PivotedRows GroupAndTotal(CancellationToken cancellationToken, DataSchema dataSchema,
