@@ -50,6 +50,7 @@
             this.lblFilterApplied = new System.Windows.Forms.ToolStripLabel();
             this.bindingNavigator1 = new System.Windows.Forms.BindingNavigator(this.components);
             this.btnGroupTotal = new System.Windows.Forms.ToolStripSplitButton();
+            this.navBarButtonCluster = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
             this.navBarButtonActions = new System.Windows.Forms.ToolStripDropDownButton();
@@ -173,6 +174,7 @@
             this.bindingNavigator1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.navBarButtonViews,
             this.btnGroupTotal,
+            this.navBarButtonCluster,
             this.bindingNavigatorMoveFirstItem,
             this.bindingNavigatorMovePreviousItem,
             this.bindingNavigatorSeparator,
@@ -208,6 +210,13 @@
             this.btnGroupTotal.Name = "btnGroupTotal";
             this.btnGroupTotal.ButtonClick += new System.EventHandler(this.btnGroupTotal_Click);
             this.btnGroupTotal.DropDownOpening += new System.EventHandler(this.btnGroupTotal_DropDownOpening);
+            // 
+            // navBarButtonCluster
+            // 
+            this.navBarButtonCluster.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            resources.ApplyResources(this.navBarButtonCluster, "navBarButtonCluster");
+            this.navBarButtonCluster.Name = "navBarButtonCluster";
+            this.navBarButtonCluster.ButtonClick += new System.EventHandler(this.navBarButtonCluster_ButtonClick);
             // 
             // toolStripSeparator3
             // 
@@ -267,5 +276,6 @@
         private System.Windows.Forms.ToolStripButton navBarButtonCopyAll;
         private System.Windows.Forms.ToolStripSplitButton btnGroupTotal;
         private System.Windows.Forms.ToolStripDropDownButton navBarButtonActions;
+        private System.Windows.Forms.ToolStripSplitButton navBarButtonCluster;
     }
 }

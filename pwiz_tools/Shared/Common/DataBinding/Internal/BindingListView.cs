@@ -24,7 +24,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 
@@ -47,8 +46,7 @@ namespace pwiz.Common.DataBinding.Internal
     internal class BindingListView : BindingList<RowItem>, ITypedList, IBindingListView, IRaiseItemChangedEvents, IDisposable
     {
         private readonly HashSet<ListChangedEventHandler> _listChangedEventHandlers = new HashSet<ListChangedEventHandler>();
-        private ImmutableList<DataPropertyDescriptor> _itemProperties;
-        private IDictionary<string, DataPropertyDescriptor> _itemPropertiesDictionary;
+        private ReportResults _reportResults = ReportResults.EMPTY;
         private QueryResults _queryResults;
         private IRowSource _rowSource = StaticRowSource.EMPTY;
         private readonly QueryRequestor _queryRequestor;
@@ -60,8 +58,6 @@ namespace pwiz.Common.DataBinding.Internal
             EventTaskScheduler = eventTaskScheduler;
             QueryLock = new QueryLock(CancellationToken.None);
             _queryResults = QueryResults.Empty;
-            _itemProperties = ImmutableList<DataPropertyDescriptor>.EMPTY;
-            _itemPropertiesDictionary = new Dictionary<string, DataPropertyDescriptor>();
             _queryRequestor = new QueryRequestor(this);
             AllowNew = AllowRemove = AllowEdit = false;
         }
@@ -139,14 +135,26 @@ namespace pwiz.Common.DataBinding.Internal
             get { return _queryRequestor.QueryParameters.ViewInfo; }
             set
             {
-                _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetViewInfo(value);
+                _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.ChangeViewInfo(value);
+            }
+        }
+
+        public bool ClusteringRequested
+        {
+            get
+            {
+                return _queryRequestor.QueryParameters.ClusteringRequested;
+            }
+            set
+            {
+                _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.ChangeIsClusteringRequested(value);
             }
         }
 
         public void SetViewAndRows(ViewInfo viewInfo, IRowSource rows)
         {
             RowSource = rows;
-            _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetViewInfo(viewInfo);
+            _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.ChangeViewInfo(viewInfo);
         }
 
         public void ClearTransformStack()
@@ -301,7 +309,7 @@ namespace pwiz.Common.DataBinding.Internal
         {
             if (listAccessors == null || listAccessors.Length == 0)
             {
-                return new PropertyDescriptorCollection(_itemProperties.ToArray());
+                return new PropertyDescriptorCollection(ItemProperties.ToArray());
             }
             var propertyDescriptor = listAccessors[listAccessors.Length - 1];
             var collectionInfo = ViewInfo.DataSchema.GetCollectionInfo(propertyDescriptor.PropertyType);
@@ -312,13 +320,11 @@ namespace pwiz.Common.DataBinding.Internal
             return new PropertyDescriptorCollection(ViewInfo.DataSchema.GetPropertyDescriptors(propertyDescriptor.PropertyType).ToArray());
         }
 
-        public ImmutableList<DataPropertyDescriptor> ItemProperties { get { return _itemProperties; } }
+        public ItemProperties ItemProperties { get { return ReportResults.ItemProperties; } }
 
-        public DataPropertyDescriptor FindDataProperty(string name)
+        public ReportResults ReportResults
         {
-            DataPropertyDescriptor propertyDescriptor;
-            _itemPropertiesDictionary.TryGetValue(name, out propertyDescriptor);
-            return propertyDescriptor;
+            get { return _reportResults; }
         }
 
         private List<RowItem> RowItemList
@@ -359,17 +365,9 @@ namespace pwiz.Common.DataBinding.Internal
                 _newRow = newRow;
                 AddNew();
             }
-            bool propsChanged = false;
-            if (_itemProperties == null)
-            {
-                propsChanged = true;
-            }
-            else if (!_itemProperties.SequenceEqual(QueryResults.ItemProperties))
-            {
-                propsChanged = true;
-            }
-            _itemProperties = QueryResults.ItemProperties;
-            _itemPropertiesDictionary = _itemProperties.ToDictionary(property => property.Name);
+
+            bool propsChanged = !ItemProperties.SequenceEqual(QueryResults.ItemProperties);
+            _reportResults = QueryResults.TransformResults.PivotedRows;
             AllowNew = NewRowHandler != null;
             AllowEdit = true;
             AllowRemove = false;
@@ -435,7 +433,7 @@ namespace pwiz.Common.DataBinding.Internal
             get { return _queryRequestor.QueryParameters.TransformStack; }
             set
             {
-                _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetTransformStack(value);
+                _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.ChangeTransformStack(value);
             }
         }
 

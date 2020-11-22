@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
-using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataAnalysis.Clustering
 {
-    public class ClusterDataSet : Immutable
+    public class ClusterDataSet<TRow, TColumn> : Immutable
     {
-        public static ClusterDataSet FromDataFrames(IEnumerable<string> rowLabels, IEnumerable<DataFrame> dataFrames)
+        public static ClusterDataSet<TRow, TColumn> FromDataFrames(IEnumerable<TRow> rowLabels, IEnumerable<DataFrame> dataFrames)
         {
-            return new ClusterDataSet(rowLabels, dataFrames.ToLookup(frame => frame.ColumnHeaders)
+            return new ClusterDataSet<TRow, TColumn>(rowLabels, dataFrames.ToLookup(frame => frame.ColumnHeaders)
                 .Select(ImmutableList.ValueOf));
         }
 
-        public ClusterDataSet(IEnumerable<string> rowLabels, IEnumerable<ImmutableList<DataFrame>> dataFrameGroups)
+        public ClusterDataSet(IEnumerable<TRow> rowLabels, IEnumerable<ImmutableList<DataFrame>> dataFrameGroups)
         {
             RowLabels = ImmutableList.ValueOf(rowLabels);
             DataFrameGroups = ImmutableList.ValueOf(dataFrameGroups.Where(group=>group.Count > 0));
@@ -30,7 +30,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
             }
         }
 
-        public ImmutableList<string> RowLabels { get; private set; }
+        public ImmutableList<TRow> RowLabels { get; private set; }
 
         public int RowCount
         {
@@ -46,28 +46,27 @@ namespace pwiz.Common.DataAnalysis.Clustering
             get { return DataFrameGroups.SelectMany(group => group); }
         }
 
-        public ClusterDataSet ReorderRows(IList<int> newOrdering)
+        public ClusterDataSet<TRow, TColumn> ReorderRows(IList<int> newOrdering)
         {
-            return new ClusterDataSet(Reorder(RowLabels, newOrdering),
+            return new ClusterDataSet<TRow, TColumn>(Reorder(RowLabels, newOrdering),
                 DataFrameGroups.Select(group =>
                     ImmutableList.ValueOf(group.Select(frame => frame.ReorderRows(newOrdering)))));
         }
 
         public class DataFrame
         {
-            public DataFrame(ImmutableList<string> columnHeaders, IEnumerable<ImmutableList<double?>> dataColumns)
+            public DataFrame(IEnumerable<TColumn> columnHeaders, IEnumerable<ImmutableList<double?>> dataColumns)
             {
-                ColumnHeaders = columnHeaders;
+                ColumnHeaders = ImmutableList.ValueOf(columnHeaders);
+                DataColumns = ImmutableList.ValueOf(dataColumns);
                 if (ColumnHeaders.Count == 0)
                 {
                     throw new ArgumentException(nameof(columnHeaders));
                 }
-                DataColumns = ImmutableList.ValueOf(dataColumns);
                 if (ColumnHeaders.Count != DataColumns.Count)
                 {
                     throw new ArgumentException(@"Wrong number of data columns", nameof(dataColumns));
                 }
-
                 if (DataColumns.Select(col => col.Count).Distinct().Count() > 1)
                 {
                     throw new ArgumentException(@"All data columns must have the same number of rows", nameof(dataColumns));
@@ -76,35 +75,9 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
             public IEnumerable<double?> GetZScores(int iRow)
             {
-                var values = DataColumns.Select(column => column[iRow]).Where(IsValidValue).ToList();
-                double stdDev = 0;
-                if (values.Count > 1)
-                {
-                    stdDev = values.StandardDeviation();
-                }
-                if (stdDev == 0)
-                {
-                    return DataColumns.Select(column => IsValidValue(column[iRow]) ? (double?) 0 : null);
-                }
-
-                var mean = values.Mean();
-                return DataColumns.Select(col =>
-                {
-                    var value = col[iRow];
-                    if (IsValidValue(value))
-                    {
-                        return (double?) (value.Value - mean) / stdDev;
-                    }
-
-                    return null;
-                });
+                return ZScores.CalculateZScores(DataColumns.Select(col => col[iRow]));
             }
-
-            private bool IsValidValue(double? value)
-            {
-                return value.HasValue && !double.IsInfinity(value.Value) && !double.IsNaN(value.Value);
-            }
-            public ImmutableList<string> ColumnHeaders { get; private set; }
+            public ImmutableList<TColumn> ColumnHeaders { get; private set; }
             public ImmutableList<ImmutableList<double?>> DataColumns { get; private set; }
             public int RowCount
             {
@@ -123,7 +96,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
             }
         }
 
-        public ClusterResults ClusterRows()
+        public Results ClusterRows()
         {
             int columnCount = DataFrames.Sum(frame => frame.ColumnHeaders.Count);
             var rowDataSet = new double[RowLabels.Count, columnCount];
@@ -146,7 +119,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
             alglib.clusterizercreate(out alglib.clusterizerstate s);
             alglib.clusterizersetpoints(s, rowDataSet, 2);
             alglib.clusterizerrunahc(s, out alglib.ahcreport rep);
-            return new ClusterResults(ReorderRows(rep.p), new DendrogramData(rep.pz, rep.mergedist), null);
+            return new Results(ReorderRows(rep.p), new DendrogramData(rep.pz, rep.mergedist), null);
         }
 
         private Tuple<ImmutableList<DataFrame>, DendrogramData> ClusterDataFrameGroup(ImmutableList<DataFrame> group)
@@ -178,23 +151,37 @@ namespace pwiz.Common.DataAnalysis.Clustering
             return Tuple.Create(newGroup, dendrogramData);
         }
 
-        public ClusterResults ClusterColumns()
+        public Results ClusterColumns()
         {
             var clusteredGroups = DataFrameGroups.Select(ClusterDataFrameGroup).ToList();
-            var newDataSet = new ClusterDataSet(RowLabels, clusteredGroups.Select(tuple=>tuple.Item1));
-            return new ClusterResults(newDataSet, null, ImmutableList.ValueOf(clusteredGroups.Select(tuple=>tuple.Item2)));
+            var newDataSet = new ClusterDataSet<TRow, TColumn>(RowLabels, clusteredGroups.Select(tuple=>tuple.Item1));
+            return new Results(newDataSet, null, ImmutableList.ValueOf(clusteredGroups.Select(tuple=>tuple.Item2)));
         }
 
-        public ClusterResults PerformClustering()
+        public Results PerformClustering()
         {
-            ClusterResults rowResults = ClusterRows();
-            ClusterResults columnResults = rowResults.DataSet.ClusterColumns();
-            return new ClusterResults(columnResults.DataSet, rowResults.RowDendrogram, columnResults.ColumnGroupDendrograms);
+            Results rowResults = ClusterRows();
+            Results columnResults = rowResults.DataSet.ClusterColumns();
+            return new Results(columnResults.DataSet, rowResults.RowDendrogram, columnResults.ColumnGroupDendrograms);
         }
 
         public static IEnumerable<T> Reorder<T>(IList<T> list, IList<int> newOrder)
         {
             return Enumerable.Range(0, list.Count).OrderBy(i => newOrder[i]).Select(i => list[i]);
+        }
+
+        public class Results
+        {
+            public Results(ClusterDataSet<TRow, TColumn> dataSet, DendrogramData rowDendrogram,
+                ImmutableList<DendrogramData> columnDendrograms)
+            {
+                DataSet = dataSet;
+                RowDendrogram = rowDendrogram;
+                ColumnGroupDendrograms = columnDendrograms;
+            }
+            public ClusterDataSet<TRow, TColumn> DataSet { get; }
+            public DendrogramData RowDendrogram { get; private set; }
+            public ImmutableList<DendrogramData> ColumnGroupDendrograms { get; private set; }
         }
     }
 }

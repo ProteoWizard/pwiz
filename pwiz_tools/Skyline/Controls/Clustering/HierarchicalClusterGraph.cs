@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
-using pwiz.Common.DataBinding.Clustering;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
@@ -12,13 +11,13 @@ namespace pwiz.Skyline.Controls.Clustering
 {
     public partial class HierarchicalClusterGraph : DockableFormEx
     {
-        private ClusterResults _results;
+        private ClusterDataSet<string, string>.Results _results;
         public HierarchicalClusterGraph()
         {
             InitializeComponent();
         }
 
-        public ClusterResults Results
+        public ClusterDataSet<string, string>.Results Results
         {
             get { return _results; }
             set

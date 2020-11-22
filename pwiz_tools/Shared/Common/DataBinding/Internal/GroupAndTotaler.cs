@@ -140,8 +140,8 @@ namespace pwiz.Common.DataBinding.Internal
                 qualifiedCaption, pivotedColumnId, attributes);
         }
 
-        public static PivotedRows GroupAndTotal(CancellationToken cancellationToken, DataSchema dataSchema,
-            PivotSpec pivotSpec, PivotedRows input)
+        public static ReportResults GroupAndTotal(CancellationToken cancellationToken, DataSchema dataSchema,
+            PivotSpec pivotSpec, ReportResults input)
         {
             if (pivotSpec.IsEmpty)
             {
@@ -150,7 +150,7 @@ namespace pwiz.Common.DataBinding.Internal
             var groupAndTotaller = new GroupAndTotaler(cancellationToken, dataSchema, pivotSpec, input.ItemProperties);
             var newProperties = new List<DataPropertyDescriptor>();
             var newRows = ImmutableList.ValueOf(groupAndTotaller.GroupAndTotal(input.RowItems, newProperties));
-            return new PivotedRows(newRows, newProperties);
+            return new ReportResults(newRows, newProperties);
         }
     }
 }

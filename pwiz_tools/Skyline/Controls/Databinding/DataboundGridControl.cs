@@ -53,6 +53,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             InitializeComponent();
             _dataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
+            NavBar.ClusterSplitButton.Visible = true;
         }
 
         public BindingListSource BindingListSource
@@ -645,9 +646,9 @@ namespace pwiz.Skyline.Controls.Databinding
         public bool ShowHeatMap()
         {
             var numericColumnsByPropertyPath = BindingListSource.ItemProperties
-                .Where(p => IsNumeric(p.PropertyType) && null != p.PivotedColumnId)
+                .Where(p => ZScores.IsNumericType(p.PropertyType) && null != p.PivotedColumnId)
                 .GroupBy(p => p.PivotedColumnId.SeriesId);
-            var dataFrames = new List<ClusterDataSet.DataFrame>();
+            var dataFrames = new List<ClusterDataSet<string, string>.DataFrame>();
             var rowItems = BindingListSource.OfType<RowItem>().ToList();
             // Put the row items in reverse order so that they way they get displayed in the graph looks like the DataGridView.
             rowItems.Reverse();
@@ -665,10 +666,10 @@ namespace pwiz.Skyline.Controls.Databinding
                     string caption = column.PivotedColumnId.PivotKeyCaption
                         .GetCaption(BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer);
                     columnHeaders.Add(caption);
-                    var values = rowItems.Select(rowItem => ToDouble(column.GetValue(rowItem)));
+                    var values = rowItems.Select(rowItem => ZScores.ToDouble(column.GetValue(rowItem)));
                     columnDatas.Add(ImmutableList.ValueOf(values));
                 }
-                dataFrames.Add(new ClusterDataSet.DataFrame(ImmutableList.ValueOf(columnHeaders), columnDatas));
+                dataFrames.Add(new ClusterDataSet<string, string>.DataFrame(ImmutableList.ValueOf(columnHeaders), columnDatas));
             }
 
             if (dataFrames.Count == 0)
@@ -681,34 +682,13 @@ namespace pwiz.Skyline.Controls.Databinding
             var firstProperty = BindingListSource.ItemProperties[0];
             var rowLabels = rowItems.Select(rowItem =>
                 firstProperty.GetValue(rowItem)?.ToString() ?? string.Empty);
-            var dataSet = ClusterDataSet.FromDataFrames(rowLabels, dataFrames);
+            var dataSet = ClusterDataSet<string, string>.FromDataFrames(rowLabels, dataFrames);
             var heatMapGraph = new HierarchicalClusterGraph()
             {
                 Results = dataSet.PerformClustering()
             };
             heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
             return true;
-        }
-
-
-        private static bool IsNumeric(Type type)
-        {
-            return type == typeof(double) || type == typeof(double?) || type == typeof(float) || type == typeof(float?);
-        }
-
-        private static double? ToDouble(object value)
-        {
-            if (value is double doubleValue)
-            {
-                return doubleValue;
-            }
-
-            if (value is float floatValue)
-            {
-                return floatValue;
-            }
-
-            return null;
         }
     }
 }

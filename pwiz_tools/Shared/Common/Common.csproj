@@ -129,9 +129,10 @@
     <Compile Include="DataAnalysis\alglib\solvers.cs" />
     <Compile Include="DataAnalysis\alglib\specialfunctions.cs" />
     <Compile Include="DataAnalysis\alglib\statistics.cs" />
-    <Compile Include="DataAnalysis\Clustering\ClusterableDataSet.cs" />
+    <Compile Include="DataAnalysis\Clustering\ClusterDataSet.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
     <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
+    <Compile Include="DataAnalysis\Clustering\ZScores.cs" />
     <Compile Include="DataAnalysis\LinearFitResult.cs" />
     <Compile Include="DataAnalysis\FoldChange\FoldChangeDataSet.cs" />
     <Compile Include="DataAnalysis\FoldChange\DesignMatrix.cs" />
@@ -287,16 +288,17 @@
     <Compile Include="DataBinding\Internal\AbstractQuery.cs" />
     <Compile Include="DataBinding\Internal\BackgroundQuery.cs" />
     <Compile Include="DataBinding\Internal\BindingListView.cs" />
+    <Compile Include="DataBinding\Internal\Clusterer.cs" />
     <Compile Include="DataBinding\Internal\ForegroundQuery.cs" />
     <Compile Include="DataBinding\Internal\GroupAndTotaler.cs" />
     <Compile Include="DataBinding\Internal\GroupedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\Internal\GroupedRow.cs" />
     <Compile Include="DataBinding\Internal\IndexedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\Internal\IQueryRequest.cs" />
-    <Compile Include="DataBinding\Internal\PivotedRows.cs" />
     <Compile Include="DataBinding\Internal\Pivoter.cs" />
     <Compile Include="DataBinding\Internal\QueryRequestor.cs" />
     <Compile Include="DataBinding\Internal\QueryResults.cs" />
+    <Compile Include="DataBinding\ItemProperties.cs" />
     <Compile Include="DataBinding\IUiModeInfo.cs" />
     <Compile Include="DataBinding\Layout\RowFilter.cs" />
     <Compile Include="DataBinding\Internal\RowSourceWrapper.cs" />
@@ -312,6 +314,7 @@
     <Compile Include="DataBinding\PropertyPath.cs" />
     <Compile Include="DataBinding\IViewContext.cs" />
     <Compile Include="DataBinding\QueryLock.cs" />
+    <Compile Include="DataBinding\ReportResults.cs" />
     <Compile Include="DataBinding\RowItem.cs" />
     <Compile Include="DataBinding\LinkValue.cs" />
     <Compile Include="DataBinding\RowItemValues.cs" />
@@ -320,6 +323,7 @@
     <Compile Include="DataBinding\RowSources\PropertyChangeSupport.cs" />
     <Compile Include="DataBinding\SerializableViewGroups.cs" />
     <Compile Include="DataBinding\SortableBindingList.cs" />
+    <Compile Include="DataBinding\PivotedProperties.cs" />
     <Compile Include="DataBinding\TotalOperation.cs" />
     <Compile Include="DataBinding\TransformResults.cs" />
     <Compile Include="DataBinding\Layout\ColumnId.cs" />

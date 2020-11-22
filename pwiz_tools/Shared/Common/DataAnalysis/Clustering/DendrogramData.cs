@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 
-namespace pwiz.Common.DataBinding.Clustering
+namespace pwiz.Common.DataAnalysis.Clustering
 {
     public class DendrogramData : Immutable
     {
@@ -72,7 +72,6 @@ namespace pwiz.Common.DataBinding.Clustering
                     yield return Tuple.Create(left.Item1, left.Item2, newNode.Item1, newNode.Item2);
                     yield return Tuple.Create(right.Item1, right.Item2, newNode.Item1, newNode.Item2);
                 }
-
             }
         }
     }

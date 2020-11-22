@@ -23,6 +23,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
+using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
@@ -40,7 +41,7 @@ namespace pwiz.Common.DataBinding.Controls
     {
         private BindingListSource _bindingListSource;
         private IViewContext _viewContext;
-        private ImmutableList<DataPropertyDescriptor> _itemProperties;
+        private ItemProperties _itemProperties;
         private ImmutableList<ColumnFormat> _columnFormats;
 
         public BoundDataGridView()
@@ -278,6 +279,43 @@ namespace pwiz.Common.DataBinding.Controls
 
             }
             base.OnCellErrorTextNeeded(e);
+        }
+
+        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
+        {
+            var reportResults = (DataSource as BindingListSource)?.ReportResults;
+            if (reportResults == null)
+            {
+                return;
+            }
+            if (e.RowIndex < 0 || e.RowIndex >= reportResults.RowCount)
+            {
+                return;
+            }
+
+            var rowItem = reportResults.RowItems[e.RowIndex];
+            var column = Columns[e.ColumnIndex];
+            var itemProperties = reportResults.ItemProperties;
+            int propertyIndex = itemProperties.IndexOfName(column.DataPropertyName);
+            var pivotedProperties = reportResults.PivotedProperties;
+            if (propertyIndex < 0)
+            {
+                return;
+            }
+
+            var series = pivotedProperties.SeriesFromPropertyIndex(propertyIndex);
+            if (series == null)
+            {
+                return;
+            }
+
+            List<double?> zScores = ZScores.CalculateZScores(series.PropertyIndexes.Select(i => itemProperties[i].GetValue(rowItem))).ToList();
+            double? zScore = zScores[series.PropertyIndexes.IndexOf(propertyIndex)];
+            if (!zScore.HasValue)
+            {
+                return;
+            }
+            e.CellStyle.BackColor = ZScores.ZScoreToColor(zScore.Value);
         }
     }
 }

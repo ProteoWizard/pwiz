@@ -142,8 +142,8 @@ namespace pwiz.Common.DataBinding.Controls
                             bool filterApplied = false;
                             if (queryResults.TransformResults.RowTransform is RowFilter)
                             {
-                                int filteredCount = queryResults.TransformResults.PivotedRows.Count;
-                                int unfilteredCount = queryResults.TransformResults.Parent.PivotedRows.Count;
+                                int filteredCount = queryResults.TransformResults.PivotedRows.RowCount;
+                                int unfilteredCount = queryResults.TransformResults.Parent.PivotedRows.RowCount;
                                 if (filteredCount != unfilteredCount)
                                 {
                                     lblFilterApplied.Text = string.Format(Resources.NavBar_RefreshUi__Filtered_from__0__, unfilteredCount);
@@ -170,6 +170,7 @@ namespace pwiz.Common.DataBinding.Controls
                 lblFilterApplied.Text = string.Format(@"({0})", WaitingMessage);
                 lblFilterApplied.Visible = true;
             }
+            
         }
 
         private void NavBarButtonViewsOnDropDownOpening(object sender, EventArgs e)
@@ -616,6 +617,16 @@ namespace pwiz.Common.DataBinding.Controls
         public ToolStripDropDownButton ReportsButton
         {
             get { return navBarButtonViews; }
+        }
+
+        private void navBarButtonCluster_ButtonClick(object sender, EventArgs e)
+        {
+            BindingListSource.ClusteringRequested = !BindingListSource.ClusteringRequested;
+        }
+
+        public ToolStripSplitButton ClusterSplitButton
+        {
+            get { return navBarButtonCluster; }
         }
     }
 }

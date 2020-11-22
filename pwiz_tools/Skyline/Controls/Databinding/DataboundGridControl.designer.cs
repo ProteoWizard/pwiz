@@ -47,8 +47,8 @@
             this.formatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.fillDownToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.heatMapContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
@@ -63,6 +63,7 @@
             // 
             // bindingListSource
             // 
+            this.bindingListSource.ClusteringRequested = false;
             this.bindingListSource.NewRowHandler = null;
             this.bindingListSource.DataError += new System.Windows.Forms.BindingManagerDataErrorEventHandler(this.bindingListSource_DataError);
             // 
@@ -148,6 +149,12 @@
             resources.ApplyResources(this.fillDownToolStripMenuItem, "fillDownToolStripMenuItem");
             this.fillDownToolStripMenuItem.Click += new System.EventHandler(this.fillDownToolStripMenuItem_Click);
             // 
+            // heatMapContextMenuItem
+            // 
+            this.heatMapContextMenuItem.Name = "heatMapContextMenuItem";
+            resources.ApplyResources(this.heatMapContextMenuItem, "heatMapContextMenuItem");
+            this.heatMapContextMenuItem.Click += new System.EventHandler(this.heatMapContextMenuItem_Click);
+            // 
             // boundDataGridView
             // 
             this.boundDataGridView.AutoGenerateColumns = false;
@@ -184,12 +191,6 @@
             this.boundDataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.boundDataGridView.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.boundDataGridView_CellContextMenuStripNeeded);
             this.boundDataGridView.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.boundDataGridView_ColumnHeaderMouseClick);
-            // 
-            // heatMapContextMenuItem
-            // 
-            this.heatMapContextMenuItem.Name = "heatMapContextMenuItem";
-            resources.ApplyResources(this.heatMapContextMenuItem, "heatMapContextMenuItem");
-            this.heatMapContextMenuItem.Click += new System.EventHandler(this.heatMapContextMenuItem_Click);
             // 
             // DataboundGridControl
             // 

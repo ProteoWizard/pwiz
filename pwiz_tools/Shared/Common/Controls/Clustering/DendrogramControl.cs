@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.DataBinding.Clustering;
+using pwiz.Common.DataAnalysis.Clustering;
 
 namespace pwiz.Common.Controls.Clustering
 {
