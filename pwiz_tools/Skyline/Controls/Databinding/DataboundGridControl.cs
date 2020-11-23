@@ -637,7 +637,6 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-
         private void heatMapContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowHeatMap();
@@ -685,10 +684,136 @@ namespace pwiz.Skyline.Controls.Databinding
             var dataSet = ClusterDataSet<string, string>.FromDataFrames(rowLabels, dataFrames);
             var heatMapGraph = new HierarchicalClusterGraph()
             {
-                Results = dataSet.PerformClustering()
+                Results = dataSet.PerformClustering(true, true)
             };
             heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
             return true;
+        }
+        private void boundDataGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
+        {
+            UpdateDendrograms();
+        }
+
+        public void UpdateDendrograms()
+        {
+            var reportResults = BindingListSource.ReportResults;
+            UpdateColumnDendrograms(reportResults.PivotedProperties, reportResults.ColumnGroupDendrogramDatas);
+            if (reportResults.RowDendrogramData == null)
+            {
+                splitContainerVertical.Panel1Collapsed = true;
+            }
+            else
+            {
+                splitContainerVertical.Panel1Collapsed = false;
+                int dendrogramTop = 0;
+                if (!splitContainerHorizontal.Panel1Collapsed)
+                {
+                    dendrogramTop += splitContainerHorizontal.Panel1.Height;
+                }
+                if (DataGridView.ColumnHeadersVisible)
+                {
+                    dendrogramTop += DataGridView.ColumnHeadersHeight;
+                }
+                rowDendrogram.Bounds = new Rectangle(0, dendrogramTop, splitContainerVertical.Panel1.Width,
+                    splitContainerVertical.Panel1.Height - dendrogramTop);
+                var firstDisplayedCell = DataGridView.FirstDisplayedCell;
+                var rowHeight = firstDisplayedCell.Size.Height;
+                var firstLocation = rowHeight / 2.0;
+                var rowLocations = ImmutableList.ValueOf(Enumerable.Range(0, DataGridView.RowCount).Select(rowIndex =>
+                    (rowIndex - firstDisplayedCell.RowIndex) * rowHeight + firstLocation));
+                rowDendrogram.SetDendrogramDatas(new[] { new KeyValuePair<DendrogramData, ImmutableList<double>>(reportResults.RowDendrogramData, rowLocations), });
+            }
+        }
+
+        public void UpdateColumnDendrograms(PivotedProperties pivotedProperties, IList<DendrogramData> columnDendrogramDatas)
+        {
+            if (columnDendrogramDatas == null || columnDendrogramDatas.All(data=>null == data))
+            {
+                splitContainerHorizontal.Panel1Collapsed = true;
+                return;
+            }
+            List<double> columnLocations = new List<double>();
+            Dictionary<string, int> nameToIndex = new Dictionary<string, int>();
+            double currentPosition = -DataGridView.HorizontalScrollingOffset;
+            if (DataGridView.RowHeadersVisible)
+            {
+                currentPosition += DataGridView.RowHeadersWidth;
+            }
+            foreach (var column in DataGridView.Columns.Cast<DataGridViewColumn>())
+            {
+                if (!string.IsNullOrEmpty(column.DataPropertyName))
+                {
+                    nameToIndex[column.DataPropertyName] = columnLocations.Count;
+                }
+
+                double width = column.Visible ? column.Width : 0;
+                columnLocations.Add(width / 2 + currentPosition);
+                currentPosition += width;
+            }
+
+            if (columnLocations.Count == 0)
+            {
+                return;
+            }
+            var datas = new List<KeyValuePair<DendrogramData, ImmutableList<double>>>();
+            for (int i = 0; i < columnDendrogramDatas.Count; i++)
+            {
+                var dendrogramData = columnDendrogramDatas[i];
+                if (dendrogramData == null)
+                {
+                    continue;
+                }
+
+                var seriesGroup = pivotedProperties.SeriesGroups[i];
+                if (seriesGroup == null)
+                {
+                    continue;
+                }
+                double lastLocation = columnLocations[0];
+                List<double> leafLocatons = new List<double>(seriesGroup.PivotKeys.Count);
+                for (int iPivotKey = 0; iPivotKey < seriesGroup.PivotKeys.Count; iPivotKey++)
+                {
+                    var locs = new List<double>();
+                    foreach (var series in seriesGroup.SeriesList)
+                    {
+                        var propertyDescriptor = pivotedProperties.ItemProperties[series.PropertyIndexes[iPivotKey]];
+                        int columnIndex;
+                        if (nameToIndex.TryGetValue(propertyDescriptor.Name, out columnIndex))
+                        {
+                            locs.Add(columnLocations[columnIndex]);
+                        }
+                    }
+
+                    if (locs.Count != 0)
+                    {
+                        lastLocation = locs.Average();
+                    }
+                    leafLocatons.Add(lastLocation);
+                }
+                datas.Add(new KeyValuePair<DendrogramData, ImmutableList<double>>(dendrogramData, ImmutableList.ValueOf(leafLocatons)));
+            }
+            columnDendrogram.SetDendrogramDatas(datas);
+            splitContainerHorizontal.Panel1Collapsed = false;
+        }
+
+        private void boundDataGridView_Resize(object sender, EventArgs e)
+        {
+            UpdateDendrograms();
+        }
+
+        private void boundDataGridView_Scroll(object sender, ScrollEventArgs e)
+        {
+            UpdateDendrograms();
+        }
+
+        private void bindingListSource_BindingComplete(object sender, BindingCompleteEventArgs e)
+        {
+            UpdateDendrograms();
+        }
+
+        private void bindingListSource_ListChanged(object sender, ListChangedEventArgs e)
+        {
+            UpdateDendrograms();
         }
     }
 }

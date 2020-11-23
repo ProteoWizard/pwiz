@@ -158,9 +158,17 @@ namespace pwiz.Common.DataAnalysis.Clustering
             return new Results(newDataSet, null, ImmutableList.ValueOf(clusteredGroups.Select(tuple=>tuple.Item2)));
         }
 
-        public Results PerformClustering()
+        public Results PerformClustering(bool clusterRows, bool clusterColumns)
         {
-            Results rowResults = ClusterRows();
+            Results rowResults;
+            if (clusterRows)
+            {
+                rowResults = ClusterRows();
+            }
+            else
+            {
+                rowResults = new Results(this, null, null);
+            }
             Results columnResults = rowResults.DataSet.ClusterColumns();
             return new Results(columnResults.DataSet, rowResults.RowDendrogram, columnResults.ColumnGroupDendrograms);
         }

@@ -48,9 +48,21 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.fillDownToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.heatMapContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.splitContainerVertical = new System.Windows.Forms.SplitContainer();
+            this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
+            this.splitContainerHorizontal = new System.Windows.Forms.SplitContainer();
+            this.columnDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
             this.contextMenuStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).BeginInit();
+            this.splitContainerVertical.Panel1.SuspendLayout();
+            this.splitContainerVertical.Panel2.SuspendLayout();
+            this.splitContainerVertical.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerHorizontal)).BeginInit();
+            this.splitContainerHorizontal.Panel1.SuspendLayout();
+            this.splitContainerHorizontal.Panel2.SuspendLayout();
+            this.splitContainerHorizontal.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -63,9 +75,10 @@
             // 
             // bindingListSource
             // 
-            this.bindingListSource.ClusteringRequested = false;
             this.bindingListSource.NewRowHandler = null;
+            this.bindingListSource.BindingComplete += new System.Windows.Forms.BindingCompleteEventHandler(this.bindingListSource_BindingComplete);
             this.bindingListSource.DataError += new System.Windows.Forms.BindingManagerDataErrorEventHandler(this.bindingListSource_DataError);
+            this.bindingListSource.ListChanged += new System.ComponentModel.ListChangedEventHandler(this.bindingListSource_ListChanged);
             // 
             // contextMenuStrip
             // 
@@ -155,6 +168,46 @@
             resources.ApplyResources(this.heatMapContextMenuItem, "heatMapContextMenuItem");
             this.heatMapContextMenuItem.Click += new System.EventHandler(this.heatMapContextMenuItem_Click);
             // 
+            // splitContainerVertical
+            // 
+            resources.ApplyResources(this.splitContainerVertical, "splitContainerVertical");
+            this.splitContainerVertical.Name = "splitContainerVertical";
+            // 
+            // splitContainerVertical.Panel1
+            // 
+            this.splitContainerVertical.Panel1.Controls.Add(this.rowDendrogram);
+            // 
+            // splitContainerVertical.Panel2
+            // 
+            this.splitContainerVertical.Panel2.Controls.Add(this.splitContainerHorizontal);
+            // 
+            // rowDendrogram
+            // 
+            resources.ApplyResources(this.rowDendrogram, "rowDendrogram");
+            this.rowDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Left;
+            this.rowDendrogram.Name = "rowDendrogram";
+            this.rowDendrogram.RectilinearLines = true;
+            // 
+            // splitContainerHorizontal
+            // 
+            resources.ApplyResources(this.splitContainerHorizontal, "splitContainerHorizontal");
+            this.splitContainerHorizontal.Name = "splitContainerHorizontal";
+            // 
+            // splitContainerHorizontal.Panel1
+            // 
+            this.splitContainerHorizontal.Panel1.Controls.Add(this.columnDendrogram);
+            // 
+            // splitContainerHorizontal.Panel2
+            // 
+            this.splitContainerHorizontal.Panel2.Controls.Add(this.boundDataGridView);
+            // 
+            // columnDendrogram
+            // 
+            this.columnDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Top;
+            resources.ApplyResources(this.columnDendrogram, "columnDendrogram");
+            this.columnDendrogram.Name = "columnDendrogram";
+            this.columnDendrogram.RectilinearLines = true;
+            // 
             // boundDataGridView
             // 
             this.boundDataGridView.AutoGenerateColumns = false;
@@ -191,16 +244,27 @@
             this.boundDataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.boundDataGridView.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.boundDataGridView_CellContextMenuStripNeeded);
             this.boundDataGridView.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.boundDataGridView_ColumnHeaderMouseClick);
+            this.boundDataGridView.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.boundDataGridView_DataBindingComplete);
+            this.boundDataGridView.Scroll += new System.Windows.Forms.ScrollEventHandler(this.boundDataGridView_Scroll);
+            this.boundDataGridView.Resize += new System.EventHandler(this.boundDataGridView_Resize);
             // 
             // DataboundGridControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.boundDataGridView);
+            this.Controls.Add(this.splitContainerVertical);
             this.Controls.Add(this.navBar);
             this.Name = "DataboundGridControl";
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).EndInit();
             this.contextMenuStrip.ResumeLayout(false);
+            this.splitContainerVertical.Panel1.ResumeLayout(false);
+            this.splitContainerVertical.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).EndInit();
+            this.splitContainerVertical.ResumeLayout(false);
+            this.splitContainerHorizontal.Panel1.ResumeLayout(false);
+            this.splitContainerHorizontal.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerHorizontal)).EndInit();
+            this.splitContainerHorizontal.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -225,5 +289,9 @@
         private System.Windows.Forms.ToolStripMenuItem formatToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem heatMapContextMenuItem;
+        private System.Windows.Forms.SplitContainer splitContainerVertical;
+        private Common.Controls.Clustering.DendrogramControl rowDendrogram;
+        private System.Windows.Forms.SplitContainer splitContainerHorizontal;
+        private Common.Controls.Clustering.DendrogramControl columnDendrogram;
     }
 }

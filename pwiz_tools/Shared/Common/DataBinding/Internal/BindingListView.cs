@@ -139,11 +139,11 @@ namespace pwiz.Common.DataBinding.Internal
             }
         }
 
-        public bool ClusteringRequested
+        public ClusteringSpec ClusteringSpec
         {
             get
             {
-                return _queryRequestor.QueryParameters.ClusteringRequested;
+                return _queryRequestor.QueryParameters.ClusteringSpec;
             }
             set
             {

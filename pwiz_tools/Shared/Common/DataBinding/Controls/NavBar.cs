@@ -170,7 +170,6 @@ namespace pwiz.Common.DataBinding.Controls
                 lblFilterApplied.Text = string.Format(@"({0})", WaitingMessage);
                 lblFilterApplied.Visible = true;
             }
-            
         }
 
         private void NavBarButtonViewsOnDropDownOpening(object sender, EventArgs e)
@@ -621,12 +620,61 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void navBarButtonCluster_ButtonClick(object sender, EventArgs e)
         {
-            BindingListSource.ClusteringRequested = !BindingListSource.ClusteringRequested;
+            if (null == BindingListSource.ClusteringSpec)
+            {
+                BindingListSource.ClusteringSpec = ClusteringSpec.DEFAULT;
+            }
+            else
+            {
+                BindingListSource.ClusteringSpec = null;
+            }
         }
 
         public ToolStripSplitButton ClusterSplitButton
         {
             get { return navBarButtonCluster; }
+        }
+
+        private void navBarButtonCluster_DropDownOpening(object sender, EventArgs e)
+        {
+            clusterRowsToolStripMenuItem.Checked = true == BindingListSource?.ClusteringSpec?.ClusterRows;
+            clusterColumnsToolStripMenuItem.Checked = true == BindingListSource?.ClusteringSpec?.ClusterColumns;
+        }
+
+        private void clusterRowsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (BindingListSource == null)
+            {
+                return;
+            }
+
+            var clusteringSpec = BindingListSource.ClusteringSpec;
+            if (clusteringSpec == null)
+            {
+                BindingListSource.ClusteringSpec = ClusteringSpec.MINIMUM.ChangeClusterRows(true);
+            }
+            else
+            {
+                BindingListSource.ClusteringSpec = clusteringSpec.ChangeClusterRows(!clusteringSpec.ClusterRows);
+            }
+        }
+
+        private void clusterColumnsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (BindingListSource == null)
+            {
+                return;
+            }
+
+            var clusteringSpec = BindingListSource.ClusteringSpec;
+            if (clusteringSpec == null)
+            {
+                BindingListSource.ClusteringSpec = ClusteringSpec.MINIMUM.ChangeClusterColumns(true);
+            }
+            else
+            {
+                BindingListSource.ClusteringSpec = clusteringSpec.ChangeClusterColumns(!clusteringSpec.ClusterColumns);
+            }
         }
     }
 }

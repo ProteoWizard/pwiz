@@ -225,14 +225,101 @@
   <data name="&gt;&gt;contextMenuStrip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="splitContainerVertical.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="splitContainerVertical.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 25</value>
+  </data>
+  <data name="rowDendrogram.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="rowDendrogram.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 180</value>
+  </data>
+  <data name="rowDendrogram.Size" type="System.Drawing.Size, System.Drawing">
+    <value>256, 176</value>
+  </data>
+  <data name="rowDendrogram.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;rowDendrogram.Name" xml:space="preserve">
+    <value>rowDendrogram</value>
+  </data>
+  <data name="&gt;&gt;rowDendrogram.Type" xml:space="preserve">
+    <value>pwiz.Common.Controls.Clustering.DendrogramControl, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;rowDendrogram.Parent" xml:space="preserve">
+    <value>splitContainerVertical.Panel1</value>
+  </data>
+  <data name="&gt;&gt;rowDendrogram.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel1.Name" xml:space="preserve">
+    <value>splitContainerVertical.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel1.Parent" xml:space="preserve">
+    <value>splitContainerVertical</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="splitContainerHorizontal.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="splitContainerHorizontal.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="splitContainerHorizontal.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
+    <value>Horizontal</value>
+  </data>
+  <data name="columnDendrogram.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="columnDendrogram.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="columnDendrogram.Size" type="System.Drawing.Size, System.Drawing">
+    <value>512, 139</value>
+  </data>
+  <data name="columnDendrogram.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;columnDendrogram.Name" xml:space="preserve">
+    <value>columnDendrogram</value>
+  </data>
+  <data name="&gt;&gt;columnDendrogram.Type" xml:space="preserve">
+    <value>pwiz.Common.Controls.Clustering.DendrogramControl, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;columnDendrogram.Parent" xml:space="preserve">
+    <value>splitContainerHorizontal.Panel1</value>
+  </data>
+  <data name="&gt;&gt;columnDendrogram.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel1.Name" xml:space="preserve">
+    <value>splitContainerHorizontal.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel1.Parent" xml:space="preserve">
+    <value>splitContainerHorizontal</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="boundDataGridView.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
   <data name="boundDataGridView.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 25</value>
+    <value>0, 0</value>
   </data>
   <data name="boundDataGridView.Size" type="System.Drawing.Size, System.Drawing">
-    <value>772, 356</value>
+    <value>512, 213</value>
   </data>
   <data name="boundDataGridView.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -241,12 +328,78 @@
     <value>boundDataGridView</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.2.1.325, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.2.1.327, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>splitContainerHorizontal.Panel2</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel2.Name" xml:space="preserve">
+    <value>splitContainerHorizontal.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel2.Parent" xml:space="preserve">
+    <value>splitContainerHorizontal</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="splitContainerHorizontal.Size" type="System.Drawing.Size, System.Drawing">
+    <value>512, 356</value>
+  </data>
+  <data name="splitContainerHorizontal.SplitterDistance" type="System.Int32, mscorlib">
+    <value>139</value>
+  </data>
+  <data name="splitContainerHorizontal.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Name" xml:space="preserve">
+    <value>splitContainerHorizontal</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.Parent" xml:space="preserve">
+    <value>splitContainerVertical.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainerHorizontal.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel2.Name" xml:space="preserve">
+    <value>splitContainerVertical.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel2.Parent" xml:space="preserve">
+    <value>splitContainerVertical</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="splitContainerVertical.Size" type="System.Drawing.Size, System.Drawing">
+    <value>772, 356</value>
+  </data>
+  <data name="splitContainerVertical.SplitterDistance" type="System.Int32, mscorlib">
+    <value>256</value>
+  </data>
+  <data name="splitContainerVertical.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Name" xml:space="preserve">
+    <value>splitContainerVertical</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;splitContainerVertical.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

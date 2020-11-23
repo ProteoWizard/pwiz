@@ -102,22 +102,17 @@ namespace pwiz.Common.DataBinding.Layout
             }
             foreach (var rowTransform in RowTransforms)
             {
-                var pivotSpec = rowTransform as PivotSpec;
-                if (pivotSpec != null)
+                if (rowTransform is PivotSpec pivotSpec)
                 {
                     writer.WriteStartElement("pivot");
                     pivotSpec.WriteXml(writer);
                     writer.WriteEndElement();
                 }
-                else
+                else if (rowTransform is RowFilter rowFilter)
                 {
-                    var rowFilter = rowTransform as RowFilter;
-                    if (rowFilter != null)
-                    {
-                        writer.WriteStartElement("rowFilter");
-                        rowFilter.WriteXml(writer);
-                        writer.WriteEndElement();
-                    }
+                    writer.WriteStartElement("rowFilter");
+                    rowFilter.WriteXml(writer);
+                    writer.WriteEndElement();
                 }
             }
         }

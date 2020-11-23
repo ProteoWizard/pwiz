@@ -105,11 +105,11 @@ namespace pwiz.Common.DataBinding.Internal
         {
             return ChangeProp(ImClone(this), im => im.TransformStack = value);
         }
-        public bool ClusteringRequested { get; private set; }
+        public ClusteringSpec ClusteringSpec { get; private set; }
 
-        public QueryParameters ChangeIsClusteringRequested(bool clustered)
+        public QueryParameters ChangeIsClusteringRequested(ClusteringSpec clusteringSpec)
         {
-            return ChangeProp(ImClone(this), im => im.ClusteringRequested = clustered);
+            return ChangeProp(ImClone(this), im => im.ClusteringSpec = clusteringSpec);
         }
     }
 }

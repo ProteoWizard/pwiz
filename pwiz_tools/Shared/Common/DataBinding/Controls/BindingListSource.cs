@@ -223,12 +223,13 @@ namespace pwiz.Common.DataBinding.Controls
             get { return BindingListView.ReportResults; }
         }
 
-        public bool ClusteringRequested
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public ClusteringSpec ClusteringSpec
         {
-            get { return BindingListView.ClusteringRequested; }
+            get { return BindingListView.ClusteringSpec; }
             set
             {
-                BindingListView.ClusteringRequested = value;
+                BindingListView.ClusteringSpec = value;
             }
         }
 

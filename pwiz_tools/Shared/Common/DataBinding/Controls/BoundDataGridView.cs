@@ -296,21 +296,26 @@ namespace pwiz.Common.DataBinding.Controls
             var rowItem = reportResults.RowItems[e.RowIndex];
             var column = Columns[e.ColumnIndex];
             var itemProperties = reportResults.ItemProperties;
-            int propertyIndex = itemProperties.IndexOfName(column.DataPropertyName);
             var pivotedProperties = reportResults.PivotedProperties;
+            int propertyIndex = itemProperties.IndexOfName(column.DataPropertyName);
             if (propertyIndex < 0)
             {
                 return;
             }
 
-            var series = pivotedProperties.SeriesFromPropertyIndex(propertyIndex);
-            if (series == null)
+            var groupSeries = pivotedProperties.FindSeriesForProperty(itemProperties[propertyIndex]);
+            if (groupSeries == null)
             {
                 return;
             }
 
-            List<double?> zScores = ZScores.CalculateZScores(series.PropertyIndexes.Select(i => itemProperties[i].GetValue(rowItem))).ToList();
-            double? zScore = zScores[series.PropertyIndexes.IndexOf(propertyIndex)];
+            int indexWithinSeries = groupSeries.Item2.PropertyIndexes.IndexOf(propertyIndex);
+            if (indexWithinSeries < 0)
+            {
+                return;
+            }
+            List<double?> zScores = ZScores.CalculateZScores(groupSeries.Item2.PropertyIndexes.Select(i => itemProperties[i].GetValue(rowItem))).ToList();
+            double? zScore = zScores[indexWithinSeries];
             if (!zScore.HasValue)
             {
                 return;

@@ -300,6 +300,7 @@
     <Compile Include="DataBinding\Internal\QueryResults.cs" />
     <Compile Include="DataBinding\ItemProperties.cs" />
     <Compile Include="DataBinding\IUiModeInfo.cs" />
+    <Compile Include="DataBinding\Layout\ClusteringSpec.cs" />
     <Compile Include="DataBinding\Layout\RowFilter.cs" />
     <Compile Include="DataBinding\Internal\RowSourceWrapper.cs" />
     <Compile Include="DataBinding\IRowSource.cs" />

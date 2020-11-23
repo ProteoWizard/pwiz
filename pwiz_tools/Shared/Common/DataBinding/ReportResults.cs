@@ -43,8 +43,7 @@ namespace pwiz.Common.DataBinding
                 for (int i = 0; i < colDendrograms.Count; i++)
                 {
                     var dendrogram = colDendrograms[i];
-                    if (dendrogram != null && PivotedProperties.SeriesGroups[i].First().PivotKeys.Count !=
-                        dendrogram.LeafCount)
+                    if (dendrogram != null && PivotedProperties.SeriesGroups[i].PivotKeys.Count != dendrogram.LeafCount)
                     {
                         throw new ArgumentException(@"Wrong number of columns", nameof(colDendrograms));
                     }

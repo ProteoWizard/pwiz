@@ -36,6 +36,12 @@ namespace pwiz.Common.DataBinding
             return -1;
         }
 
+        public DataPropertyDescriptor FindByName(string propertyName)
+        {
+            int index = IndexOfName(propertyName);
+            return index >= 0 ? _properties[index] : null;
+        }
+
         public ImmutableList<DataPropertyDescriptor> AsImmutableList()
         {
             return _properties;

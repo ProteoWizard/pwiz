@@ -2,13 +2,15 @@
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
+using pwiz.Common.DataBinding.Layout;
 
 namespace pwiz.Common.DataBinding.Internal
 {
     public class Clusterer
     {
-        public Clusterer(IEnumerable<RowItem> rowItems, PivotedProperties pivotedProperties)
+        public Clusterer(ClusteringSpec clusteringSpec, IEnumerable<RowItem> rowItems, PivotedProperties pivotedProperties)
         {
+            ClusteringSpec = clusteringSpec;
             RowItems = ImmutableList.ValueOf(rowItems);
             PivotedProperties = pivotedProperties;
         }
@@ -16,6 +18,8 @@ namespace pwiz.Common.DataBinding.Internal
 
         public ItemProperties ItemProperties => PivotedProperties.ItemProperties;
         public PivotedProperties PivotedProperties { get; }
+
+        public ClusteringSpec ClusteringSpec { get; }
 
         public ClusterDataSet<RowItem, int>.DataFrame MakeDataFrame(PivotedProperties.Series series)
         {
@@ -37,25 +41,30 @@ namespace pwiz.Common.DataBinding.Internal
         public ReportResults GetClusteredResults()
         {
             var clusterDataSet = new ClusterDataSet<RowItem, int>(RowItems,
-                PivotedProperties.SeriesGroups.Select(group => ImmutableList.ValueOf(MakeDataFrames(group))));
-            var clusterResults = clusterDataSet.PerformClustering();
+                PivotedProperties.SeriesGroups.Select(group => ImmutableList.ValueOf(MakeDataFrames(group.SeriesList))));
+            var clusterResults = clusterDataSet.PerformClustering(ClusteringSpec.ClusterRows, ClusteringSpec.ClusterColumns);
             var pivotedProperties = PivotedProperties.ReorderPivots(clusterResults.DataSet.DataFrameGroups
                 .Select(group => group[0].ColumnHeaders).Cast<IList<int>>().ToList());
             return new ReportResults(clusterResults.DataSet.RowLabels, pivotedProperties, clusterResults.RowDendrogram, clusterResults.ColumnGroupDendrograms);
         }
 
-        public static ReportResults PerformClustering(ReportResults reportResults)
+        public static ReportResults PerformClustering(ClusteringSpec clusteringSpec, ReportResults reportResults)
         {
             var pivotedPropertySet = new PivotedProperties(reportResults.ItemProperties);
             var seriesGroups = pivotedPropertySet.CreateSeriesGroups()
-                .Where(group => group.Any(series => ZScores.IsNumericType(series.PropertyType))).ToList();
+                .Where(group => group.SeriesList.Any(series => ZScores.IsNumericType(series.PropertyType))).ToList();
             if (seriesGroups.Count == 0)
             {
                 return null;
             }
 
-            pivotedPropertySet = pivotedPropertySet.ChangeSeriesGroups(seriesGroups);
-            var clusterer = new Clusterer(reportResults.RowItems, pivotedPropertySet);
+            if (!clusteringSpec.ClusterColumns && !clusteringSpec.ClusterRows)
+            {
+                return new ReportResults(reportResults.RowItems, pivotedPropertySet);
+            }
+
+            pivotedPropertySet = pivotedPropertySet.ChangeSeriesGroups(seriesGroups).ReorderItemProperties();
+            var clusterer = new Clusterer(clusteringSpec, reportResults.RowItems, pivotedPropertySet);
             return clusterer.GetClusteredResults();
         }
     }

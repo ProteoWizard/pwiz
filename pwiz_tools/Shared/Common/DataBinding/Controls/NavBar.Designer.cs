@@ -54,6 +54,10 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
             this.navBarButtonActions = new System.Windows.Forms.ToolStripDropDownButton();
+            this.displayZScoresToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clusterRowsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clusterColumnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).BeginInit();
             this.bindingNavigator1.SuspendLayout();
             this.SuspendLayout();
@@ -214,9 +218,15 @@
             // navBarButtonCluster
             // 
             this.navBarButtonCluster.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.navBarButtonCluster.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.displayZScoresToolStripMenuItem,
+            this.clusterRowsToolStripMenuItem,
+            this.clusterColumnsToolStripMenuItem,
+            this.advancedToolStripMenuItem});
             resources.ApplyResources(this.navBarButtonCluster, "navBarButtonCluster");
             this.navBarButtonCluster.Name = "navBarButtonCluster";
             this.navBarButtonCluster.ButtonClick += new System.EventHandler(this.navBarButtonCluster_ButtonClick);
+            this.navBarButtonCluster.DropDownOpening += new System.EventHandler(this.navBarButtonCluster_DropDownOpening);
             // 
             // toolStripSeparator3
             // 
@@ -236,6 +246,28 @@
             resources.ApplyResources(this.navBarButtonActions, "navBarButtonActions");
             this.navBarButtonActions.Name = "navBarButtonActions";
             this.navBarButtonActions.DropDownOpening += new System.EventHandler(this.navBarButtonActions_DropDownOpening);
+            // 
+            // displayZScoresToolStripMenuItem
+            // 
+            this.displayZScoresToolStripMenuItem.Name = "displayZScoresToolStripMenuItem";
+            resources.ApplyResources(this.displayZScoresToolStripMenuItem, "displayZScoresToolStripMenuItem");
+            // 
+            // clusterRowsToolStripMenuItem
+            // 
+            this.clusterRowsToolStripMenuItem.Name = "clusterRowsToolStripMenuItem";
+            resources.ApplyResources(this.clusterRowsToolStripMenuItem, "clusterRowsToolStripMenuItem");
+            this.clusterRowsToolStripMenuItem.Click += new System.EventHandler(this.clusterRowsToolStripMenuItem_Click);
+            // 
+            // clusterColumnsToolStripMenuItem
+            // 
+            this.clusterColumnsToolStripMenuItem.Name = "clusterColumnsToolStripMenuItem";
+            resources.ApplyResources(this.clusterColumnsToolStripMenuItem, "clusterColumnsToolStripMenuItem");
+            this.clusterColumnsToolStripMenuItem.Click += new System.EventHandler(this.clusterColumnsToolStripMenuItem_Click);
+            // 
+            // advancedToolStripMenuItem
+            // 
+            this.advancedToolStripMenuItem.Name = "advancedToolStripMenuItem";
+            resources.ApplyResources(this.advancedToolStripMenuItem, "advancedToolStripMenuItem");
             // 
             // NavBar
             // 
@@ -277,5 +309,9 @@
         private System.Windows.Forms.ToolStripSplitButton btnGroupTotal;
         private System.Windows.Forms.ToolStripDropDownButton navBarButtonActions;
         private System.Windows.Forms.ToolStripSplitButton navBarButtonCluster;
+        private System.Windows.Forms.ToolStripMenuItem displayZScoresToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem clusterRowsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem clusterColumnsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem advancedToolStripMenuItem;
     }
 }

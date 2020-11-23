@@ -346,7 +346,9 @@
     <Compile Include="Controls\Clustering\HierarchicalClusterGraph.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Controls\Clustering\HierarchicalClusterGraph.Designer.cs" />
+    <Compile Include="Controls\Clustering\HierarchicalClusterGraph.Designer.cs">
+      <DependentUpon>HierarchicalClusterGraph.cs</DependentUpon>
+	</Compile>
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
     </Compile>

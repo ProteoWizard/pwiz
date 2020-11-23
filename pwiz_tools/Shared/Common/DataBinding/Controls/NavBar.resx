@@ -349,6 +349,30 @@
   <data name="btnGroupTotal.Text" xml:space="preserve">
     <value>Group/Total</value>
   </data>
+  <data name="displayZScoresToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="displayZScoresToolStripMenuItem.Text" xml:space="preserve">
+    <value>Display Z Scores</value>
+  </data>
+  <data name="clusterRowsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="clusterRowsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Cluster Rows</value>
+  </data>
+  <data name="clusterColumnsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="clusterColumnsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Cluster Columns</value>
+  </data>
+  <data name="advancedToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="advancedToolStripMenuItem.Text" xml:space="preserve">
+    <value>Advanced...</value>
+  </data>
   <data name="navBarButtonCluster.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -372,9 +396,6 @@
   </data>
   <data name="navBarButtonCluster.Text" xml:space="preserve">
     <value>Cluster</value>
-  </data>
-  <data name="navBarButtonCluster.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
   </data>
   <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
     <value>6, 25</value>
@@ -581,6 +602,30 @@
   </data>
   <data name="&gt;&gt;navBarButtonActions.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripDropDownButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;displayZScoresToolStripMenuItem.Name" xml:space="preserve">
+    <value>displayZScoresToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;displayZScoresToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;clusterRowsToolStripMenuItem.Name" xml:space="preserve">
+    <value>clusterRowsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;clusterRowsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;clusterColumnsToolStripMenuItem.Name" xml:space="preserve">
+    <value>clusterColumnsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;clusterColumnsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;advancedToolStripMenuItem.Name" xml:space="preserve">
+    <value>advancedToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;advancedToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>NavBar</value>
