@@ -84,6 +84,9 @@ namespace TestRunner
         // These tests are allowed to fail the total memory leak threshold, and extra iterations are not done to stabilize a spiky total memory distribution
         public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupedStudiesTutorialDraft" };
 
+        // These tests are allowed to fail the total handle leak threshold, and extra iterations are not done to stabilize a spiky total handle count
+        public static string[] MutedTotalHandlesLeakTestNames = { "TestDdaSearch" };
+
         private static int GetLeakCheckIterations(TestInfo test)
         {
             return LeakCheckIterationsOverrideByTestName.ContainsKey(test.TestMethod.Name)
@@ -153,7 +156,7 @@ namespace TestRunner
                     return string.Format("!!! {0} LEAKED {1:0.#} bytes\r\n", testName, TotalMemory);
                 if (UserGdiHandles >= leakThresholds.UserGdiHandles)
                     return string.Format("!!! {0} HANDLE-LEAKED {1:0.#} User+GDI\r\n", testName, UserGdiHandles);
-                if (TotalHandles >= leakThresholds.TotalHandles)
+                if (TotalHandles >= leakThresholds.TotalHandles && !MutedTotalHandlesLeakTestNames.Contains(testName))
                     return string.Format("!!! {0} HANDLE-LEAKED {1:0.#} Total\r\n", testName, TotalHandles);
                 return null;
             }
