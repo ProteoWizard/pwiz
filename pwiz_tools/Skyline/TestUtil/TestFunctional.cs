@@ -676,18 +676,39 @@ namespace pwiz.SkylineTestUtil
         public static void WaitForClosedForm(Form formClose)
         {
             int waitCycles = GetWaitCycles();
+            var formDetail = string.Empty;
             for (int i = 0; i < waitCycles; i++)
             {
                 Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isOpen = true;
-                SkylineInvoke(() => isOpen = IsFormOpen(formClose));
+                SkylineInvoke(() =>
+                {
+                    isOpen = IsFormOpen(formClose);
+                    if (isOpen && string.IsNullOrEmpty(formDetail))
+                    {
+                        // Grab some details in case of eventual failure
+                        var formCloseClassName = System.ComponentModel.TypeDescriptor.GetClassName(formClose);
+                        string formCloseText;
+                        try
+                        {
+                            formCloseText = formClose.Text;
+                        }
+                        catch
+                        {
+                            formCloseText = "@@(could not retrieve form text)@@";
+                        }
+                        formDetail = string.Format("(form class={0}, form text=\"{1}\")", 
+                            string.IsNullOrEmpty(formCloseClassName) ? @"?" : formCloseClassName,
+                            string.IsNullOrEmpty(formCloseText) ? @"?" : formCloseText);
+                    }
+                });
                 if (!isOpen)
                     return;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
 
-            Assert.Fail(@"Timeout {0} seconds exceeded in WaitForClosedForm. Open forms: {1}", waitCycles * SLEEP_INTERVAL / 1000, GetOpenFormsString());
+            AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForClosedForm{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, formDetail, GetOpenFormsString());
         }
 
         public static void WaitForClosedAllChromatogramsGraph()
@@ -1138,7 +1159,7 @@ namespace pwiz.SkylineTestUtil
                 formSeen.Saw(formType);
                 bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
 
-                PauseAndContinueForm.Show(description, LinkPage(pageNum), showMatchingPages, timeout);
+                PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), LinkPage(pageNum), showMatchingPages, timeout);
             }
             else
             {
@@ -1654,6 +1675,7 @@ namespace pwiz.SkylineTestUtil
             if (null != SkylineWindow)
             {
                 AssertEx.ValidatesAgainstSchema(SkylineWindow.Document);
+                NormalizedValueCalculatorVerifier.VerifyRatioCalculations(SkylineWindow.Document);
             }
 
             if (doClipboardCheck)

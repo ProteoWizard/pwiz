@@ -1660,33 +1660,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Medians.
-        /// </summary>
-        public static string AreaCVToolbar_UpdateUI_Medians {
-            get {
-                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_Medians", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to None.
-        /// </summary>
-        public static string AreaCVToolbar_UpdateUI_None {
-            get {
-                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_None", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Total ion current.
-        /// </summary>
-        public static string AreaCVToolbar_UpdateUI_Total_ion_current {
-            get {
-                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_Total_ion_current", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid CV cutoff entered.
         /// </summary>
         public static string AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered {
@@ -1819,15 +1792,6 @@ namespace pwiz.Skyline.Properties {
         public static string AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To__0_ {
             get {
                 return ResourceManager.GetString("AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Peak Area Ratio To Global Standards.
-        /// </summary>
-        public static string AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards {
-            get {
-                return ResourceManager.GetString("AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards", resourceCulture);
             }
         }
         
@@ -15421,7 +15385,7 @@ namespace pwiz.Skyline.Properties {
         ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct components  [rest of string was truncated]&quot;;.
+        ///Recognized adduct com [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -20141,7 +20105,7 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Note that you can adjust column order in Skyline by dragging the column headers left or right.  For molecules, you can also select which columns to enable with the &quot;Columns...&quot; button.
         ///
-        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule transit [rest of string was truncated]&quot;;.
+        ///Most peptide transition lists can be imported with the &quot;File|Import|Transition List...&quot; menu item or even pasted directly into the Targets window. You can also do this with molecule tra [rest of string was truncated]&quot;;.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_SmallMol_ {
             get {
@@ -23220,33 +23184,6 @@ namespace pwiz.Skyline.Properties {
         public static string RefineDlg_MSLevel_2 {
             get {
                 return ResourceManager.GetString("RefineDlg_MSLevel_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Global standards.
-        /// </summary>
-        public static string RefineDlg_NormalizationMethod_Global_standards {
-            get {
-                return ResourceManager.GetString("RefineDlg_NormalizationMethod_Global_standards", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Medians.
-        /// </summary>
-        public static string RefineDlg_NormalizationMethod_Medians {
-            get {
-                return ResourceManager.GetString("RefineDlg_NormalizationMethod_Medians", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to None.
-        /// </summary>
-        public static string RefineDlg_NormalizationMethod_None {
-            get {
-                return ResourceManager.GetString("RefineDlg_NormalizationMethod_None", resourceCulture);
             }
         }
         

@@ -271,13 +271,6 @@ namespace pwiz.Skyline.Model.Results
         public float? ZScore { get; private set; }
         public Annotations Annotations { get; private set; }
 
-        public RatioValue GetRatio(int index)
-        {
-            return index != RATIO_INDEX_GLOBAL_STANDARDS
-                       ? _ratios[index]
-                       : _ratios[_ratios.Count - 1];
-        }
-
         /// <summary>
         /// Set if user action has explicitly set these values
         /// </summary>
@@ -523,6 +516,7 @@ namespace pwiz.Skyline.Model.Results
         }
         public float? Ratio { get { return _ratios[0]; } }
 
+        private const int RATIO_INDEX_GLOBAL_STANDARDS = -2;
         public float? GetRatio(int index)
         {
             return index != RATIO_INDEX_GLOBAL_STANDARDS
@@ -1286,8 +1280,6 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public abstract class ChromInfo : Immutable
     {
-        public const int RATIO_INDEX_GLOBAL_STANDARDS = -2;
-
         protected ChromInfo(ChromFileInfoId fileId)
         {
             FileId = fileId;

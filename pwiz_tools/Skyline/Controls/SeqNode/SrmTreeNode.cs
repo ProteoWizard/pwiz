@@ -27,6 +27,8 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -795,6 +797,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 // parenting, before the text and icons can be set correctly.
                 // So, force a model change to update those values.
                 if (tree.ShowReplicate == ReplicateDisplay.best 
+                    || docNode is TransitionGroupDocNode
                     || !ReferenceEquals(docNode, nodeTree.Model))
                 {
                     nodeTree.Model = docNode;
@@ -1337,16 +1340,15 @@ namespace pwiz.Skyline.Controls.SeqNode
 
     public class DisplaySettings
     {
-        public const int RATIO_INDEX_GLOBAL_STANDARDS = -2;
-
         internal readonly bool _showBestReplicate;
         internal readonly int _resultsIndex;
 
-        public DisplaySettings(PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, int ratioIndex)
+        public DisplaySettings(NormalizedValueCalculator normalizedValueCalculator, PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, NormalizeOption normalizeOption)
         {
+            NormalizedValueCalculator = normalizedValueCalculator;
             _showBestReplicate = showBestReplicate;
             _resultsIndex = resultsIndex;
-            RatioIndex = ratioIndex;
+            NormalizeOption = normalizeOption;
             NodePep = nodePep;
         }
          
@@ -1354,13 +1356,13 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             _showBestReplicate = settings._showBestReplicate;
             _resultsIndex = settings._resultsIndex;
-            RatioIndex = settings.RatioIndex;
+            NormalizeOption = settings.NormalizeOption;
             NodePep = nodePep;
         }
 
         public PeptideDocNode NodePep { get; private set; }
 
-        public int Index
+        public int ResultsIndex
         {
             get
             {
@@ -1368,6 +1370,16 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
-        public int RatioIndex { get; private set; }
+        public NormalizeOption NormalizeOption { get; private set; }
+
+        public NormalizationMethod NormalizationMethod
+        {
+            get
+            {
+                return NormalizedValueCalculator.NormalizationMethodForMolecule(NodePep, NormalizeOption);
+            }
+        }
+
+        public NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
     }
 }

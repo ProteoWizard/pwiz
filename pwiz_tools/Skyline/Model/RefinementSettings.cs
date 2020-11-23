@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -67,7 +68,7 @@ namespace pwiz.Skyline.Model
 
         public RefinementSettings()
         {
-            NormalizationMethod = AreaCVNormalizationMethod.none;
+            NormalizationMethod = NormalizeOption.NONE;
             MSLevel = AreaCVMsLevel.products;
             GroupComparisonNames = new List<string>();
             GroupComparisonDefs = new List<GroupComparisonDef>();
@@ -207,9 +208,7 @@ namespace pwiz.Skyline.Model
         [Track]
         public int? MinimumDetections { get; set; }
         [Track]
-        public AreaCVNormalizationMethod NormalizationMethod { get; set; }
-        [Track]
-        public IsotopeLabelType NormalizationLabelType { get; set; }
+        public NormalizeOption NormalizationMethod { get; set; }
         [Track]
         public AreaCVTransitions Transitions { get; set; }
         [Track]
@@ -359,7 +358,7 @@ namespace pwiz.Skyline.Model
                         Resources.RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_);
                 }
 
-                if (NormalizationMethod == AreaCVNormalizationMethod.global_standards &&
+                if (NormalizationMethod.Is(GroupComparison.NormalizationMethod.GLOBAL_STANDARDS) &&
                     !document.Settings.HasGlobalStandardArea)
                 {
                     // error
@@ -369,10 +368,9 @@ namespace pwiz.Skyline.Model
                 var cvcutoff = CVCutoff.HasValue ? CVCutoff.Value : double.NaN;
                 var qvalue = QValueCutoff.HasValue ? QValueCutoff.Value : double.NaN;
                 var minDetections = MinimumDetections.HasValue ? MinimumDetections.Value : -1;
-                var ratioIndex = GetLabelIndex(NormalizationLabelType, document);
                 var countTransitions = CountTransitions.HasValue ? CountTransitions.Value : -1;
-                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod, ratioIndex,
-                    Transitions, countTransitions, MSLevel), null, progressMonitor);
+                var data = new AreaCVRefinementData(refined, new AreaCVRefinementSettings(cvcutoff, qvalue, minDetections, NormalizationMethod,
+                    Transitions, countTransitions, MSLevel), CancellationToken.None, progressMonitor);
                 refined = data.RemoveAboveCVCutoff(refined);
             }
 
@@ -394,7 +392,7 @@ namespace pwiz.Skyline.Model
             return refined;
         }
 
-        private int GetLabelIndex(IsotopeLabelType type, SrmDocument doc)
+        private NormalizeOption GetLabelIndex(IsotopeLabelType type, SrmDocument doc)
         {
             if (type != null)
             {
@@ -405,10 +403,10 @@ namespace pwiz.Skyline.Model
                     // error
                     throw new Exception(Resources.RefinementSettings_GetLabelIndex_The_document_does_not_contain_the_given_reference_type_);
                 }
-                return idx;
+                return NormalizeOption.FromIsotopeLabelType(type);
             }
 
-            return -1;
+            return NormalizeOption.NONE;
         }
 
         private string GetAcceptProteinKey(PeptideGroupDocNode nodePepGroup)

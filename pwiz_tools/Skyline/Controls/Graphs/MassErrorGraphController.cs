@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphSummary.UpdateUI();
         }
 
-        public void OnRatioIndexChanged()
+        public void OnNormalizeOptionChanged()
         {
             if (GraphSummary.GraphPanes.OfType<MassErrorReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */)
                 GraphSummary.UpdateUI();

@@ -29,6 +29,8 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
@@ -143,18 +145,20 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area), 
                     string.Format("Unexpected y-axis title {0}", pane.YAxis.Title.Text));
 
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_global_standard_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.GLOBAL_STANDARDS);
             });
             WaitForGraphs();
 
             var peptidePath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, SELECTED_PEPTIDE_INDEX);
+            string globalStandardAxisTitle = NormalizationMethod.GLOBAL_STANDARDS
+                .GetAxisTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area);
             RunUI(() =>
             {
                 AreaReplicateGraphPane pane;
                 Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
                 double yMax = pane.YAxis.Scale.Max;
                 Assert.IsTrue(0.07 <= yMax && yMax <= 0.12, string.Format("{0} not between 0.07 and 0.12", yMax));  // Not L10N
-                Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards));
+                Assert.AreEqual(globalStandardAxisTitle, pane.YAxis.Title.Text);
                 Assert.AreEqual(5, SkylineWindow.GraphPeakArea.CurveCount);
 
                 // Select a peptide with both light and heavy precursors
@@ -174,7 +178,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(SkylineWindow.GraphPeakArea.TryGetGraphPane(out pane));
                 double yMax = pane.YAxis.Scale.Max;
                 Assert.IsTrue(0.12 <= yMax && yMax  <= 0.22, string.Format("{0} not between 0.12 and 0.22", yMax));  // Not L10N
-                Assert.IsTrue(pane.YAxis.Title.Text.StartsWith(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To_Global_Standards));
+                Assert.AreEqual(globalStandardAxisTitle, pane.YAxis.Title.Text);
                 Assert.AreEqual(2, SkylineWindow.GraphPeakArea.CurveCount);
             });
 

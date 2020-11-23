@@ -129,10 +129,10 @@ namespace pwiz.Skyline.Controls.Graphs
         public void SetQValueTo(float qValue)
         {
             if (qValue == .01f)
-                rbQValue01.Select();
+                rbQValue01.Checked = true;
             else
             {
-                rbQValueCustom.Select();
+                rbQValueCustom.Checked = true;
                 txtQValueCustom.Text = qValue.ToString(CultureInfo.CurrentCulture);
             }
         }

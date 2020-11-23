@@ -78,8 +78,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 propDialog.SetQValueTo(0.003f);
+                propDialog.OkDialog();
             });
-            OkDialog(propDialog, propDialog.OkDialog);
+            WaitForClosedForm(propDialog);
             WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.003f));
             AssertDataCorrect(pane, 0, 0.003f);
 
@@ -91,16 +92,17 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 propDialog.SetQValueTo(0.001f);
+                propDialog.OkDialog();
             });
-            OkDialog(propDialog, propDialog.OkDialog);
+            WaitForClosedForm(propDialog);
             WaitForCondition(() => (DetectionsGraphController.Settings.QValueCutoff == 0.001f));
             AssertDataCorrect(pane, 2, 0.001f);
 
             //verify the number of the bars on the plot
             RunUI(() =>
             {
-            Assert.IsTrue(
-                pane.CurveList[0].IsBar && pane.CurveList[0].Points.Count == REF_DATA[0].Length);
+                Assert.IsTrue(
+                    pane.CurveList[0].IsBar && pane.CurveList[0].Points.Count == REF_DATA[0].Length);
             });
 
             string[] tipText =
@@ -173,30 +175,29 @@ namespace pwiz.SkylineTestFunctional
 
         private void AssertDataCorrect(DetectionsPlotPane pane, int refIndex, float qValue, bool record = false)
         {
-            DetectionPlotData data = null;
-            WaitForConditionUI(() => (data = pane.CurrentData) != null 
-                                           && data.QValueCutoff == qValue
+            WaitForConditionUI(() => pane.CurrentData != null 
+                                           && pane.CurrentData.QValueCutoff == qValue
                                            && DetectionPlotData.GetDataCache().Status == DetectionPlotData.DetectionDataCache.CacheStatus.idle,
                 () => $"Retrieving data for qValue {qValue}, refIndex {refIndex} took too long.");
             WaitForGraphs();
-            Assert.IsTrue(data.IsValid);
+            WaitForCondition(() => pane.CurrentData.IsValid);
 
             if (record)
             {
                 Console.WriteLine(@"Peptides");
-                data.GetTargetData(DetectionsGraphController.TargetType.PEPTIDE).TargetsCount
+                pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PEPTIDE).TargetsCount
                     .ForEach((cnt) => { Console.Write($@"{cnt}, "); });
                 Console.WriteLine(@"\nPrecursors");
-                data.GetTargetData(DetectionsGraphController.TargetType.PRECURSOR).TargetsCount
+                pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PRECURSOR).TargetsCount
                     .ForEach((cnt) => { Console.Write($@"{cnt}, "); });
             }
 
             Assert.IsTrue(
                 REF_DATA[refIndex].SequenceEqual(
-                    data.GetTargetData(DetectionsGraphController.TargetType.PEPTIDE).TargetsCount));
+                    pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PEPTIDE).TargetsCount));
             Assert.IsTrue(
                 REF_DATA[refIndex + 1].SequenceEqual(
-                    data.GetTargetData(DetectionsGraphController.TargetType.PRECURSOR).TargetsCount));
+                    pane.CurrentData.GetTargetData(DetectionsGraphController.TargetType.PRECURSOR).TargetsCount));
         }
     }
 }
