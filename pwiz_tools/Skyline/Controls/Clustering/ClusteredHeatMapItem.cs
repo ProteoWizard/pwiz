@@ -29,19 +29,17 @@ namespace pwiz.Skyline.Controls.Clustering
                         continue;
                     }
                     Color backColor;
-                    if (zScore <= -4)
+                    // zScores closer to 0 have lighter colors than the extremes
+                    var lightness = (int)(Math.Max(0, 4 - Math.Abs(zScore)) * (255 / 4.0));
+                    if (zScore >= 0)
                     {
-                        backColor = Color.FromArgb(255, 255, 0);
-                    }
-                    else if (zScore >= 4)
-                    {
-                        backColor = Color.FromArgb(255, 0, 255);
+                        backColor = Color.FromArgb(255, lightness, lightness);
                     }
                     else
                     {
-                        var blue = (int) ((zScore + 4) * 255 / 8);
-                        backColor = Color.FromArgb(255, 255 - blue, blue);
+                        backColor = Color.FromArgb(lightness, lightness, 255);
                     }
+                    
 
                     var brush = new SolidBrush(backColor);
 
