@@ -210,7 +210,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
             Assert.IsTrue(searchSucceeded.Value);
 
-            RunDlg<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
+            var emptyProteinsDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            RunUI(()=>
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
@@ -251,8 +252,9 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(333, transitionCount);
                     }
                 }
-                emptyProteinsDlg.OkDialog();
             });
+            WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
+            OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
