@@ -130,6 +130,7 @@
     <Compile Include="DataAnalysis\alglib\specialfunctions.cs" />
     <Compile Include="DataAnalysis\alglib\statistics.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterDataSet.cs" />
+    <Compile Include="DataAnalysis\Clustering\ClusterMetricType.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
     <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
     <Compile Include="DataAnalysis\Clustering\ZScores.cs" />
@@ -168,6 +169,12 @@
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
     <Compile Include="DataBinding\ColumnSelector.cs" />
+    <Compile Include="DataBinding\Controls\ClusteringEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\ClusteringEditor.Designer.cs">
+      <DependentUpon>ClusteringEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataBinding\Controls\ColumnListEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -377,6 +384,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\RecordNavBar.zh-CHS.resx">
       <DependentUpon>RecordNavBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.resx">
+      <DependentUpon>ClusteringEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\ColumnListEditor.ja.resx">
       <DependentUpon>ColumnListEditor.cs</DependentUpon>

@@ -180,66 +180,6 @@
   <data name="tableLayoutPanel2.ColumnCount" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="btnAddValue.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="btnAddValue.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="btnAddValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 23</value>
-  </data>
-  <data name="btnAddValue.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnAddValue.Text" xml:space="preserve">
-    <value>Add Val&amp;ue &gt;&gt;</value>
-  </data>
-  <data name="&gt;&gt;btnAddValue.Name" xml:space="preserve">
-    <value>btnAddValue</value>
-  </data>
-  <data name="&gt;&gt;btnAddValue.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAddValue.Parent" xml:space="preserve">
-    <value>valueButtons</value>
-  </data>
-  <data name="&gt;&gt;btnAddValue.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="comboAggregateOp.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Bottom</value>
-  </data>
-  <data name="comboAggregateOp.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 30</value>
-  </data>
-  <data name="comboAggregateOp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 21</value>
-  </data>
-  <data name="comboAggregateOp.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;comboAggregateOp.Name" xml:space="preserve">
-    <value>comboAggregateOp</value>
-  </data>
-  <data name="&gt;&gt;comboAggregateOp.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboAggregateOp.Parent" xml:space="preserve">
-    <value>valueButtons</value>
-  </data>
-  <data name="&gt;&gt;comboAggregateOp.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="valueButtons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 23</value>
-  </data>
-  <data name="valueButtons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 51</value>
-  </data>
-  <data name="valueButtons.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
   <data name="&gt;&gt;valueButtons.Name" xml:space="preserve">
     <value>valueButtons</value>
   </data>
@@ -344,18 +284,6 @@
   </data>
   <data name="&gt;&gt;rowHeaderButtonPanel.ZOrder" xml:space="preserve">
     <value>2</value>
-  </data>
-  <data name="btnAddColumnHeader.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 36</value>
-  </data>
-  <data name="btnAddColumnHeader.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 23</value>
-  </data>
-  <data name="btnAddColumnHeader.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnAddColumnHeader.Text" xml:space="preserve">
-    <value>A&amp;dd Column Header &gt;&gt;</value>
   </data>
   <data name="&gt;&gt;btnAddColumnHeader.Name" xml:space="preserve">
     <value>btnAddColumnHeader</value>
@@ -662,6 +590,126 @@
   </data>
   <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="valueButtonPanel" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="availableColumnList" Row="0" RowSpan="3" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="rowHeaderButtonPanel" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="columnHeaderButtonPanel" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="rowHeadersPanel" Row="0" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;Control Name="panel3" Row="1" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;Control Name="panelValues" Row="2" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,50,Absolute,200,Percent,50" /&gt;&lt;Rows Styles="Percent,33.33333,Percent,33.33333,Percent,33.33333" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <data name="&gt;&gt;btnAddValue.Name" xml:space="preserve">
+    <value>btnAddValue</value>
+  </data>
+  <data name="&gt;&gt;btnAddValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddValue.Parent" xml:space="preserve">
+    <value>valueButtons</value>
+  </data>
+  <data name="&gt;&gt;btnAddValue.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOp.Name" xml:space="preserve">
+    <value>comboAggregateOp</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOp.Parent" xml:space="preserve">
+    <value>valueButtons</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOp.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="valueButtons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>24, 23</value>
+  </data>
+  <data name="valueButtons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 51</value>
+  </data>
+  <data name="valueButtons.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;valueButtons.Name" xml:space="preserve">
+    <value>valueButtons</value>
+  </data>
+  <data name="&gt;&gt;valueButtons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;valueButtons.Parent" xml:space="preserve">
+    <value>valueButtonPanel</value>
+  </data>
+  <data name="&gt;&gt;valueButtons.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnAddValue.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="btnAddValue.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="btnAddValue.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 23</value>
+  </data>
+  <data name="btnAddValue.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="btnAddValue.Text" xml:space="preserve">
+    <value>Add Val&amp;ue &gt;&gt;</value>
+  </data>
+  <data name="&gt;&gt;btnAddValue.Name" xml:space="preserve">
+    <value>btnAddValue</value>
+  </data>
+  <data name="&gt;&gt;btnAddValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddValue.Parent" xml:space="preserve">
+    <value>valueButtons</value>
+  </data>
+  <data name="&gt;&gt;btnAddValue.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboAggregateOp.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="comboAggregateOp.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 30</value>
+  </data>
+  <data name="comboAggregateOp.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 21</value>
+  </data>
+  <data name="comboAggregateOp.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOp.Name" xml:space="preserve">
+    <value>comboAggregateOp</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOp.Parent" xml:space="preserve">
+    <value>valueButtons</value>
+  </data>
+  <data name="&gt;&gt;comboAggregateOp.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnAddColumnHeader.Location" type="System.Drawing.Point, System.Drawing">
+    <value>24, 36</value>
+  </data>
+  <data name="btnAddColumnHeader.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 23</value>
+  </data>
+  <data name="btnAddColumnHeader.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="btnAddColumnHeader.Text" xml:space="preserve">
+    <value>A&amp;dd Column Header &gt;&gt;</value>
+  </data>
+  <data name="&gt;&gt;btnAddColumnHeader.Name" xml:space="preserve">
+    <value>btnAddColumnHeader</value>
+  </data>
+  <data name="&gt;&gt;btnAddColumnHeader.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddColumnHeader.Parent" xml:space="preserve">
+    <value>columnHeaderButtonPanel</value>
+  </data>
+  <data name="&gt;&gt;btnAddColumnHeader.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

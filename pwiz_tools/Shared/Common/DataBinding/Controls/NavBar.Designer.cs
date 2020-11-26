@@ -51,13 +51,13 @@
             this.bindingNavigator1 = new System.Windows.Forms.BindingNavigator(this.components);
             this.btnGroupTotal = new System.Windows.Forms.ToolStripSplitButton();
             this.navBarButtonCluster = new System.Windows.Forms.ToolStripSplitButton();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
-            this.navBarButtonActions = new System.Windows.Forms.ToolStripDropDownButton();
             this.displayZScoresToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clusterRowsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clusterColumnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
+            this.navBarButtonActions = new System.Windows.Forms.ToolStripDropDownButton();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).BeginInit();
             this.bindingNavigator1.SuspendLayout();
             this.SuspendLayout();
@@ -228,25 +228,6 @@
             this.navBarButtonCluster.ButtonClick += new System.EventHandler(this.navBarButtonCluster_ButtonClick);
             this.navBarButtonCluster.DropDownOpening += new System.EventHandler(this.navBarButtonCluster_DropDownOpening);
             // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            resources.ApplyResources(this.toolStripSeparator3, "toolStripSeparator3");
-            // 
-            // navBarButtonCopyAll
-            // 
-            this.navBarButtonCopyAll.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            resources.ApplyResources(this.navBarButtonCopyAll, "navBarButtonCopyAll");
-            this.navBarButtonCopyAll.Name = "navBarButtonCopyAll";
-            this.navBarButtonCopyAll.Click += new System.EventHandler(this.NavBarButtonCopyAllOnClick);
-            // 
-            // navBarButtonActions
-            // 
-            this.navBarButtonActions.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            resources.ApplyResources(this.navBarButtonActions, "navBarButtonActions");
-            this.navBarButtonActions.Name = "navBarButtonActions";
-            this.navBarButtonActions.DropDownOpening += new System.EventHandler(this.navBarButtonActions_DropDownOpening);
-            // 
             // displayZScoresToolStripMenuItem
             // 
             this.displayZScoresToolStripMenuItem.Name = "displayZScoresToolStripMenuItem";
@@ -268,6 +249,26 @@
             // 
             this.advancedToolStripMenuItem.Name = "advancedToolStripMenuItem";
             resources.ApplyResources(this.advancedToolStripMenuItem, "advancedToolStripMenuItem");
+            this.advancedToolStripMenuItem.Click += new System.EventHandler(this.advancedToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            resources.ApplyResources(this.toolStripSeparator3, "toolStripSeparator3");
+            // 
+            // navBarButtonCopyAll
+            // 
+            this.navBarButtonCopyAll.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.navBarButtonCopyAll, "navBarButtonCopyAll");
+            this.navBarButtonCopyAll.Name = "navBarButtonCopyAll";
+            this.navBarButtonCopyAll.Click += new System.EventHandler(this.NavBarButtonCopyAllOnClick);
+            // 
+            // navBarButtonActions
+            // 
+            this.navBarButtonActions.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            resources.ApplyResources(this.navBarButtonActions, "navBarButtonActions");
+            this.navBarButtonActions.Name = "navBarButtonActions";
+            this.navBarButtonActions.DropDownOpening += new System.EventHandler(this.navBarButtonActions_DropDownOpening);
             // 
             // NavBar
             // 

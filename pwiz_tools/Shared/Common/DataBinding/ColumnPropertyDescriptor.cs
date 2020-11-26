@@ -100,12 +100,12 @@ namespace pwiz.Common.DataBinding
         {
             get
             {
-                if (PivotKey == null)
+                IColumnCaption pivotCaption = null;
+                if (PivotKey != null)
                 {
-                    return null;
+                    pivotCaption = CaptionComponentList.SpaceSeparate(PivotKey.KeyPairs.Select(kvp => kvp.Value));
                 }
 
-                IColumnCaption pivotCaption = CaptionComponentList.SpaceSeparate(PivotKey.KeyPairs.Select(kvp => kvp.Value));
                 return new PivotedColumnId(PivotKey, pivotCaption, DisplayColumn.PropertyPath, DisplayColumn.GetColumnCaption(null));
             }
         }

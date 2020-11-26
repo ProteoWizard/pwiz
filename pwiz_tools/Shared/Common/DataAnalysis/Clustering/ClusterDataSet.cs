@@ -18,6 +18,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
         public ClusterDataSet(IEnumerable<TRow> rowLabels, IEnumerable<ImmutableList<DataFrame>> dataFrameGroups)
         {
+            DistanceMetric = ClusterMetricType.EUCLIDEAN;
             RowLabels = ImmutableList.ValueOf(rowLabels);
             DataFrameGroups = ImmutableList.ValueOf(dataFrameGroups.Where(group=>group.Count > 0));
             foreach (var group in DataFrameGroups)
@@ -31,6 +32,13 @@ namespace pwiz.Common.DataAnalysis.Clustering
         }
 
         public ImmutableList<TRow> RowLabels { get; private set; }
+
+        public ClusterMetricType DistanceMetric { get; private set; }
+
+        public ClusterDataSet<TRow, TColumn> ChangeDistanceMetric(ClusterMetricType distanceMetric)
+        {
+            return ChangeProp(ImClone(this), im => im.DistanceMetric = distanceMetric);
+        }
 
         public int RowCount
         {
@@ -117,7 +125,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 }
             }
             alglib.clusterizercreate(out alglib.clusterizerstate s);
-            alglib.clusterizersetpoints(s, rowDataSet, 2);
+            alglib.clusterizersetpoints(s, rowDataSet, DistanceMetric.AlgLibValue);
             alglib.clusterizerrunahc(s, out alglib.ahcreport rep);
             return new Results(ReorderRows(rep.p), new DendrogramData(rep.pz, rep.mergedist), null);
         }
@@ -144,7 +152,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 }
             }
             alglib.clusterizercreate(out alglib.clusterizerstate s);
-            alglib.clusterizersetpoints(s, points, 2);
+            alglib.clusterizersetpoints(s, points, DistanceMetric.AlgLibValue);
             alglib.clusterizerrunahc(s, out alglib.ahcreport rep);
             var newGroup = ImmutableList.ValueOf(group.Select(frame => frame.ReorderColumns(rep.p)));
             var dendrogramData = new DendrogramData(rep.pz, rep.mergedist);

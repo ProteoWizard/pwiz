@@ -676,5 +676,26 @@ namespace pwiz.Common.DataBinding.Controls
                 BindingListSource.ClusteringSpec = clusteringSpec.ChangeClusterColumns(!clusteringSpec.ClusterColumns);
             }
         }
+
+        private void advancedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var reportResults = BindingListSource?.ReportResults;
+            var dataSchema = BindingListSource?.ViewInfo.DataSchema;
+            if (reportResults == null || dataSchema == null)
+            {
+                return;
+            }
+
+            using (var clusteringEditor = new ClusteringEditor()
+            {
+                DataSchema = dataSchema,
+                ReportResults = reportResults
+
+            })
+            {
+                clusteringEditor.ShowDialog(FormUtil.FindTopLevelOwner(this));
+            }
+            
+        }
     }
 }
