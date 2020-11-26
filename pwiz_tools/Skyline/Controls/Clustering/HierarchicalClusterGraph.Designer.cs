@@ -36,12 +36,12 @@
             this.zedGraphControl1 = new ZedGraph.ZedGraphControl();
             ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).BeginInit();
-            this.splitContainerHorizontal.Panel1.SuspendLayout();
-            this.splitContainerHorizontal.Panel2.SuspendLayout();
-            this.splitContainerVertical.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainerHorizontal)).BeginInit();
             this.splitContainerVertical.Panel1.SuspendLayout();
             this.splitContainerVertical.Panel2.SuspendLayout();
+            this.splitContainerVertical.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerHorizontal)).BeginInit();
+            this.splitContainerHorizontal.Panel1.SuspendLayout();
+            this.splitContainerHorizontal.Panel2.SuspendLayout();
             this.splitContainerHorizontal.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -53,13 +53,13 @@
             // 
             // splitContainerVertical.Panel1
             // 
-            this.splitContainerVertical.Panel1.Controls.Add(this.rowDendrogram);
+            this.splitContainerVertical.Panel1.Controls.Add(this.splitContainerHorizontal);
             // 
             // splitContainerVertical.Panel2
             // 
-            this.splitContainerVertical.Panel2.Controls.Add(this.splitContainerHorizontal);
+            this.splitContainerVertical.Panel2.Controls.Add(this.rowDendrogram);
             this.splitContainerVertical.Size = new System.Drawing.Size(800, 450);
-            this.splitContainerVertical.SplitterDistance = 266;
+            this.splitContainerVertical.SplitterDistance = 600;
             this.splitContainerVertical.TabIndex = 0;
             // 
             // rowDendrogram
@@ -67,11 +67,11 @@
             this.rowDendrogram.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.rowDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Left;
-            this.rowDendrogram.Location = new System.Drawing.Point(0, 180);
+            this.rowDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Right;
+            this.rowDendrogram.Location = new System.Drawing.Point(3, 180);
             this.rowDendrogram.Name = "rowDendrogram";
             this.rowDendrogram.RectilinearLines = true;
-            this.rowDendrogram.Size = new System.Drawing.Size(266, 270);
+            this.rowDendrogram.Size = new System.Drawing.Size(190, 270);
             this.rowDendrogram.TabIndex = 0;
             // 
             // splitContainerHorizontal
@@ -88,7 +88,7 @@
             // splitContainerHorizontal.Panel2
             // 
             this.splitContainerHorizontal.Panel2.Controls.Add(this.zedGraphControl1);
-            this.splitContainerHorizontal.Size = new System.Drawing.Size(530, 450);
+            this.splitContainerHorizontal.Size = new System.Drawing.Size(600, 450);
             this.splitContainerHorizontal.SplitterDistance = 176;
             this.splitContainerHorizontal.TabIndex = 0;
             // 
@@ -99,7 +99,7 @@
             this.columnDendrogram.Location = new System.Drawing.Point(0, 0);
             this.columnDendrogram.Name = "columnDendrogram";
             this.columnDendrogram.RectilinearLines = true;
-            this.columnDendrogram.Size = new System.Drawing.Size(530, 176);
+            this.columnDendrogram.Size = new System.Drawing.Size(600, 176);
             this.columnDendrogram.TabIndex = 0;
             // 
             // zedGraphControl1
@@ -114,7 +114,7 @@
             this.zedGraphControl1.ScrollMinX = 0D;
             this.zedGraphControl1.ScrollMinY = 0D;
             this.zedGraphControl1.ScrollMinY2 = 0D;
-            this.zedGraphControl1.Size = new System.Drawing.Size(530, 270);
+            this.zedGraphControl1.Size = new System.Drawing.Size(600, 270);
             this.zedGraphControl1.TabIndex = 0;
             this.zedGraphControl1.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.zedGraphControl1_ZoomEvent);
             this.zedGraphControl1.Resize += new System.EventHandler(this.zedGraphControl1_Resize);
@@ -123,18 +123,19 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.splitContainerVertical);
             this.Name = "HierarchicalClusterGraph";
             this.TabText = "HierarchicalClusterGraph";
             this.Text = "HierarchicalClusterGraph";
             ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).EndInit();
-            this.splitContainerHorizontal.Panel1.ResumeLayout(false);
-            this.splitContainerHorizontal.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).EndInit();
-            this.splitContainerVertical.ResumeLayout(false);
             this.splitContainerVertical.Panel1.ResumeLayout(false);
             this.splitContainerVertical.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).EndInit();
+            this.splitContainerVertical.ResumeLayout(false);
+            this.splitContainerHorizontal.Panel1.ResumeLayout(false);
+            this.splitContainerHorizontal.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerHorizontal)).EndInit();
             this.splitContainerHorizontal.ResumeLayout(false);
             this.ResumeLayout(false);

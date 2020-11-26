@@ -15,6 +15,13 @@ namespace pwiz.Skyline.Controls.Clustering
         public HierarchicalClusterGraph()
         {
             InitializeComponent();
+
+            zedGraphControl1.GraphPane.Title.IsVisible = false;
+            zedGraphControl1.GraphPane.XAxis.Title.Text = "Replicate";
+            zedGraphControl1.GraphPane.YAxis.Title.Text = "Protein";
+            zedGraphControl1.GraphPane.Legend.IsVisible = false;
+            zedGraphControl1.GraphPane.Margin.All = 0;
+            zedGraphControl1.GraphPane.Border.IsVisible = false;
         }
 
         public ClusterDataSet<string, string>.Results Results
