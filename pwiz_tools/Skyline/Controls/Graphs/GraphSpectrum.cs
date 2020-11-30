@@ -266,13 +266,25 @@ namespace pwiz.Skyline.Controls.Graphs
         private void ZoomXAxis(Axis axis)
         {
             var instrument = DocumentUI.Settings.TransitionSettings.Instrument;
+            double xMin;
             if (!instrument.IsDynamicMin || _nodeGroup == null)
-                axis.Scale.Min = instrument.MinMz;
+                xMin = instrument.MinMz;
             else
-                axis.Scale.Min = instrument.GetMinMz(_nodeGroup.PrecursorMz);
+                xMin = instrument.GetMinMz(_nodeGroup.PrecursorMz);
+            ZoomXAxis(axis, xMin, instrument.MaxMz);
+        }
+
+        private void ZoomXAxis(Axis axis, double xMin, double xMax)
+        {
+            axis.Scale.Min = xMin;
             axis.Scale.MinAuto = false;
-            axis.Scale.Max = instrument.MaxMz;
+            axis.Scale.Max = xMax;
             axis.Scale.MaxAuto = false;
+        }
+
+        public void ZoomXAxis(double xMin, double xMax)
+        {
+            ZoomXAxis(GraphPane.XAxis, xMin, xMax);
         }
 
         public void ZoomSpectrumToSettings()

@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -124,8 +125,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     result = new AreaCVGraphData(document,
                         new AreaCVGraphSettings(settings.GraphType,
-                            properties.NormalizationMethod,
-                            properties.RatioIndex,
+                            properties.NormalizeOption,
                             settings.Group,
                             properties.Annotation,
                             settings.PointsType,
@@ -149,12 +149,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public AreaCVGraphData Get(GraphDataProperties properties)
             {
-                return Get(properties.Group, properties.Annotation, properties.MinimumDetections,
-                    properties.NormalizationMethod, properties.RatioIndex);
+                return Get(properties.Group, properties.Annotation, properties.MinimumDetections, properties.NormalizeOption);
             }
 
-            public AreaCVGraphData Get(ReplicateValue group, object annotation, int minimumDetections,
-                AreaCVNormalizationMethod normalizationMethod, int ratioIndex)
+            public AreaCVGraphData Get(ReplicateValue group, object annotation, int minimumDetections, NormalizeOption normalizeOption)
             {
                 lock (_cacheInfo)
                 {
@@ -163,9 +161,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                Equals(d._graphSettings.Annotation, annotation) &&
                                                                d._graphSettings.MinimumDetections ==
                                                                minimumDetections &&
-                                                               d._graphSettings.NormalizationMethod ==
-                                                               normalizationMethod &&
-                                                               d._graphSettings.RatioIndex == ratioIndex);
+                                                               d._graphSettings.NormalizeOption == normalizeOption);
                 }
             }
 
@@ -199,15 +195,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Add an entry for All
                 var annotations = annotationsArray.Concat(new string[] { null }).ToList();
 
-                var normalizationMethods = new List<AreaCVNormalizationMethod> { AreaCVNormalizationMethod.none, AreaCVNormalizationMethod.medians, AreaCVNormalizationMethod.ratio };
-                if (document.Settings.HasGlobalStandardArea)
-                    normalizationMethods.Add(AreaCVNormalizationMethod.global_standards);
-                if (document.Settings.HasTicArea)
-                    normalizationMethods.Add(AreaCVNormalizationMethod.tic);
-
-                // First cache for current normalization method
-                if (normalizationMethods.Remove(graphSettings.NormalizationMethod))
-                    normalizationMethods.Insert(0, graphSettings.NormalizationMethod);
+                var normalizationMethods = new List<NormalizeOption>(NormalizeOption.AvailableNormalizeOptions(document).Prepend(NormalizeOption.NONE));
 
                 // First cache the histograms for the current annotation
                 if (annotations.Remove(graphSettings.Annotation))
@@ -215,31 +203,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 foreach (var n in normalizationMethods)
                 {
-                    var isRatio = n == AreaCVNormalizationMethod.ratio;
-                    // There can be RatioInternalStandardTypes even though HasHeavyModifications is false
-                    if (isRatio && !document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
+                    if (n.IsRatioToLabel && !document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
                         continue;
 
-                    var ratioIndices = isRatio
-                        ? Enumerable.Range(0, document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count).ToList()
-                        : new List<int> { -1 };
-
-                    if (graphSettings.RatioIndex != -1)
+                    foreach (var a in annotations)
                     {
-                        if (ratioIndices.Remove(graphSettings.RatioIndex))
-                            ratioIndices.Insert(0, graphSettings.RatioIndex);
-                    }
+                        var minDetections = GetMinDetectionsForAnnotation(document,graphSettings, a);
 
-                    foreach (var r in ratioIndices)
-                    {
-                        foreach (var a in annotations)
+                        for (var i = 2; i <= minDetections; ++i)
                         {
-                            var minDetections = GetMinDetectionsForAnnotation(document,graphSettings, a);
-
-                            for (var i = 2; i <= minDetections; ++i)
-                            {
-                                yield return new GraphDataProperties(graphSettings.Group, n, r, a, i);
-                            }
+                            yield return new GraphDataProperties(graphSettings.Group, n, a, i);
                         }
                     }
                 }
@@ -290,7 +263,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 public bool Equals(GraphDataProperties other)
                 {
-                    return Equals(Group, other.Group) && NormalizationMethod == other.NormalizationMethod && RatioIndex == other.RatioIndex && Equals(Annotation, other.Annotation) && MinimumDetections == other.MinimumDetections;
+                    return Equals(Group, other.Group) && NormalizeOption == other.NormalizeOption && Equals(Annotation, other.Annotation) && MinimumDetections == other.MinimumDetections;
                 }
 
                 public override bool Equals(object obj)
@@ -304,8 +277,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     unchecked
                     {
                         var hashCode = (Group != null ? Group.GetHashCode() : 0);
-                        hashCode = (hashCode * 397) ^ (int)NormalizationMethod;
-                        hashCode = (hashCode * 397) ^ RatioIndex;
+                        hashCode = (hashCode * 397) ^ NormalizeOption.GetHashCode();
                         hashCode = (hashCode * 397) ^ (Annotation != null ? Annotation.GetHashCode() : 0);
                         hashCode = (hashCode * 397) ^ MinimumDetections;
                         return hashCode;
@@ -315,24 +287,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 public GraphDataProperties(AreaCVGraphSettings settings)
                 {
                     Group = settings.Group;
-                    NormalizationMethod = settings.NormalizationMethod;
-                    RatioIndex = settings.RatioIndex;
+                    NormalizeOption = settings.NormalizeOption;
                     Annotation = settings.Annotation;
                     MinimumDetections = settings.MinimumDetections;
                 }
 
-                public GraphDataProperties(ReplicateValue group, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, object annotation, int minimumDetections)
+                public GraphDataProperties(ReplicateValue group, NormalizeOption normalizeOption, object annotation, int minimumDetections)
                 {
                     Group = group;
-                    NormalizationMethod = normalizationMethod;
-                    RatioIndex = ratioIndex;
+                    NormalizeOption = normalizeOption;
                     Annotation = annotation;
                     MinimumDetections = minimumDetections;
                 }
 
                 public ReplicateValue Group { get; private set; }
-                public AreaCVNormalizationMethod NormalizationMethod { get; private set; }
-                public int RatioIndex { get; private set; }
+                public NormalizeOption NormalizeOption { get; private set; }
                 public object Annotation { get; private set; }
                 public int MinimumDetections { get; private set; }
             }
