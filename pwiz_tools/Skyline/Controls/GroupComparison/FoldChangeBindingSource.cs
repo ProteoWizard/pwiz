@@ -119,8 +119,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     }
                     FoldChangeResult foldChangeResult = new FoldChangeResult(groupComparisonDef.ConfidenceLevel,
                         adjustedPValues[iRow], resultRow.LinearFitResult, criticalValue);
+                    var runAbundances = new Dictionary<Replicate, ReplicateRow>();
+                    
+                    foreach (var runAbundance in resultRow.RunAbundances)
+                    {
+                        Replicate replicate = new Replicate(_skylineDataSchema, runAbundance.ReplicateIndex);
+                        runAbundances.Add(replicate, new ReplicateRow(replicate, Math.Pow(2, runAbundance.Log2Abundance)));
+                    }
                     rows.Add(new FoldChangeRow(protein, peptide, resultRow.Selector.LabelType,
-                        resultRow.Selector.MsLevel, resultRow.Selector.GroupIdentifier, resultRow.ReplicateCount, foldChangeResult));
+                        resultRow.Selector.MsLevel, resultRow.Selector.GroupIdentifier, resultRow.ReplicateCount, foldChangeResult, runAbundances));
                 }
             }
             var defaultViewSpec = GetDefaultViewSpec(rows);
@@ -215,7 +222,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public class FoldChangeRow
         {
             public FoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide, IsotopeLabelType labelType,
-                int? msLevel, GroupIdentifier group, int replicateCount, FoldChangeResult foldChangeResult)
+                int? msLevel, GroupIdentifier group, int replicateCount, FoldChangeResult foldChangeResult, IDictionary<Replicate, ReplicateRow> replicateResults)
             {
                 Protein = protein;
                 Peptide = peptide;
@@ -224,6 +231,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 ReplicateCount = replicateCount;
                 FoldChangeResult = foldChangeResult;
                 Group = group;
+                RunAbundances = replicateResults;
             }
 
             public Protein Protein { get; private set; }
@@ -233,6 +241,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public GroupIdentifier Group { get; private set; }
             public int ReplicateCount { get; private set; }
             public FoldChangeResult FoldChangeResult { get; private set; }
+            public IDictionary<Replicate, ReplicateRow> RunAbundances { get; private set; }
+        }
+
+        public class ReplicateRow
+        {
+            public ReplicateRow(Replicate replicate, double? abundance)
+            {
+                Replicate = replicate;
+                Abundance = abundance;
+            }
+            public Replicate Replicate { get; private set; }
+            public double? Abundance { get; private set; }
         }
     }
 }

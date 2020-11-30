@@ -190,6 +190,14 @@ namespace pwiz.Common.DataAnalysis.Clustering
             public ClusterDataSet<TRow, TColumn> DataSet { get; }
             public DendrogramData RowDendrogram { get; private set; }
             public ImmutableList<DendrogramData> ColumnGroupDendrograms { get; private set; }
+
+            public Results ReverseRows()
+            {
+                List<int> newOrdering = Enumerable.Range(0, DataSet.RowCount).ToList();
+                newOrdering.Reverse();
+                
+                return new Results(DataSet.ReorderRows(newOrdering), RowDendrogram?.Reverse(), ColumnGroupDendrograms);
+            }
         }
     }
 }

@@ -171,6 +171,7 @@
             // splitContainerVertical
             // 
             resources.ApplyResources(this.splitContainerVertical, "splitContainerVertical");
+            this.splitContainerVertical.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainerVertical.Name = "splitContainerVertical";
             // 
             // splitContainerVertical.Panel1
@@ -191,6 +192,7 @@
             // splitContainerHorizontal
             // 
             resources.ApplyResources(this.splitContainerHorizontal, "splitContainerHorizontal");
+            this.splitContainerHorizontal.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainerHorizontal.Name = "splitContainerHorizontal";
             // 
             // splitContainerHorizontal.Panel1

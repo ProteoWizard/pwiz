@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using pwiz.Common.DataAnalysis.Clustering;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
@@ -28,19 +29,8 @@ namespace pwiz.Skyline.Controls.Clustering
                     {
                         continue;
                     }
-                    Color backColor;
-                    // zScores closer to 0 have lighter colors than the extremes
-                    var lightness = (int)(Math.Max(0, 4 - Math.Abs(zScore)) * (255 / 4.0));
-                    if (zScore >= 0)
-                    {
-                        backColor = Color.FromArgb(255, lightness, lightness);
-                    }
-                    else
-                    {
-                        backColor = Color.FromArgb(lightness, lightness, 255);
-                    }
-                    
 
+                    Color backColor = ZScores.ZScoreToColor(zScore);
                     var brush = new SolidBrush(backColor);
 
                     double x1 = xScale.Transform(point.X - .5);

@@ -58,16 +58,17 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
         public static Color ZScoreToColor(double zScore)
         {
-            if (zScore <= -4)
+            Color backColor;
+            // zScores closer to 0 have lighter colors than the extremes
+            var lightness = (int)(Math.Max(0, 4 - Math.Abs(zScore)) * (255 / 4.0));
+            if (zScore >= 0)
             {
-                return Color.FromArgb(255, 255, 0);
+                return Color.FromArgb(255, lightness, lightness);
             }
-            else if (zScore >= 4)
+            else
             {
-                return Color.FromArgb(255, 0, 255);
+                return Color.FromArgb(lightness, lightness, 255);
             }
-            var blue = (int)((zScore + 4) * 255 / 8);
-            return Color.FromArgb(255, 255 - blue, blue);
         }
     }
 }
