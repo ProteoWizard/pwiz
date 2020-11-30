@@ -18,7 +18,6 @@
  */
 
 using System.Collections.Generic;
-using System.ComponentModel;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
@@ -96,11 +95,7 @@ namespace pwiz.Common.DataBinding.Internal
             ViewInfo = null;
             TransformStack = TransformStack.EMPTY;
         }
-        public QueryParameters(ViewInfo viewInfo, TransformStack rowTransform, ListSortDescriptionCollection sortDescriptions)
-        {
-            ViewInfo = viewInfo;
-            TransformStack = rowTransform;
-        }
+
         public QueryParameters(QueryParameters that)
         {
             ViewInfo = that.ViewInfo;
