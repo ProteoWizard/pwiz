@@ -128,16 +128,14 @@ namespace SkylineBatch
 
         private static bool InitRSettings()
         {
-            if (SkylineSettings.HasRPath() || SkylineSettings.FindR(out var pathsChecked))
+            if (SkylineSettings.FindRDirectory())
             {
                 return true;
             }
 
             var message = new StringBuilder();
             message.AppendLine(
-                    $"SkylineBatch requires rScript.exe to be installed on the computer.")
-                .AppendLine($"Unable to find rScript.exe at any of the following locations: ")
-                .AppendLine(string.Join(Environment.NewLine, pathsChecked)).AppendLine()
+                    $"SkylineBatch requires at least one version of R with rScript.exe to be installed on the computer.")
                 .AppendLine(
                     $"Please install rScript.exe to use SkylineBatch");
             MessageBox.Show(message.ToString(), @"Unable To Find R",
@@ -190,7 +188,7 @@ namespace SkylineBatch
 
         private static string AppName()
         {
-            return "SkylineBatch";
+            return "Skyline Batch";
         }
 
         private static void InitializeSecurityProtocol()

@@ -224,7 +224,7 @@ namespace SkylineBatch
                     listViewConfigs.Items.Add(lvi);
                 if (configManager.SelectedConfig >= 0)
                     listViewConfigs.Items[configManager.SelectedConfig].Selected = true;
-                UpdateLabelVisibility();
+                UpdateLabelVisibility(); 
             });
 
         }
@@ -278,21 +278,15 @@ namespace SkylineBatch
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
             var filePath = dialog.FileName;
-            var importMessage = configManager.Import(filePath);
 
-            if (string.IsNullOrEmpty(importMessage))
-                return;
-
+            configManager.Import(filePath);
             UpdateUiConfigurations();
-            DisplayInfo(Resources.Import_configurations, importMessage);
         }
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-
-            var dialog = new SaveFileDialog { Title = Resources.Save_configurations, Filter = Resources.XML_file_extension };
-            if (dialog.ShowDialog(this) != DialogResult.OK) return;
-            configManager.ExportAll(dialog.FileName);
+            var shareForm = new ShareConfigsForm(this, configManager);
+            shareForm.ShowDialog();
         }
 
 
@@ -300,7 +294,12 @@ namespace SkylineBatch
 
 
         #region Logging
-        // TODO: see if you can move some of this to skylineBatchLogger for better testing
+
+        private void btnViewLog_Click(object sender, EventArgs e)
+        {
+            comboLogList.SelectedIndex = 0;
+            tabMain.SelectTab(tabLog);
+        }
 
         private void comboLogList_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -505,9 +504,9 @@ namespace SkylineBatch
             return AlertDlg.ShowQuestion(this, message, title);
         }
 
+
+
         #endregion
-
-
 
     }
 
@@ -526,6 +525,7 @@ namespace SkylineBatch
         void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = true);
         void LogLinesToUi(List<string> lines);
         void LogErrorLinesToUi(List<string> lines);
+
         void DisplayError(string title, string message);
         void DisplayWarning(string title, string message);
         void DisplayInfo(string title, string message);

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.Win32;
 using SkylineBatch.Properties;
 
 namespace SkylineBatch
@@ -35,6 +36,7 @@ namespace SkylineBatch
         private const string SkylineDailyRunnerExe = "SkylineDailyRunner.exe";
         private const string SkylineExe = Skyline + ".exe";
         private const string SkylineDailyExe = SkylineDaily + ".exe";
+        private const string RegistryLocationR = @"SOFTWARE\R-core\R\";
 
         public static bool IsInitialized()
         {
@@ -67,21 +69,45 @@ namespace SkylineBatch
             return false;
         }
 
-        public static bool FindR(out IList<string> pathsChecked)
+        public static bool FindRDirectory()
         {
-            pathsChecked = new List<string>();
-            string rDir = null;
-
-            
-            if (TryGetR(ref rDir, pathsChecked))
+            if (string.IsNullOrWhiteSpace(Settings.Default.RDir))
             {
-                Settings.Default.RDir = rDir;
-                Settings.Default.Save();
-                Program.LogInfo(new StringBuilder("Skyline settings changed. ").Append(GetSkylineSettingsStr()).ToString());
-                return true;
+                var rKey = Registry.LocalMachine.OpenSubKey(RegistryLocationR) ?? Registry.CurrentUser.OpenSubKey(RegistryLocationR);
+                if (rKey == null)
+                    return false;
+                var latestRPath = rKey.GetValue(@"InstallPath") as string;
+                Settings.Default.RDir = Path.GetDirectoryName(latestRPath);
             }
 
-            return false;
+            InitRscriptExeList();
+            return Settings.Default.RVersions.Count > 0;
+        }
+
+        public static void InitRscriptExeList()
+        {
+            var rPaths = new Dictionary<string, string>();
+            if (string.IsNullOrWhiteSpace(Settings.Default.RDir))
+            {
+                return;
+            }
+
+            var rVersions = Directory.GetDirectories(Settings.Default.RDir);
+            foreach (var rVersion in rVersions)
+            {
+                var folderName = Path.GetFileName(rVersion);
+                if (folderName.StartsWith("R-"))
+                {
+                    var rScriptPath = rVersion + "\\bin\\Rscript.exe";
+                    if (File.Exists(rScriptPath))
+                    {
+                        rPaths.Add(folderName.Substring(2), rScriptPath);
+                    }
+                }
+
+            }
+
+            Settings.Default.RVersions = rPaths;
         }
 
         private static bool ClickOnceInstallExists(ref string skylineType, ICollection<string> pathsChecked)
@@ -108,32 +134,6 @@ namespace SkylineBatch
             var paths = ListPossibleSkylineShortcutPaths(skylineType);
             Array.ForEach(paths, pathsChecked.Add);
             return paths.Any(File.Exists);
-        }
-
-        private static bool TryGetR(ref string rPath, ICollection<string> pathsChecked)
-        {
-            var rDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + "\\R";
-            if (!Directory.Exists(rDirectory))
-                return false;
-
-            var rVersions = Directory.GetDirectories(rDirectory);
-            int i = rVersions.Length - 1;
-            while (i >= 0)
-            {
-                if (Path.GetFileName(rVersions[i]).StartsWith("R-"))
-                {
-                    var possiblePath = rVersions[i] + "\\bin\\Rscript.exe";
-                    pathsChecked.Add(possiblePath);
-                    if (File.Exists(possiblePath))
-                    {
-                        rPath = possiblePath;
-                        return true;
-                    }
-                }
-                i--;
-            }
-            return false;
-            
         }
 
         private static bool AdminInstallExists(ref string skylineInstallDir, ref string skylineType, ICollection<string> pathsChecked)
@@ -174,15 +174,22 @@ namespace SkylineBatch
 
         public static string SkylineInstallDir => Settings.Default.SkylineInstallDir;
 
-        public static string GetSkylineCmdLineExePath => UseClickOnceInstall
-            ? GetSkylineRunnerPath()
-            : Path.Combine(SkylineInstallDir, SkylineCmdExe);
+        public static string GetSkylineCmdLineExePath => GetSkylineCmdLineExe();
 
         public static string GetRscriptExeLocation => Settings.Default.RDir;
+        
 
-        private static string GetSkylineRunnerPath()
+
+        private static string GetSkylineCmdLineExe()
         {
-            return GetSkylineRunnerPath(UseSkyline);
+            var rootDirectory = Path.GetDirectoryName(typeof(SkylineSettings).Assembly.Location);
+            var skylineCmdPath = rootDirectory != null ? rootDirectory.Replace("bin\\Debug", "SkylineCmd.exe") : null;
+            if (skylineCmdPath != null && !File.Exists(skylineCmdPath))
+                return UseClickOnceInstall
+                    ? GetSkylineRunnerPath(UseSkyline)
+                    : Path.Combine(SkylineInstallDir, SkylineCmdExe);
+
+            return skylineCmdPath;
         }
 
         private static string GetSkylineRunnerPath(bool useSkyline)

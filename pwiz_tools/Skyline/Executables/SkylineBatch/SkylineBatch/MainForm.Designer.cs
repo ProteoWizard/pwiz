@@ -37,6 +37,7 @@
             this.btnRunBatch = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnDeleteLogs = new System.Windows.Forms.Button();
+            this.btnViewLog = new System.Windows.Forms.Button();
             this.systray_icon = new System.Windows.Forms.NotifyIcon(this.components);
             this.cb_minimizeToSysTray = new System.Windows.Forms.CheckBox();
             this.textBoxSkylinePath = new System.Windows.Forms.TextBox();
@@ -129,6 +130,14 @@
             this.toolTip_MainForm.SetToolTip(this.btnDeleteLogs, resources.GetString("btnDeleteLogs.ToolTip"));
             this.btnDeleteLogs.UseVisualStyleBackColor = true;
             this.btnDeleteLogs.Click += new System.EventHandler(this.btnDeleteLogs_Click);
+            // 
+            // btnViewLog
+            // 
+            resources.ApplyResources(this.btnViewLog, "btnViewLog");
+            this.btnViewLog.Name = "btnViewLog";
+            this.toolTip_MainForm.SetToolTip(this.btnViewLog, resources.GetString("btnViewLog.ToolTip"));
+            this.btnViewLog.UseVisualStyleBackColor = true;
+            this.btnViewLog.Click += new System.EventHandler(this.btnViewLog_Click);
             // 
             // systray_icon
             // 
@@ -235,13 +244,13 @@
             // 
             // listViewConfigs
             // 
-            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
             this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.listViewConfigName,
             this.listViewCreated,
             this.listViewStatus});
             this.listViewConfigs.FullRowSelect = true;
             this.listViewConfigs.HideSelection = false;
+            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
@@ -290,6 +299,7 @@
             // panel1
             // 
             resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Controls.Add(this.btnViewLog);
             this.panel1.Controls.Add(this.toolStrip1);
             this.panel1.Controls.Add(this.btnImportConfigs);
             this.panel1.Controls.Add(this.btnExportConfigs);
@@ -466,5 +476,6 @@
         private System.Windows.Forms.ComboBox comboLogList;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnDeleteLogs;
+        private System.Windows.Forms.Button btnViewLog;
     }
 }

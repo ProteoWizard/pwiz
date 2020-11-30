@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 
 namespace SkylineBatchTest
@@ -128,7 +129,7 @@ namespace SkylineBatchTest
         public static ReportInfo GetTestReportInfo()
         {
             return new ReportInfo("UniqueReport", GetTestFilePath("UniqueReport.skyr"),
-                new List<string> {GetTestFilePath("testScript.r")});
+                new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), "4.0.3")});
         }
 
         public static SkylineBatchConfig GetTestConfig(string name = "name")
@@ -165,7 +166,12 @@ namespace SkylineBatchTest
             return testConfigManager;
         }
 
-        public static void ClearSavedConfigurations()
+        public static void InitializeRVersions()
+        {
+            Assert.IsTrue(SkylineSettings.FindRDirectory());
+        }
+
+            public static void ClearSavedConfigurations()
         {
             var testConfigManager = new ConfigManager(new SkylineBatchLogger(TestUtils.GetTestFilePath("TestLog.log")));
             while (testConfigManager.HasConfigs())

@@ -14,6 +14,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestThreadingAdd()
         {
+            TestUtils.InitializeRVersions();
             for (int i = 0; i < 100; i++)
                 ThreadingAdd();
         }
@@ -45,6 +46,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestThreadingMove()
         {
+            TestUtils.InitializeRVersions();
             for (int i = 0; i < 100; i++)
                 ThreadingMove();
         }
@@ -78,6 +80,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestThreadingRemove()
         {
+            TestUtils.InitializeRVersions();
             for (int i = 0; i < 100; i++)
             {
                 ThreadingRemove();
@@ -113,6 +116,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestThreadingReplace()
         {
+            TestUtils.InitializeRVersions();
             for (int i = 0; i < 100; i++)
             {
                 ThreadingReplace();

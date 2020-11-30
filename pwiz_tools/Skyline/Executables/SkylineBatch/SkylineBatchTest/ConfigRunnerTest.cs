@@ -34,6 +34,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public async Task TestExecuteCommandLine()
         {
+           TestUtils.InitializeRVersions();
            var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), new SkylineBatchLogger(TestUtils.GetTestFilePath("testLog.log")));
            Assert.IsTrue(testRunner.IsStopped());
             var singleCommand = new List<string>
@@ -51,7 +52,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public async Task TestRunFromStepFour()
         {
-            // TODO: look into why program isn't finding R in test mode
+            TestUtils.InitializeRVersions();
             var testRunner = TestUtils.GetTestConfigRunner();
             Assert.IsTrue(testRunner.IsStopped());
             await testRunner.Run(4);

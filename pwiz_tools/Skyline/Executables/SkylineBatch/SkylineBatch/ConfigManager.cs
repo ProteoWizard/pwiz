@@ -97,9 +97,9 @@ namespace SkylineBatch
         private void SaveConfigList()
         {
             var updatedConfigs = new ConfigList();
+            var invalidConfigNames = "";
             foreach (var config in _configList)
             {
-                var invalidConfigNames = "";
                 try
                 {
                     config.Validate();
@@ -107,15 +107,13 @@ namespace SkylineBatch
                 }
                 catch (ArgumentException)
                 {
-                    invalidConfigNames += "\"" + config.Name + "\"" + Environment.NewLine;
+                    invalidConfigNames += config.Name + Environment.NewLine;
                 }
-
-                if (invalidConfigNames.Length > 0)
-                {
-                    DisplayError(Resources.Save_configuration_error,
-                        Resources.Could_not_save_configurations + Environment.NewLine + invalidConfigNames);
-                }
-
+            }
+            if (invalidConfigNames.Length > 0)
+            {
+                DisplayError(Resources.Save_configuration_error,
+                    Resources.Could_not_save_configurations + Environment.NewLine + invalidConfigNames);
             }
             Settings.Default.ConfigList = updatedConfigs;
             Settings.Default.Save();
@@ -126,23 +124,26 @@ namespace SkylineBatch
 
         public List<ListViewItem> ConfigsListViewItems()
         {
-            var listViewConfigs = new List<ListViewItem>();
-            foreach (var config in _configList)
+            lock (_lock)
             {
-                var lvi = new ListViewItem(config.Name);
-                lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
-                lvi.SubItems.Add(config.Created.ToShortDateString());
-                lvi.SubItems.Add(_configRunners[config.Name].GetDisplayStatus());
-                listViewConfigs.Add(lvi);
+                var listViewConfigs = new List<ListViewItem>();
+                foreach (var config in _configList)
+                {
+                    var lvi = new ListViewItem(config.Name);
+                    lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
+                    lvi.SubItems.Add(config.Created.ToShortDateString());
+                    lvi.SubItems.Add(_configRunners[config.Name].GetDisplayStatus());
+                    listViewConfigs.Add(lvi);
+                }
+                return listViewConfigs;
             }
-            return listViewConfigs;
         }
 
         public bool HasConfigs()
         {
             lock (_lock)
             {
-                return _configRunners.Keys.Count > 0;
+                return _configList.Count > 0;
             }
         }
 
@@ -501,6 +502,13 @@ namespace SkylineBatch
             _uiControl.DisplayWarning(title, message);
         }
 
+        private void DisplayInfo(string title, string message)
+        {
+            if (!_runningUi)
+                return;
+            _uiControl.DisplayInfo(title, message);
+        }
+
         private DialogResult DisplayQuestion(string title, string message)
         {
             if (!_runningUi)
@@ -529,7 +537,7 @@ namespace SkylineBatch
 
         #region Import/Export
 
-        public string Import(string filePath)
+        public void Import(string filePath)
         {
             var readConfigs = new List<SkylineBatchConfig>();
             var validationErrors = new List<string>();
@@ -571,14 +579,14 @@ namespace SkylineBatch
             catch (Exception)
             {
                 DisplayError(Resources.Import_configs_error_title, string.Format(Resources.No_configs_imported, filePath));
-                return null;
+                return;
             }
 
-            if (readConfigs.Count == 0)
+            if (readConfigs.Count == 0 && validationErrors.Count == 0)
             {
                 DisplayWarning(Resources.Import_configs_error_title,
                     string.Format(Resources.No_configs_imported, filePath));
-                return null;
+                return;
             }
 
             var duplicateConfigs = new List<string>();
@@ -616,17 +624,34 @@ namespace SkylineBatch
                     message.Append(error).Append(Environment.NewLine);
                 }
             }
-            return message.ToString();
+            DisplayInfo(Resources.Import_configurations, message.ToString());
         }
 
-        public void ExportAll(string filePath)
-        {
-            SaveConfigList();
 
+
+        public object[] GetConfigNames()
+        {
+            var names = new object[_configList.Count];
+            for (int i = 0; i < _configList.Count; i++)
+                names[i] = _configList[i].Name;
+            return names;
+        }
+
+        public void ExportConfigs(string filePath, int[] indiciesToSave)
+        {
+            var savingConfigs = new ConfigList();
+            foreach(int index in indiciesToSave)
+                savingConfigs.Add(_configList[index]);
+            var tempSettings = new Settings();
+            tempSettings.ConfigList = savingConfigs;
+            tempSettings.Save();
             var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
             config.SaveAs(filePath);
+            Settings.Default.Save();
         }
+
         #endregion
+
 
         #region Tests
         

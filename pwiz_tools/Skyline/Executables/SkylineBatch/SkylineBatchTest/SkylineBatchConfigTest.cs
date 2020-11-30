@@ -37,8 +37,8 @@ namespace SkylineBatchTest
             var invalidName = "";
             var validSkyr = TestUtils.GetTestFilePath("UniqueReport.skyr");
             var invalidSkyr = "invalidPath.skyr";
-            var validRScripts = new List<string>();
-            var invalidRscripts = new List<string>() {"invalidPath.r"};
+            var validRScripts = new List<Tuple<string,string>>();
+            var invalidRscripts = new List<Tuple<string, string>>{new Tuple<string, string>("invalidPath.r", "1.2.3")};
             TestValidateReportSettings(validName, invalidSkyr, validRScripts, "Report path invalidPath.skyr is not a valid path.");
             TestValidateReportSettings(validName, validSkyr, invalidRscripts, "R script path invalidPath.r is not a valid path.");
             TestValidateReportSettings(invalidName, validSkyr, validRScripts, "Report must have name.");
@@ -99,7 +99,7 @@ namespace SkylineBatchTest
             }
         }
 
-        private void TestValidateReportSettings(string name, string path, List<string> scripts, string expectedError)
+        private void TestValidateReportSettings(string name, string path, List<Tuple<string, string>> scripts, string expectedError)
         {
             try
             {
@@ -139,10 +139,11 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestReportSettingsEquals()
         {
-            var testReportInfoNoScript = new ReportInfo("Name", TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<string>());
+            TestUtils.InitializeRVersions();
+            var testReportInfoNoScript = new ReportInfo("Name", TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<Tuple<string, string>>());
             var testReportInfoWithScript = TestUtils.GetTestReportInfo();
             Assert.IsTrue(Equals(testReportInfoNoScript,
-                new ReportInfo("Name", TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<string>())));
+                new ReportInfo("Name", TestUtils.GetTestFilePath("UniqueReport.skyr"), new List<Tuple<string, string>>())));
             Assert.IsFalse(Equals(testReportInfoNoScript, testReportInfoWithScript));
             //TestUtils.GetTestReportSettings();
             var emptyReportSettings = new ReportSettings(new List<ReportInfo>());
@@ -159,6 +160,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestConfigEquals()
         {
+            TestUtils.InitializeRVersions();
             var testConfig = TestUtils.GetTestConfig();
             Assert.IsTrue(Equals(testConfig, TestUtils.GetTestConfig()));
             Assert.IsFalse(Equals(testConfig, TestUtils.GetTestConfig("other")));

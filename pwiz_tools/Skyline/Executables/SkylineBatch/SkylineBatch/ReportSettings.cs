@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Xml;
 using System.IO;
+using SkylineBatch.Properties;
 
 
 namespace SkylineBatch
@@ -126,11 +127,11 @@ namespace SkylineBatch
         // Represents a report and associated r scripts to run using that report.
         
 
-        public ReportInfo(string name, string path, List<string> rScripts)
+        public ReportInfo(string name, string path, List<Tuple<string, string>> rScripts)
         {
             Name = name;
             ReportPath = path;
-            RScripts = ImmutableList.CreateRange(rScripts);
+            RScripts = ImmutableList.Create<Tuple<string,string>>().AddRange(rScripts);
 
             Validate();
         }
@@ -139,14 +140,14 @@ namespace SkylineBatch
 
         public readonly string ReportPath;
 
-        public readonly ImmutableList<string> RScripts;
+        public readonly ImmutableList<Tuple<string,string>> RScripts;
 
-    public object[] AsArray()
+        public object[] AsArray()
         {
             var scriptsString = "";
-            foreach (var scriptPath in RScripts)
+            foreach (var script in RScripts)
             {
-                scriptsString += Path.GetFileName(scriptPath) + "\n";
+                scriptsString += Path.GetFileName(script.Item1) + "\n";
             }
 
             return new object[] {Name, ReportPath, scriptsString};
@@ -164,11 +165,16 @@ namespace SkylineBatch
                 throw new ArgumentException(string.Format("Report path {0} is not a valid path.", ReportPath));
             }
 
-            foreach (var script in RScripts)
+            foreach (var pathAndVersion in RScripts)
             {
-                if (!File.Exists(script))
+                if (!File.Exists(pathAndVersion.Item1))
                 {
-                    throw new ArgumentException(string.Format("R script path {0} is not a valid path.", script));
+                    throw new ArgumentException(string.Format("R script path {0} is not a valid path.", pathAndVersion.Item1));
+                }
+                
+                if (!Settings.Default.RVersions.ContainsKey(pathAndVersion.Item2))
+                {
+                    throw new ArgumentException(string.Format("R version {0} is not installed on this computer.", pathAndVersion.Item2));
                 }
             }
         }
@@ -183,13 +189,13 @@ namespace SkylineBatch
         {
             var name = reader.GetAttribute(Attr.Name);
             var reportPath = reader.GetAttribute(Attr.Path);
-            var rScripts = new List<string>();
+            var rScripts = new List<Tuple<string, string>>();
             while (reader.IsStartElement() && !reader.IsEmptyElement)
             {
                 if (reader.Name == "script_path")
                 {
-
-                    rScripts.Add(reader.ReadElementContentAsString());
+                    var tupleItems = reader.ReadElementContentAsString().Split(new[]{ '(', ',', ')' }, StringSplitOptions.RemoveEmptyEntries);
+                    rScripts.Add(new Tuple<string,string>(tupleItems[0].Trim(), tupleItems[1].Trim()));
                 }
                 else
                 {
@@ -220,7 +226,7 @@ namespace SkylineBatch
                 return false;
             for (int i = 0; i < RScripts.Count; i++)
             {
-                if (RScripts[i] != other.RScripts[i])
+                if (RScripts[i].Item1 != other.RScripts[i].Item1 || RScripts[i].Item2 != other.RScripts[i].Item2)
                     return false;
             }
 

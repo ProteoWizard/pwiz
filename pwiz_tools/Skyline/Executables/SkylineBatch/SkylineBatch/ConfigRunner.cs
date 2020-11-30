@@ -109,7 +109,7 @@ namespace SkylineBatch
             var namingPattern = Config.MainSettings.ReplicateNamingPattern;
 
 
-            var rLocation = SkylineSettings.GetRscriptExeLocation;
+            //var rLocation = SkylineSettings.GetRscriptExeLocation;
 
 
 
@@ -138,10 +138,11 @@ namespace SkylineBatch
                 var newReportPath = Config.MainSettings.AnalysisFolderPath + "\\" + report.Name + ".csv";
                 thirdStep += string.Format("--report-add=\"{0}\" --report-conflict-resolution=overwrite ", report.ReportPath);
                 thirdStep += string.Format("--report-name=\"{0}\" --report-file=\"{1}\" --report-invariant ", report.Name, newReportPath);
-                foreach(var script in report.RScripts)
+                foreach(var scriptAndVersion in report.RScripts)
                 {
+                    var rVersionExe = Settings.Default.RVersions[scriptAndVersion.Item2];
                     var workingDirectory = Config.MainSettings.AnalysisFolderPath;
-                    scriptCommands.Add(string.Format("\"{0}\" \"{1}\" \"{2}\" 2>&1", rLocation, script, workingDirectory));
+                    scriptCommands.Add(string.Format("\"{0}\" \"{1}\" \"{2}\" 2>&1", rVersionExe, scriptAndVersion.Item1, workingDirectory));
                 }
 
             }

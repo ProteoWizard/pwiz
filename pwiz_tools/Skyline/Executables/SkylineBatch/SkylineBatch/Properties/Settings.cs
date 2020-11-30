@@ -21,6 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
+using System.Text;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -45,6 +47,25 @@ namespace SkylineBatch.Properties
             }
             set {
                 this["ConfigList"] = value; // Not L10N
+            }
+        }
+        
+        [ApplicationScopedSetting]
+        public Dictionary<string,string> RVersions
+        {
+            get
+            {
+                var dict = (Dictionary<string, string>)this["RVersions"]; // Not L10N
+                if (dict == null)
+                {
+                    dict = new Dictionary<string,string>();
+                    RVersions = dict;
+                }
+                return dict;
+            }
+            set
+            {
+                this["RVersions"] = value; // Not L10N
             }
         }
     }
@@ -73,13 +94,17 @@ namespace SkylineBatch.Properties
 
             // Read list items
             var list = new List<SkylineBatchConfig>();
+            var message = new StringBuilder();
             while (reader.IsStartElement())
             {
                 try
                 {
                     list.Add(SkylineBatchConfig.ReadXml(reader));
                 }
-                catch (ArgumentException) { } // Skip invalid configurations
+                catch (ArgumentException e)
+                {
+                    message.Append(e.Message + Environment.NewLine);
+                }
                 
                 reader.Read();
             }
@@ -89,6 +114,9 @@ namespace SkylineBatch.Properties
             {
                 Add(config);
             }
+
+            if (message.Length > 0)
+                MessageBox.Show(message.ToString(), @"Load Configurations Error", MessageBoxButtons.OK);
         }
 
         public void WriteXml(XmlWriter writer)

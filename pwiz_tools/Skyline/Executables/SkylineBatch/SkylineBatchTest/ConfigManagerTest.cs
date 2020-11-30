@@ -83,6 +83,7 @@ namespace SkylineBatchTest
         public void TestAddInsertConfig()
         {
             TestUtils.ClearSavedConfigurations();
+            TestUtils.InitializeRVersions();
             var testConfigManager = new ConfigManager(new SkylineBatchLogger(TestUtils.GetTestFilePath("TestLog.log")));
             Assert.IsTrue(!testConfigManager.HasConfigs());
             var addedConfig = TestUtils.GetTestConfig("one");
@@ -111,6 +112,7 @@ namespace SkylineBatchTest
         public void TestRemoveConfig()
         {
             TestUtils.ClearSavedConfigurations();
+            TestUtils.InitializeRVersions();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.RemoveSelected();
@@ -134,6 +136,7 @@ namespace SkylineBatchTest
         public void TestMoveConfig()
         {
             TestUtils.ClearSavedConfigurations();
+            TestUtils.InitializeRVersions();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.MoveSelectedConfig(false);
@@ -150,6 +153,7 @@ namespace SkylineBatchTest
         public void TestReplaceConfig()
         {
             TestUtils.ClearSavedConfigurations();
+            TestUtils.InitializeRVersions();
             var configManager = TestUtils.GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.ReplaceSelectedConfig(TestUtils.GetTestConfig("oneReplaced"));
@@ -184,7 +188,7 @@ namespace SkylineBatchTest
             TestUtils.ClearSavedConfigurations();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
             var configManager = TestUtils.GetTestConfigManager();
-            configManager.ExportAll(configsXmlPath);
+            configManager.ExportConfigs(configsXmlPath, new [] {0,1,2});
             int i = 0;
             while (configManager.HasConfigs() && i < 4)
             {
@@ -198,11 +202,11 @@ namespace SkylineBatchTest
             configManager.Import(configsXmlPath);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
 
-            configManager.SelectConfig(0);
+            configManager.SelectConfig(2);
             configManager.RemoveSelected();
-            string importMessage = configManager.Import(TestUtils.GetTestFilePath("configs.xml"));
-            string expectedMessage = "Number of configurations imported: 1\r\nThe following configurations already exist and were not imported:\r\n\"two\"\r\n\"three\"\r\n";
-            Assert.AreEqual(importMessage, expectedMessage);
+            configManager.Import(TestUtils.GetTestFilePath("configs.xml"));
+            Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));
+
 
             File.Delete(configsXmlPath);
         }
