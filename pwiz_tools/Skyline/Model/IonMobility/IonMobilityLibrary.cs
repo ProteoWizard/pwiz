@@ -28,21 +28,88 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.IonMobility
 {
+    [XmlRoot("ionmobility_library_spec")]
+    public class IonMobilityLibrarySpec : XmlNamedElement, IEquatable<IonMobilityLibrarySpec> 
+    {
+        public const string EXT = IonMobilityDb.EXT;
+
+        public string FilePath { get; protected set; }
+
+        public static string FILTER_IONMOBILITYLIBRARY
+        {
+            get { return TextUtil.FileDialogFilter(Resources.IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files, EXT); }
+        }
+
+        public IonMobilityLibrarySpec(string name, string path) : base(name)
+        {
+            FilePath = path;
+        }
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        protected IonMobilityLibrarySpec()
+        {
+        }
+        
+        public string Filter
+        {
+            get { return FILTER_IONMOBILITYLIBRARY; }
+        }
+
+        public bool IsNone
+        {
+            get { return Name == IonMobilityLibrary.NONE.Name; }
+        }
+
+        public bool Equals(IonMobilityLibrarySpec other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Name == other.Name && FilePath == other.FilePath;
+        }
+
+
+        public override bool Equals(object obj)
+        {
+            return ReferenceEquals(this, obj) || obj is IonMobilityLibrarySpec other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (FilePath != null ? FilePath.GetHashCode() : 0);
+            }
+        }
+
+        public static bool operator ==(IonMobilityLibrarySpec left, IonMobilityLibrarySpec right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(IonMobilityLibrarySpec left, IonMobilityLibrarySpec right)
+        {
+            return !Equals(left, right);
+        }
+
+    }
+
     [XmlRoot("ion_mobility_library")]
-    public class IonMobilityLibrary : XmlNamedElement
+    public class IonMobilityLibrary : IonMobilityLibrarySpec
     {
         public static readonly IonMobilityLibrary NONE = new IonMobilityLibrary(@"None", String.Empty, null);
 
         private IonMobilityDb _database;
-        public string FilePath { get; protected set; }
 
-        public IonMobilityLibrary(string name, string filePath, IonMobilityDb loadedDatabase) : base(name)
+        public IonMobilityLibrary(string name, string filePath, IonMobilityDb loadedDatabase) : base(name, filePath)
         {
-            FilePath = filePath;
             _database = loadedDatabase;
         }
 
@@ -63,11 +130,6 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public int Count { get { return _database == null || _database.DictLibrary == null ? -1 : _database.DictLibrary.Count; } }  // How many entries in library?
 
-        public bool IsNone
-        {
-            get { return Name == NONE.Name; }
-        }
-
         public bool IsUsable
         {
             get { return _database != null; }
@@ -82,6 +144,11 @@ namespace pwiz.Skyline.Model.IonMobility
             if (database == null)
                 return null;
             return ChangeDatabase(database);
+        }
+
+        public IonMobilityLibrary ChangeDatabasePath(string path)
+        {
+            return ChangeProp(ImClone(this), im => im.FilePath = path);
         }
 
         /// <summary>
@@ -269,11 +336,6 @@ namespace pwiz.Skyline.Model.IonMobility
         }
 
         #region Property change methods
-
-        public IonMobilityLibrary ChangeDatabasePath(string path)
-        {
-            return ChangeProp(ImClone(this), im => im.FilePath = path);
-        }
 
         public IonMobilityLibrary ChangeDatabase(IonMobilityDb database)
         {
