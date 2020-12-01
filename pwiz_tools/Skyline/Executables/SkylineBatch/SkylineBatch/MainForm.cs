@@ -90,14 +90,14 @@ namespace SkylineBatch
             UpdateUiConfigurations();
         }
 
-        private void btnEdit_Click(object sender, EventArgs e)
-        {   
+        private void HandleEditEvent(object sender, EventArgs e)
+        {
             var configRunner = configManager.GetSelectedConfigRunner();
             // can edit if config is not busy running, otherwise is view only
             Program.LogInfo(string.Format("{0} configuration \"{1}\"",
                 (!configRunner.IsRunning() ? "Editing" : "Viewing"),
                 configRunner.GetConfigName()));
-            var configForm = new SkylineBatchConfigForm( this, configRunner.Config, ConfigAction.Edit, configRunner.IsBusy());
+            var configForm = new SkylineBatchConfigForm(this, configRunner.Config, ConfigAction.Edit, configRunner.IsBusy());
             configForm.ShowDialog();
         }
 
@@ -173,7 +173,8 @@ namespace SkylineBatch
                 ((ToolStripMenuItem)batchRunDropDown.Items[i]).Checked = false;
             }
             ((ToolStripMenuItem)batchRunDropDown.Items[selectedIndex]).Checked = true;
-            btnRunBatch.Text = string.Format(Resources.Pneumonic_on_first_letter, e.ClickedItem.Text);
+            btnRunBatch.TextAlign = selectedIndex == 0 ? ContentAlignment.MiddleCenter : ContentAlignment.MiddleLeft;
+            btnRunBatch.Text = e.ClickedItem.Text.Insert(1,"&");
             RunBatch();
         }
 

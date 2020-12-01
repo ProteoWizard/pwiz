@@ -62,6 +62,7 @@
             this.btnRunOptions = new System.Windows.Forms.Button();
             this.lblNoConfigs = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.button1 = new System.Windows.Forms.Button();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnUpArrow = new System.Windows.Forms.ToolStripButton();
             this.btnDownArrow = new System.Windows.Forms.ToolStripButton();
@@ -244,18 +245,19 @@
             // 
             // listViewConfigs
             // 
+            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
             this.listViewConfigs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.listViewConfigName,
             this.listViewCreated,
             this.listViewStatus});
             this.listViewConfigs.FullRowSelect = true;
             this.listViewConfigs.HideSelection = false;
-            resources.ApplyResources(this.listViewConfigs, "listViewConfigs");
             this.listViewConfigs.MultiSelect = false;
             this.listViewConfigs.Name = "listViewConfigs";
             this.listViewConfigs.UseCompatibleStateImageBehavior = false;
             this.listViewConfigs.View = System.Windows.Forms.View.Details;
             this.listViewConfigs.SelectedIndexChanged += new System.EventHandler(this.listViewConfigs_SelectedIndexChanged);
+            this.listViewConfigs.DoubleClick += new System.EventHandler(this.HandleEditEvent);
             // 
             // listViewConfigName
             // 
@@ -299,6 +301,7 @@
             // panel1
             // 
             resources.ApplyResources(this.panel1, "panel1");
+            this.panel1.Controls.Add(this.button1);
             this.panel1.Controls.Add(this.btnViewLog);
             this.panel1.Controls.Add(this.toolStrip1);
             this.panel1.Controls.Add(this.btnImportConfigs);
@@ -308,6 +311,12 @@
             this.panel1.Controls.Add(this.btnCopy);
             this.panel1.Controls.Add(this.btnDelete);
             this.panel1.Name = "panel1";
+            // 
+            // button1
+            // 
+            resources.ApplyResources(this.button1, "button1");
+            this.button1.Name = "button1";
+            this.button1.UseVisualStyleBackColor = true;
             // 
             // toolStrip1
             // 
@@ -348,7 +357,7 @@
             resources.ApplyResources(this.btnEdit, "btnEdit");
             this.btnEdit.Name = "btnEdit";
             this.btnEdit.UseVisualStyleBackColor = true;
-            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
+            this.btnEdit.Click += new System.EventHandler(this.HandleEditEvent);
             // 
             // btnCopy
             // 
@@ -477,5 +486,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnDeleteLogs;
         private System.Windows.Forms.Button btnViewLog;
+        private System.Windows.Forms.Button button1;
     }
 }

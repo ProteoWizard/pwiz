@@ -40,94 +40,57 @@
             // 
             // checkBoxSelectAll
             // 
-            this.checkBoxSelectAll.AutoSize = true;
-            this.checkBoxSelectAll.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.checkBoxSelectAll.Location = new System.Drawing.Point(12, 12);
+            resources.ApplyResources(this.checkBoxSelectAll, "checkBoxSelectAll");
             this.checkBoxSelectAll.Name = "checkBoxSelectAll";
-            this.checkBoxSelectAll.Size = new System.Drawing.Size(69, 17);
-            this.checkBoxSelectAll.TabIndex = 9;
-            this.checkBoxSelectAll.Text = "Select all";
             this.checkBoxSelectAll.UseVisualStyleBackColor = true;
             this.checkBoxSelectAll.Click += new System.EventHandler(this.checkBoxSelectAll_Click);
             // 
             // checkedSaveConfigs
             // 
-            this.checkedSaveConfigs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.checkedSaveConfigs, "checkedSaveConfigs");
             this.checkedSaveConfigs.CheckOnClick = true;
             this.checkedSaveConfigs.FormattingEnabled = true;
-            this.checkedSaveConfigs.Location = new System.Drawing.Point(12, 35);
             this.checkedSaveConfigs.Name = "checkedSaveConfigs";
-            this.checkedSaveConfigs.Size = new System.Drawing.Size(423, 169);
-            this.checkedSaveConfigs.TabIndex = 10;
             this.checkedSaveConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedSaveConfigs_ItemCheck);
             // 
             // textFileName
             // 
-            this.textFileName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textFileName.Location = new System.Drawing.Point(12, 249);
+            resources.ApplyResources(this.textFileName, "textFileName");
             this.textFileName.Name = "textFileName";
-            this.textFileName.Size = new System.Drawing.Size(423, 20);
-            this.textFileName.TabIndex = 11;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
-            this.label1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label1.Location = new System.Drawing.Point(12, 231);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(53, 15);
-            this.label1.TabIndex = 12;
-            this.label1.Text = "Save as:";
             // 
             // btnBrowse
             // 
-            this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBrowse.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnBrowse.Location = new System.Drawing.Point(451, 247);
+            resources.ApplyResources(this.btnBrowse, "btnBrowse");
             this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.Size = new System.Drawing.Size(29, 23);
-            this.btnBrowse.TabIndex = 13;
-            this.btnBrowse.Text = "...";
             this.btnBrowse.UseVisualStyleBackColor = true;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnCancel.Location = new System.Drawing.Point(405, 287);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 19;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
-            this.btnOk.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnOk.Location = new System.Drawing.Point(315, 287);
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(79, 23);
-            this.btnOk.TabIndex = 18;
-            this.btnOk.Text = "Save";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // ShareConfigsForm
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(504, 331);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.btnBrowse);
@@ -135,13 +98,10 @@
             this.Controls.Add(this.textFileName);
             this.Controls.Add(this.checkedSaveConfigs);
             this.Controls.Add(this.checkBoxSelectAll);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ShareConfigsForm";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Share Configurations";
             this.ResumeLayout(false);
             this.PerformLayout();
 
