@@ -322,7 +322,6 @@
             // 
             resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.ImageScalingSize = new System.Drawing.Size(32, 32);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnUpArrow,
             this.btnDownArrow});
@@ -383,7 +382,6 @@
             // 
             // batchRunDropDown
             // 
-            this.batchRunDropDown.ImageScalingSize = new System.Drawing.Size(32, 32);
             this.batchRunDropDown.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.startFromStepOne,
             this.startFromStepTwo,
