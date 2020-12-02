@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 
@@ -124,12 +123,8 @@ namespace pwiz.Skyline.Model.IonMobility
 
         private static IonMobilityLibrary GetIonMobilityLibrary(SrmDocument document)
         {
-            if (document == null)
-            {
-                return IonMobilityLibrary.NONE;
-            }
-            var ionMobilityFiltering = document.Settings.TransitionSettings.IonMobilityFiltering ?? TransitionIonMobilityFiltering.EMPTY;
-            return ionMobilityFiltering.IonMobilityLibrary;
+            return document?.Settings?.TransitionSettings?.IonMobilityFiltering?.IonMobilityLibrary
+                   ?? IonMobilityLibrary.NONE;
         }
 
     }
