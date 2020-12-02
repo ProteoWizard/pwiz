@@ -148,7 +148,7 @@ namespace pwiz.Common.DataBinding
             }
 
             var newItemProperties = new ItemProperties(newOrder.Select(i => ItemProperties[i]));
-            var result = new PivotedProperties(newItemProperties, SeriesGroups.Select(group=>group.RenumberProperties(newOrder)));
+            var result = new PivotedProperties(newItemProperties, SeriesGroups.Select(group=>group.RenumberProperties(newNumbering)));
 #if DEBUG
             Debug.Assert(ItemProperties.ToHashSet().SetEquals(result.ItemProperties.ToHashSet()));
             Debug.Assert(SeriesGroups.Count == result.SeriesGroups.Count);

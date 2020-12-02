@@ -45,6 +45,7 @@ namespace pwiz.Common.DataBinding.Internal
             var clusterResults = clusterDataSet.PerformClustering(ClusteringSpec.ClusterRows, ClusteringSpec.ClusterColumns);
             var pivotedProperties = PivotedProperties.ReorderPivots(clusterResults.DataSet.DataFrameGroups
                 .Select(group => group[0].ColumnHeaders).Cast<IList<int>>().ToList());
+            pivotedProperties = pivotedProperties.ReorderItemProperties();
             return new ReportResults(clusterResults.DataSet.RowLabels, pivotedProperties, clusterResults.RowDendrogram, clusterResults.ColumnGroupDendrograms);
         }
 

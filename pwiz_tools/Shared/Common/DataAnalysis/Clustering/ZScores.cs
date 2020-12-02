@@ -58,8 +58,9 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
         public static Color ZScoreToColor(double zScore)
         {
-            Color backColor;
             // zScores closer to 0 have lighter colors than the extremes
+            // TODO: Make the caller pass in the minimum and maximum zScore values from the entire dataset,
+            // and use that to scale the colors instead of assuming that the values will be between -4 and +4.
             var lightness = (int)(Math.Max(0, 4 - Math.Abs(zScore)) * (255 / 4.0));
             if (zScore >= 0)
             {
