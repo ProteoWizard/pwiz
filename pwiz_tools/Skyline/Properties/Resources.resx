@@ -11165,4 +11165,8 @@ Invalid peptide sequence at position 18
   <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
     <value>Concurrent Accumulations</value>
   </data>
+  <data name="GraphFullScan_CreateGraph_IM__0_" xml:space="preserve">
+    <value>IM={0}</value>
+    <comment>"IM" stands for "Ion Mobility" - used for displaying ion mobility in raw scan view</comment>
+  </data>
 </root>

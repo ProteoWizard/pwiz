@@ -357,7 +357,17 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 // CONSIDER: (copied from iRT code) Not sure if this is the right thing to do.  It would
                 //           be nice to solve whatever is causing this, but this is
                 //           better than showing an unexpected error form with stack trace.
-                MessageDlg.ShowWithException(this, Resources.EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_library__The_library_may_be_out_of_synch_, staleStateException);
+                MessageDlg.ShowWithException(this,
+                    Resources
+                        .EditIonMobilityLibraryDlg_OkDialog_Failure_updating_peptides_in_the_ion_mobility_library__The_library_may_be_out_of_synch_,
+                    staleStateException);
+                return;
+            }
+            catch (IOException x)
+            {
+                // DB file open in an external viewer etc
+                MessageDlg.Show(this, x.Message);
+                textDatabase.Focus();
                 return;
             }
 
@@ -950,9 +960,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 return Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_at_a_minimum_contain_columns_for_peptide_and_adduct__along_with_collisional_cross_section_and_or_ion_mobility_;
             }
 
-            var target = columns[EditIonMobilityLibraryDlg.COLUMN_TARGET] == null
-                ? String.Empty
-                : columns[EditIonMobilityLibraryDlg.COLUMN_TARGET].ToString();
+            var target = columns[EditIonMobilityLibraryDlg.COLUMN_TARGET] as Target;
+            var targetText = target == null
+                ? string.Empty
+                : target.ToString();
+            var isPeptide = FastaSequence.IsExSequence(targetText);
             var adduct = columns[EditIonMobilityLibraryDlg.COLUMN_ADDUCT] == null
                 ? String.Empty
                 : columns[EditIonMobilityLibraryDlg.COLUMN_ADDUCT].ToString();
@@ -974,22 +986,24 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             var messages = new List<string>();
 
-            if (string.IsNullOrWhiteSpace(target))
+            if (string.IsNullOrWhiteSpace(targetText))
             {
                 messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_peptide_sequence_on_line__0__, lineNumber));
                 badCell = EditIonMobilityLibraryDlg.COLUMN_TARGET;
             }
-            else if (targetResolver.TryResolveTarget(target, out _) == null && !FastaSequence.IsExSequence(target))
+            else if (!isPeptide && 
+                     targetResolver.TryResolveTarget(targetText, out _) == null && 
+                     targetResolver.TryResolveTarget(target?.ToSerializableString(), out _) == null)
             {
-                messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1__, target, lineNumber));
+                messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1__, targetText, lineNumber));
                 badCell = EditIonMobilityLibraryDlg.COLUMN_TARGET;
             }
-            else
+            else if (isPeptide)
             {
                 try
                 {
                     columns[EditIonMobilityLibraryDlg.COLUMN_TARGET] =
-                        SequenceMassCalc.NormalizeModifiedSequence(target);
+                        SequenceMassCalc.NormalizeModifiedSequence(targetText);
                 }
                 catch (Exception x)
                 {
@@ -1054,11 +1068,16 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                         lineNumber));
                     badCell = EditIonMobilityLibraryDlg.COLUMN_ION_MOBILITY;
                 }
-                else if (dIonMobility < 0)
+                else if (dIonMobility <= 0)
                 {
-                    messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_ion_mobility_value___0___on_line__1__must_be_greater_than_zero,
-                        dIonMobility,
-                        lineNumber));
+                    if (dIonMobility == 0 || 
+                        !IonMobilityFilter.TryParseIonMobilityUnits(units, out var unitsType) || // No units declared
+                        !IonMobilityFilter.AcceptNegativeMobilityValues(unitsType)) // Negative values inappropriate for these units
+                    {
+                        messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_ion_mobility_value___0___on_line__1__must_be_greater_than_zero,
+                            dIonMobility,
+                            lineNumber));
+                    }
                 }
             }
 

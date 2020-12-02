@@ -68,7 +68,15 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var target in targets)
                 {
+                    // Also lookup by name
                     accessions.Add(new Tuple<string, Target>(GetTargetDisplayName(target), target));
+
+                    // And by small molecule encoding string
+                    var encoded = target.ToSerializableString();
+                    if (!string.IsNullOrEmpty(encoded))
+                    {
+                        accessions.Add(new Tuple<string, Target>(encoded, target));
+                    }
                 }
 
                 _targetsByName = accessions.ToLookup(a => a.Item1, a => a.Item2);

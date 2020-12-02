@@ -708,11 +708,23 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Ion mobility value must have ion mobility units
-            if (textIonMobility.Visible && IonMobility.HasValue && IonMobilityUnits == eIonMobilityUnits.none)
+            if (textIonMobility.Visible && IonMobility.HasValue)
             {
-                helper.ShowTextBoxError(textIonMobility, Resources.EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_);
-                comboBoxIonMobilityUnits.Focus();
-                return;
+                if (IonMobilityUnits == eIonMobilityUnits.none)
+                {
+                    helper.ShowTextBoxError(textIonMobility, Resources.EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_);
+                    comboBoxIonMobilityUnits.Focus();
+                    return;
+                }
+
+                if (IonMobility.Value == 0 ||
+                    (IonMobility.Value < 0 && !IonMobilityFilter.AcceptNegativeMobilityValues(IonMobilityUnits)))
+                {
+                    helper.ShowTextBoxError(textIonMobility, 
+                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_, IonMobility));
+                    textIonMobility.Focus();
+                    return;
+                }
             }
             if (_usageMode == UsageMode.precursor)
             {

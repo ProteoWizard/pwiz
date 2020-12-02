@@ -996,6 +996,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public static bool AcceptNegativeMobilityValues(eIonMobilityUnits units)
+        {
+            return units == eIonMobilityUnits.compensation_V;
+        }
+
         public static eIonMobilityUnits IonMobilityUnitsFromL10NString(string units)
         {
             if (TryParseIonMobilityUnits(units, out var result))
