@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Controls.Clustering
             var points = new PointPairList();
             for (int iRow = 0; iRow < dataSet.RowCount; iRow++)
             {
-                double xGroupStart = 0;
+                double xGroupStart = 1;
                 foreach (var dataFrameGroup in dataSet.DataFrameGroups)
                 {
                     var zScoreLists = dataFrameGroup.Select(frame => frame.GetZScores(iRow).ToList()).ToList();
@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Controls.Clustering
             }
 
             var datas = new List<KeyValuePair<DendrogramData, ImmutableList<double>>>();
-            double xStart = 0;
+            double xStart = 1;
             for (int iGroup = 0; iGroup < Results.DataSet.DataFrameGroups.Count; iGroup++)
             {
                 var group = Results.DataSet.DataFrameGroups[iGroup];

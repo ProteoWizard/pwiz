@@ -649,8 +649,6 @@ namespace pwiz.Skyline.Controls.Databinding
                 .GroupBy(p => p.PivotedColumnId.SeriesId);
             var dataFrames = new List<ClusterDataSet<string, string>.DataFrame>();
             var rowItems = BindingListSource.OfType<RowItem>().ToList();
-            // Put the row items in reverse order so that they way they get displayed in the graph looks like the DataGridView.
-            rowItems.Reverse();
             foreach (var columnSet in numericColumnsByPropertyPath)
             {
                 if (columnSet.Count() <= 1)
@@ -679,12 +677,17 @@ namespace pwiz.Skyline.Controls.Databinding
             }
 
             var firstProperty = BindingListSource.ItemProperties[0];
-            var rowLabels = rowItems.Select(rowItem =>
-                firstProperty.GetValue(rowItem)?.ToString() ?? string.Empty);
+            var rowLabels = ImmutableList.ValueOf(rowItems.Select(rowItem =>
+                firstProperty.GetValue(rowItem)?.ToString() ?? string.Empty));
             var dataSet = ClusterDataSet<string, string>.FromDataFrames(rowLabels, dataFrames);
+            ClusterDataSet<string, string>.Results results;
+            var clusteringSpec = BindingListSource.ClusteringSpec ?? ClusteringSpec.DEFAULT;
+            results = dataSet.PerformClustering(clusteringSpec.ClusterRows, clusteringSpec.ClusterColumns);
+            // Reverse all of the rows because the graph is upside down compared to the data grid view
+            results = results.ReverseRows();
             var heatMapGraph = new HierarchicalClusterGraph()
             {
-                Results = dataSet.PerformClustering(true, true)
+                Results = results
             };
             heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
             return true;

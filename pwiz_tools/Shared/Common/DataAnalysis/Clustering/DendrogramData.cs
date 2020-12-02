@@ -23,6 +23,26 @@ namespace pwiz.Common.DataAnalysis.Clustering
             _mergeDistances = mergeDistances;
         }
 
+        public DendrogramData Reverse()
+        {
+            int leafCount = LeafCount;
+            var newMergeIndices = new int[_mergeDistances.GetLength(0), 2];
+            for (int i = 0; i < _mergeDistances.GetLength(0); i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    var mergeIndex = _mergeIndices[i, j];
+                    if (mergeIndex < leafCount)
+                    {
+                        mergeIndex = leafCount - mergeIndex;
+                    }
+
+                    newMergeIndices[i, j] = mergeIndex;
+                }
+            }
+            return new DendrogramData(newMergeIndices, _mergeDistances);
+        }
+
         public int LeafCount
         {
             get

@@ -238,7 +238,7 @@
     <value>0, 180</value>
   </data>
   <data name="rowDendrogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>256, 176</value>
+    <value>100, 176</value>
   </data>
   <data name="rowDendrogram.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -283,7 +283,7 @@
     <value>0, 0</value>
   </data>
   <data name="columnDendrogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>512, 139</value>
+    <value>668, 100</value>
   </data>
   <data name="columnDendrogram.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -319,7 +319,7 @@
     <value>0, 0</value>
   </data>
   <data name="boundDataGridView.Size" type="System.Drawing.Size, System.Drawing">
-    <value>512, 213</value>
+    <value>668, 252</value>
   </data>
   <data name="boundDataGridView.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -328,7 +328,7 @@
     <value>boundDataGridView</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.2.1.327, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.2.1.330, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Parent" xml:space="preserve">
     <value>splitContainerHorizontal.Panel2</value>
@@ -349,10 +349,10 @@
     <value>1</value>
   </data>
   <data name="splitContainerHorizontal.Size" type="System.Drawing.Size, System.Drawing">
-    <value>512, 356</value>
+    <value>668, 356</value>
   </data>
   <data name="splitContainerHorizontal.SplitterDistance" type="System.Int32, mscorlib">
-    <value>139</value>
+    <value>100</value>
   </data>
   <data name="splitContainerHorizontal.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -385,7 +385,7 @@
     <value>772, 356</value>
   </data>
   <data name="splitContainerVertical.SplitterDistance" type="System.Int32, mscorlib">
-    <value>256</value>
+    <value>100</value>
   </data>
   <data name="splitContainerVertical.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
