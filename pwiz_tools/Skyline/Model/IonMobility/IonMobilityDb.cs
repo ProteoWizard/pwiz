@@ -29,7 +29,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.IonMobility
 {
@@ -65,12 +64,6 @@ namespace pwiz.Skyline.Model.IonMobility
     public class IonMobilityDb : Immutable, IValidating, IDisposable
     {
         public const string EXT = ".imsdb";
-
-        public static string FILTER_IONMOBILITYLIBRARY
-        {
-            get { return TextUtil.FileDialogFilter(Resources.IonMobilityDb_FILTER_IONMOBILITYLIBRARY_Ion_Mobility_Library_Files, EXT); }
-        }
-
 
         private readonly string _path;
         private readonly ISessionFactory _sessionFactory;

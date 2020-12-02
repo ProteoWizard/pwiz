@@ -1714,7 +1714,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // cancel
                 return null;
             }
-            if (ionMobilityLibSpec.FilePath == ionMobilityLibrary.FilePath && ionMobilityLibSpec.IsUsable)
+            if (ionMobilityLibSpec.FilePath == ionMobilityLibrary.FilePath && ionMobilityLibrary.IsUsable)
             {
                 return this;
             }
