@@ -1211,7 +1211,7 @@ If unchecked, zeros will be written in their place.</value>
     <value>2</value>
   </data>
   <data name="panelTriggered.Location" type="System.Drawing.Point, System.Drawing">
-    <value>332, 261</value>
+    <value>180, 261</value>
   </data>
   <data name="panelTriggered.Size" type="System.Drawing.Size, System.Drawing">
     <value>138, 27</value>

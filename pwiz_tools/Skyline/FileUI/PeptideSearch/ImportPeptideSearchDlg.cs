@@ -564,6 +564,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             return;
                         }
 
+                        ImportPeptideSearch.SearchEngine?.Dispose();
                         ImportPeptideSearch.SearchEngine = new MSAmandaSearchWrapper();
                         SearchSettingsControl.InitializeEngine();
                         break;

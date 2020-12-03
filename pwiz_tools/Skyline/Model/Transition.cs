@@ -201,11 +201,18 @@ namespace pwiz.Skyline.Model
 
         public static string GetChargeIndicator(Adduct adduct, CultureInfo cultureInfo)
         {
-            if (!adduct.IsProteomic && !adduct.IsChargeOnly)
-            {
-                return adduct.AsFormulaOrSignedInt();
-            }
-            var charge = adduct.AdductCharge;
+            return !adduct.IsProteomic && !adduct.IsChargeOnly
+                ? adduct.AsFormulaOrSignedInt()
+                : GetChargeIndicator(adduct.AdductCharge, cultureInfo);
+        }
+
+        public static string GetChargeIndicator(int charge)
+        {
+            return GetChargeIndicator(charge, LocalizationHelper.CurrentCulture);
+        }
+
+        public static string GetChargeIndicator(int charge, CultureInfo cultureInfo)
+        {
             if (charge >= 0)
             {
                 const string pluses = "++++";

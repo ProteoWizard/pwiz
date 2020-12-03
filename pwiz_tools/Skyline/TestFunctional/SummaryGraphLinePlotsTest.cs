@@ -21,6 +21,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 
@@ -92,12 +93,12 @@ namespace pwiz.SkylineTestFunctional
             VerifyGraphState(SkylineWindow.GraphPeakArea, AreaGraphDisplayType.lines, tranCount, subjectCount + 1, subjectCount);
             VerifyGraphState(SkylineWindow.GraphRetentionTime, AreaGraphDisplayType.lines, tranCount, subjectCount, subjectCount);
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_global_standard_view));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.GLOBAL_STANDARDS));
             WaitForGraphs();
             VerifyGraphState(SkylineWindow.GraphPeakArea, AreaGraphDisplayType.lines, tranCount, subjectCount + 1, subjectCount);
             VerifyGraphYRange(SkylineWindow.GraphPeakArea, 5E-5, 2E-2, subjectCount + 1, subjectCount);
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
             WaitForGraphs();
             VerifyGraphState(SkylineWindow.GraphPeakArea, AreaGraphDisplayType.lines, tranCount, subjectCount + 1, subjectCount);
             VerifyGraphYRange(SkylineWindow.GraphPeakArea, 5, 50, subjectCount + 1, subjectCount);

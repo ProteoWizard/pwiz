@@ -760,22 +760,21 @@ namespace pwiz.Skyline
             {
                 if (p.Value == NormalizationMethod.GLOBAL_STANDARDS.Name)
                 {
-                    c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.global_standards;
+                    c.Refinement.NormalizationMethod = NormalizeOption.FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS);
                 }
                 else if (p.Value == NormalizationMethod.TIC.Name)
                 {
-                    c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.tic;
+                    c.Refinement.NormalizationMethod = NormalizeOption.FromNormalizationMethod(NormalizationMethod.TIC);
                 }
                 else
                 {
-                    c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.medians;
+                    c.Refinement.NormalizationMethod = NormalizeOption.FromNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS);
                 }
             }) { WrapValue = true };
         public static readonly Argument ARG_REFINE_CV_REFERENCE_NORMALIZE = new RefineArgument(@"refine-cv-reference-normalize", LABEL_VALUE,
             (c, p) =>
             {
-                c.Refinement.NormalizationMethod = AreaCVNormalizationMethod.ratio;
-                c.RefinementCvLabelTypeName = p.Value;
+                c.Refinement.NormalizationMethod = NormalizeOption.FromNormalizationMethod(NormalizationMethod.FromIsotopeLabelTypeName(p.Value));
             }) { WrapValue = true };
         public static readonly Argument ARG_REFINE_CV_TRANSITIONS = new RefineArgument(@"refine-cv-transitions",
             new[] { AreaCVTransitions.all.ToString(), AreaCVTransitions.best.ToString() },
