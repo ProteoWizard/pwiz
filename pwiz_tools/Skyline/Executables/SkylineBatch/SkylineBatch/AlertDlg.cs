@@ -108,7 +108,7 @@ namespace SkylineBatch
             }
         }
 
-        private void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons)
+        private void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons) 
         {
             foreach (var dialogResult in GetDialogResults(messageBoxButtons).Reverse())
             {
@@ -217,17 +217,17 @@ namespace SkylineBatch
             switch (messageBoxButtons)
             {
                 case MessageBoxButtons.OK:
-                    return new[] { DialogResult.OK };
+                    return new[] {DialogResult.OK};
                 case MessageBoxButtons.OKCancel:
-                    return new[] { DialogResult.OK, DialogResult.Cancel };
+                    return new[] {DialogResult.OK, DialogResult.Cancel};
                 case MessageBoxButtons.AbortRetryIgnore:
-                    return new[] { DialogResult.Abort, DialogResult.Retry, DialogResult.Ignore };
+                    return new[] {DialogResult.Abort, DialogResult.Retry, DialogResult.Ignore};
                 case MessageBoxButtons.RetryCancel:
-                    return new[] { DialogResult.Retry, DialogResult.Cancel };
+                    return new[] {DialogResult.Retry, DialogResult.Cancel};
                 case MessageBoxButtons.YesNo:
-                    return new[] { DialogResult.Yes, DialogResult.No };
+                    return new[] {DialogResult.Yes, DialogResult.No};
                 case MessageBoxButtons.YesNoCancel:
-                    return new[] { DialogResult.Yes, DialogResult.No, DialogResult.Cancel };
+                    return new[] {DialogResult.Yes, DialogResult.No, DialogResult.Cancel};
             }
             return new DialogResult[0];
         }
@@ -325,6 +325,5 @@ namespace SkylineBatch
             get { return base.Text; }
             set { base.Text = value; }
         }
-
     }
 }
