@@ -960,11 +960,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 return Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_at_a_minimum_contain_columns_for_peptide_and_adduct__along_with_collisional_cross_section_and_or_ion_mobility_;
             }
 
-            var target = columns[EditIonMobilityLibraryDlg.COLUMN_TARGET] as Target;
-            var targetText = target == null
-                ? string.Empty
-                : target.ToString();
-            var isPeptide = FastaSequence.IsExSequence(targetText);
+            var targetObj = columns[EditIonMobilityLibraryDlg.COLUMN_TARGET] as Target;
+            var target = columns[EditIonMobilityLibraryDlg.COLUMN_TARGET] == null
+                ? String.Empty
+                : columns[EditIonMobilityLibraryDlg.COLUMN_TARGET].ToString();
+            var isPeptide = FastaSequence.IsExSequence(target);
             var adduct = columns[EditIonMobilityLibraryDlg.COLUMN_ADDUCT] == null
                 ? String.Empty
                 : columns[EditIonMobilityLibraryDlg.COLUMN_ADDUCT].ToString();
@@ -986,16 +986,16 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             var messages = new List<string>();
 
-            if (string.IsNullOrWhiteSpace(targetText))
+            if (string.IsNullOrWhiteSpace(target))
             {
                 messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_Missing_peptide_sequence_on_line__0__, lineNumber));
                 badCell = EditIonMobilityLibraryDlg.COLUMN_TARGET;
             }
             else if (!isPeptide && 
-                     targetResolver.TryResolveTarget(targetText, out _) == null && 
-                     targetResolver.TryResolveTarget(target?.ToSerializableString(), out _) == null)
+                     targetResolver.TryResolveTarget(target, out _) == null && 
+                     targetResolver.TryResolveTarget(targetObj?.ToSerializableString(), out _) == null)
             {
-                messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1__, targetText, lineNumber));
+                messages.Add(string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_text__0__is_not_a_valid_peptide_sequence_on_line__1__, target, lineNumber));
                 badCell = EditIonMobilityLibraryDlg.COLUMN_TARGET;
             }
             else if (isPeptide)
@@ -1003,7 +1003,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 try
                 {
                     columns[EditIonMobilityLibraryDlg.COLUMN_TARGET] =
-                        SequenceMassCalc.NormalizeModifiedSequence(targetText);
+                        SequenceMassCalc.NormalizeModifiedSequence(target);
                 }
                 catch (Exception x)
                 {
