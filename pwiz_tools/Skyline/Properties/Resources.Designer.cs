@@ -8102,15 +8102,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to fragmentIons value not found in ComboBox items.
-        /// </summary>
-        public static string DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox {
-            get {
-                return ResourceManager.GetString("DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to MS1 Tolerance incorrect.
         /// </summary>
         public static string DdaSearch_SearchSettingsControl_MS1_Tolerance_incorrect {
