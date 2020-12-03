@@ -9078,7 +9078,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
     <value>スコアモデルのトレーニング（反復{0}/{1}）</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_" xml:space="preserve">
-    <value>スコアモデルをトレーニング（反復{0}/{1} - {2:#,#} ピーク位置：{3:0.##%} FDR）</value>
+    <value>スコアモデルを学習（反復{0}/{1} - {2:#,#} ピーク位置：{3:0.##%} FDR）</value>
   </data>
   <data name="MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_" xml:space="preserve">
     <value>スコアモデルの収束（反復{0} - {1:#,#} ピーク位置：{2:0.##%} FDR）</value>
@@ -10634,7 +10634,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>..\Resources\Skyline_Release.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_" xml:space="preserve">
-    <value>プリカーサ―分子式{0}にニュートラルロス{1}で使用する有意な原子が含まれていません</value>
+    <value>プリカーサ―分子式{0}にニュートラルロス{1}で使用する十分な原子が含まれていません</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula" xml:space="preserve">
     <value>プリカーサー化学式のないプロダクトニュートラルロス化学式は使用できません</value>
@@ -10643,7 +10643,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>入力文字列が空です。</value>
   </data>
   <data name="ShimadzuMethodExporter_ExportMethod_Input_string_cannot_be_parsed_" xml:space="preserve">
-    <value>入力文字列は構文にできません。</value>
+    <value>入力文字列は解析できません。</value>
   </data>
   <data name="ShimadzuMethodExporter_ExportMethod_Output_path_is_not_specified_" xml:space="preserve">
     <value>出力パスが指定されていません。</value>
@@ -10667,7 +10667,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>出力メソッドにイベントが含まれていません。</value>
   </data>
   <data name="ShimadzuMethodExporter_ExportMethod_Input_events_are_not_contiguous_" xml:space="preserve">
-    <value>入力イベントが隣接していません。</value>
+    <value>入力イベントが連続していません。</value>
   </data>
   <data name="ShimadzuMethodExporter_ExportMethod_Input_events_are_not_in_ascending_order" xml:space="preserve">
     <value>入力イベントが昇順になっていません</value>
@@ -10679,7 +10679,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>入力文字列が空です。</value>
   </data>
   <data name="ShimadzuNativeMassListExporter_ExportNativeList_Input_string_cannot_be_parsed_" xml:space="preserve">
-    <value>入力文字列は構文にできません。</value>
+    <value>入力文字列は解析できません。</value>
   </data>
   <data name="ShimadzuNativeMassListExporter_ExportNativeList_Cannot_open_output_file_" xml:space="preserve">
     <value>出力ファイルを開けません。</value>
@@ -10691,7 +10691,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>イベント数がLabSolutionsで許可されている最大数を超えています（1000）。</value>
   </data>
   <data name="ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_contiguous_" xml:space="preserve">
-    <value>入力イベントが隣接していません。</value>
+    <value>入力イベントが連続していません。</value>
   </data>
   <data name="ShimadzuNativeMassListExporter_ExportNativeList_Input_events_are_not_in_ascending_order" xml:space="preserve">
     <value>入力イベントが昇順になっていません</value>
@@ -10812,7 +10812,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>デコイが破棄されました</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_predictor_or_spectral_library__The_following_ion_mobility_values_are_missing_" xml:space="preserve">
-    <value>すべてのターゲットにはイオン移動度値が必要です。これは明示的に設定したり、イオン移動度予測やスペクトルライブラリに含むことができます。以下のイオン移動度値が不足しています。</value>
+    <value>すべてのターゲットにはイオン移動度値が必要です。これは直に設定したり、イオン移動度予測やスペクトルライブラリに含むことができます。以下のイオン移動度値が不足しています。</value>
   </data>
   <data name="SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_" xml:space="preserve">
     <value>テンプレートファイルが有効ではありません。</value>
@@ -10843,7 +10843,7 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
     <value>「{0}」を数字として解析できません</value>
   </data>
   <data name="CrosslinkSequenceParser_Expected_Expected___0__" xml:space="preserve">
-    <value>「{0}」が期待されました</value>
+    <value>「{0}」が予想されました</value>
   </data>
   <data name="ParseExceptionDetail_ToString__at_position__0_" xml:space="preserve">
     <value>位置{1}での{0}</value>
@@ -10895,7 +10895,7 @@ Invalid peptide sequence at position 18
     <value>全数</value>
   </data>
   <data name="DetectionPlotPane_Tooltip_QMedian" xml:space="preserve">
-    <value>Q値メジアンの-log10</value>
+    <value>Q値の中央値の-log10</value>
   </data>
   <data name="DetectionPlotPane_XAxis_Name" xml:space="preserve">
     <value>繰り返し測定</value>
@@ -10976,7 +10976,7 @@ Invalid peptide sequence at position 18
     <value>Unimodファイル{0}が見つかりません</value>
   </data>
   <data name="DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox" xml:space="preserve">
-    <value>ComboBox項目に断片化値が見つかりません</value>
+    <value>ComboBox項目に断片イオン値が見つかりません</value>
   </data>
   <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
     <value>断片イオンを選択する必要があります</value>
