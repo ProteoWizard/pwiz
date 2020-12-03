@@ -10975,9 +10975,6 @@ Invalid peptide sequence at position 18
   <data name="DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found" xml:space="preserve">
     <value>Unimodファイル{0}が見つかりません</value>
   </data>
-  <data name="DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox" xml:space="preserve">
-    <value>ComboBox項目に断片化値が見つかりません</value>
-  </data>
   <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
     <value>断片イオンを選択する必要があります</value>
   </data>

@@ -10985,9 +10985,6 @@ Invalid peptide sequence at position 18
   <data name="DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found" xml:space="preserve">
     <value>找不到 Unimod 文件 {0}</value>
   </data>
-  <data name="DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox" xml:space="preserve">
-    <value>在组合框项目中找不到碎片离子值</value>
-  </data>
   <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
     <value>必须选择碎片离子</value>
   </data>
