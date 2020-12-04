@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -20,43 +20,41 @@ namespace pwiz.Common.DataBinding.Controls
             InitializeComponent();
             comboDistanceMetric.Items.AddRange(ClusterMetricType.ALL.ToArray());
             columnsDataGridView.AutoGenerateColumns = false;
-            colRole.Items.AddRange(ROLE_NONE, ROLE_ROW_LABEL, ROLE_ROW_VALUE, ROLE_COLUMN_LABEL, ROLE_COLUMN_VALUE);
-            colRole.ValueMember = nameof(ROLE_NONE.Key);
-            colRole.DisplayMember = nameof(ROLE_NONE.Value);
-            colTransform.Items.AddRange(ClusterValueTransform.All.ToArray());
-            colTransform.ValueMember = nameof(ClusterValueTransform.UNCHANGED.Name);
-            colTransform.DisplayMember = nameof(ClusterValueTransform.UNCHANGED.Label);
+            colTransform.ValueMember = nameof(ClusterRole.Name);
+            colTransform.DisplayMember = nameof(ClusterRole.Label);
+            colTransform.Items.AddRange(ClusterRole.All.Cast<object>().ToArray());
             columnsDataGridView.DataSource = _clusterSpecRows;
         }
 
         public void SetData(DataSchema dataSchema, ReportResults reportResults, ClusteringSpec clusteringSpec)
         {
-            DataSchema = dataSchema;
-            ReportResults = reportResults;
             _clusterSpecRows.Clear();
-            _clusterSpecRows.AddRange(MakeRows());
+            _clusterSpecRows.AddRange(MakeRows(dataSchema, reportResults, clusteringSpec));
         }
 
-        public DataSchema DataSchema { get; private set; }
-
-        public ReportResults ReportResults { get; private set; }
-
-        public IEnumerable<ClusterSpecRow> MakeRows()
+        public IEnumerable<ClusterSpecRow> MakeRows(DataSchema dataSchema, ReportResults reportResults, ClusteringSpec clusteringSpec)
         {
-            var pivotedProperties = new PivotedProperties(ReportResults.ItemProperties);
+            var pivotedProperties = new PivotedProperties(reportResults.ItemProperties);
             pivotedProperties = pivotedProperties.ChangeSeriesGroups(pivotedProperties.CreateSeriesGroups());
+            clusteringSpec =
+                clusteringSpec ?? ClusteringSpec.GetDefaultClusteringSpec(reportResults, pivotedProperties);
+
+            var transforms = clusteringSpec.ToValueTransformDictionary();
             foreach (var p in pivotedProperties.UngroupedProperties)
             {
-                var columnRef = MakeColumnRef(p.PivotedColumnId);
+                var columnRef = ClusteringSpec.ColumnRef.FromPropertyDescriptor(p);
                 if (columnRef == null)
                 {
                     continue;
                 }
-                var row = new ClusterSpecRow(columnRef, null, p.ColumnCaption.GetCaption(DataSchema.DataSchemaLocalizer), false, p.PropertyType)
+
+                var row = new ClusterSpecRow(columnRef, null,
+                    p.ColumnCaption.GetCaption(dataSchema.DataSchemaLocalizer), false, p.PropertyType);
+                if (transforms.TryGetValue(columnRef, out ClusterRole transform))
                 {
-                    Role = ROLE_NONE.Key,
-                    Transform = ClusterValueTransform.BOOLEAN.Name,
-                };
+                    row.Transform = transform.Name;
+                }
+
                 yield return row;
             }
 
@@ -65,8 +63,7 @@ namespace pwiz.Common.DataBinding.Controls
                 var group = pivotedProperties.SeriesGroups[columnGroupIndex];
                 foreach (var series in group.SeriesList)
                 {
-                    var columnRef =
-                        MakeColumnRef(pivotedProperties.ItemProperties[series.PropertyIndexes[0]].PivotedColumnId);
+                    var columnRef = ClusteringSpec.ColumnRef.FromPivotedPropertySeries(series);
                     if (columnRef == null)
                     {
                         continue;
@@ -75,52 +72,41 @@ namespace pwiz.Common.DataBinding.Controls
                     bool equalInAllRows = true;
                     for (int iPivotKey = 0; iPivotKey < group.PivotKeys.Count; iPivotKey++)
                     {
-                        var propertyDescriptor = ReportResults.ItemProperties[series.PropertyIndexes[iPivotKey]];
-                        if (ReportResults.RowItems.Select(propertyDescriptor.GetValue)
+                        var propertyDescriptor = reportResults.ItemProperties[series.PropertyIndexes[iPivotKey]];
+                        if (reportResults.RowItems.Select(propertyDescriptor.GetValue)
                             .Where(value=>null != value).Distinct().Skip(1).Any())
                         {
                             equalInAllRows = false;
                             break;
                         }
                     }
-
                     var row = new ClusterSpecRow(columnRef, columnGroupIndex,
-                        series.SeriesCaption.GetCaption(DataSchema.DataSchemaLocalizer), equalInAllRows,
-                        series.PropertyType)
+                        series.SeriesCaption.GetCaption(dataSchema.DataSchemaLocalizer), equalInAllRows,
+                        series.PropertyType);
+                    if (transforms.TryGetValue(columnRef, out ClusterRole transform))
                     {
-                        Role = ROLE_COLUMN_VALUE.Key,
-                        Transform = ClusterValueTransform.BOOLEAN.Name
-                    };
+                        row.Transform = transform.Name;
+                    }
+
                     yield return row;
                 }
             }
         }
 
-        private readonly KeyValuePair<string, string> ROLE_NONE =
-            new KeyValuePair<string, string>(@"none", "None");
-
-        private readonly KeyValuePair<string, string> ROLE_ROW_LABEL =
-            new KeyValuePair<string, string>(@"row_label", "Row Label");
-
-        private readonly KeyValuePair<string, string> ROLE_ROW_VALUE =
-            new KeyValuePair<string, string>(@"row_value", "Row Value");
-
-        private readonly KeyValuePair<string, string> ROLE_COLUMN_LABEL = new KeyValuePair<string, string>("column_label", "Column Label");
-        private readonly KeyValuePair<string, string> ROLE_COLUMN_VALUE =
-            new KeyValuePair<string, string>(@"column_value", "Column Value");
-
         public class ClusterSpecRow
         {
-            public ClusterSpecRow(ClusteringSpec.ColumnRef columnRef, int? columnGroupIndex, string columnCaption, bool equalInAllRows, Type propertyType)
+            public ClusterSpecRow(ClusteringSpec.ColumnRef columnRef, int? columnGroupIndex, string columnCaption,
+                bool equalInAllRows, Type propertyType)
             {
                 ColumnRef = columnRef;
+                Transform = ClusterRole.IGNORED.Name;
                 Column = columnCaption;
                 ColumnGroupIndex = columnGroupIndex;
                 EqualInAllRows = equalInAllRows;
                 PropertyType = propertyType;
             }
 
-            public ClusteringSpec.ColumnRef ColumnRef { get; private set; }
+            public ClusteringSpec.ColumnRef ColumnRef { get;  }
 
             public int? ColumnGroupIndex { get; }
 
@@ -129,33 +115,9 @@ namespace pwiz.Common.DataBinding.Controls
             public Type PropertyType { get; }
             public string Column { get; }
 
-            public string Role { get; set; }
-
-            public string Transform { get; set; }
-        }
-
-        private void columnsDataGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (e.ColumnIndex != colTransform.Index)
+            public string Transform
             {
-                return;
-            }
-            if (e.RowIndex < 0 || e.RowIndex >= _clusterSpecRows.Count)
-            {
-                return;
-            }
-
-            System.Diagnostics.Debug.WriteLine("Cell Formatting Row {0}", e.RowIndex);
-            var row = _clusterSpecRows[e.RowIndex];
-            if (row.Role == ROLE_NONE.Key || row.Role == ROLE_ROW_LABEL.Key)
-            {
-                e.CellStyle.BackColor = Color.LightGray;
-                e.CellStyle.ForeColor = Color.DarkGray;
-            }
-            else
-            {
-                e.CellStyle.BackColor = Color.White;
-                e.CellStyle.ForeColor = Color.Black;
+                get; set;
             }
         }
 
@@ -179,48 +141,26 @@ namespace pwiz.Common.DataBinding.Controls
                 return;
             }
 
-
             var rowValue = _clusterSpecRows[rowIndex];
             var columnIndex = columnsDataGridView.CurrentCellAddress.X;
-            var newItems = new List<object>();
-            if (columnIndex == colRole.Index)
+            if (columnIndex == colTransform.Index)
             {
-                newItems.Add(ROLE_NONE);
+                var newItems = new List<ClusterRole>();
+                newItems.Add(ClusterRole.IGNORED);
                 if (rowValue.ColumnGroupIndex.HasValue)
                 {
-                    newItems.Add(ROLE_COLUMN_VALUE);
                     if (rowValue.EqualInAllRows)
                     {
-                        newItems.Add(ROLE_COLUMN_LABEL);
+                        newItems.Add(ClusterRole.COLUMNHEADER);
                     }
                 }
                 else
                 {
-                    newItems.Add(ROLE_ROW_LABEL);
-                    newItems.Add(ROLE_ROW_VALUE);
+                    newItems.Add(ClusterRole.ROWHEADER);
                 }
+                newItems.AddRange(ClusterRole.All.OfType<ClusterRole.Transform>().Where(t=>t.CanHandleDataType(rowValue.PropertyType)));
                 ReplaceItems(comboBoxControl, newItems);
-            } else if (columnIndex == colTransform.Index)
-            {
-                bool isNumeric = ZScores.IsNumericType(rowValue.PropertyType);
-                if (isNumeric)
-                {
-                    newItems.Add(ClusterValueTransform.UNCHANGED);
-                    if (rowValue.ColumnGroupIndex.HasValue)
-                    {
-                        newItems.Add(ClusterValueTransform.ZSCORE);
-                    }
-
-                    newItems.Add(ClusterValueTransform.LOGARITHM);
-                }
-
-                newItems.Add(ClusterValueTransform.BOOLEAN);
             }
-            else
-            {
-                return;
-            }
-            ReplaceItems(comboBoxControl, newItems);
         }
 
         private void columnsDataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -228,11 +168,11 @@ namespace pwiz.Common.DataBinding.Controls
             columnsDataGridView.Invalidate();
         }
 
-        private void ReplaceItems(ComboBox comboBox, IEnumerable<object> newItems)
+        private void ReplaceItems(ComboBox comboBox, IEnumerable newItems)
         {
             var oldSelectedItem = comboBox.SelectedItem;
             comboBox.Items.Clear();
-            comboBox.Items.AddRange(newItems.ToArray());
+            comboBox.Items.AddRange(newItems.Cast<object>().ToArray());
             if (oldSelectedItem != null)
             {
                 var newSelectedIndex = comboBox.Items.OfType<object>().ToList().IndexOf(oldSelectedItem);
@@ -248,62 +188,9 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private ClusteringSpec.ColumnRef MakeColumnRef(PivotedColumnId pivotedColumnId)
-        {
-            if (pivotedColumnId == null)
-            {
-                return null;
-            }
-            if (pivotedColumnId.SeriesId is PropertyPath propertyPath)
-            {
-                return new ClusteringSpec.ColumnRef(propertyPath);
-            }
-
-            if (pivotedColumnId.SeriesId is ColumnId columnId)
-            {
-                return new ClusteringSpec.ColumnRef(columnId);
-            }
-
-            return null;
-        }
-
         public ClusteringSpec GetClusteringSpec()
         {
-            var rowHeaders = new List<ClusteringSpec.ColumnRef>();
-            var rowValues = new List<ClusteringSpec.ValueSpec>();
-            var groups = new List<ClusteringSpec.GroupSpec>();
-            foreach (var row in _clusterSpecRows.Where(row => !row.ColumnGroupIndex.HasValue))
-            {
-                if (row.Role == ROLE_ROW_LABEL.Key)
-                {
-                    rowHeaders.Add(row.ColumnRef);
-                }
-                else if (row.Role == ROLE_ROW_VALUE.Key)
-                {
-                    rowValues.Add(new ClusteringSpec.ValueSpec(row.ColumnRef, row.Transform));
-                }
-            }
-
-            foreach (var group in _clusterSpecRows.Where(row => row.ColumnGroupIndex.HasValue)
-                .ToLookup(row => row.ColumnGroupIndex))
-            {
-                var columnHeaders = new List<ClusteringSpec.ColumnRef>();
-                var columnValues = new List<ClusteringSpec.ValueSpec>();
-                foreach (var row in group)
-                {
-                    if (row.Role == ROLE_COLUMN_LABEL.Key)
-                    {
-                        columnHeaders.Add(row.ColumnRef);
-                    }
-                    else if (row.Role == ROLE_COLUMN_VALUE.Key)
-                    {
-                        columnValues.Add(new ClusteringSpec.ValueSpec(row.ColumnRef, row.Transform));
-                    }
-                }
-                groups.Add(new ClusteringSpec.GroupSpec().ChangeColumnHeaders(columnHeaders).ChangeColumnValues(columnValues));
-            }
-
-            return new ClusteringSpec();
+            return new ClusteringSpec(_clusterSpecRows.Select(row => new ClusteringSpec.ValueSpec(row.ColumnRef, row.Transform)));
         }
     }
 }

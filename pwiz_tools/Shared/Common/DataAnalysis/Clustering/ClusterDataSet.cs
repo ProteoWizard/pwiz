@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
@@ -61,9 +59,23 @@ namespace pwiz.Common.DataAnalysis.Clustering
                     ImmutableList.ValueOf(group.Select(frame => frame.ReorderRows(newOrdering)))));
         }
 
+        public ClusterDataSet<TNewRow, TNewColumn> ChangeLabels<TNewRow, TNewColumn>(IEnumerable<TNewRow> newRowLabels,
+            IEnumerable<IEnumerable<TNewColumn>> newColumnLabels)
+        {
+            var newDataFrameGroups = new List<ImmutableList<ClusterDataSet<TNewRow, TNewColumn>.DataFrame>>();
+            foreach (var newLabels in newColumnLabels)
+            {
+                var newLabelList = ImmutableList.ValueOf(newLabels);
+                newDataFrameGroups.Add(ImmutableList.ValueOf(DataFrameGroups[newDataFrameGroups.Count].Select(frame =>
+                    new ClusterDataSet<TNewRow, TNewColumn>.DataFrame(newLabelList, frame.DataColumns, frame.Transform))));
+            }
+
+            return new ClusterDataSet<TNewRow, TNewColumn>(newRowLabels, newDataFrameGroups);
+        }
+
         public class DataFrame
         {
-            public DataFrame(IEnumerable<TColumn> columnHeaders, IEnumerable<ImmutableList<double?>> dataColumns)
+            public DataFrame(IEnumerable<TColumn> columnHeaders, IEnumerable<ImmutableList<double?>> dataColumns, ClusterRole.Transform valueTransform)
             {
                 ColumnHeaders = ImmutableList.ValueOf(columnHeaders);
                 DataColumns = ImmutableList.ValueOf(dataColumns);
@@ -79,7 +91,11 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 {
                     throw new ArgumentException(@"All data columns must have the same number of rows", nameof(dataColumns));
                 }
+
+                Transform = valueTransform;
             }
+
+            public ClusterRole.Transform Transform { get; private set; }
 
             public IEnumerable<double?> GetZScores(int iRow)
             {
@@ -94,13 +110,13 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
             public DataFrame ReorderRows(IList<int> newOrdering)
             {
-                return new DataFrame(ColumnHeaders, DataColumns.Select(col=>ImmutableList.ValueOf(Reorder(col, newOrdering))));
+                return new DataFrame(ColumnHeaders, DataColumns.Select(col=>ImmutableList.ValueOf(Reorder(col, newOrdering))), Transform);
             }
 
             public DataFrame ReorderColumns(IList<int> newOrdering)
             {
                 return new DataFrame(ImmutableList.ValueOf(Reorder(ColumnHeaders, newOrdering)),
-                    Reorder(DataColumns, newOrdering));
+                    Reorder(DataColumns, newOrdering), Transform);
             }
         }
 
@@ -132,6 +148,10 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
         private Tuple<ImmutableList<DataFrame>, DendrogramData> ClusterDataFrameGroup(ImmutableList<DataFrame> group)
         {
+            if (group[0].ColumnHeaders.Count <= 1)
+            {
+                return Tuple.Create(group, (DendrogramData) null);
+            }
             var points = new double[group[0].ColumnHeaders.Count,
                 RowCount * group.Count];
             for (int iRow = 0; iRow < RowCount; iRow++)
@@ -166,7 +186,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
             return new Results(newDataSet, null, ImmutableList.ValueOf(clusteredGroups.Select(tuple=>tuple.Item2)));
         }
 
-        public Results PerformClustering(bool clusterRows, bool clusterColumns)
+        public Results PerformClustering(bool clusterRows)
         {
             Results rowResults;
             if (clusterRows)
@@ -205,6 +225,12 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 newOrdering.Reverse();
                 
                 return new Results(DataSet.ReorderRows(newOrdering), RowDendrogram?.Reverse(), ColumnGroupDendrograms);
+            }
+
+            public ClusterDataSet<TNewRow, TNewColumn>.Results ChangeLabels<TNewRow, TNewColumn>(
+                IEnumerable<TNewRow> newRowLabels, IEnumerable<IEnumerable<TNewColumn>> newColumnLabels)
+            {
+                return new ClusterDataSet<TNewRow, TNewColumn>.Results(DataSet.ChangeLabels(newRowLabels, newColumnLabels), RowDendrogram, ColumnGroupDendrograms);
             }
         }
     }

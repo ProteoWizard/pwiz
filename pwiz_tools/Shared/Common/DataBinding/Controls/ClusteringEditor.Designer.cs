@@ -34,7 +34,6 @@
             this.lblDistanceMetric = new System.Windows.Forms.Label();
             this.comboDistanceMetric = new System.Windows.Forms.ComboBox();
             this.colColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colRole = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.colTransform = new System.Windows.Forms.DataGridViewComboBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.columnsDataGridView)).BeginInit();
             this.SuspendLayout();
@@ -44,7 +43,7 @@
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnOK.Location = new System.Drawing.Point(632, 500);
+            this.btnOK.Location = new System.Drawing.Point(313, 289);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 3;
@@ -56,7 +55,7 @@
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnCancel.Location = new System.Drawing.Point(713, 500);
+            this.btnCancel.Location = new System.Drawing.Point(394, 289);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 4;
@@ -71,14 +70,12 @@
             this.columnsDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.columnsDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colColumn,
-            this.colRole,
             this.colTransform});
             this.columnsDataGridView.Location = new System.Drawing.Point(11, 72);
             this.columnsDataGridView.Name = "columnsDataGridView";
-            this.columnsDataGridView.Size = new System.Drawing.Size(777, 422);
+            this.columnsDataGridView.Size = new System.Drawing.Size(458, 211);
             this.columnsDataGridView.TabIndex = 5;
             this.columnsDataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.columnsDataGridView_CellEndEdit);
-            this.columnsDataGridView.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.columnsDataGridView_CellFormatting);
             this.columnsDataGridView.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.columnsDataGridView_DataError);
             this.columnsDataGridView.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.columnsDataGridView_EditingControlShowing);
             // 
@@ -106,14 +103,7 @@
             this.colColumn.HeaderText = "Column";
             this.colColumn.Name = "colColumn";
             this.colColumn.ReadOnly = true;
-            // 
-            // colRole
-            // 
-            this.colRole.DataPropertyName = "Role";
-            this.colRole.DisplayStyleForCurrentCellOnly = true;
-            this.colRole.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.colRole.HeaderText = "Role";
-            this.colRole.Name = "colRole";
+            this.colColumn.Width = 200;
             // 
             // colTransform
             // 
@@ -122,18 +112,20 @@
             this.colTransform.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.colTransform.HeaderText = "Transform";
             this.colTransform.Name = "colTransform";
+            this.colTransform.Width = 200;
             // 
             // ClusteringEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 535);
+            this.ClientSize = new System.Drawing.Size(481, 324);
             this.Controls.Add(this.comboDistanceMetric);
             this.Controls.Add(this.lblDistanceMetric);
             this.Controls.Add(this.columnsDataGridView);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.btnCancel);
             this.Name = "ClusteringEditor";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "ClusteringEditor";
             ((System.ComponentModel.ISupportInitialize)(this.columnsDataGridView)).EndInit();
             this.ResumeLayout(false);
@@ -149,7 +141,6 @@
         private System.Windows.Forms.Label lblDistanceMetric;
         private System.Windows.Forms.ComboBox comboDistanceMetric;
         private System.Windows.Forms.DataGridViewTextBoxColumn colColumn;
-        private System.Windows.Forms.DataGridViewComboBoxColumn colRole;
         private System.Windows.Forms.DataGridViewComboBoxColumn colTransform;
     }
 }

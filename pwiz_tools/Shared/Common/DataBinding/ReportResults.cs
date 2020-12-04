@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
@@ -21,10 +20,10 @@ namespace pwiz.Common.DataBinding
         }
 
         public ReportResults(IEnumerable<RowItem> rowItems, PivotedProperties pivotedProperties,
-            DendrogramData rowDendrogramData, IEnumerable<DendrogramData> columnDendrogramDatas)
+            CaptionedDendrogramData rowDendrogramData, IEnumerable<CaptionedDendrogramData> columnDendrogramDatas)
         {
             RowItems = ImmutableList.ValueOf(rowItems);
-            if (rowDendrogramData != null && rowDendrogramData.LeafCount != RowItems.Count)
+            if (rowDendrogramData != null && rowDendrogramData.DendrogramData.LeafCount != RowItems.Count)
             {
                 throw new ArgumentException(@"Row count does not match", nameof(rowDendrogramData));
             }
@@ -77,8 +76,8 @@ namespace pwiz.Common.DataBinding
         }
         public PivotedProperties PivotedProperties { get; private set; }
 
-        public DendrogramData RowDendrogramData { get; private set; }
+        public CaptionedDendrogramData RowDendrogramData { get; private set; }
 
-        public ImmutableList<DendrogramData> ColumnGroupDendrogramDatas { get; private set; }
+        public ImmutableList<CaptionedDendrogramData> ColumnGroupDendrogramDatas { get; private set; }
     }
 }

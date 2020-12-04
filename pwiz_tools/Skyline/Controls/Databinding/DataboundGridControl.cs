@@ -28,6 +28,7 @@ using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
@@ -644,47 +645,25 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public bool ShowHeatMap()
         {
-            var numericColumnsByPropertyPath = BindingListSource.ItemProperties
-                .Where(p => ZScores.IsNumericType(p.PropertyType) && null != p.PivotedColumnId)
-                .GroupBy(p => p.PivotedColumnId.SeriesId);
-            var dataFrames = new List<ClusterDataSet<string, string>.DataFrame>();
-            var rowItems = BindingListSource.OfType<RowItem>().ToList();
-            foreach (var columnSet in numericColumnsByPropertyPath)
-            {
-                if (columnSet.Count() <= 1)
-                {
-                    continue;
-                }
+            var clusterer = Clusterer.CreateClusterer(BindingListSource.ClusteringSpec ?? ClusteringSpec.DEFAULT,
+                BindingListSource.ReportResults);
 
-                var columnHeaders = new List<string>();
-                var columnDatas = new List<ImmutableList<double?>>();
-                foreach (var column in columnSet)
-                {
-                    string caption = column.PivotedColumnId.PivotKeyCaption
-                        .GetCaption(BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer);
-                    columnHeaders.Add(caption);
-                    var values = rowItems.Select(rowItem => ZScores.ToDouble(column.GetValue(rowItem)));
-                    columnDatas.Add(ImmutableList.ValueOf(values));
-                }
-                dataFrames.Add(new ClusterDataSet<string, string>.DataFrame(ImmutableList.ValueOf(columnHeaders), columnDatas));
-            }
-
-            if (dataFrames.Count == 0)
+            if (clusterer == null)
             {
                 MessageDlg.Show(FormUtil.FindTopLevelOwner(this),
-                    "In order to show the heat map at least one numeric column must have been pivoted.");
+                    "This data could not be clustered.");
                 return false;
             }
 
-            var firstProperty = BindingListSource.ItemProperties[0];
-            var rowLabels = ImmutableList.ValueOf(rowItems.Select(rowItem =>
-                firstProperty.GetValue(rowItem)?.ToString() ?? string.Empty));
-            var dataSet = ClusterDataSet<string, string>.FromDataFrames(rowLabels, dataFrames);
-            ClusterDataSet<string, string>.Results results;
-            var clusteringSpec = BindingListSource.ClusteringSpec ?? ClusteringSpec.DEFAULT;
-            results = dataSet.PerformClustering(clusteringSpec.ClusterRows, clusteringSpec.ClusterColumns);
-            // Reverse all of the rows because the graph is upside down compared to the data grid view
+            var captionedClusteredResults = clusterer.GetCaptionedClusterDataSetResults();
+            var captionedDataSet = captionedClusteredResults.DataSet;
+            var dataSchemaLocalizer = BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer;
+            var results = captionedClusteredResults.ChangeLabels(captionedDataSet.RowLabels.Select(
+                    label => label.GetCaption(dataSchemaLocalizer)),
+                captionedDataSet.DataFrameGroups.Select(group =>
+                    group[0].ColumnHeaders.Select(header => header.GetCaption(dataSchemaLocalizer))));
             results = results.ReverseRows();
+
             var heatMapGraph = new HierarchicalClusterGraph()
             {
                 Results = results
@@ -700,7 +679,8 @@ namespace pwiz.Skyline.Controls.Databinding
         public void UpdateDendrograms()
         {
             var reportResults = BindingListSource.ReportResults;
-            UpdateColumnDendrograms(reportResults.PivotedProperties, reportResults.ColumnGroupDendrogramDatas);
+            UpdateColumnDendrograms(reportResults.PivotedProperties,
+                reportResults.ColumnGroupDendrogramDatas?.Select(d => d.DendrogramData).ToList());
             if (reportResults.RowDendrogramData == null)
             {
                 splitContainerVertical.Panel1Collapsed = true;
@@ -724,7 +704,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 var firstLocation = rowHeight / 2.0;
                 var rowLocations = ImmutableList.ValueOf(Enumerable.Range(0, DataGridView.RowCount).Select(rowIndex =>
                     (rowIndex - firstDisplayedCell.RowIndex) * rowHeight + firstLocation));
-                rowDendrogram.SetDendrogramDatas(new[] { new KeyValuePair<DendrogramData, ImmutableList<double>>(reportResults.RowDendrogramData, rowLocations), });
+                rowDendrogram.SetDendrogramDatas(new[] { new KeyValuePair<DendrogramData, ImmutableList<double>>(reportResults.RowDendrogramData.DendrogramData, rowLocations), });
             }
         }
 

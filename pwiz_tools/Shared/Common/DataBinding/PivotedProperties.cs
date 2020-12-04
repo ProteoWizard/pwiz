@@ -5,6 +5,7 @@ using System.Diagnostics;
 #endif
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding

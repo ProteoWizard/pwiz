@@ -637,8 +637,8 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void navBarButtonCluster_DropDownOpening(object sender, EventArgs e)
         {
-            clusterRowsToolStripMenuItem.Checked = true == BindingListSource?.ClusteringSpec?.ClusterRows;
-            clusterColumnsToolStripMenuItem.Checked = true == BindingListSource?.ClusteringSpec?.ClusterColumns;
+            // clusterRowsToolStripMenuItem.Checked = true == BindingListSource?.ClusteringSpec?.ClusterRows;
+            // clusterColumnsToolStripMenuItem.Checked = true == BindingListSource?.ClusteringSpec?.ClusterColumns;
         }
 
         private void clusterRowsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -648,15 +648,15 @@ namespace pwiz.Common.DataBinding.Controls
                 return;
             }
 
-            var clusteringSpec = BindingListSource.ClusteringSpec;
-            if (clusteringSpec == null)
-            {
-                BindingListSource.ClusteringSpec = ClusteringSpec.MINIMUM.ChangeClusterRows(true);
-            }
-            else
-            {
-                BindingListSource.ClusteringSpec = clusteringSpec.ChangeClusterRows(!clusteringSpec.ClusterRows);
-            }
+            // var clusteringSpec = BindingListSource.ClusteringSpec;
+            // if (clusteringSpec == null)
+            // {
+            //     BindingListSource.ClusteringSpec = ClusteringSpec.MINIMUM.ChangeClusterRows(true);
+            // }
+            // else
+            // {
+            //     BindingListSource.ClusteringSpec = clusteringSpec.ChangeClusterRows(!clusteringSpec.ClusterRows);
+            // }
         }
 
         private void clusterColumnsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -666,15 +666,15 @@ namespace pwiz.Common.DataBinding.Controls
                 return;
             }
 
-            var clusteringSpec = BindingListSource.ClusteringSpec;
-            if (clusteringSpec == null)
-            {
-                BindingListSource.ClusteringSpec = ClusteringSpec.MINIMUM.ChangeClusterColumns(true);
-            }
-            else
-            {
-                BindingListSource.ClusteringSpec = clusteringSpec.ChangeClusterColumns(!clusteringSpec.ClusterColumns);
-            }
+            // var clusteringSpec = BindingListSource.ClusteringSpec;
+            // if (clusteringSpec == null)
+            // {
+            //     BindingListSource.ClusteringSpec = ClusteringSpec.MINIMUM.ChangeClusterColumns(true);
+            // }
+            // else
+            // {
+            //     BindingListSource.ClusteringSpec = clusteringSpec.ChangeClusterColumns(!clusteringSpec.ClusterColumns);
+            // }
         }
 
         private void advancedToolStripMenuItem_Click(object sender, EventArgs e)
@@ -688,10 +688,12 @@ namespace pwiz.Common.DataBinding.Controls
 
             using (var clusteringEditor = new ClusteringEditor())
             {
-                clusteringEditor.SetData(dataSchema, reportResults);
-                clusteringEditor.ShowDialog(FormUtil.FindTopLevelOwner(this));
+                clusteringEditor.SetData(dataSchema, reportResults, BindingListSource.ClusteringSpec);
+                if (clusteringEditor.ShowDialog(FormUtil.FindTopLevelOwner(this)) == DialogResult.OK)
+                {
+                    BindingListSource.ClusteringSpec = clusteringEditor.GetClusteringSpec();
+                }
             }
-            
         }
     }
 }
