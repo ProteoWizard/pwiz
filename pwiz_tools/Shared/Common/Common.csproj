@@ -132,6 +132,7 @@
     <Compile Include="DataAnalysis\Clustering\ClusterDataSet.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterMetricType.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
+    <Compile Include="DataAnalysis\Clustering\ClusterValueTransform.cs" />
     <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
     <Compile Include="DataAnalysis\Clustering\ZScores.cs" />
     <Compile Include="DataAnalysis\LinearFitResult.cs" />

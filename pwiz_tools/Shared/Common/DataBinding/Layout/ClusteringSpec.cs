@@ -26,20 +26,28 @@ namespace pwiz.Common.DataBinding.Layout
             return ChangeProp(ImClone(this), im => im.ClusterRows = clusterRows);
         }
 
-        public ImmutableList<ValueSpec> RowHeaders { get; private set; }
+        public ImmutableList<ColumnRef> RowHeaders { get; private set; }
 
-        public ClusteringSpec ChangeRowHeaders(IEnumerable<ValueSpec> values)
+        public ClusteringSpec ChangeRowHeaders(IEnumerable<ColumnRef> values)
         {
             return ChangeProp(ImClone(this), im => im.RowHeaders = ImmutableList.ValueOf(values));
         }
 
-        public ImmutableList<ValueSpec> ColumnHeaders { get; private set; }
+        public ImmutableList<ValueSpec> RowValues { get; private set; }
 
-        public ClusteringSpec ChangeColumnHeaders(IEnumerable<ValueSpec> values)
+        public ClusteringSpec ChangeRowValues(IEnumerable<ValueSpec> values)
         {
-            return ChangeProp(ImClone(this), im => im.ColumnHeaders = ImmutableList.ValueOf(values));
+            return ChangeProp(ImClone(this), im => im.RowValues = ImmutableList.ValueOf(values));
         }
 
+        public ImmutableList<GroupSpec> ColumnGroups { get; private set; }
+
+        public ClusteringSpec ChangeColumnGroups(IEnumerable<GroupSpec> values)
+        {
+            return ChangeProp(ImClone(this), im => im.ColumnGroups = ImmutableList.ValueOf(values));
+        }
+
+        public ImmutableList<ValueSpec> ColumnValues { get; private set; }
 
         protected bool Equals(ClusteringSpec other)
         {
@@ -64,23 +72,111 @@ namespace pwiz.Common.DataBinding.Layout
             }
         }
 
-    }
-
-    public class RowClusteringSpec : Immutable
-    {
-        public ImmutableList<ValueSpec> Headers { get; private set; }
-        public 
-    }
-
-    public class ValueSpec : Immutable
-    {
-        public ValueSpec(ColumnId columnId, PropertyPath propertyPath)
+        public class GroupSpec : Immutable
         {
-            ColumnId = columnId;
-            PropertyPath = propertyPath;
+            public ImmutableList<ColumnRef> ColumnHeaders { get; private set; }
+
+            public GroupSpec ChangeColumnHeaders(IEnumerable<ColumnRef> headers)
+            {
+                return ChangeProp(ImClone(this), im => im.ColumnHeaders = ImmutableList.ValueOf(headers));
+            }
+            public ImmutableList<ValueSpec> ColumnValues { get; private set; }
+
+            public GroupSpec ChangeColumnValues(IEnumerable<ValueSpec> values)
+            {
+                return ChangeProp(ImClone(this), im => im.ColumnValues = ImmutableList.ValueOf(values));
+            }
+
+            protected bool Equals(GroupSpec other)
+            {
+                return ColumnHeaders.Equals(other.ColumnHeaders) && ColumnValues.Equals(other.ColumnValues);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((GroupSpec) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (ColumnHeaders.GetHashCode() * 397) ^ ColumnValues.GetHashCode();
+                }
+            }
         }
 
-        public ColumnId ColumnId { get; private set; }
-        public PropertyPath PropertyPath { get; private set; }
+        public class ColumnRef
+        {
+            public ColumnRef(ColumnId columnId)
+            {
+                ColumnId = columnId.Name;
+            }
+
+            public ColumnRef(PropertyPath propertyPath)
+            {
+                PropertyPath = propertyPath;
+            }
+
+            public string ColumnId { get; private set; }
+
+            public PropertyPath PropertyPath { get; private set; }
+
+            protected bool Equals(ColumnRef other)
+            {
+                return ColumnId == other.ColumnId && Equals(PropertyPath, other.PropertyPath);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((ColumnRef) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((ColumnId != null ? ColumnId.GetHashCode() : 0) * 397) ^ (PropertyPath != null ? PropertyPath.GetHashCode() : 0);
+                }
+            }
+        }
+
+        public class ValueSpec
+        {
+            public ValueSpec(ColumnRef columnRef, string transform)
+            {
+                Column = columnRef;
+                Transform = transform;
+            }
+            public ColumnRef Column { get; private set; }
+            public string Transform { get; private set; }
+
+            protected bool Equals(ValueSpec other)
+            {
+                return Column.Equals(other.Column) && Transform == other.Transform;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((ValueSpec) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (Column.GetHashCode() * 397) ^ Transform.GetHashCode();
+                }
+            }
+        }
     }
 }

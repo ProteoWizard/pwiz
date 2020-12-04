@@ -24,6 +24,17 @@ namespace pwiz.Common.DataBinding
 
         public ImmutableList<SeriesGroup> SeriesGroups { get; private set; }
 
+        public IEnumerable<DataPropertyDescriptor> UngroupedProperties
+        {
+            get
+            {
+                var groupedPropertyIndexes = SeriesGroups
+                    .SelectMany(group => group.SeriesList.SelectMany(series => series.PropertyIndexes)).ToHashSet();
+                return Enumerable.Range(0, ItemProperties.Count).Where(i => !groupedPropertyIndexes.Contains(i))
+                    .Select(i => ItemProperties[i]);
+            }
+        }
+
         public class SeriesGroup
         {
             public SeriesGroup(IEnumerable<object> pivotKeys, IEnumerable<object> pivotCaptions, IEnumerable<Series> series)

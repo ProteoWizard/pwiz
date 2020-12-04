@@ -18,11 +18,36 @@ namespace pwiz.Common.DataAnalysis.Clustering
         public static readonly ClusterMetricType PEARSON = 
             new ClusterMetricType(@"pearson", ()=>"Pearson correlation", 10);
 
+        private Func<string> _getLabelFunc;
         public ClusterMetricType(string name, Func<string> getLabel, int algLibValue) : base(name, getLabel)
         {
+            Name = name;
+            _getLabelFunc = getLabel;
             AlgLibValue = algLibValue;
         }
 
         public int AlgLibValue { get; }
+
+        public string Name { get; }
+        public string Label
+        {
+            get { return _getLabelFunc(); }
+        }
+
+        public override string ToString()
+        {
+            return Label;
+        }
+
+        public static IEnumerable<ClusterMetricType> ALL
+        {
+            get
+            {
+                yield return EUCLIDEAN;
+                yield return MANHATTAN;
+                yield return CHEBYSHEV;
+                yield return PEARSON;
+            }
+        }
     }
 }

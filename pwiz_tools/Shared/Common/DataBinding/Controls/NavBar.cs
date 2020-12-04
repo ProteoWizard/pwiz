@@ -686,13 +686,9 @@ namespace pwiz.Common.DataBinding.Controls
                 return;
             }
 
-            using (var clusteringEditor = new ClusteringEditor()
+            using (var clusteringEditor = new ClusteringEditor())
             {
-                DataSchema = dataSchema,
-                ReportResults = reportResults
-
-            })
-            {
+                clusteringEditor.SetData(dataSchema, reportResults);
                 clusteringEditor.ShowDialog(FormUtil.FindTopLevelOwner(this));
             }
             

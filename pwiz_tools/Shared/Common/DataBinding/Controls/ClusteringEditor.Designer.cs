@@ -28,132 +28,128 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.rowFieldPanel = new System.Windows.Forms.Panel();
-            this.comboRowColumn = new System.Windows.Forms.ComboBox();
-            this.availableFieldsTreeRows = new pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree();
-            this.columnFieldPanel = new System.Windows.Forms.Panel();
-            this.comboColumnColumn = new System.Windows.Forms.ComboBox();
-            this.availableFieldsTreeColumns = new pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree();
-            this.tableLayoutPanel1.SuspendLayout();
-            this.rowFieldPanel.SuspendLayout();
-            this.columnFieldPanel.SuspendLayout();
+            this.btnOK = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.columnsDataGridView = new pwiz.Common.Controls.CommonDataGridView();
+            this.lblDistanceMetric = new System.Windows.Forms.Label();
+            this.comboDistanceMetric = new System.Windows.Forms.ComboBox();
+            this.colColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colRole = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colTransform = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            ((System.ComponentModel.ISupportInitialize)(this.columnsDataGridView)).BeginInit();
             this.SuspendLayout();
             // 
-            // tableLayoutPanel1
+            // btnOK
             // 
-            this.tableLayoutPanel1.ColumnCount = 3;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Controls.Add(this.rowFieldPanel, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.columnFieldPanel, 0, 1);
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 12);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(776, 462);
-            this.tableLayoutPanel1.TabIndex = 0;
+            this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnOK.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.btnOK.Location = new System.Drawing.Point(632, 500);
+            this.btnOK.Name = "btnOK";
+            this.btnOK.Size = new System.Drawing.Size(75, 23);
+            this.btnOK.TabIndex = 3;
+            this.btnOK.Text = "OK";
+            this.btnOK.UseVisualStyleBackColor = true;
             // 
-            // rowFieldPanel
+            // btnCancel
             // 
-            this.rowFieldPanel.Controls.Add(this.availableFieldsTreeRows);
-            this.rowFieldPanel.Controls.Add(this.comboRowColumn);
-            this.rowFieldPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rowFieldPanel.Location = new System.Drawing.Point(3, 3);
-            this.rowFieldPanel.Name = "rowFieldPanel";
-            this.rowFieldPanel.Size = new System.Drawing.Size(332, 225);
-            this.rowFieldPanel.TabIndex = 0;
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.btnCancel.Location = new System.Drawing.Point(713, 500);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.TabIndex = 4;
+            this.btnCancel.Text = "Cancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // comboRowColumn
+            // columnsDataGridView
             // 
-            this.comboRowColumn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboRowColumn.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboRowColumn.FormattingEnabled = true;
-            this.comboRowColumn.Location = new System.Drawing.Point(3, 3);
-            this.comboRowColumn.Name = "comboRowColumn";
-            this.comboRowColumn.Size = new System.Drawing.Size(329, 21);
-            this.comboRowColumn.TabIndex = 0;
-            this.comboRowColumn.SelectedIndexChanged += new System.EventHandler(this.comboRowColumn_SelectedIndexChanged);
-            // 
-            // availableFieldsTreeRows
-            // 
-            this.availableFieldsTreeRows.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.columnsDataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.availableFieldsTreeRows.CheckedColumns = new pwiz.Common.DataBinding.PropertyPath[0];
-            this.availableFieldsTreeRows.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
-            this.availableFieldsTreeRows.ImageIndex = 0;
-            this.availableFieldsTreeRows.Location = new System.Drawing.Point(3, 30);
-            this.availableFieldsTreeRows.Name = "availableFieldsTreeRows";
-            this.availableFieldsTreeRows.SelectedImageIndex = 0;
-            this.availableFieldsTreeRows.ShowNodeToolTips = true;
-            this.availableFieldsTreeRows.Size = new System.Drawing.Size(326, 192);
-            this.availableFieldsTreeRows.TabIndex = 1;
+            this.columnsDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.columnsDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colColumn,
+            this.colRole,
+            this.colTransform});
+            this.columnsDataGridView.Location = new System.Drawing.Point(11, 72);
+            this.columnsDataGridView.Name = "columnsDataGridView";
+            this.columnsDataGridView.Size = new System.Drawing.Size(777, 422);
+            this.columnsDataGridView.TabIndex = 5;
+            this.columnsDataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.columnsDataGridView_CellEndEdit);
+            this.columnsDataGridView.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.columnsDataGridView_CellFormatting);
+            this.columnsDataGridView.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.columnsDataGridView_DataError);
+            this.columnsDataGridView.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.columnsDataGridView_EditingControlShowing);
             // 
-            // columnFieldPanel
+            // lblDistanceMetric
             // 
-            this.columnFieldPanel.Controls.Add(this.availableFieldsTreeColumns);
-            this.columnFieldPanel.Controls.Add(this.comboColumnColumn);
-            this.columnFieldPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.columnFieldPanel.Location = new System.Drawing.Point(3, 234);
-            this.columnFieldPanel.Name = "columnFieldPanel";
-            this.columnFieldPanel.Size = new System.Drawing.Size(332, 225);
-            this.columnFieldPanel.TabIndex = 1;
+            this.lblDistanceMetric.AutoSize = true;
+            this.lblDistanceMetric.Location = new System.Drawing.Point(12, 11);
+            this.lblDistanceMetric.Name = "lblDistanceMetric";
+            this.lblDistanceMetric.Size = new System.Drawing.Size(83, 13);
+            this.lblDistanceMetric.TabIndex = 6;
+            this.lblDistanceMetric.Text = "Distance metric:";
             // 
-            // comboColumnColumn
+            // comboDistanceMetric
             // 
-            this.comboColumnColumn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboColumnColumn.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboColumnColumn.FormattingEnabled = true;
-            this.comboColumnColumn.Location = new System.Drawing.Point(3, 3);
-            this.comboColumnColumn.Name = "comboColumnColumn";
-            this.comboColumnColumn.Size = new System.Drawing.Size(326, 21);
-            this.comboColumnColumn.TabIndex = 0;
-            this.comboColumnColumn.SelectedIndexChanged += new System.EventHandler(this.comboColumnColumn_SelectedIndexChanged);
+            this.comboDistanceMetric.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboDistanceMetric.FormattingEnabled = true;
+            this.comboDistanceMetric.Location = new System.Drawing.Point(12, 36);
+            this.comboDistanceMetric.Name = "comboDistanceMetric";
+            this.comboDistanceMetric.Size = new System.Drawing.Size(280, 21);
+            this.comboDistanceMetric.TabIndex = 7;
             // 
-            // availableFieldsTreeColumns
+            // colColumn
             // 
-            this.availableFieldsTreeColumns.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.availableFieldsTreeColumns.CheckedColumns = new pwiz.Common.DataBinding.PropertyPath[0];
-            this.availableFieldsTreeColumns.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
-            this.availableFieldsTreeColumns.ImageIndex = 0;
-            this.availableFieldsTreeColumns.Location = new System.Drawing.Point(3, 30);
-            this.availableFieldsTreeColumns.Name = "availableFieldsTreeColumns";
-            this.availableFieldsTreeColumns.SelectedImageIndex = 0;
-            this.availableFieldsTreeColumns.ShowNodeToolTips = true;
-            this.availableFieldsTreeColumns.Size = new System.Drawing.Size(326, 192);
-            this.availableFieldsTreeColumns.TabIndex = 2;
+            this.colColumn.DataPropertyName = "Column";
+            this.colColumn.HeaderText = "Column";
+            this.colColumn.Name = "colColumn";
+            this.colColumn.ReadOnly = true;
+            // 
+            // colRole
+            // 
+            this.colRole.DataPropertyName = "Role";
+            this.colRole.DisplayStyleForCurrentCellOnly = true;
+            this.colRole.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.colRole.HeaderText = "Role";
+            this.colRole.Name = "colRole";
+            // 
+            // colTransform
+            // 
+            this.colTransform.DataPropertyName = "Transform";
+            this.colTransform.DisplayStyleForCurrentCellOnly = true;
+            this.colTransform.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.colTransform.HeaderText = "Transform";
+            this.colTransform.Name = "colTransform";
             // 
             // ClusteringEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 535);
-            this.Controls.Add(this.tableLayoutPanel1);
+            this.Controls.Add(this.comboDistanceMetric);
+            this.Controls.Add(this.lblDistanceMetric);
+            this.Controls.Add(this.columnsDataGridView);
+            this.Controls.Add(this.btnOK);
+            this.Controls.Add(this.btnCancel);
             this.Name = "ClusteringEditor";
             this.Text = "ClusteringEditor";
-            this.tableLayoutPanel1.ResumeLayout(false);
-            this.rowFieldPanel.ResumeLayout(false);
-            this.columnFieldPanel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.columnsDataGridView)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.Panel rowFieldPanel;
-        private Editor.AvailableFieldsTree availableFieldsTreeRows;
-        private System.Windows.Forms.ComboBox comboRowColumn;
-        private System.Windows.Forms.Panel columnFieldPanel;
-        private Editor.AvailableFieldsTree availableFieldsTreeColumns;
-        private System.Windows.Forms.ComboBox comboColumnColumn;
+        private System.Windows.Forms.Button btnOK;
+        private System.Windows.Forms.Button btnCancel;
+        private Common.Controls.CommonDataGridView columnsDataGridView;
+        private System.Windows.Forms.Label lblDistanceMetric;
+        private System.Windows.Forms.ComboBox comboDistanceMetric;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colColumn;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colRole;
+        private System.Windows.Forms.DataGridViewComboBoxColumn colTransform;
     }
 }
