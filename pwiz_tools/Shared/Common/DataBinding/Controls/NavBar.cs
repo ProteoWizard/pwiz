@@ -641,42 +641,6 @@ namespace pwiz.Common.DataBinding.Controls
             // clusterColumnsToolStripMenuItem.Checked = true == BindingListSource?.ClusteringSpec?.ClusterColumns;
         }
 
-        private void clusterRowsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (BindingListSource == null)
-            {
-                return;
-            }
-
-            // var clusteringSpec = BindingListSource.ClusteringSpec;
-            // if (clusteringSpec == null)
-            // {
-            //     BindingListSource.ClusteringSpec = ClusteringSpec.MINIMUM.ChangeClusterRows(true);
-            // }
-            // else
-            // {
-            //     BindingListSource.ClusteringSpec = clusteringSpec.ChangeClusterRows(!clusteringSpec.ClusterRows);
-            // }
-        }
-
-        private void clusterColumnsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (BindingListSource == null)
-            {
-                return;
-            }
-
-            // var clusteringSpec = BindingListSource.ClusteringSpec;
-            // if (clusteringSpec == null)
-            // {
-            //     BindingListSource.ClusteringSpec = ClusteringSpec.MINIMUM.ChangeClusterColumns(true);
-            // }
-            // else
-            // {
-            //     BindingListSource.ClusteringSpec = clusteringSpec.ChangeClusterColumns(!clusteringSpec.ClusterColumns);
-            // }
-        }
-
         private void advancedToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var reportResults = BindingListSource?.ReportResults;

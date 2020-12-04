@@ -38,10 +38,10 @@ namespace pwiz.Common.DataBinding
 
         public class SeriesGroup
         {
-            public SeriesGroup(IEnumerable<object> pivotKeys, IEnumerable<object> pivotCaptions, IEnumerable<Series> series)
+            public SeriesGroup(IEnumerable<object> pivotKeys, IEnumerable<IColumnCaption> pivotCaptions, IEnumerable<Series> series)
             {
                 PivotKeys = ImmutableList.ValueOf(pivotKeys);
-                PivotCaptions = ImmutableList.ValueOf(PivotCaptions);
+                PivotCaptions = ImmutableList.ValueOf(pivotCaptions);
                 SeriesList = ImmutableList.ValueOf(series);
             }
             public ImmutableList<object> PivotKeys { get; }
