@@ -15,11 +15,6 @@ namespace pwiz.Common.Controls.Clustering
 
         private DockStyle _dendrogramLocation;
         private bool _rectilinearLines;
-        public DendrogramControl()
-        {
-            InitializeComponent();
-        }
-
         public DockStyle DendrogramLocation {
             get
             {

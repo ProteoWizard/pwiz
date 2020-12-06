@@ -96,7 +96,6 @@
     <Compile Include="Controls\Clustering\DendrogramControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Controls\Clustering\DendrogramControl.Designer.cs" />
     <Compile Include="Controls\CommonDataGridView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -373,7 +372,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Controls\Clustering\DendrogramControl.resx" />
     <EmbeddedResource Include="Controls\FindBox.ja.resx">
       <DependentUpon>FindBox.cs</DependentUpon>
     </EmbeddedResource>
