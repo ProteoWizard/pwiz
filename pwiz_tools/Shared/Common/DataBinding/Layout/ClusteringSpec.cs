@@ -40,6 +40,16 @@ namespace pwiz.Common.DataBinding.Layout
             return dictionary;
         }
 
+        public ClusteringSpec RemoveRole(ClusterRole role)
+        {
+            var newValues = ImmutableList.ValueOf(Values.Where(value => value.Transform != role.Name));
+            if (newValues.Count == Values.Count)
+            {
+                return this;
+            }
+            return new ClusteringSpec(newValues);
+        }
+
         protected bool Equals(ClusteringSpec other)
         {
             return Equals(Values, other.Values) && DistanceMetric == other.DistanceMetric;

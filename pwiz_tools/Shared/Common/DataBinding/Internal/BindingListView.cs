@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 
@@ -210,6 +211,10 @@ namespace pwiz.Common.DataBinding.Internal
         public void ApplySort(ListSortDescriptionCollection sorts)
         {
             RowFilter = RowFilter.ChangeListSortDescriptionCollection(sorts);
+            if (ClusteringSpec != null && sorts.Count > 0)
+            {
+                ClusteringSpec = ClusteringSpec.RemoveRole(ClusterRole.ROWHEADER);
+            }
             // Fire an event so that the NavBar updates to show that the DataGridView is sorting
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }

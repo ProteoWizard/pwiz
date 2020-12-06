@@ -280,47 +280,5 @@ namespace pwiz.Common.DataBinding.Controls
             }
             base.OnCellErrorTextNeeded(e);
         }
-
-        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
-        {
-            var reportResults = (DataSource as BindingListSource)?.ReportResults;
-            if (reportResults == null)
-            {
-                return;
-            }
-            if (e.RowIndex < 0 || e.RowIndex >= reportResults.RowCount)
-            {
-                return;
-            }
-
-            var rowItem = reportResults.RowItems[e.RowIndex];
-            var column = Columns[e.ColumnIndex];
-            var itemProperties = reportResults.ItemProperties;
-            var pivotedProperties = reportResults.PivotedProperties;
-            int propertyIndex = itemProperties.IndexOfName(column.DataPropertyName);
-            if (propertyIndex < 0)
-            {
-                return;
-            }
-
-            var groupSeries = pivotedProperties.FindSeriesForProperty(itemProperties[propertyIndex]);
-            if (groupSeries == null)
-            {
-                return;
-            }
-
-            int indexWithinSeries = groupSeries.Item2.PropertyIndexes.IndexOf(propertyIndex);
-            if (indexWithinSeries < 0)
-            {
-                return;
-            }
-            List<double?> zScores = ZScores.CalculateZScores(groupSeries.Item2.PropertyIndexes.Select(i => itemProperties[i].GetValue(rowItem))).ToList();
-            double? zScore = zScores[indexWithinSeries];
-            if (!zScore.HasValue)
-            {
-                return;
-            }
-            e.CellStyle.BackColor = ZScores.ZScoreToColor(zScore.Value);
-        }
     }
 }

@@ -33,8 +33,6 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
-            this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.sortAscendingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sortDescendingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -49,11 +47,13 @@
             this.fillDownToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.heatMapContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainerVertical = new System.Windows.Forms.SplitContainer();
-            this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.splitContainerHorizontal = new System.Windows.Forms.SplitContainer();
+            this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.columnDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
+            this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
+            this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
+            this.databoundColorManager1 = new pwiz.Common.DataBinding.Controls.DataboundColorManager();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).BeginInit();
             this.splitContainerVertical.Panel1.SuspendLayout();
@@ -64,21 +64,8 @@
             this.splitContainerHorizontal.Panel2.SuspendLayout();
             this.splitContainerHorizontal.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
             this.SuspendLayout();
-            // 
-            // navBar
-            // 
-            resources.ApplyResources(this.navBar, "navBar");
-            this.navBar.BindingListSource = this.bindingListSource;
-            this.navBar.Name = "navBar";
-            this.navBar.ShowViewsButton = true;
-            // 
-            // bindingListSource
-            // 
-            this.bindingListSource.NewRowHandler = null;
-            this.bindingListSource.BindingComplete += new System.Windows.Forms.BindingCompleteEventHandler(this.bindingListSource_BindingComplete);
-            this.bindingListSource.DataError += new System.Windows.Forms.BindingManagerDataErrorEventHandler(this.bindingListSource_DataError);
-            this.bindingListSource.ListChanged += new System.ComponentModel.ListChangedEventHandler(this.bindingListSource_ListChanged);
             // 
             // contextMenuStrip
             // 
@@ -182,13 +169,6 @@
             // 
             this.splitContainerVertical.Panel2.Controls.Add(this.splitContainerHorizontal);
             // 
-            // rowDendrogram
-            // 
-            resources.ApplyResources(this.rowDendrogram, "rowDendrogram");
-            this.rowDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Left;
-            this.rowDendrogram.Name = "rowDendrogram";
-            this.rowDendrogram.RectilinearLines = true;
-            // 
             // splitContainerHorizontal
             // 
             resources.ApplyResources(this.splitContainerHorizontal, "splitContainerHorizontal");
@@ -202,6 +182,13 @@
             // splitContainerHorizontal.Panel2
             // 
             this.splitContainerHorizontal.Panel2.Controls.Add(this.boundDataGridView);
+            // 
+            // rowDendrogram
+            // 
+            resources.ApplyResources(this.rowDendrogram, "rowDendrogram");
+            this.rowDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Left;
+            this.rowDendrogram.Name = "rowDendrogram";
+            this.rowDendrogram.RectilinearLines = true;
             // 
             // columnDendrogram
             // 
@@ -250,6 +237,24 @@
             this.boundDataGridView.Scroll += new System.Windows.Forms.ScrollEventHandler(this.boundDataGridView_Scroll);
             this.boundDataGridView.Resize += new System.EventHandler(this.boundDataGridView_Resize);
             // 
+            // bindingListSource
+            // 
+            this.bindingListSource.NewRowHandler = null;
+            this.bindingListSource.BindingComplete += new System.Windows.Forms.BindingCompleteEventHandler(this.bindingListSource_BindingComplete);
+            this.bindingListSource.DataError += new System.Windows.Forms.BindingManagerDataErrorEventHandler(this.bindingListSource_DataError);
+            this.bindingListSource.ListChanged += new System.ComponentModel.ListChangedEventHandler(this.bindingListSource_ListChanged);
+            // 
+            // navBar
+            // 
+            resources.ApplyResources(this.navBar, "navBar");
+            this.navBar.BindingListSource = this.bindingListSource;
+            this.navBar.Name = "navBar";
+            this.navBar.ShowViewsButton = true;
+            // 
+            // databoundColorManager1
+            // 
+            this.databoundColorManager1.BoundDataGridView = this.boundDataGridView;
+            // 
             // DataboundGridControl
             // 
             resources.ApplyResources(this, "$this");
@@ -257,7 +262,6 @@
             this.Controls.Add(this.splitContainerVertical);
             this.Controls.Add(this.navBar);
             this.Name = "DataboundGridControl";
-            ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).EndInit();
             this.contextMenuStrip.ResumeLayout(false);
             this.splitContainerVertical.Panel1.ResumeLayout(false);
             this.splitContainerVertical.Panel2.ResumeLayout(false);
@@ -268,6 +272,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerHorizontal)).EndInit();
             this.splitContainerHorizontal.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -295,5 +300,6 @@
         private Common.Controls.Clustering.DendrogramControl rowDendrogram;
         private System.Windows.Forms.SplitContainer splitContainerHorizontal;
         private Common.Controls.Clustering.DendrogramControl columnDendrogram;
+        private Common.DataBinding.Controls.DataboundColorManager databoundColorManager1;
     }
 }

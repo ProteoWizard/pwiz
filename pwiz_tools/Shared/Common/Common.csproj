@@ -89,6 +89,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Colors\AbstractColorScheme.cs" />
+    <Compile Include="Colors\ColorPalettes.cs" />
+    <Compile Include="Colors\ColorScheme.cs" />
+    <Compile Include="Colors\DiscreteColorScheme.cs" />
+    <Compile Include="Colors\ZScoreColorScheme.cs" />
     <Compile Include="Controls\Clustering\DendrogramControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -184,6 +189,9 @@
       <DependentUpon>ColumnListEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="DataBinding\Controls\ColumnListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\DataGridViewColorManager.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="DataBinding\Controls\Editor\ChooseViewsControl.cs">
