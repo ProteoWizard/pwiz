@@ -135,17 +135,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private ViewLayoutList GetClusteredLayout()
         {
             var ppRunAbundances = PropertyPath.Root
-                .Property(nameof(FoldChangeBindingSource.FoldChangeRow.RunAbundances)).DictionaryValues();
+                .Property(nameof(FoldChangeBindingSource.FoldChangeDetailRow.RunAbundances)).DictionaryValues();
             var roles = new List<Tuple<PropertyPath, ClusterRole>>();
-            roles.Add(Tuple.Create(PropertyPath.Root.Property(nameof(FoldChangeBindingSource.FoldChangeRow.Protein)),
+            roles.Add(Tuple.Create(PropertyPath.Root.Property(nameof(FoldChangeBindingSource.FoldChangeDetailRow.Protein)),
                 ClusterRole.ROWHEADER));
-            roles.Add(Tuple.Create(PropertyPath.Root.Property(nameof(FoldChangeBindingSource.FoldChangeRow.Peptide)),
+            roles.Add(Tuple.Create(PropertyPath.Root.Property(nameof(FoldChangeBindingSource.FoldChangeDetailRow.Peptide)),
                 ClusterRole.ROWHEADER));
             roles.Add(Tuple.Create(
                 ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.ReplicateIdentity)),
                 ClusterRole.COLUMNHEADER));
             roles.Add(Tuple.Create(
-                ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.InControlGroup)),
+                ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.GroupIdentifier)),
                 ClusterRole.COLUMNHEADER));
             roles.Add(Tuple.Create(ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.Abundance)),
                 (ClusterRole) ClusterRole.ZSCORE));

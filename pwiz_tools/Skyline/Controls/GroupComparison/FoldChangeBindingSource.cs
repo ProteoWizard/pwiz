@@ -96,6 +96,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var rows = new List<FoldChangeRow>();
             if (null != results)
             {
+                var controlGroupIdentifier =
+                    GroupComparisonModel.GroupComparisonDef.GetControlGroupIdentifier(_skylineDataSchema.Document
+                        .Settings);
                 Dictionary<int, double> criticalValuesByDegreesOfFreedom = new Dictionary<int, double>();
                 var groupComparisonDef = results.GroupComparer.ComparisonDef;
                 var adjustedPValues = PValues.AdjustPValues(results.ResultRows.Select(
@@ -125,39 +128,69 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     foreach (var runAbundance in resultRow.RunAbundances)
                     {
                         Replicate replicate = new Replicate(_skylineDataSchema, runAbundance.ReplicateIndex);
-                        runAbundances.Add(replicate, new ReplicateRow(replicate, runAbundance.Control, runAbundance.BioReplicate, Math.Pow(2, runAbundance.Log2Abundance)));
+                        runAbundances.Add(replicate, new ReplicateRow(replicate, runAbundance.Control ?
+                                controlGroupIdentifier : resultRow.Selector.GroupIdentifier
+                            , runAbundance.BioReplicate, Math.Pow(2, runAbundance.Log2Abundance)));
                     }
                     rows.Add(new FoldChangeRow(protein, peptide, resultRow.Selector.LabelType,
                         resultRow.Selector.MsLevel, resultRow.Selector.GroupIdentifier, resultRow.ReplicateCount, foldChangeResult, runAbundances));
                 }
             }
+
+            var detailRows = new List<FoldChangeDetailRow>();
+            foreach (var grouping in rows.ToLookup(row =>
+                Tuple.Create(row.Protein, row.Peptide, row.IsotopeLabelType, row.MsLevel)))
+            {
+                var foldChangeResults = grouping.ToDictionary(row => row.Group, row => row.FoldChangeResult);
+                var runAbundances = new Dictionary<Replicate, ReplicateRow>();
+                foreach (var abundance in grouping.SelectMany(row => row.RunAbundances))
+                {
+                    runAbundances[abundance.Key] = abundance.Value;
+                }
+                detailRows.Add(new FoldChangeDetailRow(grouping.Key.Item1, grouping.Key.Item2, grouping.Key.Item3, grouping.Key.Item4, foldChangeResults, runAbundances));
+            }
             var defaultViewSpec = GetDefaultViewSpec(rows);
             var clusteredViewSpec = GetClusteredViewSpec(defaultViewSpec);
-            var rowSource = new StaticRowSource(rows);
-            ReplaceBuiltInViews(new[]{defaultViewSpec, clusteredViewSpec}, rowSource);
-            _bindingListSource.RowSource = rowSource;
+
+            var rowSourceInfos = new List<RowSourceInfo>()
+            {
+                new RowSourceInfo(new StaticRowSource(rows),
+                    new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), defaultViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN)),
+                new RowSourceInfo(new StaticRowSource(detailRows),
+                    new ViewInfo(_skylineDataSchema, typeof(FoldChangeDetailRow), clusteredViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN))
+            };
+            SetRowSourceInfos(rowSourceInfos);
         }
 
-        public void ReplaceBuiltInViews(IList<ViewSpec> viewSpecs, StaticRowSource rowSource)
+        private void SetRowSourceInfos(IList<RowSourceInfo> rowSourceInfos)
         {
-            if (viewSpecs.SequenceEqual(ViewContext.BuiltInViews))
+            var oldBuiltInViews = ViewContext.BuiltInViews.ToList();
+            ViewContext.SetRowSources(rowSourceInfos);
+            foreach (var rowSourceInfo in rowSourceInfos)
             {
-                return;
-            }
-
-            var viewInfos = viewSpecs.Select(viewSpec =>
-                new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), viewSpec).ChangeViewGroup(ViewGroup.BUILT_IN)).ToList();
-            ViewContext.SetRowSources(new[] {new RowSourceInfo(typeof(FoldChangeRow), rowSource, viewInfos)});
-            if (Equals(ViewGroup.BUILT_IN.Id, _bindingListSource.ViewInfo?.ViewGroup?.Id))
-            {
-                for (int iView = 0; iView < viewSpecs.Count; iView++)
+                if (_bindingListSource.ViewSpec?.RowSource != rowSourceInfo.Name)
                 {
-                    var viewSpec = viewSpecs[iView];
-                    if (_bindingListSource.ViewSpec.Name == viewSpec.Name &&
-                        !viewSpec.Equals(_bindingListSource.ViewSpec))
+                    continue;
+                }
+                var newViewSpecs = rowSourceInfo.Views.Select(viewInfo => viewInfo.GetViewSpec());
+                var oldViewSpecs = oldBuiltInViews.Where(view => view.RowSource == rowSourceInfo.Name);
+                ViewInfo newViewInfo = null;
+                if (!newViewSpecs.SequenceEqual(oldViewSpecs))
+                {
+                    if (ViewGroup.BUILT_IN.Id.Equals(_bindingListSource.ViewInfo?.ViewGroup.Id))
                     {
-                        _bindingListSource.SetView(viewInfos[iView], rowSource);
+                        newViewInfo =
+                            rowSourceInfo.Views.FirstOrDefault(view => view.Name == _bindingListSource.ViewInfo.Name);
                     }
+                }
+
+                if (newViewInfo == null)
+                {
+                    _bindingListSource.RowSource = rowSourceInfo.Rows;
+                }
+                else
+                {
+                    _bindingListSource.SetView(newViewInfo, rowSourceInfo.Rows);
                 }
             }
         }
@@ -216,18 +249,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private ViewSpec GetClusteredViewSpec(ViewSpec defaultViewSpec)
         {
-            var clusteredViewSpec = defaultViewSpec.SetName(CLUSTERED_VIEW_NAME);
-            PropertyPath ppRunAbundance = PropertyPath.Root.Property(nameof(FoldChangeRow.RunAbundances)).DictionaryValues();
+            var clusteredViewSpec = defaultViewSpec.SetName(CLUSTERED_VIEW_NAME).SetRowType(typeof(FoldChangeDetailRow));
+
+            PropertyPath ppRunAbundance = PropertyPath.Root.Property(nameof(FoldChangeDetailRow.RunAbundances)).DictionaryValues();
             var columnsToAdd = new List<PropertyPath>();
+            var columnPrefixToRemove = PropertyPath.Root.Property(nameof(FoldChangeRow.FoldChangeResult));
             if (!string.IsNullOrEmpty(GroupComparisonModel.GroupComparisonDef.IdentityAnnotation))
             {
                 columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.ReplicateIdentity)));
             }
-            columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.InControlGroup)));
+            columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.GroupIdentifier)));
             columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.Abundance)));
-
-            clusteredViewSpec = clusteredViewSpec.SetColumns(clusteredViewSpec.Columns.Concat(
-                columnsToAdd.Select(col=>new ColumnSpec(col))));
+            clusteredViewSpec = clusteredViewSpec.SetColumns(clusteredViewSpec.Columns
+                .Where(col => !col.PropertyPath.StartsWith(columnPrefixToRemove))
+                .Concat(columnsToAdd.Select(col => new ColumnSpec(col))));
             return clusteredViewSpec;
         }
 
@@ -251,18 +286,16 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return _bindingListSource;
         }
 
-        public class FoldChangeRow
+        public abstract class AbstractFoldChangeRow
         {
-            public FoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide, IsotopeLabelType labelType,
-                int? msLevel, GroupIdentifier group, int replicateCount, FoldChangeResult foldChangeResult, IDictionary<Replicate, ReplicateRow> replicateResults)
+            public AbstractFoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide,
+                IsotopeLabelType labelType,
+                int? msLevel, IDictionary<Replicate, ReplicateRow> replicateResults)
             {
                 Protein = protein;
                 Peptide = peptide;
                 IsotopeLabelType = labelType;
                 MsLevel = msLevel;
-                ReplicateCount = replicateCount;
-                FoldChangeResult = foldChangeResult;
-                Group = group;
                 RunAbundances = replicateResults;
             }
 
@@ -270,25 +303,52 @@ namespace pwiz.Skyline.Controls.GroupComparison
             public Model.Databinding.Entities.Peptide Peptide { get; private set; }
             public IsotopeLabelType IsotopeLabelType { get; private set; }
             public int? MsLevel { get; private set; }
+            public IDictionary<Replicate, ReplicateRow> RunAbundances { get; private set; }
+
+        }
+
+        public class FoldChangeRow : AbstractFoldChangeRow
+        {
+            public FoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide, IsotopeLabelType labelType,
+                int? msLevel, GroupIdentifier group, int replicateCount, FoldChangeResult foldChangeResult, IDictionary<Replicate, ReplicateRow> replicateResults)
+                :base(protein, peptide, labelType, msLevel, replicateResults)
+            {
+                ReplicateCount = replicateCount;
+                FoldChangeResult = foldChangeResult;
+                Group = group;
+            }
+
             public GroupIdentifier Group { get; private set; }
             public int ReplicateCount { get; private set; }
             public FoldChangeResult FoldChangeResult { get; private set; }
-            public IDictionary<Replicate, ReplicateRow> RunAbundances { get; private set; }
+        }
+
+        public class FoldChangeDetailRow : AbstractFoldChangeRow
+        {
+            public FoldChangeDetailRow(Protein protein, Model.Databinding.Entities.Peptide peptide,
+                IsotopeLabelType labelType,
+                int? msLevel, Dictionary<GroupIdentifier, FoldChangeResult> foldChangeResults,
+                IDictionary<Replicate, ReplicateRow> replicateResult) : base(protein, peptide, labelType, msLevel, replicateResult)
+            {
+                FoldChangeResults = foldChangeResults;
+            }
+
+            public IDictionary<GroupIdentifier, FoldChangeResult> FoldChangeResults { get; private set; }
         }
 
         public class ReplicateRow
         {
-            public ReplicateRow(Replicate replicate, bool inControlGroup, String identity, double? abundance)
+            public ReplicateRow(Replicate replicate, GroupIdentifier groupIdentifier, String identity, double? abundance)
             {
                 Replicate = replicate;
-                InControlGroup = inControlGroup;
+                GroupIdentifier = groupIdentifier;
                 ReplicateIdentity = identity;
                 Abundance = abundance;
             }
             public Replicate Replicate { get; private set; }
             public double? Abundance { get; private set; }
             public String ReplicateIdentity { get; private set; }
-            public bool InControlGroup { get; private set; }
+            public GroupIdentifier GroupIdentifier { get; private set; }
         }
     }
 }

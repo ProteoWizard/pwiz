@@ -30,10 +30,10 @@
         {
             this.components = new System.ComponentModel.Container();
             this.splitContainerVertical = new System.Windows.Forms.SplitContainer();
-            this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.splitContainerHorizontal = new System.Windows.Forms.SplitContainer();
             this.columnDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.zedGraphControl1 = new ZedGraph.ZedGraphControl();
+            this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).BeginInit();
             this.splitContainerVertical.Panel1.SuspendLayout();
@@ -61,18 +61,7 @@
             this.splitContainerVertical.Size = new System.Drawing.Size(800, 450);
             this.splitContainerVertical.SplitterDistance = 600;
             this.splitContainerVertical.TabIndex = 0;
-            // 
-            // rowDendrogram
-            // 
-            this.rowDendrogram.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.rowDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Right;
-            this.rowDendrogram.Location = new System.Drawing.Point(3, 180);
-            this.rowDendrogram.Name = "rowDendrogram";
-            this.rowDendrogram.RectilinearLines = true;
-            this.rowDendrogram.Size = new System.Drawing.Size(190, 270);
-            this.rowDendrogram.TabIndex = 0;
+            this.splitContainerVertical.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainerVertical_SplitterMoved);
             // 
             // splitContainerHorizontal
             // 
@@ -118,6 +107,18 @@
             this.zedGraphControl1.TabIndex = 0;
             this.zedGraphControl1.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.zedGraphControl1_ZoomEvent);
             this.zedGraphControl1.Resize += new System.EventHandler(this.zedGraphControl1_Resize);
+            // 
+            // rowDendrogram
+            // 
+            this.rowDendrogram.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.rowDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Right;
+            this.rowDendrogram.Location = new System.Drawing.Point(3, 180);
+            this.rowDendrogram.Name = "rowDendrogram";
+            this.rowDendrogram.RectilinearLines = true;
+            this.rowDendrogram.Size = new System.Drawing.Size(190, 270);
+            this.rowDendrogram.TabIndex = 0;
             // 
             // HierarchicalClusterGraph
             // 

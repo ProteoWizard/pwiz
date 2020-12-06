@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
@@ -71,7 +74,6 @@ namespace pwiz.Skyline.Controls.Clustering
                 splitContainerHorizontal.Panel1Collapsed = true;
                 return;
             }
-
             var datas = new List<DendrogramControl.DendrogramFormat>();
             double xStart = .5;
             foreach (var group in GraphResults.ColumnGroups)
@@ -99,7 +101,7 @@ namespace pwiz.Skyline.Controls.Clustering
             UpdateColumnDendrograms();
             int rowDendrogramTop =
                 splitContainerHorizontal.Panel1Collapsed ? 0 : splitContainerHorizontal.Panel1.Height;
-            rowDendrogram.Bounds = new Rectangle(0, rowDendrogramTop, splitContainerVertical.Panel1.Width, splitContainerVertical.Panel1.Height - rowDendrogramTop);
+            rowDendrogram.Bounds = new Rectangle(0, rowDendrogramTop, splitContainerVertical.Panel2.Width, splitContainerVertical.Panel2.Height - rowDendrogramTop);
             if (GraphResults.RowDendrogramData == null)
             {
                 splitContainerVertical.Panel1Collapsed = true;
@@ -124,15 +126,9 @@ namespace pwiz.Skyline.Controls.Clustering
                     new DendrogramControl.DendrogramFormat(GraphResults.RowDendrogramData, rowLocations, colors)
                 });
             }
-
         }
 
         private void zedGraphControl1_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, System.Drawing.PointF mousePosition)
-        {
-            UpdateDendrograms();
-        }
-
-        private void zedGraphControl1_Resize(object sender, EventArgs e)
         {
             UpdateDendrograms();
         }
@@ -141,6 +137,17 @@ namespace pwiz.Skyline.Controls.Clustering
         {
             public string Caption { get; private set; }
             public ImmutableList<Color> Colors { get; private set; }
+        }
+
+        private void splitContainerVertical_SplitterMoved(object sender, SplitterEventArgs e)
+        {
+            UpdateDendrograms();
+        }
+
+        private void zedGraphControl1_Resize(object sender, EventArgs e)
+        {
+            zedGraphControl1.GraphPane.Draw(zedGraphControl1.CreateGraphics());
+            UpdateDendrograms();
         }
     }
 }
