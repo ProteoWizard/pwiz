@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private EventTaskScheduler _taskScheduler;
         private BindingListSource _bindingListSource;
         private SkylineDataSchema _skylineDataSchema;
+        public const string CLUSTERED_VIEW_NAME = "Clustered";
 
 
         public FoldChangeBindingSource(GroupComparisonModel groupComparisonModel)
@@ -124,27 +125,41 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     foreach (var runAbundance in resultRow.RunAbundances)
                     {
                         Replicate replicate = new Replicate(_skylineDataSchema, runAbundance.ReplicateIndex);
-                        runAbundances.Add(replicate, new ReplicateRow(replicate, Math.Pow(2, runAbundance.Log2Abundance)));
+                        runAbundances.Add(replicate, new ReplicateRow(replicate, runAbundance.Control, runAbundance.BioReplicate, Math.Pow(2, runAbundance.Log2Abundance)));
                     }
                     rows.Add(new FoldChangeRow(protein, peptide, resultRow.Selector.LabelType,
                         resultRow.Selector.MsLevel, resultRow.Selector.GroupIdentifier, resultRow.ReplicateCount, foldChangeResult, runAbundances));
                 }
             }
             var defaultViewSpec = GetDefaultViewSpec(rows);
-            if (!Equals(defaultViewSpec, ViewContext.BuiltInViews.First()))
+            var clusteredViewSpec = GetClusteredViewSpec(defaultViewSpec);
+            var rowSource = new StaticRowSource(rows);
+            ReplaceBuiltInViews(new[]{defaultViewSpec, clusteredViewSpec}, rowSource);
+            _bindingListSource.RowSource = rowSource;
+        }
+
+        public void ReplaceBuiltInViews(IList<ViewSpec> viewSpecs, StaticRowSource rowSource)
+        {
+            if (viewSpecs.SequenceEqual(ViewContext.BuiltInViews))
             {
-                var viewInfo = new ViewInfo(_skylineDataSchema, typeof (FoldChangeRow), defaultViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
-                ViewContext.SetRowSources(new[]
+                return;
+            }
+
+            var viewInfos = viewSpecs.Select(viewSpec =>
+                new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), viewSpec).ChangeViewGroup(ViewGroup.BUILT_IN)).ToList();
+            ViewContext.SetRowSources(new[] {new RowSourceInfo(typeof(FoldChangeRow), rowSource, viewInfos)});
+            if (Equals(ViewGroup.BUILT_IN.Id, _bindingListSource.ViewInfo?.ViewGroup?.Id))
+            {
+                for (int iView = 0; iView < viewSpecs.Count; iView++)
                 {
-                    new RowSourceInfo(new StaticRowSource(rows), viewInfo)
-                });
-                if (null != _bindingListSource.ViewSpec && _bindingListSource.ViewSpec.Name == defaultViewSpec.Name &&
-                    !_bindingListSource.ViewSpec.Equals(defaultViewSpec))
-                {
-                    _bindingListSource.SetView(viewInfo, new StaticRowSource(rows));
+                    var viewSpec = viewSpecs[iView];
+                    if (_bindingListSource.ViewSpec.Name == viewSpec.Name &&
+                        !viewSpec.Equals(_bindingListSource.ViewSpec))
+                    {
+                        _bindingListSource.SetView(viewInfos[iView], rowSource);
+                    }
                 }
             }
-            _bindingListSource.RowSource = new StaticRowSource(rows);
         }
 
         private ViewSpec GetDefaultViewSpec(IList<FoldChangeRow> foldChangeRows)
@@ -199,6 +214,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return viewSpec;
         }
 
+        private ViewSpec GetClusteredViewSpec(ViewSpec defaultViewSpec)
+        {
+            var clusteredViewSpec = defaultViewSpec.SetName(CLUSTERED_VIEW_NAME);
+            PropertyPath ppRunAbundance = PropertyPath.Root.Property(nameof(FoldChangeRow.RunAbundances)).DictionaryValues();
+            var columnsToAdd = new List<PropertyPath>();
+            if (!string.IsNullOrEmpty(GroupComparisonModel.GroupComparisonDef.IdentityAnnotation))
+            {
+                columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.ReplicateIdentity)));
+            }
+            columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.InControlGroup)));
+            columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.Abundance)));
+
+            clusteredViewSpec = clusteredViewSpec.SetColumns(clusteredViewSpec.Columns.Concat(
+                columnsToAdd.Select(col=>new ColumnSpec(col))));
+            return clusteredViewSpec;
+        }
+
         public void Release()
         {
             if (Interlocked.Decrement(ref _referenceCount) == 0)
@@ -246,13 +278,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public class ReplicateRow
         {
-            public ReplicateRow(Replicate replicate, double? abundance)
+            public ReplicateRow(Replicate replicate, bool inControlGroup, String identity, double? abundance)
             {
                 Replicate = replicate;
+                InControlGroup = inControlGroup;
+                ReplicateIdentity = identity;
                 Abundance = abundance;
             }
             public Replicate Replicate { get; private set; }
             public double? Abundance { get; private set; }
+            public String ReplicateIdentity { get; private set; }
+            public bool InControlGroup { get; private set; }
         }
     }
 }
