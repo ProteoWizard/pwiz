@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
@@ -40,20 +41,21 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(()=>documentGrid.BindingListSource.ClusteringSpec = ClusteringSpec.DEFAULT);
             WaitForCondition(() => documentGrid.IsComplete);
-            var expectedRowLabels = documentGrid.BindingListSource.OfType<RowItem>().Select(row =>
+            List<string> expectedRowLabels = documentGrid.BindingListSource.OfType<RowItem>().Select(row =>
                 documentGrid.BindingListSource.ItemProperties[0].GetValue(row)?.ToString() ?? string.Empty).ToList();
-            CollectionAssert.AreEqual(expectedRowLabels, heatMapResults.RowHeaders.Select(header=>header.Colors).ToList());
-            var expectedColumnLabels = documentGrid.BindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>()
+            List<string> actualRowLabels = heatMapResults.RowHeaders.Select(header => header.Caption).ToList();
+            CollectionAssert.AreEqual(expectedRowLabels, actualRowLabels);
+            List<string> expectedColumnLabels = documentGrid.BindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>()
                 .Where(c => c.PropertyPath.Name == "NormalizedArea").Select(col =>
                     col.PivotedColumnId.PivotKeyCaption.GetCaption(SkylineDataSchema.GetLocalizedSchemaLocalizer())).ToList();
-            var actualColumnLabels = heatMapResults.ColumnGroups.First().Headers.Select(header=>header.Caption);
-            CollectionAssert.AreEqual(expectedColumnLabels, actualColumnLabels.ToList());
+            List<string> actualColumnLabels = heatMapResults.ColumnGroups.First().Headers.Select(header=>header.Caption).ToList();
+            CollectionAssert.AreEqual(expectedColumnLabels, actualColumnLabels);
 
             RunUI(()=>documentGrid.ChooseView("ThreeColumnGroups"));
             WaitForCondition(() => documentGrid.IsComplete);
             heatMap = ShowDialog<HierarchicalClusterGraph>(()=>documentGrid.DataboundGridControl.ShowHeatMap());
             PauseForScreenShot("Heat map with three column groups");
-            Assert.AreEqual(3, heatMap.GraphResults.ColumnGroups.Count);
+            Assert.AreEqual(6, heatMap.GraphResults.ColumnGroups.Count);
             OkDialog(heatMap, heatMap.Close);
         }
     }
