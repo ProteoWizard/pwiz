@@ -23,7 +23,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using NHibernate.Loader;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
 using pwiz.Common.DataAnalysis.Clustering;
@@ -31,7 +30,6 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
@@ -68,15 +66,22 @@ namespace pwiz.Skyline.Controls.Databinding
                 if (null != BindingListSource)
                 {
                     BindingListSource.DataError -= bindingListSource_DataError;
+                    BindingListSource.AllRowsChanged -= BindingListSource_OnAllRowsChanged;
                 }
                 bindingListSource = value;
                 if (null != BindingListSource)
                 {
                     BindingListSource.DataError += bindingListSource_DataError;
+                    BindingListSource.AllRowsChanged += BindingListSource_OnAllRowsChanged;
                 }
                 NavBar.BindingListSource = bindingListSource;
                 boundDataGridView.DataSource = bindingListSource;
             }
+        }
+
+        private void BindingListSource_OnAllRowsChanged(object sender, EventArgs e)
+        {
+            UpdateDendrograms();
         }
 
         /// <summary>

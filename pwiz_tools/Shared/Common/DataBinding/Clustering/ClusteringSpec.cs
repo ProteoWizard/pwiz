@@ -299,7 +299,7 @@ namespace pwiz.Common.DataBinding.Clustering
                     }
                     else
                     {
-                        var transform = ZScores.IsNumericType(series.PropertyType)
+                        var transform = ClusterRole.IsNumericType(series.PropertyType)
                             ? ClusterRole.ZSCORE
                             : ClusterRole.BOOLEAN;
                         values.Add(new ValueSpec(columnRef, transform));
@@ -325,9 +325,7 @@ namespace pwiz.Common.DataBinding.Clustering
                     while (propertyEnumerator.MoveNext())
                     {
                         var propertyDescriptor = propertyEnumerator.Current;
-                        // ReSharper disable PossibleNullReferenceException
-                        if (!ZScores.IsNumericType(propertyDescriptor.PropertyType))
-                            // ReSharper restore PossibleNullReferenceException
+                        if (!ClusterRole.IsNumericType(propertyDescriptor?.PropertyType))
                         {
                             continue;
                         }

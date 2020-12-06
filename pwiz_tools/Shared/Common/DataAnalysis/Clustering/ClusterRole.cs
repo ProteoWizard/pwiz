@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.Statistics;
 
 namespace pwiz.Common.DataAnalysis.Clustering
 {
@@ -86,7 +87,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
             public override bool CanHandleDataType(Type type)
             {
-                return ZScores.IsNumericType(type);
+                return IsNumericType(type);
             }
 
             protected double? TransformValue(double? value)
@@ -101,7 +102,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
             public override IEnumerable<double?> TransformRow(IEnumerable<object> values)
             {
-                return values.Select(value => TransformValue(ZScores.ToDouble(value)));
+                return values.Select(value => TransformValue(ToDouble(value)));
             }
         }
 
@@ -118,6 +119,31 @@ namespace pwiz.Common.DataAnalysis.Clustering
             }
         }
 
+        public static bool IsNumericType(Type type)
+        {
+            return type == typeof(double) || type == typeof(double?) || type == typeof(float) || type == typeof(float?);
+        }
+
+        public static double? ToDouble(object value)
+        {
+            if (value is double doubleValue)
+            {
+                return doubleValue;
+            }
+
+            if (value is float floatValue)
+            {
+                return floatValue;
+            }
+
+            return null;
+        }
+
+        public static bool IsValidDouble(double? value)
+        {
+            return value.HasValue && !double.IsNaN(value.Value) && !double.IsInfinity(value.Value);
+        }
+
         private class ZScore : Transform
         {
             public ZScore() : base("zscore", () => "Z-Score", 0)
@@ -127,8 +153,23 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
             public override IEnumerable<double?> TransformRow(IEnumerable<object> values)
             {
-                return ZScores.CalculateZScores(values);
+                var doubleValuesList = values.Select(ToDouble).ToList();
+                var validValues = doubleValuesList.Where(IsValidDouble).ToList();
+                double stdDev = 0;
+                if (validValues.Count > 1)
+                {
+                    stdDev = validValues.StandardDeviation();
+                }
+                if (stdDev == 0)
+                {
+                    return doubleValuesList.Select(val => val.HasValue ? (double?)0 : null);
+                }
+
+                var mean = validValues.Mean();
+                return doubleValuesList.Select(val => val.HasValue ? (double?)(val.Value - mean) / stdDev : null);
             }
         }
+
     }
+
 }

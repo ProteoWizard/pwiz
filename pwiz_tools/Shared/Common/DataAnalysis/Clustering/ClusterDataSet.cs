@@ -67,7 +67,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
             {
                 var newLabelList = ImmutableList.ValueOf(newLabels);
                 newDataFrameGroups.Add(ImmutableList.ValueOf(DataFrameGroups[newDataFrameGroups.Count].Select(frame =>
-                    new ClusterDataSet<TNewRow, TNewColumn>.DataFrame(newLabelList, frame.DataColumns, frame.Transform))));
+                    new ClusterDataSet<TNewRow, TNewColumn>.DataFrame(newLabelList, frame.DataColumns))));
             }
 
             return new ClusterDataSet<TNewRow, TNewColumn>(newRowLabels, newDataFrameGroups);
@@ -75,7 +75,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
         public class DataFrame
         {
-            public DataFrame(IEnumerable<TColumn> columnHeaders, IEnumerable<ImmutableList<double?>> dataColumns, ClusterRole.Transform valueTransform)
+            public DataFrame(IEnumerable<TColumn> columnHeaders, IEnumerable<ImmutableList<double>> dataColumns)
             {
                 ColumnHeaders = ImmutableList.ValueOf(columnHeaders);
                 DataColumns = ImmutableList.ValueOf(dataColumns);
@@ -91,18 +91,12 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 {
                     throw new ArgumentException(@"All data columns must have the same number of rows", nameof(dataColumns));
                 }
-
-                Transform = valueTransform;
             }
 
             public ClusterRole.Transform Transform { get; private set; }
 
-            public IEnumerable<double?> GetZScores(int iRow)
-            {
-                return ZScores.CalculateZScores(DataColumns.Select(col => col[iRow]));
-            }
             public ImmutableList<TColumn> ColumnHeaders { get; private set; }
-            public ImmutableList<ImmutableList<double?>> DataColumns { get; private set; }
+            public ImmutableList<ImmutableList<double>> DataColumns { get; private set; }
             public int RowCount
             {
                 get { return DataColumns[0].Count; }
@@ -110,13 +104,13 @@ namespace pwiz.Common.DataAnalysis.Clustering
 
             public DataFrame ReorderRows(IList<int> newOrdering)
             {
-                return new DataFrame(ColumnHeaders, DataColumns.Select(col=>ImmutableList.ValueOf(Reorder(col, newOrdering))), Transform);
+                return new DataFrame(ColumnHeaders, DataColumns.Select(col=>ImmutableList.ValueOf(Reorder(col, newOrdering))));
             }
 
             public DataFrame ReorderColumns(IList<int> newOrdering)
             {
                 return new DataFrame(ImmutableList.ValueOf(Reorder(ColumnHeaders, newOrdering)),
-                    Reorder(DataColumns, newOrdering), Transform);
+                    Reorder(DataColumns, newOrdering));
             }
         }
 
@@ -129,13 +123,9 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 int iCol = 0;
                 foreach (var dataFrame in DataFrames)
                 {
-                    foreach (var zScore in dataFrame.GetZScores(iRow))
+                    foreach (var dataColumn in dataFrame.DataColumns)
                     {
-                        if (zScore.HasValue)
-                        {
-                            rowDataSet[iRow, iCol] = zScore.Value;
-                        }
-
+                        rowDataSet[iRow, iCol] = dataColumn[iRow];
                         iCol++;
                     }
                 }
@@ -143,12 +133,16 @@ namespace pwiz.Common.DataAnalysis.Clustering
             alglib.clusterizercreate(out alglib.clusterizerstate s);
             alglib.clusterizersetpoints(s, rowDataSet, DistanceMetric.AlgLibValue);
             alglib.clusterizerrunahc(s, out alglib.ahcreport rep);
+            if (rep.p.Length == 0)
+            {
+                return new Results(this, null, null);
+            }
             return new Results(ReorderRows(rep.p), new DendrogramData(rep.pz, rep.mergedist), null);
         }
 
         private Tuple<ImmutableList<DataFrame>, DendrogramData> ClusterDataFrameGroup(ImmutableList<DataFrame> group)
         {
-            if (group[0].ColumnHeaders.Count <= 1)
+            if (group.Count == 0 || group[0].ColumnHeaders.Count <= 1)
             {
                 return Tuple.Create(group, (DendrogramData) null);
             }
@@ -159,15 +153,10 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 for (int iFrame = 0; iFrame < group.Count; iFrame++)
                 {
                     var frame = group[iFrame];
-                    var zScores = frame.GetZScores(iRow).ToList();
                     int y = iRow * group.Count + iFrame;
-                    for (int x = 0; x < zScores.Count; x++)
+                    for (int x = 0; x < frame.DataColumns.Count; x++)
                     {
-                        var zScore = zScores[x];
-                        if (zScore.HasValue)
-                        {
-                            points[x, y] = zScore.Value;
-                        }
+                        points[x, y] = frame.DataColumns[x][iRow];
                     }
                 }
             }

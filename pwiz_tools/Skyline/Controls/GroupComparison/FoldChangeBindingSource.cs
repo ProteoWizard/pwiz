@@ -252,8 +252,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var clusteredViewSpec = defaultViewSpec.SetName(CLUSTERED_VIEW_NAME).SetRowType(typeof(FoldChangeDetailRow));
 
             PropertyPath ppRunAbundance = PropertyPath.Root.Property(nameof(FoldChangeDetailRow.RunAbundances)).DictionaryValues();
+            PropertyPath ppFoldChange = PropertyPath.Root.Property(nameof(FoldChangeDetailRow.FoldChangeResults))
+                .DictionaryValues();
             var columnsToAdd = new List<PropertyPath>();
             var columnPrefixToRemove = PropertyPath.Root.Property(nameof(FoldChangeRow.FoldChangeResult));
+            columnsToAdd.Add(ppFoldChange);
+            columnsToAdd.Add(ppFoldChange.Property(nameof(FoldChangeResult.AdjustedPValue)));
             if (!string.IsNullOrEmpty(GroupComparisonModel.GroupComparisonDef.IdentityAnnotation))
             {
                 columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.ReplicateIdentity)));

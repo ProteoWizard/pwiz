@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.DataAnalysis.Clustering;
@@ -16,7 +15,7 @@ namespace pwiz.Common.Colors
         {
             double minValue = MinValue;
             double maxValue = MaxValue;
-            foreach (var value in values.OfType<object>().Select(ZScores.ToDouble).OfType<double>())
+            foreach (var value in values.OfType<object>().Select(ToDouble).OfType<double>())
             {
                 minValue = Math.Min(minValue, value);
                 maxValue = Math.Max(maxValue, value);
@@ -57,7 +56,7 @@ namespace pwiz.Common.Colors
 
         public static double? ToDouble(object value)
         {
-            return ZScores.ToDouble(value);
+            return ClusterRole.ToDouble(value);
         }
     }
 }

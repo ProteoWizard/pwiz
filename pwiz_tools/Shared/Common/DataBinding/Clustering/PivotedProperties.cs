@@ -130,7 +130,12 @@ namespace pwiz.Common.DataBinding.Clustering
             for (int iGroup = 0; iGroup < newPivotOrders.Count; iGroup++)
             {
                 var pivotOrder = newPivotOrders[iGroup];
-                newGroups.Add(SeriesGroups[iGroup].ReorderPivotKeys(pivotOrder));
+                var newGroup = SeriesGroups[iGroup];
+                if (pivotOrder != null)
+                {
+                    newGroup = newGroup.ReorderPivotKeys(pivotOrder);
+                }
+                newGroups.Add(newGroup);
             }
             return new PivotedProperties(ItemProperties, newGroups);
         }

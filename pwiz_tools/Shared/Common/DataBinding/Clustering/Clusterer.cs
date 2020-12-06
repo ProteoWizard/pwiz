@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
@@ -22,13 +23,20 @@ namespace pwiz.Common.DataBinding.Clustering
 
         public ClusterDataSet<RowItem, int>.DataFrame MakeDataFrame(PivotedProperties.Series series, ClusterRole.Transform clusterValueTransform)
         {
-            var columnDatas = new List<ImmutableList<double?>>();
-            foreach (var propertyDescriptor in series.PropertyIndexes.Select(i => ItemProperties[i]))
+            var rows = new List<List<double>>();
+            var propertyDescriptors = series.PropertyIndexes.Select(i => ItemProperties[i]).ToList();
+            foreach (var rowItem in RowItems)
             {
-                var values = RowItems.Select(rowItem => ZScores.ToDouble(propertyDescriptor.GetValue(rowItem)));
-                columnDatas.Add(ImmutableList.ValueOf(values));
+                var rawValues = propertyDescriptors.Select(pd => pd.GetValue(rowItem)).ToList();
+                rows.Add(clusterValueTransform.TransformRow(rawValues).Select(value=>value??clusterValueTransform.ValueForNull).ToList());
+
             }
-            return new ClusterDataSet<RowItem, int>.DataFrame(Enumerable.Range(0, columnDatas.Count), columnDatas, clusterValueTransform);
+            var columnDatas = new List<ImmutableList<double>>();
+            for (int i =0; i  < series.PropertyIndexes.Count; i++)
+            {
+                columnDatas.Add(ImmutableList.ValueOf(rows.Select(row=>row[i]).ToList()));
+            }
+            return new ClusterDataSet<RowItem, int>.DataFrame(Enumerable.Range(0, columnDatas.Count), columnDatas);
         }
 
         public IEnumerable<ClusterDataSet<RowItem, int>.DataFrame> MakeDataFrames(IEnumerable<PivotedProperties.Series> seriesList)
@@ -41,6 +49,22 @@ namespace pwiz.Common.DataBinding.Clustering
                     continue;
                 }
                 yield return MakeDataFrame(series, transform);
+            }
+        }
+
+        public IEnumerable<ClusterDataSet<RowItem, int>.DataFrame> MakeRowDataFrames()
+        {
+            foreach (var pd in Properties.PivotedProperties.UngroupedProperties)
+            {
+                var transform = Properties.GetRowTransform(pd);
+                if (transform != null)
+                {
+                    var rawValues = RowItems.Select(pd.GetValue);
+                    var transformedValues = rawValues.Select(value =>
+                        transform.TransformRow(new[] {value}).FirstOrDefault() ?? transform.ValueForNull);
+                    var dataColumn = ImmutableList.ValueOf(transformedValues);
+                    yield return new ClusterDataSet<RowItem, int>.DataFrame(new []{0}, new []{dataColumn});
+                }
             }
         }
 
@@ -69,45 +93,13 @@ namespace pwiz.Common.DataBinding.Clustering
 
         private ClusterDataSet<RowItem, int>.Results GetClusterDataSetResults()
         {
-            var clusterDataSet = new ClusterDataSet<RowItem, int>(RowItems,
-                Properties.PivotedProperties.SeriesGroups.Select(group => ImmutableList.ValueOf(MakeDataFrames(group.SeriesList))));
-            return clusterDataSet.PerformClustering(RowHeaderLevels.Any());
-        }
-
-        public ClusterDataSet<IColumnCaption, IColumnCaption>.Results GetCaptionedClusterDataSetResults()
-        {
-            var rawResults = GetClusterDataSetResults();
-            if (rawResults == null)
-            {
-                return null;
-            }
-
-            var rowItems = rawResults.DataSet.RowLabels;
-
-            var newRowLabels = rowItems.Select(rowItem =>
-                (IColumnCaption) CaptionComponentList.SpaceSeparate(RowHeaderLevels.Select(pd => pd.GetValue(rowItem))));
-            var newColumnLabels = new List<ImmutableList<IColumnCaption>>();
-            foreach (var seriesGroup in Properties.PivotedProperties.SeriesGroups)
-            {
-                var columnHeaders = seriesGroup.SeriesList
-                    .Where(series => Properties.GetColumnRole(series) == ClusterRole.COLUMNHEADER);
-                ImmutableList<IColumnCaption> captions;
-                var parts = columnHeaders.Select(part => GetColumnHeaderLevel(rowItems, part)).ToList();
-                if (parts.Any())
-                {
-                    captions = ImmutableList.ValueOf(Enumerable.Range(0, parts[0].ValueCount)
-                        .Select(i => CaptionComponentList.SpaceSeparate(parts.Select(part => part.Values[i])))
-                        .Cast<IColumnCaption>());
-                }
-                else
-                {
-                    captions = ImmutableList.ValueOf(GetDefaultColumnHeader(rowItems, seriesGroup).Values
-                        .Cast<IColumnCaption>());
-                }
-                newColumnLabels.Add(captions);
-            }
-
-            return rawResults.ChangeLabels(newRowLabels, newColumnLabels);
+            var rowDataFrames = ImmutableList.ValueOf(MakeRowDataFrames());
+            var dataFrameGroups =
+                Properties.PivotedProperties.SeriesGroups.Select(group =>
+                    ImmutableList.ValueOf(MakeDataFrames(group.SeriesList)));
+            dataFrameGroups = dataFrameGroups.Prepend(rowDataFrames);
+            var clusterDataSet = new ClusterDataSet<RowItem, int>(RowItems, dataFrameGroups);
+            return clusterDataSet.PerformClustering(rowDataFrames.Any() || RowHeaderLevels.Any());
         }
 
         public ClusteredReportResults GetClusteredResults()
@@ -125,13 +117,14 @@ namespace pwiz.Common.DataBinding.Clustering
             }
 
             List<CaptionedDendrogramData> columnDendrograms = new List<CaptionedDendrogramData>();
-            for (int iGroup = 0; iGroup < Properties.PivotedProperties.SeriesGroups.Count; iGroup++)
+            int iResultGroup = 1;
+            Debug.Assert(iResultGroup + Properties.PivotedProperties.SeriesGroups.Count == clusterResults.DataSet.DataFrameGroups.Count);
+            foreach (var group in Properties.PivotedProperties.SeriesGroups)
             {
-                var columnDendrogramData = clusterResults.ColumnGroupDendrograms[iGroup];
+                var columnDendrogramData = clusterResults.ColumnGroupDendrograms[iResultGroup];
                 CaptionedDendrogramData captionedDendrogramData = null;
                 if (columnDendrogramData != null)
                 {
-                    var group = Properties.PivotedProperties.SeriesGroups[iGroup];
                     var captionLevels = new List<CaptionedValues>();
                     foreach (var headerLevel in Properties.GetColumnHeaders(group))
                     {
@@ -145,6 +138,7 @@ namespace pwiz.Common.DataBinding.Clustering
                     captionedDendrogramData = new CaptionedDendrogramData(columnDendrogramData, captionLevels);
                 }
                 columnDendrograms.Add(captionedDendrogramData);
+                iResultGroup++;
             }
 
             if (columnDendrograms.All(v => null == v))
@@ -152,7 +146,8 @@ namespace pwiz.Common.DataBinding.Clustering
                 columnDendrograms = null;
             }
             var pivotedProperties = Properties.PivotedProperties.ReorderPivots(clusterResults.DataSet.DataFrameGroups
-                .Select(group => group[0].ColumnHeaders).Cast<IList<int>>().ToList());
+                .Skip(1)
+                .Select(group => group.FirstOrDefault()?.ColumnHeaders).Cast<IList<int>>().ToList());
             pivotedProperties = pivotedProperties.ReorderItemProperties();
             return new ClusteredReportResults(clusterResults.DataSet.RowLabels, Properties.ReplacePivotedProperties(pivotedProperties), rowDendrogramData, columnDendrograms);
         }

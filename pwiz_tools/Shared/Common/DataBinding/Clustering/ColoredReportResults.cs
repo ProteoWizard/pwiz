@@ -58,7 +58,7 @@ namespace pwiz.Common.DataBinding.Clustering
             var columnHeaderValues = new Dictionary<string, object>();
             foreach (var property in reportResults.ClusteredProperties.RowHeaders)
             {
-                if (ZScores.IsNumericType(property.PropertyType))
+                if (ClusterRole.IsNumericType(property.PropertyType))
                 {
                     var colorScheme = new NumericColorScheme();
                     colorScheme.AddValues(reportResults.RowItems.Select(row => property.GetValue(row)));
@@ -105,7 +105,7 @@ namespace pwiz.Common.DataBinding.Clustering
                             }
                             values.UnionWith(columnDistinctValues);
                         }
-                        if (ZScores.IsNumericType(series.PropertyType))
+                        if (ClusterRole.IsNumericType(series.PropertyType))
                         {
                             colorScheme = new NumericColorScheme();
                             colorScheme.AddValues(values);

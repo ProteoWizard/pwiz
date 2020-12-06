@@ -42,19 +42,18 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => documentGrid.IsComplete);
             var expectedRowLabels = documentGrid.BindingListSource.OfType<RowItem>().Select(row =>
                 documentGrid.BindingListSource.ItemProperties[0].GetValue(row)?.ToString() ?? string.Empty).ToList();
-            expectedRowLabels.Reverse();
-            CollectionAssert.AreEqual(expectedRowLabels, heatMapResults.DataSet.RowLabels.ToList());
+            CollectionAssert.AreEqual(expectedRowLabels, heatMapResults.RowHeaders.Select(header=>header.Colors).ToList());
             var expectedColumnLabels = documentGrid.BindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>()
                 .Where(c => c.PropertyPath.Name == "NormalizedArea").Select(col =>
                     col.PivotedColumnId.PivotKeyCaption.GetCaption(SkylineDataSchema.GetLocalizedSchemaLocalizer())).ToList();
-            var actualColumnLabels = heatMapResults.DataSet.DataFrameGroups.First().First().ColumnHeaders;
+            var actualColumnLabels = heatMapResults.ColumnGroups.First().Headers.Select(header=>header.Caption);
             CollectionAssert.AreEqual(expectedColumnLabels, actualColumnLabels.ToList());
 
             RunUI(()=>documentGrid.ChooseView("ThreeColumnGroups"));
             WaitForCondition(() => documentGrid.IsComplete);
             heatMap = ShowDialog<HierarchicalClusterGraph>(()=>documentGrid.DataboundGridControl.ShowHeatMap());
             PauseForScreenShot("Heat map with three column groups");
-            Assert.AreEqual(3, heatMap.GraphResults.ColumnGroupDendrograms.Count);
+            Assert.AreEqual(3, heatMap.GraphResults.ColumnGroups.Count);
             OkDialog(heatMap, heatMap.Close);
         }
     }
