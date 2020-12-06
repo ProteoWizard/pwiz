@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.DataAnalysis.Clustering;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Layout;
 
 namespace pwiz.Common.DataBinding.Controls

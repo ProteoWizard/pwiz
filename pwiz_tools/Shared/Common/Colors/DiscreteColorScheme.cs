@@ -22,7 +22,7 @@ namespace pwiz.Common.Colors
         {
             var valueToIndex = new Dictionary<object, int>();
             var valuesByType = values.OfType<object>().Distinct().ToLookup(v => v.GetType());
-            int index = StartingIndex;
+            int index = 1;
             foreach (var grouping in valuesByType.OrderBy(group => group.Count()))
             {
                 foreach (var v in grouping)

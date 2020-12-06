@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 

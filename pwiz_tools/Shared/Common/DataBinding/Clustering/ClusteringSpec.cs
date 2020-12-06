@@ -2,9 +2,10 @@
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 
-namespace pwiz.Common.DataBinding.Layout
+namespace pwiz.Common.DataBinding.Clustering
 {
     public class ClusteringSpec : Immutable
     {

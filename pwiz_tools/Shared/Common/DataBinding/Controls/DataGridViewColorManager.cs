@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -7,7 +6,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Colors;
 using pwiz.Common.DataAnalysis.Clustering;
-using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.DataBinding.Clustering;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -114,75 +113,65 @@ namespace pwiz.Common.DataBinding.Controls
         public void InitializeColorSchemes()
         {
             var bindingListSource = BoundDataGridView?.DataSource as BindingListSource;
-            var reportResults = bindingListSource?.ReportResults;
+            var reportResults = bindingListSource?.ReportResults as ClusteredReportResults;
             if (reportResults == null)
             {
+                _colorManagers = null;
                 return;
             }
-            var clusterSpec = bindingListSource.ClusteringSpec;
-            if (clusterSpec == null)
-            {
-                return;
-            }
-
-            var rolesByColumnRef = clusterSpec.ToValueTransformDictionary();
             var distinctValues = new HashSet<object>();
             var numericValues = new HashSet<double>();
             var colorManagers = new Dictionary<string, ColorManager>();
-            foreach (var property in bindingListSource.ReportResults.PivotedProperties.UngroupedProperties)
+            var columnHeaderValues = new Dictionary<string, object>();
+            foreach (var property in reportResults.ClusteredProperties.RowHeaders)
             {
-                var columnRef = ClusteringSpec.ColumnRef.FromPropertyDescriptor(property);
-                if (columnRef == null || !rolesByColumnRef.TryGetValue(columnRef, out ClusterRole role))
+                if (ZScores.IsNumericType(property.PropertyType))
+                {
+                    var colorScheme = new NumericColorScheme();
+                    colorScheme.Calibrate(reportResults.RowItems.Select(row => property.GetValue(row)));
+                    colorManagers[property.Name] = new ColorManager(colorScheme, new[] {property}, null);
+                }
+                else
+                {
+                    distinctValues.UnionWith(reportResults.RowItems.Select(property.GetValue).Where(v => null != v));
+                    colorManagers[property.Name] = new ColorManager(_discreteColorScheme, new[] { property }, null);
+                }
+            }
+            foreach (var property in reportResults.ClusteredProperties.PivotedProperties.UngroupedProperties)
+            {
+                ColorManager colorManager = null;
+                var transform = reportResults.ClusteredProperties.GetRowTransform(property);
+                if (transform == null)
                 {
                     continue;
                 }
-
-                ColorManager colorManager = null;
-                if (role == ClusterRole.ROWHEADER)
-                {
-                    if (ZScores.IsNumericType(property.PropertyType))
-                    {
-                        var colorScheme = new NumericColorScheme();
-                        colorScheme.Calibrate(reportResults.RowItems.Select(row => property.GetValue(row)));
-                        colorManager = new ColorManager(colorScheme, new[]{property}, null);
-                    }
-                    else
-                    {
-                        distinctValues.UnionWith(reportResults.RowItems.Select(property.GetValue).Where(v => null != v));
-                        colorManager = new ColorManager(_discreteColorScheme, new []{property}, null);
-                    }
-                }
-                else if (role is ClusterRole.Transform transform)
-                {
-                    colorManager = new ColorManager(_numericColorScheme, new []{property}, transform);
-                    numericValues.UnionWith(reportResults.RowItems
-                        .Select(row => transform.TransformRow(new[] {property.GetValue(row)}).First())
-                        .OfType<double>());
-                }
-
-                if (colorManager != null)
-                {
-                    colorManagers.Add(property.Name, colorManager);
-                }
+                colorManagers[property.Name] = new ColorManager(_numericColorScheme, new []{property}, transform);
+                numericValues.UnionWith(reportResults.RowItems
+                    .Select(row => transform.TransformRow(new[] {property.GetValue(row)}).First())
+                    .OfType<double>());
             }
 
             foreach (var group in reportResults.PivotedProperties.SeriesGroups)
             {
                 foreach (var series in group.SeriesList)
                 {
-                    var columnRef = ClusteringSpec.ColumnRef.FromPivotedPropertySeries(series);
-                    if (columnRef == null || !rolesByColumnRef.TryGetValue(columnRef, out ClusterRole role))
-                    {
-                        continue;
-                    }
-
                     var propertyDescriptors = series.PropertyIndexes
                         .Select(index => reportResults.ItemProperties[index]).ToList();
                     IColorScheme colorScheme = null;
+                    var role = reportResults.ClusteredProperties.GetColumnRole(series);
                     if (role == ClusterRole.COLUMNHEADER)
                     {
-                        var values = reportResults.RowItems.SelectMany(row =>
-                            propertyDescriptors.Select(pd => pd.GetValue(row)));
+                        var values = new HashSet<object>();
+                        foreach (var property in propertyDescriptors)
+                        {
+                            var columnDistinctValues = reportResults.RowItems.Select(property.GetValue)
+                                .Where(v => null != v).Distinct().ToList();
+                            if (columnDistinctValues.Count == 1)
+                            {
+                                columnHeaderValues[property.Name] = columnDistinctValues[0];
+                            }
+                            values.UnionWith(columnDistinctValues);
+                        }
                         if (ZScores.IsNumericType(series.PropertyType))
                         {
                             colorScheme = new NumericColorScheme();
@@ -190,7 +179,7 @@ namespace pwiz.Common.DataBinding.Controls
                         }
                         else
                         {
-                            distinctValues.UnionWith(values.Where(v => null != v));
+                            distinctValues.UnionWith(values);
                             colorScheme = _discreteColorScheme;
                         }
                     }
@@ -215,6 +204,30 @@ namespace pwiz.Common.DataBinding.Controls
             _numericColorScheme.Calibrate(numericValues);
             _discreteColorScheme.Calibrate(distinctValues);
             _colorManagers = colorManagers;
+            if (columnHeaderValues.Any())
+            {
+                BoundDataGridView.EnableHeadersVisualStyles = false;
+                foreach (var entry in columnHeaderValues)
+                {
+                    if (!_colorManagers.TryGetValue(entry.Key, out ColorManager colorManager))
+                    {
+                        continue;
+                    }
+                    foreach (var col in BoundDataGridView.Columns.OfType<DataGridViewColumn>()
+                        .Where(col => col.DataPropertyName == entry.Key))
+                    {
+                        var color = colorManager.ColorScheme.GetColor(entry.Value);
+                        if (color.HasValue)
+                        {
+                            col.HeaderCell.Style.BackColor = color.Value;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                BoundDataGridView.EnableHeadersVisualStyles = true;
+            }
         }
 
         class ColorManager

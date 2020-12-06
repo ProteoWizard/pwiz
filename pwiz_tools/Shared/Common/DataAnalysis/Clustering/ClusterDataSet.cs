@@ -18,8 +18,8 @@ namespace pwiz.Common.DataAnalysis.Clustering
         {
             DistanceMetric = ClusterMetricType.EUCLIDEAN;
             RowLabels = ImmutableList.ValueOf(rowLabels);
-            DataFrameGroups = ImmutableList.ValueOf(dataFrameGroups.Where(group=>group.Count > 0));
-            foreach (var group in DataFrameGroups)
+            DataFrameGroups = ImmutableList.ValueOf(dataFrameGroups);
+            foreach (var group in DataFrameGroups.Where(group=>group.Count > 0))
             {
                 var firstGroup = group[0];
                 if (firstGroup.RowCount != RowLabels.Count)

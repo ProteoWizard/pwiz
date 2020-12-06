@@ -93,7 +93,7 @@
     <Compile Include="Colors\ColorPalettes.cs" />
     <Compile Include="Colors\ColorScheme.cs" />
     <Compile Include="Colors\DiscreteColorScheme.cs" />
-    <Compile Include="Colors\ZScoreColorScheme.cs" />
+    <Compile Include="Colors\NumericColorScheme.cs" />
     <Compile Include="Controls\Clustering\DendrogramControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -173,6 +173,9 @@
     <Compile Include="DataBinding\Attributes\HiddenAttribute.cs" />
     <Compile Include="DataBinding\CaptionedValues.cs" />
     <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
+    <Compile Include="DataBinding\Clustering\ClusteredProperties.cs" />
+    <Compile Include="DataBinding\Clustering\ClusteredReportResults.cs" />
+    <Compile Include="DataBinding\Clustering\ClusteringSpec.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
     <Compile Include="DataBinding\ColumnSelector.cs" />
@@ -318,7 +321,6 @@
     <Compile Include="DataBinding\ItemProperties.cs" />
     <Compile Include="DataBinding\IUiModeInfo.cs" />
     <Compile Include="DataBinding\CaptionedDendrogramData.cs" />
-    <Compile Include="DataBinding\Layout\ClusteringSpec.cs" />
     <Compile Include="DataBinding\Layout\RowFilter.cs" />
     <Compile Include="DataBinding\Internal\RowSourceWrapper.cs" />
     <Compile Include="DataBinding\IRowSource.cs" />
@@ -342,7 +344,7 @@
     <Compile Include="DataBinding\RowSources\PropertyChangeSupport.cs" />
     <Compile Include="DataBinding\SerializableViewGroups.cs" />
     <Compile Include="DataBinding\SortableBindingList.cs" />
-    <Compile Include="DataBinding\PivotedProperties.cs" />
+    <Compile Include="DataBinding\Clustering\PivotedProperties.cs" />
     <Compile Include="DataBinding\TotalOperation.cs" />
     <Compile Include="DataBinding\TransformResults.cs" />
     <Compile Include="DataBinding\Layout\ColumnId.cs" />

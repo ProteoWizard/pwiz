@@ -27,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
@@ -678,10 +679,11 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void UpdateDendrograms()
         {
-            var reportResults = BindingListSource.ReportResults;
+            var reportResults = BindingListSource.ReportResults as ClusteredReportResults ??
+                                ClusteredReportResults.EMPTY;
             UpdateColumnDendrograms(reportResults.PivotedProperties,
                 reportResults.ColumnGroupDendrogramDatas?.Select(d => d.DendrogramData).ToList());
-            if (reportResults.RowDendrogramData == null)
+            if (reportResults?.RowDendrogramData == null)
             {
                 splitContainerVertical.Panel1Collapsed = true;
             }

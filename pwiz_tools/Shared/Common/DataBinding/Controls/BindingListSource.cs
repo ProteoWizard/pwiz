@@ -23,6 +23,7 @@ using System.Linq;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
 

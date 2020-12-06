@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-#if DEBUG
 using System.Diagnostics;
-#endif
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
+#if DEBUG
+#endif
 
-namespace pwiz.Common.DataBinding
+namespace pwiz.Common.DataBinding.Clustering
 {
     public class PivotedProperties
     {
