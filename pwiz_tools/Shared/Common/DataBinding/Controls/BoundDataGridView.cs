@@ -19,12 +19,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
-using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
 
@@ -87,6 +88,7 @@ namespace pwiz.Common.DataBinding.Controls
         private void BindingListSourceOnAllRowsChanged(object sender, EventArgs eventArgs)
         {
             Invalidate();
+            UpdateColorScheme();
         }
 
         protected virtual void UpdateColumns()
@@ -100,6 +102,12 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 return;
             }
+            var columnsToHide = new HashSet<string>();
+            var clusteredProperties = (bindingListSource.ReportResults as ClusteredReportResults)?.ClusteredProperties;
+            if (clusteredProperties != null)
+            {
+                columnsToHide.UnionWith(clusteredProperties.GetAllColumnHeaderProperties().Select(p=>p.Name));
+            }
             var newItemProperties = bindingListSource.ItemProperties;
             if (!Equals(newItemProperties, _itemProperties))
             {
@@ -107,20 +115,25 @@ namespace pwiz.Common.DataBinding.Controls
                 for (int i = 0; i < newItemProperties.Count; i++)
                 {
                     var propertyDescriptor = newItemProperties[i];
+                    if (columnsToHide.Contains(propertyDescriptor.Name))
+                    {
+                        continue;
+                    }
                     var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
                     if (null != column)
                     {
                         newColumns.Add(column);
                     }
                 }
-				if (newColumns.Count > 0)
-				{
-					Columns.Clear();
-					AddColumns(newColumns.ToArray());
-				}
-				_itemProperties = newItemProperties;
+                if (newColumns.Count > 0)
+                {
+                    Columns.Clear();
+                    AddColumns(newColumns.ToArray());
+                }
+                _itemProperties = newItemProperties;
             }
             UpdateColumnFormats(false);
+            UpdateColorScheme();
         }
 
         protected override void OnCellContentClick(DataGridViewCellEventArgs e)
@@ -280,5 +293,65 @@ namespace pwiz.Common.DataBinding.Controls
             }
             base.OnCellErrorTextNeeded(e);
         }
+
+        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
+        {
+            base.OnCellFormatting(e);
+            if (ReportColorScheme == null)
+            {
+                return;
+            }
+
+            if (e.ColumnIndex < 0 || e.ColumnIndex >= ColumnCount)
+            {
+                return;
+            }
+            var reportResults = (DataSource as BindingListSource)?.ReportResults;
+            if (reportResults == null)
+            {
+                return;
+            }
+
+            if (e.RowIndex < 0 || e.RowIndex >= reportResults.RowCount)
+            {
+                return;
+            }
+
+            var column = Columns[e.ColumnIndex];
+            if (column == null)
+            {
+                return;
+            }
+            var propertyDescriptor = reportResults.ItemProperties.FindByName(Columns[e.ColumnIndex].DataPropertyName);
+            if (propertyDescriptor == null)
+            {
+                return;
+            }
+
+            var color = ReportColorScheme.GetColor(propertyDescriptor, reportResults.RowItems[e.RowIndex]);
+            if (color.HasValue)
+            {
+                e.CellStyle.BackColor = color.Value;
+                if (color.Value.R + color.Value.G + color.Value.B < 128 * 3)
+                {
+                    e.CellStyle.ForeColor = Color.White;
+                }
+            }
+        }
+
+        public void UpdateColorScheme()
+        {
+            var reportResults = (DataSource as BindingListSource)?.ReportResults as ClusteredReportResults;
+            if (reportResults == null)
+            {
+                ReportColorScheme = null;
+            }
+            else
+            {
+                ReportColorScheme = ReportColorScheme.FromClusteredResults(reportResults);
+            }
+        }
+
+        public ReportColorScheme ReportColorScheme { get; set; }
     }
 }

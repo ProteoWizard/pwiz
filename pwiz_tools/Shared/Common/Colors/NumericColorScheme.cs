@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.DataAnalysis.Clustering;
@@ -8,21 +9,24 @@ namespace pwiz.Common.Colors
 {
     public class NumericColorScheme : IColorScheme
     {
+        public NumericColorScheme()
+        {
+        }
         public double MaxValue { get; set; }
         public double MinValue { get; set; }
 
-        public void Calibrate(IEnumerable values)
+        public void  Recalibrate(IEnumerable values)
         {
-            double maxValue = 0;
             double minValue = 0;
-            foreach (var value in values.OfType<object>().Select(ToDouble).OfType<double>())
+            double maxValue = 0;
+            foreach (var value in values.OfType<object>().Select(ZScores.ToDouble).OfType<double>())
             {
-                maxValue = Math.Max(value, maxValue);
-                minValue = Math.Min(value, minValue);
+                minValue = Math.Min(minValue, value);
+                maxValue = Math.Max(maxValue, value);
             }
 
-            MaxValue = maxValue;
             MinValue = minValue;
+            MaxValue = maxValue;
         }
 
         public Color? GetColor(object value)

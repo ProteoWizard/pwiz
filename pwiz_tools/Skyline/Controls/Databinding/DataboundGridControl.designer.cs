@@ -53,7 +53,6 @@
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
-            this.databoundColorManager1 = new pwiz.Common.DataBinding.Controls.DataboundColorManager();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).BeginInit();
             this.splitContainerVertical.Panel1.SuspendLayout();
@@ -251,10 +250,6 @@
             this.navBar.Name = "navBar";
             this.navBar.ShowViewsButton = true;
             // 
-            // databoundColorManager1
-            // 
-            this.databoundColorManager1.BoundDataGridView = this.boundDataGridView;
-            // 
             // DataboundGridControl
             // 
             resources.ApplyResources(this, "$this");
@@ -300,6 +295,5 @@
         private Common.Controls.Clustering.DendrogramControl rowDendrogram;
         private System.Windows.Forms.SplitContainer splitContainerHorizontal;
         private Common.Controls.Clustering.DendrogramControl columnDendrogram;
-        private Common.DataBinding.Controls.DataboundColorManager databoundColorManager1;
     }
 }

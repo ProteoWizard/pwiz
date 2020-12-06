@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
 
@@ -18,6 +20,8 @@ namespace pwiz.Common.DataBinding
 
         public Type ValueType { get; private set; }
         public ImmutableList<object> Values { get; private set; }
+
+        public ImmutableList<Color?> Colors { get; private set; }
 
         public int ValueCount {get{ return Values.Count; }}
     }

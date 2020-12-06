@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls.Clustering;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
@@ -681,7 +682,8 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             var reportResults = BindingListSource.ReportResults as ClusteredReportResults ??
                                 ClusteredReportResults.EMPTY;
-            UpdateColumnDendrograms(reportResults.PivotedProperties,
+            var colorScheme = boundDataGridView.ReportColorScheme;
+            UpdateColumnDendrograms(reportResults.ClusteredProperties, colorScheme,
                 reportResults.ColumnGroupDendrogramDatas?.Select(d => d.DendrogramData).ToList());
             if (reportResults?.RowDendrogramData == null)
             {
@@ -703,23 +705,33 @@ namespace pwiz.Skyline.Controls.Databinding
                     splitContainerVertical.Panel1.Height - dendrogramTop);
                 var firstDisplayedCell = DataGridView.FirstDisplayedCell;
                 var rowHeight = firstDisplayedCell.Size.Height;
-                var firstLocation = rowHeight / 2.0;
+                var firstLocation = 3.5;
                 var rowLocations = ImmutableList.ValueOf(Enumerable.Range(0, DataGridView.RowCount).Select(rowIndex =>
-                    (rowIndex - firstDisplayedCell.RowIndex) * rowHeight + firstLocation));
-                rowDendrogram.SetDendrogramDatas(new[] { new KeyValuePair<DendrogramData, ImmutableList<double>>(reportResults.RowDendrogramData.DendrogramData, rowLocations), });
+                        (rowIndex - firstDisplayedCell.RowIndex) * rowHeight + firstLocation))
+                    .Select(d => new KeyValuePair<double, double>(d, d + rowHeight));
+                IEnumerable<IEnumerable<Color>> rowColors = null;
+                if (colorScheme != null)
+                {
+                    rowColors = ImmutableList.ValueOf(reportResults.RowItems.Select(rowItem => colorScheme.GetRowColors(rowItem).Select(c=>c?? Color.Transparent)));
+                }
+                rowDendrogram.SetDendrogramDatas(new[]
+                {
+                    new DendrogramControl.DendrogramFormat(reportResults.RowDendrogramData.DendrogramData, rowLocations, rowColors)
+                });
             }
         }
 
-        public void UpdateColumnDendrograms(PivotedProperties pivotedProperties, IList<DendrogramData> columnDendrogramDatas)
+        public void UpdateColumnDendrograms(ClusteredProperties clusteredProperties, ReportColorScheme reportColorScheme, IList<DendrogramData> columnDendrogramDatas)
         {
+            var pivotedProperties = clusteredProperties.PivotedProperties;
             if (columnDendrogramDatas == null || columnDendrogramDatas.All(data=>null == data))
             {
                 splitContainerHorizontal.Panel1Collapsed = true;
                 return;
             }
-            List<double> columnLocations = new List<double>();
+            List<KeyValuePair<double, double>> columnLocations = new List<KeyValuePair<double, double>>();
             Dictionary<string, int> nameToIndex = new Dictionary<string, int>();
-            double currentPosition = -DataGridView.HorizontalScrollingOffset;
+            double currentPosition = .5 - DataGridView.HorizontalScrollingOffset;
             if (DataGridView.RowHeadersVisible)
             {
                 currentPosition += DataGridView.RowHeadersWidth;
@@ -732,7 +744,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
 
                 double width = column.Visible ? column.Width : 0;
-                columnLocations.Add(width / 2 + currentPosition);
+                columnLocations.Add(new KeyValuePair<double, double>(currentPosition, currentPosition + width));
                 currentPosition += width;
             }
 
@@ -740,7 +752,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return;
             }
-            var datas = new List<KeyValuePair<DendrogramData, ImmutableList<double>>>();
+            var datas = new List<DendrogramControl.DendrogramFormat>();
             for (int i = 0; i < columnDendrogramDatas.Count; i++)
             {
                 var dendrogramData = columnDendrogramDatas[i];
@@ -754,11 +766,13 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     continue;
                 }
-                double lastLocation = columnLocations[0];
-                List<double> leafLocatons = new List<double>(seriesGroup.PivotKeys.Count);
+                KeyValuePair<double, double> lastLocation = columnLocations[0];
+                List<KeyValuePair<double, double>> leafLocatons = new List<KeyValuePair<double, double>>(seriesGroup.PivotKeys.Count);
+                List<List<Color>> leafColors = new List<List<Color>>();
                 for (int iPivotKey = 0; iPivotKey < seriesGroup.PivotKeys.Count; iPivotKey++)
                 {
-                    var locs = new List<double>();
+                    var colors = new List<Color>();
+                    var locs = new List<KeyValuePair<double, double>>();
                     foreach (var series in seriesGroup.SeriesList)
                     {
                         var propertyDescriptor = pivotedProperties.ItemProperties[series.PropertyIndexes[iPivotKey]];
@@ -767,15 +781,24 @@ namespace pwiz.Skyline.Controls.Databinding
                         {
                             locs.Add(columnLocations[columnIndex]);
                         }
+
+                        if (reportColorScheme != null)
+                        {
+                            if (clusteredProperties.GetColumnRole(series) == ClusterRole.COLUMNHEADER)
+                            {
+                                colors.Add(reportColorScheme.GetColumnColor(propertyDescriptor) ?? Color.Transparent);
+                            }
+                        }
                     }
 
                     if (locs.Count != 0)
                     {
-                        lastLocation = locs.Average();
+                        lastLocation = new KeyValuePair<double, double>(locs.Min(kvp=>kvp.Key), locs.Max(kvp=>kvp.Value));
                     }
                     leafLocatons.Add(lastLocation);
+                    leafColors.Add(colors);
                 }
-                datas.Add(new KeyValuePair<DendrogramData, ImmutableList<double>>(dendrogramData, ImmutableList.ValueOf(leafLocatons)));
+                datas.Add(new DendrogramControl.DendrogramFormat(dendrogramData, ImmutableList.ValueOf(leafLocatons), leafColors));
             }
             columnDendrogram.SetDendrogramDatas(datas);
             splitContainerHorizontal.Panel1Collapsed = false;

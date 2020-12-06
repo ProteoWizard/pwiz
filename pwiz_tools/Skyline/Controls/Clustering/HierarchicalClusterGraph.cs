@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls.Clustering;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -91,16 +92,16 @@ namespace pwiz.Skyline.Controls.Clustering
                 return;
             }
 
-            var datas = new List<KeyValuePair<DendrogramData, ImmutableList<double>>>();
+            var datas = new List<DendrogramControl.DendrogramFormat>();
             double xStart = 1;
             for (int iGroup = 0; iGroup < Results.DataSet.DataFrameGroups.Count; iGroup++)
             {
                 var group = Results.DataSet.DataFrameGroups[iGroup];
                 var locations = Enumerable.Range(0, group[0].ColumnHeaders.Count).Select(i =>
                         (double) zedGraphControl1.GraphPane.GeneralTransform(xStart + i, 0.0, CoordType.AxisXYScale).X)
+                    .Select(d=>new KeyValuePair<double, double>(d,d))
                     .ToList();
-                datas.Add(new KeyValuePair<DendrogramData, ImmutableList<double>>(
-                    Results.ColumnGroupDendrograms[iGroup], ImmutableList.ValueOf(locations)));
+                datas.Add(new DendrogramControl.DendrogramFormat(Results.ColumnGroupDendrograms[iGroup], locations, null));
                 xStart += group[0].ColumnHeaders.Count;
             }
            
@@ -125,9 +126,13 @@ namespace pwiz.Skyline.Controls.Clustering
                     rowIndex =>
                         (double) zedGraphControl1.GraphPane
                             .GeneralTransform(0.0, rowIndex,
-                                CoordType.AxisXYScale).Y));
+                                CoordType.AxisXYScale).Y))
+                    .Select(d => new KeyValuePair<double, double>(d,d));
 
-                rowDendrogram.SetDendrogramDatas(new[] { new KeyValuePair<DendrogramData, ImmutableList<double>>(Results.RowDendrogram, rowLocations), });
+                rowDendrogram.SetDendrogramDatas(new[]
+                {
+                    new DendrogramControl.DendrogramFormat(Results.RowDendrogram, rowLocations, null)
+                });
             }
 
         }

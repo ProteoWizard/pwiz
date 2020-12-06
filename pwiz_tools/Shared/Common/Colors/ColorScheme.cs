@@ -5,7 +5,7 @@ namespace pwiz.Common.Colors
 {
     public interface IColorScheme
     {
-        void Calibrate(IEnumerable values);
+        void Recalibrate(IEnumerable values);
         Color? GetColor(object value);
     }
 }

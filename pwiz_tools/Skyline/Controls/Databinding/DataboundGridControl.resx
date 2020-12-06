@@ -402,9 +402,6 @@
   <data name="&gt;&gt;navBar.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <metadata name="databoundColorManager1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>315, 17</value>
-  </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -491,12 +488,6 @@
   </data>
   <data name="&gt;&gt;bindingListSource.Type" xml:space="preserve">
     <value>pwiz.Common.DataBinding.Controls.BindingListSource, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;databoundColorManager1.Name" xml:space="preserve">
-    <value>databoundColorManager1</value>
-  </data>
-  <data name="&gt;&gt;databoundColorManager1.Type" xml:space="preserve">
-    <value>pwiz.Common.DataBinding.Controls.DataboundColorManager, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>DataboundGridControl</value>

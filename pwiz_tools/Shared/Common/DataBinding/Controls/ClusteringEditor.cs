@@ -37,8 +37,10 @@ namespace pwiz.Common.DataBinding.Controls
         {
             var pivotedProperties = new PivotedProperties(reportResults.ItemProperties);
             pivotedProperties = pivotedProperties.ChangeSeriesGroups(pivotedProperties.CreateSeriesGroups());
-            clusteringSpec =
-                clusteringSpec ?? ClusteringSpec.GetDefaultClusteringSpec(reportResults, pivotedProperties);
+            if (clusteringSpec == null || clusteringSpec.Values.Count == 0)
+            {
+                clusteringSpec = ClusteringSpec.GetDefaultClusteringSpec(reportResults, pivotedProperties);
+            }
 
             var transforms = clusteringSpec.ToValueTransformDictionary();
             foreach (var p in pivotedProperties.UngroupedProperties)

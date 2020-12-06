@@ -15,6 +15,7 @@ namespace pwiz.Common.DataBinding.Clustering
         public ClusteringSpec(IEnumerable<ValueSpec> values)
         {
             Values = ImmutableList.ValueOfOrEmpty(values);
+            HideColumnHeaders = true;
         }
 
         public ImmutableList<ValueSpec> Values { get; private set; }
@@ -49,6 +50,13 @@ namespace pwiz.Common.DataBinding.Clustering
                 return this;
             }
             return new ClusteringSpec(newValues);
+        }
+
+        public bool HideColumnHeaders { get; private set; }
+
+        public ClusteringSpec ChangeHideColumnHeaders(bool hide)
+        {
+            return ChangeProp(ImClone(this), im => im.HideColumnHeaders = hide);
         }
 
         protected bool Equals(ClusteringSpec other)

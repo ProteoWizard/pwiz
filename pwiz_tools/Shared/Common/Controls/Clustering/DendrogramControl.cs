@@ -10,8 +10,8 @@ namespace pwiz.Common.Controls.Clustering
 {
     public partial class DendrogramControl : UserControl
     {
-        private ImmutableList<KeyValuePair<DendrogramData, ImmutableList<double>>> _dendrogramDatas =
-            ImmutableList<KeyValuePair<DendrogramData, ImmutableList<double>>>.EMPTY;
+        private ImmutableList<DendrogramFormat> _dendrogramFormats =
+            ImmutableList<DendrogramFormat>.EMPTY;
 
         private DockStyle _dendrogramLocation;
         private bool _rectilinearLines;
@@ -49,9 +49,9 @@ namespace pwiz.Common.Controls.Clustering
             }
         }
 
-        public void SetDendrogramDatas(IEnumerable<KeyValuePair<DendrogramData, ImmutableList<double>>> datas)
+        public void SetDendrogramDatas(IEnumerable<DendrogramFormat> datas)
         {
-            _dendrogramDatas = ImmutableList.ValueOfOrEmpty(datas);
+            _dendrogramFormats = ImmutableList.ValueOfOrEmpty(datas);
             Invalidate();
         }
 
@@ -66,22 +66,27 @@ namespace pwiz.Common.Controls.Clustering
             base.OnPaint(e);
             if (DesignMode)
             {
-                var availableSpace = IsTreeVertical ? Width : Height;
-                var leafLocations = Enumerable.Range(0, 3).Select(i => (i + 1.0) * availableSpace / 4).ToArray();
+                double availableSpace = IsTreeVertical ? Width : Height;
+                var leafLocations = Enumerable.Range(0, 3).Select(i =>
+                    new KeyValuePair<double, double>(i * availableSpace / 4, (i + 1) * availableSpace / 4)).ToList();
                 var dendrogramData = new DendrogramData(new int[,]{{0,1},{2,3}}, Enumerable.Repeat(1.0, 2).ToArray());
-                DrawDendrogram(e.Graphics, dendrogramData, leafLocations);
+                DrawDendrogram(e.Graphics, new DendrogramFormat(dendrogramData, leafLocations, new []{new []
+                {
+                    Color.Red, Color.Blue, Color.Green, Color.Yellow
+                }}));
                 return;
             }
 
-            foreach (var data in _dendrogramDatas)
+            foreach (var data in _dendrogramFormats)
             {
-                DrawDendrogram(e.Graphics, data.Key, data.Value);
+                DrawDendrogram(e.Graphics, data);
             }
         }
 
-        private void DrawDendrogram(Graphics graphics, DendrogramData dendrogramData, IList<double> locations)
+        private void DrawDendrogram(Graphics graphics, DendrogramFormat format)
         {
-            var lines = dendrogramData.GetLines(locations, RectilinearLines).ToList();
+            var locations = format.LeafLocations.Select(kvp=>(kvp.Key + kvp.Value) / 2).ToList();
+            var lines = format.Data.GetLines(locations, RectilinearLines).ToList();
             var pen = new Pen(Color.Black, 1);
             var maxHeight = lines.Max(line => line.Item4);
             if (maxHeight == 0)
@@ -89,11 +94,39 @@ namespace pwiz.Common.Controls.Clustering
                 // TODO: Draw a degenerate tree where all nodes connect at the same point
                 return;
             }
-            foreach (var line in lines)
+
+            var colorFraction = GetFractionForColors(format);
+            var treeFraction = 1 - colorFraction;
+            if (treeFraction > 0)
             {
-                var start = CoordinatesToPoint(line.Item1, line.Item2 / maxHeight);
-                var end = CoordinatesToPoint(line.Item3, line.Item4 / maxHeight);
-                DrawLine(graphics, pen, start, end);
+                var denominator = maxHeight / treeFraction;
+                var offset = denominator - maxHeight;
+                foreach (var line in lines)
+                {
+                    var start = CoordinatesToPoint(line.Item1, (offset + line.Item2) / denominator);
+                    var end = CoordinatesToPoint(line.Item3, (offset + line.Item4) / denominator);
+                    DrawLine(graphics, pen, start, end);
+                }
+            }
+
+            if (colorFraction > 0)
+            {
+                for (int colorLevel = 0; colorLevel < format.ColorLevelCount; colorLevel++)
+                {
+                    for (int iLeaf = 0; iLeaf < format.Colors.Count; iLeaf++)
+                    {
+                        var color = format.Colors[iLeaf][colorLevel];
+                        var left = format.LeafLocations[iLeaf].Key;
+                        var right = format.LeafLocations[iLeaf].Value;
+
+                        var bottom = colorLevel * colorFraction / format.ColorLevelCount;
+                        var top = (colorLevel + 1) * colorFraction / format.ColorLevelCount;
+                        var topLeft = CoordinatesToPoint(left, top);
+                        var bottomRight = CoordinatesToPoint(right, bottom);
+
+                        graphics.FillRectangle(new SolidBrush(color), new RectangleF(topLeft, new SizeF(bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y)));
+                    }
+                }
             }
         }
 
@@ -124,6 +157,37 @@ namespace pwiz.Common.Controls.Clustering
             }
         }
 
+        private double GetFractionForColors(DendrogramFormat dendrogramFormat)
+        {
+            if (dendrogramFormat.Colors == null || dendrogramFormat.Colors.Count == 0)
+            {
+                return 0;
+            }
+
+            var totalSpace = GetTotalSpace();
+            var spaceForColors = Math.Max(totalSpace / 10, dendrogramFormat.ColorLevelCount * 5);
+            if (spaceForColors >= totalSpace)
+            {
+                return 1;
+            }
+
+            return spaceForColors / totalSpace;
+        }
+
+        private double GetTotalSpace()
+        {
+            switch (DendrogramLocation)
+            {
+                case DockStyle.Top:
+                case DockStyle.Bottom:
+                default:
+                    return Height;
+                case DockStyle.Left:
+                case DockStyle.Right:
+                    return Width;
+            }
+        }
+
         public bool IsTreeVertical
         {
             get
@@ -137,6 +201,43 @@ namespace pwiz.Common.Controls.Clustering
 
                 return true;
             }
+        }
+
+        public class DendrogramFormat
+        {
+            public DendrogramFormat(DendrogramData data, IEnumerable<KeyValuePair<double, double>> leafLocations,
+                IEnumerable<IEnumerable<Color>> colors)
+            {
+                Data = data;
+                LeafLocations = ImmutableList.ValueOf(leafLocations);
+                if (colors != null)
+                {
+                    Colors = ImmutableList.ValueOf(colors.Select(ImmutableList.ValueOf));
+                    if (Colors.Count != LeafLocations.Count)
+                    {
+                        throw new ArgumentException(@"Wrong number of colors", nameof(colors));
+                    }
+
+                    if (Colors.Count > 0)
+                    {
+                        ColorLevelCount = Colors[0].Count;
+                        if (Colors.Any(c => c.Count != ColorLevelCount))
+                        {
+                            throw new ArgumentException(@"Inconsistent number of colors", nameof(colors));
+                        }
+                    }
+                }
+                else
+                {
+                    Colors = ImmutableList<ImmutableList<Color>>.EMPTY;
+                }
+            }
+
+            public DendrogramData Data { get; private set; }
+
+            public ImmutableList<KeyValuePair<double, double>> LeafLocations { get; private set; }
+            public ImmutableList<ImmutableList<Color>> Colors { get; private set; }
+            public int ColorLevelCount { get; private set; }
         }
     }
 }

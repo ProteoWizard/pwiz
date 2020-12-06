@@ -89,7 +89,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Colors\AbstractColorScheme.cs" />
     <Compile Include="Colors\ColorPalettes.cs" />
     <Compile Include="Colors\ColorScheme.cs" />
     <Compile Include="Colors\DiscreteColorScheme.cs" />
@@ -176,9 +175,13 @@
     <Compile Include="DataBinding\Clustering\ClusteredProperties.cs" />
     <Compile Include="DataBinding\Clustering\ClusteredReportResults.cs" />
     <Compile Include="DataBinding\Clustering\ClusteringSpec.cs" />
+    <Compile Include="DataBinding\Clustering\ColoredReportResults.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
     <Compile Include="DataBinding\ColumnSelector.cs" />
+    <Compile Include="DataBinding\Controls\ClusteredBoundDataGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\ClusteringEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -192,9 +195,6 @@
       <DependentUpon>ColumnListEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="DataBinding\Controls\ColumnListView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="DataBinding\Controls\DataGridViewColorManager.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="DataBinding\Controls\Editor\ChooseViewsControl.cs">

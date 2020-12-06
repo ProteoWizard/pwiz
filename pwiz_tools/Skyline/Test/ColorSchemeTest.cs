@@ -15,7 +15,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestColorScheme()
         {
-            var colorScheme = new DiscreteColorScheme(0);
+            var colorScheme = new DiscreteColorScheme();
             Assert.IsNotNull(colorScheme);
         }
     }
