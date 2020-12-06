@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>documentGrid.ChooseView("PeptideResultValues"));
             WaitForCondition(() => documentGrid.IsComplete);
             var heatMap = ShowDialog<HierarchicalClusterGraph>(()=>documentGrid.DataboundGridControl.ShowHeatMap());
-            var heatMapResults = heatMap.Results;
+            var heatMapResults = heatMap.GraphResults;
             Assert.IsNotNull(heatMap);
             PauseForScreenShot("Normal heat map");
             OkDialog(heatMap, heatMap.Close);
@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => documentGrid.IsComplete);
             heatMap = ShowDialog<HierarchicalClusterGraph>(()=>documentGrid.DataboundGridControl.ShowHeatMap());
             PauseForScreenShot("Heat map with three column groups");
-            Assert.AreEqual(3, heatMap.Results.ColumnGroupDendrograms.Count);
+            Assert.AreEqual(3, heatMap.GraphResults.ColumnGroupDendrograms.Count);
             OkDialog(heatMap, heatMap.Close);
         }
     }

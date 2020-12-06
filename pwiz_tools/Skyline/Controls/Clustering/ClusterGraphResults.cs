@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
-using pwiz.Common.DataBinding;
 
 namespace pwiz.Skyline.Controls.Clustering
 {
-    public class HierarchicalClusterResults
+    public class ClusterGraphResults
     {
-        public HierarchicalClusterResults(DendrogramData rowDendrogramData, 
+        public ClusterGraphResults(DendrogramData rowDendrogramData, 
             IEnumerable<Header> rowHeaders,
             IEnumerable<ColumnGroup> columnGroups,
             IEnumerable<Point> points)

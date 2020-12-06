@@ -659,16 +659,16 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             var clusteredResults = clusterer.GetClusteredResults();
             var colorScheme = ReportColorScheme.FromClusteredResults(clusteredResults);
-            var points = new List<HierarchicalClusterResults.Point>();
-            var rowHeaders = new List<HierarchicalClusterResults.Header>();
+            var points = new List<ClusterGraphResults.Point>();
+            var rowHeaders = new List<ClusterGraphResults.Header>();
             var columnValues = new List<DataPropertyDescriptor>();
-            var columnGroups = new List<HierarchicalClusterResults.ColumnGroup>();
+            var columnGroups = new List<ClusterGraphResults.ColumnGroup>();
             for (int iGroup = 0; iGroup < clusteredResults.PivotedProperties.SeriesGroups.Count; iGroup++)
             {
                 var group = clusteredResults.PivotedProperties.SeriesGroups[iGroup];
 
                 var groupColumnHeaders = clusteredResults.ClusteredProperties.GetColumnHeaders(group).ToList();
-                var groupHeaders = new List<HierarchicalClusterResults.Header>();
+                var groupHeaders = new List<ClusterGraphResults.Header>();
                 for (int iPivotKey = 0; iPivotKey < group.PivotKeys.Count; iPivotKey++)
                 {
                     var colors = new List<Color>();
@@ -677,7 +677,7 @@ namespace pwiz.Skyline.Controls.Databinding
                         var pd = clusteredResults.ItemProperties[series.PropertyIndexes[iPivotKey]];
                         colors.Add(colorScheme.GetColumnColor(pd) ?? Color.Transparent);
                     }
-                    groupHeaders.Add(new HierarchicalClusterResults.Header(group.PivotCaptions[iPivotKey].GetCaption(DataSchemaLocalizer.INVARIANT), colors));
+                    groupHeaders.Add(new ClusterGraphResults.Header(group.PivotCaptions[iPivotKey].GetCaption(DataSchemaLocalizer.INVARIANT), colors));
                 }
                 foreach (var series in group.SeriesList)
                 {
@@ -688,7 +688,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                     columnValues.AddRange(series.PropertyIndexes.Select(i=>clusteredResults.ItemProperties[i]));
 
-                    columnGroups.Add(new HierarchicalClusterResults.ColumnGroup(clusteredResults.ColumnGroupDendrogramDatas[iGroup].DendrogramData, groupHeaders));
+                    columnGroups.Add(new ClusterGraphResults.ColumnGroup(clusteredResults.ColumnGroupDendrogramDatas[iGroup].DendrogramData, groupHeaders));
                 }
             }
             for (int iRow = 0; iRow < clusteredResults.RowCount; iRow++)
@@ -704,7 +704,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
                 string rowCaption = CaptionComponentList.SpaceSeparate(rowHeaderParts)
                     .GetCaption(DataSchemaLocalizer.INVARIANT);
-                rowHeaders.Add(new HierarchicalClusterResults.Header(rowCaption, rowColors));
+                rowHeaders.Add(new ClusterGraphResults.Header(rowCaption, rowColors));
                 for (int iCol = 0; iCol < columnValues.Count; iCol++)
                 {
                     var color = colorScheme.GetColor(columnValues[iCol], rowItem);
@@ -712,13 +712,13 @@ namespace pwiz.Skyline.Controls.Databinding
                     {
                         continue;
                     }
-                    points.Add(new HierarchicalClusterResults.Point(iRow, iCol, color.Value));
+                    points.Add(new ClusterGraphResults.Point(iRow, iCol, color.Value));
                 }
             }
-            var graphResults = new HierarchicalClusterResults(clusteredResults.RowDendrogramData.DendrogramData, rowHeaders, columnGroups, points);
+            var graphResults = new ClusterGraphResults(clusteredResults.RowDendrogramData.DendrogramData, rowHeaders, columnGroups, points);
             var heatMapGraph = new HierarchicalClusterGraph()
             {
-                Results = graphResults
+                GraphResults = graphResults
             };
             heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
             return true;

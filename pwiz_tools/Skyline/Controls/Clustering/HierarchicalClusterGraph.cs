@@ -11,7 +11,7 @@ namespace pwiz.Skyline.Controls.Clustering
 {
     public partial class HierarchicalClusterGraph : DockableFormEx
     {
-        private HierarchicalClusterResults _results;
+        private ClusterGraphResults _graphResults;
         public HierarchicalClusterGraph()
         {
             InitializeComponent();
@@ -24,12 +24,12 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.GraphPane.Border.IsVisible = false;
         }
 
-        public HierarchicalClusterResults Results
+        public ClusterGraphResults GraphResults
         {
-            get { return _results; }
+            get { return _graphResults; }
             set
             {
-                _results = value;
+                _graphResults = value;
                 UpdateGraph();
             }
         }
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.GraphPane.CurveList.Clear();
             zedGraphControl1.GraphPane.GraphObjList.Clear();
 
-            var dataSet = Results;
+            var dataSet = GraphResults;
             var points = new PointPairList();
             foreach (var point in dataSet.Points)
             {
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.GraphPane.CurveList.Add(new ClusteredHeatMapItem("Points", points));
 
             zedGraphControl1.GraphPane.YAxis.Type = AxisType.Text;
-            zedGraphControl1.GraphPane.YAxis.Scale.TextLabels = dataSet.RowHeaders.Select(header=>header.Caption).ToArray();
+            zedGraphControl1.GraphPane.YAxis.Scale.TextLabels = dataSet.RowHeaders.Select(header=>header.Caption).Reverse().ToArray();
 
             zedGraphControl1.GraphPane.XAxis.Type = AxisType.Text;
             zedGraphControl1.GraphPane.XAxis.Scale.TextLabels =
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public void UpdateColumnDendrograms()
         {
-            if (Results.ColumnGroups.All(group=>group.DendrogramData == null))
+            if (GraphResults.ColumnGroups.All(group=>group.DendrogramData == null))
             {
                 splitContainerHorizontal.Panel1Collapsed = true;
                 return;
@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
             var datas = new List<DendrogramControl.DendrogramFormat>();
             double xStart = .5;
-            foreach (var group in Results.ColumnGroups)
+            foreach (var group in GraphResults.ColumnGroups)
             {
                 var locations = new List<KeyValuePair<double, double>>();
                 var colors = new List<ImmutableList<Color>>();
@@ -100,14 +100,14 @@ namespace pwiz.Skyline.Controls.Clustering
             int rowDendrogramTop =
                 splitContainerHorizontal.Panel1Collapsed ? 0 : splitContainerHorizontal.Panel1.Height;
             rowDendrogram.Bounds = new Rectangle(0, rowDendrogramTop, splitContainerVertical.Panel1.Width, splitContainerVertical.Panel1.Height - rowDendrogramTop);
-            if (Results.RowDendrogramData == null)
+            if (GraphResults.RowDendrogramData == null)
             {
                 splitContainerVertical.Panel1Collapsed = true;
             }
             else
             {
                 splitContainerVertical.Panel1Collapsed = false;
-                int rowCount = Results.RowCount;
+                int rowCount = GraphResults.RowCount;
                 var rowLocations = new List<KeyValuePair<double, double>>();
                 var colors = new List<ImmutableList<Color>>();
                 for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
@@ -117,11 +117,11 @@ namespace pwiz.Skyline.Controls.Clustering
                     var y2 = zedGraphControl1.GraphPane.GeneralTransform(0.0, rowCount - .5 - rowIndex ,
                         CoordType.AxisXYScale).Y;
                     rowLocations.Add(new KeyValuePair<double, double>(y1, y2));
-                    colors.Add(Results.RowHeaders[rowIndex].Colors);
+                    colors.Add(GraphResults.RowHeaders[rowIndex].Colors);
                 }
                 rowDendrogram.SetDendrogramDatas(new[]
                 {
-                    new DendrogramControl.DendrogramFormat(Results.RowDendrogramData, rowLocations, colors)
+                    new DendrogramControl.DendrogramFormat(GraphResults.RowDendrogramData, rowLocations, colors)
                 });
             }
 
