@@ -179,9 +179,6 @@
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
     <Compile Include="DataBinding\ColumnSelector.cs" />
-    <Compile Include="DataBinding\Controls\ClusteredBoundDataGridView.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="DataBinding\Controls\ClusteringEditor.cs">
       <SubType>Form</SubType>
     </Compile>

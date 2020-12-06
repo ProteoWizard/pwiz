@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System.CodeDom;
+using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding.Layout;
@@ -15,7 +18,6 @@ namespace pwiz.Common.DataBinding.Clustering
         public ClusteringSpec(IEnumerable<ValueSpec> values)
         {
             Values = ImmutableList.ValueOfOrEmpty(values);
-            HideColumnHeaders = true;
         }
 
         public ImmutableList<ValueSpec> Values { get; private set; }
@@ -52,13 +54,6 @@ namespace pwiz.Common.DataBinding.Clustering
             return new ClusteringSpec(newValues);
         }
 
-        public bool HideColumnHeaders { get; private set; }
-
-        public ClusteringSpec ChangeHideColumnHeaders(bool hide)
-        {
-            return ChangeProp(ImClone(this), im => im.HideColumnHeaders = hide);
-        }
-
         protected bool Equals(ClusteringSpec other)
         {
             return Equals(Values, other.Values) && DistanceMetric == other.DistanceMetric;
@@ -78,6 +73,72 @@ namespace pwiz.Common.DataBinding.Clustering
             {
                 return ((Values != null ? Values.GetHashCode() : 0) * 397) ^ (DistanceMetric != null ? DistanceMetric.GetHashCode() : 0);
             }
+        }
+
+        private const string EL_VALUE = "value";
+        private const string ATTR_DISTANCE_METRIC = "distance_metric";
+        private const string ATTR_COLUMN_ID = "column_id";
+        private const string ATTR_PROPERTY_PATH = "property_path";
+        private const string ATTR_ROLE = "role";
+
+
+        public void WriteXml(XmlWriter writer)
+        {
+            if (DistanceMetric != null)
+            {
+                writer.WriteAttributeString(ATTR_DISTANCE_METRIC, DistanceMetric);
+            }
+            foreach (var value in Values)
+            {
+                writer.WriteStartElement(EL_VALUE);
+                if (null != value.ColumnRef.ColumnId)
+                {
+                    writer.WriteAttributeString(ATTR_COLUMN_ID, value.ColumnRef.ColumnId.ToPersistedString());
+                }
+
+                if (null != value.ColumnRef.PropertyPath)
+                {
+                    writer.WriteAttributeString(ATTR_PROPERTY_PATH, value.ColumnRef.PropertyPath.ToString());
+                }
+
+                writer.WriteAttributeString(ATTR_ROLE, value.Transform);
+                writer.WriteEndElement();
+            }
+        }
+
+        public static ClusteringSpec ReadXml(XmlReader reader)
+        {
+            var xElement = (XElement)XNode.ReadFrom(reader);
+            var values = new List<ValueSpec>();
+            foreach (var elValue in xElement.Elements(EL_VALUE))
+            {
+                var role = elValue.Attribute(ATTR_ROLE)?.Value;
+                if (role == null)
+                {
+                    continue;
+                }
+
+                ColumnRef columnRef = null;
+                var columnid = elValue.Attribute(ATTR_COLUMN_ID)?.Value;
+                if (columnid != null)
+                {
+                    columnRef = new ColumnRef(new ColumnId(columnid));
+                }
+                else
+                {
+                    columnRef = new ColumnRef(PropertyPath.Parse(elValue.Attribute(ATTR_PROPERTY_PATH)?.Value));
+                }
+                values.Add(new ValueSpec(columnRef, role));
+            }
+
+            var spec = new ClusteringSpec(values);
+            var attrDistanceMetric = xElement.Attribute(ATTR_DISTANCE_METRIC);
+            if (attrDistanceMetric != null)
+            {
+                spec = spec.ChangeDistanceMetric(attrDistanceMetric.Value);
+            }
+
+            return spec;
         }
 
         public class ColumnRef

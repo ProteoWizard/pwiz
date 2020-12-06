@@ -731,7 +731,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             List<KeyValuePair<double, double>> columnLocations = new List<KeyValuePair<double, double>>();
             Dictionary<string, int> nameToIndex = new Dictionary<string, int>();
-            double currentPosition = .5 - DataGridView.HorizontalScrollingOffset;
+            double currentPosition = 0 - DataGridView.HorizontalScrollingOffset;
             if (DataGridView.RowHeadersVisible)
             {
                 currentPosition += DataGridView.RowHeadersWidth;

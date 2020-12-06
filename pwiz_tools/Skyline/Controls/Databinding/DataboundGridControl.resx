@@ -243,6 +243,9 @@
   <data name="splitContainerHorizontal.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="splitContainerHorizontal.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
   <data name="splitContainerHorizontal.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
@@ -253,7 +256,7 @@
     <value>0, 0</value>
   </data>
   <data name="columnDendrogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>668, 100</value>
+    <value>670, 100</value>
   </data>
   <data name="columnDendrogram.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -292,7 +295,7 @@
     <value>0, 0</value>
   </data>
   <data name="boundDataGridView.Size" type="System.Drawing.Size, System.Drawing">
-    <value>668, 252</value>
+    <value>670, 254</value>
   </data>
   <data name="boundDataGridView.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -322,10 +325,13 @@
     <value>1</value>
   </data>
   <data name="splitContainerHorizontal.Size" type="System.Drawing.Size, System.Drawing">
-    <value>668, 356</value>
+    <value>670, 356</value>
   </data>
   <data name="splitContainerHorizontal.SplitterDistance" type="System.Int32, mscorlib">
     <value>100</value>
+  </data>
+  <data name="splitContainerHorizontal.SplitterWidth" type="System.Int32, mscorlib">
+    <value>2</value>
   </data>
   <data name="splitContainerHorizontal.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -359,6 +365,9 @@
   </data>
   <data name="splitContainerVertical.SplitterDistance" type="System.Int32, mscorlib">
     <value>100</value>
+  </data>
+  <data name="splitContainerVertical.SplitterWidth" type="System.Int32, mscorlib">
+    <value>2</value>
   </data>
   <data name="splitContainerVertical.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>

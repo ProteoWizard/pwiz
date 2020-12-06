@@ -241,7 +241,7 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 ColumnFormats.SetFormat(format.Item1, format.Item2);
             }
-            // TODO: sort
+            ClusteringSpec = viewLayout.ClusterSpec;
         }
 
         public INewRowHandler NewRowHandler

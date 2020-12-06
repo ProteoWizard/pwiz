@@ -553,6 +553,7 @@ namespace pwiz.Common.DataBinding.Controls
                 columnFormats.Add(Tuple.Create(columnId, columnFormat));
             }
             newLayout = newLayout.ChangeColumnFormats(columnFormats);
+            newLayout = newLayout.ChangeClusterSpec(BindingListSource.ClusteringSpec);
             return newLayout;
         }
 

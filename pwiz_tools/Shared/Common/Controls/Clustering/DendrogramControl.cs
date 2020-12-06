@@ -70,10 +70,8 @@ namespace pwiz.Common.Controls.Clustering
                 var leafLocations = Enumerable.Range(0, 3).Select(i =>
                     new KeyValuePair<double, double>(i * availableSpace / 4, (i + 1) * availableSpace / 4)).ToList();
                 var dendrogramData = new DendrogramData(new int[,]{{0,1},{2,3}}, Enumerable.Repeat(1.0, 2).ToArray());
-                DrawDendrogram(e.Graphics, new DendrogramFormat(dendrogramData, leafLocations, new []{new []
-                {
-                    Color.Red, Color.Blue, Color.Green, Color.Yellow
-                }}));
+                var colors = new[] {Color.Red, Color.Green, Color.Blue}.Select(color => new[] {color});
+                DrawDendrogram(e.Graphics, new DendrogramFormat(dendrogramData, leafLocations, colors));
                 return;
             }
 

@@ -8,11 +8,24 @@ namespace pwiz.Common.Colors
 {
     public class DiscreteColorScheme : IColorScheme
     {
-        public void Recalibrate(IEnumerable values)
+        private IList<Color> _palette = ColorPalettes.LARGE_PALETTE;
+        private IDictionary<object, int> _objectIndexes = new Dictionary<object, int>();
+
+        public void AddValues(IEnumerable values)
         {
+            int index;
+            IEnumerable<object> newValues = values.OfType<object>().Distinct();
+            if (_objectIndexes.Count == 0)
+            {
+                index = 2;
+            }
+            else
+            {
+                index = _objectIndexes.Values.Max() + 1;
+                newValues = newValues.Where(v=>!_objectIndexes.ContainsKey(v));
+            }
             var valueToIndex = new Dictionary<object, int>();
-            var valuesByType = values.OfType<object>().Distinct().ToLookup(v => v.GetType());
-            int index = 2;
+            var valuesByType = newValues.ToLookup(v => v.GetType());
             foreach (var grouping in valuesByType.OrderBy(group => group.Count()))
             {
                 foreach (var v in grouping)
@@ -22,11 +35,8 @@ namespace pwiz.Common.Colors
             }
 
             _objectIndexes = valueToIndex;
-
         }
 
-        private IList<Color> _palette = ColorPalettes.LARGE_PALETTE;
-        private IDictionary<object, int> _objectIndexes = new Dictionary<object, int>();
 
         public Color? GetColor(object value)
         {

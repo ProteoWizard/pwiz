@@ -9,16 +9,13 @@ namespace pwiz.Common.Colors
 {
     public class NumericColorScheme : IColorScheme
     {
-        public NumericColorScheme()
-        {
-        }
         public double MaxValue { get; set; }
         public double MinValue { get; set; }
 
-        public void  Recalibrate(IEnumerable values)
+        public void  AddValues(IEnumerable values)
         {
-            double minValue = 0;
-            double maxValue = 0;
+            double minValue = MinValue;
+            double maxValue = MaxValue;
             foreach (var value in values.OfType<object>().Select(ZScores.ToDouble).OfType<double>())
             {
                 minValue = Math.Min(minValue, value);

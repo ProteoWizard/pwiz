@@ -61,7 +61,7 @@ namespace pwiz.Common.DataBinding.Clustering
                 if (ZScores.IsNumericType(property.PropertyType))
                 {
                     var colorScheme = new NumericColorScheme();
-                    colorScheme.Recalibrate(reportResults.RowItems.Select(row => property.GetValue(row)));
+                    colorScheme.AddValues(reportResults.RowItems.Select(row => property.GetValue(row)));
                     colorManagers[property.Name] = new ColorManager(colorScheme, new[] { property }, null);
                 }
                 else
@@ -108,7 +108,7 @@ namespace pwiz.Common.DataBinding.Clustering
                         if (ZScores.IsNumericType(series.PropertyType))
                         {
                             colorScheme = new NumericColorScheme();
-                            colorScheme.Recalibrate(values);
+                            colorScheme.AddValues(values);
                         }
                         else
                         {
@@ -134,8 +134,8 @@ namespace pwiz.Common.DataBinding.Clustering
                     }
                 }
             }
-            numericColorScheme.Recalibrate(numericValues);
-            discreteColorScheme.Recalibrate(distinctValues);
+            numericColorScheme.AddValues(numericValues);
+            discreteColorScheme.AddValues(distinctValues);
             var columnColors = new Dictionary<string, Color>();
             foreach (var entry in columnHeaderValues)
             {

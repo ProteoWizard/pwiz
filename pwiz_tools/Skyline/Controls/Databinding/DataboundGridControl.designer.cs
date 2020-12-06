@@ -47,8 +47,8 @@
             this.fillDownToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.heatMapContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainerVertical = new System.Windows.Forms.SplitContainer();
-            this.splitContainerHorizontal = new System.Windows.Forms.SplitContainer();
             this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
+            this.splitContainerHorizontal = new System.Windows.Forms.SplitContainer();
             this.columnDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
@@ -168,6 +168,13 @@
             // 
             this.splitContainerVertical.Panel2.Controls.Add(this.splitContainerHorizontal);
             // 
+            // rowDendrogram
+            // 
+            resources.ApplyResources(this.rowDendrogram, "rowDendrogram");
+            this.rowDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Left;
+            this.rowDendrogram.Name = "rowDendrogram";
+            this.rowDendrogram.RectilinearLines = true;
+            // 
             // splitContainerHorizontal
             // 
             resources.ApplyResources(this.splitContainerHorizontal, "splitContainerHorizontal");
@@ -181,13 +188,6 @@
             // splitContainerHorizontal.Panel2
             // 
             this.splitContainerHorizontal.Panel2.Controls.Add(this.boundDataGridView);
-            // 
-            // rowDendrogram
-            // 
-            resources.ApplyResources(this.rowDendrogram, "rowDendrogram");
-            this.rowDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Left;
-            this.rowDendrogram.Name = "rowDendrogram";
-            this.rowDendrogram.RectilinearLines = true;
             // 
             // columnDendrogram
             // 
@@ -222,6 +222,7 @@
             resources.ApplyResources(this.boundDataGridView, "boundDataGridView");
             this.boundDataGridView.MaximumColumnCount = 2000;
             this.boundDataGridView.Name = "boundDataGridView";
+            this.boundDataGridView.ReportColorScheme = null;
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
             dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
