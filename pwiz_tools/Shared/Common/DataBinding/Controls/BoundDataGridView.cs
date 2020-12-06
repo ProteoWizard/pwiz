@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Colors;
 using pwiz.Common.Controls;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Clustering;
@@ -331,12 +332,35 @@ namespace pwiz.Common.DataBinding.Controls
             var color = ReportColorScheme.GetColor(propertyDescriptor, reportResults.RowItems[e.RowIndex]);
             if (color.HasValue)
             {
-                e.CellStyle.BackColor = color.Value;
-                if (color.Value.R + color.Value.G + color.Value.B < 128 * 3)
-                {
-                    e.CellStyle.ForeColor = Color.White;
-                }
+                e.CellStyle.BackColor = LightenColor(color.Value);
             }
+        }
+
+        private bool use_hsv = false;
+        public Color LightenColor(Color color)
+        {
+            if (use_hsv)
+            {
+                ColorPalettes.ColorToHSV(color, out double hue, out double saturation, out double value);
+                var newSaturation = saturation < .5 ? saturation : (saturation + .5) / 2;
+                var newValue = value > .5 ? value : (value + .5) / 2;
+                if (newSaturation == saturation && newValue == value)
+                {
+                    return color;
+                }
+                return ColorPalettes.ColorFromHSV(hue, saturation / 2, (1 + value) / 2);
+            }
+            return Color.FromArgb(color.A, LightenRgbComponent(color.R), LightenRgbComponent(color.G), LightenRgbComponent(color.B));
+        }
+
+        private int LightenRgbComponent(int component)
+        {
+            if (component > 255)
+            {
+                return component;
+            }
+
+            return (component + 255) / 2;
         }
 
         public void UpdateColorScheme()

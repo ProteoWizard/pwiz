@@ -24,13 +24,7 @@ namespace pwiz.Skyline.Controls.Clustering
                 for (int i = 0; i < points.Count; i++)
                 {
                     var point = points[i];
-                    var zScore = point.Z;
-                    if (zScore.Equals(PointPairBase.Missing))
-                    {
-                        continue;
-                    }
-
-                    Color backColor = ZScores.ZScoreToColor(zScore);
+                    Color backColor = (Color) point.Tag;
                     var brush = new SolidBrush(backColor);
 
                     double x1 = xScale.Transform(point.X - .5);

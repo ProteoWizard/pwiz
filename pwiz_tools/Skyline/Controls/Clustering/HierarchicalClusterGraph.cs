@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
-using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
@@ -12,7 +11,7 @@ namespace pwiz.Skyline.Controls.Clustering
 {
     public partial class HierarchicalClusterGraph : DockableFormEx
     {
-        private ClusterDataSet<string, string>.Results _results;
+        private HierarchicalClusterResults _results;
         public HierarchicalClusterGraph()
         {
             InitializeComponent();
@@ -25,7 +24,7 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.GraphPane.Border.IsVisible = false;
         }
 
-        public ClusterDataSet<string, string>.Results Results
+        public HierarchicalClusterResults Results
         {
             get { return _results; }
             set
@@ -40,42 +39,23 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.GraphPane.CurveList.Clear();
             zedGraphControl1.GraphPane.GraphObjList.Clear();
 
-            var dataSet = Results.DataSet;
+            var dataSet = Results;
             var points = new PointPairList();
-            for (int iRow = 0; iRow < dataSet.RowCount; iRow++)
+            foreach (var point in dataSet.Points)
             {
-                double xGroupStart = 1;
-                foreach (var dataFrameGroup in dataSet.DataFrameGroups)
+                points.Add(new PointPair(point.ColumnIndex + 1, dataSet.RowCount - point.RowIndex)
                 {
-                    var zScoreLists = dataFrameGroup.Select(frame => frame.GetZScores(iRow).ToList()).ToList();
-                    int frameCount = dataFrameGroup.Count;
-                    int colCountInGroup = dataFrameGroup.First().ColumnHeaders.Count;
-
-                    // Add points for the zScores of all of the columns
-                    // If there is more than one data frame in this group, then the points will 
-                    // be plotted with fractional x values so that all of the group's points fit within
-                    // a single integer
-                    for (int iColInGroup = 0; iColInGroup < colCountInGroup; iColInGroup++)
-                    {
-                        for (int iFrame = 0; iFrame < frameCount; iFrame++)
-                        {
-                            double? zScore = zScoreLists[iFrame][iColInGroup];
-                            double x = xGroupStart + iColInGroup + iFrame / (double)frameCount;
-                            points.Add(new PointPair(x, iRow, zScore.HasValue ? zScore.Value : PointPairBase.Missing));
-                        }
-                    }
-
-                    xGroupStart += colCountInGroup;
-                }
+                    Tag = point.Color
+                });
             }
             zedGraphControl1.GraphPane.CurveList.Add(new ClusteredHeatMapItem("Points", points));
 
             zedGraphControl1.GraphPane.YAxis.Type = AxisType.Text;
-            zedGraphControl1.GraphPane.YAxis.Scale.TextLabels = dataSet.RowLabels.ToArray();
+            zedGraphControl1.GraphPane.YAxis.Scale.TextLabels = dataSet.RowHeaders.Select(header=>header.Caption).ToArray();
 
             zedGraphControl1.GraphPane.XAxis.Type = AxisType.Text;
             zedGraphControl1.GraphPane.XAxis.Scale.TextLabels =
-                dataSet.DataFrameGroups.SelectMany(group => group[0].ColumnHeaders).ToArray();
+                dataSet.ColumnGroups.SelectMany(group => group.Headers.Select(header=>header.Caption)).ToArray();
             AxisLabelScaler scaler = new AxisLabelScaler(zedGraphControl1.GraphPane);
             scaler.ScaleAxisLabels();
             zedGraphControl1.AxisChange();
@@ -86,23 +66,29 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public void UpdateColumnDendrograms()
         {
-            if (Results.ColumnGroupDendrograms == null)
+            if (Results.ColumnGroups.All(group=>group.DendrogramData == null))
             {
                 splitContainerHorizontal.Panel1Collapsed = true;
                 return;
             }
 
             var datas = new List<DendrogramControl.DendrogramFormat>();
-            double xStart = 1;
-            for (int iGroup = 0; iGroup < Results.DataSet.DataFrameGroups.Count; iGroup++)
+            double xStart = .5;
+            foreach (var group in Results.ColumnGroups)
             {
-                var group = Results.DataSet.DataFrameGroups[iGroup];
-                var locations = Enumerable.Range(0, group[0].ColumnHeaders.Count).Select(i =>
-                        (double) zedGraphControl1.GraphPane.GeneralTransform(xStart + i, 0.0, CoordType.AxisXYScale).X)
-                    .Select(d=>new KeyValuePair<double, double>(d,d))
-                    .ToList();
-                datas.Add(new DendrogramControl.DendrogramFormat(Results.ColumnGroupDendrograms[iGroup], locations, null));
-                xStart += group[0].ColumnHeaders.Count;
+                var locations = new List<KeyValuePair<double, double>>();
+                var colors = new List<ImmutableList<Color>>();
+                for (int i = 0; i < group.Headers.Count; i++)
+                {
+                    double x1 = (double) zedGraphControl1.GraphPane
+                        .GeneralTransform(xStart + i, 0.0, CoordType.AxisXYScale).X;
+                    double x2 = zedGraphControl1.GraphPane
+                        .GeneralTransform(xStart + i + 1, 0.0, CoordType.AxisXYScale).X;
+                    locations.Add(new KeyValuePair<double, double>(x1, x2));
+                    colors.Add(group.Headers[i].Colors);
+                }
+                datas.Add(new DendrogramControl.DendrogramFormat(group.DendrogramData, locations, colors));
+                xStart += group.Headers.Count;
             }
            
             columnDendrogram.SetDendrogramDatas(datas);
@@ -114,24 +100,28 @@ namespace pwiz.Skyline.Controls.Clustering
             int rowDendrogramTop =
                 splitContainerHorizontal.Panel1Collapsed ? 0 : splitContainerHorizontal.Panel1.Height;
             rowDendrogram.Bounds = new Rectangle(0, rowDendrogramTop, splitContainerVertical.Panel1.Width, splitContainerVertical.Panel1.Height - rowDendrogramTop);
-            if (Results.RowDendrogram == null)
+            if (Results.RowDendrogramData == null)
             {
                 splitContainerVertical.Panel1Collapsed = true;
             }
             else
             {
                 splitContainerVertical.Panel1Collapsed = false;
-                int rowCount = Results.DataSet.RowCount;
-                var rowLocations = ImmutableList.ValueOf(Enumerable.Range(0, rowCount).Select(
-                    rowIndex =>
-                        (double) zedGraphControl1.GraphPane
-                            .GeneralTransform(0.0, rowIndex,
-                                CoordType.AxisXYScale).Y))
-                    .Select(d => new KeyValuePair<double, double>(d,d));
-
+                int rowCount = Results.RowCount;
+                var rowLocations = new List<KeyValuePair<double, double>>();
+                var colors = new List<ImmutableList<Color>>();
+                for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
+                {
+                    var y1 = zedGraphControl1.GraphPane.GeneralTransform(0.0, rowCount + .5 - rowIndex,
+                        CoordType.AxisXYScale).Y;
+                    var y2 = zedGraphControl1.GraphPane.GeneralTransform(0.0, rowCount - .5 - rowIndex ,
+                        CoordType.AxisXYScale).Y;
+                    rowLocations.Add(new KeyValuePair<double, double>(y1, y2));
+                    colors.Add(Results.RowHeaders[rowIndex].Colors);
+                }
                 rowDendrogram.SetDendrogramDatas(new[]
                 {
-                    new DendrogramControl.DendrogramFormat(Results.RowDendrogram, rowLocations, null)
+                    new DendrogramControl.DendrogramFormat(Results.RowDendrogramData, rowLocations, colors)
                 });
             }
 
@@ -145,6 +135,12 @@ namespace pwiz.Skyline.Controls.Clustering
         private void zedGraphControl1_Resize(object sender, EventArgs e)
         {
             UpdateDendrograms();
+        }
+
+        public class HeaderInfo
+        {
+            public string Caption { get; private set; }
+            public ImmutableList<Color> Colors { get; private set; }
         }
     }
 }

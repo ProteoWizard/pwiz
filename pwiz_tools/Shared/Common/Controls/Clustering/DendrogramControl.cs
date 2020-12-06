@@ -116,8 +116,13 @@ namespace pwiz.Common.Controls.Clustering
                         var top = (colorLevel + 1) * colorFraction / format.ColorLevelCount;
                         var topLeft = CoordinatesToPoint(left, top);
                         var bottomRight = CoordinatesToPoint(right, bottom);
+                        var rectangle = new RectangleF(
+                            Math.Min(topLeft.X, bottomRight.X),
+                            Math.Min(topLeft.Y, bottomRight.Y),
+                            Math.Abs(topLeft.X - bottomRight.X),
+                            Math.Abs(topLeft.Y - bottomRight.Y));
 
-                        graphics.FillRectangle(new SolidBrush(color), new RectangleF(topLeft, new SizeF(bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y)));
+                        graphics.FillRectangle(new SolidBrush(color), rectangle);
                     }
                 }
             }

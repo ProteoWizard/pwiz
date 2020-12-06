@@ -304,7 +304,7 @@
     <Compile Include="DataBinding\Internal\AbstractQuery.cs" />
     <Compile Include="DataBinding\Internal\BackgroundQuery.cs" />
     <Compile Include="DataBinding\Internal\BindingListView.cs" />
-    <Compile Include="DataBinding\Internal\Clusterer.cs" />
+    <Compile Include="DataBinding\Clustering\Clusterer.cs" />
     <Compile Include="DataBinding\Internal\ForegroundQuery.cs" />
     <Compile Include="DataBinding\Internal\GroupAndTotaler.cs" />
     <Compile Include="DataBinding\Internal\GroupedPropertyDescriptor.cs" />

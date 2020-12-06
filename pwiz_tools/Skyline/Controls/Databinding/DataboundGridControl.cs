@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using NHibernate.Loader;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
 using pwiz.Common.DataAnalysis.Clustering;
@@ -656,19 +657,68 @@ namespace pwiz.Skyline.Controls.Databinding
                     "This data could not be clustered.");
                 return false;
             }
+            var clusteredResults = clusterer.GetClusteredResults();
+            var colorScheme = ReportColorScheme.FromClusteredResults(clusteredResults);
+            var points = new List<HierarchicalClusterResults.Point>();
+            var rowHeaders = new List<HierarchicalClusterResults.Header>();
+            var columnValues = new List<DataPropertyDescriptor>();
+            var columnGroups = new List<HierarchicalClusterResults.ColumnGroup>();
+            for (int iGroup = 0; iGroup < clusteredResults.PivotedProperties.SeriesGroups.Count; iGroup++)
+            {
+                var group = clusteredResults.PivotedProperties.SeriesGroups[iGroup];
 
-            var captionedClusteredResults = clusterer.GetCaptionedClusterDataSetResults();
-            var captionedDataSet = captionedClusteredResults.DataSet;
-            var dataSchemaLocalizer = BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer;
-            var results = captionedClusteredResults.ChangeLabels(captionedDataSet.RowLabels.Select(
-                    label => label.GetCaption(dataSchemaLocalizer)),
-                captionedDataSet.DataFrameGroups.Select(group =>
-                    group[0].ColumnHeaders.Select(header => header.GetCaption(dataSchemaLocalizer))));
-            results = results.ReverseRows();
+                var groupColumnHeaders = clusteredResults.ClusteredProperties.GetColumnHeaders(group).ToList();
+                var groupHeaders = new List<HierarchicalClusterResults.Header>();
+                for (int iPivotKey = 0; iPivotKey < group.PivotKeys.Count; iPivotKey++)
+                {
+                    var colors = new List<Color>();
+                    foreach (var series in groupColumnHeaders)
+                    {
+                        var pd = clusteredResults.ItemProperties[series.PropertyIndexes[iPivotKey]];
+                        colors.Add(colorScheme.GetColumnColor(pd) ?? Color.Transparent);
+                    }
+                    groupHeaders.Add(new HierarchicalClusterResults.Header(group.PivotCaptions[iPivotKey].GetCaption(DataSchemaLocalizer.INVARIANT), colors));
+                }
+                foreach (var series in group.SeriesList)
+                {
+                    var transform = clusteredResults.ClusteredProperties.GetColumnRole(series) as ClusterRole.Transform;
+                    if (transform == null)
+                    {
+                        continue;
+                    }
+                    columnValues.AddRange(series.PropertyIndexes.Select(i=>clusteredResults.ItemProperties[i]));
 
+                    columnGroups.Add(new HierarchicalClusterResults.ColumnGroup(clusteredResults.ColumnGroupDendrogramDatas[iGroup].DendrogramData, groupHeaders));
+                }
+            }
+            for (int iRow = 0; iRow < clusteredResults.RowCount; iRow++)
+            {
+                var rowItem = clusteredResults.RowItems[iRow];
+                var rowColors = new List<Color>();
+                var rowHeaderParts = new List<object>();
+                foreach (var rowHeader in clusteredResults.ClusteredProperties.RowHeaders)
+                {
+                    rowHeaderParts.Add(rowHeader.GetValue(rowItem));
+                    rowColors.Add(colorScheme.GetColor(rowHeader, rowItem) ?? Color.Transparent);
+                }
+
+                string rowCaption = CaptionComponentList.SpaceSeparate(rowHeaderParts)
+                    .GetCaption(DataSchemaLocalizer.INVARIANT);
+                rowHeaders.Add(new HierarchicalClusterResults.Header(rowCaption, rowColors));
+                for (int iCol = 0; iCol < columnValues.Count; iCol++)
+                {
+                    var color = colorScheme.GetColor(columnValues[iCol], rowItem);
+                    if (!color.HasValue)
+                    {
+                        continue;
+                    }
+                    points.Add(new HierarchicalClusterResults.Point(iRow, iCol, color.Value));
+                }
+            }
+            var graphResults = new HierarchicalClusterResults(clusteredResults.RowDendrogramData.DendrogramData, rowHeaders, columnGroups, points);
             var heatMapGraph = new HierarchicalClusterGraph()
             {
-                Results = results
+                Results = graphResults
             };
             heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
             return true;

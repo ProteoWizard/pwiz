@@ -2,9 +2,8 @@
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
-using pwiz.Common.DataBinding.Clustering;
 
-namespace pwiz.Common.DataBinding.Internal
+namespace pwiz.Common.DataBinding.Clustering
 {
     public class Clusterer
     {
@@ -111,7 +110,7 @@ namespace pwiz.Common.DataBinding.Internal
             return rawResults.ChangeLabels(newRowLabels, newColumnLabels);
         }
 
-        public ReportResults GetClusteredResults()
+        public ClusteredReportResults GetClusteredResults()
         {
             var clusterResults = GetClusterDataSetResults();
             CaptionedDendrogramData rowDendrogramData = null;

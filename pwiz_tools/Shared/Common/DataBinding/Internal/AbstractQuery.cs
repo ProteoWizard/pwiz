@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Layout;
 
 namespace pwiz.Common.DataBinding.Internal
