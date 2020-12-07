@@ -42,7 +42,7 @@ namespace pwiz.Common.DataBinding.Controls
                 clusteringSpec = ClusteringSpec.GetDefaultClusteringSpec(reportResults, pivotedProperties);
             }
 
-            var transforms = clusteringSpec.ToValueTransformDictionary();
+            var transforms = clusteringSpec?.ToValueTransformDictionary() ?? new Dictionary<ClusteringSpec.ColumnRef, ClusterRole>();
             foreach (var p in pivotedProperties.UngroupedProperties)
             {
                 var columnRef = ClusteringSpec.ColumnRef.FromPropertyDescriptor(p);
