@@ -34,67 +34,67 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Agilent.MassSpectrometry.LCMSAcquisition.MHPlugin">
-      <HintPath>.\Agilent.MassSpectrometry.LCMSAcquisition.MHPlugin.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MassSpectrometry.LCMSAcquisition.MHPlugin.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.CommonUtilities">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.CommonUtilities.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.CommonUtilities.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.DataInterfaces">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.DataInterfaces.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.DataInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.ESW">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.ESW.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.ESW.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodValidationModule">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MethodValidationModule.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MethodValidationModule.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSActualProvider">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSActualProvider.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSActualProvider.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSIF">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSIF.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSIF.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSMethodDO">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSMethodDO.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSMethodDO.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSParamProvider">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSParamProvider.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSParamProvider.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTrace">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSTrace.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSTrace.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTuneDO">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSTuneDO.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSTuneDO.dll</HintPath>
     </Reference>
     <Reference Include="Agilent.MSDrivers.LCQuadrupole.ValidationBase">
-      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll</HintPath>
     </Reference>
     <Reference Include="MethodCreator">
-      <HintPath>.\MethodCreator.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\MethodCreator.dll</HintPath>
     </Reference>
     <Reference Include="RapidControlIF">
-      <HintPath>.\RapidControlIF.dll</HintPath>
+      <HintPath>..\..\..\Method\AgilentUltivo\RapidControlIF.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
