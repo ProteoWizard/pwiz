@@ -31,7 +31,7 @@ namespace pwiz.Common.DataBinding.Controls
             _clusterSpecRows.Clear();
             _clusterSpecRows.AddRange(MakeRows(dataSchema, reportResults, clusteringSpec));
             comboDistanceMetric.SelectedItem =
-                ClusterMetricType.FromName(clusteringSpec.DistanceMetric) ?? ClusterMetricType.DEFAULT;
+                ClusterMetricType.FromName(clusteringSpec?.DistanceMetric) ?? ClusterMetricType.DEFAULT;
         }
 
         public IEnumerable<ClusterSpecRow> MakeRows(DataSchema dataSchema, ReportResults reportResults, ClusteringSpec clusteringSpec)
@@ -151,6 +151,8 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 var newItems = new List<ClusterRole>();
                 newItems.Add(ClusterRole.IGNORED);
+                var transforms = ClusterRole.All.OfType<ClusterRole.Transform>()
+                    .Where(t => t.CanHandleDataType(rowValue.PropertyType));
                 if (rowValue.ColumnGroupIndex.HasValue)
                 {
                     if (rowValue.EqualInAllRows)
@@ -161,8 +163,10 @@ namespace pwiz.Common.DataBinding.Controls
                 else
                 {
                     newItems.Add(ClusterRole.ROWHEADER);
+                    transforms = transforms.Where(t => t != ClusterRole.ZSCORE);
                 }
-                newItems.AddRange(ClusterRole.All.OfType<ClusterRole.Transform>().Where(t=>t.CanHandleDataType(rowValue.PropertyType)));
+
+                newItems.AddRange(transforms);
                 ReplaceItems(comboBoxControl, newItems);
             }
         }

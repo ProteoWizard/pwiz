@@ -168,6 +168,11 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 var mean = validValues.Mean();
                 return doubleValuesList.Select(val => val.HasValue ? (double?)(val.Value - mean) / stdDev : null);
             }
+
+            public override bool CanHandleDataType(Type type)
+            {
+                return IsNumericType(type);
+            }
         }
 
     }
