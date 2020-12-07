@@ -10779,7 +10779,7 @@
     <value>以下离子有多个离子迁移值。Skyline 支持多个构象异构体，因此这可能是有意为之。</value>
   </data>
   <data name="EditIonMobilityLibraryDlg_ValidateUniquePrecursors_This_list_contains__0__ions_with_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_" xml:space="preserve">
-    <value>该列表包 {0} 个离子，且这些离子具有多个离子迁移值。Skyline 支持多个构象异构体，因此这可能是有意为之。</value>
+    <value>该列表包含 {0} 个离子，且这些离子具有多个离子迁移值。Skyline 支持多个构象异构体，因此这可能是有意为之。</value>
   </data>
   <data name="IonMobilityFilteringUserControl_ValidateFixedWindow_Fixed_window_size_must_be_greater_than_0_" xml:space="preserve">
     <value>固定窗口大小必须大于 0。</value>
