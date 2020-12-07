@@ -255,7 +255,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             PropertyPath ppFoldChange = PropertyPath.Root.Property(nameof(FoldChangeDetailRow.FoldChangeResults))
                 .DictionaryValues();
             var columnsToAdd = new List<PropertyPath>();
-            var columnPrefixToRemove = PropertyPath.Root.Property(nameof(FoldChangeRow.FoldChangeResult));
+            var columnPrefixesToRemove = new List<PropertyPath>()
+            {
+                PropertyPath.Root.Property(nameof(FoldChangeRow.FoldChangeResult)),
+                PropertyPath.Root.Property(nameof(FoldChangeRow.Group))
+            };
             columnsToAdd.Add(ppFoldChange);
             columnsToAdd.Add(ppFoldChange.Property(nameof(FoldChangeResult.AdjustedPValue)));
             if (!string.IsNullOrEmpty(GroupComparisonModel.GroupComparisonDef.IdentityAnnotation))
@@ -265,7 +269,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.GroupIdentifier)));
             columnsToAdd.Add(ppRunAbundance.Property(nameof(ReplicateRow.Abundance)));
             clusteredViewSpec = clusteredViewSpec.SetColumns(clusteredViewSpec.Columns
-                .Where(col => !col.PropertyPath.StartsWith(columnPrefixToRemove))
+                .Where(col => !columnPrefixesToRemove.Any(prefix=>col.PropertyPath.StartsWith(prefix)))
                 .Concat(columnsToAdd.Select(col => new ColumnSpec(col))));
             return clusteredViewSpec;
         }

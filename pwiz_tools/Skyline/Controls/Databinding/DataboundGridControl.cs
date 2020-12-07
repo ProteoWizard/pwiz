@@ -735,12 +735,11 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void UpdateDendrograms()
         {
-            var reportResults = BindingListSource.ReportResults as ClusteredReportResults ??
-                                ClusteredReportResults.EMPTY;
+            var reportResults = BindingListSource.ReportResults as ClusteredReportResults ?? ClusteredReportResults.EMPTY;
             var colorScheme = boundDataGridView.ReportColorScheme;
             UpdateColumnDendrograms(reportResults.ClusteredProperties, colorScheme,
-                reportResults.ColumnGroupDendrogramDatas?.Select(d => d.DendrogramData).ToList());
-            if (reportResults?.RowDendrogramData == null)
+                reportResults.ColumnGroupDendrogramDatas?.Select(d => d?.DendrogramData).ToList());
+            if (reportResults?.RowDendrogramData == null || DataGridView.RowCount == 0)
             {
                 splitContainerVertical.Panel1Collapsed = true;
             }
