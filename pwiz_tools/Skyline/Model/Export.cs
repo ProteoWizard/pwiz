@@ -2844,7 +2844,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(4);    // Cell Accelerator Voltage
             writer.Write(FieldSeparator);
-            writer.Write(@"Negative"); // Polarity
+            writer.Write(nodeTranGroup.PrecursorCharge > 0 ? @"Positive" : @"Negative"); // Polarity
 
             if (MethodType != ExportMethodType.Standard)
             {
