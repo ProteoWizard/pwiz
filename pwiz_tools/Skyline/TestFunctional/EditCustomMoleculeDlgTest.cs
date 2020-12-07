@@ -277,6 +277,29 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
             var doc = WaitForDocumentChange(docA);
+
+            // Negative drift times not allowed
+            editMoleculeDlgA = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
+            RunUI(() =>
+            {
+                editMoleculeDlgA.IonMobility = -TESTVALUES_GROUP.IonMobility.Value;
+            });
+            ShowDialog<MessageDlg>(editMoleculeDlgA.OkDialog);
+            errorDlg = WaitForOpenForm<MessageDlg>();
+            RunUI(() =>
+            {
+                Assert.IsTrue(errorDlg.Message.Contains(
+                    string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_, 
+                        -TESTVALUES_GROUP.IonMobility.Value)));
+                errorDlg.OkDialog();
+                editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.compensation_V; // But negative CoV is allowed
+            });
+            OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
+            var docB = WaitForDocumentChange(doc);
+            // Undo that last change
+            RunUI(() => SkylineWindow.Undo());
+            doc = WaitForDocumentChange(docB);
+
             var peptideDocNode = doc.Molecules.ElementAt(0);
             Assert.IsNotNull(peptideDocNode);
             Assert.IsTrue(peptideDocNode.EqualsId(docA.Molecules.ElementAt(0))); // No Id change
