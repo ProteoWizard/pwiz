@@ -123,10 +123,8 @@ namespace pwiz.Skyline.Model.IonMobility
 
         private static IonMobilityLibrary GetIonMobilityLibrary(SrmDocument document)
         {
-            if (document == null)
-                return null;
-            var ionMobilityFiltering = document.Settings.TransitionSettings.IonMobilityFiltering;
-            return ionMobilityFiltering?.IonMobilityLibrary;
+            return document?.Settings?.TransitionSettings?.IonMobilityFiltering?.IonMobilityLibrary
+                   ?? IonMobilityLibrary.NONE;
         }
 
     }

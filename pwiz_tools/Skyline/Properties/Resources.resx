@@ -10809,9 +10809,6 @@ There might be something wrong with default web browser on this computer.</value
   <data name="SchedulingGraphPropertyDlg_OkDialog_Template_file_is_not_valid_" xml:space="preserve">
     <value>Template file is not valid.</value>
   </data>
-  <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
-    <value>Concurrent Accumulations</value>
-  </data>
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Error_copying_template_file_" xml:space="preserve">
     <value>Error copying template file.</value>
   </data>
@@ -10991,9 +10988,6 @@ Invalid peptide sequence at position 18
   <data name="DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found" xml:space="preserve">
     <value>Unimod file {0} not found</value>
   </data>
-  <data name="DdaSearch_SearchSettingsControl_Fragmentions_not_found_in_combobox" xml:space="preserve">
-    <value>fragmentIons value not found in ComboBox items</value>
-  </data>
   <data name="DdaSearch_SearchSettingsControl_Fragment_ions_must_be_selected" xml:space="preserve">
     <value>Fragment ions must be selected</value>
   </data>
@@ -11096,7 +11090,73 @@ Invalid peptide sequence at position 18
   <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
     <value>iRT standard set to {0}, but multiple iRT standards were found. iRT standard must be set explicitly.</value>
   </data>
+  <data name="BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__" xml:space="preserve">
+    <value>Scheduling failure (no targets?)</value>
+  </data>
   <data name="SkylineVersion_V20_2_Skyline_20_2" xml:space="preserve">
     <value>Skyline 20.2</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Concurrent_frames" xml:space="preserve">
+    <value>Concurrent frames</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Max_sampling_times" xml:space="preserve">
+    <value>Max sampling times</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Mean_sampling_times" xml:space="preserve">
+    <value>Mean sampling times</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Redundancy_of_targets" xml:space="preserve">
+    <value>Redundancy of targets</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Targets_per_frame" xml:space="preserve">
+    <value>Targets per frame</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Target" xml:space="preserve">
+    <value>Rank of target</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_frames" xml:space="preserve">
+    <value>Concurrent frames</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Max_sampling_times" xml:space="preserve">
+    <value>Max sampling times (seconds)</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Mean_sampling_times" xml:space="preserve">
+    <value>Mean sampling times (seconds)</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Redundancy_of_targets" xml:space="preserve">
+    <value>Redundancy of targets</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Targets_per_frame" xml:space="preserve">
+    <value>Targets per frame</value>
+  </data>
+  <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Target_table" xml:space="preserve">
+    <value>Target table</value>
+  </data>
+  <data name="Metrics_ColTarget_Target" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="Metrics_ColMeanSamplingTime_Mean_sampling_time__seconds_" xml:space="preserve">
+    <value>Mean sampling time (seconds)</value>
+  </data>
+  <data name="Metrics_ColMaxSamplingTime_Max_sampling_time__seconds_" xml:space="preserve">
+    <value>Max sampling time (seconds)</value>
+  </data>
+  <data name="Metrics_ColMz_m_z" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="Metrics_Col1K0LowerLimit__1_K0_lower_limit" xml:space="preserve">
+    <value>1/K0 lower limit</value>
+  </data>
+  <data name="Metrics_Col1K0UpperLimit__1_K0_upper_limit" xml:space="preserve">
+    <value>1/K0 upper limit</value>
+  </data>
+  <data name="Metrics_ColRtBegin_RT_begin" xml:space="preserve">
+    <value>RT begin</value>
+  </data>
+  <data name="Metrics_ColRtEnd_RT_end" xml:space="preserve">
+    <value>RT end</value>
+  </data>
+  <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
+    <value>Concurrent Accumulations</value>
   </data>
 </root>

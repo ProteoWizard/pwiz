@@ -22,8 +22,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
-#pragma warning disable 649
-
 namespace pwiz.SkylineTestUtil
 {
     public static class TypeInspector
@@ -86,10 +84,11 @@ namespace pwiz.SkylineTestUtil
         {
             return "`" + code + "`";
         }
-
+#pragma warning disable CS0649 // Disable "Field is never assigned" warning
         /// <summary>
         /// Class which is used to help determine the size of fields
         /// </summary>
+        [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
         internal class Subclass1 : object
         {
             public int w;
@@ -101,7 +100,7 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Generic class which is used to help determine the size of fields
         /// </summary>
-        [UsedImplicitly]
+        [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
         internal class Subclass2<T> : Subclass1
         {
             public T _myValue1;
