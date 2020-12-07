@@ -105,6 +105,7 @@
             this.zedGraphControl1.ScrollMinY2 = 0D;
             this.zedGraphControl1.Size = new System.Drawing.Size(600, 270);
             this.zedGraphControl1.TabIndex = 0;
+            this.zedGraphControl1.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraphControl1_ContextMenuBuilder);
             this.zedGraphControl1.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.zedGraphControl1_ZoomEvent);
             this.zedGraphControl1.Resize += new System.EventHandler(this.zedGraphControl1_Resize);
             // 

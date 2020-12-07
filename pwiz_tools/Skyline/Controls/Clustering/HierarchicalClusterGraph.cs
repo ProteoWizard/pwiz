@@ -149,5 +149,56 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.GraphPane.Draw(zedGraphControl1.CreateGraphics());
             UpdateDendrograms();
         }
+
+        public bool ShowXAxisLabels
+        {
+            get
+            {
+                return zedGraphControl1.GraphPane.XAxis.Scale.IsVisible;
+            }
+            set
+            {
+                zedGraphControl1.GraphPane.XAxis.Scale.IsVisible = value;
+                zedGraphControl1.GraphPane.AxisChange();
+                zedGraphControl1.Invalidate();
+            }
+        }
+
+        public bool ShowYAxisLabels
+        {
+            get
+            {
+                return zedGraphControl1.GraphPane.YAxis.Scale.IsVisible;
+            }
+            set
+            {
+                zedGraphControl1.GraphPane.YAxis.Scale.IsVisible = value;
+                zedGraphControl1.GraphPane.AxisChange();
+                zedGraphControl1.Invalidate();
+            }
+        }
+
+        private void zedGraphControl1_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
+            menuStrip.Items.Add(new ToolStripMenuItem("X-Axis Labels", null, ShowXAxisLabelsOnClick)
+            {
+                Checked = ShowXAxisLabels
+            });
+            menuStrip.Items.Add(new ToolStripMenuItem("Y-Axis Labels", null, ShowYAxisLabelsOnClick)
+            {
+                Checked = ShowYAxisLabels
+            });
+        }
+
+        private void ShowYAxisLabelsOnClick(object sender, EventArgs args)
+        {
+            ShowYAxisLabels = !ShowYAxisLabels;
+        }
+
+        private void ShowXAxisLabelsOnClick(object sender, EventArgs args)
+        {
+            ShowXAxisLabels = !ShowXAxisLabels;
+        }
     }
 }

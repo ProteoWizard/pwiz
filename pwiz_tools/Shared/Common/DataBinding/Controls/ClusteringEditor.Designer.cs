@@ -31,10 +31,10 @@
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.columnsDataGridView = new pwiz.Common.Controls.CommonDataGridView();
-            this.lblDistanceMetric = new System.Windows.Forms.Label();
-            this.comboDistanceMetric = new System.Windows.Forms.ComboBox();
             this.colColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTransform = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.lblDistanceMetric = new System.Windows.Forms.Label();
+            this.comboDistanceMetric = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.columnsDataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -79,6 +79,23 @@
             this.columnsDataGridView.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.columnsDataGridView_DataError);
             this.columnsDataGridView.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.columnsDataGridView_EditingControlShowing);
             // 
+            // colColumn
+            // 
+            this.colColumn.DataPropertyName = "Column";
+            this.colColumn.HeaderText = "Column";
+            this.colColumn.Name = "colColumn";
+            this.colColumn.ReadOnly = true;
+            this.colColumn.Width = 200;
+            // 
+            // colTransform
+            // 
+            this.colTransform.DataPropertyName = "Transform";
+            this.colTransform.DisplayStyleForCurrentCellOnly = true;
+            this.colTransform.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.colTransform.HeaderText = "Transform";
+            this.colTransform.Name = "colTransform";
+            this.colTransform.Width = 200;
+            // 
             // lblDistanceMetric
             // 
             this.lblDistanceMetric.AutoSize = true;
@@ -97,23 +114,6 @@
             this.comboDistanceMetric.Size = new System.Drawing.Size(280, 21);
             this.comboDistanceMetric.TabIndex = 7;
             // 
-            // colColumn
-            // 
-            this.colColumn.DataPropertyName = "Column";
-            this.colColumn.HeaderText = "Column";
-            this.colColumn.Name = "colColumn";
-            this.colColumn.ReadOnly = true;
-            this.colColumn.Width = 200;
-            // 
-            // colTransform
-            // 
-            this.colTransform.DataPropertyName = "Transform";
-            this.colTransform.DisplayStyleForCurrentCellOnly = true;
-            this.colTransform.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.colTransform.HeaderText = "Transform";
-            this.colTransform.Name = "colTransform";
-            this.colTransform.Width = 200;
-            // 
             // ClusteringEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -126,7 +126,7 @@
             this.Controls.Add(this.btnCancel);
             this.Name = "ClusteringEditor";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "ClusteringEditor";
+            this.Text = "Clustering Editor";
             ((System.ComponentModel.ISupportInitialize)(this.columnsDataGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
