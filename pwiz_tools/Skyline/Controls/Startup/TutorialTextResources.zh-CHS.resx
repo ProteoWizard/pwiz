@@ -101,7 +101,7 @@
     <value>DIA/SWATH 数据分析</value>
   </data>
   <data name="DIA_SWATH_Description" xml:space="preserve">
-    <value>根据 Navarr、Nature Biotech 2016 基准测试文件，使用为指示说明而创建的 3 种生物混合数据集，亲身体验如何处理从 Q Exactive 或 TripleTOF 仪器中获得的非数据依赖采集 (DIA) 数据。使用面向 DIA 的“导入肽段搜索”向导从 DDA 数据构建谱图库，其中自动 iRT 校准用于保留时间校准，mProphet 学习的模型用于肽段峰值检测。运用丰富的 Skyline 摘要图评估数据质量，摘要图中包含保留时间、峰面积、质量准确度和 CV。 最后进行群组比较，并自行评估数据捕获每种生物预期比率的效果。</value>
+    <value>根据 Navarro、Nature Biotech 2016 基准测试文献，使用为指示说明而创建的三物种混合数据集，亲身体验如何处理从 Q Exactive 或 TripleTOF 仪器中获得的非数据依赖采集 (DIA) 数据。使用面向 DIA 的“导入肽段搜索”向导从 DDA 数据构建谱图库，其中自动 iRT 校准用于保留时间校准，mProphet 学习的模型用于肽段峰值检测。运用丰富的 Skyline 摘要图评估数据质量，摘要图中包含保留时间、峰面积、质量准确度和 CV。 最后进行群组比较，并自行评估数据捕获每个物种预期比率的效果。</value>
   </data>
   <data name="IMSFiltering_Caption" xml:space="preserve">
     <value>离子迁移谱图过滤</value>
@@ -167,7 +167,7 @@
     <value>碰撞能量优化</value>
   </data>
   <data name="LibraryExplorer_Description" xml:space="preserve">
-    <value>亲身体验如何使用 Skyline 谱图库浏览器。了解使用包含 15N 标记肽段和磷酸化肽段的 MS/MS 谱图库对同位素标记和子离子中性丢失进行处理的更多信息。使用库浏览器可加速 Shotgun 发现实验与靶向研究之间的离子对。</value>
+    <value>亲身体验如何使用 Skyline 谱图库浏览器。了解使用包含 15N 标记肽段和磷酸化肽段的 MS/MS 谱图库对同位素标记和子离子中性丢失进行处理的更多信息。使用库浏览器可加速从Shotgun 蛋白组学研究到靶向蛋白组研究的方法建立。</value>
   </data>
   <data name="ExistingQuant_Caption" xml:space="preserve">
     <value>现有和定量实验</value>
