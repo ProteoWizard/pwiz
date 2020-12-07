@@ -120,6 +120,18 @@ namespace pwiz.Skyline.EditUI
             set { textSizeComboBox.SelectedItem = value; }
         }
 
+        public bool IsPeakWidthRelative
+        {
+            get { return cbRelative.Checked; }
+            set { cbRelative.Checked = value; }
+        }
+
+        public double TimeRange
+        {
+            get { return double.Parse(textTimeRange.Text); }
+            set { textTimeRange.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
         #endregion
     }
 }

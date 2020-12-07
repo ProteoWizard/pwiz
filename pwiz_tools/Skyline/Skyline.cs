@@ -4633,21 +4633,21 @@ namespace pwiz.Skyline
             var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
             for (int i = 0; i < standardTypes.Count; i++)
             {
-                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, i);
+                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, NormalizeOption.FromIsotopeLabelType(standardTypes[i]));
             }
             if (DocumentUI.Settings.HasGlobalStandardArea)
             {
                 SelectRatioHandler.Create(this, menu, ratiosToGlobalStandardsMenuItem.Text,
-                    ChromInfo.RATIO_INDEX_GLOBAL_STANDARDS);
+                    NormalizeOption.FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS));
             }
         }
 
         private class SelectRatioHandler
         {
             protected readonly SkylineWindow _skyline;
-            private readonly int _ratioIndex;
+            private readonly NormalizeOption _ratioIndex;
 
-            public SelectRatioHandler(SkylineWindow skyline, int ratioIndex)
+            public SelectRatioHandler(SkylineWindow skyline, NormalizeOption ratioIndex)
             {
                 _skyline = skyline;
                 _ratioIndex = ratioIndex;
@@ -4665,22 +4665,22 @@ namespace pwiz.Skyline
 
             protected virtual void OnMenuItemClick()
             {
-                _skyline.SequenceTree.RatioIndex = _ratioIndex;
-                _skyline._listGraphPeakArea.ForEach(g => g.RatioIndex = _ratioIndex);
+                _skyline.SequenceTree.NormalizeOption = _ratioIndex;
+                _skyline._listGraphPeakArea.ForEach(g => g.NormalizeOption = _ratioIndex);
             }
 
-            public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, int i)
+            public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, NormalizeOption i)
             {
                 var handler = new SelectRatioHandler(skylineWindow, i);
                 var item = new ToolStripMenuItem(text, null, handler.ToolStripMenuItemClick)
-                { Checked = (skylineWindow.SequenceTree.RatioIndex == i) };
+                { Checked = (skylineWindow.SequenceTree.NormalizeOption == i) };
                 menu.DropDownItems.Add(item);
             }
         }
 
-        public void SetRatioIndex(int index)
+        public void SetRatioIndex(NormalizeOption ratioIndex)
         {
-            new SelectRatioHandler(this, index).Select();
+            new SelectRatioHandler(this, ratioIndex).Select();
         }
 
         private void sequenceTree_PickedChildrenEvent(object sender, PickedChildrenEventArgs e)

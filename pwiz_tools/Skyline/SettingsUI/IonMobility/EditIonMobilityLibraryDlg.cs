@@ -42,7 +42,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 {
     public partial class EditIonMobilityLibraryDlg : FormEx
     {
-        private readonly IEnumerable<IonMobilityLibrary> _existingLibs;
+        private readonly IEnumerable<IonMobilityLibrarySpec> _existingLibs;
 
         public IonMobilityLibrary IonMobilityLibrary { get; private set; }
 
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         public const int COLUMN_HIGH_ENERGY_OFFSET = 5;
 
 
-        public EditIonMobilityLibraryDlg(IonMobilityLibrary library, IEnumerable<IonMobilityLibrary> existingLibs)
+        public EditIonMobilityLibraryDlg(IonMobilityLibrarySpec library, IEnumerable<IonMobilityLibrarySpec> existingLibs)
         {
             _existingLibs = existingLibs;
 
@@ -171,7 +171,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 OverwritePrompt = true,
                 DefaultExt = IonMobilityDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(IonMobilityDb.FILTER_IONMOBILITYLIBRARY) 
+                Filter = TextUtil.FileDialogFiltersAll(IonMobilityLibrarySpec.FILTER_IONMOBILITYLIBRARY) 
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -248,7 +248,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 Title = Resources.EditIonMobilityLibraryDlg_btnBrowseDb_Click_Open_Ion_Mobility_Library,
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 DefaultExt = IonMobilityDb.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(IonMobilityDb.FILTER_IONMOBILITYLIBRARY)
+                Filter = TextUtil.FileDialogFiltersAll(IonMobilityLibrarySpec.FILTER_IONMOBILITYLIBRARY)
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
