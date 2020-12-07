@@ -8,16 +8,19 @@ namespace pwiz.Common.DataBinding.Clustering
 {
     public class Clusterer
     {
-        public Clusterer(IEnumerable<RowItem> rowItems, ClusteredProperties properties)
+        public Clusterer(IEnumerable<RowItem> rowItems, ClusteredProperties properties, ClusterMetricType distanceMetric)
         {
             RowItems = ImmutableList.ValueOf(rowItems);
             Properties = properties;
             RowHeaderLevels = ImmutableList.ValueOf(Properties.RowHeaders);
+            DistanceMetric = distanceMetric;
         }
         public ImmutableList<RowItem> RowItems { get; }
 
         public ItemProperties ItemProperties => Properties.PivotedProperties.ItemProperties;
         public ClusteredProperties Properties { get; }
+
+        public ClusterMetricType DistanceMetric { get; }
 
         public ImmutableList<DataPropertyDescriptor> RowHeaderLevels { get; private set; }
 
@@ -168,7 +171,7 @@ namespace pwiz.Common.DataBinding.Clustering
                 clusteredProperties = ClusteredProperties.FromClusteringSpec(clusteringSpec, pivotedPropertySet);
             }
 
-            return new Clusterer(reportResults.RowItems, clusteredProperties);
+            return new Clusterer(reportResults.RowItems, clusteredProperties, ClusterMetricType.FromName(clusteringSpec.DistanceMetric) ?? ClusterMetricType.DEFAULT);
         }
 
         public static ReportResults PerformClustering(ClusteringSpec clusteringSpec, ReportResults reportResults)

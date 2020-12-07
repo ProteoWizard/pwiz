@@ -8,7 +8,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding.Clustering;
-using pwiz.Common.DataBinding.Layout;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -31,6 +30,8 @@ namespace pwiz.Common.DataBinding.Controls
         {
             _clusterSpecRows.Clear();
             _clusterSpecRows.AddRange(MakeRows(dataSchema, reportResults, clusteringSpec));
+            comboDistanceMetric.SelectedItem =
+                ClusterMetricType.FromName(clusteringSpec.DistanceMetric) ?? ClusterMetricType.DEFAULT;
         }
 
         public IEnumerable<ClusterSpecRow> MakeRows(DataSchema dataSchema, ReportResults reportResults, ClusteringSpec clusteringSpec)
@@ -193,7 +194,10 @@ namespace pwiz.Common.DataBinding.Controls
 
         public ClusteringSpec GetClusteringSpec()
         {
-            return new ClusteringSpec(_clusterSpecRows.Select(row => new ClusteringSpec.ValueSpec(row.ColumnRef, row.Transform)));
+            var clusteringSpec = new ClusteringSpec(_clusterSpecRows.Select(row => new ClusteringSpec.ValueSpec(row.ColumnRef, row.Transform)));
+            clusteringSpec =
+                clusteringSpec.ChangeDistanceMetric((comboDistanceMetric.SelectedItem as ClusterMetricType)?.Name);
+            return clusteringSpec;
         }
     }
 }

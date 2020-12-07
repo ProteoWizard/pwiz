@@ -17,6 +17,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
             new ClusterMetricType(@"euclidean", ()=>"Euclidean distance (L2 norm)", 2);
         public static readonly ClusterMetricType PEARSON = 
             new ClusterMetricType(@"pearson", ()=>"Pearson correlation", 10);
+        public static readonly ClusterMetricType DEFAULT = EUCLIDEAN;
 
         public ClusterMetricType(string name, Func<string> getLabel, int algLibValue) : base(name, getLabel)
         {
@@ -39,6 +40,11 @@ namespace pwiz.Common.DataAnalysis.Clustering
                 yield return CHEBYSHEV;
                 yield return PEARSON;
             }
+        }
+
+        public static ClusterMetricType FromName(string name)
+        {
+            return ALL.FirstOrDefault(metric => metric.Name == name);
         }
     }
 }
