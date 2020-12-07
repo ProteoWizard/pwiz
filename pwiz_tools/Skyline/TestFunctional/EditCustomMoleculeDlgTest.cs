@@ -264,8 +264,16 @@ namespace pwiz.SkylineTestFunctional
                 editMoleculeDlgA.PrecursorCollisionEnergy = TESTVALUES_GROUP.CollisionEnergy.Value;
                 // Test the "set" part of "Issue 371: Small molecules: need to be able to import and/or set CE, RT and DT for individual precursors and products"
                 editMoleculeDlgA.IonMobility = TESTVALUES_GROUP.IonMobility.Value;
-                editMoleculeDlgA.IonMobilityUnits = TESTVALUES_GROUP.IonMobilityUnits;
+                editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.none; // Simulate user forgets to declare units
                 editMoleculeDlgA.CollisionalCrossSectionSqA = TESTVALUES_GROUP.CollisionalCrossSectionSqA.Value;
+            });
+            ShowDialog<MessageDlg>(editMoleculeDlgA.OkDialog);
+            var errorDlg = WaitForOpenForm<MessageDlg>();
+            RunUI(() =>
+            {
+                Assert.IsTrue(errorDlg.Message.Contains(Resources.EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_));
+                errorDlg.OkDialog();
+                editMoleculeDlgA.IonMobilityUnits = TESTVALUES_GROUP.IonMobilityUnits;
             });
             OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
             var doc = WaitForDocumentChange(docA);
