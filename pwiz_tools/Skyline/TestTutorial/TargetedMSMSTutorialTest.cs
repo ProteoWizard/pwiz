@@ -589,7 +589,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     SkylineWindow.ShowPeakAreaReplicateComparison();
                     SkylineWindow.ShowProductTransitions();
-                    SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                    SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
                 });
 
             // Ensure graph looks like p27.

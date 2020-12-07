@@ -771,8 +771,18 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettingsDlg.OkDialog();
             });
             WaitForClosedForm(transitionSettingsDlg);
-            doc = WaitForDocumentChange(doc);
-            
+            WaitForDocumentChange(doc);
+
+            // Now close the document, then reopen to verify imsdb background loader operation
+            var docName = TestContext.GetTestPath("reloaded.sky");
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument(docName);
+                SkylineWindow.NewDocument();
+                SkylineWindow.OpenFile(docName);
+            });
+            doc = WaitForDocumentLoaded();
+
             var result = doc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
             AssertEx.AreEqual(2, result.Count);
             var key3 = new LibKey("GLAGVENVTELKK", Adduct.TRIPLY_PROTONATED);
