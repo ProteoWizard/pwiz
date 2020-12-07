@@ -3100,6 +3100,75 @@
     <Content Include="Instruments.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MassSpectrometry.LCMSAcquisition.MHPlugin.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.CommonUtilities.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.DataInterfaces.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.ESW.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MethodValidationModule.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSActualProvider.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSIF.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSMethodDO.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSParamProvider.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSTrace.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSTuneDO.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\BuildAgilentUltivoMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\ESWShared.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\MethodCreator.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AgilentUltivo\RapidControlIF.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Method\Thermo\BuildThermoMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3146,6 +3215,7 @@
       <Link>unimod.obo</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Method\AgilentUltivo\BuildAgilentUltivoMethod.exe.config" />
     <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
     <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
     <None Include="Resources\Locked.bmp" />

@@ -3041,7 +3041,7 @@ namespace pwiz.Skyline
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_);
                     return;
                 }
-                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400)
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400) || Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT_ULTIVO)
                         ? !Directory.Exists(args.TemplateFile)
                         : !File.Exists(args.TemplateFile))
                 {
@@ -3052,6 +3052,12 @@ namespace pwiz.Skyline
                     !AgilentMethodExporter.IsAgilentMethodPath(args.TemplateFile))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template___The_folder_is_expected_to_have_a__m_extension__and_contain_the_file_qqqacqmethod_xsd_, args.TemplateFile);
+                    return;
+                }
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT_ULTIVO) &&
+                    !AgilentUltivoMethodExporter.IsMethodPath(args.TemplateFile))
+                {
+                    _out.WriteLine(Resources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_, args.TemplateFile);
                     return;
                 }
             }

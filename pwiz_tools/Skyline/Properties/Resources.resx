@@ -11159,4 +11159,10 @@ Invalid peptide sequence at position 18
   <data name="RTScheduleGraphPane_UpdateGraph_Concurrent_Accumulations" xml:space="preserve">
     <value>Concurrent Accumulations</value>
   </data>
+  <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>The folder {0} does not appear to contain an Agilent Ultivo method template. The folder is expected to have a .m extension.</value>
+  </data>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+    <value>The chosen folder does not appear to contain an Agilent Ultivo method template. The folder is expected to have a .m extension.</value>
+  </data>
 </root>

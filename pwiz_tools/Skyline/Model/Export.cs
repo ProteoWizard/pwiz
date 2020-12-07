@@ -174,6 +174,7 @@ namespace pwiz.Skyline.Model
         public const string AGILENT = "Agilent";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
+        public const string AGILENT_ULTIVO = "Agilent Ultivo";
         public const string BRUKER = "Bruker";
         public const string BRUKER_TOF = "Bruker QTOF";
         public const string BRUKER_TIMSTOF = "Bruker timsTOF";
@@ -204,6 +205,7 @@ namespace pwiz.Skyline.Model
         public static readonly string[] METHOD_TYPES =
             {
                 AGILENT6400,
+                AGILENT_ULTIVO,
                 BRUKER_TOF,
                 BRUKER_TIMSTOF,
                 ABI_QTRAP,
@@ -250,6 +252,7 @@ namespace pwiz.Skyline.Model
                                        {ABI_QTRAP, EXT_AB_SCIEX},
                                        {ABI_TOF, EXT_AB_SCIEX},
                                        {AGILENT6400, EXT_AGILENT},
+                                       {AGILENT_ULTIVO, EXT_AGILENT},
                                        {BRUKER_TOF, EXT_BRUKER},
                                        {BRUKER_TIMSTOF, EXT_BRUKER_TIMSTOF},
                                        {SHIMADZU, EXT_SHIMADZU},
@@ -435,6 +438,8 @@ namespace pwiz.Skyline.Model
                         return ExportAgilentCsv(doc, path);
                     else
                         return ExportAgilentMethod(doc, path, template);
+                case ExportInstrumentType.AGILENT_ULTIVO:
+                    return ExportAgilentUltivoMethod(doc, path, template);
                 case ExportInstrumentType.AGILENT_TOF:
                     if (type == ExportFileType.IsolationList)
                         return ExportAgilentIsolationList(doc, path, template);
@@ -571,6 +576,16 @@ namespace pwiz.Skyline.Model
         public AbstractMassListExporter ExportAgilentMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new AgilentMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.DwellTime = DwellTime;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportAgilentUltivoMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new AgilentUltivoMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
@@ -2894,6 +2909,30 @@ namespace pwiz.Skyline.Model
         public static bool IsAgilentMethodPath(string methodPath)
         {
             return methodPath.EndsWith(ExportInstrumentType.EXT_AGILENT) && File.Exists(Path.Combine(methodPath, @"qqqacqmeth.xsd"));
+        }
+    }
+
+    public class AgilentUltivoMethodExporter : AgilentMassListExporter
+    {
+        public const string EXE_BUILD_AGILENT_METHOD = @"Method\AgilentUltivo\BuildAgilentUltivoMethod";
+
+        public AgilentUltivoMethodExporter(SrmDocument document)
+            : base(document)
+        {
+        }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            MethodExporter.ExportMethod(EXE_BUILD_AGILENT_METHOD,
+                new List<string>(), fileName, templateName, MemoryOutput, progressMonitor);
+        }
+
+        public static bool IsMethodPath(string methodPath)
+        {
+            return methodPath.EndsWith(ExportInstrumentType.EXT_AGILENT);
         }
     }
 

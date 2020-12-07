@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0A0180A8-6BCB-41B7-8636-D034B1E629BC}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>BuildAgilentUltivoMethod</RootNamespace>
+    <AssemblyName>BuildAgilentUltivoMethod</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Agilent.MassSpectrometry.LCMSAcquisition.MHPlugin">
+      <HintPath>.\Agilent.MassSpectrometry.LCMSAcquisition.MHPlugin.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.CommonUtilities">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.CommonUtilities.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.DataInterfaces">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.DataInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.ESW">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.ESW.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodValidationModule">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MethodValidationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSActualProvider">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSActualProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSIF">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSIF.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSMethodDO">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSMethodDO.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSParamProvider">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSParamProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTrace">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSTrace.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTuneDO">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.MSTuneDO.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.ValidationBase">
+      <HintPath>.\Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll</HintPath>
+    </Reference>
+    <Reference Include="MethodCreator">
+      <HintPath>.\MethodCreator.dll</HintPath>
+    </Reference>
+    <Reference Include="RapidControlIF">
+      <HintPath>.\RapidControlIF.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ESWShared.dll" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

@@ -11759,6 +11759,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent Ultivo method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_cont" +
+                        "ain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_exten" +
+                        "sion_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred..
         /// </summary>
         public static string ExportMethodDlg_btnGraph_Click_An_error_occurred_ {
@@ -12131,6 +12142,16 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ" +
                         "_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_fi" +
                         "le_qqqacqmethod_xsd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent Ultivo method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Ult" +
+                        "ivo_method_template__The_folder_is_expected_to_have_a__m_extension_", resourceCulture);
             }
         }
         
