@@ -601,7 +601,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return NullForEmpty(textBoxPrecursorCollisionEnergy.Text); }
             set
             {
-                textBoxPrecursorCollisionEnergy.Text = value.HasValue
+                textBoxPrecursorCollisionEnergy.Text = value.HasValue && !value.Value.Equals(0)
                     ? value.Value.ToString(LocalizationHelper.CurrentCulture)
                     : string.Empty;
             }
