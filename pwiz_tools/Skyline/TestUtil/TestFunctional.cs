@@ -1159,7 +1159,8 @@ namespace pwiz.SkylineTestUtil
                 formSeen.Saw(formType);
                 bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
 
-                PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), LinkPage(pageNum), showMatchingPages, timeout);
+                var pageString = pageNum.HasValue ? string.Format(" - p. {0}", pageNum) : string.Empty;
+                PauseAndContinueForm.Show(description + pageString, LinkPage(pageNum), showMatchingPages, timeout);
             }
             else
             {
