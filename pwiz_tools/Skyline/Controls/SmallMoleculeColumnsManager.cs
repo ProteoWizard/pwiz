@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Controls
                         dataGridViewColumn.Visible = true;
                         dataGridViewColumn.ReadOnly = readOnly;
                     }
-                    else if (hasColumn)
+                    else
                     {
                         // Already has a mass column - note which one
                         for (var i = 0; i < gridView.ColumnCount; i++)
