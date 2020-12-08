@@ -82,6 +82,8 @@ namespace pwiz.Skyline.Controls
 
             var formulaHeader = Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula;
             var hasFormulaColumn = gridView.Columns.Contains(formulaHeader);
+            var addedHeaders = new List<string>();
+
             if (!hasFormulaColumn && smallMoleculeLibraryAttributes.Any(a => !string.IsNullOrEmpty(a.Value.ChemicalFormula)))
             {
                 // Add a column for chemical formula
@@ -92,6 +94,7 @@ namespace pwiz.Skyline.Controls
                 dataGridViewColumn.DataPropertyName = DATA_PROPERTY_NAME_FORMULA;
                 dataGridViewColumn.Visible = true;
                 dataGridViewColumn.ReadOnly = readOnly;
+                addedHeaders.Add(dataGridViewColumn.HeaderText);
             }
             else if (hasFormulaColumn)
             {
@@ -138,6 +141,7 @@ namespace pwiz.Skyline.Controls
                         dataGridViewColumn.Name = dataGridViewColumn.HeaderText = header;
                         dataGridViewColumn.Visible = true;
                         dataGridViewColumn.ReadOnly = readOnly;
+                        addedHeaders.Add(dataGridViewColumn.HeaderText);
                     }
                     else
                     {
@@ -177,6 +181,7 @@ namespace pwiz.Skyline.Controls
                     dataGridViewColumn.DataPropertyName = tag;
                     dataGridViewColumn.Visible = true;
                     dataGridViewColumn.ReadOnly = readOnly;
+                    addedHeaders.Add(dataGridViewColumn.HeaderText);
                 }
                 else if (hasAccessionColumnForTag && !AccessionColumnIndexes.TryGetValue(tag, out _))
                 {
@@ -191,12 +196,19 @@ namespace pwiz.Skyline.Controls
                     }
                 }
             }
+
+            HeadersAdded = addedHeaders.ToArray(); // Useful for adjusting parent control width
         }
 
         public SmallMoleculeColumnsManager ChangeTargetResolver(TargetResolver targetResolver)
         {
             return new SmallMoleculeColumnsManager(DataGridView, targetResolver, ModeUI, ReadOnly, InsertColumnsAt);
         }
+
+        /// <summary>
+        /// List of header names that were automatically added (useful for adjusting parent control width)
+        /// </summary>
+        public string[] HeadersAdded { get; private set; }
 
         /// <summary>
         /// Helps deal with hidden columns and their effect on column indexing

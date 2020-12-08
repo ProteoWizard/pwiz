@@ -43,6 +43,26 @@ namespace pwiz.Skyline.SettingsUI
             {
                 (col as TargetColumn)?.SetSmallMoleculesColumnManagementProvider(SmallMoleculeColumnsManager); // Makes it possible to show "caffeine" instead of "#$#caffeine#C8H10N4O2#",and adds formula, InChiKey etc columns as needed
             }
+
+            // Adjust parent form width for any small molecule columns that were automatically added (assumes the gridView is suitably anchored)
+            if (SmallMoleculeColumnsManager.HeadersAdded != null)
+            {
+                for (var parent = gridView.Parent; parent != null; parent = parent.Parent)
+                {
+                    if (parent is Form form)
+                    {
+                        var g = form.CreateGraphics();
+                        var extraWidth = 0;
+                        foreach (var header in SmallMoleculeColumnsManager.HeadersAdded)
+                        {
+                            extraWidth += (int)g.MeasureString(header + @" ", gridView.Font).Width; // Rough adjustment - not worrying about precise margins etc
+                        }
+
+                        form.Width += extraWidth;
+                        break;
+                    }
+                }
+            }
         }
 
         public TargetResolver TargetResolver { get { return SmallMoleculeColumnsManager.TargetResolver; } }
