@@ -92,7 +92,7 @@ namespace pwiz.Common.DataBinding.Clustering
             return new CaptionedValues(CaptionComponentList.EMPTY, typeof(IColumnCaption), seriesGroup.PivotCaptions);
         }
 
-        private ClusterDataSet<RowItem, int>.Results GetClusterDataSetResults()
+        private ClusterDataSet<RowItem, int> MakeClusterDataSet()
         {
             var rowDataFrames = ImmutableList.ValueOf(MakeRowDataFrames());
             var dataFrameGroups =
@@ -100,13 +100,27 @@ namespace pwiz.Common.DataBinding.Clustering
                     ImmutableList.ValueOf(MakeDataFrames(group.SeriesList)));
             dataFrameGroups = dataFrameGroups.Prepend(rowDataFrames);
             var clusterDataSet = new ClusterDataSet<RowItem, int>(RowItems, dataFrameGroups);
-            return clusterDataSet.PerformClustering(rowDataFrames.Any() || RowHeaderLevels.Any());
+            return clusterDataSet;
+        }
+
+        private ClusterDataSet<RowItem, int>.Results GetClusterDataSetResults()
+        {
+            var clusterDataSet = MakeClusterDataSet();
+            bool performRowClustering = RowHeaderLevels.Any() || Properties.PivotedProperties.UngroupedProperties
+                .Any(p => null != Properties.GetRowTransform(p));
+            return clusterDataSet.PerformClustering(performRowClustering);
         }
 
         public PcaResults<int> PerformPca(PivotedProperties.SeriesGroup seriesGroup, int maxLevels)
         {
-            var dataSet = new ClusterDataSet<RowItem, int>(RowItems, ImmutableList.Singleton(ImmutableList.ValueOf(MakeDataFrames(seriesGroup.SeriesList))));
+            ClusterDataSet<RowItem, int> dataSet = new ClusterDataSet<RowItem, int>(RowItems, ImmutableList.Singleton(ImmutableList.ValueOf(MakeDataFrames(seriesGroup.SeriesList))));
             return dataSet.PerformPcaOnColumnGroups(maxLevels).FirstOrDefault();
+        }
+
+        public PcaResults<RowItem> PerformPcaOnRows(int maxLevels)
+        {
+            var dataSet = MakeClusterDataSet();
+            return dataSet.PerformPcaOnRows(maxLevels);
         }
 
         public ClusteredReportResults GetClusteredResults()

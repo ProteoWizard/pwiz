@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -194,6 +195,46 @@ namespace pwiz.Common.DataAnalysis.Clustering
         public IEnumerable<PcaResults<TColumn>> PerformPcaOnColumnGroups(int maxLevels)
         {
             return DataFrameGroups.Select(group => PerformPca(group, maxLevels));
+        }
+
+        public PcaResults<TRow> PerformPcaOnRows(int maxLevels)
+        {
+            int nPoints = RowCount;
+            int nVars = DataFrames.Sum(frame => frame.ColumnHeaders.Count);
+            var matrix = new double[nPoints, nVars];
+            int iCol = 0;
+            foreach (var dataFrame in DataFrames)
+            {
+                foreach (var col in dataFrame.DataColumns)
+                {
+
+                    for (int iRow = 0; iRow < nPoints; iRow++)
+                    {
+                        matrix[iRow, iCol] = col[iRow];
+                    }
+
+                    iCol++;
+                }
+            }
+            alglib.pcatruncatedsubspace(matrix, nPoints, nVars, maxLevels, .0001, 0, out double[] s2, out double[,] vectors);
+            var decomposedVectors = new List<ImmutableList<double>>();
+            for (int iRow = 0; iRow < nPoints; iRow++)
+            {
+                var decomposedVector = new List<double>();
+                for (int iComponent = 0; iComponent < vectors.GetLength(1); iComponent++)
+                {
+                    double dotProduct = 0;
+                    for (int iCoordinate = 0; iCoordinate < nVars; iCoordinate++)
+                    {
+                        dotProduct += matrix[iRow, iCoordinate] * vectors[iCoordinate, iComponent];
+                    }
+                    decomposedVector.Add(dotProduct);
+                }
+                decomposedVectors.Add(ImmutableList.ValueOf(decomposedVector));
+            }
+
+            return new PcaResults<TRow>(RowLabels, decomposedVectors);
+
         }
 
         private PcaResults<TColumn> PerformPca(ImmutableList<DataFrame> dataFrames, int maxLevels)
