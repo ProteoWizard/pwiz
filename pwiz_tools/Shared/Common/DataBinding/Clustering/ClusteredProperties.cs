@@ -49,8 +49,8 @@ namespace pwiz.Common.DataBinding.Clustering
 
         public IEnumerable<DataPropertyDescriptor> GetAllColumnHeaderProperties()
         {
-            return PivotedProperties.SeriesGroups.SelectMany(GetColumnHeaders).SelectMany(series =>
-                series.PropertyIndexes.Select(index => PivotedProperties.ItemProperties[index]));
+            return PivotedProperties.SeriesGroups.SelectMany(GetColumnHeaders)
+                .SelectMany(series => series.PropertyDescriptors);
         }
 
         public IEnumerable<PivotedProperties.Series> ColumnValues

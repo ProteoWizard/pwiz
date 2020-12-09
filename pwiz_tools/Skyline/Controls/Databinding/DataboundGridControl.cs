@@ -679,7 +679,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     var colors = new List<Color>();
                     foreach (var series in groupColumnHeaders)
                     {
-                        var pd = clusteredResults.ItemProperties[series.PropertyIndexes[iPivotKey]];
+                        var pd = series.PropertyDescriptors[iPivotKey];
                         colors.Add(colorScheme.GetColumnColor(pd) ?? Color.Transparent);
                     }
                     groupHeaders.Add(new ClusterGraphResults.Header(group.PivotCaptions[iPivotKey].GetCaption(DataSchemaLocalizer.INVARIANT), colors));
@@ -691,7 +691,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     {
                         continue;
                     }
-                    columnValues.AddRange(series.PropertyIndexes.Select(i=>clusteredResults.ItemProperties[i]));
+                    columnValues.AddRange(series.PropertyDescriptors);
 
                     columnGroups.Add(new ClusterGraphResults.ColumnGroup(clusteredResults.ColumnGroupDendrogramDatas[iGroup].DendrogramData, groupHeaders));
                 }
@@ -829,7 +829,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     var locs = new List<KeyValuePair<double, double>>();
                     foreach (var series in seriesGroup.SeriesList)
                     {
-                        var propertyDescriptor = pivotedProperties.ItemProperties[series.PropertyIndexes[iPivotKey]];
+                        var propertyDescriptor = series.PropertyDescriptors[iPivotKey];
                         int columnIndex;
                         if (nameToIndex.TryGetValue(propertyDescriptor.Name, out columnIndex))
                         {

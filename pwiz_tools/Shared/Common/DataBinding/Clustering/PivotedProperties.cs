@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+#if DEBUG
 using System.Diagnostics;
+#endif
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
-#if DEBUG
-#endif
 
 namespace pwiz.Common.DataBinding.Clustering
 {
@@ -64,7 +63,7 @@ namespace pwiz.Common.DataBinding.Clustering
             }
         }
 
-        public class Series : Immutable
+        public class Series
         {
             public Series(ItemProperties itemProperties, object seriesId, IColumnCaption seriesCaption, IEnumerable<int> propertyIndexes, Type propertyType)
             {
@@ -75,7 +74,7 @@ namespace pwiz.Common.DataBinding.Clustering
                 PropertyType = propertyType;
             }
 
-            public ItemProperties ItemProperties { get; private set; }
+            internal ItemProperties ItemProperties { get; }
             public object SeriesId { get; }
             public IColumnCaption SeriesCaption { get; }
             public ImmutableList<int> PropertyIndexes { get; }
