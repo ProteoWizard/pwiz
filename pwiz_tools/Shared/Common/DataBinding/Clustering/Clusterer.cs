@@ -27,10 +27,9 @@ namespace pwiz.Common.DataBinding.Clustering
         public ClusterDataSet<RowItem, int>.DataFrame MakeDataFrame(PivotedProperties.Series series, ClusterRole.Transform clusterValueTransform)
         {
             var rows = new List<List<double>>();
-            var propertyDescriptors = series.PropertyIndexes.Select(i => ItemProperties[i]).ToList();
             foreach (var rowItem in RowItems)
             {
-                var rawValues = propertyDescriptors.Select(pd => pd.GetValue(rowItem)).ToList();
+                var rawValues = series.PropertyDescriptors.Select(pd => pd.GetValue(rowItem)).ToList();
                 rows.Add(clusterValueTransform.TransformRow(rawValues).Select(value=>value??clusterValueTransform.ValueForNull).ToList());
 
             }
@@ -80,9 +79,8 @@ namespace pwiz.Common.DataBinding.Clustering
         private CaptionedValues GetColumnHeaderLevel(IList<RowItem> rowItems, PivotedProperties.Series series)
         {
             var values = new List<object>();
-            foreach (var propertyIndex in series.PropertyIndexes)
+            foreach (var propertyDescriptor in series.PropertyDescriptors)
             {
-                var propertyDescriptor = ItemProperties[propertyIndex];
                 values.Add(rowItems.Select(propertyDescriptor.GetValue).FirstOrDefault(v => null != v));
             }
             return new CaptionedValues(series.SeriesCaption, series.PropertyType, values);

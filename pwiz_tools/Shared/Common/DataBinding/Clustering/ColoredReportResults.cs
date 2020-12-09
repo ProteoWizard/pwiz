@@ -99,14 +99,12 @@ namespace pwiz.Common.DataBinding.Clustering
             {
                 foreach (var series in group.SeriesList)
                 {
-                    var propertyDescriptors = series.PropertyIndexes
-                        .Select(index => reportResults.ItemProperties[index]).ToList();
                     IColorScheme colorScheme = null;
                     var role = reportResults.ClusteredProperties.GetColumnRole(series);
                     if (role == ClusterRole.COLUMNHEADER)
                     {
                         var values = new HashSet<object>();
-                        foreach (var property in propertyDescriptors)
+                        foreach (var property in series.PropertyDescriptors)
                         {
                             var columnDistinctValues = reportResults.RowItems.Select(property.GetValue)
                                 .Where(v => null != v).Distinct().ToList();
@@ -132,14 +130,14 @@ namespace pwiz.Common.DataBinding.Clustering
                     {
                         colorScheme = numericColorScheme;
                         numericValues.UnionWith(reportResults.RowItems.SelectMany(row =>
-                                transform.TransformRow(propertyDescriptors.Select(pd => pd.GetValue(row))))
+                                transform.TransformRow(series.PropertyDescriptors.Select(pd => pd.GetValue(row))))
                             .OfType<double>());
                     }
 
                     if (colorScheme != null)
                     {
-                        var colorManager = new ColorManager(colorScheme, propertyDescriptors, role as ClusterRole.Transform);
-                        foreach (var pd in propertyDescriptors)
+                        var colorManager = new ColorManager(colorScheme, series.PropertyDescriptors, role as ClusterRole.Transform);
+                        foreach (var pd in series.PropertyDescriptors)
                         {
                             colorManagers.Add(pd.Name, colorManager);
                         }

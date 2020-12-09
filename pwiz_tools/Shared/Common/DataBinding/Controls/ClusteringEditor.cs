@@ -74,11 +74,10 @@ namespace pwiz.Common.DataBinding.Controls
                     }
 
                     bool equalInAllRows = true;
-                    for (int iPivotKey = 0; iPivotKey < group.PivotKeys.Count; iPivotKey++)
+                    foreach (var propertyDescriptor in series.PropertyDescriptors)
                     {
-                        var propertyDescriptor = reportResults.ItemProperties[series.PropertyIndexes[iPivotKey]];
                         if (reportResults.RowItems.Select(propertyDescriptor.GetValue)
-                            .Where(value=>null != value).Distinct().Skip(1).Any())
+                            .Where(value => null != value).Distinct().Skip(1).Any())
                         {
                             equalInAllRows = false;
                             break;

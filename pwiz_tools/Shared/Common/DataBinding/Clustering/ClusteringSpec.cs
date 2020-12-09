@@ -266,7 +266,7 @@ namespace pwiz.Common.DataBinding.Clustering
 
         public static bool EqualValuesInAllRows(ReportResults reportResults, PivotedProperties.Series series)
         {
-            foreach (var propertyDescriptor in series.PropertyIndexes.Select(i => reportResults.ItemProperties[i]))
+            foreach (var propertyDescriptor in series.PropertyDescriptors)
             {
                 var distinctValues = reportResults.RowItems.Select(propertyDescriptor.GetValue)
                     .Where(value => null != value).Distinct();
