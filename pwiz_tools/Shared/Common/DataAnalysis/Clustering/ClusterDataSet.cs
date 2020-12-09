@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -188,6 +189,73 @@ namespace pwiz.Common.DataAnalysis.Clustering
             }
             Results columnResults = rowResults.DataSet.ClusterColumns();
             return new Results(columnResults.DataSet, rowResults.RowDendrogram, columnResults.ColumnGroupDendrograms);
+        }
+
+        public IEnumerable<PcaResults<TColumn>> PerformPcaOnColumnGroups(int maxLevels)
+        {
+            return DataFrameGroups.Select(group => PerformPca(group, maxLevels));
+        }
+
+        private PcaResults<TColumn> PerformPca(ImmutableList<DataFrame> dataFrames, int maxLevels)
+        {
+            ImmutableList<TColumn> columnHeaders = null;
+            foreach (var dataFrame in dataFrames)
+            {
+                if (columnHeaders == null)
+                {
+                    columnHeaders = dataFrame.ColumnHeaders;
+                }
+                else
+                {
+                    if (!Equals(dataFrame.ColumnHeaders, columnHeaders))
+                    {
+                        throw new ArgumentException(@"Column headers do not match", nameof(dataFrames));
+                    }
+                }
+
+                if (dataFrame.RowCount != RowCount)
+                {
+                    throw new ArgumentException(@"Wrong number of rows", nameof(dataFrame));
+                }
+            }
+
+            if (columnHeaders == null)
+            {
+                throw new ArgumentException(@"No data", nameof(dataFrames));
+            }
+
+            int nPoints = columnHeaders.Count;
+            int nVars = RowCount * dataFrames.Count;
+            var matrix = new double[nPoints, nVars];
+            for (int iColumn = 0; iColumn < columnHeaders.Count; iColumn++)
+            {
+                for (int iRow = 0; iRow < RowCount; iRow++)
+                {
+                    for (int iDataFrame = 0; iDataFrame < dataFrames.Count; iDataFrame++)
+                    {
+                        matrix[iColumn, iRow * dataFrames.Count + iDataFrame] =
+                            dataFrames[iDataFrame].DataColumns[iColumn][iRow];
+                    }
+                }
+            }
+            alglib.pcatruncatedsubspace(matrix, nPoints, nVars, maxLevels, .0001, 0, out double[] s2, out double[,] vectors);
+            var decomposedVectors = new List<ImmutableList<double>>();
+            for (int iColumn = 0; iColumn < columnHeaders.Count; iColumn++)
+            {
+                var decomposedVector = new List<double>();
+                for (int iComponent = 0; iComponent < vectors.GetLength(1); iComponent++)
+                {
+                    double dotProduct = 0;
+                    for (int iCoordinate = 0; iCoordinate < nVars; iCoordinate++)
+                    {
+                        dotProduct += matrix[iColumn, iCoordinate] * vectors[iCoordinate, iComponent];
+                    }
+                    decomposedVector.Add(dotProduct);
+                }
+                decomposedVectors.Add(ImmutableList.ValueOf(decomposedVector));
+            }
+
+            return new PcaResults<TColumn>(columnHeaders, decomposedVectors);
         }
 
         public static IEnumerable<T> Reorder<T>(IList<T> list, IList<int> newOrder)

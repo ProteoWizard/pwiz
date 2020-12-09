@@ -877,5 +877,29 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             UpdateDendrograms();
         }
+
+        private void pCAToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPcaPlot();
+        }
+
+        public void ShowPcaPlot()
+        {
+            var clusterer = Clusterer.CreateClusterer(BindingListSource.ClusteringSpec ?? ClusteringSpec.DEFAULT,
+                BindingListSource.ReportResults);
+
+            if (clusterer == null)
+            {
+                MessageDlg.Show(FormUtil.FindTopLevelOwner(this),
+                    "Can't perform PCA on this data.");
+                return;
+            }
+
+            var clusteredResutls = clusterer.GetClusteredResults();
+            var colorScheme = ReportColorScheme.FromClusteredResults(clusteredResutls);
+            var pcaPlot = new PcaPlot();
+            pcaPlot.SetData(clusterer, colorScheme);
+            pcaPlot.Show(FormUtil.FindTopLevelOwner(this));
+        }
     }
 }

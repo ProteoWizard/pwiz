@@ -47,6 +47,18 @@ namespace pwiz.Common.DataBinding.Clustering
             return ClusteredProperties.RowHeaders.Select(p => GetColor(p, rowItem));
         }
 
+        public Color? GetColor(PivotedProperties.Series series, object value)
+        {
+            if (!_colorManagers.TryGetValue(
+                ClusteredProperties.PivotedProperties.ItemProperties[series.PropertyIndexes[0]].Name,
+                out ColorManager colorManager))
+            {
+                return null;
+            }
+
+            return colorManager.ColorScheme.GetColor(value);
+        }
+
         public static ReportColorScheme FromClusteredResults(ClusteredReportResults clusteredReportResults)
         {
             var discreteColorScheme = new DiscreteColorScheme();
