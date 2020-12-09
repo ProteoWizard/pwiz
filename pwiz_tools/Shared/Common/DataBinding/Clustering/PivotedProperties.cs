@@ -18,6 +18,11 @@ namespace pwiz.Common.DataBinding.Clustering
         {
             ItemProperties = itemProperties;
             SeriesGroups = ImmutableList.ValueOf(seriesGroups);
+            if (!SeriesGroups.SelectMany(group => group.SeriesList)
+                .All(series => ReferenceEquals(series.ItemProperties, itemProperties)))
+            {
+                throw new ArgumentException(@"Wrong set of properties", nameof(seriesGroups));
+            }
         }
 
         public ItemProperties ItemProperties { get; private set; }
@@ -53,34 +58,46 @@ namespace pwiz.Common.DataBinding.Clustering
                     SeriesList.Select(series=>series.ReorderProperties(newOrder)));
             }
 
-            public SeriesGroup RenumberProperties(IList<int> newNumbering)
+            public SeriesGroup RenumberProperties(ItemProperties newItemProperties, IList<int> newNumbering)
             {
-                return new SeriesGroup(PivotKeys, PivotCaptions, SeriesList.Select(series=>series.RenumberProperties(newNumbering)));
+                return new SeriesGroup(PivotKeys, PivotCaptions, SeriesList.Select(series=>series.RenumberProperties(newItemProperties, newNumbering)));
             }
         }
 
         public class Series : Immutable
         {
-            public Series(object seriesId, IColumnCaption seriesCaption, IEnumerable<int> propertyIndexes, Type propertyType)
+            public Series(ItemProperties itemProperties, object seriesId, IColumnCaption seriesCaption, IEnumerable<int> propertyIndexes, Type propertyType)
             {
+                ItemProperties = itemProperties;
                 SeriesId = seriesId;
                 SeriesCaption = seriesCaption;
                 PropertyIndexes = ImmutableList.ValueOf(propertyIndexes);
                 PropertyType = propertyType;
             }
+
+            public ItemProperties ItemProperties { get; private set; }
             public object SeriesId { get; }
             public IColumnCaption SeriesCaption { get; }
             public ImmutableList<int> PropertyIndexes { get; }
+
+            public IList<DataPropertyDescriptor> PropertyDescriptors
+            {
+                get
+                {
+                    return ReadOnlyList.Create(PropertyIndexes.Count, i => ItemProperties[PropertyIndexes[i]]);
+                }
+            }
+
             public Type PropertyType { get; }
 
             public Series ReorderProperties(IList<int> newOrder)
             {
-                return new Series(SeriesId, SeriesCaption, newOrder.Select(i => PropertyIndexes[i]), PropertyType);
+                return new Series(ItemProperties, SeriesId, SeriesCaption, newOrder.Select(i => PropertyIndexes[i]), PropertyType);
             }
 
-            public Series RenumberProperties(IList<int> newNumbering)
+            public Series RenumberProperties(ItemProperties newItemProperties, IList<int> newNumbering)
             {
-                return new Series(SeriesId, SeriesCaption, PropertyIndexes.Select(i=>newNumbering[i]), PropertyType);
+                return new Series(newItemProperties, SeriesId, SeriesCaption, PropertyIndexes.Select(i=>newNumbering[i]), PropertyType);
             }
         }
 
@@ -101,7 +118,7 @@ namespace pwiz.Common.DataBinding.Clustering
 
                 var firstProperty = ItemProperties[seriesTuples.First().Item1];
                 var firstPivotColumnId = seriesTuples.First().Item2;
-                var series = new Series(firstPivotColumnId.SeriesId, firstPivotColumnId.SeriesCaption,
+                var series = new Series(ItemProperties, firstPivotColumnId.SeriesId, firstPivotColumnId.SeriesCaption,
                     seriesTuples.Select(tuple => tuple.Item1),
                     firstProperty.PropertyType);
 
@@ -164,7 +181,7 @@ namespace pwiz.Common.DataBinding.Clustering
             }
 
             var newItemProperties = new ItemProperties(newOrder.Select(i => ItemProperties[i]));
-            var result = new PivotedProperties(newItemProperties, SeriesGroups.Select(group=>group.RenumberProperties(newNumbering)));
+            var result = new PivotedProperties(newItemProperties, SeriesGroups.Select(group=>group.RenumberProperties(newItemProperties, newNumbering)));
 #if DEBUG
             Debug.Assert(ItemProperties.ToHashSet().SetEquals(result.ItemProperties.ToHashSet()));
             Debug.Assert(SeriesGroups.Count == result.SeriesGroups.Count);
