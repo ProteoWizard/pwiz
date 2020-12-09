@@ -81,9 +81,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable">
-      <HintPath>..\Lib\System.Collections.Immutable.dll</HintPath>
-    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -108,9 +105,6 @@
     <Compile Include="ZedGraph\DataSourcePointList.cs" />
     <Compile Include="ZedGraph\DateAsOrdinalScale.cs" />
     <Compile Include="ZedGraph\DateScale.cs" />
-    <Compile Include="ZedGraph\DendrogramData.cs" />
-    <Compile Include="ZedGraph\DendrogramFormat.cs" />
-    <Compile Include="ZedGraph\DendrogramScale.cs" />
     <Compile Include="ZedGraph\EllipseObj.cs" />
     <Compile Include="ZedGraph\ErrorBar.cs" />
     <Compile Include="ZedGraph\ErrorBarItem.cs" />

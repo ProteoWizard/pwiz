@@ -343,6 +343,7 @@
       <DependentUpon>AuditLogExtraInfoForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Clustering\ClusteredHeatMapItem.cs" />
+    <Compile Include="Controls\Clustering\DendrogramScale.cs" />
     <Compile Include="Controls\Clustering\HierarchicalClusterGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2080,7 +2081,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\HierarchicalClusterGraph.resx">
       <DependentUpon>HierarchicalClusterGraph.cs</DependentUpon>
-	</EmbeddedResource>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
     </EmbeddedResource>

@@ -96,6 +96,7 @@
     <Compile Include="Controls\Clustering\DendrogramControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Controls\Clustering\DendrogramFormat.cs" />
     <Compile Include="Controls\CommonDataGridView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -136,6 +137,7 @@
     <Compile Include="DataAnalysis\Clustering\ClusterMetricType.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterRole.cs" />
+    <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
     <Compile Include="DataAnalysis\LinearFitResult.cs" />
     <Compile Include="DataAnalysis\FoldChange\FoldChangeDataSet.cs" />
     <Compile Include="DataAnalysis\FoldChange\DesignMatrix.cs" />

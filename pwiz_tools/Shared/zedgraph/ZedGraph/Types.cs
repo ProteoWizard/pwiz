@@ -73,8 +73,9 @@ namespace ZedGraph
 		LinearAsOrdinal,
 		/// <summary> An exponential axis </summary>
 		Exponent,
-        /// <summary> An axis that draws dendrograms</summary>
-        Dendrogram
+        /// <summary> A custom class which inherits from <see cref="Scale"/>. It can be assigned to an axis using the property
+        /// setter for <see cref="Axis.Scale"/>.</summary>
+        UserDefined
     }
 
 	/// <summary>

@@ -23,9 +23,9 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.GraphPane.XAxis.Title.Text = "Replicate";
             zedGraphControl1.GraphPane.YAxis.Title.Text = "Protein";
             zedGraphControl1.GraphPane.X2Axis.IsVisible = true;
-            zedGraphControl1.GraphPane.X2Axis.Type = AxisType.Dendrogram;
+            zedGraphControl1.GraphPane.X2Axis.Scale = new DendrogramScale(zedGraphControl1.GraphPane.X2Axis);
             zedGraphControl1.GraphPane.Y2Axis.IsVisible = true;
-            zedGraphControl1.GraphPane.Y2Axis.Type = AxisType.Dendrogram;
+            zedGraphControl1.GraphPane.Y2Axis.Scale = new DendrogramScale(zedGraphControl1.GraphPane.Y2Axis);
             zedGraphControl1.GraphPane.Legend.IsVisible = false;
             zedGraphControl1.GraphPane.Margin.All = 0;
             zedGraphControl1.GraphPane.Border.IsVisible = false;

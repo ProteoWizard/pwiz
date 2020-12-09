@@ -480,6 +480,15 @@ namespace ZedGraph
 		public Scale Scale
 		{
 			get { return _scale; }
+            set
+            {
+                if (!ReferenceEquals(value._ownerAxis, this))
+                {
+                    throw new ArgumentException("Wrong owner");
+                }
+
+                _scale = value;
+            }
 		}
 		/// <summary>
 		/// Gets or sets the scale value at which this axis should cross the "other" axis.

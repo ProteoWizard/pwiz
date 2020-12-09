@@ -18,30 +18,26 @@
 //=============================================================================
 
 using System;
-using System.CodeDom;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls.Clustering;
+using ZedGraph;
 
-namespace ZedGraph
+namespace pwiz.Skyline.Controls.Clustering
 {
     /// <summary>
     /// The Dendrogram class inherits from the <see cref="Scale" /> class, and implements
-    /// the features specific to <see cref="AxisType.Dendrogram" />.
+    /// the draws a dendrogram.
     /// </summary>
     /// <remarks>
     /// Dendrogram is the normal, default cartesian axis.
     /// </remarks>
-    /// 
-    /// <author> John Champion  </author>
-    /// <version> $Revision: 1.10 $ $Date: 2007-04-16 00:03:02 $ </version>
     [Serializable]
-    public class DendrogramScale : Scale, ISerializable //, ICloneable
+    public class DendrogramScale : Scale
     {
         private List<DendrogramFormat> formats;
         private bool _rectilinearLines = true;
@@ -87,13 +83,9 @@ namespace ZedGraph
 
         #region properties
 
-        /// <summary>
-        /// Return the <see cref="AxisType" /> for this <see cref="Scale" />, which is
-        /// <see cref="AxisType.Dendrogram" />.
-        /// </summary>
         public override AxisType Type
         {
-            get { return AxisType.Dendrogram; }
+            get { return AxisType.UserDefined; }
         }
 
         #endregion
@@ -147,8 +139,8 @@ namespace ZedGraph
             foreach (var format in formats)
             {
             
-                var locations = format.LeafLocations.Select(kvp => (kvp.Key + kvp.Value) / 2).ToList();
-                var lines = format.Data.GetLines(locations, _rectilinearLines).ToList();
+                var locations = Enumerable.Select<KeyValuePair<double, double>, double>(format.LeafLocations, kvp => (kvp.Key + kvp.Value) / 2).ToList();
+                var lines = Enumerable.ToList<Tuple<double, double, double, double>>(format.Data.GetLines(locations, _rectilinearLines));
                 var pen = new Pen(Color.Black, 1);
                 var maxHeight = lines.Max(line => line.Item4);
                 if (maxHeight == 0)
@@ -186,10 +178,10 @@ namespace ZedGraph
                             var topLeft = CoordinatesToPoint(left, top, pane, xAxisHeight, yAxisWidth);
                             var bottomRight = CoordinatesToPoint(right, bottom, pane, xAxisHeight, yAxisWidth);
                             var rectangle = new RectangleF(
-                                Math.Min(topLeft.X, bottomRight.X),
-                                Math.Min(topLeft.Y, bottomRight.Y),
-                                Math.Abs(topLeft.X - bottomRight.X),
-                                Math.Abs(topLeft.Y - bottomRight.Y));
+                                Math.Min((float) topLeft.X, (float) bottomRight.X),
+                                Math.Min((float) topLeft.Y, (float) bottomRight.Y),
+                                Math.Abs((float) (topLeft.X - bottomRight.X)),
+                                Math.Abs((float) (topLeft.Y - bottomRight.Y)));
 
                             graphics.FillRectangle(new SolidBrush(color), rectangle);
                         }
@@ -252,7 +244,7 @@ namespace ZedGraph
             }
 
             var totalSpace = GetTotalSpace();
-            var spaceForColors = Math.Max(totalSpace / 10, dendrogramFormat.ColorLevelCount * 5);
+            var spaceForColors = Math.Max((double) (totalSpace / 10), dendrogramFormat.ColorLevelCount * 5);
             if (spaceForColors >= totalSpace)
             {
                 return 1;
@@ -290,9 +282,9 @@ namespace ZedGraph
         /// <summary>
         /// Constructor for deserializing objects
         /// </summary>
-        /// <param name="info">A <see cref="SerializationInfo"/> instance that defines the serialized data
+        /// <param name="info">A <see cref="System.Runtime.Serialization.SerializationInfo"/> instance that defines the serialized data
         /// </param>
-        /// <param name="context">A <see cref="StreamingContext"/> instance that contains the serialized data
+        /// <param name="context">A <see cref="System.Runtime.Serialization.StreamingContext"/> instance that contains the serialized data
         /// </param>
         protected DendrogramScale(SerializationInfo info, StreamingContext context) : base(info, context)
         {
@@ -302,15 +294,15 @@ namespace ZedGraph
 
         }
         /// <summary>
-        /// Populates a <see cref="SerializationInfo"/> instance with the data needed to serialize the target object
+        /// Populates a <see cref="System.Runtime.Serialization.SerializationInfo"/> instance with the data needed to serialize the target object
         /// </summary>
-        /// <param name="info">A <see cref="SerializationInfo"/> instance that defines the serialized data</param>
-        /// <param name="context">A <see cref="StreamingContext"/> instance that contains the serialized data</param>
-        [SecurityPermissionAttribute(SecurityAction.Demand, SerializationFormatter = true)]
+        /// <param name="info">A <see cref="System.Runtime.Serialization.SerializationInfo"/> instance that defines the serialized data</param>
+        /// <param name="context">A <see cref="System.Runtime.Serialization.StreamingContext"/> instance that contains the serialized data</param>
+        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
-            info.AddValue("schema2", schema2);
+            info.AddValue((string) "schema2", (int) schema2);
         }
         #endregion
 
