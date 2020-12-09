@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using pwiz.Common.Collections;
-using ZedGraph;
+using pwiz.Common.DataAnalysis.Clustering;
 
 namespace pwiz.Skyline.Controls.Clustering
 {

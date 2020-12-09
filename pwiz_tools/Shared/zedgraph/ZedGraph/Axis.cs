@@ -481,6 +481,22 @@ namespace ZedGraph
 		{
 			get { return _scale; }
 		}
+
+		/// <summary>
+		/// Sets the scale property of a UserDefined Axis.
+		/// </summary>
+		/// <remarks>Allows for more flexibility in a ZedGraph Axis. Will throw an Exception if called
+		/// on any Type other than UserDefined.
+		/// </remarks>
+		public void SetUserDefinedScale(Scale scale)
+		{
+			if (Type != AxisType.UserDefined)
+			{
+				throw new Exception($"Cannot set scale of AxisType: {Type}");
+			}
+
+			_scale = scale;
+		}
 		/// <summary>
 		/// Gets or sets the scale value at which this axis should cross the "other" axis.
 		/// </summary>

@@ -5,9 +5,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
@@ -15,20 +13,20 @@ namespace pwiz.Skyline.Controls.Clustering
     public partial class HierarchicalClusterGraph : DockableFormEx
     {
         private ClusterGraphResults _graphResults;
+        private DendrogramScale _rowDendrogramScale;
+        private DendrogramScale _columnDendrogramScale;
         public HierarchicalClusterGraph()
         {
             InitializeComponent();
-            
+            InitializeDendrograms();
             zedGraphControl1.GraphPane.Title.IsVisible = false;
             zedGraphControl1.GraphPane.XAxis.Title.Text = "Replicate";
             zedGraphControl1.GraphPane.YAxis.Title.Text = "Protein";
-            zedGraphControl1.GraphPane.X2Axis.IsVisible = true;
-            zedGraphControl1.GraphPane.X2Axis.Type = AxisType.Dendrogram;
-            zedGraphControl1.GraphPane.Y2Axis.IsVisible = true;
-            zedGraphControl1.GraphPane.Y2Axis.Type = AxisType.Dendrogram;
+            
             zedGraphControl1.GraphPane.Legend.IsVisible = false;
             zedGraphControl1.GraphPane.Margin.All = 0;
             zedGraphControl1.GraphPane.Border.IsVisible = false;
+            
         }
 
         public ClusterGraphResults GraphResults
@@ -39,6 +37,22 @@ namespace pwiz.Skyline.Controls.Clustering
                 _graphResults = value;
                 UpdateGraph();
             }
+        }
+
+        public void InitializeDendrograms()
+        {
+            // make visible
+            zedGraphControl1.GraphPane.X2Axis.IsVisible = true;
+            zedGraphControl1.GraphPane.Y2Axis.IsVisible = true;
+            // create user defined axis and set to dendrogram
+            zedGraphControl1.GraphPane.X2Axis.Type = AxisType.UserDefined;
+            zedGraphControl1.GraphPane.Y2Axis.Type = AxisType.UserDefined;
+            zedGraphControl1.GraphPane.X2Axis.SetUserDefinedScale(new DendrogramScale(zedGraphControl1.GraphPane.X2Axis, DockStyle.Top));
+            zedGraphControl1.GraphPane.Y2Axis.SetUserDefinedScale(new DendrogramScale(zedGraphControl1.GraphPane.Y2Axis, DockStyle.Right));
+
+            _columnDendrogramScale = (DendrogramScale)zedGraphControl1.GraphPane.X2Axis.Scale;
+            _rowDendrogramScale = (DendrogramScale)zedGraphControl1.GraphPane.Y2Axis.Scale;
+            
         }
 
         public void UpdateGraph()
@@ -71,11 +85,9 @@ namespace pwiz.Skyline.Controls.Clustering
             UpdateDendrograms();
         }
 
-        public void UpdateColumnDendrograms()
+        public List<DendrogramFormat> GetUpdatedColumnDendrograms()
         {
-
-            var columnDendrogramScale = (DendrogramScale)(zedGraphControl1.GraphPane.X2Axis.Scale);
-            var zDatas = new List<DendrogramFormat>();
+            var columnDendrograms = new List<DendrogramFormat>();
             double xStart = .5;
             foreach (var group in GraphResults.ColumnGroups)
             {
@@ -90,17 +102,15 @@ namespace pwiz.Skyline.Controls.Clustering
                     locations.Add(new KeyValuePair<double, double>(x1, x2));
                     colors.Add(group.Headers[i].Colors);
                 }
-                zDatas.Add(new DendrogramFormat(group.DendrogramData, locations, colors));
+                columnDendrograms.Add(new DendrogramFormat(group.DendrogramData, locations, colors));
                 xStart += group.Headers.Count;
             }
 
-            columnDendrogramScale.SetDendrograms(zDatas, DockStyle.Top);
+            return columnDendrograms;
         }
 
-        public void UpdateDendrograms()
+        public List<DendrogramFormat> GetUpdatedRowDendrograms()
         {
-            UpdateColumnDendrograms();
-            var rowDendrogramScale = (DendrogramScale)zedGraphControl1.GraphPane.Y2Axis.Scale;
             int rowCount = GraphResults.RowCount;
             var rowLocations = new List<KeyValuePair<double, double>>();
             var colors = new List<ImmutableList<Color>>();
@@ -114,9 +124,15 @@ namespace pwiz.Skyline.Controls.Clustering
                 colors.Add(GraphResults.RowHeaders[rowIndex].Colors);
             }
 
-            var dendrograms = new List<DendrogramFormat>
+            return new List<DendrogramFormat>
                 {new DendrogramFormat(GraphResults.RowDendrogramData, rowLocations, colors)};
-            rowDendrogramScale.SetDendrograms(dendrograms, DockStyle.Right);
+        }
+
+
+        public void UpdateDendrograms()
+        {
+            _columnDendrogramScale.Update(GetUpdatedColumnDendrograms());
+            _rowDendrogramScale.Update(GetUpdatedRowDendrograms());
         }
 
         private void zedGraphControl1_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, System.Drawing.PointF mousePosition)

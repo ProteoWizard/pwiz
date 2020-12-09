@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using pwiz.Common.Collections;
-using ZedGraph;
+using pwiz.Common.Controls.Clustering;
 
 namespace pwiz.Common.DataAnalysis.Clustering
 {
