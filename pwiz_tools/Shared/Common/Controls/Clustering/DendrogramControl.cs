@@ -64,7 +64,7 @@ namespace pwiz.Common.Controls.Clustering
                 double availableSpace = IsTreeVertical ? Width : Height;
                 var leafLocations = Enumerable.Range(0, 3).Select(i =>
                     new KeyValuePair<double, double>(i * availableSpace / 4, (i + 1) * availableSpace / 4)).ToList();
-                var dendrogramData = new DendrogramData(new int[,]{{0,1},{2,3}}, Enumerable.Repeat(1.0, 2).ToArray());
+                var dendrogramData = new ZedGraph.DendrogramData(new int[,]{{0,1},{2,3}}, Enumerable.Repeat(1.0, 2).ToArray());
                 var colors = new[] {Color.Red, Color.Green, Color.Blue}.Select(color => new[] {color});
                 DrawDendrogram(e.Graphics, new DendrogramFormat(dendrogramData, leafLocations, colors));
                 return;
@@ -203,7 +203,7 @@ namespace pwiz.Common.Controls.Clustering
 
         public class DendrogramFormat
         {
-            public DendrogramFormat(DendrogramData data, IEnumerable<KeyValuePair<double, double>> leafLocations,
+            public DendrogramFormat(ZedGraph.DendrogramData data, IEnumerable<KeyValuePair<double, double>> leafLocations,
                 IEnumerable<IEnumerable<Color>> colors)
             {
                 Data = data;
@@ -231,7 +231,7 @@ namespace pwiz.Common.Controls.Clustering
                 }
             }
 
-            public DendrogramData Data { get; private set; }
+            public ZedGraph.DendrogramData Data { get; private set; }
 
             public ImmutableList<KeyValuePair<double, double>> LeafLocations { get; private set; }
             public ImmutableList<ImmutableList<Color>> Colors { get; private set; }

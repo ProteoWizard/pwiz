@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.SystemUtil;
 
-namespace pwiz.Common.DataAnalysis.Clustering
+namespace ZedGraph
 {
-    public class DendrogramData : Immutable
+    public class DendrogramData 
     {
         private int[,] _mergeIndices;
         private double[] _mergeDistances;
@@ -70,7 +69,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
             }
 
             var nodes = new List<Tuple<double, double>>(LeafCount + _mergeDistances.Length);
-            nodes.AddRange(leafLocations.Take(LeafCount).Select(location=>Tuple.Create(location, 0.0)));
+            nodes.AddRange(leafLocations.Take(LeafCount).Select(location => Tuple.Create(location, 0.0)));
             for (int i = 0; i < _mergeDistances.Length; i++)
             {
                 var left = nodes[_mergeIndices[i, 0]];

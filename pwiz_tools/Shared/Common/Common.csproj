@@ -135,7 +135,6 @@
     <Compile Include="DataAnalysis\Clustering\ClusterDataSet.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterMetricType.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterRole.cs" />
-    <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
     <Compile Include="DataAnalysis\Clustering\PcaResults.cs" />
     <Compile Include="DataAnalysis\LinearFitResult.cs" />
     <Compile Include="DataAnalysis\FoldChange\FoldChangeDataSet.cs" />
