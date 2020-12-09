@@ -18,10 +18,14 @@ namespace pwiz.Skyline.Controls.Clustering
         public HierarchicalClusterGraph()
         {
             InitializeComponent();
-
+            
             zedGraphControl1.GraphPane.Title.IsVisible = false;
             zedGraphControl1.GraphPane.XAxis.Title.Text = "Replicate";
             zedGraphControl1.GraphPane.YAxis.Title.Text = "Protein";
+            zedGraphControl1.GraphPane.X2Axis.IsVisible = true;
+            zedGraphControl1.GraphPane.X2Axis.Type = AxisType.Dendrogram;
+            zedGraphControl1.GraphPane.Y2Axis.IsVisible = true;
+            zedGraphControl1.GraphPane.Y2Axis.Type = AxisType.Dendrogram;
             zedGraphControl1.GraphPane.Legend.IsVisible = false;
             zedGraphControl1.GraphPane.Margin.All = 0;
             zedGraphControl1.GraphPane.Border.IsVisible = false;
@@ -69,12 +73,9 @@ namespace pwiz.Skyline.Controls.Clustering
 
         public void UpdateColumnDendrograms()
         {
-            if (GraphResults.ColumnGroups.All(group=>group.DendrogramData == null))
-            {
-                splitContainerHorizontal.Panel1Collapsed = true;
-                return;
-            }
-            var datas = new List<DendrogramControl.DendrogramFormat>();
+
+            var columnDendrogramScale = (DendrogramScale)(zedGraphControl1.GraphPane.X2Axis.Scale);
+            var zDatas = new List<DendrogramFormat>();
             double xStart = .5;
             foreach (var group in GraphResults.ColumnGroups)
             {
@@ -82,50 +83,40 @@ namespace pwiz.Skyline.Controls.Clustering
                 var colors = new List<ImmutableList<Color>>();
                 for (int i = 0; i < group.Headers.Count; i++)
                 {
-                    double x1 = (double) zedGraphControl1.GraphPane
+                    double x1 = (double)zedGraphControl1.GraphPane
                         .GeneralTransform(xStart + i, 0.0, CoordType.AxisXYScale).X;
                     double x2 = zedGraphControl1.GraphPane
                         .GeneralTransform(xStart + i + 1, 0.0, CoordType.AxisXYScale).X;
                     locations.Add(new KeyValuePair<double, double>(x1, x2));
                     colors.Add(group.Headers[i].Colors);
                 }
-                datas.Add(new DendrogramControl.DendrogramFormat(group.DendrogramData, locations, colors));
+                zDatas.Add(new DendrogramFormat(group.DendrogramData, locations, colors));
                 xStart += group.Headers.Count;
             }
-           
-            columnDendrogram.SetDendrogramDatas(datas);
+
+            columnDendrogramScale.SetDendrograms(zDatas, DockStyle.Top);
         }
 
         public void UpdateDendrograms()
         {
             UpdateColumnDendrograms();
-            int rowDendrogramTop =
-                splitContainerHorizontal.Panel1Collapsed ? 0 : splitContainerHorizontal.Panel1.Height;
-            rowDendrogram.Bounds = new Rectangle(0, rowDendrogramTop, splitContainerVertical.Panel2.Width, splitContainerVertical.Panel2.Height - rowDendrogramTop);
-            if (GraphResults.RowDendrogramData == null)
+            var rowDendrogramScale = (DendrogramScale)zedGraphControl1.GraphPane.Y2Axis.Scale;
+            int rowCount = GraphResults.RowCount;
+            var rowLocations = new List<KeyValuePair<double, double>>();
+            var colors = new List<ImmutableList<Color>>();
+            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
-                splitContainerVertical.Panel1Collapsed = true;
+                var y1 = zedGraphControl1.GraphPane.GeneralTransform(0.0, rowCount + .5 - rowIndex,
+                    CoordType.AxisXYScale).Y;
+                var y2 = zedGraphControl1.GraphPane.GeneralTransform(0.0, rowCount - .5 - rowIndex,
+                    CoordType.AxisXYScale).Y;
+                rowLocations.Add(new KeyValuePair<double, double>(y1, y2));
+                colors.Add(GraphResults.RowHeaders[rowIndex].Colors);
             }
-            else
-            {
-                splitContainerVertical.Panel1Collapsed = false;
-                int rowCount = GraphResults.RowCount;
-                var rowLocations = new List<KeyValuePair<double, double>>();
-                var colors = new List<ImmutableList<Color>>();
-                for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
-                {
-                    var y1 = zedGraphControl1.GraphPane.GeneralTransform(0.0, rowCount + .5 - rowIndex,
-                        CoordType.AxisXYScale).Y;
-                    var y2 = zedGraphControl1.GraphPane.GeneralTransform(0.0, rowCount - .5 - rowIndex ,
-                        CoordType.AxisXYScale).Y;
-                    rowLocations.Add(new KeyValuePair<double, double>(y1, y2));
-                    colors.Add(GraphResults.RowHeaders[rowIndex].Colors);
-                }
-                rowDendrogram.SetDendrogramDatas(new[]
-                {
-                    new DendrogramControl.DendrogramFormat(GraphResults.RowDendrogramData, rowLocations, colors)
-                });
-            }
+
+            var dendrograms = new List<DendrogramFormat>
+                {new DendrogramFormat(GraphResults.RowDendrogramData, rowLocations, colors)};
+            rowDendrogramScale.SetDendrograms(dendrograms, DockStyle.Right);
         }
 
         private void zedGraphControl1_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, System.Drawing.PointF mousePosition)
