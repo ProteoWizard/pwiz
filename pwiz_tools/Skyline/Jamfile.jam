@@ -333,6 +333,12 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>Skyline.exe
     ;
 
+    if --teamcity-test-decoration in [ modules.peek : ARGV ]
+    {
+        explicit Build ;
+    }
+
+
     make InspectCode
         : # sources
         : # actions
