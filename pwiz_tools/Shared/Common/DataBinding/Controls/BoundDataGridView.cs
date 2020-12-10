@@ -92,49 +92,73 @@ namespace pwiz.Common.DataBinding.Controls
             UpdateColorScheme();
         }
 
+        private bool _inUpdateColumns;
         protected virtual void UpdateColumns()
         {
-            var bindingListSource = DataSource as BindingListSource;
-            if (DesignMode)
+            if (_inUpdateColumns)
             {
                 return;
             }
-            if (null == bindingListSource || null == _viewContext)
+
+            try
             {
-                return;
-            }
-            var columnsToHide = new HashSet<string>();
-            var clusteredProperties = (bindingListSource.ReportResults as ClusteredReportResults)?.ClusteredProperties;
-            if (clusteredProperties != null)
-            {
-                columnsToHide.UnionWith(clusteredProperties.GetAllColumnHeaderProperties().Select(p=>p.Name));
-            }
-            var newItemProperties = bindingListSource.ItemProperties;
-            if (!Equals(newItemProperties, _itemProperties))
-            {
-                var newColumns = new List<DataGridViewColumn>();
-                for (int i = 0; i < newItemProperties.Count; i++)
+                _inUpdateColumns = true;
+                var bindingListSource = DataSource as BindingListSource;
+                if (DesignMode)
                 {
-                    var propertyDescriptor = newItemProperties[i];
-                    if (columnsToHide.Contains(propertyDescriptor.Name))
-                    {
-                        continue;
-                    }
-                    var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
-                    if (null != column)
-                    {
-                        newColumns.Add(column);
-                    }
+                    return;
                 }
-                if (newColumns.Count > 0)
+
+                if (null == bindingListSource || null == _viewContext)
                 {
-                    Columns.Clear();
-                    AddColumns(newColumns.ToArray());
+                    return;
                 }
-                _itemProperties = newItemProperties;
+
+                var columnsToHide = new HashSet<string>();
+                var clusteredProperties =
+                    (bindingListSource.ReportResults as ClusteredReportResults)?.ClusteredProperties;
+                if (clusteredProperties != null)
+                {
+                    columnsToHide.UnionWith(clusteredProperties.GetAllColumnHeaderProperties().Select(p => p.Name));
+                }
+
+                var newItemProperties = bindingListSource.ItemProperties;
+                if (!Equals(newItemProperties, _itemProperties))
+                {
+                    var newColumns = new List<DataGridViewColumn>();
+                    for (int i = 0; i < newItemProperties.Count; i++)
+                    {
+                        var propertyDescriptor = newItemProperties[i];
+                        if (columnsToHide.Contains(propertyDescriptor.Name))
+                        {
+                            continue;
+                        }
+
+                        var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
+                        if (null != column)
+                        {
+                            newColumns.Add(column);
+                        }
+                    }
+
+                    if (newColumns.Count > 0)
+                    {
+                        Columns.Clear();
+                        AddColumns(newColumns.ToArray());
+                    }
+
+                    _itemProperties = newItemProperties;
+                }
+
+                UpdateColumnFormats(false);
+                UpdateColorScheme();
+
             }
-            UpdateColumnFormats(false);
-            UpdateColorScheme();
+            finally
+            {
+                _inUpdateColumns = false;
+            }
+
         }
 
         protected override void OnCellContentClick(DataGridViewCellEventArgs e)

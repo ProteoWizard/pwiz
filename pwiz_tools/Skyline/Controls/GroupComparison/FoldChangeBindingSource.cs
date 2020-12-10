@@ -23,11 +23,13 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -354,6 +356,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 Abundance = abundance;
             }
             public Replicate Replicate { get; private set; }
+            [Format(Formats.CalibrationCurve)]
             public double? Abundance { get; private set; }
             public String ReplicateIdentity { get; private set; }
             public GroupIdentifier GroupIdentifier { get; private set; }
