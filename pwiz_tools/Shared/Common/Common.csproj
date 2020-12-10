@@ -96,6 +96,7 @@
     <Compile Include="Controls\Clustering\DendrogramControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
     <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
     <Compile Include="Controls\Clustering\DendrogramFormat.cs" />
     <Compile Include="Controls\Clustering\DendrogramScale.cs" />

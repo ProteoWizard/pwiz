@@ -103,7 +103,7 @@ namespace pwiz.Common.DataBinding.Clustering
             return clusterDataSet;
         }
 
-        private ClusterDataSet<RowItem, int>.Results GetClusterDataSetResults()
+        private ClusterResults<RowItem, int> GetClusterDataSetResults()
         {
             var clusterDataSet = MakeClusterDataSet();
             bool performRowClustering = RowHeaderLevels.Any() || Properties.PivotedProperties.UngroupedProperties

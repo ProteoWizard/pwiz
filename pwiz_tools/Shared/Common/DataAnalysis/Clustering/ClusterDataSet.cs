@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Common.Controls.Clustering;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataAnalysis.Clustering
@@ -117,7 +114,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
             }
         }
 
-        public Results ClusterRows()
+        public ClusterResults<TRow, TColumn> ClusterRows()
         {
             int columnCount = DataFrames.Sum(frame => frame.ColumnHeaders.Count);
             var rowDataSet = new double[RowLabels.Count, columnCount];
@@ -138,9 +135,9 @@ namespace pwiz.Common.DataAnalysis.Clustering
             alglib.clusterizerrunahc(s, out alglib.ahcreport rep);
             if (rep.p.Length == 0)
             {
-                return new Results(this, null, null);
+                return new ClusterResults<TRow, TColumn>(this, null, null);
             }
-            return new Results(ReorderRows(rep.p), new DendrogramData(rep.pz, rep.mergedist), null);
+            return new ClusterResults<TRow, TColumn>(ReorderRows(rep.p), new DendrogramData(rep.pz, rep.mergedist), null);
         }
 
         private Tuple<ImmutableList<DataFrame>, DendrogramData> ClusterDataFrameGroup(ImmutableList<DataFrame> group)
@@ -171,26 +168,26 @@ namespace pwiz.Common.DataAnalysis.Clustering
             return Tuple.Create(newGroup, dendrogramData);
         }
 
-        public Results ClusterColumns()
+        public ClusterResults<TRow, TColumn> ClusterColumns()
         {
             var clusteredGroups = DataFrameGroups.Select(ClusterDataFrameGroup).ToList();
             var newDataSet = new ClusterDataSet<TRow, TColumn>(RowLabels, clusteredGroups.Select(tuple=>tuple.Item1));
-            return new Results(newDataSet, null, ImmutableList.ValueOf(clusteredGroups.Select(tuple=>tuple.Item2)));
+            return new ClusterResults<TRow, TColumn>(newDataSet, null, ImmutableList.ValueOf(clusteredGroups.Select(tuple=>tuple.Item2)));
         }
 
-        public Results PerformClustering(bool clusterRows)
+        public ClusterResults<TRow, TColumn> PerformClustering(bool clusterRows)
         {
-            Results rowResults;
+            ClusterResults<TRow, TColumn> rowResults;
             if (clusterRows)
             {
                 rowResults = ClusterRows();
             }
             else
             {
-                rowResults = new Results(this, null, null);
+                rowResults = new ClusterResults<TRow, TColumn>(this, null, null);
             }
-            Results columnResults = rowResults.DataSet.ClusterColumns();
-            return new Results(columnResults.DataSet, rowResults.RowDendrogram, columnResults.ColumnGroupDendrograms);
+            ClusterResults<TRow, TColumn> columnResults = rowResults.DataSet.ClusterColumns();
+            return new ClusterResults<TRow, TColumn>(columnResults.DataSet, rowResults.RowDendrogram, columnResults.ColumnGroupDendrograms);
         }
 
         public IEnumerable<PcaResults<TColumn>> PerformPcaOnColumnGroups(int maxLevels)
@@ -303,34 +300,6 @@ namespace pwiz.Common.DataAnalysis.Clustering
         public static IEnumerable<T> Reorder<T>(IList<T> list, IList<int> newOrder)
         {
             return Enumerable.Range(0, list.Count).OrderBy(i => newOrder[i]).Select(i => list[i]);
-        }
-
-        public class Results
-        {
-            public Results(ClusterDataSet<TRow, TColumn> dataSet, DendrogramData rowDendrogram,
-                ImmutableList<DendrogramData> columnDendrograms)
-            {
-                DataSet = dataSet;
-                RowDendrogram = rowDendrogram;
-                ColumnGroupDendrograms = columnDendrograms;
-            }
-            public ClusterDataSet<TRow, TColumn> DataSet { get; }
-            public DendrogramData RowDendrogram { get; private set; }
-            public ImmutableList<DendrogramData> ColumnGroupDendrograms { get; private set; }
-
-            public Results ReverseRows()
-            {
-                List<int> newOrdering = Enumerable.Range(0, DataSet.RowCount).ToList();
-                newOrdering.Reverse();
-                
-                return new Results(DataSet.ReorderRows(newOrdering), RowDendrogram?.Reverse(), ColumnGroupDendrograms);
-            }
-
-            public ClusterDataSet<TNewRow, TNewColumn>.Results ChangeLabels<TNewRow, TNewColumn>(
-                IEnumerable<TNewRow> newRowLabels, IEnumerable<IEnumerable<TNewColumn>> newColumnLabels)
-            {
-                return new ClusterDataSet<TNewRow, TNewColumn>.Results(DataSet.ChangeLabels(newRowLabels, newColumnLabels), RowDendrogram, ColumnGroupDendrograms);
-            }
         }
     }
 }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using pwiz.Common.Collections;
-using pwiz.Common.Controls.Clustering;
+﻿using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataAnalysis.Clustering
 {
@@ -17,6 +11,7 @@ namespace pwiz.Common.DataAnalysis.Clustering
             RowDendrogram = rowDendrogram;
             ColumnGroupDendrograms = columnDendrograms;
         }
+
         public ClusterDataSet<TRow, TColumn> DataSet { get; private set; }
         public DendrogramData RowDendrogram { get; private set; }
         public ImmutableList<DendrogramData> ColumnGroupDendrograms { get; private set; }
