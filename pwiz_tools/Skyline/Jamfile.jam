@@ -104,6 +104,11 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         return [ build-properties $(targets) : $(sources) : $(properties) ] ;
     }
+    
+    rule do_skyline_clean ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
 
     rule do_Inspect_Code ( targets + : sources * : properties * )
     {
@@ -117,9 +122,17 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Building Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
         
-        echo Instantiating template filse...
+        echo Instantiating template files...
         msbuild $(SKYLINE_PATH)/Executables/Installer/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(PWIZ_BUILD_PATH)/SkylineDeploy/ /nologo /verbosity:minimal
         $(PWIZ_BUILD_PATH)/SkylineDeploy/SetupDeployProject.exe "$(SKYLINE_PATH)" "$(PWIZ_BUILD_PATH)" $(VERSION) $(ADDRESS_MODEL) $(TARGET_NAME)
+    }
+
+    actions do_skyline_clean
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+
+        echo Cleaning Skyline so subsequent builds copy files properly...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Clean /nologo /verbosity:minimal
     }
 
     actions do_Inspect_Code
@@ -276,8 +289,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         }
         return $(result) ;
     }
+    
 
-
+    # this is really the main action for building Skyline and leaving Skyline.exe intact, but it is explicit 
     make Skyline.exe
         : # sources
         : # actions
@@ -300,6 +314,23 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibToMs2/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>$(PWIZ_ROOT_PATH)//INSTALLER_VENDOR_FILES.txt
+    ;
+    explicit Skyline.exe ;
+
+    # this is the default target which builds Skyline and then cleans it so the first subsequent build in the IDE doesn't mess up the Content file copies
+    make Build
+        : # sources
+        : # actions
+            @do_skyline_clean
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
+            <assembly>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler
+            <assembly>TestDiagnostics//TestDiagnostics
+            <conditional>@build-location
+            <dependency>Skyline.exe
     ;
 
     make InspectCode
