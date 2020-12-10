@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.PerformanceData;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -17,6 +16,7 @@ namespace pwiz.Skyline.Controls.Clustering
     {
         private List<Tuple<string, PivotedProperties.SeriesGroup>> _datasetOptions;
         private bool _inUpdateControls;
+        private static readonly Color MISSING_COLOR = Color.Black;
         public PcaPlot()
         {
             InitializeComponent();
@@ -40,43 +40,7 @@ namespace pwiz.Skyline.Controls.Clustering
             try
             {
                 _inUpdateControls = true;
-                var newDatasetOptions = new List<Tuple<string, PivotedProperties.SeriesGroup>>();
-                if (Clusterer.RowHeaderLevels.Any())
-                {
-                    newDatasetOptions.Add(Tuple.Create(
-                        TextUtil.SpaceSeparate(Clusterer.RowHeaderLevels.Select(pd => pd.ColumnCaption.ToString())),
-                        (PivotedProperties.SeriesGroup) null));
-                }
-
-                foreach (var seriesGroup in Clusterer.Properties.PivotedProperties.SeriesGroups)
-                {
-                    if (seriesGroup.PivotKeys.Count <= 1)
-                    {
-                        continue;
-                    }
-
-                    string caption;
-                    var columnHeaders = Clusterer.Properties.GetColumnHeaders(seriesGroup).ToList();
-                    if (columnHeaders.Any())
-                    {
-                        caption = TextUtil.SpaceSeparate(columnHeaders.Select(c => c.SeriesCaption.ToString()));
-                    }
-                    else
-                    {
-                        var values = seriesGroup.SeriesList.Where(series =>
-                            Clusterer.Properties.GetColumnRole(series) is ClusterRole.Transform).ToList();
-                        if (values.Any())
-                        {
-                            caption = TextUtil.SpaceSeparate(values.Select(v => v.SeriesCaption.ToString()));
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
-                    newDatasetOptions.Add(Tuple.Create(caption, seriesGroup));
-                }
-
+                var newDatasetOptions = GetDatasetOptions();
                 int oldSelectedIndex = comboDataset.SelectedIndex;
                 comboDataset.Items.Clear();
                 foreach (var tuple in newDatasetOptions)
@@ -99,13 +63,52 @@ namespace pwiz.Skyline.Controls.Clustering
             }
             finally
             {
-                {
-                    _inUpdateControls = wasInUpdateControls;
-                }
+                _inUpdateControls = wasInUpdateControls;
             }
 
             UpdateGraph();
+        }
 
+        private List<Tuple<string, PivotedProperties.SeriesGroup>> GetDatasetOptions()
+        {
+            var newDatasetOptions = new List<Tuple<string, PivotedProperties.SeriesGroup>>();
+            if (Clusterer.RowHeaderLevels.Any())
+            {
+                newDatasetOptions.Add(Tuple.Create(
+                    TextUtil.SpaceSeparate(Clusterer.RowHeaderLevels.Select(pd => pd.ColumnCaption.ToString())),
+                    (PivotedProperties.SeriesGroup)null));
+            }
+
+            foreach (var seriesGroup in Clusterer.Properties.PivotedProperties.SeriesGroups)
+            {
+                if (seriesGroup.PivotKeys.Count <= 1)
+                {
+                    continue;
+                }
+
+                string caption;
+                var columnHeaders = Clusterer.Properties.GetColumnHeaders(seriesGroup).ToList();
+                if (columnHeaders.Any())
+                {
+                    caption = TextUtil.SpaceSeparate(columnHeaders.Select(c => c.SeriesCaption.ToString()));
+                }
+                else
+                {
+                    var values = seriesGroup.SeriesList.Where(series =>
+                        Clusterer.Properties.GetColumnRole(series) is ClusterRole.Transform).ToList();
+                    if (values.Any())
+                    {
+                        caption = TextUtil.SpaceSeparate(values.Select(v => v.SeriesCaption.ToString()));
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                newDatasetOptions.Add(Tuple.Create(caption, seriesGroup));
+            }
+
+            return newDatasetOptions;
         }
 
         public void UpdateGraph()
@@ -134,9 +137,7 @@ namespace pwiz.Skyline.Controls.Clustering
             int xAxisIndex = (int) numericUpDownXAxis.Value - 1;
             int yAxisIndex = (int) numericUpDownYAxis.Value - 1;
             var clusteredProperties = Clusterer.Properties;
-            var pointLists = new Dictionary<ImmutableList<HeaderLevel>, PointPairList>();
-            int pcVectorsRequired = Math.Max(xAxisIndex, yAxisIndex) + 1;
-            Color missingColor = Color.Black;
+            Dictionary<ImmutableList<HeaderLevel>, PointPairList> pointLists;
             int numberOfDimensions;
             string graphTitle;
             if (seriesGroup == null)
@@ -146,28 +147,7 @@ namespace pwiz.Skyline.Controls.Clustering
                                              group.SeriesList.Where(series =>
                                                  clusteredProperties.GetColumnRole(series) is ClusterRole.Transform))
                                          .Sum(series => series.PropertyIndexes.Count);
-                var results = Clusterer.PerformPcaOnRows(pcVectorsRequired);
-                for (int iRow = 0; iRow < results.ItemLabels.Count; iRow++)
-                {
-                    var rowItem = results.ItemLabels[iRow];
-                    var headers = new List<HeaderLevel>();
-                    foreach (var pdHeader in clusteredProperties.RowHeaders)
-                    {
-                        var objectValue = pdHeader.GetValue(rowItem);
-                        headers.Add(new HeaderLevel(pdHeader.ColumnCaption, objectValue,
-                            ColorScheme.GetColor(pdHeader, rowItem) ?? missingColor));
-                    }
-
-                    var key = ImmutableList.ValueOf(headers);
-                    PointPairList pointPairList;
-                    if (!pointLists.TryGetValue(key, out pointPairList))
-                    {
-                        pointPairList = new PointPairList();
-                        pointLists.Add(key, pointPairList);
-                    }
-                    pointPairList.Add(results.ItemComponents[iRow][xAxisIndex], results.ItemComponents[iRow][yAxisIndex]);
-                }
-
+                pointLists = GetRowPointPairLists(xAxisIndex, yAxisIndex);
                 graphTitle = "PCA on rows";
             }
             else
@@ -175,29 +155,7 @@ namespace pwiz.Skyline.Controls.Clustering
                 var valueSeriesList = seriesGroup.SeriesList.Where(series =>
                     Clusterer.Properties.GetColumnRole(series) is ClusterRole.Transform).ToList();
                 numberOfDimensions = Clusterer.RowItems.Count * valueSeriesList.Count;
-
-                var results = Clusterer.PerformPca(seriesGroup, pcVectorsRequired);
-                var headerLevels = Clusterer.Properties.GetColumnHeaders(seriesGroup).ToList();
-
-
-                for (int iColumn = 0; iColumn < results.ItemComponents.Count; iColumn++)
-                {
-                    var headers = new List<HeaderLevel>();
-                    foreach (var series in headerLevels)
-                    {
-                        var pd = series.PropertyDescriptors[iColumn];
-                        var objectValue = Clusterer.RowItems.Select(pd.GetValue).FirstOrDefault(value => null != value);
-                        headers.Add(new HeaderLevel(series.SeriesCaption, objectValue, ColorScheme.GetColor(series, objectValue) ?? missingColor));
-                    }
-                    var key = ImmutableList.ValueOf(headers);
-                    PointPairList pointPairList;
-                    if (!pointLists.TryGetValue(key, out pointPairList))
-                    {
-                        pointPairList = new PointPairList();
-                        pointLists.Add(key, pointPairList);
-                    }
-                    pointPairList.Add(results.ItemComponents[iColumn][xAxisIndex], results.ItemComponents[iColumn][yAxisIndex]);
-                }
+                pointLists = GetColumnPointPairLists(seriesGroup, xAxisIndex, yAxisIndex);
                 graphTitle = TextUtil.SpaceSeparate(
                     valueSeriesList.Select(series => series.SeriesCaption.GetCaption(DataSchemaLocalizer.INVARIANT)));
                 if (clusteredProperties.RowHeaders.Any())
@@ -248,6 +206,66 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.GraphPane.Legend.IsVisible = zedGraphControl1.GraphPane.CurveList.Count < 16;
             zedGraphControl1.GraphPane.AxisChange();
             zedGraphControl1.Invalidate();
+        }
+
+        private Dictionary<ImmutableList<HeaderLevel>, PointPairList> GetRowPointPairLists(int xAxisIndex, int yAxisIndex)
+        {
+            var pointLists = new Dictionary<ImmutableList<HeaderLevel>, PointPairList>();
+
+            var results = Clusterer.PerformPcaOnRows(Math.Max(xAxisIndex, yAxisIndex) + 1);
+            for (int iRow = 0; iRow < results.ItemLabels.Count; iRow++)
+            {
+                var rowItem = results.ItemLabels[iRow];
+                var headers = new List<HeaderLevel>();
+                foreach (var pdHeader in Clusterer.Properties.RowHeaders)
+                {
+                    var objectValue = pdHeader.GetValue(rowItem);
+                    headers.Add(new HeaderLevel(pdHeader.ColumnCaption, objectValue,
+                        ColorScheme.GetColor(pdHeader, rowItem) ?? MISSING_COLOR));
+                }
+
+                var key = ImmutableList.ValueOf(headers);
+                PointPairList pointPairList;
+                if (!pointLists.TryGetValue(key, out pointPairList))
+                {
+                    pointPairList = new PointPairList();
+                    pointLists.Add(key, pointPairList);
+                }
+                pointPairList.Add(results.ItemComponents[iRow][xAxisIndex], results.ItemComponents[iRow][yAxisIndex]);
+            }
+
+            return pointLists;
+        }
+
+        private Dictionary<ImmutableList<HeaderLevel>, PointPairList> GetColumnPointPairLists(
+            PivotedProperties.SeriesGroup seriesGroup, int xAxisIndex, int yAxisIndex)
+        {
+            var pointLists = new Dictionary<ImmutableList<HeaderLevel>, PointPairList>();
+
+            var results = Clusterer.PerformPcaOnColumnGroup(seriesGroup, Math.Max(xAxisIndex, yAxisIndex) + 1);
+            var headerLevels = Clusterer.Properties.GetColumnHeaders(seriesGroup).ToList();
+
+
+            for (int iColumn = 0; iColumn < results.ItemComponents.Count; iColumn++)
+            {
+                var headers = new List<HeaderLevel>();
+                foreach (var series in headerLevels)
+                {
+                    var pd = series.PropertyDescriptors[iColumn];
+                    var objectValue = Clusterer.RowItems.Select(pd.GetValue).FirstOrDefault(value => null != value);
+                    headers.Add(new HeaderLevel(series.SeriesCaption, objectValue, ColorScheme.GetColor(series, objectValue) ?? MISSING_COLOR));
+                }
+                var key = ImmutableList.ValueOf(headers);
+                PointPairList pointPairList;
+                if (!pointLists.TryGetValue(key, out pointPairList))
+                {
+                    pointPairList = new PointPairList();
+                    pointLists.Add(key, pointPairList);
+                }
+                pointPairList.Add(results.ItemComponents[iColumn][xAxisIndex], results.ItemComponents[iColumn][yAxisIndex]);
+            }
+
+            return pointLists;
         }
 
         private void numericUpDown_ValueChanged(object sender, EventArgs e)

@@ -111,9 +111,10 @@ namespace pwiz.Common.DataBinding.Clustering
             return clusterDataSet.PerformClustering(performRowClustering);
         }
 
-        public PcaResults<int> PerformPca(PivotedProperties.SeriesGroup seriesGroup, int maxLevels)
+        public PcaResults<int> PerformPcaOnColumnGroup(PivotedProperties.SeriesGroup seriesGroup, int maxLevels)
         {
-            ClusterDataSet<RowItem, int> dataSet = new ClusterDataSet<RowItem, int>(RowItems, ImmutableList.Singleton(ImmutableList.ValueOf(MakeDataFrames(seriesGroup.SeriesList))));
+            ClusterDataSet<RowItem, int> dataSet = new ClusterDataSet<RowItem, int>(RowItems,
+                ImmutableList.Singleton(ImmutableList.ValueOf(MakeDataFrames(seriesGroup.SeriesList))));
             return dataSet.PerformPcaOnColumnGroups(maxLevels).FirstOrDefault();
         }
 
