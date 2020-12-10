@@ -816,8 +816,8 @@ namespace ZedGraph
 					return new DateAsOrdinalScale( oldScale, _ownerAxis );
 				case AxisType.LinearAsOrdinal:
 					return new LinearAsOrdinalScale( oldScale, _ownerAxis );
-                case AxisType.Dendrogram:
-                    return new DendrogramScale(oldScale, _ownerAxis);
+                case AxisType.UserDefined:
+                    return new UserDefinedScale(oldScale, _ownerAxis);
                 default:
 					throw new Exception( "Implementation Error: Invalid AxisType" );
 			}

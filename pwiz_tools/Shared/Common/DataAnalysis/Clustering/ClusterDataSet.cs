@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls.Clustering;
 using pwiz.Common.SystemUtil;
-using ZedGraph;
 
 namespace pwiz.Common.DataAnalysis.Clustering
 {

@@ -73,8 +73,8 @@ namespace ZedGraph
 		LinearAsOrdinal,
 		/// <summary> An exponential axis </summary>
 		Exponent,
-        /// <summary> An axis that draws dendrograms</summary>
-        Dendrogram
+        /// <summary> An axis that can be defined by the user using SetUserDefinedAxis.</summary>
+        UserDefined
     }
 
 	/// <summary>

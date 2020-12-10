@@ -64,7 +64,7 @@ namespace pwiz.Common.Controls.Clustering
                 double availableSpace = IsTreeVertical ? Width : Height;
                 var leafLocations = Enumerable.Range(0, 3).Select(i =>
                     new KeyValuePair<double, double>(i * availableSpace / 4, (i + 1) * availableSpace / 4)).ToList();
-                var dendrogramData = new ZedGraph.DendrogramData(new int[,]{{0,1},{2,3}}, Enumerable.Repeat(1.0, 2).ToArray());
+                var dendrogramData = new DendrogramData(new int[,]{{0,1},{2,3}}, Enumerable.Repeat(1.0, 2).ToArray());
                 var colors = new[] {Color.Red, Color.Green, Color.Blue}.Select(color => new[] {color});
                 DrawDendrogram(e.Graphics, new DendrogramFormat(dendrogramData, leafLocations, colors));
                 return;
@@ -199,43 +199,6 @@ namespace pwiz.Common.Controls.Clustering
 
                 return true;
             }
-        }
-
-        public class DendrogramFormat
-        {
-            public DendrogramFormat(ZedGraph.DendrogramData data, IEnumerable<KeyValuePair<double, double>> leafLocations,
-                IEnumerable<IEnumerable<Color>> colors)
-            {
-                Data = data;
-                LeafLocations = ImmutableList.ValueOf(leafLocations);
-                if (colors != null)
-                {
-                    Colors = ImmutableList.ValueOf(colors.Select(ImmutableList.ValueOf));
-                    if (Colors.Count != LeafLocations.Count)
-                    {
-                        throw new ArgumentException(@"Wrong number of colors", nameof(colors));
-                    }
-
-                    if (Colors.Count > 0)
-                    {
-                        ColorLevelCount = Colors[0].Count;
-                        if (Colors.Any(c => c.Count != ColorLevelCount))
-                        {
-                            throw new ArgumentException(@"Inconsistent number of colors", nameof(colors));
-                        }
-                    }
-                }
-                else
-                {
-                    Colors = ImmutableList<ImmutableList<Color>>.EMPTY;
-                }
-            }
-
-            public ZedGraph.DendrogramData Data { get; private set; }
-
-            public ImmutableList<KeyValuePair<double, double>> LeafLocations { get; private set; }
-            public ImmutableList<ImmutableList<Color>> Colors { get; private set; }
-            public int ColorLevelCount { get; private set; }
         }
     }
 }

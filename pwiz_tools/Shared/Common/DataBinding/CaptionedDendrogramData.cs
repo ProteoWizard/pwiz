@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
-using ZedGraph;
 
 namespace pwiz.Common.DataBinding
 {

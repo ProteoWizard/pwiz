@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 
-namespace ZedGraph
+namespace pwiz.Common.DataAnalysis.Clustering
 {
-    public class DendrogramData 
+    public class DendrogramData : Immutable
     {
         private int[,] _mergeIndices;
         private double[] _mergeDistances;

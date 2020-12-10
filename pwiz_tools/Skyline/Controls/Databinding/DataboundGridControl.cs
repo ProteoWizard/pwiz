@@ -771,7 +771,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
                 rowDendrogram.SetDendrogramDatas(new[]
                 {
-                    new DendrogramControl.DendrogramFormat(reportResults.RowDendrogramData.DendrogramData, rowLocations, rowColors)
+                    new DendrogramFormat(reportResults.RowDendrogramData.DendrogramData, rowLocations, rowColors)
                 });
             }
         }
@@ -807,7 +807,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return;
             }
-            var datas = new List<DendrogramControl.DendrogramFormat>();
+            var datas = new List<DendrogramFormat>();
             for (int i = 0; i < columnDendrogramDatas.Count; i++)
             {
                 var dendrogramData = columnDendrogramDatas[i];
@@ -853,7 +853,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     leafLocatons.Add(lastLocation);
                     leafColors.Add(colors);
                 }
-                datas.Add(new DendrogramControl.DendrogramFormat(dendrogramData, ImmutableList.ValueOf(leafLocatons), leafColors));
+                datas.Add(new DendrogramFormat(dendrogramData, ImmutableList.ValueOf(leafLocatons), leafColors));
             }
             columnDendrogram.SetDendrogramDatas(datas);
             splitContainerHorizontal.Panel1Collapsed = false;
