@@ -3,10 +3,11 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
-using pwiz.Common.DataBinding.Layout;
 using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -17,7 +18,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestClusteredHeatMap()
         {
-            // IsPauseForScreenShots = true;
             TestFilesZip = @"TestFunctional\ClusteredHeatMapTest.zip";
             RunFunctionalTest();
         }
@@ -29,6 +29,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("HeatMapTest.sky"));
                 SkylineWindow.ShowDocumentGrid(true);
             });
+            TestGroupComparisonClustering();
             var documentGrid = FindOpenForm<DocumentGridForm>();
             Assert.IsNotNull(documentGrid);
             RunUI(()=>documentGrid.ChooseView("PeptideResultValues"));
@@ -57,6 +58,30 @@ namespace pwiz.SkylineTestFunctional
             PauseForScreenShot("Heat map with three column groups");
             Assert.AreEqual(6, heatMap.GraphResults.ColumnGroups.Count);
             OkDialog(heatMap, heatMap.Close);
+        }
+
+        private const string PER_PROTEIN_NAME = "GroupComparisonPerProtein";
+        public void TestGroupComparisonClustering()
+        {
+            RunDlg<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison, dlg =>
+            {
+                dlg.GroupComparisonDef = GroupComparisonDef.EMPTY
+                    .ChangeControlAnnotation("Condition")
+                    .ChangeControlValue("Healthy")
+                    .ChangeIdentityAnnotation("BioReplicate")
+                    .ChangePerProtein(true)
+                    .ChangeNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS);
+                dlg.TextBoxName.Text = PER_PROTEIN_NAME;
+                dlg.OkDialog();
+            });
+            RunUI(()=>SkylineWindow.ShowGroupComparisonWindow(PER_PROTEIN_NAME));
+            FoldChangeGrid grid = FindOpenForm<FoldChangeGrid>();
+            RunUI(()=>grid.DataboundGridControl.ChooseView("Clustered"));
+            WaitForCondition(() => grid.DataboundGridControl.IsComplete && 0 != grid.DataboundGridControl.RowCount);
+            var heatMap = ShowDialog<HierarchicalClusterGraph>(()=>grid.DataboundGridControl.ShowHeatMap());
+            var pcaPlot = ShowDialog<PcaPlot>(() => grid.DataboundGridControl.ShowPcaPlot());
+            OkDialog(heatMap, heatMap.Close);
+            OkDialog(pcaPlot, pcaPlot.Close);
         }
     }
 }

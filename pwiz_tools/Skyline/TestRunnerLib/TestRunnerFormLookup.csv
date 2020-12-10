@@ -145,6 +145,7 @@ PasteDlg.TransitionListTab,TestExistingExperimentsTutorial
 PasteFilteredPeptidesDlg,TestLibraryBuild
 PasteTypeDlg,TestExplicitMultiType
 PathChooserDlg,TestStartPageShowPathChooser
+PcaPlot,TestClusteredHeatMap
 PeptideSettingsUI.DigestionTab,TestMethodEditTutorial
 PeptideSettingsUI.FilterTab,TestEditDialogs
 PeptideSettingsUI.LibraryTab,TestMethodEditTutorial
