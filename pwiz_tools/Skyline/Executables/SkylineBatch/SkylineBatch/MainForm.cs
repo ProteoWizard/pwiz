@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SkylineBatch.Properties;
@@ -60,7 +61,13 @@ namespace SkylineBatch
         {
             if (!_loaded)
             {
-                action();
+                try
+                {
+                    action();
+                }
+                catch (InvalidOperationException)
+                {
+                }
                 return;
             }
 
@@ -434,36 +441,6 @@ namespace SkylineBatch
 
         #endregion
 
-
-        #region Install skyline
-
-        private void buttonFileDialogSkylineInstall_click(object sender, EventArgs e)
-        {
-            using (var folderBrowserDlg = new FolderBrowserDialog())
-            {
-                folderBrowserDlg.Description = Resources.Select_the_skyline_installation_directory; //Select the Skyline installation directory.
-                folderBrowserDlg.ShowNewFolderButton = false;
-                folderBrowserDlg.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
-                {
-                    textBoxSkylinePath.Text = folderBrowserDlg.SelectedPath;
-                }
-            }
-        }
-
-        private void WebBasedInstall_Click(object sender, EventArgs e)
-        {
-            textBoxSkylinePath.Enabled = false;
-            buttonFileDialogSkylineInstall.Enabled = false;
-        }
-
-        private void SpecifyInstall_Click(object sender, EventArgs e)
-        {
-            textBoxSkylinePath.Enabled = true;
-            buttonFileDialogSkylineInstall.Enabled = true;
-        }
-
-        #endregion
 
 
         #region Mainform event handlers and errors

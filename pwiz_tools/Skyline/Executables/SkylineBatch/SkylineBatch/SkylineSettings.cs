@@ -32,8 +32,8 @@ namespace SkylineBatch
         private const string SkylineCmdExe = "SkylineCmd.exe";
         public const string Skyline = "Skyline";
         public const string SkylineDaily = "Skyline-daily";
-        private const string SkylineRunnerExe = "SkylineRunner.exe";
-        private const string SkylineDailyRunnerExe = "SkylineDailyRunner.exe";
+        public const string SkylineRunnerExe = "SkylineRunner.exe";
+        public const string SkylineDailyRunnerExe = "SkylineDailyRunner.exe";
         private const string SkylineExe = Skyline + ".exe";
         private const string SkylineDailyExe = SkylineDaily + ".exe";
         private const string RegistryLocationR = @"SOFTWARE\R-core\R\";
@@ -42,31 +42,32 @@ namespace SkylineBatch
         {
             // Check for the new settings.  If they are empty it means that this is a new installation
             // OR the first time the program is being run after the upgrade that added the settings.
-            return !string.IsNullOrWhiteSpace(Settings.Default.SkylineInstallDir);
+            return !string.IsNullOrWhiteSpace(Settings.Default.SkylineCommandPath);
         }
 
-        public static bool HasRPath()
+        private static string GetProgramDirectory()
         {
-            return !string.IsNullOrWhiteSpace(Settings.Default.RDir);
+            var rootDirectory = Path.GetDirectoryName(typeof(SkylineSettings).Assembly.Location);
+            return rootDirectory.Remove(rootDirectory.Length - "\\bin\\Debug".Length);
         }
 
-        public static bool FindSkyline(out IList<string> pathsChecked)
+        private static string GetProjectDirectory()
         {
-            pathsChecked = new List<string>();
-            string skyineInstallDir = null;
-            string skylineType = null;
-            if (AdminInstallExists(ref skyineInstallDir, ref skylineType, pathsChecked))
-            {
-                SaveSettings(skylineType, skyineInstallDir);
-                return true;
-            }
-            if (ClickOnceInstallExists(ref skylineType, pathsChecked))
-            {
-                SaveSettings(skylineType);
-                return true;
-            }
+            var programDirectory = GetProgramDirectory();
+            return programDirectory.Remove(programDirectory.Length - "\\SkylineBatch\\SkylineBatch".Length);
+        }
 
-            return false;
+        public static bool FindLocalSkylineCmd()
+        {
+            var skylineCmdPath = Path.Combine(GetProjectDirectory(), SkylineCmdExe);
+            if (!File.Exists(skylineCmdPath))
+            {
+                Settings.Default.AdminInstallation = false;
+                return false;
+            }
+            Settings.Default.SkylineCommandPath = skylineCmdPath;
+            Settings.Default.AdminInstallation = true;
+            return true;
         }
 
         public static bool FindRDirectory()
@@ -110,23 +111,24 @@ namespace SkylineBatch
             Settings.Default.RVersions = rPaths;
         }
 
-        private static bool ClickOnceInstallExists(ref string skylineType, ICollection<string> pathsChecked)
+        public static bool SavedInstallationsEquals(Tuple<bool,bool> installations)
         {
-            // ClickOnce Skyline installation
-            if (ClickOnceInstallExists(Skyline, pathsChecked))
-            {
-                skylineType = Skyline;
-                return true;
-            }
+            return Settings.Default.SkylineClickOnceInstalled == installations.Item1 &&
+                   Settings.Default.SkylineDailyClickOnceInstalled == installations.Item2;
+        }
 
-            // ClickOnce Skyline-daily installation
-            if (ClickOnceInstallExists(SkylineDaily, pathsChecked))
-            {
-                skylineType = SkylineDaily;
-                return true;
-            }
+        public static void UpdateSavedInstallations(Tuple<bool, bool> installations)
+        {
+            Settings.Default.SkylineClickOnceInstalled = installations.Item1;
+            Settings.Default.SkylineDailyClickOnceInstalled = installations.Item2;
+        }
 
-            return false;
+        public static Tuple<bool,bool> ClickOnceInstallExists()
+        {
+            var pathsChecked = new List<string>();
+            var skylineInstallExists = ClickOnceInstallExists(Skyline, pathsChecked);
+            var skylineDailyInstallExists = ClickOnceInstallExists(SkylineDaily, pathsChecked);
+            return new Tuple<bool, bool>(skylineInstallExists, skylineDailyInstallExists);
         }
 
         private static bool ClickOnceInstallExists(string skylineType, ICollection<string> pathsChecked)
@@ -168,119 +170,56 @@ namespace SkylineBatch
             return false;
         }
 
-        public static bool UseSkyline => Settings.Default.SkylineType.Equals(Skyline);
+        public static bool UseClickOnceInstall => Settings.Default.SkylineCommandPath.EndsWith("Runner.exe");
 
-        public static bool UseClickOnceInstall => string.IsNullOrWhiteSpace(Settings.Default.SkylineInstallDir);
-
-        public static string SkylineInstallDir => Settings.Default.SkylineInstallDir;
-
-        public static string GetSkylineCmdLineExePath => GetSkylineCmdLineExe();
-
-        public static string GetRscriptExeLocation => Settings.Default.RDir;
+        public static string GetSkylineCmdLineExePath => Settings.Default.SkylineCommandPath;
         
-
-
-        private static string GetSkylineCmdLineExe()
-        {
-            var rootDirectory = Path.GetDirectoryName(typeof(SkylineSettings).Assembly.Location);
-            var skylineCmdPath = rootDirectory != null ? rootDirectory.Replace("bin\\Debug", "SkylineCmd.exe") : null;
-            if (skylineCmdPath != null && !File.Exists(skylineCmdPath))
-                return UseClickOnceInstall
-                    ? GetSkylineRunnerPath(UseSkyline)
-                    : Path.Combine(SkylineInstallDir, SkylineCmdExe);
-
-            return skylineCmdPath;
-        }
-
-        private static string GetSkylineRunnerPath(bool useSkyline)
-        {
-            var runnerName = useSkyline ? SkylineRunnerExe : SkylineDailyRunnerExe;
-            var runnerDirectory = Path.GetDirectoryName(typeof(SkylineSettings).Assembly.Location);
-            if (runnerDirectory == null)
-                throw new ArgumentNullException(nameof(runnerDirectory), @"Could not find skyline runner directory.");
-            return Path.Combine(runnerDirectory, runnerName);
-        }
-
-        private static void SaveSettings(string skylineType)
-        {
-            SaveSettings(skylineType, string.Empty);
-        }
-
-        private static void SaveSettings(string skylineType, string skylineInstallPath)
-        {
-            Settings.Default.SkylineType = skylineType;
-            Settings.Default.SkylineInstallDir = skylineInstallPath;
-            Settings.Default.Save();
-            Program.LogInfo(new StringBuilder("Skyline settings changed. ").Append(GetSkylineSettingsStr()).ToString());
-        }
 
         public static string GetSkylineSettingsStr()
         {
             var str = new StringBuilder($"Skyline type: {Settings.Default.SkylineType}; ");
-            str.Append(UseClickOnceInstall ? "Using web-based Skyline install" : $"Skyline installation directory {Settings.Default.SkylineInstallDir}");
+            str.Append(UseClickOnceInstall ? "Using web-based Skyline install" : $"Skyline installation directory {Settings.Default.SkylineCommandPath}");
             return str.ToString();
         }
 
-        public static bool UpdateSettings(bool useSkyline, bool useClickOnceInstaller, string installDir,
+        public static bool UpdateSettings(bool useSkyline, bool useSkylineDaily, string skylineFolderDir,
             out string errors)
         {
             errors = string.Empty;
-            var skylineTypeClicked = useSkyline ? Skyline : SkylineDaily;
-
-            if (useClickOnceInstaller)
+            if (useSkyline || useSkylineDaily)
             {
-                var pathsChecked = new List<string>();
-                var skylineRunnerPath = GetSkylineRunnerPath(useSkyline);
+                var runnerExe = useSkyline ? SkylineRunnerExe : SkylineDailyRunnerExe;
+                var skylineRunnerPath = Path.Combine(GetProgramDirectory(), runnerExe);
                 if (!File.Exists(skylineRunnerPath))
                 {
                     errors = $"{skylineRunnerPath} does not exist.";
                     return false;
                 }
-
-                if (!ClickOnceInstallExists(skylineTypeClicked, pathsChecked))
-                {
-                    var err = new StringBuilder(
-                            $"Could not find a web-based install of {skylineTypeClicked}. Checked in the following locations:")
-                        .AppendLine()
-                        .Append(string.Join(Environment.NewLine, pathsChecked));
-                    errors = err.ToString();
-                    return false;
-                }
-
-                SaveSettings(skylineTypeClicked);
+                Settings.Default.SkylineCommandPath = skylineRunnerPath;
             }
-
             else
             {
-                if (string.IsNullOrWhiteSpace(installDir))
+                if (string.IsNullOrWhiteSpace(skylineFolderDir))
                 {
                     errors = "Path to Skyline installation directory cannot be empty.";
                     return false;
                 }
-                if (!Directory.Exists(installDir))
+                if (!Directory.Exists(skylineFolderDir))
                 {
-                    errors = $"Directory '{installDir}' does not exist.";
+                    errors = $"Directory '{skylineFolderDir}' does not exist.";
                     return false;
                 }
 
-                var skylineCmdExePath = Path.Combine(installDir, SkylineCmdExe);
+                var skylineCmdExePath = Path.Combine(skylineFolderDir, SkylineCmdExe);
                 if (!File.Exists(skylineCmdExePath))
                 {
-                    errors = $"{SkylineCmdExe} was not found in '{installDir}'.";
+                    errors = $"{SkylineCmdExe} was not found in '{skylineFolderDir}'.";
                     return false;
                 }
 
-                var skylineExe = useSkyline ? SkylineExe : SkylineDailyExe;
-                var skylineExePath = Path.Combine(installDir, skylineExe);
-                if (!File.Exists(skylineExePath))
-                {
-                    errors = $"{skylineExe} was not found in '{installDir}'.";
-                    return false;
-                }
-
-                SaveSettings(skylineTypeClicked, installDir);
+                Settings.Default.SkylineCommandPath = skylineCmdExePath;
             }
-
+            Settings.Default.Save();
             return true;
         }
 
@@ -293,13 +232,6 @@ namespace SkylineBatch
                 Path.Combine(Path.Combine(programsFolderPath, "MacCoss Lab, UW"), shortcutFilename), // Not L10N
                 Path.Combine(Path.Combine(programsFolderPath, skylineAppName), shortcutFilename),
             };
-        }
-
-        public static bool SettingsChanged(bool useSkylineSelected, bool clickOnceInstallSelected, string installDirEntered)
-        {
-            return UseSkyline != useSkylineSelected
-                   || UseClickOnceInstall != clickOnceInstallSelected
-                   || (!clickOnceInstallSelected && !SkylineInstallDir.Equals(installDirEntered));
         }
     }
 }

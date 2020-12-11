@@ -109,21 +109,22 @@ namespace SkylineBatch
 
         private static bool InitSkylineSettings()
         {
-            if (SkylineSettings.IsInitialized() || SkylineSettings.FindSkyline(out var pathsChecked))
-            {
+            Settings.Default.SkylineDailyClickOnceInstalled = false;
+            var currentInstallations = SkylineSettings.ClickOnceInstallExists();
+            if (SkylineSettings.FindLocalSkylineCmd() || (SkylineSettings.IsInitialized() && SkylineSettings.SavedInstallationsEquals(currentInstallations)))
                 return true;
+            
+            var skylineForm = new FindSkylineForm(currentInstallations.Item1, currentInstallations.Item2);
+            Application.Run(skylineForm);
+
+            if (skylineForm.DialogResult != DialogResult.OK)
+            {
+                MessageBox.Show($@"{AppName()} requires Skyline to run.", $@"{AppName()} Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
 
-            var message = new StringBuilder();
-            message.AppendLine(
-                    $"SkylineBatch requires {SkylineSettings.Skyline} or {SkylineSettings.SkylineDaily} to be installed on the computer.")
-                .AppendLine($"Unable to find {SkylineSettings.Skyline} at any of the following locations: ")
-                .AppendLine(string.Join(Environment.NewLine, pathsChecked)).AppendLine()
-                .AppendLine(
-                    $"Please install {SkylineSettings.Skyline} or {SkylineSettings.SkylineDaily} to use SkylineBatch");
-            MessageBox.Show(message.ToString(), Resources.Unable_To_Find_Skyline,
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
+            SkylineSettings.UpdateSavedInstallations(currentInstallations);
+            return true;
         }
 
         private static bool InitRSettings()
@@ -137,7 +138,7 @@ namespace SkylineBatch
             message.AppendLine(
                     $"SkylineBatch requires at least one version of R with rScript.exe to be installed on the computer.")
                 .AppendLine(
-                    $"Please install rScript.exe to use SkylineBatch");
+                    $"Please install R to use SkylineBatch");
             MessageBox.Show(message.ToString(), @"Unable To Find R",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
@@ -186,7 +187,7 @@ namespace SkylineBatch
             return $"{AppName()} {_version}";
         }
 
-        private static string AppName()
+        public static string AppName()
         {
             return "Skyline Batch";
         }

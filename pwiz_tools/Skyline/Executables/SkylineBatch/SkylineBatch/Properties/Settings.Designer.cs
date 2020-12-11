@@ -25,12 +25,12 @@ namespace SkylineBatch.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public string SkylineInstallDir {
+        public string SkylineCommandPath {
             get {
-                return ((string)(this["SkylineInstallDir"]));
+                return ((string)(this["SkylineCommandPath"]));
             }
             set {
-                this["SkylineInstallDir"] = value;
+                this["SkylineCommandPath"] = value;
             }
         }
         
@@ -55,6 +55,42 @@ namespace SkylineBatch.Properties {
             }
             set {
                 this["RDir"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AdminInstallation {
+            get {
+                return ((bool)(this["AdminInstallation"]));
+            }
+            set {
+                this["AdminInstallation"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SkylineClickOnceInstalled {
+            get {
+                return ((bool)(this["SkylineClickOnceInstalled"]));
+            }
+            set {
+                this["SkylineClickOnceInstalled"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SkylineDailyClickOnceInstalled {
+            get {
+                return ((bool)(this["SkylineDailyClickOnceInstalled"]));
+            }
+            set {
+                this["SkylineDailyClickOnceInstalled"] = value;
             }
         }
     }

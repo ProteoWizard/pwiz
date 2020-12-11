@@ -108,11 +108,6 @@ namespace SkylineBatch
             var dataDir = Config.MainSettings.DataFolderPath;
             var namingPattern = Config.MainSettings.ReplicateNamingPattern;
 
-
-            //var rLocation = SkylineSettings.GetRscriptExeLocation;
-
-
-
             // STEP 1: open skyline file and save copy to analysis folder
             var firstStep = string.Format("\"{0}\" --in=\"{1}\" --out=\"{2}\" ‑‑save‑settings", skylineRunner,
                 templateFullName, newSkylineFileName);

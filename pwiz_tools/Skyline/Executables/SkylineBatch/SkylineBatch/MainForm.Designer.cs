@@ -31,23 +31,21 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.toolTip_MainForm = new System.Windows.Forms.ToolTip(this.components);
-            this.cb_keepRunning = new System.Windows.Forms.CheckBox();
+            this.btnDeleteLogs = new System.Windows.Forms.Button();
             this.btnExportConfigs = new System.Windows.Forms.Button();
             this.btnImportConfigs = new System.Windows.Forms.Button();
+            this.btnViewLog = new System.Windows.Forms.Button();
             this.btnRunBatch = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.btnDeleteLogs = new System.Windows.Forms.Button();
-            this.btnViewLog = new System.Windows.Forms.Button();
             this.systray_icon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.cb_minimizeToSysTray = new System.Windows.Forms.CheckBox();
-            this.textBoxSkylinePath = new System.Windows.Forms.TextBox();
-            this.radioButtonSpecifySkylinePath = new System.Windows.Forms.RadioButton();
             this.buttonApplySkylineSettings = new System.Windows.Forms.Button();
-            this.radioButtonWebBasedSkyline = new System.Windows.Forms.RadioButton();
             this.buttonFileDialogSkylineInstall = new System.Windows.Forms.Button();
             this.panelSkylineType = new System.Windows.Forms.Panel();
-            this.radioButtonUseSkyline = new System.Windows.Forms.RadioButton();
-            this.radioButtonUseSkylineDaily = new System.Windows.Forms.RadioButton();
+            this.batchRunDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.startFromStepOne = new System.Windows.Forms.ToolStripMenuItem();
+            this.startFromStepTwo = new System.Windows.Forms.ToolStripMenuItem();
+            this.startFromStepThree = new System.Windows.Forms.ToolStripMenuItem();
+            this.startFromStepFour = new System.Windows.Forms.ToolStripMenuItem();
             this.tabLog = new System.Windows.Forms.TabPage();
             this.label1 = new System.Windows.Forms.Label();
             this.comboLogList = new System.Windows.Forms.ComboBox();
@@ -71,26 +69,22 @@
             this.btnCopy = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
-            this.batchRunDropDown = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.startFromStepOne = new System.Windows.Forms.ToolStripMenuItem();
-            this.startFromStepTwo = new System.Windows.Forms.ToolStripMenuItem();
-            this.startFromStepThree = new System.Windows.Forms.ToolStripMenuItem();
-            this.startFromStepFour = new System.Windows.Forms.ToolStripMenuItem();
+            this.batchRunDropDown.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.tabFront.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.tabMain.SuspendLayout();
-            this.batchRunDropDown.SuspendLayout();
             this.SuspendLayout();
             // 
-            // cb_keepRunning
+            // btnDeleteLogs
             // 
-            resources.ApplyResources(this.cb_keepRunning, "cb_keepRunning");
-            this.cb_keepRunning.Name = "cb_keepRunning";
-            this.toolTip_MainForm.SetToolTip(this.cb_keepRunning, resources.GetString("cb_keepRunning.ToolTip"));
-            this.cb_keepRunning.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.btnDeleteLogs, "btnDeleteLogs");
+            this.btnDeleteLogs.Name = "btnDeleteLogs";
+            this.toolTip_MainForm.SetToolTip(this.btnDeleteLogs, resources.GetString("btnDeleteLogs.ToolTip"));
+            this.btnDeleteLogs.UseVisualStyleBackColor = true;
+            this.btnDeleteLogs.Click += new System.EventHandler(this.btnDeleteLogs_Click);
             // 
             // btnExportConfigs
             // 
@@ -108,6 +102,14 @@
             this.btnImportConfigs.UseVisualStyleBackColor = true;
             this.btnImportConfigs.Click += new System.EventHandler(this.btnImport_Click);
             // 
+            // btnViewLog
+            // 
+            resources.ApplyResources(this.btnViewLog, "btnViewLog");
+            this.btnViewLog.Name = "btnViewLog";
+            this.toolTip_MainForm.SetToolTip(this.btnViewLog, resources.GetString("btnViewLog.ToolTip"));
+            this.btnViewLog.UseVisualStyleBackColor = true;
+            this.btnViewLog.Click += new System.EventHandler(this.btnViewLog_Click);
+            // 
             // btnRunBatch
             // 
             resources.ApplyResources(this.btnRunBatch, "btnRunBatch");
@@ -124,45 +126,10 @@
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
-            // btnDeleteLogs
-            // 
-            resources.ApplyResources(this.btnDeleteLogs, "btnDeleteLogs");
-            this.btnDeleteLogs.Name = "btnDeleteLogs";
-            this.toolTip_MainForm.SetToolTip(this.btnDeleteLogs, resources.GetString("btnDeleteLogs.ToolTip"));
-            this.btnDeleteLogs.UseVisualStyleBackColor = true;
-            this.btnDeleteLogs.Click += new System.EventHandler(this.btnDeleteLogs_Click);
-            // 
-            // btnViewLog
-            // 
-            resources.ApplyResources(this.btnViewLog, "btnViewLog");
-            this.btnViewLog.Name = "btnViewLog";
-            this.toolTip_MainForm.SetToolTip(this.btnViewLog, resources.GetString("btnViewLog.ToolTip"));
-            this.btnViewLog.UseVisualStyleBackColor = true;
-            this.btnViewLog.Click += new System.EventHandler(this.btnViewLog_Click);
-            // 
             // systray_icon
             // 
             resources.ApplyResources(this.systray_icon, "systray_icon");
             this.systray_icon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.systray_icon_MouseDoubleClick);
-            // 
-            // cb_minimizeToSysTray
-            // 
-            resources.ApplyResources(this.cb_minimizeToSysTray, "cb_minimizeToSysTray");
-            this.cb_minimizeToSysTray.Name = "cb_minimizeToSysTray";
-            this.cb_minimizeToSysTray.UseVisualStyleBackColor = true;
-            // 
-            // textBoxSkylinePath
-            // 
-            resources.ApplyResources(this.textBoxSkylinePath, "textBoxSkylinePath");
-            this.textBoxSkylinePath.Name = "textBoxSkylinePath";
-            // 
-            // radioButtonSpecifySkylinePath
-            // 
-            resources.ApplyResources(this.radioButtonSpecifySkylinePath, "radioButtonSpecifySkylinePath");
-            this.radioButtonSpecifySkylinePath.Name = "radioButtonSpecifySkylinePath";
-            this.radioButtonSpecifySkylinePath.TabStop = true;
-            this.radioButtonSpecifySkylinePath.UseVisualStyleBackColor = true;
-            this.radioButtonSpecifySkylinePath.CheckedChanged += new System.EventHandler(this.SpecifyInstall_Click);
             // 
             // buttonApplySkylineSettings
             // 
@@ -170,39 +137,51 @@
             this.buttonApplySkylineSettings.Name = "buttonApplySkylineSettings";
             this.buttonApplySkylineSettings.UseVisualStyleBackColor = true;
             // 
-            // radioButtonWebBasedSkyline
-            // 
-            resources.ApplyResources(this.radioButtonWebBasedSkyline, "radioButtonWebBasedSkyline");
-            this.radioButtonWebBasedSkyline.Name = "radioButtonWebBasedSkyline";
-            this.radioButtonWebBasedSkyline.TabStop = true;
-            this.radioButtonWebBasedSkyline.UseVisualStyleBackColor = true;
-            this.radioButtonWebBasedSkyline.CheckedChanged += new System.EventHandler(this.WebBasedInstall_Click);
-            // 
             // buttonFileDialogSkylineInstall
             // 
             resources.ApplyResources(this.buttonFileDialogSkylineInstall, "buttonFileDialogSkylineInstall");
             this.buttonFileDialogSkylineInstall.Name = "buttonFileDialogSkylineInstall";
             this.buttonFileDialogSkylineInstall.UseVisualStyleBackColor = true;
-            this.buttonFileDialogSkylineInstall.Click += new System.EventHandler(this.buttonFileDialogSkylineInstall_click);
             // 
             // panelSkylineType
             // 
             resources.ApplyResources(this.panelSkylineType, "panelSkylineType");
             this.panelSkylineType.Name = "panelSkylineType";
             // 
-            // radioButtonUseSkyline
+            // batchRunDropDown
             // 
-            resources.ApplyResources(this.radioButtonUseSkyline, "radioButtonUseSkyline");
-            this.radioButtonUseSkyline.Name = "radioButtonUseSkyline";
-            this.radioButtonUseSkyline.TabStop = true;
-            this.radioButtonUseSkyline.UseVisualStyleBackColor = true;
+            this.batchRunDropDown.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.startFromStepOne,
+            this.startFromStepTwo,
+            this.startFromStepThree,
+            this.startFromStepFour});
+            this.batchRunDropDown.Name = "batchRunDropDown";
+            this.batchRunDropDown.ShowCheckMargin = true;
+            this.batchRunDropDown.ShowImageMargin = false;
+            resources.ApplyResources(this.batchRunDropDown, "batchRunDropDown");
+            this.batchRunDropDown.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.batchRunDropDown_ItemClicked);
             // 
-            // radioButtonUseSkylineDaily
+            // startFromStepOne
             // 
-            resources.ApplyResources(this.radioButtonUseSkylineDaily, "radioButtonUseSkylineDaily");
-            this.radioButtonUseSkylineDaily.Name = "radioButtonUseSkylineDaily";
-            this.radioButtonUseSkylineDaily.TabStop = true;
-            this.radioButtonUseSkylineDaily.UseVisualStyleBackColor = true;
+            this.startFromStepOne.Checked = true;
+            this.startFromStepOne.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.startFromStepOne.Name = "startFromStepOne";
+            resources.ApplyResources(this.startFromStepOne, "startFromStepOne");
+            // 
+            // startFromStepTwo
+            // 
+            this.startFromStepTwo.Name = "startFromStepTwo";
+            resources.ApplyResources(this.startFromStepTwo, "startFromStepTwo");
+            // 
+            // startFromStepThree
+            // 
+            this.startFromStepThree.Name = "startFromStepThree";
+            resources.ApplyResources(this.startFromStepThree, "startFromStepThree");
+            // 
+            // startFromStepFour
+            // 
+            this.startFromStepFour.Name = "startFromStepFour";
+            resources.ApplyResources(this.startFromStepFour, "startFromStepFour");
             // 
             // tabLog
             // 
@@ -380,41 +359,6 @@
             this.tabMain.Name = "tabMain";
             this.tabMain.SelectedIndex = 0;
             // 
-            // batchRunDropDown
-            // 
-            this.batchRunDropDown.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.startFromStepOne,
-            this.startFromStepTwo,
-            this.startFromStepThree,
-            this.startFromStepFour});
-            this.batchRunDropDown.Name = "batchRunDropDown";
-            this.batchRunDropDown.ShowCheckMargin = true;
-            this.batchRunDropDown.ShowImageMargin = false;
-            resources.ApplyResources(this.batchRunDropDown, "batchRunDropDown");
-            this.batchRunDropDown.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.batchRunDropDown_ItemClicked);
-            // 
-            // startFromStepOne
-            // 
-            this.startFromStepOne.Checked = true;
-            this.startFromStepOne.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.startFromStepOne.Name = "startFromStepOne";
-            resources.ApplyResources(this.startFromStepOne, "startFromStepOne");
-            // 
-            // startFromStepTwo
-            // 
-            this.startFromStepTwo.Name = "startFromStepTwo";
-            resources.ApplyResources(this.startFromStepTwo, "startFromStepTwo");
-            // 
-            // startFromStepThree
-            // 
-            this.startFromStepThree.Name = "startFromStepThree";
-            resources.ApplyResources(this.startFromStepThree, "startFromStepThree");
-            // 
-            // startFromStepFour
-            // 
-            this.startFromStepFour.Name = "startFromStepFour";
-            resources.ApplyResources(this.startFromStepFour, "startFromStepFour");
-            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
@@ -422,6 +366,7 @@
             this.Controls.Add(this.tabMain);
             this.Name = "MainForm";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.batchRunDropDown.ResumeLayout(false);
             this.tabLog.ResumeLayout(false);
             this.tabLog.PerformLayout();
             this.tabFront.ResumeLayout(false);
@@ -433,7 +378,6 @@
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.tabMain.ResumeLayout(false);
-            this.batchRunDropDown.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -441,49 +385,42 @@
         #endregion
         private System.Windows.Forms.ToolTip toolTip_MainForm;
         private System.Windows.Forms.NotifyIcon systray_icon;
-        private System.Windows.Forms.CheckBox cb_keepRunning;
-        private System.Windows.Forms.CheckBox cb_minimizeToSysTray;
-        private System.Windows.Forms.TextBox textBoxSkylinePath;
-        private System.Windows.Forms.RadioButton radioButtonSpecifySkylinePath;
         private System.Windows.Forms.Button buttonApplySkylineSettings;
-        private System.Windows.Forms.RadioButton radioButtonWebBasedSkyline;
         private System.Windows.Forms.Button buttonFileDialogSkylineInstall;
         private System.Windows.Forms.Panel panelSkylineType;
-        private System.Windows.Forms.RadioButton radioButtonUseSkyline;
-        private System.Windows.Forms.RadioButton radioButtonUseSkylineDaily;
-        private System.Windows.Forms.TabPage tabLog;
-        private System.Windows.Forms.RichTextBox textBoxLog;
-        private System.Windows.Forms.TabPage tabFront;
-        private System.Windows.Forms.Label labelSavedConfigurations;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Button btnImportConfigs;
-        private System.Windows.Forms.Button btnExportConfigs;
-        private System.Windows.Forms.Button btnEdit;
-        private System.Windows.Forms.Button btnCopy;
-        private System.Windows.Forms.Button btnDelete;
-        private System.Windows.Forms.Panel panel2;
-        private System.Windows.Forms.Label lblNoConfigs;
-        private System.Windows.Forms.Button btnAddConfig;
-        private System.Windows.Forms.TabControl tabMain;
-        private System.Windows.Forms.Button btnRunBatch;
-        private System.Windows.Forms.ListView listViewConfigs;
-        private System.Windows.Forms.ColumnHeader listViewConfigName;
-        private System.Windows.Forms.ColumnHeader listViewCreated;
-        private System.Windows.Forms.ColumnHeader listViewStatus;
         private System.Windows.Forms.ContextMenuStrip batchRunDropDown;
         private System.Windows.Forms.ToolStripMenuItem startFromStepOne;
         private System.Windows.Forms.ToolStripMenuItem startFromStepTwo;
         private System.Windows.Forms.ToolStripMenuItem startFromStepThree;
-        private System.Windows.Forms.Button btnRunOptions;
         private System.Windows.Forms.ToolStripMenuItem startFromStepFour;
+        private System.Windows.Forms.TabPage tabLog;
+        private System.Windows.Forms.Button btnDeleteLogs;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ComboBox comboLogList;
+        private System.Windows.Forms.RichTextBox textBoxLog;
+        private System.Windows.Forms.TabPage tabFront;
+        private System.Windows.Forms.ListView listViewConfigs;
+        private System.Windows.Forms.ColumnHeader listViewConfigName;
+        private System.Windows.Forms.ColumnHeader listViewCreated;
+        private System.Windows.Forms.ColumnHeader listViewStatus;
+        private System.Windows.Forms.Label labelSavedConfigurations;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Button btnRunOptions;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Label lblNoConfigs;
+        private System.Windows.Forms.Button btnRunBatch;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnViewLog;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton btnUpArrow;
         private System.Windows.Forms.ToolStripButton btnDownArrow;
-        private System.Windows.Forms.ComboBox comboLogList;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button btnDeleteLogs;
-        private System.Windows.Forms.Button btnViewLog;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnImportConfigs;
+        private System.Windows.Forms.Button btnExportConfigs;
+        private System.Windows.Forms.Button btnAddConfig;
+        private System.Windows.Forms.Button btnEdit;
+        private System.Windows.Forms.Button btnCopy;
+        private System.Windows.Forms.Button btnDelete;
+        private System.Windows.Forms.TabControl tabMain;
     }
 }
