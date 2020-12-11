@@ -6,5 +6,6 @@ pushd %~dp0
 if exist PrositConfig_production.xml (
 	copy PrositConfig_production.xml PrositConfig.xml
 ) else (
+	if "%1" == "Skyline" (echo PrositConfig_production.xml must be present for an official non-daily build && exit 1)
 	copy PrositConfig_development.xml PrositConfig.xml
 )
