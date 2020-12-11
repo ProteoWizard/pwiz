@@ -1927,6 +1927,9 @@ namespace pwiz.Skyline
             this.replicateOrderAcqTimeContextMenuItem.Name = "replicateOrderAcqTimeContextMenuItem";
             resources.ApplyResources(this.replicateOrderAcqTimeContextMenuItem, "replicateOrderAcqTimeContextMenuItem");
             this.replicateOrderAcqTimeContextMenuItem.Click += new System.EventHandler(this.replicateOrderAcqTimeContextMenuItem_Click);
+            // 
+            // areaNormalizeContextMenuItem
+            // 
             this.areaNormalizeContextMenuItem.Name = "areaNormalizeContextMenuItem";
             resources.ApplyResources(this.areaNormalizeContextMenuItem, "areaNormalizeContextMenuItem");
             // 
@@ -2939,20 +2942,17 @@ namespace pwiz.Skyline
             // 
             this.reintegrateToolStripMenuItem.Name = "reintegrateToolStripMenuItem";
             resources.ApplyResources(this.reintegrateToolStripMenuItem, "reintegrateToolStripMenuItem");
-            this.reintegrateToolStripMenuItem.Click += new System.EventHandler(this.reintegrateToolStripMenuItem_Click);
             // 
             // generateDecoysMenuItem
             // 
             this.generateDecoysMenuItem.Name = "generateDecoysMenuItem";
             resources.ApplyResources(this.generateDecoysMenuItem, "generateDecoysMenuItem");
             this.modeUIHandler.SetUIMode(this.generateDecoysMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
-            this.generateDecoysMenuItem.Click += new System.EventHandler(this.generateDecoysMenuItem_Click);
             // 
             // compareModelsToolStripMenuItem
             // 
             this.compareModelsToolStripMenuItem.Name = "compareModelsToolStripMenuItem";
             resources.ApplyResources(this.compareModelsToolStripMenuItem, "compareModelsToolStripMenuItem");
-            this.compareModelsToolStripMenuItem.Click += new System.EventHandler(this.compareModelsToolStripMenuItem_Click);
             // 
             // toolStripSeparator59
             // 
@@ -2963,7 +2963,6 @@ namespace pwiz.Skyline
             // 
             this.removeMissingResultsMenuItem.Name = "removeMissingResultsMenuItem";
             resources.ApplyResources(this.removeMissingResultsMenuItem, "removeMissingResultsMenuItem");
-            this.removeMissingResultsMenuItem.Click += new System.EventHandler(this.removeMissingResultsMenuItem_Click);
             // 
             // toolStripSeparator45
             // 
@@ -2975,27 +2974,23 @@ namespace pwiz.Skyline
             this.acceptProteinsMenuItem.Name = "acceptProteinsMenuItem";
             resources.ApplyResources(this.acceptProteinsMenuItem, "acceptProteinsMenuItem");
             this.modeUIHandler.SetUIMode(this.acceptProteinsMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
-            this.acceptProteinsMenuItem.Click += new System.EventHandler(this.acceptProteinsMenuItem_Click);
             // 
             // removeEmptyProteinsMenuItem
             // 
             this.removeEmptyProteinsMenuItem.Name = "removeEmptyProteinsMenuItem";
             resources.ApplyResources(this.removeEmptyProteinsMenuItem, "removeEmptyProteinsMenuItem");
-            this.removeEmptyProteinsMenuItem.Click += new System.EventHandler(this.removeEmptyProteinsMenuItem_Click);
             // 
             // associateFASTAMenuItem
             // 
             this.associateFASTAMenuItem.Name = "associateFASTAMenuItem";
             resources.ApplyResources(this.associateFASTAMenuItem, "associateFASTAMenuItem");
             this.modeUIHandler.SetUIMode(this.associateFASTAMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
-            this.associateFASTAMenuItem.Click += new System.EventHandler(this.associateFASTAMenuItem_Click);
             // 
             // renameProteinsMenuItem
             // 
             this.renameProteinsMenuItem.Name = "renameProteinsMenuItem";
             resources.ApplyResources(this.renameProteinsMenuItem, "renameProteinsMenuItem");
             this.modeUIHandler.SetUIMode(this.renameProteinsMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
-            this.renameProteinsMenuItem.Click += new System.EventHandler(this.renameProteinsToolStripMenuItem_Click);
             // 
             // sortProteinsMenuItem
             // 
@@ -3011,28 +3006,24 @@ namespace pwiz.Skyline
             // 
             this.sortProteinsByNameToolStripMenuItem.Name = "sortProteinsByNameToolStripMenuItem";
             resources.ApplyResources(this.sortProteinsByNameToolStripMenuItem, "sortProteinsByNameToolStripMenuItem");
-            this.sortProteinsByNameToolStripMenuItem.Click += new System.EventHandler(this.sortProteinsByNameToolStripMenuItem_Click);
             // 
             // sortProteinsByAccessionToolStripMenuItem
             // 
             this.sortProteinsByAccessionToolStripMenuItem.Name = "sortProteinsByAccessionToolStripMenuItem";
             resources.ApplyResources(this.sortProteinsByAccessionToolStripMenuItem, "sortProteinsByAccessionToolStripMenuItem");
             this.modeUIHandler.SetUIMode(this.sortProteinsByAccessionToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
-            this.sortProteinsByAccessionToolStripMenuItem.Click += new System.EventHandler(this.sortProteinsByAccessionToolStripMenuItem_Click);
             // 
             // sortProteinsByPreferredNameToolStripMenuItem
             // 
             this.sortProteinsByPreferredNameToolStripMenuItem.Name = "sortProteinsByPreferredNameToolStripMenuItem";
             resources.ApplyResources(this.sortProteinsByPreferredNameToolStripMenuItem, "sortProteinsByPreferredNameToolStripMenuItem");
             this.modeUIHandler.SetUIMode(this.sortProteinsByPreferredNameToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
-            this.sortProteinsByPreferredNameToolStripMenuItem.Click += new System.EventHandler(this.sortProteinsByPreferredNameToolStripMenuItem_Click);
             // 
             // sortProteinsByGeneToolStripMenuItem
             // 
             this.sortProteinsByGeneToolStripMenuItem.Name = "sortProteinsByGeneToolStripMenuItem";
             resources.ApplyResources(this.sortProteinsByGeneToolStripMenuItem, "sortProteinsByGeneToolStripMenuItem");
             this.modeUIHandler.SetUIMode(this.sortProteinsByGeneToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
-            this.sortProteinsByGeneToolStripMenuItem.Click += new System.EventHandler(this.sortProteinsByGeneToolStripMenuItem_Click);
             // 
             // toolStripSeparator43
             // 
@@ -3044,25 +3035,21 @@ namespace pwiz.Skyline
             this.acceptPeptidesMenuItem.Name = "acceptPeptidesMenuItem";
             resources.ApplyResources(this.acceptPeptidesMenuItem, "acceptPeptidesMenuItem");
             this.modeUIHandler.SetUIMode(this.acceptPeptidesMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
-            this.acceptPeptidesMenuItem.Click += new System.EventHandler(this.acceptPeptidesMenuItem_Click);
             // 
             // removeEmptyPeptidesMenuItem
             // 
             this.removeEmptyPeptidesMenuItem.Name = "removeEmptyPeptidesMenuItem";
             resources.ApplyResources(this.removeEmptyPeptidesMenuItem, "removeEmptyPeptidesMenuItem");
-            this.removeEmptyPeptidesMenuItem.Click += new System.EventHandler(this.removeEmptyPeptidesMenuItem_Click);
             // 
             // removeDuplicatePeptidesMenuItem
             // 
             this.removeDuplicatePeptidesMenuItem.Name = "removeDuplicatePeptidesMenuItem";
             resources.ApplyResources(this.removeDuplicatePeptidesMenuItem, "removeDuplicatePeptidesMenuItem");
-            this.removeDuplicatePeptidesMenuItem.Click += new System.EventHandler(this.removeDuplicatePeptidesMenuItem_Click);
             // 
             // removeRepeatedPeptidesMenuItem
             // 
             this.removeRepeatedPeptidesMenuItem.Name = "removeRepeatedPeptidesMenuItem";
             resources.ApplyResources(this.removeRepeatedPeptidesMenuItem, "removeRepeatedPeptidesMenuItem");
-            this.removeRepeatedPeptidesMenuItem.Click += new System.EventHandler(this.removeRepeatedPeptidesMenuItem_Click);
             // 
             // toolStripSeparator35
             // 
@@ -3073,13 +3060,11 @@ namespace pwiz.Skyline
             // 
             this.permuteIsotopeModificationsMenuItem.Name = "permuteIsotopeModificationsMenuItem";
             resources.ApplyResources(this.permuteIsotopeModificationsMenuItem, "permuteIsotopeModificationsMenuItem");
-            this.permuteIsotopeModificationsMenuItem.Click += new System.EventHandler(this.permuteIsotopeModificationsMenuItem_Click);
             // 
             // refineAdvancedMenuItem
             // 
             this.refineAdvancedMenuItem.Name = "refineAdvancedMenuItem";
             resources.ApplyResources(this.refineAdvancedMenuItem, "refineAdvancedMenuItem");
-            this.refineAdvancedMenuItem.Click += new System.EventHandler(this.refineMenuItem_Click);
             // 
             // viewToolStripMenuItem
             // 
