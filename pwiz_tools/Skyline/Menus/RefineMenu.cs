@@ -43,7 +43,6 @@ namespace pwiz.Skyline.Menus
 
         public IEnumerable<ToolStripItem> DropDownItems { get; }
 
-
         private void reintegrateToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowReintegrateDialog();
