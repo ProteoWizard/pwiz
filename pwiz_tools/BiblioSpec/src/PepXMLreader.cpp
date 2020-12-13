@@ -35,11 +35,15 @@ namespace bal = boost::algorithm;
 
 namespace BiblioSpec {
 
-static const int STATE_INIT = -1;
-static const int STATE_ROOT = 0;
-static const int STATE_PROPHET_SUMMARY = 1;
-static const int STATE_SEARCH_HIT_BEST = 5;
-static const int STATE_SEARCH_HIT_BEST_SEEN = 6;
+    enum ParserState
+    {
+        STATE_INIT = -1,
+        STATE_ROOT = 0,
+        STATE_PROPHET_SUMMARY = 1,
+        STATE_ANALYSIS_SUMMARY,
+        STATE_SEARCH_HIT_BEST = 5,
+        STATE_SEARCH_HIT_BEST_SEEN = 6
+    };
 
 PepXMLreader::PepXMLreader(BlibBuilder& maker,
                            const char* xmlfilename,
@@ -91,11 +95,19 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            // work in bytes / 1000 to avoid overflow
            initSpecFileProgress(bfs::file_size(getFileName()) / 1000);
        }
-   } else if(state == STATE_PROPHET_SUMMARY && isElement("inputfile",name)) {
+       state = STATE_ANALYSIS_SUMMARY;
+   }
+   else if (state == STATE_ANALYSIS_SUMMARY)
+   {
+       // ignore anything inside <analysis_summary>, it could be an entire nested pepXML file!
+       return;
+   }
+   else if (state == STATE_PROPHET_SUMMARY && isElement("inputfile", name)) {
       // Count files for use in reporting percent complete
       numFiles++;
    } else if(isElement("msms_run_summary",name)) {
       fileroot_ = getRequiredAttrValue("base_name",attr);
+      Verbosity::comment(V_DEBUG, "PepXML base_name is %s", fileroot_.c_str());
       // Because Mascot2XML uses the full path for the base_name,
       // only the part beyond the last "\" or "/" is taken.
       size_t slash = fileroot_.rfind('/');
@@ -159,7 +171,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
                lookUpBy_ = NAME_ID;
                specReader_->setIdType(NAME_ID);
-           } else if (search_engine.find("peaksdb") == 0) {
+           } else if (search_engine.find("peaksdb") == 0 || search_engine.find("peaks_db") == 0) {
                Verbosity::comment(V_DEBUG, "Pepxml file is from PEAKS");
                analysisType_ = PEAKS_ANALYSIS;
                scoreType_ = PEAKS_CONFIDENCE_SCORE;
@@ -375,7 +387,11 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
 void PepXMLreader::endElement(const XML_Char* name)
 {
-    if(isElement("peptideprophet_summary",name)) {
+    if (isElement("analysis_summary", name))
+    {
+        state = STATE_ROOT;
+    }
+    else if(isElement("peptideprophet_summary",name)) {
         state = STATE_ROOT;
         // now we know either the number of files or the pepxml file size
         if( numFiles > 1 ){

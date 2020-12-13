@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
 //            IsPauseForAuditLog = true;
             CoverShotName = "ExistingQuant";
 
@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            if (!IsPauseForCoverShot)
+            if (!IsCoverShotMode)
                 DoMrmerTest();
             DoStudy7Test();
         }
@@ -299,7 +299,7 @@ namespace pwiz.SkylineTestTutorial
             // Preparing a Document to Accept the Study 7 Transition List, p. 18
             RunUI(() => SkylineWindow.NewDocument());
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 var modHeavyK = new StaticMod(HEAVY_K, "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
                     RelativeRT.Matching, null, null, null);
@@ -489,7 +489,7 @@ namespace pwiz.SkylineTestTutorial
             FindNode(hgflprLight);
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph normalized metafile", 32);
 
             RunUI(() =>
@@ -593,7 +593,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas normalized to heave graph metafile", 39);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RunUI(() =>
                 {
@@ -607,11 +607,11 @@ namespace pwiz.SkylineTestTutorial
                 WaitForGraphs();
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
                 RunUI(SkylineWindow.FocusDocument);
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
             WaitForGraphs();
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas no normalization graph metafile", 40);
 
@@ -632,7 +632,7 @@ namespace pwiz.SkylineTestTutorial
 
         private static void NormalizeGraphToHeavy()
         {
-            AreaGraphController.AreaView = AreaNormalizeToView.area_ratio_view;
+            AreaGraphController.AreaNormalizeOption = NormalizeOption.FromIsotopeLabelType(IsotopeLabelType.heavy);
             Settings.Default.AreaLogScale = false;
             SkylineWindow.UpdatePeakAreaGraph();
         }

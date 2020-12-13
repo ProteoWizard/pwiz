@@ -28,9 +28,8 @@
 #include "Exception.hpp"
 #include "DateTime.hpp"
 #include "Filesystem.hpp"
+#include "Stream.hpp"
 #include "pwiz/utility/math/round.hpp"
-#include <string>
-#include <sstream>
 #include <cmath>
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
@@ -211,7 +210,7 @@ int main(int argc, char* argv[])
         doctest::Context context;
         testExitStatus = context.run();
     }
-    catch (exception& e)
+    catch (std::exception& e)
     {
         TEST_FAILED(e.what())
     }

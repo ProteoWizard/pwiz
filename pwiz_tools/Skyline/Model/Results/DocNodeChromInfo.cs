@@ -61,6 +61,10 @@ namespace pwiz.Skyline.Model.Results
 
         public PeptideChromInfo ChangeExcludeFromCalibration(bool exclude)
         {
+            if (exclude == ExcludeFromCalibration)
+            {
+                return this;
+            }
             return ChangeProp(ImClone(this), im => im.ExcludeFromCalibration = exclude);
         }
 
@@ -69,6 +73,10 @@ namespace pwiz.Skyline.Model.Results
 
         public PeptideChromInfo ChangeAnalyteConcentration(double? analyteConcentration)
         {
+            if (Equals(analyteConcentration, AnalyteConcentration))
+            {
+                return this;
+            }
             return ChangeProp(ImClone(this), im => im.AnalyteConcentration = analyteConcentration);
         }
 
@@ -262,13 +270,6 @@ namespace pwiz.Skyline.Model.Results
         public float? QValue { get; private set; }
         public float? ZScore { get; private set; }
         public Annotations Annotations { get; private set; }
-
-        public RatioValue GetRatio(int index)
-        {
-            return index != RATIO_INDEX_GLOBAL_STANDARDS
-                       ? _ratios[index]
-                       : _ratios[_ratios.Count - 1];
-        }
 
         /// <summary>
         /// Set if user action has explicitly set these values
@@ -515,6 +516,7 @@ namespace pwiz.Skyline.Model.Results
         }
         public float? Ratio { get { return _ratios[0]; } }
 
+        private const int RATIO_INDEX_GLOBAL_STANDARDS = -2;
         public float? GetRatio(int index)
         {
             return index != RATIO_INDEX_GLOBAL_STANDARDS
@@ -751,7 +753,7 @@ namespace pwiz.Skyline.Model.Results
             for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
             {
                 var transitionChromInfos = peaksByReplicate[replicateIndex]
-                    .Select(transitionPeak => FromProtoTransitionPeak(annotationScrubber, settings, transitionPeak)).ToArray();
+                    .Select(transitionPeak => FromProtoTransitionPeak(annotationScrubber, settings, transitionPeak)).ToList();
                 lists.Add(new ChromInfoList<TransitionChromInfo>(transitionChromInfos));
             }
             return new Results<TransitionChromInfo>(lists);
@@ -1052,26 +1054,25 @@ namespace pwiz.Skyline.Model.Results
     public struct ChromInfoList<TItem> : IList<TItem>
     {
         private readonly object _oneOrManyItems;
-        public ChromInfoList(params TItem[] elements) : this((IEnumerable<TItem>) elements)
+        public ChromInfoList(IList<TItem> elements)
         {
+            switch (elements?.Count)
+            {
+                case null:
+                case 0:
+                    _oneOrManyItems = null;
+                    break;
+                case 1:
+                    _oneOrManyItems = elements[0];
+                    break;
+                default:
+                    _oneOrManyItems = ImmutableList.ValueOf(elements);
+                    break;
+            }
         }
 
-        public ChromInfoList(IEnumerable<TItem> elements)
+        public ChromInfoList(IEnumerable<TItem> elements) : this(ImmutableList.ValueOf(elements))
         {
-            var list = ImmutableList.ValueOf(elements);
-            if (list == null || list.Count == 0)
-            {
-                _oneOrManyItems = null;
-            }
-            else if (list.Count == 1)
-            {
-                _oneOrManyItems = list[0];
-            }
-            else
-            {
-                _oneOrManyItems = list;
-            }
-
         }
 
         public float? GetAverageValue(Func<TItem, float?> getVal)
@@ -1099,9 +1100,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromInfoList<TItem> ChangeAt(int i, TItem item)
         {
-            var list = AsList().ToArray();
-            list[i] = item;
-            return new ChromInfoList<TItem>(list);
+            return new ChromInfoList<TItem>(AsList().ReplaceAt(i, item));
         }
 
         public int Count 
@@ -1116,7 +1115,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return 1;
                 }
-                return ((IList<TItem>) _oneOrManyItems).Count;
+                return ((ImmutableList<TItem>) _oneOrManyItems).Count;
             } 
         }
         IEnumerator IEnumerable.GetEnumerator()
@@ -1131,10 +1130,27 @@ namespace pwiz.Skyline.Model.Results
 
         public TItem this[int index]
         {
-            get { return AsList()[index]; }
+            get
+            {
+                if (_oneOrManyItems == null)
+                {
+                    throw new IndexOutOfRangeException();
+                }
+
+                if (_oneOrManyItems is TItem item)
+                {
+                    if (index != 0)
+                    {
+                        throw new IndexOutOfRangeException();
+                    }
+
+                    return item;
+                }
+                return ((ImmutableList<TItem>)_oneOrManyItems)[index];
+            }
         }
 
-        public IList<TItem> AsList()
+        public ImmutableList<TItem> AsList()
         {
             if (_oneOrManyItems == null)
             {
@@ -1144,7 +1160,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return ImmutableList.Singleton((TItem) _oneOrManyItems);
             }
-            return (IList<TItem>) _oneOrManyItems;
+            return (ImmutableList<TItem>) _oneOrManyItems;
         }
 
         public bool IsEmpty
@@ -1264,8 +1280,6 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public abstract class ChromInfo : Immutable
     {
-        public const int RATIO_INDEX_GLOBAL_STANDARDS = -2;
-
         protected ChromInfo(ChromFileInfoId fileId)
         {
             FileId = fileId;

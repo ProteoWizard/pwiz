@@ -942,7 +942,7 @@ namespace pwiz.Skyline.FileUI
 
             if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
             {
-                var missingIonMobility = BrukerTimsTofMethodExporter.GetMissingIonMobility(_document, _exportProperties, templateName);
+                var missingIonMobility = BrukerTimsTofMethodExporter.GetMissingIonMobility(_document, _exportProperties);
                 if (missingIonMobility.Length > 0)
                 {
                     MessageDlg.Show(this,
@@ -1941,16 +1941,30 @@ namespace pwiz.Skyline.FileUI
             var brukerTemplate = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF)
                 ? textTemplateFile.Text
                 : null;
+            BrukerTimsTofMethodExporter.Metrics brukerMetrics = null;
 
-            if (!string.IsNullOrEmpty(brukerTemplate) && !File.Exists(brukerTemplate))
+            if (!string.IsNullOrEmpty(brukerTemplate))
             {
-                MessageDlg.Show(this,
-                    string.Format(Resources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist,
-                        brukerTemplate));
-                return;
+                if (!File.Exists(brukerTemplate))
+                {
+                    MessageDlg.Show(this,
+                        string.Format(Resources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist,
+                            brukerTemplate));
+                    return;
+                }
+
+                using (var longWait = new LongWaitDlg())
+                {
+                    longWait.PerformWork(this, 800, progress =>
+                    {
+                        var exportProperties = new ExportDlgProperties(this, new CancellationToken());
+                        exportProperties.MethodType = ExportMethodType.Scheduled;
+                        brukerMetrics = BrukerTimsTofMethodExporter.GetSchedulingMetrics(_document, exportProperties, brukerTemplate, progress);
+                    });
+                }
             }
             
-            using (var dlg = new ExportMethodScheduleGraph(_document, brukerTemplate))
+            using (var dlg = new ExportMethodScheduleGraph(_document, brukerTemplate, brukerMetrics))
             {
                 if (dlg.Exception != null)
                 {
@@ -1983,9 +1997,11 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public void SetTemplateFile(string templateFile)
+        public void SetTemplateFile(string templateFile, bool setEndCaret = false)
         {
             textTemplateFile.Text = templateFile;
+            if (setEndCaret)
+                textTemplateFile.Select(templateFile.Length, 0);
         }
 
         public void SetInstrument(string instrument)

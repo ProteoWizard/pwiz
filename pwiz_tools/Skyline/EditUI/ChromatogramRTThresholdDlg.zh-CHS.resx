@@ -265,7 +265,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>保留时间亮度阈值</value>
+    <value>保留时间亮度截止值</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ChromatogramRTThresholdDlg</value>

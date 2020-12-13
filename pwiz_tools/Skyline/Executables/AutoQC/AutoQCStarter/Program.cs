@@ -12,10 +12,9 @@ namespace AutoQCStarter
 {
     static class Program
     {
-        private const bool IS_DAILY = false;
-        private const string APP_NAME = "AutoQC" + (IS_DAILY ? "Daily" : "") + "Starter";
+        private const string APP_NAME = "AutoQCStarter";
         private const string PUBLISHER_NAME = "University of Washington";
-        private static string _autoqcAppName = IS_DAILY? "AutoQC-daily" : "AutoQC";
+        private static string _autoqcAppName = "AutoQC";
         private static string _autoqcAppPath;
 
         private static readonly string LOG_FILE = "AutoQCStarter.log";

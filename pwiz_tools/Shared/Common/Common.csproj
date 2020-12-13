@@ -254,8 +254,6 @@
     <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
       <DependentUpon>NavBar.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Controls\ViewCell.cs" />
-    <Compile Include="DataBinding\Controls\ViewColumn.cs" />
     <Compile Include="DataBinding\DataFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
     <Compile Include="DataBinding\DisplayColumn.cs" />
@@ -265,6 +263,7 @@
     <Compile Include="DataBinding\FilterInfo.cs" />
     <Compile Include="DataBinding\FilterOperation.cs" />
     <Compile Include="DataBinding\FilterPredicate.cs" />
+    <Compile Include="DataBinding\IErrorTextProvider.cs" />
     <Compile Include="DataBinding\Internal\AbstractQuery.cs" />
     <Compile Include="DataBinding\Internal\BackgroundQuery.cs" />
     <Compile Include="DataBinding\Internal\BindingListView.cs" />
@@ -296,10 +295,8 @@
     <Compile Include="DataBinding\LinkValue.cs" />
     <Compile Include="DataBinding\RowItemValues.cs" />
     <Compile Include="DataBinding\RowSourceInfo.cs" />
-    <Compile Include="DataBinding\RowSources\BindingListSupport.cs" />
     <Compile Include="DataBinding\RowSources\IListChanged.cs" />
     <Compile Include="DataBinding\RowSources\PropertyChangeSupport.cs" />
-    <Compile Include="DataBinding\RowSources\WrappedCollection.cs" />
     <Compile Include="DataBinding\SerializableViewGroups.cs" />
     <Compile Include="DataBinding\SortableBindingList.cs" />
     <Compile Include="DataBinding\TotalOperation.cs" />
@@ -307,7 +304,6 @@
     <Compile Include="DataBinding\Layout\ColumnId.cs" />
     <Compile Include="DataBinding\Layout\ViewLayout.cs" />
     <Compile Include="DataBinding\ViewGroup.cs" />
-    <Compile Include="DataBinding\ViewGroupInfo.cs" />
     <Compile Include="DataBinding\ViewInfo.cs" />
     <Compile Include="DataBinding\ViewSpecLayout.cs" />
     <Compile Include="DataBinding\ViewSpecList.cs" />

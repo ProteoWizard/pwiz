@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Grpc.Core;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
@@ -46,7 +47,7 @@ using Server = pwiz.Skyline.Util.Server;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    public partial class ToolOptionsUI : FormEx
+    public partial class ToolOptionsUI : FormEx, IMultipleViewProvider
     {
         private readonly SettingsListBoxDriver<Server> _driverServers;
         private readonly SettingsListBoxDriver<RemoteAccount> _driverRemoteAccounts;
@@ -231,7 +232,7 @@ namespace pwiz.Skyline.ToolsUI
                 var pr = new PrositPingRequest(PrositIntensityModelCombo,
                     PrositRetentionTimeModelCombo,
                     _settingsNoMod, _pingInput.NodePep, _pingInput.NodeGroup, _pingInput.NCE.Value,
-                    () => { Invoke((Action) UpdateServerStatus); });
+                    () => { CommonActionUtil.SafeBeginInvoke(this, UpdateServerStatus); });
                 if (_pingRequest == null || !_pingRequest.Equals(pr))
                 {
                     _pingRequest?.Cancel();
@@ -343,9 +344,9 @@ namespace pwiz.Skyline.ToolsUI
         public class DisplayTab : IFormView { }
         public class PrositTab : IFormView { }
 
-        private static readonly IFormView[] TAB_PAGES =
+        private static readonly IFormView[] TAB_PAGES = // N.B. order must agree with TABS enum above
         {
-            new PanoramaTab(), new RemoteTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(), new PrositTab()
+            new PanoramaTab(), new RemoteTab(), new PrositTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab()
         };
 
         public void NavigateToTab(TABS tab)

@@ -719,7 +719,7 @@ namespace pwiz.SkylineTestFunctional
                     "Proteins!*.Peptides!*.HMDB",
                     "Proteins!*.Peptides!*.SMILES",
                     "Proteins!*.Peptides!*.CAS",
-                    "Proteins!*.Peptides!*.KEGG"});
+                    "Proteins!*.Peptides!*.KEGG"}, null, 32);
                 const double explicitCE2= 123.45;
                 var colCE = FindDocumentGridColumn(documentGrid, "ExplicitCollisionEnergy");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCE.Index].Value = explicitCE2);
@@ -730,7 +730,8 @@ namespace pwiz.SkylineTestFunctional
                 var colPCE = FindDocumentGridColumn(documentGrid, "Precursor.PrecursorExplicitCollisionEnergy");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colPCE.Index].Value = explicitPrecursorCE);
                 WaitForCondition(() => SkylineWindow.Document.MoleculeTransitionGroups.Any(tg => tg.ExplicitValues.CollisionEnergy.Equals(explicitPrecursorCE)));
-                AssertEx.AreEqual(explicitPrecursorCE, documentGrid.DataGridView.Rows[1].Cells[colPCE.Index].Value);
+                // Expect the next line, which depicts a sibling transition, to share this precursor value
+                WaitForCondition(() => Equals(explicitPrecursorCE, documentGrid.DataGridView.Rows[1].Cells[colPCE.Index].Value));
 
                 const double explicitDP = 12.345;
                 var colDP = FindDocumentGridColumn(documentGrid, "ExplicitDeclusteringPotential");

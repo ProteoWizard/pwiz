@@ -21,10 +21,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -32,13 +34,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     {
         public enum ModType { structural, heavy };
 
-        private struct ListBoxModification
+        public struct ListBoxModification
         {
             public StaticMod Mod { get; private set; }
-            public ListBoxModification(StaticMod mod) : this()
+            private bool IsDDASearch { get; set; }
+            public ListBoxModification(StaticMod mod, bool isDDA = false) : this()
             {
                 Mod = mod;
+                IsDDASearch = isDDA;
             }
+
             public override string ToString()
             {
                 char aa = (Mod.AAs != null) ? Mod.AAs.FirstOrDefault() : '\0';
@@ -48,6 +53,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 sb.Append('[');
                 sb.Append(Math.Round(modMass, 1));
                 sb.Append(']');
+                if (IsDDASearch)
+                {
+                    sb.Append(' ');
+                    if (Mod.IsVariable)
+                        sb.Append(Resources.ListBoxModification_ToString__variable_);
+                    else if (Mod.LabelAtoms != LabelAtoms.None)
+                        sb.Append(Resources.ListBoxModification_ToString__isotopic_label_);
+                    else
+                        sb.Append(Resources.ListBoxModification_ToString__fixed_);
+                }
                 return string.Format(Resources.AbstractModificationMatcherFoundMatches__0__equals__1__, Mod.Name, sb);
             }
         }
@@ -79,6 +94,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         private IModifyDocumentContainer DocumentContainer { get; set; }
+        private SrmDocument Document { get; set; }
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
 
         public IEnumerable<string> CheckedModifications
@@ -106,8 +122,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool Initialize(SrmDocument document)
         {
-            if (!ImportPeptideSearch.HasDocLib)
+            Document = document;
+
+            if (!ImportPeptideSearch.HasDocLib && !ImportPeptideSearch.IsDDASearch)
                 return false;
+            if (ImportPeptideSearch.IsDDASearch)
+            {
+                labelModifications.Text = Resources.MatchModificationsControl_ModificationLabelText_DDA_Search;
+                btnAddModification.Text = Resources.MatchModificationsControl_Initialize__Edit_modifications;
+                menuItemAddStructuralModification.Text = Resources.MatchModificationsControl_Initialize_Edit__structural_modifications___;
+                menuItemAddHeavyModification.Text = Resources.MatchModificationsControl_Initialize_Edit__heavy_modifications___;
+            }
 
             ImportPeptideSearch.InitializeModifications(document);
             FillLists(document);
@@ -116,38 +141,80 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public SrmSettings AddCheckedModifications(SrmDocument document)
         {
+            var firstHeavyModificationType = document.Settings.PeptideSettings.Modifications
+                .GetHeavyModificationTypes().FirstOrDefault();
+            // in the non-DDA case, AddCheckedModifications is only additive, so no checked items is a no-op
             if (modificationsListBox.CheckedItems.Count == 0)
-                return document.Settings;
+            {
+                if (!ImportPeptideSearch.IsDDASearch)
+                {
+                    return document.Settings;
+                }
+                else
+                {
+                    // in DDA-case, return empty mod lists
+                    var emptyPeptideMods = document.Settings.PeptideSettings.Modifications
+                        .ChangeStaticModifications(new List<StaticMod>());
+                    emptyPeptideMods = emptyPeptideMods.ChangeModifications(firstHeavyModificationType, new List<StaticMod>());
+                    return ImportPeptideSearch.AddModifications(document, emptyPeptideMods);
+                }
+            }
+            // Find checked mods
+            List<StaticMod> structuralMods;
+            List<StaticMod> heavyMods; 
+            if (ImportPeptideSearch.IsDDASearch)
+            {
+                var selectedMods = modificationsListBox.CheckedItems.Cast<ListBoxModification>().Select(o => o.Mod).ToList();
+                structuralMods = selectedMods.Where(o => o.LabelAtoms == LabelAtoms.None).ToList();
+                heavyMods = selectedMods.Where(o => o.LabelAtoms != LabelAtoms.None).ToList();
 
-            // Find checked static mods
-            var newStructuralMods = (from mod in ImportPeptideSearch.MatcherPepMods.StaticModifications
-                from ListBoxModification checkedMod in modificationsListBox.CheckedItems
-                where mod.Equivalent(checkedMod.Mod)
-                select mod).ToList();
+            }
+            else
+            {
+                structuralMods = (from mod in ImportPeptideSearch.MatcherPepMods.StaticModifications
+                    from ListBoxModification checkedMod in modificationsListBox.CheckedItems
+                    where mod.Equivalent(checkedMod.Mod)
+                    select mod).ToList();
 
-            // Find checked heavy mods
-            var newHeavyMods = (from mod in ImportPeptideSearch.MatcherHeavyMods
-                from ListBoxModification checkedMod in modificationsListBox.CheckedItems
-                where mod.Equivalent(checkedMod.Mod)
-                select mod).ToList();
+                // Find checked heavy mods
+                heavyMods = (from mod in ImportPeptideSearch.MatcherHeavyMods
+                    from ListBoxModification checkedMod in modificationsListBox.CheckedItems
+                    where mod.Equivalent(checkedMod.Mod)
+                    select mod).ToList();
+            }
 
             // Update document modifications
-            return ImportPeptideSearch.AddModifications(document,
-                new PeptideModifications(newStructuralMods, new[] {new TypedModifications(IsotopeLabelType.heavy, newHeavyMods)}));
+            var newPeptideMods = document.Settings.PeptideSettings.Modifications.ChangeStaticModifications(structuralMods);
+            newPeptideMods = newPeptideMods.ChangeModifications(firstHeavyModificationType, heavyMods);
+            return ImportPeptideSearch.AddModifications(document, newPeptideMods);
         }
 
         private void FillLists(SrmDocument document)
         {
-            ImportPeptideSearch.UpdateModificationMatches(document);
+            IList<StaticMod> modsToAdd, modsToCheck;
+            if (ImportPeptideSearch.IsDDASearch)
+            {
+                modsToAdd = Settings.Default.StaticModList.ToList();
+                modsToAdd.AddRange(Settings.Default.HeavyModList.Distinct());
+                modsToCheck = document.Settings.PeptideSettings.Modifications.StaticModifications.ToList();
+                modsToCheck.AddRange(document.Settings.PeptideSettings.Modifications.AllHeavyModifications.Distinct());
+                //modsToAdd = ImportPeptideSearch.UserDefinedTypedMods;
+            }
+            else
+            {
+                ImportPeptideSearch.UpdateModificationMatches(document);
+                modsToAdd = ImportPeptideSearch.GetMatchedMods().ToList();
+                modsToCheck = new List<StaticMod>(); // don't check any mods
+            }
 
             modificationsListBox.Items.Clear();
             unmatchedListBox.Items.Clear();
 
-            foreach (var match in ImportPeptideSearch.GetMatchedMods())
-                modificationsListBox.Items.Add(new ListBoxModification(match), CheckState.Unchecked);
+            foreach (var match in modsToAdd)
+                modificationsListBox.Items.Add(new ListBoxModification(match, ImportPeptideSearch.IsDDASearch), modsToCheck.Contains(match));
 
             var unmatched = ImportPeptideSearch.GetUnmatchedSequences();
-            if (unmatched.Any())
+            if (unmatched != null && unmatched.Any())
             {
                 splitContainer.Panel2Collapsed = false;
                 foreach (var uninterpretedMod in unmatched)
@@ -176,12 +243,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void menuItemAddStructuralModification_Click(object sender, EventArgs e)
         {
-            AddModification(ModType.structural);
+            if (ImportPeptideSearch.IsDDASearch)
+            {
+                var driverStaticMod = new SettingsListBoxDriver<StaticMod>(modificationsListBox, Settings.Default.StaticModList);
+                driverStaticMod.EditList();
+                FillLists(Document);
+            }
+            else
+                AddModification(ModType.structural);
         }
 
         private void menuItemAddHeavyModification_Click(object sender, EventArgs e)
         {
-            AddModification(ModType.heavy);
+            if (ImportPeptideSearch.IsDDASearch)
+            {
+                var driverHeavyMod = new SettingsListBoxDriver<StaticMod>(modificationsListBox, Settings.Default.HeavyModList);
+                driverHeavyMod.EditList();
+                FillLists(Document);
+            }
+            else
+                AddModification(ModType.heavy);
         }
 
         public void AddModification(StaticMod mod, ModType type)
@@ -223,6 +304,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             for (int i = 0; i < modificationsListBox.Items.Count; ++i)
                 modificationsListBox.SetItemChecked(i, check);
+        }
+
+        public void ChangeItem(int index, bool check)
+        {
+            modificationsListBox.SetItemChecked(index, check);
+        }
+
+        public void ClickAddStructuralModification()
+        {
+            menuItemAddStructuralModification.PerformClick();
+        }
+
+        public void ClickAddHeavyModification()
+        {
+            menuItemAddHeavyModification.PerformClick();
         }
     }
 }

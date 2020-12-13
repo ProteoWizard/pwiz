@@ -1240,17 +1240,19 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     // We have no idea what kind of file this might be, so even reading the first "line" might take a long time. Read a chunk instead.
-                    var probeFile = File.OpenRead(path);
-                    var CHUNKSIZE = 500; // Should be more than adequate to check for "?xml version="1.0" encoding="utf-8"?>< srm_settings format_version = "4.12" software_version = "Skyline (64-bit) " >"
-                    var probeBuf = new byte[CHUNKSIZE];
-                    probeFile.Read(probeBuf, 0, CHUNKSIZE);
-                    probeBuf[CHUNKSIZE - 1] = 0;
-                    var probeString = Encoding.UTF8.GetString(probeBuf);
-                    if (!probeString.Contains(@"<srm_settings"))
+                    using (var probeFile = File.OpenRead(path))
                     {
-                        explained = string.Format(
-                            Resources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
-                            path, EXT, SrmDocumentSharing.EXT_SKY_ZIP);
+                        var CHUNKSIZE = 500; // Should be more than adequate to check for "?xml version="1.0" encoding="utf-8"?>< srm_settings format_version = "4.12" software_version = "Skyline (64-bit) " >"
+                        var probeBuf = new byte[CHUNKSIZE];
+                        probeFile.Read(probeBuf, 0, CHUNKSIZE);
+                        probeBuf[CHUNKSIZE - 1] = 0;
+                        var probeString = Encoding.UTF8.GetString(probeBuf);
+                        if (!probeString.Contains(@"<srm_settings"))
+                        {
+                            explained = string.Format(
+                                Resources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
+                                path, EXT, SrmDocumentSharing.EXT_SKY_ZIP);
+                        }
                     }
                 }
                 catch (Exception e)
@@ -2270,8 +2272,7 @@ namespace pwiz.Skyline.Model
                         continue;
 
                     var optType = chromatogram.OptimizationFunction.OptType;
-                    if (highestTuneLevel < CompensationVoltageParameters.Tuning.fine &&
-                        OptimizationType.compensation_voltage_fine.Equals(optType))
+                    if (OptimizationType.compensation_voltage_fine.Equals(optType))
                     {
                         return CompensationVoltageParameters.Tuning.fine;
                     }

@@ -119,6 +119,7 @@
     <Compile Include="Chemistry\MassDistribution.cs" />
     <Compile Include="Chemistry\Molecule.cs" />
     <Compile Include="Chemistry\MoleculeMassOffset.cs" />
+    <Compile Include="Chemistry\MzTolerance.cs" />
     <Compile Include="Chemistry\SignedMz.cs" />
     <Compile Include="Collections\AbstractReadOnlyCollection.cs" />
     <Compile Include="Collections\AbstractReadOnlyDictionary.cs" />
@@ -128,7 +129,6 @@
     <Compile Include="Collections\LinqExtensions.cs" />
     <Compile Include="Collections\PrimitiveArrays.cs" />
     <Compile Include="Collections\CollectionUtil.cs" />
-    <Compile Include="Collections\ConvertedList.cs" />
     <Compile Include="Collections\ImmutableCollection.cs" />
     <Compile Include="Collections\ImmutableDictionary.cs" />
     <Compile Include="Collections\ImmutableList.cs" />
@@ -141,6 +141,7 @@
     <Compile Include="SystemUtil\CenterWinDialog.cs" />
     <Compile Include="SystemUtil\CommonException.cs" />
     <Compile Include="SystemUtil\MemoryBlockingCollection.cs" />
+    <Compile Include="SystemUtil\ParallelEx.cs" />
     <Compile Include="SystemUtil\TrackAttribute.cs" />
     <Compile Include="SystemUtil\CommonActionUtil.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />

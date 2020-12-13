@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Skyline.Model;
@@ -1046,6 +1047,19 @@ namespace pwiz.Skyline.Util
                 return false;   // Can't tell, really
             }
             return true;
+        }
+    }
+
+    public static class XElementUtil
+    {
+        public static IEnumerable<XElement> Elements(this XElement xElement, Enum name)
+        {
+            return xElement.Elements(name.ToString());
+        }
+
+        public static XAttribute Attribute(this XElement xElement, Enum name)
+        {
+            return xElement.Attribute(name.ToString());
         }
     }
 

@@ -1,0 +1,260 @@
+﻿This list of files was copied from
+Skyline project properties > Publish > Application Files
+You can manually copy this list again and if it's changed you will know that you need to update the files in "Product.wxs"
+
+agtsampleinforw.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Antlr3.Runtime.dll
+api-ms-win-core-console-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-datetime-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-debug-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-errorhandling-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-file-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-file-l1-2-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-file-l2-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-handle-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-heap-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-interlocked-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-libraryloader-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-localization-l1-2-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-memory-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-namedpipe-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-processenvironment-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-processthreads-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-processthreads-l1-1-1.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-profile-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-rtlsupport-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-string-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-synch-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-synch-l1-2-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-sysinfo-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-timezone-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-core-util-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-conio-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-convert-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-environment-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-filesystem-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-heap-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-locale-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-math-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-multibyte-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-private-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-process-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-runtime-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-stdio-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-string-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-time-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+api-ms-win-crt-utility-l1-1-0.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+baf2sql_c.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+BaseCommon.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+BaseDataAccess.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+BaseDataAccess.dll.config (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+BaseError.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+BaseTof.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+BiblioSpec.dll
+BiblioSpec.pdb
+BlibBuild.exe
+BlibFilter.exe
+cdt.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Compression.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Data.Acquisition.Client.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Data.Acquisition.Contracts.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Data.AnalystDataProvider.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Data.Client.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Data.Common.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Data.CommonInterfaces.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Data.Contracts.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Data.Core.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Data.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Data.Wiff2.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Data.WiffReader.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.DataService.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Devices.Types.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Domain.Acquisition.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Domain.Acquisition.Methods.MassSpec.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Infrastructure.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.InternalRawXYProcessing.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Muni.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.RawXYProcessing.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.StructuredStorage.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.UserLog.Types.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.Utility.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Clearcore2.XmlHelpers.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+CLFIO32.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+CRHAKEI2.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+DataReader.dll
+de\ZedGraph.resources.dll
+DigitalRune.Windows.Docking.dll
+DotNetZip.dll
+DualProbeInterfaceParametersCS.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+enzymes.xml
+es\ZedGraph.resources.dll
+FHOOE_IMP.MSAmanda.Core.dll
+FHOOE_IMP.MSAmanda.InOutput.dll
+FHOOE_IMP.MSAmanda.Utils.dll
+fr\ZedGraph.resources.dll
+Google.Protobuf.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Grpc.Core.Api.dll
+Grpc.Core.dll
+grpc_csharp_ext.x64.dll
+grpc_csharp_ext.x86.dll
+hu\ZedGraph.resources.dll
+IdentityModel.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Iesi.Collections.dll
+Instruments.xml
+IOModuleQTFL.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+it\ZedGraph.resources.dll
+ja\BiblioSpec.resources.dll
+ja\DigitalRune.Windows.Docking.resources.dll
+ja\MSGraph.resources.dll
+ja\ProteomeDb.resources.dll
+ja\pwiz.Common.resources.dll
+ja\pwiz.CommonUtil.resources.dll
+ja\SkylineCmd.resources.dll
+ja\Skyline-daily.resources.dll
+ja\ZedGraph.resources.dll
+Kajabity Tools.dll
+log4net.dll
+MassCalcWrapObject.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+MassLynxRaw.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+MassSpecDataReader.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+MathNet.Numerics.dll
+Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe
+Method\AbSciex\TOF\BuildAnalystMethod.dll
+Method\AbSciex\TOF\Interop.AcqMethodDir.dll
+Method\AbSciex\TOF\Interop.AcqMethodSvr.dll
+Method\AbSciex\TOF\Interop.Analyst.dll
+Method\AbSciex\TOF\Interop.AnalystService.dll
+Method\AbSciex\TOF\Interop.DDEMethodSvr.dll
+Method\AbSciex\TOF\Interop.IDAMethodSvr.dll
+Method\AbSciex\TOF\Interop.MSMethodSvr.dll
+Method\AbSciex\TOF\Interop.ParameterSvr.dll
+Method\AbSciex\TOF\Interop.QueueDispatcher.dll
+Method\AbSciex\TOF\Interop.ROTMan.dll
+Method\AbSciex\TOF\ROTMANLib.dll
+Method\AbSciex\TOF\StdType.dll
+Method\AbSciex\TQ\BuildAnalystMethod.dll
+Method\AbSciex\TQ\BuildQTRAPMethod.exe
+Method\AbSciex\TQ\Interop.AcqMethodDir.dll
+Method\AbSciex\TQ\Interop.AcqMethodSvr.dll
+Method\AbSciex\TQ\Interop.Analyst.dll
+Method\AbSciex\TQ\Interop.AnalystService.dll
+Method\AbSciex\TQ\Interop.DDEMethodSvr.dll
+Method\AbSciex\TQ\Interop.IDAMethodSvr.dll
+Method\AbSciex\TQ\Interop.MSMethodSvr.dll
+Method\AbSciex\TQ\Interop.ParameterSvr.dll
+Method\AbSciex\TQ\Interop.QueueDispatcher.dll
+Method\AbSciex\TQ\Interop.ROTMan.dll
+Method\AbSciex\TQ\QueueDispatcherLib.dll
+Method\AbSciex\TQ\ROTMANLib.dll
+Method\AbSciex\TQ\StdType.dll
+Method\Agilent\BuildAgilentMethod.exe
+Method\Agilent\MethodCreator.dll
+Method\Bruker\BDal.Submethod.Wrapper.dll
+Method\Bruker\BdalRetentionTimeMassList.dll
+Method\Bruker\BuildBrukerMethod.exe
+Method\Thermo\BuildLTQMethod.exe
+Method\Thermo\BuildThermoMethod.exe
+Method\Thermo\BuildTSQEZMethod.exe
+Method\Thermo\Thermo.TNG.MethodXMLFactory.dll
+Method\Thermo\Thermo.TNG.MethodXMLInterface.dll
+Method\Waters\BuildWatersMethod.exe
+Method\Waters\VerifyESkylineLibrary.dll
+MethodConverter.dll
+MethodWriter.dll
+Microsoft.ConcurrencyVisualizer.Markers.dll
+Microsoft.Practices.ServiceLocation.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Microsoft.Practices.Unity.Configuration.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Microsoft.Practices.Unity.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+MIDAC.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+modifications.xml
+MSGraph.dll
+MSGraph.pdb
+MSMSDBCntl.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+msparser.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+msvcp110.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+msvcp120.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+msvcp140.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+msvcr110.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+msvcr120.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Newtonsoft.Json.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+NHibernate.dll
+OFX.Core.Contracts.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+OFX.Core.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+OFX.EventServices.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+OFX.Logging.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+OFX.Security.Core.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+ParallelExtensionsExtras.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+PeakItgLSS.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+percolator\percolator.exe
+percolator\qvality.exe
+percolator\xerces-c_3_1.dll
+PrmPasefScheduler.dll
+prmscheduler.dll
+ProteomeDb.dll
+ProteomeDb.pdb
+ProteowizardWrapper.dll
+ProteowizardWrapper.pdb
+protobuf-net.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+psi-ms.obo
+pt\ZedGraph.resources.dll
+pwiz.Common.dll
+pwiz.Common.pdb
+pwiz.CommonUtil.dll
+pwiz.CommonUtil.pdb
+pwiz_data_cli.dll
+QTFLDebugLog.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+QTFLProtoCS.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+quantitation_1.xsd (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+quantitation_2.xsd (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Remotion.Linq.dll
+Remotion.Linq.EagerFetching.dll
+ru\ZedGraph.resources.dll
+Sciex.Clearcore.FMan.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Sciex.Data.Processing.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Sciex.Data.SimpleTypes.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Sciex.Data.XYData.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Sciex.FMan.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Sciex.Wiff.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+SciexToolKit.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Shimadzu.LabSolutions.IO.IoModule.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+sk\ZedGraph.resources.dll
+SkylineCmd.exe
+SkylineCmd.exe.config
+Skyline-daily.exe
+Skyline-daily.exe.config
+Skyline-daily.exe.manifest
+Skyline-daily.pdb
+SkylineData.ico
+SkylineDoc.ico
+SkylineDocPointer.ico
+SkylineProcessRunner.exe
+SkylineTool.dll
+SkylineTool.pdb
+sv\ZedGraph.resources.dll
+System.Data.SQLite.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+System.Interactive.Async.dll
+System.Memory.dll
+System.Runtime.Caching.Generic.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+System.Runtime.CompilerServices.Unsafe.dll
+ThermoFisher.CommonCore.Data.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+ThermoFisher.CommonCore.RawFileReader.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+timsdata.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+tr\ZedGraph.resources.dll
+ucrtbase.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+UIMFLibrary.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+unimod.obo (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+unimod.xml
+unimod_2.xsd (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+vcomp110.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+vcomp140.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+vcruntime140.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+ZedGraph.dll
+zh-CHS\BiblioSpec.resources.dll
+zh-CHS\DigitalRune.Windows.Docking.resources.dll
+zh-CHS\MSGraph.resources.dll
+zh-CHS\ProteomeDb.resources.dll
+zh-CHS\pwiz.Common.resources.dll
+zh-CHS\SkylineCmd.resources.dll
+zh-CHS\Skyline-daily.resources.dll
+zh-CHS\ZedGraph.resources.dll
+zh-tw\ZedGraph.resources.dll

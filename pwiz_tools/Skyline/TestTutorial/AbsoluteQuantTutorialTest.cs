@@ -25,7 +25,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -50,7 +49,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "AbsoluteQuant";
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
@@ -219,7 +218,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowRTReplicateGraph();
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 // Total normalization
-                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
             });
 
             RunUI(() => SkylineWindow.ActivateReplicate("FOXN1-GST"));
@@ -254,7 +253,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.Molecules, 0));
             WaitForGraphs();
             // Heavy normalization
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_ratio_view));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.FromIsotopeLabelType(IsotopeLabelType.heavy)));
             WaitForGraphs();
             RunUI(() =>
             {
@@ -321,7 +320,7 @@ namespace pwiz.SkylineTestTutorial
             // View the calibration curve p. 18
             RunUI(() => SkylineWindow.ShowDocumentGrid(false));
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RunUI(() =>
                 {
@@ -340,7 +339,7 @@ namespace pwiz.SkylineTestTutorial
                     calibrationFloatingWindow.Left = SkylineWindow.Left + 15;
 
                 });
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 

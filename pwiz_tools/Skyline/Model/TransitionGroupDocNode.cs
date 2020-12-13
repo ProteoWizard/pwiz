@@ -342,7 +342,7 @@ namespace pwiz.Skyline.Model
         }
 
 
-        private TransitionGroupChromInfo GetChromInfoEntry(int i)
+        public TransitionGroupChromInfo GetChromInfoEntry(int i)
         {
             var result = GetSafeChromInfo(i);
             // CONSIDER: Also specify the file index and/or optimization step?
@@ -479,23 +479,6 @@ namespace pwiz.Skyline.Model
                                                               ? chromInfo.LibraryDotProduct
                                                               : (float?) null);
             }
-        }
-
-        public RatioValue GetPeakAreaRatio(int i)
-        {
-            return GetPeakAreaRatio(i, 0);
-        }
-
-        public RatioValue GetPeakAreaRatio(int i, int indexIS)
-        {
-            // CONSIDER: Also specify the file index?
-            var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo == null)
-            {
-                return null;
-            }
-
-            return chromInfo.GetRatio(indexIS);
         }
 
         public class ScheduleTimes        
@@ -2452,6 +2435,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (info.IsGoodPeak(Settings.TransitionSettings.Integration.IsIntegrateAll))
                         PeakCount++;
+                    
                     if (nodeTran.ExplicitQuantitative)
                     {
                         Area = (Area ?? 0) + info.Area;
@@ -2466,6 +2450,11 @@ namespace pwiz.Skyline.Model
                         {
                             MaxHeight = info.Height;
                             RetentionTime = info.RetentionTime;
+                        }
+                        else if(!RetentionTime.HasValue && info.Height >= MaxHeight)
+                        {
+                            MaxHeight = info.Height;
+                            RetentionTime = (info.StartRetentionTime + info.EndRetentionTime) / 2;
                         }
                         if (!info.IsFwhmDegenerate)
                             Fwhm = Math.Max(info.Fwhm, Fwhm ?? float.MinValue);

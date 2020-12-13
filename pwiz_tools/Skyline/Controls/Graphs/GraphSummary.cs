@@ -25,6 +25,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -55,7 +56,7 @@ namespace pwiz.Skyline.Controls.Graphs
             void OnDocumentChanged(SrmDocument oldDocument, SrmDocument newDocument);
             void OnActiveLibraryChanged();
             void OnResultsIndexChanged();
-            void OnRatioIndexChanged();
+            void OnNormalizeOptionChanged();
 
             void OnUpdateGraph();
 
@@ -76,6 +77,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class RTGraphView : IFormView {}
         public class AreaGraphView : IFormView {}
+        public class DetectionsGraphView : IFormView { }
 
         public interface IStateProvider
         {
@@ -135,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private int _ratioIndex;
+        private NormalizeOption _normalizeOption;
 
         public GraphTypeSummary Type { get; set; }
 
@@ -208,16 +210,16 @@ namespace pwiz.Skyline.Controls.Graphs
         /// peak area summary graph uses this class directly, this is the
         /// only way to get it the ratio index value.
         /// </summary>
-        public int RatioIndex
+        public NormalizeOption NormalizeOption
         {
-            get { return _ratioIndex; }
+            get { return _normalizeOption; }
             set
             {
-                if (_ratioIndex != value)
+                if (_normalizeOption != value)
                 {
-                    _ratioIndex = value;
+                    _normalizeOption = value;
 
-                    _controller.OnRatioIndexChanged();
+                    _controller.OnNormalizeOptionChanged();
                 }
             }
         }
@@ -543,7 +545,9 @@ namespace pwiz.Skyline.Controls.Graphs
         schedule = 1 << 3,
         run_to_run_regression = 1 << 4,
         histogram = 1 << 5,
-        histogram2d = 1 << 6
+        histogram2d = 1 << 6,
+        detections = 1 << 7,
+        detections_histogram = 1 << 8
     }
 
     public static class Extensions
@@ -568,6 +572,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     return Resources.Extensions_CustomToString_Histogram;
                 case GraphTypeSummary.histogram2d:
                     return Resources.Extensions_CustomToString__2D_Histogram;
+                case GraphTypeSummary.detections:
+                    return Resources.Extensions_CustomToString_Detections_Replicates;
+                case GraphTypeSummary.detections_histogram:
+                    return Resources.Extensions_CustomToString_Detections_Histogram;
                 default:
                     return string.Empty;
             }

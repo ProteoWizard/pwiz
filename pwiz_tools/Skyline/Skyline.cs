@@ -69,6 +69,7 @@ using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Prosit.Communication;
@@ -895,9 +896,8 @@ namespace pwiz.Skyline
         public bool InUndoRedo { get { return _undoManager.InUndoRedo; } }
 
         /// <summary>
-        /// Kills all background processing, and then restores a specific document
-        /// as the current document.  After which background processing is restarted
-        /// based on the contents of the restored document.
+        /// Restores a specific document as the current document regardless of the
+        /// state of background processing;
         /// 
         /// This heavy hammer is for use with undo/redo only.
         /// </summary>
@@ -909,11 +909,17 @@ namespace pwiz.Skyline
             // User will want to restore whatever was displayed in the UI at the time.
             SrmDocument docReplaced = DocumentUI;
 
-            bool replaced = SetDocument(docUndo, Document);
+            bool replaced;
+            lock (GetDocumentChangeLock())
+            {
+                replaced = SetDocument(docUndo, Document);
+            }
 
-            // If no background processing exists, this should succeed.
             if (!replaced)
+            {
+                // It should have succeeded because we had a lock on GetDocumentChangeLock()
                 throw new InvalidOperationException(Resources.SkylineWindow_RestoreDocument_Failed_to_restore_document);
+            }
 
             return docReplaced;
         }
@@ -1090,7 +1096,6 @@ namespace pwiz.Skyline
             _importPeptideSearchManager.ProgressUpdateEvent -= UpdateProgress;
             
             DestroyAllChromatogramsGraph();
-
             base.OnClosing(e);
         }
 
@@ -1111,8 +1116,10 @@ namespace pwiz.Skyline
             if (!Program.FunctionalTest)
                 // ReSharper disable LocalizableElement
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
-                // ReSharper restore LocalizableElement
-            
+            // ReSharper restore LocalizableElement
+
+            DetectionPlotData.ReleaseDataCache();
+
             base.OnClosed(e);
         }
 
@@ -1735,6 +1742,7 @@ namespace pwiz.Skyline
             var removedNodes = new List<DocNode>();
             ModifyDocument(string.Format(Resources.SkylineWindow_EditDelete_Delete__0__, undoText), doc =>
             {
+                bool canSynchSiblings = !doc.Settings.PeptideSettings.Quantification.SimpleRatios;
                 var listRemoveParams = new List<RemoveParams>();    // Keep removals in order
                 var dictRemove = new Dictionary<int, RemoveParams>();   // Minimize removal operations
                 var setRemove = new HashSet<int>(); // Keep track of what is being removed
@@ -1771,7 +1779,7 @@ namespace pwiz.Skyline
                 foreach (var removeParams in listRemoveParams)
                 {
                     var nodeParent = doc.FindNode(removeParams.ParentPath);
-                    if (nodeParent is TransitionGroupDocNode)
+                    if (canSynchSiblings && nodeParent is TransitionGroupDocNode)
                         doc = (SrmDocument) doc.RemoveAllSynched(removeParams.ParentPath.Parent, removeParams.ParentPath.Child, removeParams.RemoveIds);
                     else if (nodeParent != null)
                         doc = (SrmDocument) doc.RemoveAll(removeParams.ParentPath, removeParams.RemoveIds);
@@ -3815,7 +3823,9 @@ namespace pwiz.Skyline
                             var dataSettingsNew = dlg.GetDataSettings(doc.Settings.DataSettings);
                             if (Equals(dataSettingsNew, doc.Settings.DataSettings))
                                 return doc;
-                            return doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
+                            doc = doc.ChangeSettings(doc.Settings.ChangeDataSettings(dataSettingsNew));
+                            doc = MetadataExtractor.ApplyRules(doc, null, out _);
+                            return doc;
                         },
                         AuditLogEntry.SettingsLogFunction);
                     StoreNewSettings(DocumentUI.Settings);
@@ -4623,21 +4633,21 @@ namespace pwiz.Skyline
             var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
             for (int i = 0; i < standardTypes.Count; i++)
             {
-                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, i);
+                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, NormalizeOption.FromIsotopeLabelType(standardTypes[i]));
             }
             if (DocumentUI.Settings.HasGlobalStandardArea)
             {
                 SelectRatioHandler.Create(this, menu, ratiosToGlobalStandardsMenuItem.Text,
-                    ChromInfo.RATIO_INDEX_GLOBAL_STANDARDS);
+                    NormalizeOption.FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS));
             }
         }
 
         private class SelectRatioHandler
         {
             protected readonly SkylineWindow _skyline;
-            private readonly int _ratioIndex;
+            private readonly NormalizeOption _ratioIndex;
 
-            public SelectRatioHandler(SkylineWindow skyline, int ratioIndex)
+            public SelectRatioHandler(SkylineWindow skyline, NormalizeOption ratioIndex)
             {
                 _skyline = skyline;
                 _ratioIndex = ratioIndex;
@@ -4655,22 +4665,22 @@ namespace pwiz.Skyline
 
             protected virtual void OnMenuItemClick()
             {
-                _skyline.SequenceTree.RatioIndex = _ratioIndex;
-                _skyline._listGraphPeakArea.ForEach(g => g.RatioIndex = _ratioIndex);
+                _skyline.SequenceTree.NormalizeOption = _ratioIndex;
+                _skyline._listGraphPeakArea.ForEach(g => g.NormalizeOption = _ratioIndex);
             }
 
-            public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, int i)
+            public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, NormalizeOption i)
             {
                 var handler = new SelectRatioHandler(skylineWindow, i);
                 var item = new ToolStripMenuItem(text, null, handler.ToolStripMenuItemClick)
-                { Checked = (skylineWindow.SequenceTree.RatioIndex == i) };
+                { Checked = (skylineWindow.SequenceTree.NormalizeOption == i) };
                 menu.DropDownItems.Add(item);
             }
         }
 
-        public void SetRatioIndex(int index)
+        public void SetRatioIndex(NormalizeOption ratioIndex)
         {
-            new SelectRatioHandler(this, index).Select();
+            new SelectRatioHandler(this, ratioIndex).Select();
         }
 
         private void sequenceTree_PickedChildrenEvent(object sender, PickedChildrenEventArgs e)
@@ -4921,6 +4931,7 @@ namespace pwiz.Skyline
             SetResultIndexOnGraphs(_listGraphRetentionTime, true);
             SetResultIndexOnGraphs(_listGraphPeakArea, false);
             SetResultIndexOnGraphs(_listGraphMassError, false);
+            SetResultIndexOnGraphs(_listGraphDetections, false);
 
             var liveResultsGrid = (LiveResultsGrid)_resultsGridForm;
             if (null != liveResultsGrid)
@@ -5771,7 +5782,8 @@ namespace pwiz.Skyline
                 var changedTargets = count == 1 ? SelectedNode.Text : string.Format(AuditLogStrings.SkylineWindow_ChangeQuantitative_0_transitions, count);
                 ModifyDocument(message, doc =>
                 {
-                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));  // CONSIDER: Might not be true if background processing is happening
+                    // Will always be true because we have acquired the lock on GetDocumentChangeLock()
+                    Assume.IsTrue(ReferenceEquals(originalDocument, doc));
                     return newDocument;
                 }, docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, changedTargets));
             }
@@ -5864,6 +5876,19 @@ namespace pwiz.Skyline
             DisplayModificationOption.Current = displayModificationOption;
             ShowSequenceTreeForm(true, true);
             UpdateGraphPanes();
+        }
+
+        private void permuteIsotopeModificationsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPermuteIsotopeModificationsDlg();
+        }
+
+        public void ShowPermuteIsotopeModificationsDlg()
+        {
+            using (var dlg = new PermuteIsotopeModificationsDlg(this))
+            {
+                dlg.ShowDialog(this);
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ Undo Redo : 已将 120 值粘贴到文档网格
 Summary   : 已将 120 值粘贴到文档网格
 All Info  :
 已将 120 值粘贴到文档网格
-文档网格 > 查看名称 是 "Replicates"
+文档网格 > 报告名称 是 "Replicates"
 将 9-1_Site56B_A1_CalCurve_run_028 的 SampleGroup 设定为 "A"
 将 9-1_Site56B_A1_CalCurve_run_028 的 Concentration 设定为 "0"
 将 9-1_Site56B_A1_CalCurve_run_028 的 IS Spike 设定为 "10"
@@ -178,5 +178,5 @@ J	100	10
 J	100	10
 J	100	10
 
-查看名称 = "Replicates"
+报告名称 = "Replicates"
 

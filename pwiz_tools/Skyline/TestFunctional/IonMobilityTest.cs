@@ -139,14 +139,15 @@ namespace pwiz.SkylineTestFunctional
                 string databasePath = testFilesDir.GetTestPath(testlibName + IonMobilityDb.EXT);
                 RunUI(() =>
                 {
-                    ionMobilityLibDlg1.LibraryName = testlibName;
-                    ionMobilityLibDlg1.CreateDatabaseFile(databasePath); // Simulare user click on Create button
+                    // N.B no library name provided, so we'll automatically use filename as basis
+                    ionMobilityLibDlg1.CreateDatabaseFile(databasePath); // Simulate user click on Create button
                     ionMobilityLibDlg1.SetOffsetHighEnergySpectraCheckbox(true);
                     string libraryText = BuildPasteLibraryText(ionMobilityPeptides,
                         seq => seq.Substring(0, seq.Length - 1),
                         ionMobilityLibDlg1.GetOffsetHighEnergySpectraCheckbox());
                     SetClipboardText(libraryText);
                 });
+                AssertEx.AreEqual(testlibName, ionMobilityLibDlg1.LibraryName);
                 // Expect to be warned about multiple conformer
                 var warnDlg = ShowDialog<MessageDlg>(() => ionMobilityLibDlg1.DoPasteLibrary());
                 RunUI(() =>
@@ -601,18 +602,30 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.Contains(message,
                 string.Format(Resources.EditIonMobilityLibraryDlg_ValidateUniquePrecursors_This_list_contains__0__ions_with_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_,
                     22));
-            var IonMobilityFilteringUserControl = new IonMobilityFilteringUserControl();
-            AssertEx.Contains(IonMobilityFilteringUserControl.ValidateResolvingPower(-1), Resources.EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
-            AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateResolvingPower(1));
+            RunUI(() =>
+            {
+                using (var IonMobilityFilteringUserControl = new IonMobilityFilteringUserControl())
+                {
+                    AssertEx.Contains(IonMobilityFilteringUserControl.ValidateResolvingPower(-1),
+                        Resources
+                            .EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
+                    AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateResolvingPower(1));
 
-            AssertEx.Contains(IonMobilityFilteringUserControl.ValidateWidth(-1), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
-            AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateWidth(1));
-            AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateWidth(0));
-            AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateResolvingPower(0));
+                    AssertEx.Contains(IonMobilityFilteringUserControl.ValidateWidth(-1),
+                        Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
+                    AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateWidth(1));
+                    AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateWidth(0));
+                    AssertEx.IsNull(IonMobilityFilteringUserControl.ValidateResolvingPower(0));
 
-            IonMobilityFilteringUserControl.ShowOnlyResolvingPowerControls(300); // In this mode, insist on non-negative width parameters
-            AssertEx.Contains(IonMobilityFilteringUserControl.ValidateWidth(-1), Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
-            AssertEx.Contains(IonMobilityFilteringUserControl.ValidateResolvingPower(0), Resources.EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
+                    IonMobilityFilteringUserControl
+                        .ShowOnlyResolvingPowerControls(300); // In this mode, insist on non-negative width parameters
+                    AssertEx.Contains(IonMobilityFilteringUserControl.ValidateWidth(-1),
+                        Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_);
+                    AssertEx.Contains(IonMobilityFilteringUserControl.ValidateResolvingPower(0),
+                        Resources
+                            .EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
+                }
+            });
 
 
             TestParser(EditIonMobilityLibraryDlg.COLUMN_ADDUCT, "99",String.Format(
@@ -758,8 +771,18 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettingsDlg.OkDialog();
             });
             WaitForClosedForm(transitionSettingsDlg);
-            doc = WaitForDocumentChange(doc);
-            
+            WaitForDocumentChange(doc);
+
+            // Now close the document, then reopen to verify imsdb background loader operation
+            var docName = TestContext.GetTestPath("reloaded.sky");
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument(docName);
+                SkylineWindow.NewDocument();
+                SkylineWindow.OpenFile(docName);
+            });
+            doc = WaitForDocumentLoaded();
+
             var result = doc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
             AssertEx.AreEqual(2, result.Count);
             var key3 = new LibKey("GLAGVENVTELKK", Adduct.TRIPLY_PROTONATED);

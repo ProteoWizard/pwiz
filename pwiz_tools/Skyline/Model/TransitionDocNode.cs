@@ -378,11 +378,6 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        public float? GetPeakAreaRatio(int i)
-        {
-            return GetPeakAreaRatio(i, 0);
-        }
-
         public float? GetPeakAreaRatio(int i, int indexIS)
         {
             // CONSIDER: Also specify the file index?
@@ -437,7 +432,7 @@ namespace pwiz.Skyline.Model
 
         public override string GetDisplayText(DisplaySettings settings)
         {
-            return TransitionTreeNode.DisplayText(this, settings);    
+            return TransitionTreeNode.DisplayText(settings, this);    
         }
 
         public string PrimaryCustomIonEquivalenceKey
@@ -583,7 +578,6 @@ namespace pwiz.Skyline.Model
             CrosslinkBuilder crosslinkBuilder,
             SkylineDocumentProto.Types.Transition transitionProto)
         {
-            var stringPool = scrubber.StringPool;
             IonType ionType = DataValues.FromIonType(transitionProto.FragmentType);
             MeasuredIon measuredIon = null;
             if (transitionProto.MeasuredIonName != null)

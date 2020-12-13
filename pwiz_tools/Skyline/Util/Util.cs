@@ -29,7 +29,6 @@ using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -797,9 +796,10 @@ namespace pwiz.Skyline.Util
                 return true;
             if (values1 == null || values2 == null)
                 return false;
-            if (values1.Count != values2.Count)
+            int count = values1.Count;
+            if (count != values2.Count)
                 return false;
-            for (int i = 0; i < values1.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 if (!Equals(values1[i], values2[i]))
                     return false;
@@ -872,9 +872,10 @@ namespace pwiz.Skyline.Util
                 return true;
             if (values1 == null || values2 == null)
                 return false;
-            if (values1.Count != values2.Count)
+            int count = values1.Count;
+            if (count != values2.Count)
                 return false;
-            for (int i = 0; i < values1.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 if (!ReferenceEquals(values1[i], values2[i]))
                     return false;
@@ -1477,16 +1478,13 @@ namespace pwiz.Skyline.Util
         /// <param name="value">The string to parse</param>
         /// <param name="defaultValue">The value to return, if parsing fails</param>
         /// <returns>An enum value of type <see cref="TEnum"/></returns>
-        public static TEnum ParseEnum<TEnum>(string value, TEnum defaultValue)
+        public static TEnum ParseEnum<TEnum>(string value, TEnum defaultValue) where TEnum : struct
         {
-            try
+            if (Enum.TryParse(value, true, out TEnum result))
             {
-                return (TEnum)Enum.Parse(typeof(TEnum), value, true);
+                return result;
             }
-            catch (Exception)
-            {
-                return defaultValue;
-            }                            
+            return defaultValue;
         }
 
         /// <summary>
@@ -2127,123 +2125,6 @@ namespace pwiz.Skyline.Util
             }
 
             return stringBuilder.ToString();
-        }
-    }
-
-    public static class ParallelEx
-    {
-        // This can be set to true to make debugging easier.
-        public static readonly bool SINGLE_THREADED = false;
-
-        private static readonly ParallelOptions PARALLEL_OPTIONS = new ParallelOptions
-        {
-            MaxDegreeOfParallelism = SINGLE_THREADED ? 1 : -1
-        };
-
-        private class IntHolder
-        {
-            public IntHolder(int theInt)
-            {
-                TheInt = theInt;
-            }
-
-            public int TheInt { get; private set; }
-        }
-
-        public static int GetThreadCount(int? maxThreads = null)
-        {
-            if (SINGLE_THREADED)
-                return 1;
-            int threadCount = Environment.ProcessorCount;
-            int maxThreadCount = maxThreads ?? 8; // Trial with maximum of 8
-            if (threadCount > maxThreadCount)
-                threadCount = maxThreadCount;
-            return threadCount;
-        }
-
-        public static void For(int fromInclusive, int toExclusive, Action<int> body, Action<AggregateException> catchClause = null, int? maxThreads = null)
-        {
-            Action<int> localBody = i =>
-            {
-                LocalizationHelper.InitThread(); // Ensure appropriate culture
-                body(i);
-            };
-            LoopWithExceptionHandling(() =>
-            {
-                using (var worker = new QueueWorker<IntHolder>(null, (h, i) => localBody(h.TheInt)))
-                {
-                    worker.RunAsync(GetThreadCount(maxThreads), typeof(ParallelEx).Name);
-                    for (int i = fromInclusive; i < toExclusive; i++)
-                    {
-                        if (worker.Exception != null)
-                            break;
-                        worker.Add(new IntHolder(i));
-                    }
-                    worker.DoneAdding(true);
-                    if (worker.Exception != null)
-                        throw new AggregateException(@"Exception in Parallel.For", worker.Exception);   
-                }
-            }, catchClause);
-//            LoopWithExceptionHandling(() => Parallel.For(fromInclusive, toExclusive, PARALLEL_OPTIONS, localBody), catchClause);
-        }
-
-        public static void ForEach<TSource>(IEnumerable<TSource> source, Action<TSource> body, Action<AggregateException> catchClause = null, int? maxThreads = null) where TSource : class
-        {
-            Action<TSource> localBody = o =>
-            {
-                LocalizationHelper.InitThread(); // Ensure appropriate culture
-                body(o);
-            };
-            LoopWithExceptionHandling(() =>
-            {
-                using (var worker = new QueueWorker<TSource>(null, (s, i) => localBody(s)))
-                {
-                    worker.RunAsync(GetThreadCount(maxThreads), typeof(ParallelEx).Name);
-                    foreach (TSource s in source)
-                    {
-                        if (worker.Exception != null)
-                            break;
-                        worker.Add(s);
-                    }
-                    worker.DoneAdding(true);
-                    if (worker.Exception != null)
-                        throw new AggregateException(@"Exception in Parallel.ForEx", worker.Exception); 
-                }
-            }, catchClause);
-//            LoopWithExceptionHandling(() => Parallel.ForEach(source, PARALLEL_OPTIONS, localBody), catchClause);
-        }
-
-        private static void LoopWithExceptionHandling(Action loop, Action<AggregateException> catchClause)
-        {
-            try
-            {
-                loop();
-            }
-            catch (AggregateException x)
-            {
-                Exception ex = null;
-                x.Handle(inner =>
-                {
-                    if (inner is OperationCanceledException)
-                    {
-                        if (!(ex is OperationCanceledException))
-                            ex = inner;
-                        return true;
-                    }
-                    if (catchClause == null)
-                    {
-                        if (ex == null)
-                            ex = inner;
-                        return true;
-                    }
-                    return false;
-                });
-
-                if (ex != null)
-                    Helpers.WrapAndThrowException(ex);
-                if (catchClause != null)
-                    catchClause(x);
-            }
         }
     }
 

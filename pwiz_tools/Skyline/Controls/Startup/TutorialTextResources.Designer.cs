@@ -439,6 +439,24 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Small Molecule IMS Libraries.
+        /// </summary>
+        internal static string SmallMolLibraries_Caption {
+            get {
+                return ResourceManager.GetString("SmallMolLibraries_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Learn how to use spectral libraries and ion mobility filtering for analysis of complex ion mobility spectrometry-mass spectrometry (IMS-MS) small molecule data. Explore a spectral library containing m/z, retention time, fragmentation, and ion mobility information, and learn how the CCS values for each molecule are used to increase the selectivity of precursor and fragment extracted ion chromatograms..
+        /// </summary>
+        internal static string SmallMolLibraries_Description {
+            get {
+                return ResourceManager.GetString("SmallMolLibraries_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Targeted MS/MS (PRM).
         /// </summary>
         internal static string TargetedMSMS_Caption {

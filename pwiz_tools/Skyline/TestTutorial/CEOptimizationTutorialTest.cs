@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            IsPauseForCoverShot = true;
+//            IsCoverShotMode = true;
             CoverShotName = "OptimizeCE";
 
             ForceMzml = true;   // Mzml is ~2x faster for this test.
@@ -227,7 +227,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Main Skyline window", 8);
 
-            if (IsPauseForCoverShot)
+            if (IsCoverShotMode)
             {
                 RunUI(() =>
                 {
@@ -241,7 +241,7 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(SkylineWindow.FocusDocument);
 
-                PauseForCoverShot();
+                TakeCoverShot();
                 return;
             }
 
@@ -251,7 +251,7 @@ namespace pwiz.SkylineTestTutorial
 
             FindNode(decorator + "IDALNENK");
 
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
 
             PauseForScreenShot("Main Skyline window", 9);
 

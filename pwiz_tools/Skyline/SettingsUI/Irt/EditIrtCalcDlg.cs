@@ -80,6 +80,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             comboRegressionType.Items.AddRange(IrtRegressionType.ALL.Cast<object>().ToArray());
             _originalRegressionType = SelectedRegressionType = IrtRegressionType.DEFAULT;
 
+            Settings.Default.IrtStandardList.Remove(IrtStandard.AUTO);
             _driverStandards = new SettingsListComboDriver<IrtStandard>(comboStandards, Settings.Default.IrtStandardList);
             _driverStandards.LoadList(IrtStandard.EMPTY.GetKey());
 
@@ -105,6 +106,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
             // exception if the the cursor is positioned over the record selector column during loading.
             gridViewStandard.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             gridViewLibrary.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        }
+
+        private void EditIrtCalcDlg_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
         }
 
         private bool DatabaseChanged
@@ -1258,6 +1264,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             set { textCalculatorName.Text = value; }
         }
 
+        public string CalcPath
+        {
+            get { return textDatabase.Text; }
+            set { textDatabase.Text = value; }
+        }
+
         public void DoPasteStandard()
         {
             _gridViewStandardDriver.OnPaste();
@@ -1299,6 +1311,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             var selected = _driverStandards.SelectedItem;
             var lastIdx = _driverStandards.SelectedIndexLast;
+
+            if (ReferenceEquals(selected, IrtStandard.AUTO))
+            {
+                comboStandards.SelectedIndexChanged -= comboStandards_SelectedIndexChanged;
+                comboStandards.SelectedIndex = lastIdx;
+                comboStandards.SelectedIndexChanged += comboStandards_SelectedIndexChanged;
+                return;
+            }
 
             if (comboStandards.SelectedItem.ToString().Equals(Resources.SettingsListComboDriver_Edit_current) &&
                 IrtStandard.ALL.Any(standard => standard.Name.Equals(comboStandards.Items[lastIdx])))

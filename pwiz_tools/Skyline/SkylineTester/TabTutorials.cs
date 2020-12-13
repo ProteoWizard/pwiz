@@ -48,8 +48,8 @@ namespace SkylineTester
             else
             {
                 int pauseSeconds = -1;
-                if (MainWindow.PauseTutorialsCoverShots.Checked)
-                    pauseSeconds = -2;
+                if (MainWindow.ModeTutorialsCoverShots.Checked)
+                    pauseSeconds = -2; // Magic number that tells TestRunner to grab tutorial cover shot then move on to next test
                 else if (!MainWindow.PauseTutorialsScreenShots.Checked &&
                          !Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
                     pauseSeconds = 0;

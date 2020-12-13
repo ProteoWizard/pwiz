@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using AutoQC.Properties;
 
 namespace AutoQC
 {
@@ -19,9 +20,9 @@ namespace AutoQC
 
     public class AutoQcLogger : IAutoQcLogger
     {
-        public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
-        private const int _maxBackups = 5;
-        public const int MaxLogLines = 5000;
+        private const long MAX_LOG_SIZE = 10 * 1024 * 1024; // 10MB
+        private const int MAX_BACKUPS = 5;
+        public const int MAX_LOG_LINES = 5000;
 
         private string _lastMessage = string.Empty; // To avoid logging duplicate messages.
 
@@ -31,7 +32,7 @@ namespace AutoQC
 
         private IMainUiControl _mainUi;
 
-        public const string LogTruncatedMessage = "... Log truncated ... Full log is in {0}";
+        public static readonly string LogTruncatedMessage = Resources.AutoQcLogger_LogTruncatedMessage_____Log_truncated__Full_log_is_in__0_;
 
         private Queue<string> _memLogMessages;
         private const int MEM_LOG_SIZE = 100; // Keep the last 100 log messages in memory
@@ -151,7 +152,7 @@ namespace AutoQC
             }
 
             var size = new FileInfo(_filePath).Length;
-            if (size >= MaxLogSize)
+            if (size >= MAX_LOG_SIZE)
             {
                 BackupLog(_filePath, 1);
             }   
@@ -159,7 +160,7 @@ namespace AutoQC
 
         private void BackupLog(string filePath, int bkupIndex)
         {
-            if (bkupIndex > _maxBackups)
+            if (bkupIndex > MAX_BACKUPS)
             {
                 File.Delete(GetLogFilePath(filePath, bkupIndex - 1));
                 return;
@@ -307,7 +308,7 @@ namespace AutoQC
                         new StreamReader(new FileStream(GetFile(), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     )
                 {
-                    var maxDisplaySize = MaxLogSize/20;
+                    var maxDisplaySize = MAX_LOG_SIZE/20;
                     // If the log is too big don't display all of it.
                     if (reader.BaseStream.Length > maxDisplaySize)
                     {
@@ -320,9 +321,9 @@ namespace AutoQC
                         lines.Add(line);
                     }
 
-                    if (lines.Count > MaxLogLines)
+                    if (lines.Count > MAX_LOG_LINES)
                     {
-                        lines = lines.GetRange(lines.Count - MaxLogLines - 1, MaxLogLines);
+                        lines = lines.GetRange(lines.Count - MAX_LOG_LINES - 1, MAX_LOG_LINES);
                         truncated = true;
                     }
                 }

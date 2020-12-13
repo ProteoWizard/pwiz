@@ -33,7 +33,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
 
     constant SKYLINE_YEAR : 20 ;
-    constant SKYLINE_ORDINAL : 1 ; # A count of official releases made so far this year
+    constant SKYLINE_ORDINAL : 2 ; # A count of official releases made so far this year
     constant SKYLINE_BRANCH : 1 ; # 0 - release, 1 - daily, 9 - feature complete daily
 
     # when releasing a patch for a previous year, the day-of-year component will be incremented by 365 for each year difference
@@ -77,12 +77,35 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             CONFIGURATION on $(<[1]) = "Release" ;
         }
 
+        local .target_name ;
+        if --official in [ modules.peek : ARGV ]
+        {
+            .target_name = "Skyline" ;
+        }
+        else
+        {
+            .target_name = "Skyline-daily" ;
+        }
+        TARGET_NAME on $(targets) = $(.target_name) ;
+
+        local address-model = [ feature.get-values <address-model> : $(properties) ] ;
+        ADDRESS_MODEL on $(targets) = $(address-model:E=32) ;
+
+        local .version = "$(SKYLINE_YEAR).$(SKYLINE_ORDINAL).$(SKYLINE_BRANCH).$(SKYLINE_DOY)" ;
+        VERSION on $(targets) = $(.version) ;
+
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+        INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
         JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
     }
     
     rule do_skyline_build ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+    
+    rule do_skyline_clean ( targets + : sources * : properties * )
     {
         return [ build-properties $(targets) : $(sources) : $(properties) ] ;
     }
@@ -97,7 +120,19 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
 
         echo Building Skyline in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
+        
+        echo Instantiating template files...
+        msbuild $(SKYLINE_PATH)/Executables/Installer/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(PWIZ_BUILD_PATH)/SkylineDeploy/ /nologo /verbosity:minimal
+        $(PWIZ_BUILD_PATH)/SkylineDeploy/SetupDeployProject.exe "$(SKYLINE_PATH)" "$(PWIZ_BUILD_PATH)" $(VERSION) $(ADDRESS_MODEL) $(TARGET_NAME)
+    }
+
+    actions do_skyline_clean
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+
+        echo Cleaning Skyline so subsequent builds copy files properly...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Clean /nologo /verbosity:minimal
     }
 
     actions do_Inspect_Code
@@ -117,9 +152,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building Skyline Test in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Test /nologo /verbosity:minimal
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=Test.dll $(.teamcity-test-decoration)
+        $(OUTPUT_PATH)/TestRunner.exe log=Test.log buildcheck=1 test=Test.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
         exit %status%
     }
@@ -133,9 +168,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building Skyline Test Data in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestData /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestData /nologo /verbosity:minimal
         echo Unit testing pwiz data reading in Skyline in $(CONFIGURATION:L) configuration...
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestData.dll $(.teamcity-test-decoration)
+        $(OUTPUT_PATH)/TestRunner.exe log=TestData.log buildcheck=1 test=TestData.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
         exit %status%
     }
@@ -149,9 +184,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building Skyline Test Data in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestData /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestData /nologo /verbosity:minimal
         echo Testing subset of Skyline's leak checking (pass1) in $(CONFIGURATION:L) configuration...
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram $(.teamcity-test-decoration)
+        $(OUTPUT_PATH)/TestRunner.exe log=TestPass1Subset.log buildcheck=1 pass1=on pass2=off test=TestInstrumentInfo,TestQcTraces,TestTicChromatogram $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
         exit %status%
     }
@@ -165,9 +200,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestFunctional /nologo /verbosity:minimal
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
-        $(OUTPUT_PATH)/TestRunner.exe buildcheck=1 test=TestFunctional.dll $(.teamcity-test-decoration)
+        $(OUTPUT_PATH)/TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll $(.teamcity-test-decoration)
         set status=%ERRORLEVEL%
         exit %status%
     }
@@ -184,7 +219,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building Skyline TestConnected, TestTutorial, TestPerf, SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestConnected /t:TestTutorial /t:TestPerf /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestConnected /t:TestTutorial /t:TestPerf /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
     
@@ -197,7 +232,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
         echo Creating SkylineTester.zip
@@ -254,8 +289,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         }
         return $(result) ;
     }
+    
 
-
+    # this is really the main action for building Skyline and leaving Skyline.exe intact, but it is explicit 
     make Skyline.exe
         : # sources
         : # actions
@@ -277,7 +313,31 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibToMs2/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+            <dependency>$(PWIZ_ROOT_PATH)//INSTALLER_VENDOR_FILES.txt
     ;
+    explicit Skyline.exe ;
+
+    # this is the default target which builds Skyline and then cleans it so the first subsequent build in the IDE doesn't mess up the Content file copies
+    make Build
+        : # sources
+        : # actions
+            @do_skyline_clean
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
+            <assembly>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler
+            <assembly>TestDiagnostics//TestDiagnostics
+            <conditional>@build-location
+            <dependency>Skyline.exe
+    ;
+
+    if --teamcity-test-decoration in [ modules.peek : ARGV ]
+    {
+        explicit Build ;
+    }
+
 
     make InspectCode
         : # sources
@@ -314,18 +374,25 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>Skyline.exe
         ;
     
-    make TestData
-        : # sources
-        : # actions
-            @do_skyline_test_a
-        : # requirements
-            <link>shared:<build>no
-            <conditional>@no-express-requirement
-            <conditional>@msvc-dotnet-requirement
-            <conditional>@build-location
-            <dependency>Skyline.exe
-        ;
-    
+    if [ modules.peek : WIX ]
+    {
+        alias TestData : Executables/Installer//Test ;
+    }
+    else
+    {
+        make TestData
+            : # sources
+            : # actions
+                @do_skyline_test_a
+            : # requirements
+                <link>shared:<build>no
+                <conditional>@no-express-requirement
+                <conditional>@msvc-dotnet-requirement
+                <conditional>@build-location
+                <dependency>Skyline.exe
+            ;
+    }
+
     make TestPass1Subset
         : # sources
         : # actions

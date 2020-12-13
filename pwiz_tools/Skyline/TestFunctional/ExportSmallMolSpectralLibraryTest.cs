@@ -18,6 +18,8 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class ExportSmallMolSpectralLibraryTest : AbstractFunctionalTest
     {
+        private bool _convertedFromPeptides;
+        
         [TestMethod]
         public void TestExportSmallMolSpectralLibrary()
         {
@@ -27,22 +29,40 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            // Export and check spectral library
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("msstatstest.sky")));
+            CheckHighEnergyOffsetOutput(); // Verify the fix for Kaylie's issue of HE IM offsets not being output
+            CheckConvertedSmallMolDocumentOutput();
+        }
+
+        private SrmDocument ExportTestLib(string docName, string libName, bool convertFromPeptides, out IList<DbRefSpectra> refSpectra)
+        {
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(docName)));
             var docOrig = WaitForDocumentLoaded();
-            var refine = new RefinementSettings();
-            var doc = refine.ConvertToSmallMolecules(docOrig, TestFilesDirs[0].FullPath, addAnnotations:false); 
-            SkylineWindow.SetDocument(doc, docOrig);
-            var exported = TestFilesDir.GetTestPath("exportSM.blib");
+            var doc = docOrig;
+            _convertedFromPeptides = convertFromPeptides;
+            if (_convertedFromPeptides)
+            {
+                var refine = new RefinementSettings();
+                doc = refine.ConvertToSmallMolecules(docOrig, TestFilesDirs[0].FullPath, addAnnotations: false);
+                SkylineWindow.SetDocument(doc, docOrig);
+            }
+            var exported = TestFilesDir.GetTestPath(libName);
             var libraryExporter = new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath);
             libraryExporter.ExportSpectralLibrary(exported, null);
             Assert.IsTrue(File.Exists(exported));
-            IList<DbRefSpectra> refSpectra = null;
+            refSpectra = null;
             using (var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", exported)))
             {
                 connection.Open();
                 refSpectra = GetRefSpectra(connection);
             }
+
+            return doc;
+        }
+
+        private void CheckConvertedSmallMolDocumentOutput()
+        {
+            // Export and check spectral library
+            var doc = ExportTestLib("msstatstest.sky", "exportSM.blib", true, out var refSpectra);
 
             CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "C81H115N19O26", "[M+2H]", 885.9203087025, 4, new[]{"y7", "y6", "y5", "y13"});
             CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "C81H115N19O26", "[M6C134N15+2H]", 890.9244430127, 4);
@@ -110,9 +130,23 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errDlg2, errDlg2.OkDialog);
         }
 
-        private static void CheckRefSpectra(IList<DbRefSpectra> spectra, string name, string formula, string precursorAdduct, double precursorMz, ushort numPeaks, string[] fragmentNames = null)
+        private void CheckHighEnergyOffsetOutput()
         {
-            name = RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + name;
+            ExportTestLib("Original.sky", "exportIM.blib", false, out var refSpectra);
+
+            CheckRefSpectra(refSpectra, "PE(18:0_18:1)", "C41H80NO8P", "[M-H]", 744.55487984, 3, null, 35.3074607849121, -0.5);
+            CheckRefSpectra(refSpectra, "PE(12:0_14:0)", "C31H62NO8P", "[M-H]", 606.41402921, 3, null, 31.3844776153564, - 0.5);
+            CheckRefSpectra(refSpectra, "PE(16:1_18:3)", "C39H70NO8P", "[M-H]", 710.47662949, 3, null, 33.8052673339844, - 0.5);
+        }
+
+        private void CheckRefSpectra(IList<DbRefSpectra> spectra, string name, string formula, string precursorAdduct, 
+            double precursorMz, ushort numPeaks, string[] fragmentNames = null, 
+            double? ionMobility = null, double? ionMobilityHighEnergyOffset = null)
+        {
+            if (_convertedFromPeptides)
+            {
+                name = RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + name;
+            }
             for (var i = 0; i < spectra.Count; i++)
             {
                 var spectrum = spectra[i];
@@ -133,6 +167,15 @@ namespace pwiz.SkylineTestFunctional
                         foreach (var annotation in spectrum.PeakAnnotations)
                         {
                             Assume.IsTrue(fragmentNames.Contains(annotation.Name));
+                        }
+                    }
+
+                    if (ionMobility.HasValue)
+                    {
+                        AssertEx.AreEqualNullable(spectrum.IonMobility, ionMobility, .00001);
+                        if (ionMobilityHighEnergyOffset.HasValue)
+                        {
+                            AssertEx.AreEqualNullable(spectrum.IonMobilityHighEnergyOffset, ionMobilityHighEnergyOffset, .00001);
                         }
                     }
 

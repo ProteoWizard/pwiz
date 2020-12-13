@@ -160,7 +160,7 @@
     <value>2</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-    <value>OK(&amp;O)</value>
+    <value>&amp;OK</value>
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>

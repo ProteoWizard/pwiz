@@ -115,15 +115,19 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Shimadzu::spectrum(size_t index, DetailLe
     Scan& scan = result->scanList.scans[0];
     scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
-    pwiz::vendor_api::Shimadzu::SpectrumPtr spectrum = rawfile_->getSpectrum(ie.scanNumber);
+    pwiz::vendor_api::Shimadzu::SpectrumInfo info = rawfile_->getSpectrumInfo(ie.scanNumber);
+    int msLevel = info.msLevel;
+    result->set(MS_ms_level, msLevel);
+
+    // decide whether to use Points or Peaks to populate data arrays
+    bool doCentroid = msLevelsToCentroid.contains(msLevel);
+
+    pwiz::vendor_api::Shimadzu::SpectrumPtr spectrum = rawfile_->getSpectrum(ie.scanNumber, !doCentroid);
 
     double scanTime = spectrum->getScanTime();
     if (scanTime > 0 || ie.scanNumber == 1)
         scan.set(MS_scan_start_time, scanTime / 1000, UO_second); // Shimadzu stores time in milliseconds
 
-    int msLevel = spectrum->getMSLevel();
-    result->set(MS_ms_level, msLevel);
-    
     if (msLevel == 1)
         result->set(MS_MS1_spectrum);
     else
@@ -138,9 +142,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Shimadzu::spectrum(size_t index, DetailLe
 
     if (spectrum->getMinX() > 0)
         scan.scanWindows.push_back(ScanWindow(spectrum->getMinX(), spectrum->getMaxX(), MS_m_z));
-
-    // decide whether to use Points or Peaks to populate data arrays
-    bool doCentroid = msLevelsToCentroid.contains(msLevel);
 
     /*if (experimentType == MRM)
     {

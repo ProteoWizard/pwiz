@@ -5,6 +5,9 @@ using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -23,7 +26,7 @@ namespace pwiz.Skyline.Model
         }
 
         public AreaCVRefinementData(SrmDocument document, AreaCVRefinementSettings settings,
-            CancellationToken? token = null, SrmSettingsChangeMonitor progressMonitor = null)
+            CancellationToken token, SrmSettingsChangeMonitor progressMonitor = null)
         {
             _settings = settings;
             if (document == null || !document.Settings.HasResults)
@@ -51,8 +54,18 @@ namespace pwiz.Skyline.Model
                 minDetections = _settings.MinimumDetections;
 
             MedianInfo medianInfo = null;
-            if (_settings.NormalizationMethod == AreaCVNormalizationMethod.medians)
+            int? ratioIndex = null;
+            if (settings.NormalizeOption.IsRatioToLabel)
+            {
+                var isotopeLabelTypeName = (settings.NormalizeOption.NormalizationMethod as NormalizationMethod.RatioToLabel)
+                    ?.IsotopeLabelTypeName;
+                ratioIndex =
+                    document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.IndexOf(type =>
+                        type.Name == isotopeLabelTypeName);
+            }
+            if (_settings.NormalizeOption.Is(NormalizationMethod.EQUALIZE_MEDIANS))
                 medianInfo = CalculateMedianAreas(document);
+            NormalizationData normalizationData = null;
 
             foreach (var peptideGroup in document.MoleculeGroups)
             {
@@ -62,73 +75,154 @@ namespace pwiz.Skyline.Model
                     {
                         progressMonitor.ProcessMolecule(peptide);
                     }
-                    foreach (var transitionGroupDocNode in peptide.TransitionGroups)
-                    {
-                        if (_settings.PointsType == PointsTypePeakArea.decoys != transitionGroupDocNode.IsDecoy)
-                            continue;
 
+                    if (_settings.PointsType == PointsTypePeakArea.decoys != peptide.IsDecoy)
+                        continue;
+
+                    CalibrationCurveFitter calibrationCurveFitter = null;
+                    CalibrationCurve calibrationCurve = null;
+                    IEnumerable<TransitionGroupDocNode> transitionGroups;
+                    if (_settings.NormalizeOption == NormalizeOption.CALIBRATED ||
+                        _settings.NormalizeOption == NormalizeOption.DEFAULT)
+                    {
+                        if (!peptide.TransitionGroups.Any())
+                        {
+                            continue;
+                        }
+                        var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(() =>
+                        {
+                            return normalizationData = normalizationData ?? NormalizationData.GetNormalizationData(document, false, null);
+                        }, document.Settings, peptideGroup, peptide);
+                        calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
+                        transitionGroups = new[] {peptide.TransitionGroups.First()};
+                        if (_settings.NormalizeOption == NormalizeOption.CALIBRATED)
+                        {
+                            calibrationCurve = calibrationCurveFitter.GetCalibrationCurve();
+                            if (calibrationCurve == null)
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        transitionGroups = peptide.TransitionGroups;
+                    }
+                    foreach (var transitionGroupDocNode in transitionGroups)
+                    {
                         foreach (var a in annotations)
                         {
                             areas.Clear();
 
                             if (!Equals(a, _settings.Annotation) && (_settings.Group == null || _settings.Annotation != null))
                                 continue;
-                            
-                            foreach (var i in AnnotationHelper.GetReplicateIndices(document, _settings.Group, a))
+
+                            foreach (var replicateIndex in AnnotationHelper.GetReplicateIndices(document,
+                                _settings.Group, a))
                             {
                                 if (progressMonitor != null && progressMonitor.IsCanceled())
                                     throw new OperationCanceledException();
-                                
-                                if (token.HasValue && token.Value.IsCancellationRequested)
-                                {
-                                    throw new Exception(@"Cancelled");
-                                }
-                                var groupChromInfo = transitionGroupDocNode.GetSafeChromInfo(i)
+
+                                token.ThrowIfCancellationRequested();
+                                var groupChromInfo = transitionGroupDocNode.GetSafeChromInfo(replicateIndex)
                                     .FirstOrDefault(c => c.OptimizationStep == 0);
                                 if (groupChromInfo == null)
                                     continue;
 
                                 if (qvalueCutoff.HasValue)
                                 {
-                                    if (!(groupChromInfo.QValue.HasValue && groupChromInfo.QValue.Value < qvalueCutoff.Value))
+                                    if (!(groupChromInfo.QValue.HasValue &&
+                                          groupChromInfo.QValue.Value < qvalueCutoff.Value))
                                         continue;
                                 }
 
-                                if (!groupChromInfo.Area.HasValue)
-                                    continue;
-                                var index = i;
-                                var sumArea = transitionGroupDocNode.Transitions.Where(t =>
+                                double sumArea, normalizedArea;
+                                if (calibrationCurveFitter != null)
                                 {
-                                    if (ms1 != t.IsMs1 || !t.ExplicitQuantitative)
-                                        return false;
-
-                                    var chromInfo = t.GetSafeChromInfo(index)
-                                        .FirstOrDefault(c => c.OptimizationStep == 0);
-                                    if (chromInfo == null)
-                                        return false;
-                                    if (_settings.Transitions == AreaCVTransitions.best)
-                                        return chromInfo.RankByLevel == 1;
-                                    if (_settings.Transitions == AreaCVTransitions.all)
-                                        return true;
-
-                                    return chromInfo.RankByLevel <= _settings.CountTransitions;
-                                    // ReSharper disable once PossibleNullReferenceException
-                                }).Sum(t => (double) t.GetSafeChromInfo(index).FirstOrDefault(c => c.OptimizationStep == 0).Area);
-
-                                var normalizedArea = sumArea;
-                                if (_settings.NormalizationMethod == AreaCVNormalizationMethod.medians)
-                                    normalizedArea /= medianInfo.Medians[i] / medianInfo.MedianMedian;
-                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.global_standards && hasGlobalStandards)
-                                    normalizedArea =
-                                        NormalizeToGlobalStandard(document, transitionGroupDocNode, i, sumArea);
-                                else if (_settings.NormalizationMethod == AreaCVNormalizationMethod.ratio && hasHeavyMods && _settings.RatioIndex >= 0)
-                                {
-                                    var ci = transitionGroupDocNode.GetSafeChromInfo(i).FirstOrDefault(c => c.OptimizationStep == 0);
-                                    if (ci != null)
+                                    double? value;
+                                    if (calibrationCurve != null)
                                     {
-                                        var ratioValue = ci.GetRatio(_settings.RatioIndex);
+                                        value = calibrationCurveFitter.GetCalculatedConcentration(calibrationCurve,
+                                            replicateIndex);
+                                    }
+                                    else
+                                    {
+                                        value = calibrationCurveFitter.GetNormalizedPeakArea(
+                                            new CalibrationPoint(replicateIndex, null));
+                                    }
+                                    if (!value.HasValue)
+                                    {
+                                        continue;
+                                    }
+
+                                    sumArea = value.Value;
+                                    normalizedArea = value.Value;
+                                }
+                                else
+                                {
+                                    if (!groupChromInfo.Area.HasValue)
+                                        continue;
+                                    var index = replicateIndex;
+                                    sumArea = transitionGroupDocNode.Transitions.Where(t =>
+                                    {
+                                        if (ms1 != t.IsMs1 || !t.ExplicitQuantitative)
+                                            return false;
+
+                                        var chromInfo = t.GetSafeChromInfo(index)
+                                            .FirstOrDefault(c => c.OptimizationStep == 0);
+                                        if (chromInfo == null)
+                                            return false;
+                                        if (_settings.Transitions == AreaCVTransitions.best)
+                                            return chromInfo.RankByLevel == 1;
+                                        if (_settings.Transitions == AreaCVTransitions.all)
+                                            return true;
+
+                                        return chromInfo.RankByLevel <= _settings.CountTransitions;
+                                        // ReSharper disable once PossibleNullReferenceException
+                                    }).Sum(t => (double) t.GetSafeChromInfo(index)
+                                        .FirstOrDefault(c => c.OptimizationStep == 0).Area);
+
+                                    normalizedArea = sumArea;
+                                    if (_settings.NormalizeOption.Is(NormalizationMethod.EQUALIZE_MEDIANS))
+                                    {
+                                        normalizedArea /= medianInfo.Medians[replicateIndex] / medianInfo.MedianMedian;
+                                    }
+                                    else if (_settings.NormalizeOption.Is(NormalizationMethod.GLOBAL_STANDARDS) &&
+                                             hasGlobalStandards)
+                                    {
+                                        normalizedArea =
+                                            NormalizeToGlobalStandard(document, transitionGroupDocNode, replicateIndex,
+                                                sumArea);
+                                    }
+                                    else if (_settings.NormalizeOption.Is(NormalizationMethod.TIC))
+                                    {
+                                        var denominator = document.Settings.GetTicNormalizationDenominator(
+                                            replicateIndex, groupChromInfo.FileId);
+                                        if (!denominator.HasValue)
+                                        {
+                                            continue;
+                                        }
+
+                                        normalizedArea /= denominator.Value;
+                                    }
+                                    else if (hasHeavyMods &&
+                                             _settings.NormalizeOption.NormalizationMethod is NormalizationMethod
+                                                 .RatioToLabel)
+                                    {
+                                        var ci = transitionGroupDocNode.GetSafeChromInfo(replicateIndex)
+                                            .FirstOrDefault(c => c.OptimizationStep == 0);
+                                        RatioValue ratioValue = null;
+                                        if (ratioIndex.HasValue && ratioIndex.Value >= 0 &&
+                                            ratioIndex.Value < ci.Ratios.Count)
+                                        {
+                                            ratioValue = ci.Ratios[ratioIndex.Value];
+                                        }
+
                                         if (ratioValue == null)
-                                            continue;   // Skip the standards
+                                        {
+                                            continue;
+                                        }
+
                                         normalizedArea = ratioValue.Ratio;
                                     }
                                 }
@@ -297,14 +391,13 @@ namespace pwiz.Skyline.Model
 
     public class AreaCVRefinementSettings
     {
-        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, AreaCVNormalizationMethod normalizationMethod, int ratioIndex,
+        public AreaCVRefinementSettings(double cvCutoff, double qValueCutoff, int minimumDetections, NormalizeOption normalizeOption,
             AreaCVTransitions transitions, int countTransitions, AreaCVMsLevel msLevel)
         {
             CVCutoff = cvCutoff;
             QValueCutoff = qValueCutoff;
             MinimumDetections = minimumDetections;
-            NormalizationMethod = normalizationMethod;
-            RatioIndex = ratioIndex;
+            NormalizeOption = normalizeOption;
             MsLevel = msLevel;
             Transitions = transitions;
             CountTransitions = countTransitions;
@@ -338,11 +431,10 @@ namespace pwiz.Skyline.Model
         }
         protected AreaCVRefinementSettings() {}
 
-        public AreaCVNormalizationMethod NormalizationMethod { get; protected set; }
         public AreaCVMsLevel MsLevel { get; protected set; }
         public AreaCVTransitions Transitions { get; protected set; }
         public int CountTransitions { get; protected set; }
-        public int RatioIndex { get; protected set; }
+        public NormalizeOption NormalizeOption { get; protected set; }
         public ReplicateValue Group { get; protected set; }
         public object Annotation { get; protected set; }
         public PointsTypePeakArea PointsType { get; protected set; }
@@ -352,9 +444,9 @@ namespace pwiz.Skyline.Model
 
         protected bool Equals(AreaCVRefinementSettings other)
         {
-            return NormalizationMethod == other.NormalizationMethod && MsLevel == other.MsLevel &&
+            return MsLevel == other.MsLevel &&
                    Transitions == other.Transitions && CountTransitions == other.CountTransitions &&
-                   RatioIndex == other.RatioIndex && Equals(Group, other.Group) &&
+                   NormalizeOption == other.NormalizeOption && Equals(Group, other.Group) &&
                    Equals(Annotation, other.Annotation) && PointsType == other.PointsType &&
                    QValueCutoff.Equals(other.QValueCutoff) && CVCutoff.Equals(other.CVCutoff) &&
                    MinimumDetections == other.MinimumDetections;
@@ -372,11 +464,10 @@ namespace pwiz.Skyline.Model
         {
             unchecked
             {
-                var hashCode = (int) NormalizationMethod;
-                hashCode = (hashCode * 397) ^ (int) MsLevel;
+                var hashCode = MsLevel.GetHashCode();
                 hashCode = (hashCode * 397) ^ (int) Transitions;
                 hashCode = (hashCode * 397) ^ CountTransitions;
-                hashCode = (hashCode * 397) ^ RatioIndex;
+                hashCode = (hashCode * 397) ^ NormalizeOption.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Group != null ? Group.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Annotation != null ? Annotation.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (int) PointsType;

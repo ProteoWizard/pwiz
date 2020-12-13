@@ -51,6 +51,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string FileName {
             get { return ChromFileInfo.FilePath.GetFileName(); }
         }
+
+        public string FilePath
+        {
+            get { return ChromFileInfo.FilePath.GetFilePath(); }
+        }
+
         public string SampleName
         {
             get { return ChromFileInfo.FilePath.GetSampleName(); }

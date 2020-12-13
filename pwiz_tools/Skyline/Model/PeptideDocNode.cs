@@ -523,7 +523,8 @@ namespace pwiz.Skyline.Model
                         if (!nodeTran.HasResults)
                             continue;
                         var result = nodeTran.Results[i];
-                        if (result.IsEmpty)
+                        int resultCount = result.Count;
+                        if (resultCount == 0)
                             continue;
                         // Use average area over all files in a replicate to avoid
                         // counting a replicate as best, simply because it has more
@@ -531,8 +532,9 @@ namespace pwiz.Skyline.Model
                         // file per precursor per replicate.
                         double tranArea = 0;
                         double tranMeasured = 0;
-                        foreach (var chromInfo in result)
+                        for (int iChromInfo = 0; iChromInfo < resultCount; iChromInfo++)
                         {
+                            var chromInfo = result[iChromInfo];
                             if (chromInfo != null && chromInfo.Area > 0)
                             {
                                 tranArea += chromInfo.Area;
@@ -541,8 +543,8 @@ namespace pwiz.Skyline.Model
                                 isGroupIdentified = isGroupIdentified || chromInfo.IsIdentified;
                             }
                         }
-                        groupArea += tranArea/result.Count;
-                        groupTranMeasured += tranMeasured/result.Count;
+                        groupArea += tranArea/resultCount;
+                        groupTranMeasured += tranMeasured/resultCount;
                     }
                     combinedScore += ChromDataPeakList.ScorePeak(groupArea,
                         LegacyCountScoreCalc.GetPeakCountScore(groupTranMeasured, nodeGroup.Children.Count),
@@ -1783,6 +1785,10 @@ namespace pwiz.Skyline.Model
 
             public float? CalcTransitionRatio(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, IsotopeLabelType labelTypeNum, IsotopeLabelType labelTypeDenom)
             {
+                if (Settings.PeptideSettings.Quantification.SimpleRatios)
+                {
+                    return null;
+                }
                 // Avoid 1.0 ratios for self-to-self
                 if (ReferenceEquals(labelTypeNum, labelTypeDenom) || !TranTypes.Contains(labelTypeDenom) || !TranTypes.Contains(labelTypeNum))
                     return null;
@@ -1847,6 +1853,18 @@ namespace pwiz.Skyline.Model
                 // Delay allocation, which can be costly in DIA data with no ratios
                 List<double> numerators = null;
                 List<double> denominators = null;
+
+                if (Settings.PeptideSettings.Quantification.SimpleRatios)
+                {
+                    numerators = GetAreaPairs(labelTypeNum).Select(pair => (double) pair.Value).ToList();
+                    denominators = GetAreaPairs(labelTypeDenom).Select(pair => (double)pair.Value).ToList();
+                    if (numerators.Count == 0 || denominators.Count == 0)
+                    {
+                        return null;
+                    }
+
+                    return RatioValue.ValueOf(numerators.Sum() / denominators.Sum());
+                }
 
                 foreach (var pair in GetAreaPairs(labelTypeNum))
                 {

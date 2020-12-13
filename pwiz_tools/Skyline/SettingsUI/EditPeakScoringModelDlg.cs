@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using pwiz.Common.Controls;
 using ZedGraph;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;

@@ -1547,7 +1547,37 @@
   <data name="IonMobilityLibrary_FilePathAuditLog" xml:space="preserve">
     <value>File path</value>
   </data>
+  <data name="DataSettings_MetadataRuleSets" xml:space="preserve">
+    <value>Rule sets</value>
+  </data>
   <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
     <value>Library ion mobility values</value>
+  </data>
+  <data name="MetadataRule_Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="MetadataRule_Pattern" xml:space="preserve">
+    <value>Pattern</value>
+  </data>
+  <data name="MetadataRule_Replacement" xml:space="preserve">
+    <value>Replacement</value>
+  </data>
+  <data name="MetadataRule_Target" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="MetadataRuleSet_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="MetadataRuleSet_RowSource" xml:space="preserve">
+    <value>Row source</value>
+  </data>
+  <data name="MetadataRuleSet_Rules" xml:space="preserve">
+    <value>Rules</value>
+  </data>
+  <data name="QuantificationSettings_QualitativeIonRatioThreshold">
+    <value>Qualitative ion ratio threshold</value>
+  </data>
+  <data name="QuantificationSettings_SimpleRatios">
+    <value>Simple ratios</value>
   </data>
 </root>

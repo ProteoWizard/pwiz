@@ -53,10 +53,23 @@ namespace pwiz.ProteowizardWrapper
             {
                 // Forces pwiz_data_cli.dll to be loaded with all its dependencies
                 // Throws and exception if the DLL load fails
+                // ReSharper disable UnusedVariable
                 var test = new MSData();
+                // ReSharper restore UnusedVariable
                 // Return the version string once the load succeeds
                 return Version.ToString();
             }
+        }
+
+        public static IEnumerable<KeyValuePair<string, IList<string>>> GetFileExtensionsByType()
+        {
+            foreach (var typeExtsPair in FULL_READER_LIST.getFileExtensionsByType())
+                yield return typeExtsPair;
+        }
+
+        public static bool SupportsVendorPeakPicking(string path)
+        {
+            return SpectrumList_PeakPicker.supportsVendorPeakPicking(path);
         }
 
         // By default this creates dummy non-functional performance timers.
@@ -84,6 +97,8 @@ namespace pwiz.ProteowizardWrapper
 
         private readonly bool _requireVendorCentroidedMS1;
         private readonly bool _requireVendorCentroidedMS2;
+
+        private readonly bool _trimNativeID;
 
         private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
 
@@ -150,7 +165,8 @@ namespace pwiz.ProteowizardWrapper
             bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false,
             bool ignoreZeroIntensityPoints = false, 
             int preferOnlyMsLevel = 0,
-            bool combineIonMobilitySpectra = true) // Ask for IMS data in 3-array format by default (not guaranteed)
+            bool combineIonMobilitySpectra = true, // Ask for IMS data in 3-array format by default (not guaranteed)
+            bool trimNativeId = true)
         {
 
             // see note above on enabling performance measurement
@@ -179,6 +195,7 @@ namespace pwiz.ProteowizardWrapper
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
                 _requireVendorCentroidedMS1 = requireVendorCentroidedMS1;
                 _requireVendorCentroidedMS2 = requireVendorCentroidedMS2;
+                _trimNativeID = trimNativeId;
             }
         }
 
@@ -620,10 +637,31 @@ namespace pwiz.ProteowizardWrapper
             using (Chromatogram chrom = ChromatogramList.chromatogram(chromIndex, true))
             {
                 id = chrom.id;
+                var timeArrayData = chrom.getTimeArray().data;
+
+                // convert time to minutes
+                var timeArrayParam = chrom.getTimeArray().cvParamChild(CVID.MS_binary_data_array);
+                float timeUnitMultiple;
+                switch (timeArrayParam.units)
+                {
+                    case CVID.UO_nanosecond: timeUnitMultiple = 60 * 1e9f; break;
+                    case CVID.UO_microsecond: timeUnitMultiple = 60 * 1e6f; break;
+                    case CVID.UO_millisecond: timeUnitMultiple = 60 * 1e3f; break;
+                    case CVID.UO_second: timeUnitMultiple = 60; break;
+                    case CVID.UO_minute: timeUnitMultiple = 1; break;
+                    case CVID.UO_hour: timeUnitMultiple = 1f / 60; break;
+
+                    default:
+                        throw new InvalidDataException($"unsupported time unit in chromatogram: {timeArrayParam.unitsName}");
+                }
+                timeUnitMultiple = 1 / timeUnitMultiple;
+
                 if (!onlyMs1OrFunction1)
                 {
-                    timeArray = ToFloatArray(chrom.binaryDataArrays[0].data);
-                    intensityArray = ToFloatArray(chrom.binaryDataArrays[1].data);
+                    timeArray = new float[timeArrayData.Count];
+                    for (int i = 0; i < timeArray.Length; ++i)
+                        timeArray[i] = (float) timeArrayData[i] * timeUnitMultiple;
+                    intensityArray = ToFloatArray(chrom.getIntensityArray().data);
                 }
                 else
                 {
@@ -638,11 +676,9 @@ namespace pwiz.ProteowizardWrapper
                         return;
                     }
 
-
                     var timeList = new List<float>();
                     var intensityList = new List<float>();
-                    var timeArrayData = chrom.binaryDataArrays[0].data;
-                    var intensityArrayData = chrom.binaryDataArrays[1].data;
+                    var intensityArrayData = chrom.getIntensityArray().data;
                     var msLevelOrFunctionArrayData = msLevelOrFunctionArray.data;
 
                     for (int i = 0; i < msLevelOrFunctionArrayData.Count; ++i)
@@ -650,7 +686,7 @@ namespace pwiz.ProteowizardWrapper
                         if (msLevelOrFunctionArrayData[i] != 1)
                             continue;
 
-                        timeList.Add((float) timeArrayData[i]);
+                        timeList.Add((float) timeArrayData[i] * timeUnitMultiple);
                         intensityList.Add((float) intensityArrayData[i]);
                     }
 
@@ -917,7 +953,7 @@ namespace pwiz.ProteowizardWrapper
             bool expectIonMobilityValue = IonMobilityUnits != eIonMobilityUnits.none;
             var msDataSpectrum = new MsDataSpectrum
             {
-                Id = id.abbreviate(idText),
+                Id = _trimNativeID ? id.abbreviate(idText) : idText,
                 Level = GetMsLevel(spectrum) ?? 0,
                 Index = spectrum.index,
                 RetentionTime = GetStartTime(spectrum),
@@ -1334,6 +1370,16 @@ namespace pwiz.ProteowizardWrapper
 
         }
 
+        private static int? GetChargeStateValue(Precursor precursor)
+        {
+            if (precursor.selectedIons == null || precursor.selectedIons.Count == 0)
+                return null;
+            var param = precursor.selectedIons[0].cvParam(CVID.MS_charge_state);
+            if (param.empty())
+                return null;
+            return (int)param.value;
+        }
+
         private static IEnumerable<MsPrecursor> GetMs1Precursors(Spectrum spectrum)
         {
             bool negativePolarity = NegativePolarity(spectrum);
@@ -1509,6 +1555,7 @@ namespace pwiz.ProteowizardWrapper
     public struct MsPrecursor
     {
         public SignedMz? PrecursorMz { get; set; }
+        public int? ChargeState { get; set; }
         public double? PrecursorCollisionEnergy  { get; set; }
         public SignedMz? IsolationWindowTargetMz { get; set; }
         public double? IsolationWindowUpper { get; set; } // Add this to IsolationWindowTargetMz to get window upper bound

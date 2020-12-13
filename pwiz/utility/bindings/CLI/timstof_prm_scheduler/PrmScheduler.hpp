@@ -57,6 +57,11 @@ bool operator== (::PrmPasefSchedulingEntry const& lhs, ::PrmPasefSchedulingEntry
     return lhs.target_id == rhs.target_id && lhs.time_segment_id == rhs.time_segment_id;
 }
 
+bool operator== (::PrmVisualizationDataPoint const& lhs, ::PrmVisualizationDataPoint const& rhs)
+{
+    return lhs.x == rhs.x && lhs.y == rhs.y;
+}
+
 namespace pwiz {
 namespace CLI {
 namespace Bruker {
@@ -239,6 +244,60 @@ public ref class PasefSchedulingEntry
 /// </summary>
 public delegate bool ProgressUpdate(double progressPercentage);
 
+
+/// <summary>
+/// This enum gives the numbers for the generation of metrics of
+/// the prm-PASEF scheduling, which are thought for visualization
+/// the function prm_get_visualization takes a uint32_t to avoid
+/// inter-language conversion problems.
+/// </summary>
+public enum class SchedulingMetrics
+{
+    /// <summary>
+    /// get the number of frames which have to be measured concurrently in each retention time segment, one after the other
+    /// x = start and end rt of each time segment
+    /// y = number of concurrent frames
+    /// </summary>
+    CONCURRENT_FRAMES = 0
+
+    /// <summary>
+    /// get the average number of targets per frame for each retention time segment
+    /// </summary>
+    , TARGETS_PER_FRAME = 1
+
+    /// <summary>
+    /// average number of times a target is measured in a time segment to fill up otherwise unused mobility space: total number of fragmentations devided by the number of unique targets
+    /// </summary>
+    , REDUNDANCY_OF_TARGETS = 2
+
+    /// <summary>
+    /// average time between two measurements of a target in seconds, x is the target id
+    /// </summary>
+    , MEAN_SAMPLING_TIMES = 3
+
+    /// <summary>
+    /// max time between two measurements of a target in seconds x is the target id
+    /// </summary>
+    , MAX_SAMPLING_TIMES = 4 
+};
+
+public ref class VisualizationDataPoint
+{
+    DEFINE_INTERNAL_BASE_CODE(VisualizationDataPoint, ::PrmVisualizationDataPoint);
+
+    public:
+    /// <summary>
+    /// usually but not limited to the time in min of a retention time segment point
+    /// </summary>
+    DEFINE_PRIMITIVE_PROPERTY(double, System::Double, x);
+
+    /// <summary>
+    /// function value, e.g. a number of frames
+    /// </summary>
+    DEFINE_PRIMITIVE_PROPERTY(double, System::Double, y);
+};
+
+
 extern "C" {
     void getMethodInfo(const ::PrmMethodInfo *prm_method_info, void *user_data)
     {
@@ -265,11 +324,18 @@ extern "C" {
         auto progressUpdateFunctionPtr = (ProgressUpdateCallback)user_data;
         return progressUpdateFunctionPtr(progressPercentage);
     }
+
+    void getSchedulingMetrics(uint32_t num_entries, const ::PrmVisualizationDataPoint *data_points, void *user_data)
+    {
+        auto& entries = *((std::vector<::PrmVisualizationDataPoint>*) user_data);
+        std::copy(&data_points[0], data_points + num_entries, entries.begin());
+    }
 }
 
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MethodInfoList, ::PrmMethodInfo, MethodInfo, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SchedulingEntryList, ::PrmPasefSchedulingEntry, PasefSchedulingEntry, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TimeSegmentList, ::PrmTimeSegments, TimeSegments, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(DataPointList, ::PrmVisualizationDataPoint, VisualizationDataPoint, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
@@ -354,6 +420,18 @@ public ref class Scheduler
         timeSegmentList->base().resize(prm_get_num_time_segments(handle_));
         if (!prm_get_scheduling(handle_, getSchedulingEntries, getTimeSegments, (void*) schedulingEntryList->base_, (void*) timeSegmentList->base_))
             throw gcnew System::Exception(GetLastErrorString());
+    }
+
+    DataPointList^ GetSchedulingMetrics(SchedulingMetrics metric)
+    {
+        auto result = gcnew DataPointList();
+        auto numDataPoints = prm_calculate_visualization(handle_, (uint32_t)metric);
+        if (!numDataPoints)
+            throw gcnew System::Exception(GetLastErrorString());
+        result->base().resize(numDataPoints);
+        if (!prm_get_visualization(handle_, getSchedulingMetrics, (void*) result->base_))
+            throw gcnew System::Exception(GetLastErrorString());
+        return result;
     }
 
     /// <summary>
