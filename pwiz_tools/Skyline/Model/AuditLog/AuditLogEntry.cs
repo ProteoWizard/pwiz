@@ -89,6 +89,18 @@ namespace pwiz.Skyline.Model.AuditLog
         }
     }
 
+    class XmlTextReaderWithState : XmlTextReader
+    {
+        public DocumentFormat documentFormat { get; set; }
+        public XmlTextReaderWithState(string fileName) : base(fileName) { }
+    }
+
+    class XmlTextWriterWithState : XmlTextWriter
+    {
+        public XmlTextWriterWithState(string fileName, Encoding enc) : base(fileName, enc) { }
+        public DocumentFormat docFormat;
+    }
+
     [XmlRoot(XML_ROOT)]
     public class AuditLogList : Immutable, IXmlSerializable
     {
@@ -120,18 +132,22 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             if (AuditLogEntries.Count == 0)
                 return null;
+            var hashes = ImmutableList<AuditLogHash>.ValueOf(AuditLogEntries.Enumerate().Select(e => e.Hash));
+            return CalculateRootHash(hashes);
+        }
 
+        private static byte[] CalculateRootHash(ImmutableList<AuditLogHash> hashes)
+        {
             // Calculate root hash
             using (var sha1 = new SHA1CryptoServiceProvider())
             {
                 var blockHash = new BlockHash(sha1);
-                AuditLogEntries.Enumerate().ForEach(e => blockHash.ProcessBytes(Encoding.UTF8.GetBytes(e.Hash.ActualHash.HashString)));
+                hashes.ForEach(h => blockHash.ProcessBytes(Encoding.UTF8.GetBytes(h.ActualHash.HashString)));
                 blockHash.FinalizeHashBytes();
                 return blockHash.HashBytes;
             }
         }
-
-
+        
         public static SrmDocument ToggleAuditLogging(SrmDocument doc, bool enable)
         {
             var newDoc = doc.ChangeSettings(
@@ -221,10 +237,16 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public void WriteToFile(string fileName, string documentHash)
         {
+            WriteToFile(fileName, documentHash, DocumentFormat.CURRENT);
+        }
+
+        public void WriteToFile(string fileName, string documentHash, DocumentFormat df)
+        {
             using (var fileSaver = new FileSaver(fileName))
             {
-                using (var writer = new XmlTextWriter(fileSaver.SafeName, Encoding.UTF8) { Formatting = Formatting.Indented })
+                using (var writer = new XmlTextWriterWithState(fileSaver.SafeName, Encoding.UTF8) { Formatting = Formatting.Indented })
                 {
+                    writer.docFormat = df;
                     WriteToXmlWriter(writer, documentHash);
                 }
 
@@ -236,7 +258,10 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             writer.WriteStartDocument();
             writer.WriteStartElement(DOCUMENT_ROOT);
-            writer.WriteAttributeString(ATTR.format_version, DocumentFormat.CURRENT.ToString());
+            var df = DocumentFormat.CURRENT;
+            if(writer is XmlTextWriterWithState writerWithState)
+                df =  writerWithState.docFormat;
+            writer.WriteAttributeString(ATTR.format_version, df.ToString());
             if (!string.IsNullOrEmpty(documentHash))
                 writer.WriteElementString(EL.document_hash, documentHash);
             if (RootHash != null)
@@ -250,7 +275,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             try
             {
-                using (var reader = new XmlTextReader(fileName))
+                using (var reader = new XmlTextReaderWithState(fileName))
                 {
                     return ReadFromXmlTextReader(reader, out loggedSkylineDocumentHash, out result);
                 }
@@ -276,6 +301,8 @@ namespace pwiz.Skyline.Model.AuditLog
                 if (double.TryParse(docFormatString, NumberStyles.Float, CultureInfo.InvariantCulture, out var format))
                     docFormat = new DocumentFormat(format);
             }
+            if (reader is XmlTextReaderWithState readerWithState)
+                readerWithState.documentFormat = docFormat.HasValue ? docFormat.Value : DocumentFormat.CURRENT;
 
             reader.ReadStartElement();
 
@@ -300,24 +327,36 @@ namespace pwiz.Skyline.Model.AuditLog
                 }
             }
 
-            string rootHash = null;
+            string rootHashString = null;
             if (reader.IsStartElement(EL.root_hash.ToString()))
-                rootHash = reader.ReadElementString(EL.root_hash.ToString());
+                rootHashString = reader.ReadElementString(EL.root_hash.ToString());
 
             result = reader.DeserializeElement<AuditLogList>();
             result.FormatVersion = docFormat;
             result.RootHash = new AuditLogHash()
                 .ChangeActualHash(result.CalculateRootHash())
-                .ChangeSkylHash(Hash.FromBase64(rootHash));
+                .ChangeSkylHash(Hash.FromBase64(rootHashString));
 
-            // yell if audit log entry hash does not match.
-            // If the docFormat is null, this is an old audit log and there won't be any entry hashes.
-            // We can't just always ignore non-existent hashes, otherwise people could just delete the hash elements
+            // Root and entry-level hashes validation
+            // We can't ignore non-existent hashes, otherwise people could just delete the hash elements
             // and get Skyline to successfully load the audit log
-            var modifiedEntries =
-                result.AuditLogEntries.Enumerate().Where(entry => !entry.Hash.SkylAndActualHashesEqual()).ToArray();
 
-            if (docFormat != null && (!result.RootHash.SkylAndActualHashesEqual() || modifiedEntries.Length > 0))
+            // recalculate the actual hash for the current document format
+            var getHashes = new Func<AuditLogEntry, KeyValuePair<AuditLogHash, AuditLogEntry>>(e =>new KeyValuePair<AuditLogHash, AuditLogEntry>(e.Hash, e));
+            if (!DocumentFormat.CURRENT.Equals(result.FormatVersion))
+                getHashes = new Func<AuditLogEntry, KeyValuePair<AuditLogHash, AuditLogEntry>>(
+                    e => new KeyValuePair<AuditLogHash, AuditLogEntry>(new AuditLogHash(e, e.Hash.SkylHash, docFormat), e));
+
+            var hashes = result.AuditLogEntries.Enumerate().Select(getHashes);
+            // Identify any entry with mismatching hash
+            var modifiedEntries = hashes.Where(pair => !pair.Key.SkylAndActualHashesEqual()).Select(p => p.Value).ToArray();
+            // Calculate the root hash for the doc format specified in the audit log file
+            var rootHashForDocumentFormat = new AuditLogHash()
+                .ChangeActualHash(CalculateRootHash(ImmutableList.ValueOf(hashes.Select(h => h.Key))))
+                .ChangeSkylHash(Hash.FromBase64(rootHashString));
+            // Validate the hashes and report any failures
+            // If the docFormat is null, this is an old audit log and there won't be any entry hashes.
+            if (docFormat != null && (!rootHashForDocumentFormat.SkylAndActualHashesEqual() || modifiedEntries.Length > 0))
             {
                 throw new AuditLogException(
                     AuditLogStrings.AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified +
@@ -663,6 +702,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var result = ImClone(this);
             result.Parent = parent;
             result.Count = parent.Count + 1;
+            result.Validate();  //we need to recalculate the hash because it now includes the parent's hash
             return result;
         }
 
@@ -1309,7 +1349,10 @@ namespace pwiz.Skyline.Model.AuditLog
                 writer.WriteElementString(EL.en_extra_info, EnExtraInfo);
             }
 
-            writer.WriteElementString(EL.hash, Hash.ActualHash);
+            var hash = Hash.ActualHash;
+            if (writer is XmlTextWriterWithState writerWithState)
+                hash = new Hash(GetAuditLogHash(writerWithState.docFormat));
+            writer.WriteElementString(EL.hash, hash);
         }
 
         public void ReadXml(XmlReader reader)
@@ -1372,6 +1415,8 @@ namespace pwiz.Skyline.Model.AuditLog
                 Hash = Hash.ChangeSkylHash(Hash.ActualHash);
             }
 
+            //CONSIDER: this condition is always true for the new hash format
+            // because when the entry is read its parent is not set yet
             if (!Hash.SkylAndActualHashesEqual())
             {
                 // Reset all english strings so that they get recalculated when
@@ -1437,6 +1482,11 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public byte[] GetAuditLogHash()
         {
+            return GetAuditLogHash(DocumentFormat.CURRENT);
+        }
+
+        public byte[] GetAuditLogHash(DocumentFormat docFormat)
+        {
             if (User == null || UndoRedo == null || Summary == null || _allInfoNoUndoRedo == null)
                 return null;
 
@@ -1457,6 +1507,10 @@ namespace pwiz.Skyline.Model.AuditLog
                 encodedBytes.Add(enc.GetBytes(SkylineVersion));
                 encodedBytes.Add(GetTimeStampBytesForHash());
                 encodedBytes.Add(enc.GetBytes(TimeZoneOffset.TotalHours.ToString(CultureInfo.InvariantCulture)));
+                if (Parent != null && !Parent.IsRoot && docFormat >= DocumentFormat.SEQUENTIAL_LOG_HASH)
+                {
+                    encodedBytes.Add(Convert.FromBase64String(Parent.Hash.ActualHash.HashString));
+                }
 
                 // Avoid heap thrash performance issue by carefully allocating hash buffer size
                 var blockHash = new BlockHash(sha1, encodedBytes.Sum(b => b.Length)); 
@@ -1490,9 +1544,12 @@ namespace pwiz.Skyline.Model.AuditLog
         {
         }
 
-        public AuditLogHash(AuditLogEntry entry, Hash skylHash)
+        public AuditLogHash(AuditLogEntry entry, Hash skylHash, DocumentFormat? docFormat = null)
         {
-            ActualHash = entry.GetAuditLogHash();
+            if (docFormat.HasValue)
+                ActualHash = entry.GetAuditLogHash(docFormat.Value);
+            else
+                ActualHash = entry.GetAuditLogHash();
             SkylHash = skylHash;
         }
 

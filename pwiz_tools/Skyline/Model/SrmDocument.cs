@@ -2052,7 +2052,7 @@ namespace pwiz.Skyline.Model
             var auditLogPath = GetAuditLogPath(displayName);
 
             if (Settings.DataSettings.AuditLogging)
-                AuditLog?.WriteToFile(auditLogPath, hash);
+                AuditLog?.WriteToFile(auditLogPath, hash, skylineVersion.SrmDocumentVersion);
             else if (File.Exists(auditLogPath))
                 Helpers.TryTwice(() => File.Delete(auditLogPath));
         }
