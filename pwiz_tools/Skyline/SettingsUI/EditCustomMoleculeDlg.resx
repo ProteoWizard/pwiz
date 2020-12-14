@@ -135,7 +135,7 @@
     <value>13</value>
   </data>
   <data name="textIonMobility.ToolTip" xml:space="preserve">
-    <value>Overrides any predicted drift time value</value>
+    <value>Overrides any library ion mobility value</value>
   </data>
   <data name="&gt;&gt;textIonMobility.Name" xml:space="preserve">
     <value>textIonMobility</value>
@@ -466,7 +466,7 @@
     <value>15</value>
   </data>
   <data name="textBoxCCS.ToolTip" xml:space="preserve">
-    <value>Overrides any predicted or library collisional cross section value</value>
+    <value>Overrides any library collisional cross section value</value>
   </data>
   <data name="&gt;&gt;textBoxCCS.Name" xml:space="preserve">
     <value>textBoxCCS</value>
