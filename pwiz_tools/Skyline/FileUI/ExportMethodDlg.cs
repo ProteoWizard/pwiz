@@ -946,7 +946,7 @@ namespace pwiz.Skyline.FileUI
                 if (missingIonMobility.Length > 0)
                 {
                     MessageDlg.Show(this,
-                        Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_predictor_or_spectral_library__The_following_ion_mobility_values_are_missing_ +
+                        Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_ +
                         Environment.NewLine + Environment.NewLine +
                         TextUtil.LineSeparate(missingIonMobility.Select(k => k.ToString())));
                     return;
