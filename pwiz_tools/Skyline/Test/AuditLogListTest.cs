@@ -58,7 +58,7 @@ namespace pwiz.SkylineTest
 
             // Test backward compatibility - this file with 4.2 log should load without any problems
             Assume.IsTrue(AuditLogList.ReadFromXmlTextReader(new XmlTextReader(new StringReader(Test42FormatSkyl)), out var loggedSkylineDocumentHash, out var old));
-            Assume.AreEqual("tgnQ8fDiKLMIS236kpdJIXNR+fw=", old.RootHash.ActualHash.HashString);
+            Assume.AreEqual("EP1274xb6YXM8jl1pmhrvhEAUnc=", old.RootHash.ActualHash.HashString);
             Assume.AreEqual("AjigWTmQeAO94/jAlwubVMp4FRg=", loggedSkylineDocumentHash); // Note that this is a base64 representation of the 4.2 hex representation "<document_hash>0238A05939907803BDE3F8C0970B9B54CA781518</document_hash>
 
             var then = DateTime.Parse("2019-03-08 00:02:03Z", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToUniversalTime(); // Just before DST
@@ -93,6 +93,9 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(auditLogList.AuditLogEntries.Count, roundTrip.AuditLogEntries.Count);
             var entries = auditLogList.AuditLogEntries.Enumerate().ToArray();
             var roundtripEntries = roundTrip.AuditLogEntries.Enumerate().ToArray();
+            for(var j = roundtripEntries.Length; j-- > 0;)
+                Assert.IsNotNull(roundtripEntries[j].Hash.ActualHash);
+
             for (var i = 0; i < auditLogList.AuditLogEntries.Count; i++)
             {
                 Assert.AreEqual(entries[i].TimeStampUTC, roundtripEntries[i].TimeStampUTC);

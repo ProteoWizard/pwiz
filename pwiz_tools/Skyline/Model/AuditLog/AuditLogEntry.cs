@@ -179,6 +179,7 @@ namespace pwiz.Skyline.Model.AuditLog
             for (var i = entries.Count; i-- > 0;)
             {
                 result = entries[i].ChangeParent(result);
+                var h = entries[i].Hash;        //ensure that the hash is calculated after the deserialization
             }
             return result;
         }
