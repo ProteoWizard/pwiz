@@ -24,6 +24,7 @@ using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -34,7 +35,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly AreaCVGraphSettings _graphSettings;
         private readonly AreaCVRefinementData _refinementData;
 
-        public AreaCVGraphData(SrmDocument document, AreaCVGraphSettings graphSettings, CancellationToken? token = null)
+        public AreaCVGraphData(SrmDocument document, AreaCVGraphSettings graphSettings, CancellationToken token = default(CancellationToken))
         {
             _graphSettings = graphSettings;
 
@@ -61,7 +62,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null,
-            new AreaCVGraphSettings((GraphTypeSummary) ~0, (AreaCVNormalizationMethod) ~0, -1, null,
+            new AreaCVGraphSettings((GraphTypeSummary) ~0, NormalizeOption.NONE, null,
                 string.Empty, (PointsTypePeakArea) ~0, double.NaN, double.NaN, -1, double.NaN, (AreaCVMsLevel) ~0,
                 (AreaCVTransitions) ~0, -1));
 
@@ -116,6 +117,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public double MeanCV { get; private set; } // Mean CV
         public double BelowCVCutoff { get; private set; } // Fraction/Percentage of CV's below cutoff
 
+        public AreaCVGraphSettings GraphSettings
+        {
+            get { return _graphSettings; }
+        }
+
         public class AreaCVGraphSettings : AreaCVRefinementSettings
         {
             public AreaCVGraphSettings(SrmSettings srmSettings, GraphTypeSummary graphType, bool convertToDecimal = true)
@@ -125,8 +131,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 MsLevel = AreaGraphController.AreaCVMsLevel;
                 Transitions = AreaGraphController.AreaCVTransitions;
                 CountTransitions = AreaGraphController.AreaCVTransitionsCount;
-                NormalizationMethod = AreaGraphController.NormalizationMethod;
-                RatioIndex = AreaGraphController.AreaCVRatioIndex;
+                NormalizeOption = AreaGraphController.AreaCVNormalizeOption;
                 Group = ReplicateValue.FromPersistedString(srmSettings, AreaGraphController.GroupByGroup);
                 Annotation = AreaGraphController.GroupByAnnotation;
                 PointsType = AreaGraphController.PointsType;
@@ -136,12 +141,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 BinWidth = Settings.Default.AreaCVHistogramBinWidth * factor;
             }
 
-            public AreaCVGraphSettings(GraphTypeSummary graphType, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, ReplicateValue group, object annotation, PointsTypePeakArea pointsType, double qValueCutoff,
+            public AreaCVGraphSettings(GraphTypeSummary graphType, NormalizeOption normalizeOption, ReplicateValue group, object annotation, PointsTypePeakArea pointsType, double qValueCutoff,
                 double cvCutoff, int minimumDetections, double binwidth, AreaCVMsLevel msLevel, AreaCVTransitions transitions, int countTransitions)
             {
                 GraphType = graphType;
-                NormalizationMethod = normalizationMethod;
-                RatioIndex = ratioIndex;
+                NormalizeOption = normalizeOption;
                 Group = group;
                 Annotation = annotation;
                 PointsType = pointsType;
