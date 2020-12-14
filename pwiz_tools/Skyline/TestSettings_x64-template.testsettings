@@ -20,7 +20,7 @@
     <DeploymentItem filename="bin\x64\Release\zh-CHS\ZedGraph.resources.dll" outputDirectory="zh-CHS" />
     <DeploymentItem filename="bin\x64\Debug\zh-CHS\ZedGraph.resources.dll" outputDirectory="zh-CHS" />
     <!-- Vendor readers -->
-    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\DataReader.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\DataReader.dll" />
     <!-- Vendor method building -->
     <DeploymentItem filename="Method\Agilent\BuildAgilentMethod.exe" outputDirectory="Method\Agilent" />
     <DeploymentItem filename="Method\Agilent\MethodCreator.dll" outputDirectory="Method\Agilent" />
@@ -47,6 +47,7 @@
     <DeploymentItem filename="SkylineCmd.exe" />
     <!-- Prosit gRPC -->
     <DeploymentItem filename="..\Shared\Lib\grpc_csharp_ext.x64.dll" />
+    <DeploymentItem filename="prmscheduler.dll" />
 
     __VENDOR_DLLS__
 
