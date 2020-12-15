@@ -117,8 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="menuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
+  </metadata>
+  <metadata name="menuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -186,19 +189,19 @@
     <value>By &amp;Name</value>
   </data>
   <data name="sortProteinsByAccessionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="sortProteinsByAccessionToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Accession</value>
   </data>
   <data name="sortProteinsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="sortProteinsByPreferredNameToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Preferred Name</value>
   </data>
   <data name="sortProteinsByGeneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="sortProteinsByGeneToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Gene</value>
@@ -294,6 +297,12 @@ first occurrence of any peptide.</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.2.1.350, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;refineToolStripMenuItem.Name" xml:space="preserve">
     <value>refineToolStripMenuItem</value>
@@ -443,6 +452,6 @@ first occurrence of any peptide.</value>
     <value>RefineMenu</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=20.2.1.346, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=20.2.1.350, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

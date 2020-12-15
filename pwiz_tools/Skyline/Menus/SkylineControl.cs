@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Menus
 {
@@ -28,13 +30,22 @@ namespace pwiz.Skyline.Menus
     /// </summary>
     public class SkylineControl : UserControl
     {
+        private Container _components; // For IExtender use
+        protected Helpers.ModeUIExtender modeUIHandler; // Allows UI mode management in Designer
         public SkylineControl()
         {
+            InitializeComponent();
         }
 
-        public SkylineControl(SkylineWindow skylineWindow)
+        public SkylineControl(SkylineWindow skylineWindow) : this()
         {
             SkylineWindow = skylineWindow;
+        }
+
+        private void InitializeComponent()
+        {
+            _components = new Container();
+            modeUIHandler = new Helpers.ModeUIExtender(_components);
         }
 
         public SkylineWindow SkylineWindow { get; private set; }
