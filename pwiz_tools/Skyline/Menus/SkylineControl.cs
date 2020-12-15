@@ -42,6 +42,11 @@ namespace pwiz.Skyline.Menus
             SkylineWindow = skylineWindow;
         }
 
+        public Helpers.ModeUIExtender ModeUiHandler
+        {
+            get { return modeUIHandler; }
+        }
+
         private void InitializeComponent()
         {
             _components = new Container();

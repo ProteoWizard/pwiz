@@ -5654,11 +5654,6 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
-        private void permuteIsotopeModificationsMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPermuteIsotopeModificationsDlg();
-        }
-
         public void ShowPermuteIsotopeModificationsDlg()
         {
             RefineMenu.ShowPermuteIsotopeModificationsDlg();
@@ -5671,6 +5666,10 @@ namespace pwiz.Skyline
             RefineMenu = new RefineMenu(this);
             refineToolStripMenuItem.DropDownItems.Clear();
             refineToolStripMenuItem.DropDownItems.AddRange(RefineMenu.DropDownItems.ToArray());
+            foreach (var entry in RefineMenu.ModeUiHandler.GetHandledComponents())
+            {
+                modeUIHandler.AddHandledComponent(entry.Key, entry.Value);
+            }
         }
     }
 }

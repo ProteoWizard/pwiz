@@ -183,7 +183,7 @@
     <value>Re&amp;name Proteins...</value>
   </data>
   <data name="sortProteinsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="sortProteinsByNameToolStripMenuItem.Text" xml:space="preserve">
     <value>By &amp;Name</value>
