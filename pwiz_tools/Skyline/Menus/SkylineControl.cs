@@ -74,5 +74,14 @@ namespace pwiz.Skyline.Menus
             get { return SkylineWindow?.SelectedPath; }
             set { SkylineWindow.SelectedPath = value; }
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && _components != null)
+            {
+                _components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 }
