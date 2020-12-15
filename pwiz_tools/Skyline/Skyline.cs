@@ -1106,6 +1106,7 @@ namespace pwiz.Skyline
 
             _timerGraphs.Dispose();
             _timerProgress.Dispose();
+            RefineMenu.Dispose();
 
             DatabaseResources.ReleaseAll(); // Let go of protDB SessionFactories
 
@@ -1120,7 +1121,7 @@ namespace pwiz.Skyline
             // ReSharper restore LocalizableElement
 
             DetectionPlotData.ReleaseDataCache();
-
+            
             base.OnClosed(e);
         }
 
