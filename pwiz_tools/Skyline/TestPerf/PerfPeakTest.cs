@@ -251,7 +251,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     TrainModel(modelName);
                 }
-                var comparePeakPickingDlg = ShowDialog<ComparePeakPickingDlg>(SkylineWindow.ShowCompareModelsDlg);
+                var comparePeakPickingDlg = ShowDialog<ComparePeakPickingDlg>(SkylineWindow.RefineMenu.ShowCompareModelsDlg);
                 foreach (var modelName in modelNames)
                 {
                     AddModel(comparePeakPickingDlg, modelName);
