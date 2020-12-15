@@ -45,21 +45,9 @@ namespace SkylineBatch
             return !string.IsNullOrWhiteSpace(Settings.Default.SkylineCommandPath);
         }
 
-        private static string GetProgramDirectory()
-        {
-            var rootDirectory = Path.GetDirectoryName(typeof(SkylineSettings).Assembly.Location);
-            return rootDirectory.Remove(rootDirectory.Length - "\\bin\\Debug".Length);
-        }
-
-        private static string GetProjectDirectory()
-        {
-            var programDirectory = GetProgramDirectory();
-            return programDirectory.Remove(programDirectory.Length - "\\SkylineBatch\\SkylineBatch".Length);
-        }
-
         public static bool FindLocalSkylineCmd()
         {
-            var skylineCmdPath = Path.Combine(GetProjectDirectory(), SkylineCmdExe);
+            var skylineCmdPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, SkylineCmdExe);
             if (!File.Exists(skylineCmdPath))
             {
                 Settings.Default.AdminInstallation = false;
@@ -189,7 +177,8 @@ namespace SkylineBatch
             if (useSkyline || useSkylineDaily)
             {
                 var runnerExe = useSkyline ? SkylineRunnerExe : SkylineDailyRunnerExe;
-                var skylineRunnerPath = Path.Combine(GetProgramDirectory(), runnerExe);
+                var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                var skylineRunnerPath = Path.Combine(baseDirectory, runnerExe);
                 if (!File.Exists(skylineRunnerPath))
                 {
                     errors = $"{skylineRunnerPath} does not exist.";

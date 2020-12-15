@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>X:\labkey\static\software\SkylineBatch\</PublishUrl>
+    <PublishUrl>proteome.gs.washington.edu\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -23,8 +23,8 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch/</InstallUrl>
-    <ProductName>AutoQC</ProductName>
+    <InstallUrl>https://proteome.gs.washington.edu/~alimarsh/</InstallUrl>
+    <ProductName>Skyline Batch</ProductName>
     <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
@@ -72,13 +72,13 @@
     <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon>SkylineBatch_release.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
+    <Content Include="SkylineBatch_release.ico" />
     <Content Include="SkylineDailyRunner.exe" />
     <Content Include="SkylineRunner.exe" />
     <EmbeddedResource Include="AlertDlg.resx">
