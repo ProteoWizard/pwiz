@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
+using NHibernate.Hql.Ast.ANTLR.Tree;
 using pwiz.Common.Collections;
 using pwiz.Common.Colors;
 using pwiz.Common.DataAnalysis.Clustering;
@@ -11,13 +13,15 @@ namespace pwiz.Common.DataBinding.Clustering
     {
         private Dictionary<string, ColorManager> _colorManagers;
         private Dictionary<string, Color> _columnColors;
+        private Dictionary<object, ColorManager> _seriesColorManagers;
 
         private ReportColorScheme(ClusteredProperties clusteredProperties,
-            Dictionary<string, ColorManager> managers, Dictionary<string, Color> columnColors)
+            Dictionary<string, ColorManager> managers, Dictionary<string, Color> columnColors, Dictionary<object, ColorManager> seriesColorManagers)
         {
             ClusteredProperties = clusteredProperties;
             _colorManagers = managers;
             _columnColors = columnColors;
+            _seriesColorManagers = seriesColorManagers;
         }
 
         public ClusteredProperties ClusteredProperties { get; private set; }
@@ -59,7 +63,17 @@ namespace pwiz.Common.DataBinding.Clustering
             return colorManager.ColorScheme.GetColor(value);
         }
 
-        public static ReportColorScheme FromClusteredResults(ClusteredReportResults clusteredReportResults)
+        public IEnumerable<Color?> GetSeriesColors(PivotedProperties.Series series, RowItem rowItem)
+        {
+            if (!_seriesColorManagers.TryGetValue(series.SeriesId, out ColorManager colorManager))
+            {
+                return Enumerable.Repeat((Color?) null, series.PropertyIndexes.Count);
+            }
+
+            return colorManager.GetRowValues(rowItem).Select(colorManager.ColorScheme.GetColor);
+        }
+
+        public static ReportColorScheme FromClusteredResults(CancellationToken cancellationToken, ClusteredReportResults clusteredReportResults)
         {
             var discreteColorScheme = new DiscreteColorScheme();
             var numericColorScheme = new NumericColorScheme();
@@ -68,8 +82,10 @@ namespace pwiz.Common.DataBinding.Clustering
             var numericValues = new HashSet<double>();
             var colorManagers = new Dictionary<string, ColorManager>();
             var columnHeaderValues = new Dictionary<string, object>();
+            var seriesColorManagers = new Dictionary<object, ColorManager>();
             foreach (var property in reportResults.ClusteredProperties.RowHeaders)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (ClusterRole.IsNumericType(property.PropertyType))
                 {
                     var colorScheme = new NumericColorScheme();
@@ -84,6 +100,7 @@ namespace pwiz.Common.DataBinding.Clustering
             }
             foreach (var property in reportResults.ClusteredProperties.PivotedProperties.UngroupedProperties)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var transform = reportResults.ClusteredProperties.GetRowTransform(property);
                 if (transform == null)
                 {
@@ -106,6 +123,7 @@ namespace pwiz.Common.DataBinding.Clustering
                         var values = new HashSet<object>();
                         foreach (var property in series.PropertyDescriptors)
                         {
+                            cancellationToken.ThrowIfCancellationRequested();
                             var columnDistinctValues = reportResults.RowItems.Select(property.GetValue)
                                 .Where(v => null != v).Distinct().ToList();
                             if (columnDistinctValues.Count == 1)
@@ -130,8 +148,11 @@ namespace pwiz.Common.DataBinding.Clustering
                     {
                         colorScheme = numericColorScheme;
                         numericValues.UnionWith(reportResults.RowItems.SelectMany(row =>
-                                transform.TransformRow(series.PropertyDescriptors.Select(pd => pd.GetValue(row))))
-                            .OfType<double>());
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+                            return transform.TransformRow(
+                                series.PropertyDescriptors.Select(pd => pd.GetValue(row)));
+                        }).OfType<double>());
                     }
 
                     if (colorScheme != null)
@@ -141,6 +162,7 @@ namespace pwiz.Common.DataBinding.Clustering
                         {
                             colorManagers.Add(pd.Name, colorManager);
                         }
+                        seriesColorManagers.Add(series.SeriesId, colorManager);
                     }
                 }
             }
@@ -158,7 +180,7 @@ namespace pwiz.Common.DataBinding.Clustering
                     }
                 }
             }
-            return new ReportColorScheme(reportResults.ClusteredProperties, colorManagers, columnColors);
+            return new ReportColorScheme(reportResults.ClusteredProperties, colorManagers, columnColors, seriesColorManagers);
         }
 
         class ColorManager

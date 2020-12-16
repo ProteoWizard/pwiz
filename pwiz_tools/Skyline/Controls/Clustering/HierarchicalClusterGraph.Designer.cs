@@ -59,6 +59,7 @@
             this.ClientSize = new System.Drawing.Size(682, 450);
             this.Controls.Add(this.zedGraphControl1);
             this.Name = "HierarchicalClusterGraph";
+            this.ShowIcon = false;
             this.TabText = "HierarchicalClusterGraph";
             this.Text = "HierarchicalClusterGraph";
             ((System.ComponentModel.ISupportInitialize)(this.ModeUIExtender)).EndInit();

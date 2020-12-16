@@ -120,6 +120,7 @@ namespace pwiz.Common.DataBinding.Controls
         {
             navBarButtonViews.Enabled = navBarButtonExport.Enabled = ViewContext != null && BindingListView != null && BindingListView.ViewInfo != null;
             navBarButtonActions.Visible = ViewContext != null && ViewContext.HasRowActions;
+            navBarButtonClusterGrid.Checked = BindingListSource?.ClusteringSpec != null;
             if (BindingListView != null)
             {
                 var queryResults = BindingListView.QueryResults;

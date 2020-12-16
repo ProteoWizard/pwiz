@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering
@@ -20,9 +21,8 @@ namespace pwiz.Skyline.Controls.Clustering
             InitializeComponent();
             InitializeDendrograms();
             zedGraphControl1.GraphPane.Title.IsVisible = false;
-            zedGraphControl1.GraphPane.XAxis.Title.Text = "Replicate";
-            zedGraphControl1.GraphPane.YAxis.Title.Text = "Protein";
-            
+            zedGraphControl1.GraphPane.XAxis.Title.IsVisible = false;
+            zedGraphControl1.GraphPane.YAxis.Title.IsVisible = false;
             zedGraphControl1.GraphPane.Legend.IsVisible = false;
             zedGraphControl1.GraphPane.Margin.All = 0;
             zedGraphControl1.GraphPane.Border.IsVisible = false;
@@ -61,6 +61,19 @@ namespace pwiz.Skyline.Controls.Clustering
             zedGraphControl1.GraphPane.GraphObjList.Clear();
 
             var dataSet = GraphResults;
+            if (dataSet.ColumnGroups.Count == 1)
+            {
+                zedGraphControl1.GraphPane.XAxis.Title.Text =
+                    TextUtil.SpaceSeparate(dataSet.ColumnGroups[0].Headers.Select(header => header.Caption));
+            }
+            else
+            {
+                zedGraphControl1.GraphPane.XAxis.Title.Text = string.Empty;
+            }
+
+            zedGraphControl1.GraphPane.YAxis.Title.Text =
+                TextUtil.SpaceSeparate(dataSet.RowHeaders.Select(header => header.Caption));
+
             var points = new PointPairList();
             foreach (var point in dataSet.Points)
             {

@@ -349,6 +349,12 @@
   <data name="btnGroupTotal.Text" xml:space="preserve">
     <value>Group/Total</value>
   </data>
+  <data name="navBarButtonClusterGrid.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="navBarButtonClusterGrid.Text" xml:space="preserve">
+    <value>Cluster Grid</value>
+  </data>
   <data name="advancedToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
   </data>
@@ -566,6 +572,12 @@
   </data>
   <data name="&gt;&gt;navBarButtonCluster.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSplitButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;navBarButtonClusterGrid.Name" xml:space="preserve">
+    <value>navBarButtonClusterGrid</value>
+  </data>
+  <data name="&gt;&gt;navBarButtonClusterGrid.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;advancedToolStripMenuItem.Name" xml:space="preserve">
     <value>advancedToolStripMenuItem</value>

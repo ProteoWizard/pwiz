@@ -55,7 +55,11 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             InitializeComponent();
             _dataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
-            NavBar.ClassifySplitButton.Visible = true;
+            NavBar.ClusterSplitButton.Visible = true;
+            NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem("Show Heat Map", null,
+                heatMapContextMenuItem_Click));
+            NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem("Show PCA Plot", null,
+                pCAToolStripMenuItem_Click));
         }
 
         public BindingListSource BindingListSource
@@ -653,18 +657,19 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public bool ShowHeatMap()
         {
-            Tuple<Clusterer, ClusteredReportResults> resultsTuple = GetClusteredResults();
+            Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> resultsTuple = GetClusteredResults();
             if (resultsTuple == null)
             {
                 return false;
             }
 
             var clusteredResults = resultsTuple.Item2;
-            var colorScheme = ReportColorScheme.FromClusteredResults(clusteredResults);
+            var colorScheme = resultsTuple.Item3;
             var points = new List<ClusterGraphResults.Point>();
             var rowHeaders = new List<ClusterGraphResults.Header>();
-            var columnValues = new List<DataPropertyDescriptor>();
+            var columnValues = new List<PivotedProperties.Series>();
             var columnGroups = new List<ClusterGraphResults.ColumnGroup>();
+            var dataSchemaLocalizer = BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer;
             for (int iGroup = 0; iGroup < clusteredResults.PivotedProperties.SeriesGroups.Count; iGroup++)
             {
                 var group = clusteredResults.PivotedProperties.SeriesGroups[iGroup];
@@ -679,7 +684,7 @@ namespace pwiz.Skyline.Controls.Databinding
                         var pd = series.PropertyDescriptors[iPivotKey];
                         colors.Add(colorScheme.GetColumnColor(pd) ?? Color.Transparent);
                     }
-                    groupHeaders.Add(new ClusterGraphResults.Header(group.PivotCaptions[iPivotKey].GetCaption(DataSchemaLocalizer.INVARIANT), colors));
+                    groupHeaders.Add(new ClusterGraphResults.Header(group.PivotCaptions[iPivotKey].GetCaption(dataSchemaLocalizer), colors));
                 }
                 foreach (var series in group.SeriesList)
                 {
@@ -688,9 +693,10 @@ namespace pwiz.Skyline.Controls.Databinding
                     {
                         continue;
                     }
-                    columnValues.AddRange(series.PropertyDescriptors);
+                    columnValues.Add(series);
 
-                    columnGroups.Add(new ClusterGraphResults.ColumnGroup(clusteredResults.ColumnGroupDendrogramDatas[iGroup].DendrogramData, groupHeaders));
+                    columnGroups.Add(new ClusterGraphResults.ColumnGroup(
+                        clusteredResults.ColumnGroupDendrogramDatas[iGroup].DendrogramData, groupHeaders));
                 }
             }
             for (int iRow = 0; iRow < clusteredResults.RowCount; iRow++)
@@ -707,14 +713,18 @@ namespace pwiz.Skyline.Controls.Databinding
                 string rowCaption = CaptionComponentList.SpaceSeparate(rowHeaderParts)
                     .GetCaption(DataSchemaLocalizer.INVARIANT);
                 rowHeaders.Add(new ClusterGraphResults.Header(rowCaption, rowColors));
-                for (int iCol = 0; iCol < columnValues.Count; iCol++)
+                int iCol = 0;
+                foreach (var series in columnValues)
                 {
-                    var color = colorScheme.GetColor(columnValues[iCol], rowItem);
-                    if (!color.HasValue)
+                    foreach (var color in colorScheme.GetSeriesColors(series, rowItem))
                     {
-                        continue;
+                        if (color.HasValue)
+                        {
+                            points.Add(new ClusterGraphResults.Point(iRow, iCol, color.Value));
+                        }
+
+                        iCol++;
                     }
-                    points.Add(new ClusterGraphResults.Point(iRow, iCol, color.Value));
                 }
             }
             var graphResults = new ClusterGraphResults(clusteredResults.RowDendrogramData.DendrogramData, rowHeaders, columnGroups, points);
@@ -726,10 +736,10 @@ namespace pwiz.Skyline.Controls.Databinding
             return true;
         }
 
-        public Tuple<Clusterer, ClusteredReportResults> GetClusteredResults()
+        public Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> GetClusteredResults()
         {
 
-            Tuple<Clusterer, ClusteredReportResults> resultsTuple = null;
+            Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> resultsTuple = null;
             try
             {
                 using (var longWaitDlg = new LongWaitDlg())
@@ -759,7 +769,7 @@ namespace pwiz.Skyline.Controls.Databinding
             return resultsTuple;
         }
 
-        private Tuple<Clusterer, ClusteredReportResults> GetClusteredResultsBackground(ILongWaitBroker longWaitBroker)
+        private Tuple<Clusterer, ClusteredReportResults, ReportColorScheme> GetClusteredResultsBackground(ILongWaitBroker longWaitBroker)
         {
             var clusterer = Clusterer.CreateClusterer(longWaitBroker.CancellationToken, BindingListSource.ClusteringSpec ?? ClusteringSpec.DEFAULT,
                 BindingListSource.ReportResults);
@@ -768,7 +778,9 @@ namespace pwiz.Skyline.Controls.Databinding
                 return null;
             }
 
-            return Tuple.Create(clusterer, clusterer.GetClusteredResults());
+            var results = clusterer.GetClusteredResults();
+            var colorScheme = ReportColorScheme.FromClusteredResults(longWaitBroker.CancellationToken, results);
+            return Tuple.Create(clusterer, results, colorScheme);
         }
         private void boundDataGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
@@ -928,9 +940,8 @@ namespace pwiz.Skyline.Controls.Databinding
         public void ShowPcaPlot()
         {
             var resultsTuple = GetClusteredResults();
-            var colorScheme = ReportColorScheme.FromClusteredResults(resultsTuple.Item2);
             var pcaPlot = new PcaPlot();
-            pcaPlot.SetData(resultsTuple.Item1, colorScheme);
+            pcaPlot.SetData(resultsTuple.Item1, resultsTuple.Item3);
             pcaPlot.Show(FormUtil.FindTopLevelOwner(this));
         }
     }

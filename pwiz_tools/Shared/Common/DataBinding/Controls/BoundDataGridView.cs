@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Colors;
@@ -396,7 +397,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
             else
             {
-                ReportColorScheme = ReportColorScheme.FromClusteredResults(reportResults);
+                ReportColorScheme = ReportColorScheme.FromClusteredResults(CancellationToken.None, reportResults);
             }
         }
 

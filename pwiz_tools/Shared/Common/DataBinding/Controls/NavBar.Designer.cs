@@ -51,6 +51,7 @@
             this.bindingNavigator1 = new System.Windows.Forms.BindingNavigator(this.components);
             this.btnGroupTotal = new System.Windows.Forms.ToolStripSplitButton();
             this.navBarButtonCluster = new System.Windows.Forms.ToolStripSplitButton();
+            this.navBarButtonClusterGrid = new System.Windows.Forms.ToolStripMenuItem();
             this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
@@ -216,11 +217,18 @@
             // 
             this.navBarButtonCluster.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.navBarButtonCluster.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.navBarButtonClusterGrid,
             this.advancedToolStripMenuItem});
             resources.ApplyResources(this.navBarButtonCluster, "navBarButtonCluster");
             this.navBarButtonCluster.Name = "navBarButtonCluster";
             this.navBarButtonCluster.ButtonClick += new System.EventHandler(this.navBarButtonCluster_ButtonClick);
             this.navBarButtonCluster.DropDownOpening += new System.EventHandler(this.navBarButtonCluster_DropDownOpening);
+            // 
+            // navBarButtonClusterGrid
+            // 
+            this.navBarButtonClusterGrid.Name = "navBarButtonClusterGrid";
+            resources.ApplyResources(this.navBarButtonClusterGrid, "navBarButtonClusterGrid");
+            this.navBarButtonClusterGrid.Click += new System.EventHandler(this.navBarButtonCluster_ButtonClick);
             // 
             // advancedToolStripMenuItem
             // 
@@ -288,5 +296,6 @@
         private System.Windows.Forms.ToolStripDropDownButton navBarButtonActions;
         private System.Windows.Forms.ToolStripSplitButton navBarButtonCluster;
         private System.Windows.Forms.ToolStripMenuItem advancedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem navBarButtonClusterGrid;
     }
 }
