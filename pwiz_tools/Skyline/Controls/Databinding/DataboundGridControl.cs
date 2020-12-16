@@ -38,7 +38,6 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using ZedGraph;
 
 // This code is associated with the DocumentGrid.
 
@@ -56,7 +55,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             InitializeComponent();
             _dataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
-            NavBar.ClusterSplitButton.Visible = true;
+            NavBar.ClassifySplitButton.Visible = true;
         }
 
         public BindingListSource BindingListSource
@@ -654,16 +653,13 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public bool ShowHeatMap()
         {
-            var clusterer = Clusterer.CreateClusterer(BindingListSource.ClusteringSpec ?? ClusteringSpec.DEFAULT,
-                BindingListSource.ReportResults);
-
-            if (clusterer == null)
+            Tuple<Clusterer, ClusteredReportResults> resultsTuple = GetClusteredResults();
+            if (resultsTuple == null)
             {
-                MessageDlg.Show(FormUtil.FindTopLevelOwner(this),
-                    "This data could not be clustered.");
                 return false;
             }
-            var clusteredResults = clusterer.GetClusteredResults();
+
+            var clusteredResults = resultsTuple.Item2;
             var colorScheme = ReportColorScheme.FromClusteredResults(clusteredResults);
             var points = new List<ClusterGraphResults.Point>();
             var rowHeaders = new List<ClusterGraphResults.Header>();
@@ -728,6 +724,51 @@ namespace pwiz.Skyline.Controls.Databinding
             };
             heatMapGraph.Show(FormUtil.FindTopLevelOwner(this));
             return true;
+        }
+
+        public Tuple<Clusterer, ClusteredReportResults> GetClusteredResults()
+        {
+
+            Tuple<Clusterer, ClusteredReportResults> resultsTuple = null;
+            try
+            {
+                using (var longWaitDlg = new LongWaitDlg())
+                {
+                    longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(this), 1000,
+                        broker => { resultsTuple = GetClusteredResultsBackground(broker); });
+                    if (longWaitDlg.IsCanceled)
+                    {
+                        return null;
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageDlg.ShowWithException(FormUtil.FindTopLevelOwner(this), "An error occured while performing clustering.", exception);
+                return null;
+            }
+
+            if (resultsTuple == null)
+            {
+                MessageDlg.Show(FormUtil.FindTopLevelOwner(this),
+                    "Unable to choose a set of columns to use for hierarchical clustering.");
+                return null;
+
+            }
+
+            return resultsTuple;
+        }
+
+        private Tuple<Clusterer, ClusteredReportResults> GetClusteredResultsBackground(ILongWaitBroker longWaitBroker)
+        {
+            var clusterer = Clusterer.CreateClusterer(longWaitBroker.CancellationToken, BindingListSource.ClusteringSpec ?? ClusteringSpec.DEFAULT,
+                BindingListSource.ReportResults);
+            if (clusterer == null)
+            {
+                return null;
+            }
+
+            return Tuple.Create(clusterer, clusterer.GetClusteredResults());
         }
         private void boundDataGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
@@ -886,20 +927,10 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void ShowPcaPlot()
         {
-            var clusterer = Clusterer.CreateClusterer(BindingListSource.ClusteringSpec ?? ClusteringSpec.DEFAULT,
-                BindingListSource.ReportResults);
-
-            if (clusterer == null)
-            {
-                MessageDlg.Show(FormUtil.FindTopLevelOwner(this),
-                    "Can't perform PCA on this data.");
-                return;
-            }
-
-            var clusteredResutls = clusterer.GetClusteredResults();
-            var colorScheme = ReportColorScheme.FromClusteredResults(clusteredResutls);
+            var resultsTuple = GetClusteredResults();
+            var colorScheme = ReportColorScheme.FromClusteredResults(resultsTuple.Item2);
             var pcaPlot = new PcaPlot();
-            pcaPlot.SetData(clusterer, colorScheme);
+            pcaPlot.SetData(resultsTuple.Item1, colorScheme);
             pcaPlot.Show(FormUtil.FindTopLevelOwner(this));
         }
     }

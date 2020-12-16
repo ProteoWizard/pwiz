@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
 
@@ -8,13 +9,16 @@ namespace pwiz.Common.DataBinding.Clustering
 {
     public class Clusterer
     {
-        public Clusterer(IEnumerable<RowItem> rowItems, ClusteredProperties properties, ClusterMetricType distanceMetric)
+        public Clusterer(CancellationToken cancellationToken, IEnumerable<RowItem> rowItems, ClusteredProperties properties, ClusterMetricType distanceMetric)
         {
+            CancellationToken = cancellationToken;
             RowItems = ImmutableList.ValueOf(rowItems);
             Properties = properties;
             RowHeaderLevels = ImmutableList.ValueOf(Properties.RowHeaders);
             DistanceMetric = distanceMetric;
         }
+
+        public CancellationToken CancellationToken { get; private set; }
         public ImmutableList<RowItem> RowItems { get; }
 
         public ItemProperties ItemProperties => Properties.PivotedProperties.ItemProperties;
@@ -58,6 +62,7 @@ namespace pwiz.Common.DataBinding.Clustering
         {
             foreach (var pd in Properties.PivotedProperties.UngroupedProperties)
             {
+                CancellationToken.ThrowIfCancellationRequested();
                 var transform = Properties.GetRowTransform(pd);
                 if (transform != null)
                 {
@@ -174,7 +179,7 @@ namespace pwiz.Common.DataBinding.Clustering
             return new ClusteredReportResults(clusterResults.DataSet.RowLabels, Properties.ReplacePivotedProperties(pivotedProperties), rowDendrogramData, columnDendrograms);
         }
 
-        public static Clusterer CreateClusterer(ClusteringSpec clusteringSpec, ReportResults reportResults)
+        public static Clusterer CreateClusterer(CancellationToken cancellationToken, ClusteringSpec clusteringSpec, ReportResults reportResults)
         {
             var pivotedPropertySet = new PivotedProperties(reportResults.ItemProperties);
             pivotedPropertySet = pivotedPropertySet.ChangeSeriesGroups(pivotedPropertySet.CreateSeriesGroups()).ReorderItemProperties();
@@ -182,7 +187,7 @@ namespace pwiz.Common.DataBinding.Clustering
 
             if (!clusteredProperties.RowValues.Any() && !clusteredProperties.ColumnValues.Any())
             {
-                clusteringSpec = ClusteringSpec.GetDefaultClusteringSpec(reportResults, pivotedPropertySet);
+                clusteringSpec = ClusteringSpec.GetDefaultClusteringSpec(cancellationToken, reportResults, pivotedPropertySet);
                 if (clusteringSpec == null)
                 {
                     return null;
@@ -190,12 +195,12 @@ namespace pwiz.Common.DataBinding.Clustering
                 clusteredProperties = ClusteredProperties.FromClusteringSpec(clusteringSpec, pivotedPropertySet);
             }
 
-            return new Clusterer(reportResults.RowItems, clusteredProperties, ClusterMetricType.FromName(clusteringSpec.DistanceMetric) ?? ClusterMetricType.DEFAULT);
+            return new Clusterer(cancellationToken, reportResults.RowItems, clusteredProperties, ClusterMetricType.FromName(clusteringSpec.DistanceMetric) ?? ClusterMetricType.DEFAULT);
         }
 
-        public static ReportResults PerformClustering(ClusteringSpec clusteringSpec, ReportResults reportResults)
+        public static ReportResults PerformClustering(CancellationToken cancellationToken, ClusteringSpec clusteringSpec, ReportResults reportResults)
         {
-            return CreateClusterer(clusteringSpec, reportResults)?.GetClusteredResults();
+            return CreateClusterer(cancellationToken, clusteringSpec, reportResults)?.GetClusteredResults();
         }
     }
 }

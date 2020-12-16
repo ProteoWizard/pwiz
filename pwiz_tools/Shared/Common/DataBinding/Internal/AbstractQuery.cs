@@ -36,7 +36,7 @@ namespace pwiz.Common.DataBinding.Internal
             var transformedRows = Transform(cancellationToken, dataSchema, new TransformResults(null, null, pivotedRows), results.Parameters.TransformStack);
             if (null != results.Parameters.ClusteringSpec)
             {
-                var clusteredResults = Clusterer.PerformClustering(results.Parameters.ClusteringSpec, transformedRows.PivotedRows);
+                var clusteredResults = Clusterer.PerformClustering(cancellationToken, results.Parameters.ClusteringSpec, transformedRows.PivotedRows);
                 if (clusteredResults != null)
                 {
                     transformedRows = new TransformResults(transformedRows.Parent, transformedRows.RowTransform, clusteredResults);

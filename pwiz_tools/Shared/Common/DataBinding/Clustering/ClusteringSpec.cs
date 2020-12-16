@@ -1,6 +1,6 @@
-﻿using System.CodeDom;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 using pwiz.Common.Collections;
@@ -264,10 +264,11 @@ namespace pwiz.Common.DataBinding.Clustering
             }
         }
 
-        public static bool EqualValuesInAllRows(ReportResults reportResults, PivotedProperties.Series series)
+        public static bool EqualValuesInAllRows(CancellationToken cancellationToken, ReportResults reportResults, PivotedProperties.Series series)
         {
             foreach (var propertyDescriptor in series.PropertyDescriptors)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var distinctValues = reportResults.RowItems.Select(propertyDescriptor.GetValue)
                     .Where(value => null != value).Distinct();
                 if (distinctValues.Skip(1).Any())
@@ -280,7 +281,7 @@ namespace pwiz.Common.DataBinding.Clustering
         }
 
         private static int MIN_ROWS_TO_ASSUME_HEADER = 3;
-        public static ClusteringSpec GetDefaultClusteringSpec(ReportResults reportResults,
+        public static ClusteringSpec GetDefaultClusteringSpec(CancellationToken cancellationToken, ReportResults reportResults,
             PivotedProperties pivotedProperties)
         {
             var values = new List<ValueSpec>();
@@ -293,7 +294,7 @@ namespace pwiz.Common.DataBinding.Clustering
                     {
                         continue;
                     }
-                    if (reportResults.RowCount >= MIN_ROWS_TO_ASSUME_HEADER && EqualValuesInAllRows(reportResults, series))
+                    if (reportResults.RowCount >= MIN_ROWS_TO_ASSUME_HEADER && EqualValuesInAllRows(cancellationToken, reportResults, series))
                     {
                         values.Add(new ValueSpec(columnRef, ClusterRole.COLUMNHEADER));
                     }

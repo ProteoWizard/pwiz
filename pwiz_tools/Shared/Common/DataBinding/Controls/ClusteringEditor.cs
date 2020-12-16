@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
@@ -40,7 +41,7 @@ namespace pwiz.Common.DataBinding.Controls
             pivotedProperties = pivotedProperties.ChangeSeriesGroups(pivotedProperties.CreateSeriesGroups());
             if (clusteringSpec == null || clusteringSpec.Values.Count == 0)
             {
-                clusteringSpec = ClusteringSpec.GetDefaultClusteringSpec(reportResults, pivotedProperties);
+                clusteringSpec = ClusteringSpec.GetDefaultClusteringSpec(CancellationToken.None, reportResults, pivotedProperties);
             }
 
             var transforms = clusteringSpec?.ToValueTransformDictionary() ?? new Dictionary<ClusteringSpec.ColumnRef, ClusterRole>();
